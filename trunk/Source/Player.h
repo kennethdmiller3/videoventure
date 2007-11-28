@@ -17,6 +17,9 @@ class Player :
 	Vector2 axis_x;
 	Vector2 axis_y;
 
+	// rotation rate
+	float omega;
+
 	// fire delay
 	float mDelay;
 	int mCycle;

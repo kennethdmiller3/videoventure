@@ -3,39 +3,82 @@
 
 Input::Input(void)
 {
-	memset(set, 0, sizeof(set));
-	memset(clear, 0, sizeof(clear));
+	memset(value, 0, sizeof(value));
 }
 
 Input::~Input(void)
 {
 }
 
+void Input::Bind(LOGICAL aLogical, int aType, int aDevice, int aControl, float aDeadzone, float aScale)
+{
+	int aPhysical = (aType << 24) | (aDevice << 16) | aControl;
+	Binding &binding = map[aPhysical];
+	binding.target = aLogical;
+	binding.deadzone = aDeadzone;
+	binding.scale = aScale;
+	binding.previous = 0.0f;
+	binding.pressed = false;
+	binding.released = false;
+}
+
 void Input::Start(void)
 {
-	// set up inputs
-	for (int i = 0; i < NUM_LOGICAL; i++)
+	for (Map::iterator itor = map.begin(); itor != map.end(); itor++)
 	{
-		if (clear[i])
-			set[i] = false;
-		clear[i] = false;
+		Binding &binding = itor->second;
+		if (binding.released)
+		{
+			if (binding.pressed)
+			{
+				value[binding.target] -= binding.scale;
+				binding.pressed = false;
+			}
+			binding.released = false;
+		}
 	}
 }
 
-void Input::OnKeyDown(int aKey)
+void Input::OnAxis(int aType, int aDevice, int aControl, float aValue)
 {
-	Map::iterator itor(map.find(aKey));
+	int aPhysical = (aType << 24) | (aDevice << 16) | aControl;
+	Map::iterator itor(map.find(aPhysical));
 	if (itor != map.end())
 	{
-		set[itor->second] = true;
+		Binding &binding = itor->second;
+		if (aValue < -binding.deadzone)
+			aValue = (aValue + binding.deadzone) * binding.scale;
+		else if (aValue > binding.deadzone)
+			aValue = (aValue - binding.deadzone) * binding.scale;
+		else
+			aValue = 0.0f;
+		value[binding.target] += aValue - binding.previous;
+		binding.previous = aValue;
 	}
 }
 
-void Input::OnKeyUp(int aKey)
+void Input::OnPress(int aType, int aDevice, int aControl)
 {
-	Map::iterator itor(map.find(aKey));
+	int aPhysical = (aType << 24) | (aDevice << 16) | aControl;
+	Map::iterator itor(map.find(aPhysical));
 	if (itor != map.end())
 	{
-		clear[itor->second] = true;
+		Binding &binding = itor->second;
+		if (!binding.pressed)
+		{
+			value[binding.target] += binding.scale;
+			binding.pressed = true;
+		}
+	}
+}
+
+void Input::OnRelease(int aType, int aDevice, int aControl)
+{
+	int aPhysical = (aType << 24) | (aDevice << 16) | aControl;
+	Map::iterator itor(map.find(aPhysical));
+	if (itor != map.end())
+	{
+		Binding &binding = itor->second;
+		binding.released = true;
 	}
 }
