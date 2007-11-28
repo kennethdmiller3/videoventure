@@ -7,6 +7,7 @@ const float PLAYER_RADIUS = 16;
 const float PLAYER_VEL = 200;
 const float PLAYER_ACC = 1000;
 const float PLAYER_DEC = 50;
+const float PLAYER_OMEGA = 3.0f * float(M_PI);
 
 // player bullet physics
 const float PLAYER_BULLET_SPEED = 800;
@@ -20,7 +21,7 @@ const float EDGE_BOTTOM = ARENA_Y_MAX - PLAYER_RADIUS;
 // Player Constructor
 Player::Player(void)
 : Entity(), Controllable(), Simulatable(), Collidable(), Renderable()
-, input(NULL), axis_x(1, 0), axis_y(0, 1), mDelay(0.0f), mCycle(0)
+, input(NULL), axis_x(1, 0), axis_y(0, 1), omega(0.0f), mDelay(0.0f), mCycle(0)
 {
 }
 
@@ -36,22 +37,31 @@ void Player::Control(float aStep)
 		return;
 
 	// apply thrust
-	float cx = (float)(*input)[Input::MOVE_LEFT] - (float)(*input)[Input::MOVE_RIGHT];
-	float cy = (float)(*input)[Input::MOVE_UP] - (float)(*input)[Input::MOVE_DOWN];
-	float control = std::min(cx*cx + cy*cy, 1.0f);
-	float acc = PLAYER_DEC + (PLAYER_ACC - PLAYER_DEC) * control;
-	Vector2 dv(cx * PLAYER_VEL - vel.x, cy * PLAYER_VEL - vel.y);
-	float it = std::min(aStep * acc / sqrtf(dv.x * dv.x + dv.y * dv.y + 0.0001f), 1.0f);
-	vel += dv * it;
+	{
+		Vector2 move((*input)[Input::MOVE_HORIZONTAL], (*input)[Input::MOVE_VERTICAL]);
+		float control = std::min(move.LengthSq(), 1.0f);
+		float acc = PLAYER_DEC + (PLAYER_ACC - PLAYER_DEC) * control;
+		Vector2 dv(move * PLAYER_VEL - vel);
+		float it = std::min(aStep * acc / sqrtf(dv.LengthSq() + 0.0001f), 1.0f);
+		vel += dv * it;
+	}
 
-	// orient towards mouse cursor
-	int mx, my;
-	SDL_GetMouseState(&mx, &my);
-	axis_y.x = (float)(SCREEN_WIDTH/2 - mx);
-	axis_y.y = (float)(SCREEN_HEIGHT/2 - my);
-	axis_y *= 1.0f/sqrtf(axis_y.x*axis_y.x+axis_y.y*axis_y.y);
-	axis_x.x = axis_y.y;
-	axis_x.y = -axis_y.x;
+	// apply steering
+	{
+		Vector2 aim((*input)[Input::AIM_HORIZONTAL], (*input)[Input::AIM_VERTICAL]);
+		float control = std::min(16.0f * aim.LengthSq(), 1.0f);
+		float cur_angle = atan2f(axis_y.x, axis_y.y);
+		float aim_angle = atan2f(aim.x, aim.y);
+		if (aim_angle > cur_angle+float(M_PI))
+			aim_angle -= 2.0f*float(M_PI);
+		else if (aim_angle < cur_angle-float(M_PI))
+			aim_angle += 2.0f*float(M_PI);
+		float new_angle = cur_angle + std::min(std::max(aim_angle - cur_angle, -PLAYER_OMEGA * control * aStep), PLAYER_OMEGA * control * aStep);
+		axis_y.x = sinf(new_angle);
+		axis_y.y = cosf(new_angle);
+		axis_x.x = axis_y.y;
+		axis_x.y = -axis_y.x;
+	}
 
 	if ((*input)[Input::FIRE_PRIMARY])
 	{

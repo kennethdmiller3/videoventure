@@ -103,6 +103,18 @@ bool init()
 	if( SDL_Init( SDL_INIT_EVERYTHING ) < 0 )
 		return false;    
 
+	// Check for joystick
+	if (SDL_NumJoysticks() > 0)
+	{
+		// Open joystick
+		SDL_Joystick *joy = SDL_JoystickOpen(0);
+		if(joy)
+		{
+			DebugPrint("Opened Joystick 0\n");
+			DebugPrint("Name: %s\n", SDL_JoystickName(0));
+		}
+	}
+
 	// set OpenGL attributes
     SDL_GL_SetAttribute( SDL_GL_RED_SIZE, 8 );
     SDL_GL_SetAttribute( SDL_GL_GREEN_SIZE, 8 );
@@ -808,6 +820,16 @@ static void ProcessWorldItems(TiXmlElement *element)
 	}
 }
 
+enum InputType
+{
+	INPUT_TYPE_KEYBOARD,
+	INPUT_TYPE_MOUSE_AXIS,
+	INPUT_TYPE_MOUSE_BUTTON,
+	INPUT_TYPE_JOYSTICK_AXIS,
+	INPUT_TYPE_JOYSTICK_BUTTON,
+	NUM_INPUT_TYPES
+};
+
 // main
 int SDL_main( int argc, char *argv[] )
 {
@@ -821,24 +843,75 @@ int SDL_main( int argc, char *argv[] )
 	// set collision layers
 	Collidable::SetLayerMask(COLLISION_LAYER_PLAYER_BULLET, 1<<2);
 
-	// input binding
 	Input input;
-	input.Bind(Input::MOVE_UP, SDLK_w);
-	input.Bind(Input::MOVE_DOWN, SDLK_s);
-	input.Bind(Input::MOVE_LEFT, SDLK_a);
-	input.Bind(Input::MOVE_RIGHT, SDLK_d);
-	input.Bind(Input::FIRE_PRIMARY, SDL_BUTTON_LEFT);
 
-	// level configuration
-	TiXmlDocument level("level.xml");
-	level.LoadFile();
-
-	// process child elements of world
-	TiXmlHandle handle( &level );
-	TiXmlElement *world = handle.FirstChildElement("world").ToElement();
-	if (world)
 	{
-		ProcessWorldItems(world);
+		// input binding
+		TiXmlDocument config("input.xml");
+		config.LoadFile();
+
+		TiXmlHandle handle( &config );
+		TiXmlElement *element = handle.FirstChildElement("input").ToElement();
+		if (element)
+		{
+			for (TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+			{
+				const char *value = child->Value();
+				switch (Hash(value))
+				{
+				case 0xc7535f2e /* "bind" */:
+					{
+						const char *name = child->Attribute("name");
+						const char *type = child->Attribute("type");
+						const char *device = child->Attribute("device");
+						const char *control = child->Attribute("control");
+						const char *deadzone = child->Attribute("deadzone");
+						const char *scale = child->Attribute("scale");
+
+						// map logical name
+						Input::LOGICAL logical;
+						switch(Hash(name))
+						{
+						case 0x2f7d674b /* "move_x" */:	logical = Input::MOVE_HORIZONTAL; break;
+						case 0x2e7d65b8 /* "move_y" */: logical = Input::MOVE_VERTICAL; break;
+						case 0x28e0ac09 /* "aim_x" */:	logical = Input::AIM_HORIZONTAL; break;
+						case 0x27e0aa76 /* "aim_y" */:	logical = Input::AIM_VERTICAL; break;
+						case 0x8eab16d9 /* "fire" */:	logical = Input::FIRE_PRIMARY; break;
+						default:						logical = Input::NUM_LOGICAL; break;
+						}
+
+						// map input type
+						InputType inputtype;
+						switch(Hash(type))
+						{
+						case 0x4aa845f4 /* "keyboard" */:			inputtype = INPUT_TYPE_KEYBOARD; break;
+						case 0xd76afdc0 /* "mouse_axis" */:			inputtype = INPUT_TYPE_MOUSE_AXIS; break;
+						case 0xbe730575 /* "mouse_button" */:		inputtype = INPUT_TYPE_MOUSE_BUTTON; break;
+						case 0x4b1fb051 /* "joystick_axis" */:		inputtype = INPUT_TYPE_JOYSTICK_AXIS; break;
+						case 0xb084d264 /* "joystick_button" */:	inputtype = INPUT_TYPE_JOYSTICK_BUTTON; break;
+						default:									inputtype = NUM_INPUT_TYPES; break;
+						}
+
+						input.Bind(logical, inputtype, device ? atoi(device) : 0, control ? atoi(control) : 0, deadzone ? float(atof(deadzone)) : 0, scale ? float(atof(scale)) : 1);
+					}
+					break;
+				}
+			}
+		}
+	}
+
+	{
+		// level configuration
+		TiXmlDocument level("level.xml");
+		level.LoadFile();
+
+		// process child elements of world
+		TiXmlHandle handle( &level );
+		TiXmlElement *world = handle.FirstChildElement("world").ToElement();
+		if (world)
+		{
+			ProcessWorldItems(world);
+		}
 	}
 
 	// find the player
@@ -902,7 +975,7 @@ int SDL_main( int argc, char *argv[] )
 			switch (event.type)
 			{
 			case SDL_KEYDOWN:
-				input.OnKeyDown( event.key.keysym.sym );
+				input.OnPress( INPUT_TYPE_KEYBOARD, event.key.which, event.key.keysym.sym );
 				if ((event.key.keysym.sym == SDLK_F4) && (event.key.keysym.mod & KMOD_ALT))
 				{
 					quit = true;
@@ -916,13 +989,26 @@ int SDL_main( int argc, char *argv[] )
 				}
 				break;
 			case SDL_KEYUP:
-				input.OnKeyUp( event.key.keysym.sym );
+				input.OnRelease( INPUT_TYPE_KEYBOARD, event.key.which, event.key.keysym.sym );
+				break;
+			case SDL_MOUSEMOTION:
+				input.OnAxis( INPUT_TYPE_MOUSE_AXIS, event.motion.which, 0, float(event.motion.x - SCREEN_WIDTH/2) );
+				input.OnAxis( INPUT_TYPE_MOUSE_AXIS, event.motion.which, 1, float(event.motion.y - SCREEN_HEIGHT/2) );
 				break;
 			case SDL_MOUSEBUTTONDOWN:
-				input.OnKeyDown( event.button.button );
+				input.OnPress( INPUT_TYPE_MOUSE_BUTTON, event.button.which, event.button.button );
 				break;
 			case SDL_MOUSEBUTTONUP:
-				input.OnKeyUp( event.button.button );
+				input.OnRelease( INPUT_TYPE_MOUSE_BUTTON, event.button.which, event.button.button );
+				break;
+			case SDL_JOYAXISMOTION:
+				input.OnAxis( INPUT_TYPE_JOYSTICK_AXIS, event.jaxis.which, event.jaxis.axis, event.jaxis.value / 32767.0f );
+				break;
+			case SDL_JOYBUTTONDOWN:
+				input.OnPress( INPUT_TYPE_JOYSTICK_BUTTON, event.jaxis.which, event.jbutton.button );
+				break;
+			case SDL_JOYBUTTONUP:
+				input.OnRelease( INPUT_TYPE_JOYSTICK_BUTTON, event.jbutton.which, event.jbutton.button );
 				break;
 			case SDL_QUIT:
 				quit = true;
