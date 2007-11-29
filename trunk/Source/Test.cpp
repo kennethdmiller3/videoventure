@@ -247,121 +247,121 @@ static void ProcessDrawItems(TiXmlElement *element)
 					switch (Hash(attrib->Name()))
 					{
 					case 0xd965bbda /* "current" */:
-						if (atoi(attrib->Value()))
+						if (attrib->IntValue())
 							mask |= GL_CURRENT_BIT;
 						else
 							mask &= ~GL_CURRENT_BIT;
 						break;
 					case 0x18ae6c91 /* "point" */:
-						if (atoi(attrib->Value()))
+						if (attrib->IntValue())
 							mask |= GL_POINT_BIT;
 						else
 							mask &= ~GL_POINT_BIT;
 						break;
 					case 0x17db1627 /* "line" */:
-						if (atoi(attrib->Value()))
+						if (attrib->IntValue())
 							mask |= GL_LINE_BIT;
 						else
 							mask &= ~GL_LINE_BIT;
 						break;
 					case 0x051cb889 /* "polygon" */:
-						if (atoi(attrib->Value()))
+						if (attrib->IntValue())
 							mask |= GL_POLYGON_BIT;
 						else
 							mask &= ~GL_POLYGON_BIT;
 						break;
 					case 0x67b14997 /* "polygon_stipple" */:
-						if (atoi(attrib->Value()))
+						if (attrib->IntValue())
 							mask |= GL_POLYGON_STIPPLE_BIT;
 						else
 							mask &= ~GL_POLYGON_STIPPLE_BIT;
 						break;
 					case 0xccde91eb /* "pixel_mode" */:
-						if (atoi(attrib->Value()))
+						if (attrib->IntValue())
 							mask |= GL_LIGHTING_BIT;
 						else
 							mask &= ~GL_LIGHTING_BIT;
 						break;
 					case 0x827eb1c9 /* "lighting" */:
-						if (atoi(attrib->Value()))
+						if (attrib->IntValue())
 							mask |= GL_POINT_BIT;
 						else
 							mask &= ~GL_POINT_BIT;
 						break;
 					case 0xa1f3723f /* "fog" */:
-						if (atoi(attrib->Value()))
+						if (attrib->IntValue())
 							mask |= GL_FOG_BIT;
 						else
 							mask &= ~GL_FOG_BIT;
 						break;
 					case 0x65e5b825 /* "depth_buffer" */:
-						if (atoi(attrib->Value()))
+						if (attrib->IntValue())
 							mask |= GL_DEPTH_BUFFER_BIT;
 						else
 							mask &= ~GL_DEPTH_BUFFER_BIT;
 						break;
 					case 0x907f6213 /* "accum_buffer" */:
-						if (atoi(attrib->Value()))
+						if (attrib->IntValue())
 							mask |= GL_ACCUM_BUFFER_BIT;
 						else
 							mask &= ~GL_ACCUM_BUFFER_BIT;
 						break;
 					case 0x632020be /* "stencil_buffer" */:
-						if (atoi(attrib->Value()))
+						if (attrib->IntValue())
 							mask |= GL_STENCIL_BUFFER_BIT;
 						else
 							mask &= ~GL_STENCIL_BUFFER_BIT;
 						break;
 					case 0xe4abbac3 /* "viewport" */:
-						if (atoi(attrib->Value()))
+						if (attrib->IntValue())
 							mask |= GL_VIEWPORT_BIT;
 						else
 							mask &= ~GL_VIEWPORT_BIT;
 						break;
 					case 0xe1ad931b /* "transform" */:
-						if (atoi(attrib->Value()))
+						if (attrib->IntValue())
 							mask |= GL_TRANSFORM_BIT;
 						else
 							mask &= ~GL_TRANSFORM_BIT;
 						break;
 					case 0xaf8bb8ce /* "enable" */:
-						if (atoi(attrib->Value()))
+						if (attrib->IntValue())
 							mask |= GL_ENABLE_BIT;
 						else
 							mask &= ~GL_ENABLE_BIT;
 						break;
 					case 0x0d759bbb /* "color_buffer" */:
-						if (atoi(attrib->Value()))
+						if (attrib->IntValue())
 							mask |= GL_COLOR_BUFFER_BIT;
 						else
 							mask &= ~GL_COLOR_BUFFER_BIT;
 						break;
 					case 0x4bc809b8 /* "hint" */:
-						if (atoi(attrib->Value()))
+						if (attrib->IntValue())
 							mask |= GL_HINT_BIT;
 						else
 							mask &= ~GL_HINT_BIT;
 						break;
 					case 0x08d22e0f /* "eval" */:
-						if (atoi(attrib->Value()))
+						if (attrib->IntValue())
 							mask |= GL_EVAL_BIT;
 						else
 							mask &= ~GL_EVAL_BIT;
 						break;
 					case 0x0cfb5881 /* "list" */:
-						if (atoi(attrib->Value()))
+						if (attrib->IntValue())
 							mask |= GL_LIST_BIT;
 						else
 							mask &= ~GL_LIST_BIT;
 						break;
 					case 0x3c6468f4 /* "texture" */:
-						if (atoi(attrib->Value()))
+						if (attrib->IntValue())
 							mask |= GL_TEXTURE_BIT;
 						else
 							mask &= ~GL_TEXTURE_BIT;
 						break;
 					case 0x0adbc081 /* "scissor" */:
-						if (atoi(attrib->Value()))
+						if (attrib->IntValue())
 							mask |= GL_SCISSOR_BIT;
 						else
 							mask &= ~GL_SCISSOR_BIT;
@@ -374,31 +374,61 @@ static void ProcessDrawItems(TiXmlElement *element)
 			}
 			break;
 
+		case 0x052eb8b2 /* "pushclientattrib" */:
+			{
+				GLuint mask = 0U;
+				for (TiXmlAttribute *attrib = child->FirstAttribute(); attrib != NULL; attrib = attrib->Next())
+				{
+					switch (Hash(attrib->Name()))
+					{
+					case 0x959fee19 /* "pixel_store" */:
+						if (attrib->IntValue())
+							mask |= GL_CLIENT_PIXEL_STORE_BIT;
+						else
+							mask &= ~GL_CLIENT_PIXEL_STORE_BIT;
+						break;
+					case 0x20a16825 /* "vertex_array" */:
+						if (attrib->IntValue())
+							mask |= GL_CLIENT_VERTEX_ARRAY_BIT;
+						else
+							mask &= ~GL_CLIENT_VERTEX_ARRAY_BIT;
+						break;
+					}
+				}
+				glPushClientAttrib(mask);
+				ProcessDrawItems(child);
+				glPopClientAttrib();
+			}
+			break;
+
 		case 0xad0ecfd5 /* "translate" */:
 			{
-				const char *x = child->Attribute("x");
-				const char *y = child->Attribute("y");
-				const char *z = child->Attribute("z");
-				glTranslatef(x ? float(atof(x)) : 0, y ? float(atof(y)) : 0, z ? float(atof(z)) : 0);
+				float x = 0.0f, y = 0.0f, z = 0.0f;
+				child->QueryFloatAttribute("x", &x);
+				child->QueryFloatAttribute("y", &y);
+				child->QueryFloatAttribute("z", &z);
+				glTranslatef(x, y, z);
 			}
 			break;
 
 		case 0xa5f4fd0a /* "rotate" */:
 			{
-				const char *a = child->Attribute("angle");
-				const char *x = child->Attribute("x");
-				const char *y = child->Attribute("y");
-				const char *z = child->Attribute("z");
-				glRotatef(a ? float(atof(a)) : 0, x ? float(atof(x)) : 0, y ? float(atof(y)) : 0, z ? float(atof(z)) : 0);
+				float a = 0.0f, x = 0.0f, y = 0.0f, z = 0.0f;
+				child->QueryFloatAttribute("angle", &a);
+				child->QueryFloatAttribute("x", &x);
+				child->QueryFloatAttribute("y", &y);
+				child->QueryFloatAttribute("z", &z);
+				glRotatef(a, x, y, z);
 			}
 			break;
 
 		case 0x82971c71 /* "scale" */:
 			{
-				const char *x = child->Attribute("x");
-				const char *y = child->Attribute("y");
-				const char *z = child->Attribute("z");
-				glScalef(x ? float(atof(x)) : 0, y ? float(atof(y)) : 0, z ? float(atof(z)) : 0);
+				float x = 1.0f, y = 1.0f, z = 1.0f;
+				child->QueryFloatAttribute("x", &x);
+				child->QueryFloatAttribute("y", &y);
+				child->QueryFloatAttribute("z", &z);
+				glScalef(x, y, z);
 			}
 			break;
 
@@ -420,9 +450,7 @@ static void ProcessDrawItems(TiXmlElement *element)
 				{
 					char name[16];
 					sprintf(name, "m%d", i);
-					const char *value = child->Attribute(name);
-					if (value)
-						m[i] = float(atof(value));					
+					child->QueryFloatAttribute(name, &m[i]);
 				}
 				glLoadMatrixf(m);
 			}
@@ -440,41 +468,67 @@ static void ProcessDrawItems(TiXmlElement *element)
 				{
 					char name[16];
 					sprintf(name, "m%d", i);
-					const char *value = child->Attribute(name);
-					if (value)
-						m[i] = float(atof(value));					
+					child->QueryFloatAttribute(name, &m[i]);
 				}
 				glMultMatrixf(m);
 			}
 			break;
 
-		case 0x3d7e6258 /* "color" */:
+		case 0x945367a7 /* "vertex" */:
 			{
-				const char *r = child->Attribute("r");
-				const char *g = child->Attribute("g");
-				const char *b = child->Attribute("b");
-				const char *a = child->Attribute("a");
-				glColor4d(r ? float(atof(r)) : 0, g ? float(atof(g)) : 0, b ? float(atof(b)) : 0, a ? float(atof(a)) : 1);
+				float x = 0.0f, y = 0.0f, z = 0.0f, w = 1.0f;
+				child->QueryFloatAttribute("x", &x);
+				child->QueryFloatAttribute("y", &y);
+				child->QueryFloatAttribute("z", &z);
+				child->QueryFloatAttribute("w", &w);
+				glVertex4f(x, y, z, w);
+			}
+			break;
+		case 0xe68b9c52 /* "normal" */:
+			{
+				float x = 0.0f, y = 0.0f, z = 0.0f;
+				child->QueryFloatAttribute("x", &x);
+				child->QueryFloatAttribute("y", &y);
+				child->QueryFloatAttribute("z", &z);
+				glNormal3f(x, y, z);
 			}
 			break;
 
-		case 0x945367a7 /* "vertex" */:
+		case 0x3d7e6258 /* "color" */:
 			{
-				const char *x = child->Attribute("x");
-				const char *y = child->Attribute("y");
-				const char *z = child->Attribute("z");
-				const char *w = child->Attribute("w");
-				glVertex4d(x ? float(atof(x)) : 0, y ? float(atof(y)) : 0, z ? float(atof(z)) : 0, w ? float(atof(w)) : 1);
+				float r = 0.0f, g = 0.0f, b = 0.0f, a = 1.0f;
+				child->QueryFloatAttribute("r", &r);
+				child->QueryFloatAttribute("g", &g);
+				child->QueryFloatAttribute("b", &b);
+				child->QueryFloatAttribute("a", &a);
+				glColor4f(r, g, b, a);
+			}
+			break;
+
+		case 0x090aa9ab /* "index" */:
+			{
+				float c = 0.0f;
+				child->QueryFloatAttribute("c", &c);
+				glIndexf(c);
 			}
 			break;
 
 		case 0xdd612dd3 /* "texcoord" */:
 			{
-				const char *s = child->Attribute("s");
-				const char *t = child->Attribute("t");
-				const char *r = child->Attribute("r");
-				const char *q = child->Attribute("q");
-				glTexCoord4d(s ? float(atof(s)) : 0, t ? float(atof(t)) : 0, r ? float(atof(r)) : 0, q ? float(atof(q)) : 1);
+				float s = 0.0f, t = 0.0f, r = 0.0f, q = 1.0f;
+				child->QueryFloatAttribute("s", &s);
+				child->QueryFloatAttribute("t", &t);
+				child->QueryFloatAttribute("r", &r);
+				child->QueryFloatAttribute("q", &q);
+				glTexCoord4f(s, t, r, q);
+			}
+			break;
+
+		case 0x0135ab46 /* "edgeflag" */:
+			{
+				int flag;
+				if (child->QueryIntAttribute("flag", &flag) == TIXML_SUCCESS)
+					glEdgeFlag(flag ? GL_TRUE : GL_FALSE);
 			}
 			break;
 
@@ -575,6 +629,262 @@ static void ProcessDrawItems(TiXmlElement *element)
 			}
 			break;
 
+		case 0x2610a4a3 /* "clientstate" */:
+			{
+				for (TiXmlAttribute *attrib = child->FirstAttribute(); attrib != NULL; attrib = attrib->Next())
+				{
+					switch (Hash(attrib->Name()))
+					{
+					case 0x945367a7 /* "vertex" */:
+						if (attrib->IntValue())
+							glEnableClientState(GL_VERTEX_ARRAY);
+						else
+							glDisableClientState(GL_VERTEX_ARRAY);
+						break;
+					case 0xe68b9c52 /* "normal" */:
+						if (attrib->IntValue())
+							glEnableClientState(GL_NORMAL_ARRAY);
+						else
+							glDisableClientState(GL_NORMAL_ARRAY);
+						break;
+					case 0x3d7e6258 /* "color" */:
+						if (attrib->IntValue())
+							glEnableClientState(GL_COLOR_ARRAY);
+						else
+							glDisableClientState(GL_COLOR_ARRAY);
+						break;
+					case 0x090aa9ab /* "index" */:
+						if (attrib->IntValue())
+							glEnableClientState(GL_INDEX_ARRAY);
+						else
+							glDisableClientState(GL_INDEX_ARRAY);
+						break;
+					case 0xdd612dd3 /* "texcoord" */:
+						if (attrib->IntValue())
+							glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+						else
+							glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+						break;
+					case 0x0135ab46 /* "edgeflag" */:
+						if (attrib->IntValue())
+							glEnableClientState(GL_EDGE_FLAG_ARRAY);
+						else
+							glDisableClientState(GL_EDGE_FLAG_ARRAY);
+						break;
+					}
+				}
+			}
+			break;
+
+		case 0x6298bce4 /* "vertexarray" */:
+			{
+				int size = 0;
+				child->QueryIntAttribute("size", &size);
+
+				int stride = 0;
+				child->QueryIntAttribute("stride", &stride);
+
+				const char *text = child->GetText();
+				size_t len = strlen(text)+1;
+				char *buf = static_cast<char *>(_alloca(len));
+				memcpy(buf, text, len);
+				float *data = static_cast<float *>(_alloca(len*sizeof(float)/2));
+				int count = 0;
+				char *element = strtok(buf, " \t\n\r,;");
+				while (element)
+				{
+					data[count++] = float(atof(element));
+					element = strtok(NULL, " \t\n\r,;");
+				}
+
+				glVertexPointer(size, GL_FLOAT, stride, data);
+			}
+			break;
+
+		case 0x81491d33 /* "normalarray" */:
+			{
+				int stride = 0;
+				child->QueryIntAttribute("stride", &stride);
+
+				const char *text = child->GetText();
+				size_t len = strlen(text)+1;
+				char *buf = static_cast<char *>(_alloca(len));
+				memcpy(buf, text, len);
+				float *data = static_cast<float *>(_alloca(len*sizeof(float)/2));
+				int count = 0;
+				char *element = strtok(buf, " \t\n\r,;");
+				while (element)
+				{
+					data[count++] = float(atof(element));
+					element = strtok(NULL, " \t\n\r,;");
+				}
+
+				glNormalPointer(GL_FLOAT, stride, data);
+			}
+			break;
+
+		case 0xcce5b995 /* "colorarray" */:
+			{
+				int size = 0;
+				child->QueryIntAttribute("size", &size);
+
+				int stride = 0;
+				child->QueryIntAttribute("stride", &stride);
+
+				const char *text = child->GetText();
+				size_t len = strlen(text)+1;
+				char *buf = static_cast<char *>(_alloca(len));
+				memcpy(buf, text, len);
+				float *data = static_cast<float *>(_alloca(len*sizeof(float)/2));
+				int count = 0;
+				char *element = strtok(buf, " \t\n\r,;");
+				while (element)
+				{
+					data[count++] = float(atof(element));
+					element = strtok(NULL, " \t\n\r,;");
+				}
+
+				glColorPointer(size, GL_FLOAT, stride, data);
+			}
+			break;
+
+		case 0x664ead80 /* "indexarray" */:
+			{
+				int stride = 0;
+				child->QueryIntAttribute("stride", &stride);
+
+				const char *text = child->GetText();
+				size_t len = strlen(text)+1;
+				char *buf = static_cast<char *>(_alloca(len));
+				memcpy(buf, text, len);
+				float *data = static_cast<float *>(_alloca(len*sizeof(float)/2));
+				int count = 0;
+				char *element = strtok(buf, " \t\n\r,;");
+				while (element)
+				{
+					data[count++] = float(atof(element));
+					element = strtok(NULL, " \t\n\r,;");
+				}
+
+				glIndexPointer(GL_FLOAT, stride, data);
+			}
+			break;
+
+		case 0x91aa3148 /* "texcoordarray" */:
+			{
+				int size = 0;
+				child->QueryIntAttribute("size", &size);
+
+				int stride = 0;
+				child->QueryIntAttribute("stride", &stride);
+
+				const char *text = child->GetText();
+				size_t len = strlen(text)+1;
+				char *buf = static_cast<char *>(_alloca(len));
+				memcpy(buf, text, len);
+				float *data = static_cast<float *>(_alloca(len*sizeof(float)/2));
+				int count = 0;
+				char *element = strtok(buf, " \t\n\r,;");
+				while (element)
+				{
+					data[count++] = float(atof(element));
+					element = strtok(NULL, " \t\n\r,;");
+				}
+
+				glTexCoordPointer(size, GL_FLOAT, stride, data);
+			}
+			break;
+
+		case 0x60360ccf /* "edgeflagarray" */:
+			{
+				int stride = 0;
+				child->QueryIntAttribute("stride", &stride);
+
+				const char *text = child->GetText();
+				size_t len = strlen(text)+1;
+				char *buf = static_cast<char *>(_alloca(len));
+				memcpy(buf, text, len);
+				bool *data = static_cast<bool *>(_alloca(len*sizeof(bool)/2));
+				int count = 0;
+				char *element = strtok(buf, " \t\n\r,;");
+				while (element)
+				{
+					data[count++] = atoi(element) != 0;
+					element = strtok(NULL, " \t\n\r,;");
+				}
+
+				glEdgeFlagPointer(stride, data);
+			}
+			break;
+
+		case 0x0a85bb5e /* "arrayelement" */:
+			{
+				int index;
+				if (child->QueryIntAttribute("index", &index) == TIXML_SUCCESS)
+					glArrayElement(index);
+			}
+			break;
+
+		case 0xf4de4a21 /* "drawarrays" */:
+			{
+				GLenum mode;
+				switch (Hash(child->Attribute("mode")))
+				{
+				case 0xbc9567c6 /* "points" */:			mode = GL_POINTS; break;
+				case 0xe1e4263c /* "lines" */:			mode = GL_LINES; break;
+				case 0xc2106ab6 /* "line_loop" */:		mode = GL_LINE_LOOP; break;
+				case 0xc6f2fa0e /* "line_strip" */:		mode = GL_LINE_STRIP; break;
+				case 0xd8a57342 /* "triangles" */:		mode = GL_TRIANGLES; break;
+				case 0x668b2dd8 /* "triangle_strip" */:	mode = GL_TRIANGLE_STRIP; break;
+				case 0xcfa6904f /* "triangle_fan" */:	mode = GL_TRIANGLE_FAN; break;
+				case 0x5667b307 /* "quads" */:			mode = GL_QUADS; break;
+				case 0xb47cad9b /* "quad_strip" */:		mode = GL_QUAD_STRIP; break;
+				case 0x051cb889 /* "polygon" */:		mode = GL_POLYGON; break;
+				default: break;
+				}
+
+				int first = 0, count = 0;
+				child->QueryIntAttribute("first", &first);
+				child->QueryIntAttribute("count", &count);
+				glDrawArrays(mode, first, count);
+			}
+			break;
+
+		case 0x757eeee2 /* "drawelements" */:
+			{
+				GLenum mode;
+				switch (Hash(child->Attribute("mode")))
+				{
+				case 0xbc9567c6 /* "points" */:			mode = GL_POINTS; break;
+				case 0xe1e4263c /* "lines" */:			mode = GL_LINES; break;
+				case 0xc2106ab6 /* "line_loop" */:		mode = GL_LINE_LOOP; break;
+				case 0xc6f2fa0e /* "line_strip" */:		mode = GL_LINE_STRIP; break;
+				case 0xd8a57342 /* "triangles" */:		mode = GL_TRIANGLES; break;
+				case 0x668b2dd8 /* "triangle_strip" */:	mode = GL_TRIANGLE_STRIP; break;
+				case 0xcfa6904f /* "triangle_fan" */:	mode = GL_TRIANGLE_FAN; break;
+				case 0x5667b307 /* "quads" */:			mode = GL_QUADS; break;
+				case 0xb47cad9b /* "quad_strip" */:		mode = GL_QUAD_STRIP; break;
+				case 0x051cb889 /* "polygon" */:		mode = GL_POLYGON; break;
+				default: break;
+				}
+
+				const char *text = child->GetText();
+				size_t len = strlen(text)+1;
+				char *buf = static_cast<char *>(_alloca(len));
+				memcpy(buf, text, len);
+				unsigned short *indices = static_cast<unsigned short *>(_alloca(len*sizeof(unsigned short)/2));
+				int count = 0;
+				char *element = strtok(buf, " \t\n\r,;");
+				while (element)
+				{
+					indices[count++] = unsigned short(atoi(element));
+					element = strtok(NULL, " \t\n\r,;");
+				}
+
+				glDrawElements(mode, count, GL_UNSIGNED_SHORT, indices);
+			}
+			break;
+
 		default:
 			break;
 		}
@@ -636,49 +946,37 @@ static void ProcessCollidableItems(TiXmlElement *element, Collidable *collidable
 	for (TiXmlAttribute *attrib = element->FirstAttribute(); attrib != NULL; attrib = attrib->Next())
 	{
 		const char *label = attrib->Name();
-		const char *value = attrib->Value();
 		switch (Hash(label))
 		{
 		case 0x07a640f6 /* "layer" */:
-			{
-				collidable->SetLayer(value ? atoi(value) : -1);
-			}
+			collidable->SetLayer(attrib->IntValue());
 			break;
 
 		case 0x5127f14d /* "type" */:
+			switch (Hash(attrib->Value()))
 			{
-				switch (Hash(value))
-				{
-				case 0x06dbc8c0 /* "alignedbox" */:
-					collidable->type = Collidable::TYPE_ALIGNED_BOX;
-					break;
-				case 0x28217089 /* "circle" */:
-					collidable->type = Collidable::TYPE_CIRCLE;
-					break;
-				default:
-					collidable->type = Collidable::TYPE_NONE;
-					break;
-				}
+			case 0x06dbc8c0 /* "alignedbox" */:
+				collidable->type = Collidable::TYPE_ALIGNED_BOX;
+				break;
+			case 0x28217089 /* "circle" */:
+				collidable->type = Collidable::TYPE_CIRCLE;
+				break;
+			default:
+				collidable->type = Collidable::TYPE_NONE;
+				break;
 			}
 			break;
 
 		case 0x0dba4cb3 /* "radius" */:
-			{
-				collidable->size.x = value ? float(atof(value)) : 0;
-				collidable->size.y = value ? float(atof(value)) : 0;
-			}
+			collidable->size.x = collidable->size.y = float(attrib->DoubleValue());
 			break;
 
 		case 0x95876e1f /* "width" */:
-			{
-				collidable->size.x = value ? float(atof(value)) : 0;
-			}
+			collidable->size.x = float(attrib->DoubleValue());
 			break;
 
 		case 0xd5bdbb42 /* "height" */:
-			{
-				collidable->size.y = value ? float(atof(value)) : 0;
-			}
+			collidable->size.y = float(attrib->DoubleValue());
 			break;
 
 		default:
@@ -697,18 +995,18 @@ static void ProcessEntityItems(TiXmlElement *element, Entity *entity)
 		{
 		case 0x934f4e0a /* "position" */:
 			{
-				const char *x = child->Attribute("x");
-				const char *y = child->Attribute("y");
-				Vector2 pos(x ? float(atof(x)) : 0, y ? float(atof(y)) : 0);
+				Vector2 pos(entity->GetPosition());
+				child->QueryFloatAttribute("x", &pos.x);
+				child->QueryFloatAttribute("y", &pos.y);
 				entity->SetPosition(pos);
 			}
 			break;
 
 		case 0x32741c32 /* "velocity" */:
 			{
-				const char *x = child->Attribute("x");
-				const char *y = child->Attribute("y");
-				Vector2 vel(x ? float(atof(x)) : 0, y ? float(atof(y)) : 0);
+				Vector2 vel(entity->GetVelocity());
+				child->QueryFloatAttribute("x", &vel.x);
+				child->QueryFloatAttribute("y", &vel.y);
 				entity->SetVelocity(vel);
 			}
 			break;
@@ -756,8 +1054,9 @@ static void ProcessWorldItems(TiXmlElement *element)
 				{
 				case 0x1ac6a97e /* "cloud" */:
 					{
-						const char *count = child->Attribute("count");
-						entity = new Cloud(count ? atoi(count) : 1);
+						int count = 1;
+						child->QueryIntAttribute("count", &count);
+						entity = new Cloud(count);
 					}
 					break;
 
@@ -861,14 +1160,8 @@ int SDL_main( int argc, char *argv[] )
 				{
 				case 0xc7535f2e /* "bind" */:
 					{
-						const char *name = child->Attribute("name");
-						const char *type = child->Attribute("type");
-						const char *device = child->Attribute("device");
-						const char *control = child->Attribute("control");
-						const char *deadzone = child->Attribute("deadzone");
-						const char *scale = child->Attribute("scale");
-
 						// map logical name
+						const char *name = child->Attribute("name");
 						Input::LOGICAL logical;
 						switch(Hash(name))
 						{
@@ -881,6 +1174,7 @@ int SDL_main( int argc, char *argv[] )
 						}
 
 						// map input type
+						const char *type = child->Attribute("type");
 						InputType inputtype;
 						switch(Hash(type))
 						{
@@ -892,7 +1186,17 @@ int SDL_main( int argc, char *argv[] )
 						default:									inputtype = NUM_INPUT_TYPES; break;
 						}
 
-						input.Bind(logical, inputtype, device ? atoi(device) : 0, control ? atoi(control) : 0, deadzone ? float(atof(deadzone)) : 0, scale ? float(atof(scale)) : 1);
+						// get properties
+						int device = 0;
+						child->QueryIntAttribute("device", &device);
+						int control = 0;
+						child->QueryIntAttribute("control", &control);
+						float deadzone = 0.0f;
+						child->QueryFloatAttribute("deadzone", &deadzone);
+						float scale = 1.0f;
+						child->QueryFloatAttribute("scale", &scale);
+
+						input.Bind(logical, inputtype, device, control, deadzone, scale);
 					}
 					break;
 				}
