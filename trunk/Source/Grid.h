@@ -10,5 +10,5 @@ public:
 	~Grid(void);
 
 	// render
-	void Render(void);
+	virtual void Render(void);
 };

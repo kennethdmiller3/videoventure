@@ -19,8 +19,8 @@ protected:
 	// identifier
 	int id;
 
-	// current position
-	Vector2 pos;
+	// current transform
+	Matrix2 transform;
 
 	// current velocity
 	Vector2 vel;
@@ -38,16 +38,40 @@ public:
 		return id;
 	}
 
+	// set transform
+	void SetTransform(const Matrix2 &aTransform)
+	{
+		transform = aTransform;
+	}
+
+	// get transform
+	const Matrix2 &GetTransform() const
+	{
+		return transform;
+	}
+
 	// set position
 	void SetPosition(const Vector2 &aPos)
 	{
-		pos = aPos;
+		transform.p = aPos;
 	}
+
+	// get x axis
+	const Vector2 &GetAxisX() const
+	{
+		return transform.x;
+	}
+
+	// get y axis
+	const Vector2 &GetAxisY() const
+	{
+		return transform.y;
+	};
 
 	// get position
 	const Vector2 &GetPosition() const
 	{
-		return pos;
+		return transform.p;
 	}
 
 	// set velocity
@@ -61,4 +85,7 @@ public:
 	{
 		return vel;
 	}
+
+	// configure
+	virtual bool Configure(TiXmlElement *element);
 };

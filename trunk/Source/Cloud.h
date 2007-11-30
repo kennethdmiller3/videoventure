@@ -11,5 +11,5 @@ public:
 	~Cloud(void);
 
 	// render
-	void Render(void);
+	virtual void Render(void);
 };

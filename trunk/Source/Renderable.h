@@ -18,6 +18,9 @@ public:
 	Renderable(void);
 	~Renderable(void);
 
+	// configure
+	virtual bool Configure(TiXmlElement *element);
+
 	// visibility
 	void Show(void);
 	void Hide(void);

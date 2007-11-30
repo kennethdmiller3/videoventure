@@ -321,6 +321,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Source\Matrix2.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Source\Player.h"
 				>
 			</File>

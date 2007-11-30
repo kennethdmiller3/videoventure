@@ -91,7 +91,7 @@ void Bullet::Simulate(float aStep)
 	}
 
 	// apply velocity
-	pos += vel * aStep;
+	transform.p += vel * aStep;
 }
 
 void Bullet::Collide(float aStep, Collidable &aRecipient)
@@ -100,7 +100,7 @@ void Bullet::Collide(float aStep, Collidable &aRecipient)
 	SetLayer(-1);
 
 	// advance to contact point
-	pos += vel * aStep;
+	transform.p += vel * aStep;
 
 	// kill the bullet
 	mLife = 0.0f;
@@ -109,7 +109,7 @@ void Bullet::Collide(float aStep, Collidable &aRecipient)
 
 	// create an explosion
 	Explosion *explosion = new Explosion();
-	explosion->SetPosition(pos);
+	explosion->SetPosition(transform.p);
 }
 
 void Bullet::Render(void)
@@ -118,7 +118,7 @@ void Bullet::Render(void)
 	glPushMatrix();
 
 	// set offset
-	glTranslatef( pos.x, pos.y, 0 );
+	glTranslatef( transform.p.x, transform.p.y, 0 );
 
 	// draw bullet
 	glCallList(mDraw);

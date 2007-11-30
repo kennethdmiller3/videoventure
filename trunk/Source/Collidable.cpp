@@ -33,6 +33,56 @@ void Collidable::SetLayer(int aLayer)
 	}
 }
 
+bool Collidable::Configure(TiXmlElement *element)
+{
+	if (Hash(element->Value()) != 0x74e9dbae /* "collidable" */)
+		return false;
+
+	// process child elements
+	for (TiXmlAttribute *attrib = element->FirstAttribute(); attrib != NULL; attrib = attrib->Next())
+	{
+		const char *label = attrib->Name();
+		switch (Hash(label))
+		{
+		case 0x07a640f6 /* "layer" */:
+			SetLayer(attrib->IntValue());
+			break;
+
+		case 0x5127f14d /* "type" */:
+			switch (Hash(attrib->Value()))
+			{
+			case 0x06dbc8c0 /* "alignedbox" */:
+				type = Collidable::TYPE_ALIGNED_BOX;
+				break;
+			case 0x28217089 /* "circle" */:
+				type = Collidable::TYPE_CIRCLE;
+				break;
+			default:
+				type = Collidable::TYPE_NONE;
+				break;
+			}
+			break;
+
+		case 0x0dba4cb3 /* "radius" */:
+			size.x = size.y = float(attrib->DoubleValue());
+			break;
+
+		case 0x95876e1f /* "width" */:
+			size.x = float(attrib->DoubleValue());
+			break;
+
+		case 0xd5bdbb42 /* "height" */:
+			size.y = float(attrib->DoubleValue());
+			break;
+
+		default:
+			break;
+		}
+	}
+
+	return true;
+}
+
 static bool TestAlignedAligned(const AlignedBox2 &a1, const AlignedBox2 &a2)
 {
 	return

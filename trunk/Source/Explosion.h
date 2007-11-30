@@ -16,8 +16,8 @@ public:
 	~Explosion(void);
 
 	// simulate
-	void Simulate(float aStep);
+	virtual void Simulate(float aStep);
 
 	// render
-	void Render(void);
+	virtual void Render(void);
 };

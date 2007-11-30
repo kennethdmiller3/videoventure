@@ -2,26 +2,8 @@
 #include "Gunner.h"
 #include "Bullet.h"
 
-// gunner physics
-const float GUNNER_RADIUS = 5;
-
 // gunner bullet physics
 const float GUNNER_BULLET_SPEED = 800;
-
-// gunner offset (keyed by gunner index)
-const Vector2 GUNNER_OFFSET[2] =
-{
-	Vector2(-24, -16),
-	Vector2(24, -16),
-};
-
-// aim direction (keyed by gunner index)
-const float GUNNER_AIM_ANGLE = 10*(float)M_PI/180;
-const Vector2 GUNNER_AIM_DIR[2] =
-{
-	Vector2(sinf(-GUNNER_AIM_ANGLE), cosf(-GUNNER_AIM_ANGLE)),
-	Vector2(sinf(GUNNER_AIM_ANGLE), cosf(GUNNER_AIM_ANGLE)),
-};
 
 // bullet direction (keyed by shot index)
 const float GUNNER_BULLET_ANGLE = 5*(float)M_PI/180;
@@ -35,7 +17,7 @@ const Vector2 GUNNER_BULLET_DIR[2] =
 // Gunner Constructor
 Gunner::Gunner(void)
 : Entity(), Controllable(), Simulatable(), Renderable()
-, input(NULL), player(NULL), axis_x(1, 0), axis_y(0, 1), mDelay(0.0f), mPhase(-1), mCycle(0)
+, player(NULL), offset(Vector2(1, 0), Vector2(0, 1), Vector2(0, 0)), mDelay(0.0f), mPhase(-1), mCycle(0)
 {
 }
 
@@ -44,11 +26,53 @@ Gunner::~Gunner(void)
 {
 }
 
+// configure
+bool Gunner::Configure(TiXmlElement *element)
+{
+	const char *label = element->Value();
+	switch (Hash(label))
+	{
+	case 0xe063cbaa /* "gunner" */:
+		{
+			const char *owner = element->Attribute("owner");
+			EntityMap::iterator itor = entities.find(Hash(owner));
+			if (itor != entities.end())
+			{
+				player = dynamic_cast<Player *>(itor->second);
+			}
+
+			element->QueryIntAttribute("phase", &mPhase);
+		}
+		return true;
+
+	case 0x14c8d3ca /* "offset" */:
+		{
+			element->QueryFloatAttribute("x", &offset.p.x);
+			element->QueryFloatAttribute("y", &offset.p.y);
+			float angle = 0.0f;
+			if (element->QueryFloatAttribute("angle", &angle) == TIXML_SUCCESS)
+			{
+				angle *= float(M_PI)/180.0f;
+				offset.x.x = cosf(angle);
+				offset.x.y = sinf(angle);
+				offset.y.x = -offset.x.y;
+				offset.y.y = offset.x.x;
+			}
+		}
+		return true;
+
+	default:
+		return Entity::Configure(element) || Controllable::Configure(element) || Simulatable::Configure(element) || Renderable::Configure(element);
+	}
+}
+
 // Gunner Control
 void Gunner::Control(float aStep)
 {
-	if (!input)
+	if (!player)
 		return;
+
+	const Input *input = player->GetInput();
 
 	if ((*input)[Input::FIRE_PRIMARY])
 	{
@@ -58,10 +82,10 @@ void Gunner::Control(float aStep)
 			{
 				for (int i = 0; i < 2; i++)
 				{
-					const Vector2 &d = GUNNER_BULLET_DIR[i];
+					const Vector2 d = GUNNER_BULLET_DIR[i];
 					Bullet *bullet = new Bullet();
-					bullet->SetPosition(pos + axis_x * GUNNER_RADIUS * d.x + axis_y * GUNNER_RADIUS * d.y);
-					bullet->SetVelocity(axis_x * GUNNER_BULLET_SPEED * d.x + axis_y * GUNNER_BULLET_SPEED * d.y);
+					bullet->SetPosition(transform.p);
+					bullet->SetVelocity(transform.Rotate(d) * GUNNER_BULLET_SPEED);
 				}
 			}
 
@@ -77,14 +101,8 @@ void Gunner::Simulate(float aStep)
 	if (!player)
 		return;
 
-	// snap to player position
-	const Vector2 &p = GUNNER_OFFSET[mPhase];
-	pos = player->GetPosition() + player->GetAxisX() * p.x + player->GetAxisY() * p.y;
-
-	// snap to player orientation
-	const Vector2 &d = GUNNER_AIM_DIR[mPhase];
-	axis_x = player->GetAxisX() * d.y - player->GetAxisY() * d.x;
-	axis_y = player->GetAxisX() * d.x + player->GetAxisY() * d.y;
+	// offset from player position
+	transform = offset * player->GetTransform();
 
 	// update fire delay
 	mDelay -= aStep;
@@ -101,10 +119,10 @@ void Gunner::Render()
 	// load matrix
 	float m[16] =
 	{
-		axis_y.y, -axis_y.x, 0, 0,
-		axis_y.x, axis_y.y, 0, 0,
+		transform.y.y, -transform.y.x, 0, 0,
+		transform.y.x, transform.y.y, 0, 0,
 		0, 0, 1, 0,
-		pos.x, pos.y, 0, 1
+		transform.p.x, transform.p.y, 0, 1
 	};
 	glMultMatrixf( m );
 

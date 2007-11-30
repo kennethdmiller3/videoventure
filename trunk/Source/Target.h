@@ -11,9 +11,12 @@ public:
 	Target(void);
 	~Target(void);
 
+	// configure
+	virtual bool Configure(TiXmlElement *element);
+
 	// collide
-	void Collide(float aStep, Collidable &aRecipient);
+	virtual void Collide(float aStep, Collidable &aRecipient);
 
 	// render
-	void Render(void);
+	virtual void Render(void);
 };

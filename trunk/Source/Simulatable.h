@@ -14,6 +14,9 @@ public:
 	Simulatable(void);
 	~Simulatable(void);
 
+	// configure
+	virtual bool Configure(TiXmlElement *element) { return false; }
+
 	// simulate
 	static void SimulateAll(float aStep);
 	virtual void Simulate(float aStep) = 0;
