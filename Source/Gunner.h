@@ -11,15 +11,11 @@ class Gunner :
 	public Entity, public Controllable, public Simulatable, public Renderable
 {
 protected:
-	// input
-	const Input *input;
-
 	// player
 	const Player *player;
 
-	// transform;
-	Vector2 axis_x;
-	Vector2 axis_y;
+	// offset
+	Matrix2 offset;
 
 	// fire delay
 	float mDelay;
@@ -33,12 +29,6 @@ public:
 	// destructor
 	~Gunner(void);
 
-	// set input
-	void SetInput(const Input *aInput)
-	{
-		input = aInput;
-	}
-
 	// set player
 	void SetPlayer(const Player *aPlayer)
 	{
@@ -51,12 +41,15 @@ public:
 		mPhase = aPhase;
 	}
 
+	// configure
+	virtual bool Configure(TiXmlElement *element);
+
 	// control
-	void Control(float aStep);
+	virtual void Control(float aStep);
 
 	// simulate
-	void Simulate(float aStep);
+	virtual void Simulate(float aStep);
 
 	// render
-	void Render(void);
+	virtual void Render(void);
 };

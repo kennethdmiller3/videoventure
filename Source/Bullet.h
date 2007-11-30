@@ -18,11 +18,11 @@ public:
 	~Bullet(void);
 
 	// simulate
-	void Simulate(float aStep);
+	virtual void Simulate(float aStep);
 
 	// collide
-	void Collide(float aStep, Collidable &aRecipient);
+	virtual void Collide(float aStep, Collidable &aRecipient);
 
 	// render
-	void Render(void);
+	virtual void Render(void);
 };

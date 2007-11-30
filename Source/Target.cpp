@@ -12,6 +12,22 @@ Target::~Target()
 {
 }
 
+// configure
+bool Target::Configure(TiXmlElement *element)
+{
+	const char *label = element->Value();
+	switch (Hash(label))
+	{
+	case 0x32608848 /* "target" */:
+		{
+		}
+		return true;
+
+	default:
+		return Entity::Configure(element) || Collidable::Configure(element) || Renderable::Configure(element);
+	}
+}
+
 void Target::Collide(float aStep, Collidable &aRecipient)
 {
 }
@@ -22,7 +38,7 @@ void Target::Render(void)
 	glPushMatrix();
 
 	// set offset
-	glTranslatef( pos.x, pos.y, 0 );
+	glTranslatef( transform.p.x, transform.p.y, 0 );
 
 	// call the draw list
 	glCallList( mDraw );

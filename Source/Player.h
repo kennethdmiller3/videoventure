@@ -13,9 +13,11 @@ class Player :
 	// input
 	const Input *input;
 
-	// transform
-	Vector2 axis_x;
-	Vector2 axis_y;
+	// physics parameters
+	float mMaxVeloc;
+	float mMaxAccel;
+	float mFriction;
+	float mMaxOmega;
 
 	// rotation rate
 	float omega;
@@ -31,33 +33,30 @@ public:
 	// destructor
 	~Player(void);
 
+	// get input
+	const Input *GetInput(void) const
+	{
+		return input;
+	}
+
 	// set input
 	void SetInput(const Input *aInput)
 	{
 		input = aInput;
 	}
 
-	// get x axis
-	const Vector2 &GetAxisX() const
-	{
-		return axis_x;
-	}
-
-	// get y axis
-	const Vector2 &GetAxisY() const
-	{
-		return axis_y;
-	};
+	// configure
+	virtual bool Configure(TiXmlElement *element);
 
 	// control
-	void Control(float aStep);
+	virtual void Control(float aStep);
 
 	// simulate
-	void Simulate(float aStep);
+	virtual void Simulate(float aStep);
 
 	// collide
-	void Collide(float aStep, Collidable &aRecipient);
+	virtual void Collide(float aStep, Collidable &aRecipient);
 
 	// render
-	void Render(void);
+	virtual void Render(void);
 };

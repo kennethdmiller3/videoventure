@@ -87,7 +87,7 @@ void Explosion::Render(void)
 	glPushMatrix();
 
 	// set offset
-	glTranslatef( pos.x, pos.y, 0 );
+	glTranslatef( transform.p.x, transform.p.y, 0 );
 
 	// interpolation factor
 	float f = 1.0f - mLife / EXPLOSION_LIFE;

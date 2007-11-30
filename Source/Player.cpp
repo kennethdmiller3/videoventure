@@ -2,32 +2,41 @@
 #include "Player.h"
 #include "Bullet.h"
 
-// player physics
-const float PLAYER_RADIUS = 16;
-const float PLAYER_VEL = 200;
-const float PLAYER_ACC = 1000;
-const float PLAYER_DEC = 50;
-const float PLAYER_OMEGA = 3.0f * float(M_PI);
-
 // player bullet physics
 const float PLAYER_BULLET_SPEED = 800;
-
-// edge boundaries
-const float EDGE_LEFT = ARENA_X_MIN + PLAYER_RADIUS;
-const float EDGE_RIGHT = ARENA_X_MAX - PLAYER_RADIUS;
-const float EDGE_TOP = ARENA_Y_MIN + PLAYER_RADIUS;
-const float EDGE_BOTTOM = ARENA_Y_MAX - PLAYER_RADIUS;
 
 // Player Constructor
 Player::Player(void)
 : Entity(), Controllable(), Simulatable(), Collidable(), Renderable()
-, input(NULL), axis_x(1, 0), axis_y(0, 1), omega(0.0f), mDelay(0.0f), mCycle(0)
+, input(NULL)
+, mMaxVeloc(200), mMaxAccel(1000), mFriction(50), mMaxOmega(10)
+, omega(0.0f), mDelay(0.0f), mCycle(0)
 {
 }
 
 // Player Destructor
 Player::~Player(void)
 {
+}
+
+// configure
+bool Player::Configure(TiXmlElement *element)
+{
+	const char *label = element->Value();
+	switch (Hash(label))
+	{
+	case 0x2c99c300 /* "player" */:
+		{
+			element->QueryFloatAttribute("maxveloc", &mMaxVeloc);
+			element->QueryFloatAttribute("maxaccel", &mMaxAccel);
+			element->QueryFloatAttribute("friction", &mFriction);
+			element->QueryFloatAttribute("maxomega", &mMaxOmega);
+		}
+		return true;
+
+	default:
+		return Entity::Configure(element) || Controllable::Configure(element) || Simulatable::Configure(element) || Renderable::Configure(element);
+	}
 }
 
 // Player Control
@@ -40,8 +49,8 @@ void Player::Control(float aStep)
 	{
 		Vector2 move((*input)[Input::MOVE_HORIZONTAL], (*input)[Input::MOVE_VERTICAL]);
 		float control = std::min(move.LengthSq(), 1.0f);
-		float acc = PLAYER_DEC + (PLAYER_ACC - PLAYER_DEC) * control;
-		Vector2 dv(move * PLAYER_VEL - vel);
+		float acc = mFriction + (mMaxAccel - mFriction) * control;
+		Vector2 dv(move * mMaxVeloc - vel);
 		float it = std::min(aStep * acc / sqrtf(dv.LengthSq() + 0.0001f), 1.0f);
 		vel += dv * it;
 	}
@@ -50,17 +59,17 @@ void Player::Control(float aStep)
 	{
 		Vector2 aim((*input)[Input::AIM_HORIZONTAL], (*input)[Input::AIM_VERTICAL]);
 		float control = std::min(16.0f * aim.LengthSq(), 1.0f);
-		float cur_angle = atan2f(axis_y.x, axis_y.y);
+		float cur_angle = atan2f(transform.y.x, transform.y.y);
 		float aim_angle = atan2f(aim.x, aim.y);
 		if (aim_angle > cur_angle+float(M_PI))
 			aim_angle -= 2.0f*float(M_PI);
 		else if (aim_angle < cur_angle-float(M_PI))
 			aim_angle += 2.0f*float(M_PI);
-		float new_angle = cur_angle + std::min(std::max(aim_angle - cur_angle, -PLAYER_OMEGA * control * aStep), PLAYER_OMEGA * control * aStep);
-		axis_y.x = sinf(new_angle);
-		axis_y.y = cosf(new_angle);
-		axis_x.x = axis_y.y;
-		axis_x.y = -axis_y.x;
+		float new_angle = cur_angle + std::min(std::max(aim_angle - cur_angle, -mMaxOmega * control * aStep), mMaxOmega * control * aStep);
+		transform.y.x = sinf(new_angle);
+		transform.y.y = cosf(new_angle);
+		transform.x.x = transform.y.y;
+		transform.x.y = -transform.y.x;
 	}
 
 	if ((*input)[Input::FIRE_PRIMARY])
@@ -69,11 +78,11 @@ void Player::Control(float aStep)
 		{
 			Bullet *bullet;
 			bullet = new Bullet();
-			bullet->SetPosition(pos - axis_x * 6);
-			bullet->SetVelocity(axis_y * PLAYER_BULLET_SPEED);
+			bullet->SetPosition(transform.Transform(Vector2(-6, 0)));
+			bullet->SetVelocity(transform.y * PLAYER_BULLET_SPEED);
 			bullet = new Bullet();
-			bullet->SetPosition(pos + axis_x * 6);
-			bullet->SetVelocity(axis_y * PLAYER_BULLET_SPEED);
+			bullet->SetPosition(transform.Transform(Vector2(6, 0)));
+			bullet->SetVelocity(transform.y * PLAYER_BULLET_SPEED);
 
 			mDelay += 0.125f;
 		}
@@ -84,27 +93,27 @@ void Player::Control(float aStep)
 void Player::Simulate(float aStep)
 {
 	// apply velocity
-	pos += vel * aStep;
+	transform.p += vel * aStep;
 
 	// bounce off boundary
-	if( pos.x < EDGE_LEFT )
+	if( transform.p.x < ARENA_X_MIN + Collidable::size.x )
 	{
-		pos.x = EDGE_LEFT;
+		transform.p.x = ARENA_X_MIN + Collidable::size.x;
 		vel.x *= -0.5f;
 	}
-	else if( pos.x > EDGE_RIGHT )
+	else if( transform.p.x > ARENA_X_MAX - Collidable::size.x )
 	{
-		pos.x = EDGE_RIGHT;
+		transform.p.x = ARENA_X_MAX - Collidable::size.x;
 		vel.x *= -0.5f;
 	}
-	if( pos.y < EDGE_TOP )
+	if( transform.p.y < ARENA_Y_MIN + Collidable::size.y )
 	{
-		pos.y = EDGE_TOP;
+		transform.p.y = ARENA_Y_MIN + Collidable::size.y;
 		vel.y *= -0.5f;
 	}
-	else if( pos.y > EDGE_BOTTOM)
+	else if( transform.p.y > ARENA_Y_MAX - Collidable::size.y)
 	{
-		pos.y = EDGE_BOTTOM;
+		transform.p.y = ARENA_Y_MAX - Collidable::size.y;
 		vel.y *= -0.5f;
 	}
 
@@ -128,10 +137,10 @@ void Player::Render()
 	// load matrix
 	float m[16] =
 	{
-		axis_x.x, axis_x.y, 0, 0,
-		axis_y.x, axis_y.y, 0, 0,
+		transform.x.x, transform.x.y, 0, 0,
+		transform.y.x, transform.y.y, 0, 0,
 		0, 0, 1, 0,
-		pos.x, pos.y, 0, 1
+		transform.p.x, transform.p.y, 0, 1
 	};
 	glMultMatrixf( m );
 

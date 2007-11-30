@@ -340,19 +340,22 @@
 		<renderable>
 			<drawlist name="player"/>
 		</renderable>
+		<player maxveloc="200" maxaccel="1000" friction="50" maxomega="10"/>
 	</entity>
 
 	<entity name="gunner1" type="gunner">
-		<position x="0" y="0"/>
+		<offset x="-24" y="-16" angle="10"/>
 		<renderable>
 			<drawlist name="gunner"/>
 		</renderable>
+		<gunner owner="player" phase="0"/>
 	</entity>
 
 	<entity name="gunner2" type="gunner">
-		<position x="0" y="0"/>
+		<offset x="24" y="-16" angle="-10"/>
 		<renderable>
 			<drawlist name="gunner"/>
 		</renderable>
+		<gunner owner="player" phase="1"/>
 	</entity>
 </world>

@@ -33,6 +33,7 @@ namespace stdext = __gnu_cxx;
 // 2d math
 #include "Vector2.h"
 #include "Sphere2.h"
+#include "Matrix2.h"
 #include "AlignedBox2.h"
 
 // utility includes
@@ -54,6 +55,18 @@ const int COLLISION_LAYER_PLAYER_BULLET = 1;
 
 // debug function
 extern int DebugPrint(const char *format, ...);
+
+// loader
+void ProcessDrawItems(TiXmlElement *element);
+
+// entity map
+class Entity;
+typedef stdext::hash_map<unsigned int, Entity *> EntityMap;
+extern EntityMap entities;
+
+// drawlist map
+typedef stdext::hash_map<unsigned int, unsigned int> DrawListMap;
+extern DrawListMap drawlists;
 
 // configuration
 #define ENABLE_MULTISAMPLING

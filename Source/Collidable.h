@@ -64,6 +64,9 @@ public:
 	// set layer
 	void SetLayer(int aLayer);
 
+	// configure
+	virtual bool Configure(TiXmlElement *element);
+
 	// control
 	static void CollideAll(float aStep);
 	virtual void Collide(float aStep, Collidable &aRecipient) = 0;

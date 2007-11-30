@@ -10,11 +10,9 @@
 #include "Target.h"
 
 // entity map
-typedef stdext::hash_map<unsigned int, Entity *> EntityMap;
 EntityMap entities;
 
 // drawlist map
-typedef stdext::hash_map<unsigned int, unsigned int> DrawListMap;
 DrawListMap drawlists;
 
 int DebugPrint(const char *format, ...)
@@ -223,7 +221,7 @@ static const unsigned int sHashToAttribMask[][2] =
 };
 #endif
 
-static void ProcessDrawItems(TiXmlElement *element)
+void ProcessDrawItems(TiXmlElement *element)
 {
 	// process child elements
 	for (TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
@@ -891,149 +889,12 @@ static void ProcessDrawItems(TiXmlElement *element)
 	}
 }
 
-static void ProcessRenderableItems(TiXmlElement *element, Renderable *renderable)
-{
-	// process child elements
-	for (TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
-	{
-		const char *label = child->Value();
-		switch (Hash(label))
-		{
-		case 0xc98b019b /* "drawlist" */:
-			{
-				// get the list name
-				const char *name = child->Attribute("name");
-				if (name)
-				{
-					// find the named drawlist
-					DrawListMap::iterator itor = drawlists.find(Hash(name));
-					if (itor != drawlists.end())
-					{
-						// use the named drawlist
-						renderable->mDraw = itor->second;
-						break;
-					}
-				}
-
-				if (child->FirstChildElement())
-				{
-					// create a new draw list
-					GLuint handle = glGenLists(1);
-					glNewList(handle, GL_COMPILE);
-
-					// process draw items
-					ProcessDrawItems(child);
-
-					// finish the draw list
-					glEndList();
-
-					// use the anonymous drawlist
-					renderable->mDraw = handle;
-					break;
-				}
-			}
-			break;
-
-		default:
-			break;
-		}
-	}
-}
-
-static void ProcessCollidableItems(TiXmlElement *element, Collidable *collidable)
-{
-	// process child elements
-	for (TiXmlAttribute *attrib = element->FirstAttribute(); attrib != NULL; attrib = attrib->Next())
-	{
-		const char *label = attrib->Name();
-		switch (Hash(label))
-		{
-		case 0x07a640f6 /* "layer" */:
-			collidable->SetLayer(attrib->IntValue());
-			break;
-
-		case 0x5127f14d /* "type" */:
-			switch (Hash(attrib->Value()))
-			{
-			case 0x06dbc8c0 /* "alignedbox" */:
-				collidable->type = Collidable::TYPE_ALIGNED_BOX;
-				break;
-			case 0x28217089 /* "circle" */:
-				collidable->type = Collidable::TYPE_CIRCLE;
-				break;
-			default:
-				collidable->type = Collidable::TYPE_NONE;
-				break;
-			}
-			break;
-
-		case 0x0dba4cb3 /* "radius" */:
-			collidable->size.x = collidable->size.y = float(attrib->DoubleValue());
-			break;
-
-		case 0x95876e1f /* "width" */:
-			collidable->size.x = float(attrib->DoubleValue());
-			break;
-
-		case 0xd5bdbb42 /* "height" */:
-			collidable->size.y = float(attrib->DoubleValue());
-			break;
-
-		default:
-			break;
-		}
-	}
-}
-
 static void ProcessEntityItems(TiXmlElement *element, Entity *entity)
 {
 	// process child elements
 	for (TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
-		const char *label = child->Value();
-		switch (Hash(label))
-		{
-		case 0x934f4e0a /* "position" */:
-			{
-				Vector2 pos(entity->GetPosition());
-				child->QueryFloatAttribute("x", &pos.x);
-				child->QueryFloatAttribute("y", &pos.y);
-				entity->SetPosition(pos);
-			}
-			break;
-
-		case 0x32741c32 /* "velocity" */:
-			{
-				Vector2 vel(entity->GetVelocity());
-				child->QueryFloatAttribute("x", &vel.x);
-				child->QueryFloatAttribute("y", &vel.y);
-				entity->SetVelocity(vel);
-			}
-			break;
-
-		case 0x74e9dbae /* "collidable" */:
-			{
-				Collidable *collidable = dynamic_cast<Collidable *>(entity);
-				if (collidable)
-				{
-					ProcessCollidableItems(child, collidable);
-				}
-			}
-			break;
-
-		case 0x109dd1ad /* "renderable" */:
-			{
-				Renderable *renderable = dynamic_cast<Renderable *>(entity);
-				if (renderable)
-				{
-					ProcessRenderableItems(child, renderable);
-				}
-			}
-			break;
-
-		default:
-			break;
-		}
+		entity->Configure(child);
 	}
 }
 
@@ -1228,30 +1089,6 @@ int SDL_main( int argc, char *argv[] )
 			player->SetInput(&input);
 		}
 	}
-
-	// find the gunners
-	Gunner *gunner[2] = { NULL, NULL };
-	{
-		EntityMap::iterator itor = entities.find(Hash("gunner1"));
-		if (itor != entities.end())
-		{
-			gunner[0] = dynamic_cast<Gunner *>(itor->second);
-			gunner[0]->SetPlayer(player);
-			gunner[0]->SetInput(&input);
-			gunner[0]->SetPhase(0);
-		}
-	}
-	{
-		EntityMap::iterator itor = entities.find(Hash("gunner2"));
-		if (itor != entities.end())
-		{
-			gunner[1] = dynamic_cast<Gunner *>(itor->second);
-			gunner[1]->SetPlayer(player);
-			gunner[1]->SetInput(&input);
-			gunner[1]->SetPhase(1);
-		}
-	}
-
 
     // timer timer
     Timer timer;
