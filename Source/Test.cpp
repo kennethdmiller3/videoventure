@@ -1283,27 +1283,29 @@ int SDL_main( int argc, char *argv[] )
 		{
 			// get loop time in seconds
 			float step = delta / 1000.0f;
-#define PRINT_STEP_TIMES
 #ifdef PRINT_STEP_TIMES
 			DebugPrint("dt=%f (%f fps)\n", step, 1.0f/step);
 #endif
 
 			// CONTROL PHASE
 
+#ifdef PRINT_PERFORMANCE_DETAILS
 			LARGE_INTEGER perf_freq;
 			QueryPerformanceFrequency(&perf_freq);
 
 			LARGE_INTEGER perf_count0;
 			QueryPerformanceCounter(&perf_count0);
+#endif
 
 			// control all entities
 			Controllable::ControlAll(step);
 
+#ifdef PRINT_PERFORMANCE_DETAILS
 			LARGE_INTEGER perf_count1;
 			QueryPerformanceCounter(&perf_count1);
 
 			DebugPrint("ctrl=%d ", 1000000 * (perf_count1.QuadPart - perf_count0.QuadPart) / perf_freq.QuadPart);
-
+#endif
 
 			// SIMULATION PHASE
 			// (generate forces)
@@ -1311,32 +1313,35 @@ int SDL_main( int argc, char *argv[] )
 			// simulate all entities
 			Simulatable::SimulateAll(step);
 
+#ifdef PRINT_PERFORMANCE_DETAILS
 			LARGE_INTEGER perf_count2;
 			QueryPerformanceCounter(&perf_count2);
 
 			DebugPrint("simu=%d ", 1000000 * (perf_count2.QuadPart - perf_count1.QuadPart) / perf_freq.QuadPart);
-
+#endif
 
 			// COLLISION PHASE
 			// (apply forces and update positions)
 			Collidable::CollideAll(step);
 
+#ifdef PRINT_PERFORMANCE_DETAILS
 			LARGE_INTEGER perf_count3;
 			QueryPerformanceCounter(&perf_count3);
 
 			DebugPrint("coll=%d ", 1000000 * (perf_count3.QuadPart - perf_count2.QuadPart) / perf_freq.QuadPart);
-
+#endif
 		}
 
 
 		// RENDERING PHASE
 
+#ifdef PRINT_PERFORMANCE_DETAILS
 		LARGE_INTEGER perf_freq;
 		QueryPerformanceFrequency(&perf_freq);
 
 		LARGE_INTEGER perf_count0;
 		QueryPerformanceCounter(&perf_count0);
-
+#endif
 		// clear the screen
 		glClear(
 			GL_COLOR_BUFFER_BIT
@@ -1361,13 +1366,15 @@ int SDL_main( int argc, char *argv[] )
 		// reset camera transform
 		glPopMatrix();
 
-		LARGE_INTEGER perf_count1;
-		QueryPerformanceCounter(&perf_count1);
-
 		// show the screen
 		SDL_GL_SwapBuffers();
 
+#ifdef PRINT_PERFORMANCE_DETAILS
+		LARGE_INTEGER perf_count1;
+		QueryPerformanceCounter(&perf_count1);
+
 		DebugPrint("rend=%d ", 1000000 * (perf_count1.QuadPart - perf_count0.QuadPart) / perf_freq.QuadPart);
+#endif
 	}
 	while( !quit );
 
