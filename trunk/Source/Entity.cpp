@@ -2,20 +2,27 @@
 #include "Entity.h"
 #include <algorithm>
 
-Entity::List Entity::sAll;
-int Entity::sNextId = 1;
+namespace Database
+{
+	Typed<Entity *> entity("entity");
+}
 
-Entity::Entity(void)
-: id(sNextId++)
+Entity::List Entity::sAll;
+unsigned int Entity::sNextId = 1;
+
+Entity::Entity(unsigned int id)
+: id(id)
 , transform(Vector2(1, 0), Vector2(0, 1), Vector2(0, 0))
 , vel(0, 0)
 {
-	entry = sAll.insert(sAll.end(), this);
+	if (id > 0)
+		entry = sAll.insert(sAll.end(), this);
 }
 
 Entity::~Entity(void)
 {
-	sAll.erase(entry);
+	if (id > 0)
+		sAll.erase(entry);
 }
 
 // configure

@@ -12,7 +12,7 @@ public:
 	float mLife;
 
 public:
-	Explosion(void);
+	Explosion(unsigned int aId = 0, unsigned int aParentId = 0);
 	~Explosion(void);
 
 	// simulate

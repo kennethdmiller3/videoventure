@@ -1,22 +1,24 @@
 #include "StdAfx.h"
 #include "Renderable.h"
 
-Renderable::List Renderable::sAll;
-
-Renderable::Renderable(void)
-: mDraw(0)
+namespace Database
 {
-	entry = sAll.end();
-	Show();
+	Typed<RenderableTemplate> renderabletemplate("renderabletemplate");
+	Typed<Renderable> renderable("renderable");
+	Typed<GLuint> drawlist("drawlist");
 }
 
-Renderable::~Renderable(void)
+RenderableTemplate::RenderableTemplate(void)
+: mDraw(0)
 {
-	Hide();
+}
+
+RenderableTemplate::~RenderableTemplate(void)
+{
 }
 
 // configure
-bool Renderable::Configure(TiXmlElement *element)
+bool RenderableTemplate::Configure(TiXmlElement *element)
 {
 	if (Hash(element->Value()) != 0x109dd1ad /* "renderable" */)
 		return false;
@@ -34,16 +36,10 @@ bool Renderable::Configure(TiXmlElement *element)
 				if (name)
 				{
 					// find the named drawlist
-					DrawListMap::iterator itor = drawlists.find(Hash(name));
-					if (itor != drawlists.end())
-					{
-						// use the named drawlist
-						mDraw = itor->second;
-						break;
-					}
+					// (or 0 if not found)
+					mDraw = Database::drawlist.Get(Hash(name));
 				}
-
-				if (child->FirstChildElement())
+				else if (child->FirstChildElement())
 				{
 					// create a new draw list
 					GLuint handle = glGenLists(1);
@@ -57,7 +53,6 @@ bool Renderable::Configure(TiXmlElement *element)
 
 					// use the anonymous drawlist
 					mDraw = handle;
-					break;
 				}
 			}
 			break;
@@ -70,23 +65,48 @@ bool Renderable::Configure(TiXmlElement *element)
 	return true;
 }
 
+
+
+Renderable::List Renderable::sAll;
+
+Renderable::Renderable(void)
+: RenderableTemplate(), show(false)
+{
+}
+
+Renderable::Renderable(const RenderableTemplate &aTemplate)
+: RenderableTemplate(aTemplate), show(false)
+{
+	Show();
+}
+
+Renderable::~Renderable(void)
+{
+	Hide();
+}
+
 void Renderable::Show(void)
 {
 	Hide();
 
+	if (!show)
+	{
 #ifdef DRAW_FRONT_TO_BACK
-	entry = sAll.insert(sAll.begin(), this);
+		entry = sAll.insert(sAll.begin(), this);
 #else
-	entry = sAll.insert(sAll.end(), this);
+		entry = sAll.insert(sAll.end(), this);
 #endif
+		show = true;
+	}
 }
 
 void Renderable::Hide(void)
 {
-	if (entry != sAll.end())
+	if (show)
 	{
 		sAll.erase(entry);
 		entry = sAll.end();
+		show = false;
 	}
 }
 
@@ -108,3 +128,8 @@ void Renderable::RenderAll(void)
 		itor = next;
 	}
 }
+
+void Renderable::Render(void)
+{
+	glCallList(mDraw);
+};

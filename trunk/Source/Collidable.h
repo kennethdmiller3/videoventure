@@ -1,8 +1,38 @@
 #pragma once
 
+#include "Database.h"
+
 const int COLLISION_LAYERS = 32;
 
-class Collidable
+class CollidableTemplate
+{
+public:
+	// collision layer
+	int layer;
+
+	// collision type
+	enum Type
+	{
+		TYPE_NONE,
+		TYPE_ALIGNED_BOX,
+		TYPE_CIRCLE,
+		NUM_TYPES
+	};
+	Type type;
+
+	// size
+	Vector2 size;
+
+public:
+	CollidableTemplate(void);
+	virtual ~CollidableTemplate(void);
+
+	// configure
+	virtual bool Attribute(TiXmlAttribute *attribute);
+	virtual bool Configure(TiXmlElement *element);
+};
+
+class Collidable : public CollidableTemplate
 {
 private:
 	typedef std::list<Collidable *> List;
@@ -11,33 +41,20 @@ private:
 	// layer collision masks
 	static unsigned int sLayerMask[COLLISION_LAYERS];
 
+	// identifier
+	unsigned int id;
+
 	// list entry
 	List::iterator entry;
-
-	// collision layer
-	int layer;
 
 public:
 	// bounding box
 	AlignedBox2 box;
 
-	enum Type
-	{
-		TYPE_NONE,
-		TYPE_ALIGNED_BOX,
-		TYPE_CIRCLE,
-		NUM_TYPES
-	};
-
-	// collision type
-	Type type;
-
-	// size
-	Vector2 size;
-
 public:
-	Collidable(int aLayer = -1);
-	~Collidable(void);
+	Collidable(void);
+	Collidable(const CollidableTemplate &aTemplate);
+	virtual ~Collidable(void);
 
 	// get layer collision mask
 	static unsigned int GetLayerMask(int aLayer)
@@ -65,9 +82,17 @@ public:
 	void SetLayer(int aLayer);
 
 	// configure
-	virtual bool Configure(TiXmlElement *element);
+	virtual bool Attribute(TiXmlAttribute *attribute);
 
 	// control
 	static void CollideAll(float aStep);
-	virtual void Collide(float aStep, Collidable &aRecipient) = 0;
+	virtual void Collide(float aStep, Collidable &aRecipient)
+	{
+	};
 };
+
+namespace Database
+{
+	extern Typed<CollidableTemplate> collidabletemplate;
+	extern Typed<Collidable> collidable;
+}

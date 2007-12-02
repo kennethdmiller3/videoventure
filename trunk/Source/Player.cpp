@@ -6,8 +6,12 @@
 const float PLAYER_BULLET_SPEED = 800;
 
 // Player Constructor
-Player::Player(void)
-: Entity(), Controllable(), Simulatable(), Collidable(), Renderable()
+Player::Player(unsigned int aId, unsigned int aParentId)
+: Entity(aId)
+, Controllable()
+, Simulatable()
+, Collidable(Database::collidabletemplate.Get(aParentId))
+, Renderable(Database::renderabletemplate.Get(aParentId))
 , input(NULL)
 , mMaxVeloc(200), mMaxAccel(1000), mFriction(50), mMaxOmega(10)
 , omega(0.0f), mDelay(0.0f), mCycle(0)
@@ -77,10 +81,10 @@ void Player::Control(float aStep)
 		if (mDelay <= 0.0f)
 		{
 			Bullet *bullet;
-			bullet = new Bullet();
+			bullet = new Bullet(0, 0xd85669f0 /* "playerbullet" */);
 			bullet->SetPosition(transform.Transform(Vector2(-6, 0)));
 			bullet->SetVelocity(transform.y * PLAYER_BULLET_SPEED);
-			bullet = new Bullet();
+			bullet = new Bullet(0, 0xd85669f0 /* "playerbullet" */);
 			bullet->SetPosition(transform.Transform(Vector2(6, 0)));
 			bullet->SetVelocity(transform.y * PLAYER_BULLET_SPEED);
 

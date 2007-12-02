@@ -8,7 +8,7 @@ class Target
 	: public Entity, public Collidable, public Renderable
 {
 public:
-	Target(void);
+	Target(unsigned int aId = 0, unsigned int aParentId = 0);
 	~Target(void);
 
 	// configure

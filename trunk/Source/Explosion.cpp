@@ -45,8 +45,10 @@ const float EXPLOSION_HALO_COLOR[2][4] =
 
 
 
-Explosion::Explosion(void)
-: Entity(), Simulatable(), Renderable()
+Explosion::Explosion(unsigned int aId, unsigned int aParentId)
+: Entity(aId)
+, Simulatable()
+, Renderable(Database::renderabletemplate.Get(aParentId))
 , mLife(EXPLOSION_LIFE)
 {
 	// create a new draw list
@@ -64,6 +66,9 @@ Explosion::Explosion(void)
 
 	// finish the draw list
 	glEndList();
+
+	// set as visible
+	Renderable::Show();
 }
 
 Explosion::~Explosion(void)

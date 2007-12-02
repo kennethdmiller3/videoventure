@@ -24,7 +24,7 @@ protected:
 
 public:
 	// constructor
-	Gunner();
+	Gunner(unsigned int aId = 0, unsigned int aParentId = 0);
 
 	// destructor
 	~Gunner(void);

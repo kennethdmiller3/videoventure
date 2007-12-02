@@ -2,8 +2,10 @@
 #include "Target.h"
 
 // Target constructor
-Target::Target(void)
-	: Entity(), Collidable(), Renderable()
+Target::Target(unsigned int aId, unsigned int aParentId)
+: Entity(aId)
+, Collidable(Database::collidabletemplate.Get(aParentId))
+, Renderable(Database::renderabletemplate.Get(aParentId))
 {
 }
 

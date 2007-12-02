@@ -14,7 +14,7 @@ public:
 	float mLife;
 
 public:
-	Bullet(void);
+	Bullet(unsigned int aId = 0, unsigned int aParentId = 0);
 	~Bullet(void);
 
 	// simulate

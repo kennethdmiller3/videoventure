@@ -1,8 +1,9 @@
 #include "StdAfx.h"
 #include "Grid.h"
 
-Grid::Grid(void)
-: Entity(), Renderable()
+Grid::Grid(unsigned int aId, unsigned int aParentId)
+: Entity(aId)
+, Renderable(Database::renderabletemplate.Get(aParentId))
 {
 	// create a new draw list
 	mDraw = glGenLists(1);
@@ -39,6 +40,9 @@ Grid::Grid(void)
 
 	// finish the draw list
 	glEndList();
+
+	// set as visible
+	Renderable::Show();
 }
 
 Grid::~Grid(void)

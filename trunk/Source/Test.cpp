@@ -9,12 +9,6 @@
 #include "Gunner.h"
 #include "Target.h"
 
-// entity map
-EntityMap entities;
-
-// drawlist map
-DrawListMap drawlists;
-
 int DebugPrint(const char *format, ...)
 {
 	va_list ap;
@@ -194,6 +188,42 @@ void clean_up()
 	// quit SDL
 	SDL_Quit();
 }
+
+#if 0
+class Loader : public TiXmlVisitor
+{
+	// visit a document
+	virtual bool VisitEnter( const TiXmlDocument& doc );
+	virtual bool VisitExit( const TiXmlDocument& doc )
+
+	// visit an element
+	virtual bool VisitEnter( const TiXmlElement& element, const TiXmlAttribute* firstAttribute );
+	virtual bool VisitExit( const TiXmlElement& element );
+
+	// visit a text node
+	virtual bool Visit( const TiXmlText& text );
+};
+
+bool Loader::VisitEnter( const TiXmlDocument& doc )
+{
+	return true;
+}
+
+bool Loader::VisitExit( const TiXmlDocument& doc )
+{
+	return true;
+}
+
+bool Loader::VisitEnter( const TiXmlElement& element, const TiXmlAttribute* firstAttribute )
+{
+	return true;
+}
+
+bool Loader::VisitExit( const TiXmlElement& element )
+{
+	return true;
+}
+#endif
 
 #if 0
 static const unsigned int sHashToAttribMask[][2] =
@@ -618,10 +648,10 @@ void ProcessDrawItems(TiXmlElement *element)
 				const char *name = child->Attribute("name");
 				if (name)
 				{
-					DrawListMap::iterator itor = drawlists.find(Hash(name));
-					if (itor != drawlists.end())
+					GLuint drawlist = Database::drawlist.Get(Hash(name));
+					if (drawlist)
 					{
-						glCallList(itor->second);
+						glCallList(drawlist);
 					}
 				}
 			}
@@ -889,66 +919,98 @@ void ProcessDrawItems(TiXmlElement *element)
 	}
 }
 
-static void ProcessEntityItems(TiXmlElement *element, Entity *entity)
+static void ProcessEntityItems(TiXmlElement *element)
 {
-	// process child elements
-	for (TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+	// entity
+	Entity *entity = NULL;
+
+	// get entity identifier
+	const char *name = element->Attribute("name");
+	unsigned int entity_id = Hash(name);
+
+	// get parent identifier
+	const char *type = element->Attribute("type");
+	unsigned int parent_id = Hash(type);
+
+	// create entity based on parent identifier (HACK)
+	switch (parent_id)
 	{
-		entity->Configure(child);
+	case 0x1ac6a97e /* "cloud" */:
+		{
+			Cloud *cloud = new Cloud(entity_id, parent_id);
+
+			int count = 1;
+			element->QueryIntAttribute("count", &count);
+			cloud->Init(count);
+
+			entity = cloud;
+		}
+		break;
+
+	case 0xaf871a91 /* "grid" */:
+		entity = new Grid(entity_id, parent_id);
+		break;
+
+	case 0x2c99c300 /* "player" */:
+		entity = new Player(entity_id, parent_id);
+		break;
+
+	case 0xe063cbaa /* "gunner" */:
+		entity = new Gunner(entity_id, parent_id);
+		break;
+
+	case 0x32608848 /* "target" */:
+		entity = new Target(entity_id, parent_id);
+		break;
+
+	default:
+		break;
+	}
+
+	if (entity)
+	{
+		// set parent
+		Database::parent.Put(entity_id, parent_id);
+
+		// add to entity map
+		Database::entity.Put(entity_id, entity);
+
+		// process child elements
+		for (TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+		{
+			entity->Configure(child);
+		}
 	}
 }
 
-static void ProcessWorldItems(TiXmlElement *element)
+static void ProcessTemplateItems(TiXmlElement *element)
 {
+	// get template identifier
+	const char *name = element->Attribute("name");
+	unsigned int template_id = Hash(name);
+
+	// get parent identifier
+	const char *type = element->Attribute("type");
+	unsigned int parent_id = Hash(type);
+
 	for (TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
 		const char *value = child->Value();
 		switch (Hash(value))
 		{
-		case 0xd33ff5da /* "entity" */:
+		case 0x74e9dbae /* "collidable" */:
 			{
-				// entity
-				Entity *entity = NULL;
-				const char *name = child->Attribute("name");
-				const char *type = child->Attribute("type");
-				switch (Hash(type))
-				{
-				case 0x1ac6a97e /* "cloud" */:
-					{
-						int count = 1;
-						child->QueryIntAttribute("count", &count);
-						entity = new Cloud(count);
-					}
-					break;
+				CollidableTemplate collidable;
+				collidable.Configure(child);
+				Database::collidabletemplate.Put(template_id, collidable);
+			}
+			break;
 
-				case 0xaf871a91 /* "grid" */:
-					entity = new Grid();
-					break;
-
-				case 0x2c99c300 /* "player" */:
-					entity = new Player();
-					break;
-
-				case 0xe063cbaa /* "gunner" */:
-					entity = new Gunner();
-					break;
-
-				case 0x32608848 /* "target" */:
-					entity = new Target();
-					break;
-
-				default:
-					break;
-				}
-
-				if (entity)
-				{
-					// register with the entity map
-					entities[Hash(name)] = entity;
-
-					// process entity items
-					ProcessEntityItems(child, entity);
-				}
+		case 0x109dd1ad /* "renderable" */:
+			{
+				RenderableTemplate renderable;
+				renderable.Configure(child);
+				Database::renderabletemplate.Put(template_id, renderable);
 			}
 			break;
 
@@ -963,7 +1025,54 @@ static void ProcessWorldItems(TiXmlElement *element)
 				if (name)
 				{
 					// register the draw list
-					drawlists[Hash(name)] = handle;
+					Database::drawlist.Put(Hash(name), handle);
+				}
+
+				// process draw items
+				ProcessDrawItems(child);
+
+				// finish the draw list
+				glEndList();
+			}
+			break;
+		}
+	}
+
+	Database::parent.Put(template_id, parent_id);
+}
+
+static void ProcessWorldItems(TiXmlElement *element)
+{
+	for (TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+	{
+		const char *value = child->Value();
+		switch (Hash(value))
+		{
+		case 0x694aaa0b /* "template" */:
+			{
+				ProcessTemplateItems(child);
+			}
+			break;
+
+		case 0xd33ff5da /* "entity" */:
+			{
+				// process entity items
+				ProcessEntityItems(child);
+			}
+			break;
+
+		case 0xc98b019b /* "drawlist" */:
+			{
+				// create a new draw list
+				GLuint handle = glGenLists(1);
+				glNewList(handle, GL_COMPILE);
+
+				// get the list name
+				const char *name = child->Attribute("name");
+				if (name)
+				{
+					// register the draw list
+					Database::drawlist.Put(Hash(name), handle);
 				}
 
 				// process draw items
@@ -1080,14 +1189,10 @@ int SDL_main( int argc, char *argv[] )
 	}
 
 	// find the player
-	Player *player = NULL;
+	Player *player = dynamic_cast<Player *>(Database::entity.Get(Hash("player")));
+	if (player)
 	{
-		EntityMap::iterator itor = entities.find(Hash("player"));
-		if (itor != entities.end())
-		{
-			player = dynamic_cast<Player *>(itor->second);
-			player->SetInput(&input);
-		}
+		player->SetInput(&input);
 	}
 
     // timer timer
@@ -1220,6 +1325,21 @@ int SDL_main( int argc, char *argv[] )
 		SDL_GL_SwapBuffers();
 	}
 	while( !quit );
+
+	// remove all entities
+	for (Database::Typed<Entity *>::iterator itor = Database::entity.begin(); itor != Database::entity.end(); ++itor)
+		delete itor->second;
+	Database::entity.clear();
+
+	// remove all drawlists
+	for (Database::Typed<GLuint>::iterator itor = Database::drawlist.begin(); itor != Database::drawlist.end(); ++itor)
+		glDeleteLists(itor->second, 1);
+	Database::drawlist.clear();
+
+	// clear databases
+	Database::collidabletemplate.clear();
+	Database::collidable.clear();
+	Database::renderable.clear();
 
 	// clean up
 	clean_up();

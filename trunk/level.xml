@@ -58,74 +58,14 @@
 		</polygon>
 	</drawlist>
 
-	<drawlist name="bullseye">
-		<!-- bullseye target -->
-		<color r="1.0" g="0.2" b="0.1" a="1.0"/>
-		<pushmatrix>
-			<scale x="4" y="4"/>
-			<calllist name="circle8"/>
-		</pushmatrix>
-		<color r="1.0" g="1.0" b="1.0" a="1.0"/>
-		<pushmatrix>
-			<scale x="7" y="7"/>
-			<calllist name="circle12"/>
-		</pushmatrix>
-		<color r="1.0" g="0.2" b="0.1" a="1.0"/>
-		<pushmatrix>
-			<scale x="10" y="10"/>
-			<calllist name="circle16"/>
-		</pushmatrix>
-	</drawlist>
-
-	<drawlist name="player">
-		<!-- player ship -->
-		<color r="1.0" g="1.0" b="1.0" a="1.0"/>
-		<triangle_strip>
-			<vertex x="16" y="-16"/>
-			<vertex x="16" y="-11"/>
-			<vertex x="5" y="-16"/>
-			<vertex x="6" y="-6"/>
-			<vertex x="4" y="-13"/>
-			<vertex x="6" y="1"/>
-			<vertex x="3" y="-13"/>
-			<vertex x="3" y="4"/>
-			<vertex x="2" y="-16"/>
-			<vertex x="2" y="16"/>
-			<vertex x="0" y="-16"/>
-			<vertex x="-2" y="16"/>
-			<vertex x="-2" y="-16"/>
-			<vertex x="-3" y="4"/>
-			<vertex x="-3" y="-13"/>
-			<vertex x="-6" y="1"/>
-			<vertex x="-4" y="-13"/>
-			<vertex x="-6" y="-6"/>
-			<vertex x="-5" y="-16"/>
-			<vertex x="-16" y="-11"/>
-			<vertex x="-16" y="-16"/>
-		</triangle_strip>
-	</drawlist>
-
-	<drawlist name="gunner">
-		<!-- player gunner -->
-		<color r="0.5" g="0.5" b="0.5" a="1.0"/>
-		<triangles>
-			<vertex x="0" y="4"/>
-			<vertex x="2" y="1"/>
-			<vertex x="-2" y="1"/>
-		</triangles>
-		<color r="1.0" g="1.0" b="1.0" a="1.0"/>
-		<scale x="5" y="5"/>
-		<calllist name="circle12"/>
-	</drawlist>
-
 
 	<!-- background shapes -->
 
-	<entity name="cloud" type="cloud" count="256">
+	<entity name="background" type="cloud" count="256">
 		<!-- cloud layer -->
 	</entity>
 
-	<entity name="grid" type="grid">
+	<entity name="playfield" type="grid">
 		<!-- reference grid -->
 	</entity>
 
@@ -203,132 +143,91 @@
 
 	<!-- bullseye targets -->
 
-	<entity name="target1" type="target">
-		<position x="256.0" y="0.0"/>
+	<template name="target" type="">
 		<collidable layer="2" type="circle" radius="10"/>
 		<renderable>
-			<drawlist name="bullseye"/>
+			<drawlist>
+				<color r="1.0" g="0.2" b="0.1" a="1.0"/>
+				<pushmatrix>
+					<scale x="4" y="4"/>
+					<calllist name="circle8"/>
+				</pushmatrix>
+				<color r="1.0" g="1.0" b="1.0" a="1.0"/>
+				<pushmatrix>
+					<scale x="7" y="7"/>
+					<calllist name="circle12"/>
+				</pushmatrix>
+				<color r="1.0" g="0.2" b="0.1" a="1.0"/>
+				<pushmatrix>
+					<scale x="10" y="10"/>
+					<calllist name="circle16"/>
+				</pushmatrix>
+			</drawlist>
 		</renderable>
+	</template>
+	
+	<entity name="target1" type="target">
+		<position x="256.0" y="0.0"/>
 	</entity>
 
 	<entity name="target2" type="target">
 		<position x="236.5" y="98.0"/>
-		<collidable layer="2" type="circle" radius="10"/>
-		<renderable>
-			<drawlist name="bullseye"/>
-		</renderable>
 	</entity>
 
 	<entity name="target3" type="target">
 		<position x="181.0" y="181.0"/>
-		<collidable layer="2" type="circle" radius="10"/>
-		<renderable>
-			<drawlist name="bullseye"/>
-		</renderable>
 	</entity>
 
 	<entity name="target4" type="target">
 		<position x="98.0" y="236.5"/>
-		<collidable layer="2" type="circle" radius="10"/>
-		<renderable>
-			<drawlist name="bullseye"/>
-		</renderable>
 	</entity>
 
 	<entity name="target5" type="target">
 		<position x="0.0" y="256.0"/>
-		<collidable layer="2" type="circle" radius="10"/>
-		<renderable>
-			<drawlist name="bullseye"/>
-		</renderable>
 	</entity>
 
 	<entity name="target6" type="target">
 		<position x="-98.0" y="236.5"/>
-		<collidable layer="2" type="circle" radius="10"/>
-		<renderable>
-			<drawlist name="bullseye"/>
-		</renderable>
 	</entity>
 
 	<entity name="target7" type="target">
 		<position x="-181.0" y="181.0"/>
-		<collidable layer="2" type="circle" radius="10"/>
-		<renderable>
-			<drawlist name="bullseye"/>
-		</renderable>
 	</entity>
 
 	<entity name="target8" type="target">
 		<position x="-236.5" y="98.0"/>
-		<collidable layer="2" type="circle" radius="10"/>
-		<renderable>
-			<drawlist name="bullseye"/>
-		</renderable>
 	</entity>
 
 	<entity name="target9" type="target">
 		<position x="-256.0" y="0.0"/>
-		<collidable layer="2" type="circle" radius="10"/>
-		<renderable>
-			<drawlist name="bullseye"/>
-		</renderable>
 	</entity>
 
 	<entity name="target10" type="target">
 		<position x="-236.5" y="-98.0"/>
-		<collidable layer="2" type="circle" radius="10"/>
-		<renderable>
-			<drawlist name="bullseye"/>
-		</renderable>
 	</entity>
 
 	<entity name="target11" type="target">
 		<position x="-181.0" y="-181.0"/>
-		<collidable layer="2" type="circle" radius="10"/>
-		<renderable>
-			<drawlist name="bullseye"/>
-		</renderable>
 	</entity>
 
 	<entity name="target12" type="target">
 		<position x="-98.0" y="-236.5"/>
-		<collidable layer="2" type="circle" radius="10"/>
-		<renderable>
-			<drawlist name="bullseye"/>
-		</renderable>
 	</entity>
 
 	<entity name="target13" type="target">
 		<position x="0.0" y="-256.0"/>
-		<collidable layer="2" type="circle" radius="10"/>
-		<renderable>
-			<drawlist name="bullseye"/>
-		</renderable>
 	</entity>
 
 	<entity name="target14" type="target">
 		<position x="98.0" y="-236.5"/>
-		<collidable layer="2" type="circle" radius="10"/>
-		<renderable>
-			<drawlist name="bullseye"/>
-		</renderable>
 	</entity>
 
 	<entity name="target15" type="target">
 		<position x="181.0" y="-181.0"/>
-		<collidable layer="2" type="circle" radius="10"/>
-		<renderable>
-			<drawlist name="bullseye"/>
-		</renderable>
 	</entity>
 
 	<entity name="target16" type="target">
 		<position x="236.5" y="-98.0"/>
-		<collidable layer="2" type="circle" radius="10"/>
-		<renderable>
-			<drawlist name="bullseye"/>
-		</renderable>
 	</entity>
 
 
@@ -338,24 +237,85 @@
 		<position x="0" y="0"/>
 		<collidable layer="0" type="circle" radius="16"/>
 		<renderable>
-			<drawlist name="player"/>
+			<drawlist>
+				<color r="1.0" g="1.0" b="1.0" a="1.0"/>
+				<triangle_strip>
+					<vertex x="16" y="-16"/>
+					<vertex x="16" y="-11"/>
+					<vertex x="5" y="-16"/>
+					<vertex x="6" y="-6"/>
+					<vertex x="4" y="-13"/>
+					<vertex x="6" y="1"/>
+					<vertex x="3" y="-13"/>
+					<vertex x="3" y="4"/>
+					<vertex x="2" y="-16"/>
+					<vertex x="2" y="16"/>
+					<vertex x="0" y="-16"/>
+					<vertex x="-2" y="16"/>
+					<vertex x="-2" y="-16"/>
+					<vertex x="-3" y="4"/>
+					<vertex x="-3" y="-13"/>
+					<vertex x="-6" y="1"/>
+					<vertex x="-4" y="-13"/>
+					<vertex x="-6" y="-6"/>
+					<vertex x="-5" y="-16"/>
+					<vertex x="-16" y="-11"/>
+					<vertex x="-16" y="-16"/>
+				</triangle_strip>
+			</drawlist>
 		</renderable>
 		<player maxveloc="200" maxaccel="1000" friction="50" maxomega="10"/>
 	</entity>
 
+
+	<!-- player gunners -->
+	
+	<template name="gunner" type="">
+		<renderable>
+			<drawlist>
+				<color r="0.5" g="0.5" b="0.5" a="1.0"/>
+				<triangles>
+					<vertex x="0" y="4"/>
+					<vertex x="2" y="1"/>
+					<vertex x="-2" y="1"/>
+				</triangles>
+				<color r="1.0" g="1.0" b="1.0" a="1.0"/>
+				<scale x="5" y="5"/>
+				<calllist name="circle12"/>
+			</drawlist>
+		</renderable>
+	</template>
+
 	<entity name="gunner1" type="gunner">
 		<offset x="-24" y="-16" angle="10"/>
-		<renderable>
-			<drawlist name="gunner"/>
-		</renderable>
 		<gunner owner="player" phase="0"/>
 	</entity>
 
 	<entity name="gunner2" type="gunner">
 		<offset x="24" y="-16" angle="-10"/>
-		<renderable>
-			<drawlist name="gunner"/>
-		</renderable>
 		<gunner owner="player" phase="1"/>
 	</entity>
+
+
+	<!-- player bullet -->
+	
+	<template name="playerbullet" type="">
+		<collidable layer="1" type="circle" radius="3"/>
+		<renderable>
+			<drawlist>
+				<color r="0.8" g="0.9" b="1.0" a="1.0"/>
+				<pushmatrix>
+					<scale x="3" y="3"/>
+					<calllist name="circle8"/>
+				</pushmatrix>
+				<color r="0.0" g="0.5" b="1.0" a="0.25"/>
+				<pushmatrix>
+					<scale x="6" y="6"/>
+					<calllist name="circle12"/>
+				</pushmatrix>
+			</drawlist>
+		</renderable>
+		<bullet life="1"/>
+	</template>
+	
 </world>

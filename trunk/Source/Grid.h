@@ -6,7 +6,7 @@ class Grid :
 	public Entity, public Renderable
 {
 public:
-	Grid(void);
+	Grid(unsigned int aId = 0, unsigned int aParentId = 0);
 	~Grid(void);
 
 	// render
