@@ -30,6 +30,9 @@ namespace stdext = __gnu_cxx;
 // TinyXML includes
 #include "tinyxml.h"
 
+// Box2D includes
+#include "Box2D.h"
+
 // 2d math
 #include "Vector2.h"
 #include "Sphere2.h"
@@ -45,10 +48,10 @@ const int SCREEN_WIDTH = 640;
 const int SCREEN_HEIGHT = 480;
 
 // arena attributes
-const int ARENA_X_MIN = -2048;
-const int ARENA_X_MAX = 2048;
-const int ARENA_Y_MIN = -2048;
-const int ARENA_Y_MAX = 2048;
+const float ARENA_X_MIN = -2048;
+const float ARENA_X_MAX = 2048;
+const float ARENA_Y_MIN = -2048;
+const float ARENA_Y_MAX = 2048;
 
 // collision layers
 const int COLLISION_LAYER_PLAYER_SHIP = 0;

@@ -12,7 +12,7 @@ private:
 
 public:
 	Simulatable(void);
-	~Simulatable(void);
+	virtual ~Simulatable(void);
 
 	// configure
 	virtual bool Configure(TiXmlElement *element) { return false; }

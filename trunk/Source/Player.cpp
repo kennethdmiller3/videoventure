@@ -39,7 +39,7 @@ bool Player::Configure(TiXmlElement *element)
 		return true;
 
 	default:
-		return Entity::Configure(element) || Controllable::Configure(element) || Simulatable::Configure(element) || Renderable::Configure(element);
+		return Entity::Configure(element) || Controllable::Configure(element) || Simulatable::Configure(element) || Collidable::Configure(element) || Renderable::Configure(element);
 	}
 }
 
@@ -55,8 +55,9 @@ void Player::Control(float aStep)
 		float control = std::min(move.LengthSq(), 1.0f);
 		float acc = mFriction + (mMaxAccel - mFriction) * control;
 		Vector2 dv(move * mMaxVeloc - vel);
-		float it = std::min(aStep * acc / sqrtf(dv.LengthSq() + 0.0001f), 1.0f);
-		vel += dv * it;
+		float it = std::min(acc * aStep / sqrtf(dv.LengthSq() + 0.0001f), 1.0f);
+		Vector2 new_thrust(dv * it * body->GetMass());
+		body->ApplyImpulse(b2Vec2(new_thrust.x, new_thrust.y), body->GetCenterPosition());
 	}
 
 	// apply steering
@@ -69,11 +70,8 @@ void Player::Control(float aStep)
 			aim_angle -= 2.0f*float(M_PI);
 		else if (aim_angle < cur_angle-float(M_PI))
 			aim_angle += 2.0f*float(M_PI);
-		float new_angle = cur_angle + std::min(std::max(aim_angle - cur_angle, -mMaxOmega * control * aStep), mMaxOmega * control * aStep);
-		transform.y.x = sinf(new_angle);
-		transform.y.y = cosf(new_angle);
-		transform.x.x = transform.y.y;
-		transform.x.y = -transform.y.x;
+		float new_omega = -std::min(std::max((aim_angle - cur_angle) / aStep, -mMaxOmega * control), mMaxOmega * control);
+		body->SetAngularVelocity(new_omega);
 	}
 
 	if ((*input)[Input::FIRE_PRIMARY])
@@ -81,12 +79,16 @@ void Player::Control(float aStep)
 		if (mDelay <= 0.0f)
 		{
 			Bullet *bullet;
-			bullet = new Bullet(0, 0xd85669f0 /* "playerbullet" */);
+			bullet = Bullet::pool.construct(0, 0xd85669f0 /* "playerbullet" */);
+			bullet->SetTransform(transform);
 			bullet->SetPosition(transform.Transform(Vector2(-6, 0)));
 			bullet->SetVelocity(transform.y * PLAYER_BULLET_SPEED);
-			bullet = new Bullet(0, 0xd85669f0 /* "playerbullet" */);
+			bullet->AddToWorld();
+			bullet = Bullet::pool.construct(0, 0xd85669f0 /* "playerbullet" */);
+			bullet->SetTransform(transform);
 			bullet->SetPosition(transform.Transform(Vector2(6, 0)));
 			bullet->SetVelocity(transform.y * PLAYER_BULLET_SPEED);
+			bullet->AddToWorld();
 
 			mDelay += 0.125f;
 		}
@@ -96,31 +98,6 @@ void Player::Control(float aStep)
 // Player Simulate
 void Player::Simulate(float aStep)
 {
-	// apply velocity
-	transform.p += vel * aStep;
-
-	// bounce off boundary
-	if( transform.p.x < ARENA_X_MIN + Collidable::size.x )
-	{
-		transform.p.x = ARENA_X_MIN + Collidable::size.x;
-		vel.x *= -0.5f;
-	}
-	else if( transform.p.x > ARENA_X_MAX - Collidable::size.x )
-	{
-		transform.p.x = ARENA_X_MAX - Collidable::size.x;
-		vel.x *= -0.5f;
-	}
-	if( transform.p.y < ARENA_Y_MIN + Collidable::size.y )
-	{
-		transform.p.y = ARENA_Y_MIN + Collidable::size.y;
-		vel.y *= -0.5f;
-	}
-	else if( transform.p.y > ARENA_Y_MAX - Collidable::size.y)
-	{
-		transform.p.y = ARENA_Y_MAX - Collidable::size.y;
-		vel.y *= -0.5f;
-	}
-
 	// update fire delay
 	mDelay -= aStep;
 	if (mDelay < 0.0f)

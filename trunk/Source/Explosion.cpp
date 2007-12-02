@@ -44,6 +44,9 @@ const float EXPLOSION_HALO_COLOR[2][4] =
 };
 
 
+// explosion pool
+boost::object_pool<Explosion> Explosion::pool;
+
 
 Explosion::Explosion(unsigned int aId, unsigned int aParentId)
 : Entity(aId)
@@ -81,7 +84,7 @@ void Explosion::Simulate(float aStep)
 	mLife -= aStep;
 	if (mLife <= 0)
 	{
-		delete this;
+		pool.destroy(this);
 		return;
 	}
 }
@@ -91,8 +94,15 @@ void Explosion::Render(void)
 	// push a transform
 	glPushMatrix();
 
-	// set offset
-	glTranslatef( transform.p.x, transform.p.y, 0 );
+	// load matrix
+	float m[16] =
+	{
+		transform.x.x, transform.x.y, 0, 0,
+		transform.y.x, transform.y.y, 0, 0,
+		0, 0, 1, 0,
+		transform.p.x, transform.p.y, 0, 1
+	};
+	glMultMatrixf( m );
 
 	// interpolation factor
 	float f = 1.0f - mLife / EXPLOSION_LIFE;

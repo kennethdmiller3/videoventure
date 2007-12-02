@@ -10,7 +10,7 @@ namespace Database
 }
 
 CollidableTemplate::CollidableTemplate(void)
-: layer(-1), type(TYPE_NONE), size(0, 0)
+: shapes(0)
 {
 }
 
@@ -18,45 +18,199 @@ CollidableTemplate::~CollidableTemplate(void)
 {
 }
 
-bool CollidableTemplate::Attribute(TiXmlAttribute *attrib)
+bool CollidableTemplate::ProcessShapeItem(TiXmlElement *element, b2ShapeDef &shape)
 {
-	const char *label = attrib->Name();
-	switch (Hash(label))
+	const char *name = element->Value();
+	switch (Hash(name))
 	{
-	case 0x07a640f6 /* "layer" */:
-		layer = attrib->IntValue();
+	case 0x934f4e0a /* "position" */:
+		element->QueryFloatAttribute("x", &shape.localPosition.x);
+		element->QueryFloatAttribute("y", &shape.localPosition.y);
+		if (element->QueryFloatAttribute("angle", &shape.localRotation) == TIXML_SUCCESS)
+			shape.localRotation *= float(M_PI)/180.0f;
 		return true;
 
-	case 0x5127f14d /* "type" */:
-		switch (Hash(attrib->Value()))
+	case 0xa51be2bb /* "friction" */:
+		element->QueryFloatAttribute("value", &shape.friction);
+		return true;
+
+	case 0xf59a4f8f /* "restitution" */:
+		element->QueryFloatAttribute("value", &shape.restitution);
+		return true;
+
+	case 0x72b9059b /* "density" */:
+		element->QueryFloatAttribute("value", &shape.density);
+		return true;
+
+	case 0xcf2f4271 /* "category" */:
 		{
-		case 0x06dbc8c0 /* "alignedbox" */:
-			type = Collidable::TYPE_ALIGNED_BOX;
-			break;
-		case 0x28217089 /* "circle" */:
-			type = Collidable::TYPE_CIRCLE;
-			break;
-		default:
-			type = Collidable::TYPE_NONE;
-			break;
+			int category = 0;
+			element->QueryIntAttribute("value", &category);
+			shape.categoryBits = 1<<category;
 		}
 		return true;
 
-	case 0x0dba4cb3 /* "radius" */:
-		size.x = size.y = float(attrib->DoubleValue());
+	case 0xe7774569 /* "mask" */:
+		{
+			char buf[16];
+			for (int i = 0; i < 16; i++)
+			{
+				sprintf(buf, "bit%d", i);
+				int bit = (shape.maskBits & (1 << i)) != 0;
+				element->QueryIntAttribute(buf, &bit);
+				if (bit)
+					shape.maskBits |= (1 << i);
+				else
+					shape.maskBits &= ~(1 << i);
+			}
+		}
 		return true;
 
-	case 0x95876e1f /* "width" */:
-		size.x = float(attrib->DoubleValue());
-		return true;
-
-	case 0xd5bdbb42 /* "height" */:
-		size.y = float(attrib->DoubleValue());
+	case 0x5fb91e8c /* "group" */:
+		{
+			int group = shape.groupIndex;
+			element->QueryIntAttribute("value", &group);
+			shape.groupIndex = short(group);
+		}
 		return true;
 
 	default:
 		return false;
 	}
+}
+
+bool CollidableTemplate::ConfigureShape(TiXmlElement *element, b2ShapeDef &shape)
+{
+	// process child elements
+	for (TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+	{
+		ProcessShapeItem(child, shape);
+	}
+	return true;
+}
+
+bool CollidableTemplate::ConfigureCircle(TiXmlElement *element, b2CircleDef &shape)
+{
+	element->QueryFloatAttribute("radius", &shape.radius);
+	ConfigureShape(element, shape);
+	return true;
+}
+
+bool CollidableTemplate::ConfigureBox(TiXmlElement *element, b2BoxDef &shape)
+{
+	element->QueryFloatAttribute("w", &shape.extents.x);
+	element->QueryFloatAttribute("h", &shape.extents.y);
+	ConfigureShape(element, shape);
+	return true;
+}
+
+bool CollidableTemplate::ProcessPolyItem(TiXmlElement *element, b2PolyDef &shape)
+{
+	const char *name = element->Value();
+	switch (Hash(name))
+	{
+	case 0x945367a7 /* "vertex" */:
+		element->QueryFloatAttribute("x", &shape.vertices[shape.vertexCount].x);
+		element->QueryFloatAttribute("y", &shape.vertices[shape.vertexCount].y);
+		++shape.vertexCount;
+		return true;
+
+	default:
+		return ProcessShapeItem(element, shape);
+	}
+}
+
+bool CollidableTemplate::ConfigurePoly(TiXmlElement *element, b2PolyDef &shape)
+{
+	// process child elements
+	for (TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+	{
+		ProcessPolyItem(child, shape);
+	}
+	return true;
+}
+
+
+bool CollidableTemplate::ProcessBodyItem(TiXmlElement *element, b2BodyDef &body)
+{
+	const char *name = element->Value();
+	switch (Hash(name))
+	{
+	case 0x934f4e0a /* "position" */:
+		element->QueryFloatAttribute("x", &body.position.x);
+		element->QueryFloatAttribute("y", &body.position.y);
+		if (element->QueryFloatAttribute("angle", &body.rotation) == TIXML_SUCCESS)
+			 body.rotation *= float(M_PI)/180.0f;
+		return true;
+
+	case 0x32741c32 /* "velocity" */:
+		element->QueryFloatAttribute("x", &body.linearVelocity.x);
+		element->QueryFloatAttribute("y", &body.linearVelocity.y);
+		if (element->QueryFloatAttribute("angle", &body.angularVelocity) == TIXML_SUCCESS)
+			body.angularVelocity *= float(M_PI)/180.0f;
+		return true;
+
+	case 0xbb61b895 /* "damping" */:
+		element->QueryFloatAttribute("linear", &body.linearDamping);
+		element->QueryFloatAttribute("angular", &body.angularDamping);
+		return true;
+
+	case 0xac01f355 /* "allowsleep" */:
+		{
+			int allowsleep = body.allowSleep;
+			element->QueryIntAttribute("value", &allowsleep);
+			body.allowSleep = allowsleep != 0;
+		}
+		return true;
+
+	case 0xd233241f /* "preventrotation" */:
+		{
+			int preventrotation = body.preventRotation;
+			element->QueryIntAttribute("value", &preventrotation);
+			body.preventRotation = preventrotation != 0;
+		}
+		return true;
+
+	case 0x28217089 /* "circle" */:
+		{
+			b2CircleDef *shape = new b2CircleDef;
+			shapes.push_back(shape);
+			ConfigureCircle(element, *shape);
+			body.AddShape(shape);
+		}
+		return true;
+
+	case 0x70c67e32 /* "box" */:
+		{
+			b2BoxDef *shape = new b2BoxDef;
+			shapes.push_back(shape);
+			ConfigureBox(element, *shape);
+			body.AddShape(shape);
+		}
+		return true;
+
+	case 0x84d6a947 /* "poly" */:
+		{
+			b2PolyDef *shape = new b2PolyDef;
+			shapes.push_back(shape);
+			ConfigurePoly(element, *shape);
+			body.AddShape(shape);
+		}
+		return true;
+
+	default:
+		return false;
+	}
+}
+
+bool CollidableTemplate::ConfigureBody(TiXmlElement *element, b2BodyDef &body)
+{
+	// process child elements
+	for (TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+	{
+		ProcessBodyItem(child, body);
+	}
+	return true;
 }
 
 bool CollidableTemplate::Configure(TiXmlElement *element)
@@ -65,17 +219,30 @@ bool CollidableTemplate::Configure(TiXmlElement *element)
 		return false;
 
 	// process child elements
-	for (TiXmlAttribute *attrib = element->FirstAttribute(); attrib != NULL; attrib = attrib->Next())
+	for (TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
-		Attribute(attrib);
+		const char *name = child->Value();
+		switch (Hash(name))
+		{
+		case 0xdbaa7975 /* "body" */:
+			{
+				// add a body
+				unsigned int id = Hash(child->Attribute("name"));
+				b2BodyDef &body = bodies[id];
+				CollidableTemplate::ConfigureBody(child, body);
+			}
+			break;
+
+		case 0xaeae0877 /* "joint" */:
+			break;
+		}
 	}
 
 	return true;
 }
 
 
-Collidable::List Collidable::sLayer[COLLISION_LAYERS];
-unsigned int Collidable::sLayerMask[COLLISION_LAYERS];
+b2World* Collidable::world;
 
 Collidable::Collidable(void)
 : CollidableTemplate()
@@ -83,327 +250,132 @@ Collidable::Collidable(void)
 }
 
 Collidable::Collidable(const CollidableTemplate &aTemplate)
-: CollidableTemplate(aTemplate)
+: CollidableTemplate(aTemplate), body(NULL)
 {
-	int aLayer = layer;
-	layer = -1;
-	SetLayer(aLayer);
 }
 
 Collidable::~Collidable(void)
 {
-	SetLayer(-1);
+	RemoveFromWorld();
 }
 
-void Collidable::SetLayer(int aLayer)
+void Collidable::AddToWorld(void)
 {
-	if (layer != aLayer)
+	// for each body...
+	for (BodyMap::iterator itor = bodies.begin(); itor != bodies.end(); ++itor)
 	{
-		if (layer >= 0 && layer < COLLISION_LAYERS)
-			sLayer[layer].erase(entry);
+		// set body position to entity (HACK)
+		b2BodyDef def(itor->second);
+		def.userData = this;
+		Entity *entity = dynamic_cast<Entity *>(this);
+		if (entity)
+		{
+			const Matrix2 &transform = entity->GetTransform();
+			def.rotation = atan2f(transform.y.x, transform.y.y);
+			def.position.x = transform.p.x;
+			def.position.y = transform.p.y;
+			def.linearVelocity.x = entity->GetVelocity().x;
+			def.linearVelocity.y = entity->GetVelocity().y;
+		}
 
-		layer = aLayer;
-
-		if (layer >= 0 && layer < COLLISION_LAYERS)
-			entry = sLayer[layer].insert(sLayer[layer].end(), this);
-		else
-			entry = List::iterator();
-	}
-}
-
-bool Collidable::Attribute(TiXmlAttribute *attrib)
-{
-	const char *label = attrib->Name();
-	switch (Hash(label))
-	{
-	case 0x07a640f6 /* "layer" */:
-		SetLayer(attrib->IntValue());
-		return true;
-
-	default:
-		return CollidableTemplate::Attribute(attrib);
+		// create the body
+		body = world->CreateBody(&def);
 	}
 }
 
-static bool TestAlignedAligned(const AlignedBox2 &a1, const AlignedBox2 &a2)
+void Collidable::RemoveFromWorld(void)
 {
-	return
-		a1.min.x >= a2.max.x &&
-		a1.min.y >= a2.max.y &&
-		a1.max.x <= a2.min.x &&
-		a1.max.y <= a2.min.y;
+	if (body)
+	{
+		world->DestroyBody(body);
+		body = NULL;
+	}
 }
 
-static bool TestRayAligned(float &aStep, const AlignedBox2 &a, const Vector2 &p, const Vector2 &v)
-{
-	// Smits’ method
-	//bool Box::intersect(const Ray &r, float t0, float t1) const {
-	float tmin, tmax, tymin, tymax;
-	if (v.x >= 0) {
-		tmin = (a.min.x - p.x) / v.x;
-		tmax = (a.max.x - p.x) / v.x;
-	}
-	else {
-		tmin = (a.max.x - p.x) / v.x;
-		tmax = (a.min.x - p.x) / v.x;
-	}
-	if (v.y >= 0) {
-		tymin = (a.min.y - p.y) / v.y;
-		tymax = (a.max.y - p.y) / v.y;
-	}
-	else {
-		tymin = (a.max.y - p.y) / v.y;
-		tymax = (a.min.y - p.y) / v.y;
-	}
-	if ( (tmin > tymax) || (tymin > tmax) )
-		return false;
-	if (tymin > tmin)
-		tmin = tymin;
-	if (tymax < tmax)
-		tmax = tymax;
 
-	if ( tmin < aStep && tmax > 0.0f )
-	{
-		if (tmin > 0.0f)
-			aStep = tmin;
-		else
-			aStep = 0.0f;
-		return true;
-	}
-	return false;
+
+// create collision world
+void Collidable::Init(void)
+{
+	// physics world
+	b2AABB worldAABB;
+	worldAABB.minVertex.Set(ARENA_X_MIN - 32, ARENA_Y_MIN - 32);
+	worldAABB.maxVertex.Set(ARENA_X_MAX + 32, ARENA_Y_MAX + 32);
+	b2Vec2 gravity;
+	gravity.Set(0.0f, 0.0f);
+	bool doSleep = true;
+	world = new b2World(worldAABB, gravity, doSleep);
+
+	// create perimeter walls
+	b2BodyDef body;
+
+	b2BoxDef top;
+	top.localPosition.Set(0.5f * (ARENA_X_MAX + ARENA_X_MIN), ARENA_Y_MIN - 16);
+	top.extents.Set(0.5f * (ARENA_X_MAX - ARENA_X_MIN), 16);
+	body.AddShape(&top);
+
+	b2BoxDef bottom;
+	bottom.localPosition.Set(0.5f * (ARENA_X_MAX + ARENA_X_MIN), ARENA_Y_MAX + 16);
+	bottom.extents.Set(0.5f * (ARENA_X_MAX - ARENA_X_MIN), 16);
+	body.AddShape(&bottom);
+
+	b2BoxDef left;
+	left.localPosition.Set(ARENA_X_MIN - 16, 0.5f * (ARENA_Y_MAX + ARENA_Y_MIN));
+	left.extents.Set(16, 0.5f * (ARENA_Y_MAX - ARENA_Y_MIN));
+	body.AddShape(&left);
+
+	b2BoxDef right;
+	right.localPosition.Set(ARENA_X_MAX + 16, 0.5f * (ARENA_Y_MAX + ARENA_Y_MIN));
+	right.extents.Set(16, 0.5f * (ARENA_Y_MAX - ARENA_Y_MIN));
+	body.AddShape(&right);
+
+	world->CreateBody(&body);
 }
 
-#if 0
-static bool TestAlignedCircle(const AlignedBox2 &a,
-							  const Sphere2 &c)
+void Collidable::Done(void)
 {
-	float d = 0.0f;
-	if ( c.p.x < a.min.x)
-	{
-		float s = c.p.x - a.min.x;
-		d += s * s;
-	}
-	else if ( c.p.x > a.max.x)
-	{
-		float s = c.p.x - a.max.x;
-		d += s * s;
-	}
-	if ( c.p.y < a.min.y)
-	{
-		float s = c.p.y - a.min.y;
-		d += s * s;
-	}
-	else if ( c.p.y > a.max.y)
-	{
-		float s = c.p.y - a.max.y;
-		d += s * s;
-	}
-	return d <= c.r * c.r;
-}
-#endif
-
-static bool TestRayCircle(float &aStep, const Vector2 &p, const Vector2 &v, float r)
-{
-	// c = dP . dP - R^2
-	float pp = p.Dot(p) - r * r;
-	if ( pp < 0 )
-	{
-		// start overlapping
-		aStep = 0.0f;
-		return true;
-	}
-
-	// b = 2 ( dP . dV )
-	float pv = p.Dot(v);
-	if ( pv >= 0 )
-	{
-		// moving apart
-		return false;
-	}
-
-	// a = dV . dV
-	float vv = v.Dot(v);
-
-	// normalize interval to [0..1]
-	vv *= aStep * aStep;
-	pv *= aStep;
-
-	// if further than step
-	if ( (pv + vv) <= 0 && (vv + 2 * pv + pp) >= 0 )
-	{
-		// trivial reject
-		return false;
-	}
-
-	// time of closest approach
-	float tmp = -pv / vv;
-
-	// D = pv * pv - vv * pp;
-	// tmp2 = -D / (4 * vv)
-	float tmp2 = pp + pv * tmp;
-
-	// check discriminant
-	if (tmp2 > 0)
-	{
-		// never intersect
-		return false;
-	}
-
-	// calculate the time to intersection
-	float t = tmp - sqrtf(-tmp2 / vv);
-	if (t < 1)
-	{
-		// return time to intersection
-		aStep *= t;
-		return true;
-	}
-	return false;
-}
-
-static bool TestCircleCircle(float &aStep,
-							 const Sphere2 &c1, const Vector2 &v1,
-							 const Sphere2 &c2, const Vector2 &v2)
-{
-	return TestRayCircle(aStep, c2.p - c1.p, v2 - v1, c2.r + c1.r);
+	delete world;
 }
 
 void Collidable::CollideAll(float aStep)
 {
-	// for each collision layer...
-	for (int i = 0; i < COLLISION_LAYERS; i++)
+	aStep *= (1.0f/16.0f);
+	for (int i = 0; i < 16; i++)
 	{
-		// skip noncolliding layers
-		if (sLayerMask[i] == 0)
-			continue;
+		world->Step(aStep, 8);
+		world->m_broadPhase->Validate();
 
-		// for each entry in the collision layer...
-		List::iterator itor1 = sLayer[i].begin();
-		while (itor1 != sLayer[i].end())
+		// for each body...
+		for (b2Body* b = world->GetBodyList(); b; b = b->GetNext())
 		{
-			// get the next iterator
-			List::iterator next1(itor1);
-			++next1;
-
-			// get the collidable
-			Collidable *coll1 = *itor1;
-			Entity *ent1 = dynamic_cast<Entity *>(coll1);
-
-			// hack!
-			coll1->box.min = ent1->GetPosition() - coll1->size;
-			coll1->box.max = ent1->GetPosition() + coll1->size;
-
-			// intersection time
-			float t = aStep;
-			Collidable *coll = NULL;
-
-			// for each subesquent layer...
-			for (int j = 0; j < COLLISION_LAYERS; j++)
+			// update the entity position (hack)
+			Entity *entity = dynamic_cast<Entity *>(static_cast<Collidable *>(b->GetUserData()));
+			if (entity)
 			{
-				// skip non-interacting layers
-				if (!((sLayerMask[i] >> j) & 1))
-					continue;
+				entity->SetTransform(Matrix2(
+					Vector2(b->GetRotationMatrix().col1.x, b->GetRotationMatrix().col1.y),
+					Vector2(b->GetRotationMatrix().col2.x, b->GetRotationMatrix().col2.y),
+					Vector2(b->GetOriginPosition().x, b->GetOriginPosition().y)));
+				entity->SetVelocity(Vector2(b->GetLinearVelocity().x, b->GetLinearVelocity().y));
+			}
+		}
 
-				// for each entry in the recipient layer...
-				List::iterator itor2 = sLayer[j].begin();
-				while (itor2 != sLayer[j].end())
+		// for each contact...
+		for (b2Contact* c = world->GetContactList(); c; c = c->GetNext())
+		{
+			// if the shapes are actually touching...
+			if (c->GetManifoldCount() > 0)
+			{
+				b2Body* body1 = c->GetShape1()->GetBody();
+				b2Body* body2 = c->GetShape2()->GetBody();
+				Collidable* coll1 = static_cast<Collidable *>(body1->GetUserData());
+				Collidable* coll2 = static_cast<Collidable *>(body2->GetUserData());
+				if (coll1 && coll2)
 				{
-					// get the next iterator
-					List::iterator next2(itor2);
-					++next2;
-
-					// get the collidable
-					Collidable *coll2 = *itor2;
-					Entity *ent2 = dynamic_cast<Entity *>(coll2);
-
-					// hack!
-					coll2->box.min = ent2->GetPosition() - coll2->size;
-					coll2->box.max = ent2->GetPosition() + coll2->size;
-
-					switch(coll1->type)
-					{
-					case TYPE_ALIGNED_BOX:
-						switch(coll2->type)
-						{
-						case TYPE_ALIGNED_BOX:
-							if (TestAlignedAligned(coll1->box, coll2->box))
-							{
-								t = 0.0f;
-								coll = coll2;
-							}
-							break;
-
-						case TYPE_CIRCLE:
-							//if (TestAlignedCircle(coll1->box, Sphere2(ent2->GetPosition(), coll2->size.x)))
-							if (TestRayAligned(t,
-								AlignedBox2(coll1->box.min - coll2->size, coll1->box.max + coll2->size),
-								ent2->GetPosition(),
-								ent2->GetVelocity() - ent1->GetVelocity()))
-							{
-								coll = coll2;
-							}
-							break;
-
-						default:
-							break;
-						}
-						break;
-
-					case TYPE_CIRCLE:
-						switch(coll2->type)
-						{
-						case TYPE_ALIGNED_BOX:
-							//if (TestAlignedCircle(coll2->box, Sphere2(ent1->GetPosition(), coll1->size.x)))
-							if (TestRayAligned(t,
-								AlignedBox2(coll2->box.min - coll1->size, coll2->box.max + coll1->size),
-								ent1->GetPosition(),
-								ent1->GetVelocity() - ent2->GetVelocity()))
-							{
-								coll = coll2;
-							}
-							break;
-
-						case TYPE_CIRCLE:
-							if (TestCircleCircle(t,
-								Sphere2(ent1->GetPosition(), coll1->size.x), ent1->GetVelocity(),
-								Sphere2(ent2->GetPosition(), coll2->size.x), ent2->GetVelocity()))
-							{
-								coll = coll2;
-							}
-							break;
-
-						default:
-							break;
-						}
-						break;
-
-					default:
-						break;
-					}
-
-					// go to the next iterator
-					itor2 = next2;
+					coll1->Collide(i*aStep, *coll2);
+					coll2->Collide(i*aStep, *coll1);
 				}
 			}
-
-			// if collided...
-			if (coll)
-			{
-#ifdef DEBUG_TRACE_COLLISION
-				Entity *ent2 = dynamic_cast<Entity *>(coll);
-				DebugPrint("%s %d collided with %s %d at %f\n",
-					typeid(*ent1).name(), ent1->GetId(),
-					typeid(*ent2).name(), ent2->GetId(),
-					t);
-#endif
-				// advance to contact point
-				ent1->SetPosition(ent1->GetPosition() + ent1->GetVelocity() * t);
-
-				// notify of collision
-				coll1->Collide(t, *coll);
-			}
-
-			// go to the next iterator
-			itor1 = next1;
 		}
 	}
 }

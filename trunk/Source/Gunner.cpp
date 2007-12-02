@@ -19,6 +19,7 @@ Gunner::Gunner(unsigned int aId, unsigned int aParentId)
 : Entity(aId)
 , Controllable()
 , Simulatable()
+, Collidable(Database::collidabletemplate.Get(aParentId))
 , Renderable(Database::renderabletemplate.Get(aParentId))
 , player(NULL), offset(Vector2(1, 0), Vector2(0, 1), Vector2(0, 0)), mDelay(0.0f), mPhase(-1), mCycle(0)
 {
@@ -61,8 +62,29 @@ bool Gunner::Configure(TiXmlElement *element)
 		return true;
 
 	default:
-		return Entity::Configure(element) || Controllable::Configure(element) || Simulatable::Configure(element) || Renderable::Configure(element);
+		return Entity::Configure(element) || Controllable::Configure(element) || Simulatable::Configure(element) || Collidable::Configure(element) || Renderable::Configure(element);
 	}
+}
+
+// Gunner Init
+void Gunner::Init(void)
+{
+	// offset from player position
+	Matrix2 transform = offset * player->GetTransform();
+	body->SetCenterPosition(b2Vec2(transform.p.x, transform.p.y), -atan2f(transform.y.x, transform.y.y));
+
+	// constrain to the offset position
+	b2RevoluteJointDef joint;
+	joint.body1 = player->GetBody();
+	joint.body2 = GetBody();
+	joint.anchorPoint = joint.body1->GetCenterPosition();
+	joint.lowerAngle = -atan2f(offset.y.x, offset.y.y);
+	joint.upperAngle = -atan2f(offset.y.x, offset.y.y);
+	joint.enableLimit = true;
+	joint.motorTorque = 1.0f;
+	joint.motorSpeed = 0.0f;
+    joint.enableMotor = true;
+	world->CreateJoint(&joint);
 }
 
 // Gunner Control
@@ -82,9 +104,10 @@ void Gunner::Control(float aStep)
 				for (int i = 0; i < 2; i++)
 				{
 					const Vector2 d = GUNNER_BULLET_DIR[i];
-					Bullet *bullet = new Bullet(0, 0xd85669f0 /* "playerbullet" */);
-					bullet->SetPosition(transform.p);
+					Bullet *bullet = Bullet::pool.construct(0, 0xd85669f0 /* "playerbullet" */);
+					bullet->SetTransform(transform);
 					bullet->SetVelocity(transform.Rotate(d) * GUNNER_BULLET_SPEED);
+					bullet->AddToWorld();
 				}
 			}
 
@@ -99,9 +122,6 @@ void Gunner::Simulate(float aStep)
 {
 	if (!player)
 		return;
-
-	// offset from player position
-	transform = offset * player->GetTransform();
 
 	// update fire delay
 	mDelay -= aStep;
