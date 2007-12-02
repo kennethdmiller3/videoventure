@@ -41,15 +41,18 @@ void Bullet::Simulate(float aStep)
 	}
 }
 
-void Bullet::Collide(float aStep, Collidable &aRecipient)
+void Bullet::Collide(Collidable &aRecipient, b2Manifold aManifold[], int aCount)
 {
 	// kill the bullet
 //	mLife = 0.0f;
 //	RemoveFromWorld();
 
-	// create an explosion
+	// create an explosion at the contact point
 	Explosion *explosion = Explosion::pool.construct(0, 0x70f5d327 /* "playerbulletexplosion" */);
-	explosion->SetPosition(transform.p);
+	b2Vec2 position(aManifold[0].points[0].position);
+	b2Vec2 normal(aManifold[0].normal);
+	float dist(body->m_shapeList[0].GetMaxRadius()-aManifold[0].points[0].separation);
+	explosion->SetPosition(Vector2(position.x + normal.x * dist, position.y + normal.y * dist));
 }
 
 void Bullet::Render(void)

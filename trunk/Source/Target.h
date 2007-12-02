@@ -15,7 +15,7 @@ public:
 	virtual bool Configure(TiXmlElement *element);
 
 	// collide
-	virtual void Collide(float aStep, Collidable &aRecipient);
+	virtual void Collide(Collidable &aRecipient, b2Manifold aManifold[], int aCount);
 
 	// render
 	virtual void Render(void);

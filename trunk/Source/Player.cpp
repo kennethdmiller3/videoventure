@@ -105,7 +105,7 @@ void Player::Simulate(float aStep)
 }
 
 // Player Collide
-void Player::Collide(float aStep, Collidable &aRecipient)
+void Player::Collide(Collidable &aRecipient, b2Manifold aManifold[], int aCount)
 {
 }
 

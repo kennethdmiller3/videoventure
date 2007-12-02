@@ -30,7 +30,7 @@ bool Target::Configure(TiXmlElement *element)
 	}
 }
 
-void Target::Collide(float aStep, Collidable &aRecipient)
+void Target::Collide(Collidable &aRecipient, b2Manifold aManifold[], int aCount)
 {
 }
 

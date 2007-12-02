@@ -339,10 +339,10 @@ void Collidable::Done(void)
 
 void Collidable::CollideAll(float aStep)
 {
-	aStep *= (1.0f/16.0f);
-	for (int i = 0; i < 16; i++)
+//	aStep *= (1.0f/16.0f);
+//	for (int i = 0; i < 16; i++)
 	{
-		world->Step(aStep, 8);
+		world->Step(aStep, 64);
 		world->m_broadPhase->Validate();
 
 		// for each body...
@@ -372,8 +372,8 @@ void Collidable::CollideAll(float aStep)
 				Collidable* coll2 = static_cast<Collidable *>(body2->GetUserData());
 				if (coll1 && coll2)
 				{
-					coll1->Collide(i*aStep, *coll2);
-					coll2->Collide(i*aStep, *coll1);
+					coll1->Collide(*coll2, c->GetManifolds(), c->GetManifoldCount());
+					coll2->Collide(*coll1, c->GetManifolds(), c->GetManifoldCount());
 				}
 			}
 		}
