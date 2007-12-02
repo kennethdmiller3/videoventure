@@ -28,7 +28,7 @@ class Player :
 
 public:
 	// constructor
-	Player(void);
+	Player(unsigned int aId = 0, unsigned int aParentId = 0);
 
 	// destructor
 	~Player(void);

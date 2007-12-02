@@ -48,7 +48,7 @@
 				RuntimeLibrary="3"
 				UsePrecompiledHeader="2"
 				BrowseInformation="1"
-				WarningLevel="4"
+				WarningLevel="3"
 				DebugInformationFormat="4"
 				DisableSpecificWarnings="4100"
 			/>
@@ -203,6 +203,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Source\Database.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\Source\Entity.cpp"
 				>
 			</File>
@@ -294,6 +298,10 @@
 			</File>
 			<File
 				RelativePath=".\Source\Controllable.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Database.h"
 				>
 			</File>
 			<File

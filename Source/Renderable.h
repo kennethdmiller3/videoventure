@@ -1,6 +1,20 @@
 #pragma once
 
-class Renderable
+class RenderableTemplate
+{
+public:
+	// draw list
+	GLuint mDraw;
+
+public:
+	RenderableTemplate(void);
+	virtual ~RenderableTemplate();
+
+	// configure
+	virtual bool Configure(TiXmlElement *element);
+};
+
+class Renderable : public RenderableTemplate
 {
 private:
 	// list of all renderables
@@ -9,17 +23,12 @@ private:
 
 	// list entry
 	List::iterator entry;
-
-public:
-	// draw list
-	GLuint mDraw;
+	bool show;
 
 public:
 	Renderable(void);
+	Renderable(const RenderableTemplate &aTemplate);
 	~Renderable(void);
-
-	// configure
-	virtual bool Configure(TiXmlElement *element);
 
 	// visibility
 	void Show(void);
@@ -27,5 +36,12 @@ public:
 
 	// render
 	static void RenderAll(void);
-	virtual void Render(void) = 0;
+	virtual void Render(void);
 };
+
+namespace Database
+{
+	extern Typed<RenderableTemplate> renderabletemplate;
+	extern Typed<Renderable> renderable;
+	extern Typed<GLuint> drawlist;
+}

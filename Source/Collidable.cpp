@@ -3,12 +3,90 @@
 #include "Entity.h"
 #include <typeinfo>
 
+namespace Database
+{
+	Typed<CollidableTemplate> collidabletemplate("collidabletemplate");
+	Typed<Collidable> collidable("collidable");
+}
+
+CollidableTemplate::CollidableTemplate(void)
+: layer(-1), type(TYPE_NONE), size(0, 0)
+{
+}
+
+CollidableTemplate::~CollidableTemplate(void)
+{
+}
+
+bool CollidableTemplate::Attribute(TiXmlAttribute *attrib)
+{
+	const char *label = attrib->Name();
+	switch (Hash(label))
+	{
+	case 0x07a640f6 /* "layer" */:
+		layer = attrib->IntValue();
+		return true;
+
+	case 0x5127f14d /* "type" */:
+		switch (Hash(attrib->Value()))
+		{
+		case 0x06dbc8c0 /* "alignedbox" */:
+			type = Collidable::TYPE_ALIGNED_BOX;
+			break;
+		case 0x28217089 /* "circle" */:
+			type = Collidable::TYPE_CIRCLE;
+			break;
+		default:
+			type = Collidable::TYPE_NONE;
+			break;
+		}
+		return true;
+
+	case 0x0dba4cb3 /* "radius" */:
+		size.x = size.y = float(attrib->DoubleValue());
+		return true;
+
+	case 0x95876e1f /* "width" */:
+		size.x = float(attrib->DoubleValue());
+		return true;
+
+	case 0xd5bdbb42 /* "height" */:
+		size.y = float(attrib->DoubleValue());
+		return true;
+
+	default:
+		return false;
+	}
+}
+
+bool CollidableTemplate::Configure(TiXmlElement *element)
+{
+	if (Hash(element->Value()) != 0x74e9dbae /* "collidable" */)
+		return false;
+
+	// process child elements
+	for (TiXmlAttribute *attrib = element->FirstAttribute(); attrib != NULL; attrib = attrib->Next())
+	{
+		Attribute(attrib);
+	}
+
+	return true;
+}
+
+
 Collidable::List Collidable::sLayer[COLLISION_LAYERS];
 unsigned int Collidable::sLayerMask[COLLISION_LAYERS];
 
-Collidable::Collidable(int aLayer)
-: layer(-1), type(TYPE_NONE), size(0, 0)
+Collidable::Collidable(void)
+: CollidableTemplate()
 {
+}
+
+Collidable::Collidable(const CollidableTemplate &aTemplate)
+: CollidableTemplate(aTemplate)
+{
+	int aLayer = layer;
+	layer = -1;
 	SetLayer(aLayer);
 }
 
@@ -33,54 +111,18 @@ void Collidable::SetLayer(int aLayer)
 	}
 }
 
-bool Collidable::Configure(TiXmlElement *element)
+bool Collidable::Attribute(TiXmlAttribute *attrib)
 {
-	if (Hash(element->Value()) != 0x74e9dbae /* "collidable" */)
-		return false;
-
-	// process child elements
-	for (TiXmlAttribute *attrib = element->FirstAttribute(); attrib != NULL; attrib = attrib->Next())
+	const char *label = attrib->Name();
+	switch (Hash(label))
 	{
-		const char *label = attrib->Name();
-		switch (Hash(label))
-		{
-		case 0x07a640f6 /* "layer" */:
-			SetLayer(attrib->IntValue());
-			break;
+	case 0x07a640f6 /* "layer" */:
+		SetLayer(attrib->IntValue());
+		return true;
 
-		case 0x5127f14d /* "type" */:
-			switch (Hash(attrib->Value()))
-			{
-			case 0x06dbc8c0 /* "alignedbox" */:
-				type = Collidable::TYPE_ALIGNED_BOX;
-				break;
-			case 0x28217089 /* "circle" */:
-				type = Collidable::TYPE_CIRCLE;
-				break;
-			default:
-				type = Collidable::TYPE_NONE;
-				break;
-			}
-			break;
-
-		case 0x0dba4cb3 /* "radius" */:
-			size.x = size.y = float(attrib->DoubleValue());
-			break;
-
-		case 0x95876e1f /* "width" */:
-			size.x = float(attrib->DoubleValue());
-			break;
-
-		case 0xd5bdbb42 /* "height" */:
-			size.y = float(attrib->DoubleValue());
-			break;
-
-		default:
-			break;
-		}
+	default:
+		return CollidableTemplate::Attribute(attrib);
 	}
-
-	return true;
 }
 
 static bool TestAlignedAligned(const AlignedBox2 &a1, const AlignedBox2 &a2)
@@ -343,7 +385,7 @@ void Collidable::CollideAll(float aStep)
 				}
 			}
 
-			// if colliding...
+			// if collided...
 			if (coll)
 			{
 #ifdef DEBUG_TRACE_COLLISION
@@ -353,6 +395,10 @@ void Collidable::CollideAll(float aStep)
 					typeid(*ent2).name(), ent2->GetId(),
 					t);
 #endif
+				// advance to contact point
+				ent1->SetPosition(ent1->GetPosition() + ent1->GetVelocity() * t);
+
+				// notify of collision
 				coll1->Collide(t, *coll);
 			}
 

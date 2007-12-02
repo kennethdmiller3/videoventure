@@ -38,6 +38,7 @@ namespace stdext = __gnu_cxx;
 
 // utility includes
 #include "Hash.h"
+#include "Database.h"
 
 // screen attributes
 const int SCREEN_WIDTH = 640;
@@ -58,15 +59,6 @@ extern int DebugPrint(const char *format, ...);
 
 // loader
 void ProcessDrawItems(TiXmlElement *element);
-
-// entity map
-class Entity;
-typedef stdext::hash_map<unsigned int, Entity *> EntityMap;
-extern EntityMap entities;
-
-// drawlist map
-typedef stdext::hash_map<unsigned int, unsigned int> DrawListMap;
-extern DrawListMap drawlists;
 
 // configuration
 #define ENABLE_MULTISAMPLING

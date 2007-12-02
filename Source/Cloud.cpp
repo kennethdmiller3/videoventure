@@ -9,9 +9,20 @@ inline float rand_float()
 	return (float)rand() * (1.0f / (float)RAND_MAX);
 }
 
-Cloud::Cloud(int aCount)
-: Entity(), Renderable()
+Cloud::Cloud(unsigned int aId, unsigned int aParentId)
+: Entity(aId)
+, Renderable(Database::renderabletemplate.Get(aParentId))
 {
+}
+
+void Cloud::Init(int aCount)
+{
+	// remove existing draw list
+	if (mDraw)
+	{
+		glDeleteLists(mDraw, 1);
+	}
+
 	// create a new draw list
 	mDraw = glGenLists(1);
 	glNewList(mDraw, GL_COMPILE);
@@ -63,12 +74,6 @@ Cloud::~Cloud(void)
 
 void Cloud::Render(void)
 {
-	// push a transform
-	glPushMatrix();
-
 	// call draw list
 	glCallList( mDraw );
-
-	// reset the transform
-	glPopMatrix();
 }

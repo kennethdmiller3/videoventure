@@ -10,14 +10,14 @@ private:
 	static List sAll;
 
 	// next available identifier
-	static int sNextId;
+	static unsigned int sNextId;
 
 	// list entry
 	List::iterator entry;
 
 protected:
 	// identifier
-	int id;
+	unsigned int id;
 
 	// current transform
 	Matrix2 transform;
@@ -27,13 +27,19 @@ protected:
 
 public:
 	// constructor
-	Entity(void);
+	Entity(unsigned int id = 0);
 
 	// destructor
 	virtual ~Entity(void);
 
+	// take next identifier
+	static unsigned int TakeId(void)
+	{
+		return sNextId++;
+	}
+
 	// get identifier
-	int GetId(void)
+	unsigned int GetId(void)
 	{
 		return id;
 	}
@@ -89,3 +95,8 @@ public:
 	// configure
 	virtual bool Configure(TiXmlElement *element);
 };
+
+namespace Database
+{
+	extern Typed<Entity *> entity;
+}

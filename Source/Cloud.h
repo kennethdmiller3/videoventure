@@ -7,8 +7,11 @@ class Cloud :
 	public Entity, public Renderable
 {
 public:
-	Cloud(int aCount);
+	Cloud(unsigned int aId = 0, unsigned int aParentId = 0);
 	~Cloud(void);
+
+	// initialize
+	void Init(int aCount);
 
 	// render
 	virtual void Render(void);

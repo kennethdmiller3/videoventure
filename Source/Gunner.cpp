@@ -15,8 +15,11 @@ const Vector2 GUNNER_BULLET_DIR[2] =
 
 
 // Gunner Constructor
-Gunner::Gunner(void)
-: Entity(), Controllable(), Simulatable(), Renderable()
+Gunner::Gunner(unsigned int aId, unsigned int aParentId)
+: Entity(aId)
+, Controllable()
+, Simulatable()
+, Renderable(Database::renderabletemplate.Get(aParentId))
 , player(NULL), offset(Vector2(1, 0), Vector2(0, 1), Vector2(0, 0)), mDelay(0.0f), mPhase(-1), mCycle(0)
 {
 }
@@ -35,11 +38,7 @@ bool Gunner::Configure(TiXmlElement *element)
 	case 0xe063cbaa /* "gunner" */:
 		{
 			const char *owner = element->Attribute("owner");
-			EntityMap::iterator itor = entities.find(Hash(owner));
-			if (itor != entities.end())
-			{
-				player = dynamic_cast<Player *>(itor->second);
-			}
+			player = dynamic_cast<Player *>(Database::entity.Get(Hash(owner)));
 
 			element->QueryIntAttribute("phase", &mPhase);
 		}
@@ -83,7 +82,7 @@ void Gunner::Control(float aStep)
 				for (int i = 0; i < 2; i++)
 				{
 					const Vector2 d = GUNNER_BULLET_DIR[i];
-					Bullet *bullet = new Bullet();
+					Bullet *bullet = new Bullet(0, 0xd85669f0 /* "playerbullet" */);
 					bullet->SetPosition(transform.p);
 					bullet->SetVelocity(transform.Rotate(d) * GUNNER_BULLET_SPEED);
 				}
