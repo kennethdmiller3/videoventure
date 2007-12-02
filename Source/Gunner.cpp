@@ -74,14 +74,12 @@ void Gunner::Init(void)
 	body->SetCenterPosition(b2Vec2(transform.p.x, transform.p.y), -atan2f(transform.y.x, transform.y.y));
 
 	// constrain to the offset position
-	b2RevoluteJointDef joint;
+	b2PrismaticJointDef joint;
 	joint.body1 = player->GetBody();
 	joint.body2 = GetBody();
 	joint.anchorPoint = joint.body1->GetCenterPosition();
-	joint.lowerAngle = -atan2f(offset.y.x, offset.y.y);
-	joint.upperAngle = -atan2f(offset.y.x, offset.y.y);
 	joint.enableLimit = true;
-	joint.motorTorque = 1.0f;
+	joint.motorForce = 100.0f;
 	joint.motorSpeed = 0.0f;
     joint.enableMotor = true;
 	world->CreateJoint(&joint);

@@ -308,10 +308,10 @@
 	<template name="playerbullet" type="">
 		<collidable>
 			<body name="main">
-				<circle radius="2">
+				<circle radius="3">
 					<friction value="0"/>
 					<restitution value="1"/>
-					<density value="1"/>
+					<density value="0.2"/>
 					<category value="2"/>
 					<mask bit1="0" bit2="0"/>
 				</circle>

@@ -68,7 +68,7 @@ public:
 
 	// control
 	static void CollideAll(float aStep);
-	virtual void Collide(float aStep, Collidable &aRecipient)
+	virtual void Collide(Collidable &aRecipient, b2Manifold aManifold[], int aCount)
 	{
 	};
 };
