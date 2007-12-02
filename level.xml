@@ -72,79 +72,62 @@
 
 	<!-- test walls -->
 
-	<entity name="wallA" type="target">
+	<template name="wall" type="">
+		<collidable>
+			<body name="main">
+				<box w="8" h="64">
+					<category value="0"/>
+				</box>
+			</body>
+		</collidable>
+		<renderable>
+			<drawlist>
+				<color r="1.0" g="0.9" b="0.3" a="1.0"/>
+				<polygon>
+					<vertex x="-8" y="64"/>
+					<vertex x="8" y="64"/>
+					<vertex x="8" y="-64"/>
+					<vertex x="-8" y="-64"/>
+				</polygon>
+			</drawlist>
+		</renderable>
+	</template>
+	
+	<entity name="wallA" type="wall">
 		<!-- right wall -->
-		<position x="128.0" y="0.0"/>
-		<collidable layer="2" type="alignedbox" width="16" height="32"/>
-		<renderable>
-			<drawlist>
-				<color r="1.0" g="0.9" b="0.3" a="1.0"/>
-				<polygon>
-					<vertex x="-16" y="32"/>
-					<vertex x="16" y="32"/>
-					<vertex x="16" y="-32"/>
-					<vertex x="-16" y="-32"/>
-				</polygon>
-			</drawlist>
-		</renderable>
+		<position x="128.0" y="0.0" angle="0"/>
 	</entity>
 
-	<entity name="wallB" type="target">
+	<entity name="wallB" type="wall">
 		<!-- top wall -->
-		<position x="0.0" y="128.0"/>
-		<collidable layer="2" type="alignedbox" width="32" height="16"/>
-		<renderable>
-			<drawlist>
-				<color r="1.0" g="0.9" b="0.3" a="1.0"/>
-				<polygon>
-					<vertex x="-32" y="16"/>
-					<vertex x="32" y="16"/>
-					<vertex x="32" y="-16"/>
-					<vertex x="-32" y="-16"/>
-				</polygon>
-			</drawlist>
-		</renderable>
+		<position x="0.0" y="128.0" angle="90"/>
 	</entity>
 
-	<entity name="wallC" type="target">
+	<entity name="wallC" type="wall">
 		<!-- left wall -->
-		<position x="-128.0" y="0.0"/>
-		<collidable layer="2" type="alignedbox" width="16" height="32"/>
-		<renderable>
-			<drawlist>
-				<color r="1.0" g="0.9" b="0.3" a="1.0"/>
-				<polygon>
-					<vertex x="-16" y="32"/>
-					<vertex x="16" y="32"/>
-					<vertex x="16" y="-32"/>
-					<vertex x="-16" y="-32"/>
-				</polygon>
-			</drawlist>
-		</renderable>
+		<position x="-128.0" y="0.0" angle="180"/>
 	</entity>
 
-	<entity name="wallD" type="target">
+	<entity name="wallD" type="wall">
 		<!-- bottom wall -->
-		<position x="0.0" y="-128.0"/>
-		<collidable layer="2" type="alignedbox" width="32" height="16"/>
-		<renderable>
-			<drawlist>
-				<color r="1.0" g="0.9" b="0.3" a="1.0"/>
-				<polygon>
-					<vertex x="-32" y="16"/>
-					<vertex x="32" y="16"/>
-					<vertex x="32" y="-16"/>
-					<vertex x="-32" y="-16"/>
-				</polygon>
-			</drawlist>
-		</renderable>
+		<position x="0.0" y="-128.0" angle="270"/>
 	</entity>
 
 
 	<!-- bullseye targets -->
 
 	<template name="target" type="">
-		<collidable layer="2" type="circle" radius="10"/>
+		<collidable>
+			<body name="main">
+				<circle radius="10">
+					<density value="1"/>
+					<friction value="0.5"/>
+					<restitution value="0.5"/>
+					<category value="3"/>
+				</circle>
+				<damping linear="0.001" angular="0.001"/>
+			</body>
+		</collidable>
 		<renderable>
 			<drawlist>
 				<color r="1.0" g="0.2" b="0.1" a="1.0"/>
@@ -233,9 +216,20 @@
 
 	<!-- player ship -->
 
-	<entity name="player" type="player">
+	<entity name="playership" type="player">
 		<position x="0" y="0"/>
-		<collidable layer="0" type="circle" radius="16"/>
+		<collidable>
+			<body name="main">
+				<circle radius="16">
+					<density value="1"/>
+					<friction value="0.5"/>
+					<restitution value="0.5"/>
+					<category value="1"/>
+					<mask bit2="0"/>
+				</circle>
+				<allowsleep value="0"/>
+			</body>
+		</collidable>
 		<renderable>
 			<drawlist>
 				<color r="1.0" g="1.0" b="1.0" a="1.0"/>
@@ -271,6 +265,18 @@
 	<!-- player gunners -->
 	
 	<template name="gunner" type="">
+		<collidable>
+			<body name="main">
+				<circle radius="5">
+					<density value="0.1"/>
+					<friction value="0.5"/>
+					<restitution value="0.5"/>
+					<category value="2"/>
+					<mask bit0="0" bit1="0" bit2="0"/>
+				</circle>
+				<allowsleep value="0"/>
+			</body>
+		</collidable>
 		<renderable>
 			<drawlist>
 				<color r="0.5" g="0.5" b="0.5" a="1.0"/>
@@ -288,19 +294,29 @@
 
 	<entity name="gunner1" type="gunner">
 		<offset x="-24" y="-16" angle="10"/>
-		<gunner owner="player" phase="0"/>
+		<gunner owner="playership" phase="0"/>
 	</entity>
 
 	<entity name="gunner2" type="gunner">
 		<offset x="24" y="-16" angle="-10"/>
-		<gunner owner="player" phase="1"/>
+		<gunner owner="playership" phase="1"/>
 	</entity>
 
 
 	<!-- player bullet -->
 	
 	<template name="playerbullet" type="">
-		<collidable layer="1" type="circle" radius="3"/>
+		<collidable>
+			<body name="main">
+				<circle radius="2">
+					<friction value="0"/>
+					<restitution value="1"/>
+					<density value="1"/>
+					<category value="2"/>
+					<mask bit1="0" bit2="0"/>
+				</circle>
+			</body>
+		</collidable>
 		<renderable>
 			<drawlist>
 				<color r="0.8" g="0.9" b="1.0" a="1.0"/>

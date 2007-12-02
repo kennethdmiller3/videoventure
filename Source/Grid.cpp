@@ -13,27 +13,49 @@ Grid::Grid(unsigned int aId, unsigned int aParentId)
 
 	// draw perimeter
 	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-	glVertex3i(ARENA_X_MIN, ARENA_Y_MIN, 0);
-	glVertex3i(ARENA_X_MIN, ARENA_Y_MAX, 0);
-	glVertex3i(ARENA_X_MAX, ARENA_Y_MIN, 0);
-	glVertex3i(ARENA_X_MAX, ARENA_Y_MAX, 0);
-	glVertex3i(ARENA_X_MIN, ARENA_Y_MIN, 0);
-	glVertex3i(ARENA_X_MAX, ARENA_Y_MIN, 0);
-	glVertex3i(ARENA_X_MIN, ARENA_Y_MAX, 0);
-	glVertex3i(ARENA_X_MAX, ARENA_Y_MAX, 0);
+	glVertex3f(ARENA_X_MIN, ARENA_Y_MIN, 0);
+	glVertex3f(ARENA_X_MIN, ARENA_Y_MAX, 0);
+	glVertex3f(ARENA_X_MAX, ARENA_Y_MIN, 0);
+	glVertex3f(ARENA_X_MAX, ARENA_Y_MAX, 0);
+	glVertex3f(ARENA_X_MIN, ARENA_Y_MIN, 0);
+	glVertex3f(ARENA_X_MAX, ARENA_Y_MIN, 0);
+	glVertex3f(ARENA_X_MIN, ARENA_Y_MAX, 0);
+	glVertex3f(ARENA_X_MAX, ARENA_Y_MAX, 0);
 
 	// draw grid
-	for (int x = ARENA_X_MIN + 64, i = 1; x <= ARENA_X_MAX - 64; x += 64, ++i)
+	for (float x = ARENA_X_MIN + 64; x <= ARENA_X_MAX - 64;)
 	{
-		glColor4f(1.0f, 1.0f, 1.0f, (i & 3) ? 0.0625f : 0.25f);
-		glVertex3i(x, ARENA_Y_MIN, 0);
-		glVertex3i(x, ARENA_Y_MAX, 0);
+		glColor4f(1.0f, 1.0f, 1.0f, 0.0625f);
+		glVertex3f(x, ARENA_Y_MIN, 0);
+		glVertex3f(x, ARENA_Y_MAX, 0);
+		x += 64;
+		glVertex3f(x, ARENA_Y_MIN, 0);
+		glVertex3f(x, ARENA_Y_MAX, 0);
+		x += 64;
+		glVertex3f(x, ARENA_Y_MIN, 0);
+		glVertex3f(x, ARENA_Y_MAX, 0);
+		x += 64;
+		glColor4f(1.0f, 1.0f, 1.0f, 0.25f);
+		glVertex3f(x, ARENA_Y_MIN, 0);
+		glVertex3f(x, ARENA_Y_MAX, 0);
+		x += 64;
 	}
-	for (int y = ARENA_Y_MIN + 64, i = 1; y <= ARENA_Y_MAX - 64; y += 64, ++i)
+	for (float y = ARENA_Y_MIN + 64; y <= ARENA_Y_MAX - 64;)
 	{
-		glColor4f(1.0f, 1.0f, 1.0f, (i & 3) ? 0.0625f : 0.25f);
-		glVertex3i(ARENA_X_MIN, y, 0);
-		glVertex3i(ARENA_X_MAX, y, 0);
+		glColor4f(1.0f, 1.0f, 1.0f, 0.0625f);
+		glVertex3f(ARENA_X_MIN, y, 0);
+		glVertex3f(ARENA_X_MAX, y, 0);
+		y += 64;
+		glVertex3f(ARENA_X_MIN, y, 0);
+		glVertex3f(ARENA_X_MAX, y, 0);
+		y += 64;
+		glVertex3f(ARENA_X_MIN, y, 0);
+		glVertex3f(ARENA_X_MAX, y, 0);
+		y += 64;
+		glColor4f(1.0f, 1.0f, 1.0f, 0.25f);
+		glVertex3f(ARENA_X_MIN, y, 0);
+		glVertex3f(ARENA_X_MAX, y, 0);
+		y += 64;
 	}
 
 	glEnd();

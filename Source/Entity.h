@@ -94,6 +94,11 @@ public:
 
 	// configure
 	virtual bool Configure(TiXmlElement *element);
+
+	// init
+	virtual void Init(void)
+	{
+	}
 };
 
 namespace Database

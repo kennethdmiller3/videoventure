@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Database.h"
+#include <boost/pool/pool.hpp>
 
 const int COLLISION_LAYERS = 32;
 
@@ -10,79 +11,60 @@ public:
 	// collision layer
 	int layer;
 
-	// collision type
-	enum Type
-	{
-		TYPE_NONE,
-		TYPE_ALIGNED_BOX,
-		TYPE_CIRCLE,
-		NUM_TYPES
-	};
-	Type type;
+	// collision shapes
+	std::vector<b2ShapeDef *> shapes;
 
-	// size
-	Vector2 size;
+	// collision bodies
+	typedef stdext::hash_map<unsigned int, b2BodyDef> BodyMap;
+	BodyMap bodies;
+
+	// collision joints
+	typedef stdext::hash_map<unsigned int, b2JointDef> JointMap;
+	JointMap joints;
 
 public:
 	CollidableTemplate(void);
 	virtual ~CollidableTemplate(void);
 
 	// configure
-	virtual bool Attribute(TiXmlAttribute *attribute);
+	bool ProcessShapeItem(TiXmlElement *element, b2ShapeDef &shape);
+	bool ConfigureShape(TiXmlElement *element, b2ShapeDef &shape);
+	bool ConfigureCircle(TiXmlElement *element, b2CircleDef &shape);
+	bool ConfigureBox(TiXmlElement *element, b2BoxDef &shape);
+	bool ProcessPolyItem(TiXmlElement *element, b2PolyDef &shape);
+	bool ConfigurePoly(TiXmlElement *element, b2PolyDef &shape);
+	bool ProcessBodyItem(TiXmlElement *element, b2BodyDef &body);
+	bool ConfigureBody(TiXmlElement *element, b2BodyDef &body);
 	virtual bool Configure(TiXmlElement *element);
 };
 
 class Collidable : public CollidableTemplate
 {
-private:
-	typedef std::list<Collidable *> List;
-	static List sLayer[COLLISION_LAYERS];
-
-	// layer collision masks
-	static unsigned int sLayerMask[COLLISION_LAYERS];
+protected:
+	static b2World *world;
 
 	// identifier
 	unsigned int id;
 
-	// list entry
-	List::iterator entry;
-
-public:
-	// bounding box
-	AlignedBox2 box;
+	// body
+	b2Body *body;
 
 public:
 	Collidable(void);
 	Collidable(const CollidableTemplate &aTemplate);
 	virtual ~Collidable(void);
 
-	// get layer collision mask
-	static unsigned int GetLayerMask(int aLayer)
+	void AddToWorld(void);
+	void RemoveFromWorld(void);
+
+	b2Body *GetBody(void) const
 	{
-		if (aLayer >= 0 && aLayer < 32)
-			return sLayerMask[aLayer];
-		else
-			return 0;
+		return body;
 	}
 
-	// set layer collision mask
-	static void SetLayerMask(int aLayer, unsigned int aMask)
-	{
-		if (aLayer >= 0 && aLayer < 32)
-			sLayerMask[aLayer] = aMask;
-	}
-
-	// get layer
-	int GetLayer(void)
-	{
-		return layer;
-	}
-
-	// set layer
-	void SetLayer(int aLayer);
-
-	// configure
-	virtual bool Attribute(TiXmlAttribute *attribute);
+	// collision world
+	static void Init(void);
+	static void Done(void);
 
 	// control
 	static void CollideAll(float aStep);

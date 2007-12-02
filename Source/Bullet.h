@@ -5,10 +5,14 @@
 #include "Collidable.h"
 #include "Renderable.h"
 
+#include <boost/pool/object_pool.hpp>
+
 class Bullet :
 	public Entity, public Simulatable, public Collidable, public Renderable
 {
 public:
+	// bullet pool
+	static boost::object_pool<Bullet> pool;
 
 	// life
 	float mLife;

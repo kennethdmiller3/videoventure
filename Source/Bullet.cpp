@@ -14,6 +14,9 @@ const float BULLET_TAIL_COLOR[2][4] =
 	{ 0.0f, 0.0f, 1.0f, 0.0f }
 };
 
+// bullet pool
+boost::object_pool<Bullet> Bullet::pool;
+
 Bullet::Bullet(unsigned int aId, unsigned int aParentId)
 : Entity(aId)
 , Simulatable()
@@ -33,26 +36,19 @@ void Bullet::Simulate(float aStep)
 	mLife -= aStep;
 	if (mLife <= 0)
 	{
-		delete this;
+		pool.destroy(this);
 		return;
 	}
-
-	// apply velocity
-	transform.p += vel * aStep;
 }
 
 void Bullet::Collide(float aStep, Collidable &aRecipient)
 {
-	// remove collision
-	SetLayer(-1);
-
 	// kill the bullet
-	mLife = 0.0f;
-	vel.x = 0.0f;
-	vel.y = 0.0f;
+//	mLife = 0.0f;
+//	RemoveFromWorld();
 
 	// create an explosion
-	Explosion *explosion = new Explosion(0, 0x70f5d327 /* "playerbulletexplosion" */);
+	Explosion *explosion = Explosion::pool.construct(0, 0x70f5d327 /* "playerbulletexplosion" */);
 	explosion->SetPosition(transform.p);
 }
 
@@ -61,28 +57,32 @@ void Bullet::Render(void)
 	// push a transform
 	glPushMatrix();
 
-	// set offset
-	glTranslatef( transform.p.x, transform.p.y, 0 );
+	// load matrix
+	float m[16] =
+	{
+		transform.x.x, transform.x.y, 0, 0,
+		transform.y.x, transform.y.y, 0, 0,
+		0, 0, 1, 0,
+		transform.p.x, transform.p.y, 0, 1
+	};
+	glMultMatrixf( m );
 
 	// draw bullet
 	glCallList(mDraw);
 
+	// reset the transform
+	glPopMatrix();
+
 	// if moving...
 	if (vel.x != 0 && vel.y != 0)
 	{
-		// disable 2D texturing
-		glDisable( GL_TEXTURE_2D );
-
 		// draw a tail
 		float tail = std::min(1.0f - mLife, BULLET_TAIL_LENGTH);
 		glBegin( GL_LINES );
 		glColor4fv( BULLET_TAIL_COLOR[0] );
-		glVertex2f( 0, 0 );
+		glVertex2f( transform.p.x, transform.p.y );
 		glColor4fv( BULLET_TAIL_COLOR[1] );
-		glVertex2f( vel.x * -tail, vel.y * -tail );
+		glVertex2f( transform.p.x - vel.x * tail, transform.p.y - vel.y * tail );
 		glEnd();
 	}
-
-	// reset the transform
-	glPopMatrix();
 }

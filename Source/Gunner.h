@@ -8,7 +8,7 @@
 #include "Player.h"
 
 class Gunner : 
-	public Entity, public Controllable, public Simulatable, public Renderable
+	public Entity, public Controllable, public Simulatable, public Collidable, public Renderable
 {
 protected:
 	// player
@@ -43,6 +43,9 @@ public:
 
 	// configure
 	virtual bool Configure(TiXmlElement *element);
+
+	// init
+	virtual void Init(void);
 
 	// control
 	virtual void Control(float aStep);

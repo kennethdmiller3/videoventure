@@ -12,7 +12,7 @@ private:
 
 public:
 	Controllable(void);
-	~Controllable(void);
+	virtual ~Controllable(void);
 
 	// configure
 	virtual bool Configure(TiXmlElement *element) { return false; }

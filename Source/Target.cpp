@@ -39,8 +39,15 @@ void Target::Render(void)
 	// push a transform
 	glPushMatrix();
 
-	// set offset
-	glTranslatef( transform.p.x, transform.p.y, 0 );
+	// load matrix
+	float m[16] =
+	{
+		transform.x.x, transform.x.y, 0, 0,
+		transform.y.x, transform.y.y, 0, 0,
+		0, 0, 1, 0,
+		transform.p.x, transform.p.y, 0, 1
+	};
+	glMultMatrixf( m );
 
 	// call the draw list
 	glCallList( mDraw );

@@ -8,6 +8,8 @@
 #include "Player.h"
 #include "Gunner.h"
 #include "Target.h"
+#include "Bullet.h"
+#include "Explosion.h"
 
 int DebugPrint(const char *format, ...)
 {
@@ -960,6 +962,7 @@ static void ProcessEntityItems(TiXmlElement *element)
 		break;
 
 	case 0x32608848 /* "target" */:
+	case 0xa7262d15 /* "wall" */:
 		entity = new Target(entity_id, parent_id);
 		break;
 
@@ -980,6 +983,13 @@ static void ProcessEntityItems(TiXmlElement *element)
 		{
 			entity->Configure(child);
 		}
+		
+		// initialize the entity (HACK)
+		Collidable *collidable = dynamic_cast<Collidable *>(entity);
+		if (collidable)
+			collidable->AddToWorld();
+
+		entity->Init();
 	}
 }
 
@@ -1109,9 +1119,7 @@ int SDL_main( int argc, char *argv[] )
 	if( !init() )
 		return 1;    
 
-	// set collision layers
-	Collidable::SetLayerMask(COLLISION_LAYER_PLAYER_BULLET, 1<<2);
-
+	// input system
 	Input input;
 
 	{
@@ -1174,22 +1182,25 @@ int SDL_main( int argc, char *argv[] )
 		}
 	}
 
+	// collidable initialization
+	Collidable::Init();
+
 	{
 		// level configuration
-		TiXmlDocument level("level.xml");
-		level.LoadFile();
+		TiXmlDocument level_config("level.xml");
+		level_config.LoadFile();
 
 		// process child elements of world
-		TiXmlHandle handle( &level );
-		TiXmlElement *world = handle.FirstChildElement("world").ToElement();
-		if (world)
+		TiXmlHandle handle( &level_config );
+		TiXmlElement *level_world = handle.FirstChildElement("world").ToElement();
+		if (level_world)
 		{
-			ProcessWorldItems(world);
+			ProcessWorldItems(level_world);
 		}
 	}
 
 	// find the player
-	Player *player = dynamic_cast<Player *>(Database::entity.Get(Hash("player")));
+	Player *player = dynamic_cast<Player *>(Database::entity.Get(Hash("playership")));
 	if (player)
 	{
 		player->SetInput(&input);
@@ -1272,30 +1283,59 @@ int SDL_main( int argc, char *argv[] )
 		{
 			// get loop time in seconds
 			float step = delta / 1000.0f;
+#define PRINT_STEP_TIMES
 #ifdef PRINT_STEP_TIMES
 			DebugPrint("dt=%f (%f fps)\n", step, 1.0f/step);
 #endif
 
 			// CONTROL PHASE
 
+			LARGE_INTEGER perf_freq;
+			QueryPerformanceFrequency(&perf_freq);
+
+			LARGE_INTEGER perf_count0;
+			QueryPerformanceCounter(&perf_count0);
+
 			// control all entities
 			Controllable::ControlAll(step);
 
+			LARGE_INTEGER perf_count1;
+			QueryPerformanceCounter(&perf_count1);
 
-			// COLLISION PHASE
-
-			// collide all entities
-			Collidable::CollideAll(step);
+			DebugPrint("ctrl=%d ", 1000000 * (perf_count1.QuadPart - perf_count0.QuadPart) / perf_freq.QuadPart);
 
 
 			// SIMULATION PHASE
+			// (generate forces)
 
 			// simulate all entities
 			Simulatable::SimulateAll(step);
+
+			LARGE_INTEGER perf_count2;
+			QueryPerformanceCounter(&perf_count2);
+
+			DebugPrint("simu=%d ", 1000000 * (perf_count2.QuadPart - perf_count1.QuadPart) / perf_freq.QuadPart);
+
+
+			// COLLISION PHASE
+			// (apply forces and update positions)
+			Collidable::CollideAll(step);
+
+			LARGE_INTEGER perf_count3;
+			QueryPerformanceCounter(&perf_count3);
+
+			DebugPrint("coll=%d ", 1000000 * (perf_count3.QuadPart - perf_count2.QuadPart) / perf_freq.QuadPart);
+
 		}
 
 
 		// RENDERING PHASE
+
+		LARGE_INTEGER perf_freq;
+		QueryPerformanceFrequency(&perf_freq);
+
+		LARGE_INTEGER perf_count0;
+		QueryPerformanceCounter(&perf_count0);
 
 		// clear the screen
 		glClear(
@@ -1321,10 +1361,19 @@ int SDL_main( int argc, char *argv[] )
 		// reset camera transform
 		glPopMatrix();
 
+		LARGE_INTEGER perf_count1;
+		QueryPerformanceCounter(&perf_count1);
+
 		// show the screen
 		SDL_GL_SwapBuffers();
+
+		DebugPrint("rend=%d ", 1000000 * (perf_count1.QuadPart - perf_count0.QuadPart) / perf_freq.QuadPart);
 	}
 	while( !quit );
+
+	// clear pools
+	Bullet::pool.~object_pool();
+	Explosion::pool.~object_pool();
 
 	// remove all entities
 	for (Database::Typed<Entity *>::iterator itor = Database::entity.begin(); itor != Database::entity.end(); ++itor)
@@ -1340,6 +1389,9 @@ int SDL_main( int argc, char *argv[] )
 	Database::collidabletemplate.clear();
 	Database::collidable.clear();
 	Database::renderable.clear();
+
+	// collidable done
+	Collidable::Done();
 
 	// clean up
 	clean_up();
