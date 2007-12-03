@@ -67,6 +67,337 @@
 
 	<entity name="playfield" type="grid">
 		<!-- reference grid -->
+		<renderable>
+			<drawlist>
+				<scale x="64" y="64"/>
+				<color r="1.0" g="1.0" b="1.0" a="1.0"/>
+				<line_loop>
+					<!-- perimeter -->
+					<vertex x="-32" y="-32"/>
+					<vertex x="32" y="-32"/>
+					<vertex x="32" y="32"/>
+					<vertex x="-32" y="32"/>
+				</line_loop>
+				<lines>
+					<!-- vertical lines -->
+					<color r="1.0" g="1.0" b="1.0" a="0.0625"/>
+					<vertex x="-31" y="-32"/>
+					<vertex x="-31" y="32"/>
+					<vertex x="-30" y="-32"/>
+					<vertex x="-30" y="32"/>
+					<vertex x="-29" y="-32"/>
+					<vertex x="-29" y="32"/>
+					<color r="1.0" g="1.0" b="1.0" a="0.25"/>
+					<vertex x="-28" y="-32"/>
+					<vertex x="-28" y="32"/>
+					<color r="1.0" g="1.0" b="1.0" a="0.0625"/>
+					<vertex x="-27" y="-32"/>
+					<vertex x="-27" y="32"/>
+					<vertex x="-26" y="-32"/>
+					<vertex x="-26" y="32"/>
+					<vertex x="-25" y="-32"/>
+					<vertex x="-25" y="32"/>
+					<color r="1.0" g="1.0" b="1.0" a="0.25"/>
+					<vertex x="-24" y="-32"/>
+					<vertex x="-24" y="32"/>
+					<color r="1.0" g="1.0" b="1.0" a="0.0625"/>
+					<vertex x="-23" y="-32"/>
+					<vertex x="-23" y="32"/>
+					<vertex x="-22" y="-32"/>
+					<vertex x="-22" y="32"/>
+					<vertex x="-21" y="-32"/>
+					<vertex x="-21" y="32"/>
+					<color r="1.0" g="1.0" b="1.0" a="0.25"/>
+					<vertex x="-20" y="-32"/>
+					<vertex x="-20" y="32"/>
+					<color r="1.0" g="1.0" b="1.0" a="0.0625"/>
+					<vertex x="-19" y="-32"/>
+					<vertex x="-19" y="32"/>
+					<vertex x="-18" y="-32"/>
+					<vertex x="-18" y="32"/>
+					<vertex x="-17" y="-32"/>
+					<vertex x="-17" y="32"/>
+					<color r="1.0" g="1.0" b="1.0" a="0.25"/>
+					<vertex x="-16" y="-32"/>
+					<vertex x="-16" y="32"/>
+					<color r="1.0" g="1.0" b="1.0" a="0.0625"/>
+					<vertex x="-15" y="-32"/>
+					<vertex x="-15" y="32"/>
+					<vertex x="-14" y="-32"/>
+					<vertex x="-14" y="32"/>
+					<vertex x="-13" y="-32"/>
+					<vertex x="-13" y="32"/>
+					<color r="1.0" g="1.0" b="1.0" a="0.25"/>
+					<vertex x="-12" y="-32"/>
+					<vertex x="-12" y="32"/>
+					<color r="1.0" g="1.0" b="1.0" a="0.0625"/>
+					<vertex x="-11" y="-32"/>
+					<vertex x="-11" y="32"/>
+					<vertex x="-10" y="-32"/>
+					<vertex x="-10" y="32"/>
+					<vertex x="-9" y="-32"/>
+					<vertex x="-9" y="32"/>
+					<color r="1.0" g="1.0" b="1.0" a="0.25"/>
+					<vertex x="-8" y="-32"/>
+					<vertex x="-8" y="32"/>
+					<color r="1.0" g="1.0" b="1.0" a="0.0625"/>
+					<vertex x="-7" y="-32"/>
+					<vertex x="-7" y="32"/>
+					<vertex x="-6" y="-32"/>
+					<vertex x="-6" y="32"/>
+					<vertex x="-5" y="-32"/>
+					<vertex x="-5" y="32"/>
+					<color r="1.0" g="1.0" b="1.0" a="0.25"/>
+					<vertex x="-4" y="-32"/>
+					<vertex x="-4" y="32"/>
+					<color r="1.0" g="1.0" b="1.0" a="0.0625"/>
+					<vertex x="-3" y="-32"/>
+					<vertex x="-3" y="32"/>
+					<vertex x="-2" y="-32"/>
+					<vertex x="-2" y="32"/>
+					<vertex x="-1" y="-32"/>
+					<vertex x="-1" y="32"/>
+					<color r="1.0" g="1.0" b="1.0" a="0.25"/>
+					<vertex x="-0" y="-32"/>
+					<vertex x="-0" y="32"/>
+					<color r="1.0" g="1.0" b="1.0" a="0.0625"/>
+					<vertex x="1" y="-32"/>
+					<vertex x="1" y="32"/>
+					<vertex x="2" y="-32"/>
+					<vertex x="2" y="32"/>
+					<vertex x="3" y="-32"/>
+					<vertex x="3" y="32"/>
+					<color r="1.0" g="1.0" b="1.0" a="0.25"/>
+					<vertex x="4" y="-32"/>
+					<vertex x="4" y="32"/>
+					<color r="1.0" g="1.0" b="1.0" a="0.0625"/>
+					<vertex x="5" y="-32"/>
+					<vertex x="5" y="32"/>
+					<vertex x="6" y="-32"/>
+					<vertex x="6" y="32"/>
+					<vertex x="7" y="-32"/>
+					<vertex x="7" y="32"/>
+					<color r="1.0" g="1.0" b="1.0" a="0.25"/>
+					<vertex x="8" y="-32"/>
+					<vertex x="8" y="32"/>
+					<color r="1.0" g="1.0" b="1.0" a="0.0625"/>
+					<vertex x="9" y="-32"/>
+					<vertex x="9" y="32"/>
+					<vertex x="10" y="-32"/>
+					<vertex x="10" y="32"/>
+					<vertex x="11" y="-32"/>
+					<vertex x="11" y="32"/>
+					<color r="1.0" g="1.0" b="1.0" a="0.25"/>
+					<vertex x="12" y="-32"/>
+					<vertex x="12" y="32"/>
+					<color r="1.0" g="1.0" b="1.0" a="0.0625"/>
+					<vertex x="13" y="-32"/>
+					<vertex x="13" y="32"/>
+					<vertex x="14" y="-32"/>
+					<vertex x="14" y="32"/>
+					<vertex x="15" y="-32"/>
+					<vertex x="15" y="32"/>
+					<color r="1.0" g="1.0" b="1.0" a="0.25"/>
+					<vertex x="16" y="-32"/>
+					<vertex x="16" y="32"/>
+					<color r="1.0" g="1.0" b="1.0" a="0.0625"/>
+					<vertex x="17" y="-32"/>
+					<vertex x="17" y="32"/>
+					<vertex x="18" y="-32"/>
+					<vertex x="18" y="32"/>
+					<vertex x="19" y="-32"/>
+					<vertex x="19" y="32"/>
+					<color r="1.0" g="1.0" b="1.0" a="0.25"/>
+					<vertex x="20" y="-32"/>
+					<vertex x="20" y="32"/>
+					<color r="1.0" g="1.0" b="1.0" a="0.0625"/>
+					<vertex x="21" y="-32"/>
+					<vertex x="21" y="32"/>
+					<vertex x="22" y="-32"/>
+					<vertex x="22" y="32"/>
+					<vertex x="23" y="-32"/>
+					<vertex x="23" y="32"/>
+					<color r="1.0" g="1.0" b="1.0" a="0.25"/>
+					<vertex x="24" y="-32"/>
+					<vertex x="24" y="32"/>
+					<color r="1.0" g="1.0" b="1.0" a="0.0625"/>
+					<vertex x="25" y="-32"/>
+					<vertex x="25" y="32"/>
+					<vertex x="26" y="-32"/>
+					<vertex x="26" y="32"/>
+					<vertex x="27" y="-32"/>
+					<vertex x="27" y="32"/>
+					<color r="1.0" g="1.0" b="1.0" a="0.25"/>
+					<vertex x="28" y="-32"/>
+					<vertex x="28" y="32"/>
+					<color r="1.0" g="1.0" b="1.0" a="0.0625"/>
+					<vertex x="29" y="-32"/>
+					<vertex x="29" y="32"/>
+					<vertex x="30" y="-32"/>
+					<vertex x="30" y="32"/>
+					<vertex x="31" y="-32"/>
+					<vertex x="31" y="32"/>
+					<!-- horizontal lines -->
+					<color r="1.0" g="1.0" b="1.0" a="0.0625"/>
+					<vertex y="-31" x="-32"/>
+					<vertex y="-31" x="32"/>
+					<vertex y="-30" x="-32"/>
+					<vertex y="-30" x="32"/>
+					<vertex y="-29" x="-32"/>
+					<vertex y="-29" x="32"/>
+					<color r="1.0" g="1.0" b="1.0" a="0.25"/>
+					<vertex y="-28" x="-32"/>
+					<vertex y="-28" x="32"/>
+					<color r="1.0" g="1.0" b="1.0" a="0.0625"/>
+					<vertex y="-27" x="-32"/>
+					<vertex y="-27" x="32"/>
+					<vertex y="-26" x="-32"/>
+					<vertex y="-26" x="32"/>
+					<vertex y="-25" x="-32"/>
+					<vertex y="-25" x="32"/>
+					<color r="1.0" g="1.0" b="1.0" a="0.25"/>
+					<vertex y="-24" x="-32"/>
+					<vertex y="-24" x="32"/>
+					<color r="1.0" g="1.0" b="1.0" a="0.0625"/>
+					<vertex y="-23" x="-32"/>
+					<vertex y="-23" x="32"/>
+					<vertex y="-22" x="-32"/>
+					<vertex y="-22" x="32"/>
+					<vertex y="-21" x="-32"/>
+					<vertex y="-21" x="32"/>
+					<color r="1.0" g="1.0" b="1.0" a="0.25"/>
+					<vertex y="-20" x="-32"/>
+					<vertex y="-20" x="32"/>
+					<color r="1.0" g="1.0" b="1.0" a="0.0625"/>
+					<vertex y="-19" x="-32"/>
+					<vertex y="-19" x="32"/>
+					<vertex y="-18" x="-32"/>
+					<vertex y="-18" x="32"/>
+					<vertex y="-17" x="-32"/>
+					<vertex y="-17" x="32"/>
+					<color r="1.0" g="1.0" b="1.0" a="0.25"/>
+					<vertex y="-16" x="-32"/>
+					<vertex y="-16" x="32"/>
+					<color r="1.0" g="1.0" b="1.0" a="0.0625"/>
+					<vertex y="-15" x="-32"/>
+					<vertex y="-15" x="32"/>
+					<vertex y="-14" x="-32"/>
+					<vertex y="-14" x="32"/>
+					<vertex y="-13" x="-32"/>
+					<vertex y="-13" x="32"/>
+					<color r="1.0" g="1.0" b="1.0" a="0.25"/>
+					<vertex y="-12" x="-32"/>
+					<vertex y="-12" x="32"/>
+					<color r="1.0" g="1.0" b="1.0" a="0.0625"/>
+					<vertex y="-11" x="-32"/>
+					<vertex y="-11" x="32"/>
+					<vertex y="-10" x="-32"/>
+					<vertex y="-10" x="32"/>
+					<vertex y="-9" x="-32"/>
+					<vertex y="-9" x="32"/>
+					<color r="1.0" g="1.0" b="1.0" a="0.25"/>
+					<vertex y="-8" x="-32"/>
+					<vertex y="-8" x="32"/>
+					<color r="1.0" g="1.0" b="1.0" a="0.0625"/>
+					<vertex y="-7" x="-32"/>
+					<vertex y="-7" x="32"/>
+					<vertex y="-6" x="-32"/>
+					<vertex y="-6" x="32"/>
+					<vertex y="-5" x="-32"/>
+					<vertex y="-5" x="32"/>
+					<color r="1.0" g="1.0" b="1.0" a="0.25"/>
+					<vertex y="-4" x="-32"/>
+					<vertex y="-4" x="32"/>
+					<color r="1.0" g="1.0" b="1.0" a="0.0625"/>
+					<vertex y="-3" x="-32"/>
+					<vertex y="-3" x="32"/>
+					<vertex y="-2" x="-32"/>
+					<vertex y="-2" x="32"/>
+					<vertex y="-1" x="-32"/>
+					<vertex y="-1" x="32"/>
+					<color r="1.0" g="1.0" b="1.0" a="0.25"/>
+					<vertex y="-0" x="-32"/>
+					<vertex y="-0" x="32"/>
+					<color r="1.0" g="1.0" b="1.0" a="0.0625"/>
+					<vertex y="1" x="-32"/>
+					<vertex y="1" x="32"/>
+					<vertex y="2" x="-32"/>
+					<vertex y="2" x="32"/>
+					<vertex y="3" x="-32"/>
+					<vertex y="3" x="32"/>
+					<color r="1.0" g="1.0" b="1.0" a="0.25"/>
+					<vertex y="4" x="-32"/>
+					<vertex y="4" x="32"/>
+					<color r="1.0" g="1.0" b="1.0" a="0.0625"/>
+					<vertex y="5" x="-32"/>
+					<vertex y="5" x="32"/>
+					<vertex y="6" x="-32"/>
+					<vertex y="6" x="32"/>
+					<vertex y="7" x="-32"/>
+					<vertex y="7" x="32"/>
+					<color r="1.0" g="1.0" b="1.0" a="0.25"/>
+					<vertex y="8" x="-32"/>
+					<vertex y="8" x="32"/>
+					<color r="1.0" g="1.0" b="1.0" a="0.0625"/>
+					<vertex y="9" x="-32"/>
+					<vertex y="9" x="32"/>
+					<vertex y="10" x="-32"/>
+					<vertex y="10" x="32"/>
+					<vertex y="11" x="-32"/>
+					<vertex y="11" x="32"/>
+					<color r="1.0" g="1.0" b="1.0" a="0.25"/>
+					<vertex y="12" x="-32"/>
+					<vertex y="12" x="32"/>
+					<color r="1.0" g="1.0" b="1.0" a="0.0625"/>
+					<vertex y="13" x="-32"/>
+					<vertex y="13" x="32"/>
+					<vertex y="14" x="-32"/>
+					<vertex y="14" x="32"/>
+					<vertex y="15" x="-32"/>
+					<vertex y="15" x="32"/>
+					<color r="1.0" g="1.0" b="1.0" a="0.25"/>
+					<vertex y="16" x="-32"/>
+					<vertex y="16" x="32"/>
+					<color r="1.0" g="1.0" b="1.0" a="0.0625"/>
+					<vertex y="17" x="-32"/>
+					<vertex y="17" x="32"/>
+					<vertex y="18" x="-32"/>
+					<vertex y="18" x="32"/>
+					<vertex y="19" x="-32"/>
+					<vertex y="19" x="32"/>
+					<color r="1.0" g="1.0" b="1.0" a="0.25"/>
+					<vertex y="20" x="-32"/>
+					<vertex y="20" x="32"/>
+					<color r="1.0" g="1.0" b="1.0" a="0.0625"/>
+					<vertex y="21" x="-32"/>
+					<vertex y="21" x="32"/>
+					<vertex y="22" x="-32"/>
+					<vertex y="22" x="32"/>
+					<vertex y="23" x="-32"/>
+					<vertex y="23" x="32"/>
+					<color r="1.0" g="1.0" b="1.0" a="0.25"/>
+					<vertex y="24" x="-32"/>
+					<vertex y="24" x="32"/>
+					<color r="1.0" g="1.0" b="1.0" a="0.0625"/>
+					<vertex y="25" x="-32"/>
+					<vertex y="25" x="32"/>
+					<vertex y="26" x="-32"/>
+					<vertex y="26" x="32"/>
+					<vertex y="27" x="-32"/>
+					<vertex y="27" x="32"/>
+					<color r="1.0" g="1.0" b="1.0" a="0.25"/>
+					<vertex y="28" x="-32"/>
+					<vertex y="28" x="32"/>
+					<color r="1.0" g="1.0" b="1.0" a="0.0625"/>
+					<vertex y="29" x="-32"/>
+					<vertex y="29" x="32"/>
+					<vertex y="30" x="-32"/>
+					<vertex y="30" x="32"/>
+					<vertex y="31" x="-32"/>
+					<vertex y="31" x="32"/>
+				</lines>
+			</drawlist>
+		</renderable>
 	</entity>
 
 
@@ -125,7 +456,7 @@
 					<restitution value="0.5"/>
 					<category value="3"/>
 				</circle>
-				<damping linear="0.001" angular="0.001"/>
+				<damping linear="0.5" angular="0.5"/>
 			</body>
 		</collidable>
 		<renderable>
@@ -293,13 +624,23 @@
 	</template>
 
 	<entity name="gunner1" type="gunner">
-		<offset x="-24" y="-16" angle="10"/>
-		<gunner owner="playership" phase="0"/>
+		<offset x="-16" y="0" angle="10"/>
+		<gunner owner="playership" cycle="2" phase="0"/>
 	</entity>
 
 	<entity name="gunner2" type="gunner">
-		<offset x="24" y="-16" angle="-10"/>
-		<gunner owner="playership" phase="1"/>
+		<offset x="16" y="0" angle="-10"/>
+		<gunner owner="playership" cycle="2" phase="1"/>
+	</entity>
+
+	<entity name="gunner3" type="gunner">
+		<offset x="-24" y="-8" angle="25"/>
+		<gunner owner="playership" cycle="2" phase="1"/>
+	</entity>
+
+	<entity name="gunner4" type="gunner">
+		<offset x="24" y="-8" angle="-25"/>
+		<gunner owner="playership" cycle="2" phase="0"/>
 	</entity>
 
 
