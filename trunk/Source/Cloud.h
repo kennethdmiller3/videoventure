@@ -14,5 +14,5 @@ public:
 	void Init(int aCount);
 
 	// render
-	virtual void Render(void);
+	virtual void Render(const Matrix2 &transform);
 };

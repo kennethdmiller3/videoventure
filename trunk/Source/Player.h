@@ -56,5 +56,5 @@ public:
 	virtual void Collide(Collidable &aRecipient, b2Manifold aManifold[], int aCount);
 
 	// render
-	virtual void Render(void);
+	virtual void Render(const Matrix2 &transform);
 };

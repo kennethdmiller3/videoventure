@@ -22,7 +22,7 @@ void Input::Bind(LOGICAL aLogical, int aType, int aDevice, int aControl, float a
 	binding.released = false;
 }
 
-void Input::Start(void)
+void Input::Update(void)
 {
 	for (Map::iterator itor = map.begin(); itor != map.end(); itor++)
 	{

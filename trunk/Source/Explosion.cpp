@@ -54,7 +54,7 @@ void Explosion::Simulate(float aStep)
 	}
 }
 
-void Explosion::Render(void)
+void Explosion::Render(const Matrix2 &transform)
 {
 	// push a transform
 	glPushMatrix();

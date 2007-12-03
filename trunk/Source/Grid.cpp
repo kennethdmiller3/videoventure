@@ -17,7 +17,7 @@ bool Grid::Configure(TiXmlElement *element)
 	return Entity::Configure(element) || Renderable::Configure(element);
 }
 
-void Grid::Render(void)
+void Grid::Render(const Matrix2 &transform)
 {
 	// push a transform
 	glPushMatrix();

@@ -12,7 +12,8 @@ unsigned int Entity::sNextId = 1;
 
 Entity::Entity(unsigned int id)
 : id(id)
-, transform(Vector2(1, 0), Vector2(0, 1), Vector2(0, 0))
+, angle_0(0), posit_0(0, 0)
+, angle_1(0), posit_1(0, 0)
 , vel(0, 0)
 {
 	if (id > 0)
@@ -38,17 +39,10 @@ bool Entity::Configure(TiXmlElement *element)
 
 	case 0x934f4e0a /* "position" */:
 		{
-			element->QueryFloatAttribute("x", &transform.p.x);
-			element->QueryFloatAttribute("y", &transform.p.y);
-			float angle = 0.0f;
-			if (element->QueryFloatAttribute("angle", &angle) == TIXML_SUCCESS)
-			{
-				angle *= float(M_PI)/180.0f;
-				transform.x.x = cosf(angle);
-				transform.x.y = sinf(angle);
-				transform.y.x = -transform.x.y;
-				transform.y.y = transform.x.x;
-			}
+			element->QueryFloatAttribute("x", &posit_1.x);
+			element->QueryFloatAttribute("y", &posit_1.y);
+			if (element->QueryFloatAttribute("angle", &angle_1) == TIXML_SUCCESS)
+				angle_1 *= float(M_PI) / 180.0f;
 		}
 		return true;
 

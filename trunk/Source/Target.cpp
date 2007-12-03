@@ -34,7 +34,7 @@ void Target::Collide(Collidable &aRecipient, b2Manifold aManifold[], int aCount)
 {
 }
 
-void Target::Render(void)
+void Target::Render(const Matrix2 &transform)
 {
 	// push a transform
 	glPushMatrix();

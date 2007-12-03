@@ -1,5 +1,6 @@
 #include "StdAfx.h"
 #include "Renderable.h"
+#include "Entity.h"
 
 namespace Database
 {
@@ -110,8 +111,11 @@ void Renderable::Hide(void)
 	}
 }
 
-void Renderable::RenderAll(void)
+void Renderable::RenderAll(float aRatio)
 {
+	// render matrix
+	Matrix2 transform;
+
 	// render all renderables
 	List::iterator itor = sAll.begin();
 	while (itor != sAll.end())
@@ -121,15 +125,28 @@ void Renderable::RenderAll(void)
 		List::iterator next(itor);
 		++next;
 
+		// get the entity (HACK)
+		Entity *entity = dynamic_cast<Entity *>(*itor);
+		if (entity)
+		{
+			// get interpolated transform
+			transform = entity->GetInterpolatedTransform(aRatio);
+		}
+		else
+		{
+			// use identity matrix
+			transform = Matrix2(Vector2(1, 0), Vector2(0, 1), Vector2(0, 0));
+		}
+
 		// render
-		(*itor)->Render();
+		(*itor)->Render(transform);
 
 		// go to the next iterator
 		itor = next;
 	}
 }
 
-void Renderable::Render(void)
+void Renderable::Render(const Matrix2 &transform)
 {
 	glCallList(mDraw);
 };

@@ -35,8 +35,8 @@ public:
 	void Hide(void);
 
 	// render
-	static void RenderAll(void);
-	virtual void Render(void);
+	static void RenderAll(float aRatio);
+	virtual void Render(const Matrix2 &transform);
 };
 
 namespace Database
