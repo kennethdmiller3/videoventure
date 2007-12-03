@@ -4,6 +4,11 @@
 
 // player bullet physics
 const float PLAYER_BULLET_SPEED = 800;
+const Vector2 PLAYER_BULLET_POS[2] =
+{
+	Vector2(-4, 0),
+	Vector2(4, 0)
+};
 
 // Player Constructor
 Player::Player(unsigned int aId, unsigned int aParentId)
@@ -64,13 +69,12 @@ void Player::Control(float aStep)
 	{
 		Vector2 aim((*input)[Input::AIM_HORIZONTAL], (*input)[Input::AIM_VERTICAL]);
 		float control = std::min(16.0f * aim.LengthSq(), 1.0f);
-		float cur_angle = atan2f(transform.y.x, transform.y.y);
-		float aim_angle = atan2f(aim.x, aim.y);
-		if (aim_angle > cur_angle+float(M_PI))
+		float aim_angle = -atan2f(aim.x, aim.y) - angle_1;
+		if (aim_angle > float(M_PI))
 			aim_angle -= 2.0f*float(M_PI);
-		else if (aim_angle < cur_angle-float(M_PI))
+		else if (aim_angle < -float(M_PI))
 			aim_angle += 2.0f*float(M_PI);
-		float new_omega = -std::min(std::max((aim_angle - cur_angle) / aStep, -mMaxOmega * control), mMaxOmega * control);
+		float new_omega = std::min(std::max(aim_angle / aStep, -mMaxOmega * control), mMaxOmega * control);
 		body->SetAngularVelocity(new_omega);
 	}
 
@@ -83,17 +87,17 @@ void Player::Control(float aStep)
 		// if triggered...
 		if ((*input)[Input::FIRE_PRIMARY])
 		{
-			Bullet *bullet;
-			bullet = Bullet::pool.construct(0, 0xd85669f0 /* "playerbullet" */);
-			bullet->SetTransform(transform);
-			bullet->SetPosition(transform.Transform(Vector2(-4, 0)));
-			bullet->SetVelocity(transform.y * PLAYER_BULLET_SPEED);
-			bullet->AddToWorld();
-			bullet = Bullet::pool.construct(0, 0xd85669f0 /* "playerbullet" */);
-			bullet->SetTransform(transform);
-			bullet->SetPosition(transform.Transform(Vector2(4, 0)));
-			bullet->SetVelocity(transform.y * PLAYER_BULLET_SPEED);
-			bullet->AddToWorld();
+			// for each shot...
+			for (int i = 0; i < 2; i++)
+			{
+				const Vector2 d = PLAYER_BULLET_POS[i];
+				Bullet *bullet = Bullet::pool.construct(0, 0xd85669f0 /* "playerbullet" */);
+				bullet->SetTransform(angle_1, posit_1);
+				bullet->SetPosition(bullet->GetTransform().Transform(d));
+				bullet->SetVelocity(bullet->GetTransform().y * PLAYER_BULLET_SPEED);
+				bullet->Init();
+				bullet->AddToWorld();
+			}
 
 			// update weapon delay
 			mDelay += 0.25f;
@@ -121,7 +125,7 @@ void Player::Collide(Collidable &aRecipient, b2Manifold aManifold[], int aCount)
 }
 
 // Player Render
-void Player::Render()
+void Player::Render(const Matrix2 &transform)
 {
 	// push a transform
 	glPushMatrix();

@@ -35,8 +35,8 @@ public:
 	// add an input binding
 	void Bind(LOGICAL aLogical, int aType, int aDevice, int aControl, float aDeadzone, float aScale);
 
-	// start input cycle
-	void Start(void);
+	// update inputs
+	void Update(void);
 
 	// key events
 	void OnAxis(int aType, int aDevice, int aControl, float aValue);

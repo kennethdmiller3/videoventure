@@ -54,5 +54,5 @@ public:
 	virtual void Simulate(float aStep);
 
 	// render
-	virtual void Render(void);
+	virtual void Render(const Matrix2 &transform);
 };

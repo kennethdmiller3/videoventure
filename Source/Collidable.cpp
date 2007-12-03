@@ -271,11 +271,10 @@ void Collidable::AddToWorld(void)
 		if (entity)
 		{
 			const Matrix2 &transform = entity->GetTransform();
-			def.rotation = atan2f(transform.y.x, transform.y.y);
-			def.position.x = transform.p.x;
-			def.position.y = transform.p.y;
-			def.linearVelocity.x = entity->GetVelocity().x;
-			def.linearVelocity.y = entity->GetVelocity().y;
+			def.rotation = transform.Angle();
+			def.position = transform.p;
+			def.linearVelocity = entity->GetVelocity();
+			def.angularVelocity = 0.0f;
 		}
 
 		// create the body
@@ -295,7 +294,7 @@ void Collidable::RemoveFromWorld(void)
 
 
 // create collision world
-void Collidable::Init(void)
+void Collidable::WorldInit(void)
 {
 	// physics world
 	b2AABB worldAABB;
@@ -332,7 +331,7 @@ void Collidable::Init(void)
 	world->CreateBody(&body);
 }
 
-void Collidable::Done(void)
+void Collidable::WorldDone(void)
 {
 	delete world;
 }
@@ -354,6 +353,7 @@ void Collidable::CollideAll(float aStep)
 				Entity *entity = dynamic_cast<Entity *>(static_cast<Collidable *>(b->GetUserData()));
 				if (entity)
 				{
+					entity->Step();
 					entity->SetTransform(Matrix2(b->GetRotationMatrix(), b->GetOriginPosition()));
 					entity->SetVelocity(Vector2(b->GetLinearVelocity()));
 				}

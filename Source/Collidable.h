@@ -63,8 +63,8 @@ public:
 	}
 
 	// collision world
-	static void Init(void);
-	static void Done(void);
+	static void WorldInit(void);
+	static void WorldDone(void);
 
 	// control
 	static void CollideAll(float aStep);

@@ -53,9 +53,10 @@ void Bullet::Collide(Collidable &aRecipient, b2Manifold aManifold[], int aCount)
 	b2Vec2 normal(aManifold[0].normal);
 	float dist(body->m_shapeList[0].GetMaxRadius()-aManifold[0].points[0].separation);
 	explosion->SetPosition(Vector2(position.x + normal.x * dist, position.y + normal.y * dist));
+	explosion->Init();
 }
 
-void Bullet::Render(void)
+void Bullet::Render(const Matrix2 &transform)
 {
 	// push a transform
 	glPushMatrix();

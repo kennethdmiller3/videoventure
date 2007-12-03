@@ -19,8 +19,13 @@ protected:
 	// identifier
 	unsigned int id;
 
+	// previous transform
+	float angle_0;
+	Vector2 posit_0;
+
 	// current transform
-	Matrix2 transform;
+	float angle_1;
+	Vector2 posit_1;
 
 	// current velocity
 	Vector2 vel;
@@ -39,46 +44,82 @@ public:
 	}
 
 	// get identifier
-	unsigned int GetId(void)
+	unsigned int GetId(void) const
 	{
 		return id;
 	}
 
+	// step
+	void Step(void)
+	{
+		angle_0 = angle_1;
+		posit_0 = posit_1;
+	}
+
 	// set transform
+	void SetTransform(const float aAngle, const Vector2 &aPosit)
+	{
+		angle_1 = aAngle;
+		posit_1 = aPosit;
+	}
 	void SetTransform(const Matrix2 &aTransform)
 	{
-		transform = aTransform;
+		SetTransform(aTransform.Angle(), aTransform.p);
 	}
 
 	// get transform
-	const Matrix2 &GetTransform() const
+	const Matrix2 GetTransform() const
 	{
-		return transform;
+		return Matrix2(angle_1, posit_1);
+	}
+
+	// get interpolated transform
+	const Matrix2 GetInterpolatedTransform(float aRatio) const
+	{
+		return Matrix2(GetInterpolatedAngle(aRatio), GetInterpolatedPosition(aRatio));
+	}
+
+	// st angle
+	void SetAngle(float aAngle)
+	{
+		angle_1 = aAngle;
+	}
+
+	// get angle
+	float GetAngle() const
+	{
+		return angle_1;
+	}
+
+	// get interpolated angle
+	float GetInterpolatedAngle(float aRatio) const
+	{
+		float angle_d = angle_1 - angle_0;
+		if (angle_d > float(M_PI))
+			angle_d -= 2.0f*float(M_PI);
+		else if (angle_d < -float(M_PI))
+			angle_d += 2.0f*float(M_PI);
+		return angle_0 + angle_d * aRatio;
 	}
 
 	// set position
 	void SetPosition(const Vector2 &aPos)
 	{
-		transform.p = aPos;
+		posit_1 = aPos;
 	}
-
-	// get x axis
-	const Vector2 &GetAxisX() const
-	{
-		return transform.x;
-	}
-
-	// get y axis
-	const Vector2 &GetAxisY() const
-	{
-		return transform.y;
-	};
 
 	// get position
 	const Vector2 &GetPosition() const
 	{
-		return transform.p;
+		return posit_1;
 	}
+
+	// get interpolated position
+	const Vector2 GetInterpolatedPosition(float aRatio) const
+	{
+		return posit_0 + (posit_1 - posit_0) * aRatio;
+	}
+
 
 	// set velocity
 	void SetVelocity(const Vector2 &aVel)
@@ -98,6 +139,7 @@ public:
 	// init
 	virtual void Init(void)
 	{
+		Step();
 	}
 };
 

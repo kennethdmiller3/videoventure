@@ -72,7 +72,7 @@ Cloud::~Cloud(void)
 {
 }
 
-void Cloud::Render(void)
+void Cloud::Render(const Matrix2 &transform)
 {
 	// call draw list
 	glCallList( mDraw );

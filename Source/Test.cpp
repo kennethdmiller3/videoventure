@@ -1183,7 +1183,7 @@ int SDL_main( int argc, char *argv[] )
 	}
 
 	// collidable initialization
-	Collidable::Init();
+	Collidable::WorldInit();
 
 	{
 		// level configuration
@@ -1215,14 +1215,14 @@ int SDL_main( int argc, char *argv[] )
 	// last ticks
 	int ticks = timer.get_ticks();
 
+	// simulation timer
+	static const float sim_rate = 60.0f;
+	const float sim_step = 1.0f / sim_rate;
+	float sim_timer = 1.0f;
+
 	// wait for user exit
 	do
 	{
-		// INPUT PHASE
-
-		// start input
-		input.Start();
-
 		// event handler
 		SDL_Event event;
 
@@ -1273,19 +1273,30 @@ int SDL_main( int argc, char *argv[] )
 			}
 		}
 
-
 		// get loop time in ticks
 		int delta = timer.get_ticks() - ticks;
 		ticks += delta;
 
-		// if not paused...
-		if (delta != 0)
+		// clamp ticks to something sensible
+		// (while debugging, for example)
+		if (delta > 1000)
+			delta = 1000;
+
+		// advance the sim timer
+		sim_timer += delta * sim_rate / 1000.0f;
+
+		// while simulation turns to run...
+		while (sim_timer > 1.0f)
 		{
-			// get loop time in seconds
-			float step = delta / 1000.0f;
-#ifdef PRINT_STEP_TIMES
-			DebugPrint("dt=%f (%f fps)\n", step, 1.0f/step);
-#endif
+			// deduct a turn
+			sim_timer -= 1.0f;
+
+
+			// INPUT PHASE
+
+			// update inputs
+			input.Update();
+
 
 			// CONTROL PHASE
 
@@ -1298,7 +1309,7 @@ int SDL_main( int argc, char *argv[] )
 #endif
 
 			// control all entities
-			Controllable::ControlAll(step);
+			Controllable::ControlAll(sim_step);
 
 #ifdef PRINT_PERFORMANCE_DETAILS
 			LARGE_INTEGER perf_count1;
@@ -1311,7 +1322,7 @@ int SDL_main( int argc, char *argv[] )
 			// (generate forces)
 
 			// simulate all entities
-			Simulatable::SimulateAll(step);
+			Simulatable::SimulateAll(sim_step);
 
 #ifdef PRINT_PERFORMANCE_DETAILS
 			LARGE_INTEGER perf_count2;
@@ -1322,7 +1333,7 @@ int SDL_main( int argc, char *argv[] )
 
 			// COLLISION PHASE
 			// (apply forces and update positions)
-			Collidable::CollideAll(step);
+			Collidable::CollideAll(sim_step);
 
 #ifdef PRINT_PERFORMANCE_DETAILS
 			LARGE_INTEGER perf_count3;
@@ -1332,6 +1343,9 @@ int SDL_main( int argc, char *argv[] )
 #endif
 		}
 
+#ifdef PRINT_SIMULATION_TIMER
+		DebugPrint("delta=%d ticks=%d sim_t=%f\n", delta, ticks, sim_timer);
+#endif
 
 		// RENDERING PHASE
 
@@ -1356,12 +1370,12 @@ int SDL_main( int argc, char *argv[] )
 		if (player)
 		{
 			// track player position
-			const Vector2 &pos = player->GetPosition();
+			const Vector2 pos(player->GetInterpolatedPosition(sim_timer));
 			glTranslatef( -pos.x, -pos.y, 0 );
 		}
 
 		// render all entities
-		Renderable::RenderAll();
+		Renderable::RenderAll(sim_timer);
 
 		// reset camera transform
 		glPopMatrix();
@@ -1373,7 +1387,7 @@ int SDL_main( int argc, char *argv[] )
 		LARGE_INTEGER perf_count1;
 		QueryPerformanceCounter(&perf_count1);
 
-		DebugPrint("rend=%d ", 1000000 * (perf_count1.QuadPart - perf_count0.QuadPart) / perf_freq.QuadPart);
+		DebugPrint("rend=%d\n", 1000000 * (perf_count1.QuadPart - perf_count0.QuadPart) / perf_freq.QuadPart);
 #endif
 	}
 	while( !quit );
@@ -1398,7 +1412,7 @@ int SDL_main( int argc, char *argv[] )
 	Database::renderable.clear();
 
 	// collidable done
-	Collidable::Done();
+	Collidable::WorldDone();
 
 	// clean up
 	clean_up();

@@ -18,6 +18,11 @@ public:
 	{
 	}
 
+	Matrix2(const float aA, const Vector2 &aP)
+		: x(cosf(aA), sinf(aA)), y(-x.y, x.x), p(aP)
+	{
+	}
+
 	Matrix2(const b2Mat22 &aR, const b2Vec2 aP)
 		: x(aR.col1), y(aR.col2), p(aP)
 	{
@@ -27,14 +32,19 @@ public:
 	{
 	}
 
-	Vector2 Transform(const Vector2 &v)
+	Vector2 Transform(const Vector2 &v) const
 	{
 		return x * v.x + y * v.y + p;
 	}
 
-	Vector2 Rotate(const Vector2 &v)
+	Vector2 Rotate(const Vector2 &v) const
 	{
 		return x* v.x + y * v.y;
+	}
+
+	float Angle(void) const
+	{
+		return -atan2f(y.x, y.y);
 	}
 
 	friend const Matrix2 operator*(const Matrix2 &a, const Matrix2 &b)

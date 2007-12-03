@@ -52,13 +52,7 @@ bool Gunner::Configure(TiXmlElement *element)
 			element->QueryFloatAttribute("y", &offset.p.y);
 			float angle = 0.0f;
 			if (element->QueryFloatAttribute("angle", &angle) == TIXML_SUCCESS)
-			{
-				angle *= float(M_PI)/180.0f;
-				offset.x.x = cosf(angle);
-				offset.x.y = sinf(angle);
-				offset.y.x = -offset.x.y;
-				offset.y.y = offset.x.x;
-			}
+				offset = Matrix2(angle * float(M_PI) / 180.0f, offset.p);
 		}
 		return true;
 
@@ -72,7 +66,11 @@ void Gunner::Init(void)
 {
 	// offset from player position
 	Matrix2 transform = offset * player->GetTransform();
-	body->SetCenterPosition(b2Vec2(transform.p.x, transform.p.y), -atan2f(transform.y.x, transform.y.y));
+	body->SetCenterPosition(transform.p, transform.Angle());
+	SetTransform(transform);
+
+	// call parent init
+	Entity::Init();
 
 	// constrain to the offset position
 	b2PrismaticJointDef joint;
@@ -118,8 +116,9 @@ void Gunner::Control(float aStep)
 					// generate a bullet
 					const Vector2 d = GUNNER_BULLET_DIR[i];
 					Bullet *bullet = Bullet::pool.construct(0, 0xd85669f0 /* "playerbullet" */);
-					bullet->SetTransform(transform);
-					bullet->SetVelocity(transform.Rotate(d) * GUNNER_BULLET_SPEED);
+					bullet->SetTransform(angle_1, posit_1);
+					bullet->SetVelocity(bullet->GetTransform().Rotate(d) * GUNNER_BULLET_SPEED);
+					bullet->Init();
 					bullet->AddToWorld();
 				}
 
@@ -152,7 +151,7 @@ void Gunner::Simulate(float aStep)
 }
 
 // Gunner Render
-void Gunner::Render()
+void Gunner::Render(const Matrix2 &transform)
 {
 	// push a transform
 	glPushMatrix();
