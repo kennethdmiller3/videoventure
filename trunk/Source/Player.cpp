@@ -14,7 +14,7 @@ Player::Player(unsigned int aId, unsigned int aParentId)
 , Renderable(Database::renderabletemplate.Get(aParentId))
 , input(NULL)
 , mMaxVeloc(200), mMaxAccel(1000), mFriction(50), mMaxOmega(10)
-, omega(0.0f), mDelay(0.0f), mCycle(0)
+, mDelay(0.0f), mCycle(0)
 {
 }
 
@@ -74,23 +74,34 @@ void Player::Control(float aStep)
 		body->SetAngularVelocity(new_omega);
 	}
 
-	if ((*input)[Input::FIRE_PRIMARY])
+	// advance fire timer
+	mDelay -= aStep * mCycle;
+
+	// if ready to fire...
+	if (mDelay <= 0.0f)
 	{
-		if (mDelay <= 0.0f)
+		// if triggered...
+		if ((*input)[Input::FIRE_PRIMARY])
 		{
 			Bullet *bullet;
 			bullet = Bullet::pool.construct(0, 0xd85669f0 /* "playerbullet" */);
 			bullet->SetTransform(transform);
-			bullet->SetPosition(transform.Transform(Vector2(-6, 0)));
+			bullet->SetPosition(transform.Transform(Vector2(-4, 0)));
 			bullet->SetVelocity(transform.y * PLAYER_BULLET_SPEED);
 			bullet->AddToWorld();
 			bullet = Bullet::pool.construct(0, 0xd85669f0 /* "playerbullet" */);
 			bullet->SetTransform(transform);
-			bullet->SetPosition(transform.Transform(Vector2(6, 0)));
+			bullet->SetPosition(transform.Transform(Vector2(4, 0)));
 			bullet->SetVelocity(transform.y * PLAYER_BULLET_SPEED);
 			bullet->AddToWorld();
 
-			mDelay += 0.125f;
+			// update weapon delay
+			mDelay += 0.25f;
+		}
+		else
+		{
+			// clamp fire delay
+			mDelay = 0.0f;
 		}
 	}
 }
