@@ -5,28 +5,6 @@
 const float EXPLOSION_RADIUS = 6;
 const float EXPLOSION_LIFE = 0.25f;
 
-// explosion geometry (unscaled)
-const float EXPLOSION_ANGLE = (float)M_PI/8;
-const Vector2 EXPLOSION_VERTICES[] =
-{
-	Vector2(cosf( 0*EXPLOSION_ANGLE), sinf( 0*EXPLOSION_ANGLE)),
-	Vector2(cosf( 1*EXPLOSION_ANGLE), sinf( 1*EXPLOSION_ANGLE)),
-	Vector2(cosf(15*EXPLOSION_ANGLE), sinf(15*EXPLOSION_ANGLE)),
-	Vector2(cosf( 2*EXPLOSION_ANGLE), sinf( 2*EXPLOSION_ANGLE)),
-	Vector2(cosf(14*EXPLOSION_ANGLE), sinf(14*EXPLOSION_ANGLE)),
-	Vector2(cosf( 3*EXPLOSION_ANGLE), sinf( 3*EXPLOSION_ANGLE)),
-	Vector2(cosf(13*EXPLOSION_ANGLE), sinf(13*EXPLOSION_ANGLE)),
-	Vector2(cosf( 4*EXPLOSION_ANGLE), sinf( 4*EXPLOSION_ANGLE)),
-	Vector2(cosf(12*EXPLOSION_ANGLE), sinf(12*EXPLOSION_ANGLE)),
-	Vector2(cosf( 5*EXPLOSION_ANGLE), sinf( 5*EXPLOSION_ANGLE)),
-	Vector2(cosf(11*EXPLOSION_ANGLE), sinf(11*EXPLOSION_ANGLE)),
-	Vector2(cosf( 6*EXPLOSION_ANGLE), sinf( 6*EXPLOSION_ANGLE)),
-	Vector2(cosf(10*EXPLOSION_ANGLE), sinf(10*EXPLOSION_ANGLE)),
-	Vector2(cosf( 7*EXPLOSION_ANGLE), sinf( 7*EXPLOSION_ANGLE)),
-	Vector2(cosf( 9*EXPLOSION_ANGLE), sinf( 9*EXPLOSION_ANGLE)),
-	Vector2(cosf( 8*EXPLOSION_ANGLE), sinf( 8*EXPLOSION_ANGLE)),
-};
-
 // explosion core geometry
 const float EXPLOSION_CORE_RADIUS[2] = { 6, 3 };
 const float EXPLOSION_CORE_COLOR[2][4] =
@@ -54,21 +32,8 @@ Explosion::Explosion(unsigned int aId, unsigned int aParentId)
 , Renderable(Database::renderabletemplate.Get(aParentId))
 , mLife(EXPLOSION_LIFE)
 {
-	// create a new draw list
-	mDraw = glGenLists(1);
-	glNewList(mDraw, GL_COMPILE);
-
-	// generate circle
-	glBegin(GL_TRIANGLE_STRIP);
-	for (int i = 0; i < SDL_arraysize(EXPLOSION_VERTICES); ++i)
-	{
-		const Vector2 &p = EXPLOSION_VERTICES[i];
-		glVertex2f(p.x, p.y);
-	}
-	glEnd();
-
-	// finish the draw list
-	glEndList();
+	// get a circle drawlist
+	mDraw = Database::drawlist.Get(0x8cdedbba /* "circle16" */);
 
 	// set as visible
 	Renderable::Show();

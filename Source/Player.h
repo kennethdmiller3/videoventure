@@ -13,14 +13,12 @@ class Player :
 	// input
 	const Input *input;
 
+public:
 	// physics parameters
 	float mMaxVeloc;
 	float mMaxAccel;
 	float mFriction;
 	float mMaxOmega;
-
-	// rotation rate
-	float omega;
 
 	// fire delay
 	float mDelay;

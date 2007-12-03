@@ -18,6 +18,11 @@ public:
 	{
 	}
 
+	Matrix2(const b2Mat22 &aR, const b2Vec2 aP)
+		: x(aR.col1), y(aR.col2), p(aP)
+	{
+	}
+
 	~Matrix2(void)
 	{
 	}

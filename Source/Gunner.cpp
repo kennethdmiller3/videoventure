@@ -21,7 +21,7 @@ Gunner::Gunner(unsigned int aId, unsigned int aParentId)
 , Simulatable()
 , Collidable(Database::collidabletemplate.Get(aParentId))
 , Renderable(Database::renderabletemplate.Get(aParentId))
-, player(NULL), offset(Vector2(1, 0), Vector2(0, 1), Vector2(0, 0)), mDelay(0.0f), mPhase(-1), mCycle(0)
+, player(NULL), offset(Vector2(1, 0), Vector2(0, 1), Vector2(0, 0)), mDelay(0.0f), mPhase(0), mCycle(1)
 {
 }
 
@@ -41,6 +41,7 @@ bool Gunner::Configure(TiXmlElement *element)
 			const char *owner = element->Attribute("owner");
 			player = dynamic_cast<Player *>(Database::entity.Get(Hash(owner)));
 
+			element->QueryIntAttribute("cycle", &mCycle);
 			element->QueryIntAttribute("phase", &mPhase);
 		}
 		return true;
@@ -93,24 +94,51 @@ void Gunner::Control(float aStep)
 
 	const Input *input = player->GetInput();
 
-	if ((*input)[Input::FIRE_PRIMARY])
+	// cancel velocity offset
+	// (prevents "wiggle" in the joint constraint)
+	b2Body *player_body = player->GetBody();
+	b2Vec2 dv((player_body->GetLinearVelocity() - body->GetLinearVelocity() - b2Cross(player_body->GetAngularVelocity(), player_body->GetCenterPosition() - body->GetCenterPosition())));
+	body->ApplyImpulse(body->GetMass() * dv, body->GetCenterPosition());
+
+	// advance fire timer
+	mDelay -= aStep * mCycle;
+
+	// if ready to fire...
+	if (mDelay <= 0.0f)
 	{
-		if (mDelay <= 0.0f)
+		// if triggered...
+		if ((*input)[Input::FIRE_PRIMARY])
 		{
-			if (mCycle == mPhase)
+			// if firing on this phase...
+			if (mPhase == 0)
 			{
+				// for each shot...
 				for (int i = 0; i < 2; i++)
 				{
+					// generate a bullet
 					const Vector2 d = GUNNER_BULLET_DIR[i];
 					Bullet *bullet = Bullet::pool.construct(0, 0xd85669f0 /* "playerbullet" */);
 					bullet->SetTransform(transform);
 					bullet->SetVelocity(transform.Rotate(d) * GUNNER_BULLET_SPEED);
 					bullet->AddToWorld();
 				}
+
+				// wrap around
+				mPhase = mCycle - 1;
+			}
+			else
+			{
+				// advance phase
+				--mPhase;
 			}
 
-			mDelay += 0.125f;
-			mCycle = 1 - mCycle;
+			// update weapon delay
+			mDelay += 0.25f;
+		}
+		else
+		{
+			// clamp fire delay
+			mDelay = 0.0f;
 		}
 	}
 }
@@ -121,10 +149,6 @@ void Gunner::Simulate(float aStep)
 	if (!player)
 		return;
 
-	// update fire delay
-	mDelay -= aStep;
-	if (mDelay < 0.0f)
-		mDelay = 0.0f;
 }
 
 // Gunner Render

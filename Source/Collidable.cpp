@@ -342,21 +342,21 @@ void Collidable::CollideAll(float aStep)
 //	aStep *= (1.0f/16.0f);
 //	for (int i = 0; i < 16; i++)
 	{
-		world->Step(aStep, 64);
+		world->Step(aStep, 16);
 		world->m_broadPhase->Validate();
 
 		// for each body...
 		for (b2Body* b = world->GetBodyList(); b; b = b->GetNext())
 		{
-			// update the entity position (hack)
-			Entity *entity = dynamic_cast<Entity *>(static_cast<Collidable *>(b->GetUserData()));
-			if (entity)
+			if (!b->IsSleeping() && !b->IsStatic())
 			{
-				entity->SetTransform(Matrix2(
-					Vector2(b->GetRotationMatrix().col1.x, b->GetRotationMatrix().col1.y),
-					Vector2(b->GetRotationMatrix().col2.x, b->GetRotationMatrix().col2.y),
-					Vector2(b->GetOriginPosition().x, b->GetOriginPosition().y)));
-				entity->SetVelocity(Vector2(b->GetLinearVelocity().x, b->GetLinearVelocity().y));
+				// update the entity position (hack)
+				Entity *entity = dynamic_cast<Entity *>(static_cast<Collidable *>(b->GetUserData()));
+				if (entity)
+				{
+					entity->SetTransform(Matrix2(b->GetRotationMatrix(), b->GetOriginPosition()));
+					entity->SetVelocity(Vector2(b->GetLinearVelocity()));
+				}
 			}
 		}
 

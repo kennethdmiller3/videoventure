@@ -20,8 +20,18 @@ public:
 	{
 	}
 
+	explicit Vector2(const b2Vec2 &v)
+		: x(v.x), y(v.y)
+	{
+	}
+
 	~Vector2(void)
 	{
+	}
+
+	operator b2Vec2(void) const
+	{
+		return b2Vec2(x, y);
 	}
 
 	friend const Vector2 operator+(const Vector2 &v1, const Vector2 &v2)
