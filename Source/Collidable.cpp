@@ -310,22 +310,22 @@ void Collidable::WorldInit(void)
 
 	b2BoxDef top;
 	top.localPosition.Set(0.5f * (ARENA_X_MAX + ARENA_X_MIN), ARENA_Y_MIN - 16);
-	top.extents.Set(0.5f * (ARENA_X_MAX - ARENA_X_MIN), 16);
+	top.extents.Set(0.5f * (ARENA_X_MAX - ARENA_X_MIN) + 32, 16);
 	body.AddShape(&top);
 
 	b2BoxDef bottom;
 	bottom.localPosition.Set(0.5f * (ARENA_X_MAX + ARENA_X_MIN), ARENA_Y_MAX + 16);
-	bottom.extents.Set(0.5f * (ARENA_X_MAX - ARENA_X_MIN), 16);
+	bottom.extents.Set(0.5f * (ARENA_X_MAX - ARENA_X_MIN) + 32, 16);
 	body.AddShape(&bottom);
 
 	b2BoxDef left;
 	left.localPosition.Set(ARENA_X_MIN - 16, 0.5f * (ARENA_Y_MAX + ARENA_Y_MIN));
-	left.extents.Set(16, 0.5f * (ARENA_Y_MAX - ARENA_Y_MIN));
+	left.extents.Set(16, 0.5f * (ARENA_Y_MAX - ARENA_Y_MIN) + 32);
 	body.AddShape(&left);
 
 	b2BoxDef right;
 	right.localPosition.Set(ARENA_X_MAX + 16, 0.5f * (ARENA_Y_MAX + ARENA_Y_MIN));
-	right.extents.Set(16, 0.5f * (ARENA_Y_MAX - ARENA_Y_MIN));
+	right.extents.Set(16, 0.5f * (ARENA_Y_MAX - ARENA_Y_MIN) + 32);
 	body.AddShape(&right);
 
 	world->CreateBody(&body);

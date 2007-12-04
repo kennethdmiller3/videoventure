@@ -11,6 +11,11 @@
 #include "Bullet.h"
 #include "Explosion.h"
 
+// screen attributes
+int SCREEN_WIDTH = 640;
+int SCREEN_HEIGHT = 480;
+bool SCREEN_FULLSCREEN = false;
+
 int DebugPrint(const char *format, ...)
 {
 	va_list ap;
@@ -77,14 +82,13 @@ bool init_GL()
 	// set projection
 	glMatrixMode( GL_PROJECTION );
 	glLoadIdentity();
-	//glOrtho( -SCREEN_WIDTH/2, SCREEN_WIDTH/2, SCREEN_HEIGHT/2, -SCREEN_HEIGHT/2, -1, 1 );
 	glViewport( 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT );
-	glFrustum( -0.5, 0.5, 0.375, -0.375, 1, 5 );
+	glFrustum( -0.5, 0.5, 0.5f*SCREEN_HEIGHT/SCREEN_WIDTH, -0.5f*SCREEN_HEIGHT/SCREEN_WIDTH, 1, 5 );
 
 	// set base modelview matrix
 	glMatrixMode( GL_MODELVIEW );
 	glLoadIdentity();
-	glScalef( -1.0f / SCREEN_WIDTH, -1.0f / SCREEN_WIDTH, -1.0f );
+	glScalef( -1.0f / 640, -1.0f / 640, -1.0f );
 	glTranslatef(0.0f, 0.0f, 1.0f);
 
 	// return true if no errors
@@ -121,7 +125,10 @@ bool init()
 	SDL_GL_SetAttribute( SDL_GL_MULTISAMPLESAMPLES, MULTISAMPLE_SAMPLES );
 
 	// create the window
-	if( SDL_SetVideoMode( SCREEN_WIDTH, SCREEN_HEIGHT, 0, SDL_OPENGL ) == NULL )
+	unsigned int flags = SDL_OPENGL;
+	if (SCREEN_FULLSCREEN)
+		flags |= SDL_FULLSCREEN;
+	if( SDL_SetVideoMode( SCREEN_WIDTH, SCREEN_HEIGHT, 0, flags ) == NULL )
 		return false;
 
 	// initialize OpenGL
@@ -1112,6 +1119,40 @@ enum InputType
 // main
 int SDL_main( int argc, char *argv[] )
 {
+	// default input configuration
+	const char *inputconfig = "input.xml";
+
+	// default level configuration
+	const char *levelconfig = "level.xml";
+
+	// process command-line arguments
+	for (int i = 1; i < argc; ++i)
+	{
+		switch (Hash(argv[i]))
+		{
+		case 0x15a05e8a /* "-resolution" */:
+			SCREEN_WIDTH = atoi(argv[++i]);
+			SCREEN_HEIGHT = atoi(argv[++i]);
+			break;
+
+		case 0x0d138139 /* "-fullscreen" */:
+			SCREEN_FULLSCREEN = true;
+			break;
+
+		case 0x183ca255 /* "-windowed" */:
+			SCREEN_FULLSCREEN = false;
+			break;
+
+		case 0xb6627acc /* "-input" */:
+			inputconfig = argv[++i];
+			break;
+
+		case 0x1b4dcd6e /* "-level" */:
+			levelconfig = argv[++i];
+			break;
+		}
+	}
+
 	// quit flag
 	bool quit = false;
 
@@ -1124,10 +1165,10 @@ int SDL_main( int argc, char *argv[] )
 
 	{
 		// input binding
-		TiXmlDocument config("input.xml");
-		config.LoadFile();
+		TiXmlDocument document(inputconfig);
+		document.LoadFile();
 
-		TiXmlHandle handle( &config );
+		TiXmlHandle handle( &document );
 		TiXmlElement *element = handle.FirstChildElement("input").ToElement();
 		if (element)
 		{
@@ -1187,15 +1228,15 @@ int SDL_main( int argc, char *argv[] )
 
 	{
 		// level configuration
-		TiXmlDocument level_config("level.xml");
-		level_config.LoadFile();
+		TiXmlDocument document(levelconfig);
+		document.LoadFile();
 
 		// process child elements of world
-		TiXmlHandle handle( &level_config );
-		TiXmlElement *level_world = handle.FirstChildElement("world").ToElement();
-		if (level_world)
+		TiXmlHandle handle( &document );
+		TiXmlElement *element = handle.FirstChildElement("world").ToElement();
+		if (element)
 		{
-			ProcessWorldItems(level_world);
+			ProcessWorldItems(element);
 		}
 	}
 
