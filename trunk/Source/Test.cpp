@@ -14,7 +14,20 @@
 // screen attributes
 int SCREEN_WIDTH = 640;
 int SCREEN_HEIGHT = 480;
+int SCREEN_DEPTH = 0;
 bool SCREEN_FULLSCREEN = false;
+
+// opengl attributes
+bool OPENGL_DOUBLEBUFFER = true;
+bool OPENGL_STEREO = false;
+bool OPENGL_ACCELERATED = true;
+bool OPENGL_SWAPCONTROL = true;
+bool OPENGL_ANTIALIAS = false;
+int OPENGL_MULTISAMPLE = 16;
+
+// simulation attributes
+int SIMULATION_RATE = 60;
+
 
 int DebugPrint(const char *format, ...)
 {
@@ -36,21 +49,20 @@ bool init_GL()
 	// set clear color
 	glClearColor( 0, 0, 0, 0 );
 
-#ifdef ENABLE_ANTIALIAS_POINT
-	// enable point smoothing
-	glEnable( GL_POINT_SMOOTH );
-	glHint( GL_POINT_SMOOTH_HINT, GL_DONT_CARE );
-#endif
-#ifdef ENABLE_ANTIALIAS_LINE
-	// enable line smoothing
- 	glEnable( GL_LINE_SMOOTH );
-	glHint( GL_LINE_SMOOTH_HINT, GL_DONT_CARE );
-#endif
-#ifdef ENABLE_ANTIALIAS_POLYGON
-	// enable polygon smoothing
-	glEnable( GL_POLYGON_SMOOTH );
-	glHint( GL_POLYGON_SMOOTH_HINT, GL_DONT_CARE );
-#endif
+	if (OPENGL_ANTIALIAS)
+	{
+		// enable point smoothing
+		glEnable( GL_POINT_SMOOTH );
+		glHint( GL_POINT_SMOOTH_HINT, GL_DONT_CARE );
+
+		// enable line smoothing
+ 		glEnable( GL_LINE_SMOOTH );
+		glHint( GL_LINE_SMOOTH_HINT, GL_DONT_CARE );
+
+		// enable polygon smoothing
+		glEnable( GL_POLYGON_SMOOTH );
+		glHint( GL_POLYGON_SMOOTH_HINT, GL_DONT_CARE );
+	}
 
 	// enable blending
 	glEnable( GL_BLEND );
@@ -119,16 +131,24 @@ bool init()
     SDL_GL_SetAttribute( SDL_GL_BLUE_SIZE, 8 );
 #ifdef ENABLE_SRC_ALPHA_SATURATE
     SDL_GL_SetAttribute( SDL_GL_ALPHA_SIZE, 8 );
+#else
+    SDL_GL_SetAttribute( SDL_GL_ALPHA_SIZE, 0 );
 #endif
-	SDL_GL_SetAttribute( SDL_GL_SWAP_CONTROL, 1 );
-	SDL_GL_SetAttribute( SDL_GL_MULTISAMPLEBUFFERS, MULTISAMPLE_BUFFERS );
-	SDL_GL_SetAttribute( SDL_GL_MULTISAMPLESAMPLES, MULTISAMPLE_SAMPLES );
+#ifndef ENABLE_DEPTH_TEST
+	SDL_GL_SetAttribute( SDL_GL_DEPTH_SIZE, 0 );
+#endif
+	SDL_GL_SetAttribute( SDL_GL_DOUBLEBUFFER, OPENGL_DOUBLEBUFFER );
+	SDL_GL_SetAttribute( SDL_GL_STEREO, OPENGL_STEREO );
+	SDL_GL_SetAttribute( SDL_GL_MULTISAMPLEBUFFERS, OPENGL_MULTISAMPLE > 1 );
+	SDL_GL_SetAttribute( SDL_GL_MULTISAMPLESAMPLES, OPENGL_MULTISAMPLE );
+	SDL_GL_SetAttribute( SDL_GL_ACCELERATED_VISUAL, OPENGL_ACCELERATED );
+	SDL_GL_SetAttribute( SDL_GL_SWAP_CONTROL, OPENGL_SWAPCONTROL );
 
 	// create the window
 	unsigned int flags = SDL_OPENGL;
 	if (SCREEN_FULLSCREEN)
 		flags |= SDL_FULLSCREEN;
-	if( SDL_SetVideoMode( SCREEN_WIDTH, SCREEN_HEIGHT, 0, flags ) == NULL )
+	if( SDL_SetVideoMode( SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_DEPTH, flags ) == NULL )
 		return false;
 
 	// initialize OpenGL
@@ -1128,28 +1148,59 @@ int SDL_main( int argc, char *argv[] )
 	// process command-line arguments
 	for (int i = 1; i < argc; ++i)
 	{
-		switch (Hash(argv[i]))
+		if (argv[i][0] == '-' || argv[i][0] == '/')
 		{
-		case 0x15a05e8a /* "-resolution" */:
-			SCREEN_WIDTH = atoi(argv[++i]);
-			SCREEN_HEIGHT = atoi(argv[++i]);
-			break;
+			switch (Hash(argv[i]+1))
+			{
+			case 0x1d215c8f /* "resolution" */:
+				SCREEN_WIDTH = atoi(argv[++i]);
+				SCREEN_HEIGHT = atoi(argv[++i]);
+				break;
 
-		case 0x0d138139 /* "-fullscreen" */:
-			SCREEN_FULLSCREEN = true;
-			break;
+			case 0xfe759eea /* "depth" */:
+				SCREEN_DEPTH = atoi(argv[++i]);
+				break;
 
-		case 0x183ca255 /* "-windowed" */:
-			SCREEN_FULLSCREEN = false;
-			break;
+			case 0x5032fb58 /* "fullscreen" */:
+				SCREEN_FULLSCREEN = atoi(argv[++i]) != 0;
+				break;
 
-		case 0xb6627acc /* "-input" */:
-			inputconfig = argv[++i];
-			break;
+			case 0x06f8f066 /* "vsync" */:
+				OPENGL_SWAPCONTROL = atoi(argv[++i]) != 0;
+				break;
 
-		case 0x1b4dcd6e /* "-level" */:
-			levelconfig = argv[++i];
-			break;
+			case 0x35c8978f /* "antialias" */:
+				OPENGL_ANTIALIAS = atoi(argv[++i]) != 0;
+				break;
+
+			case 0x47d0f228 /* "multisample" */:
+				OPENGL_MULTISAMPLE = atoi(argv[++i]);
+				break;
+
+			case 0x68b9bf22 /* "doublebuffer" */:
+				OPENGL_DOUBLEBUFFER = atoi(argv[++i]) != 0;
+				break;
+
+			case 0xcc87a64d /* "stereo" */:
+				OPENGL_STEREO = atoi(argv[++i]) != 0;
+				break;
+
+			case 0xb5708afc /* "accelerated" */:
+				OPENGL_ACCELERATED = atoi(argv[++i]) != 0;
+				break;
+
+			case 0xf9d86f7b /* "input" */:
+				inputconfig = argv[++i];
+				break;
+
+			case 0x9b99e7dd /* "level" */:
+				levelconfig = argv[++i];
+				break;
+
+			case 0xd6974b06 /* "simrate" */:
+				SIMULATION_RATE = atoi(argv[++i]);
+				break;
+			}
 		}
 	}
 
@@ -1257,7 +1308,7 @@ int SDL_main( int argc, char *argv[] )
 	int ticks = timer.get_ticks();
 
 	// simulation timer
-	static const float sim_rate = 60.0f;
+	const float sim_rate = float(SIMULATION_RATE);
 	const float sim_step = 1.0f / sim_rate;
 	float sim_timer = 1.0f;
 

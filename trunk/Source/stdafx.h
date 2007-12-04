@@ -60,15 +60,6 @@ extern int DebugPrint(const char *format, ...);
 void ProcessDrawItems(TiXmlElement *element);
 
 // configuration
-#define ENABLE_MULTISAMPLING
-#ifdef ENABLE_MULTISAMPLING
-const int MULTISAMPLE_BUFFERS = 1;
-const int MULTISAMPLE_SAMPLES = 16;
-#else
-#define ENABLE_ANTIALIAS_POINT
-#define ENABLE_ANTIALIAS_LINE
-#define ENABLE_ANTIALIAS_POLYGON
-#endif
 //#define ENABLE_DEPTH_TEST
 #define ENABLE_FOG
 
