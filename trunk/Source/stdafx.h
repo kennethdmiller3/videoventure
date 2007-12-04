@@ -43,10 +43,6 @@ namespace stdext = __gnu_cxx;
 #include "Hash.h"
 #include "Database.h"
 
-// screen attributes
-const int SCREEN_WIDTH = 640;
-const int SCREEN_HEIGHT = 480;
-
 // arena attributes
 const float ARENA_X_MIN = -2048;
 const float ARENA_X_MAX = 2048;

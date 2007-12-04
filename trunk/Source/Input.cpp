@@ -13,13 +13,14 @@ Input::~Input(void)
 void Input::Bind(LOGICAL aLogical, int aType, int aDevice, int aControl, float aDeadzone, float aScale)
 {
 	int aPhysical = (aType << 24) | (aDevice << 16) | aControl;
-	Binding &binding = map[aPhysical];
+	Binding binding;
 	binding.target = aLogical;
 	binding.deadzone = aDeadzone;
 	binding.scale = aScale;
 	binding.previous = 0.0f;
 	binding.pressed = false;
 	binding.released = false;
+	map.insert(Map::value_type(aPhysical, binding));
 }
 
 void Input::Update(void)
@@ -42,26 +43,30 @@ void Input::Update(void)
 void Input::OnAxis(int aType, int aDevice, int aControl, float aValue)
 {
 	int aPhysical = (aType << 24) | (aDevice << 16) | aControl;
-	Map::iterator itor(map.find(aPhysical));
-	if (itor != map.end())
+	std::pair<Map::iterator, Map::iterator> p = map.equal_range(aPhysical);
+	for (Map::iterator itor = p.first; itor != p.second; ++itor)
 	{
 		Binding &binding = itor->second;
-		if (aValue < -binding.deadzone)
-			aValue = (aValue + binding.deadzone) * binding.scale;
-		else if (aValue > binding.deadzone)
-			aValue = (aValue - binding.deadzone) * binding.scale;
+		float scaled = aValue;
+		if (scaled < -binding.deadzone)
+			scaled = (scaled + binding.deadzone) * binding.scale;
+		else if (scaled > binding.deadzone)
+			scaled = (scaled - binding.deadzone) * binding.scale;
 		else
-			aValue = 0.0f;
-		value[binding.target] += aValue - binding.previous;
-		binding.previous = aValue;
+			scaled = 0.0f;
+		value[binding.target] += scaled - binding.previous;
+		binding.previous = scaled;
+#ifdef PRINT_AXIS_UPDATE
+		DebugPrint("target=%d value=%f scaled=%f logical=%f\n", binding.target, aValue, scaled, value[binding.target]);
+#endif
 	}
 }
 
 void Input::OnPress(int aType, int aDevice, int aControl)
 {
 	int aPhysical = (aType << 24) | (aDevice << 16) | aControl;
-	Map::iterator itor(map.find(aPhysical));
-	if (itor != map.end())
+	std::pair<Map::iterator, Map::iterator> p = map.equal_range(aPhysical);
+	for (Map::iterator itor = p.first; itor != p.second; ++itor)
 	{
 		Binding &binding = itor->second;
 		if (!binding.pressed)
@@ -75,8 +80,8 @@ void Input::OnPress(int aType, int aDevice, int aControl)
 void Input::OnRelease(int aType, int aDevice, int aControl)
 {
 	int aPhysical = (aType << 24) | (aDevice << 16) | aControl;
-	Map::iterator itor(map.find(aPhysical));
-	if (itor != map.end())
+	std::pair<Map::iterator, Map::iterator> p = map.equal_range(aPhysical);
+	for (Map::iterator itor = p.first; itor != p.second; ++itor)
 	{
 		Binding &binding = itor->second;
 		binding.released = true;
