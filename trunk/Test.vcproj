@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="8.00"
+	Version="9.00"
 	Name="Test"
 	ProjectGUID="{FC5E6837-9810-43F3-AE5D-A4CDDDF5D1AF}"
 	RootNamespace="Test"
 	Keyword="Win32Proj"
+	TargetFrameworkVersion="131072"
 	>
 	<Platforms>
 		<Platform
@@ -70,7 +71,6 @@
 				AdditionalLibraryDirectories="&quot;..\SDL-1.2.12\lib&quot;,&quot;..\Box2D\Library&quot;"
 				GenerateDebugInformation="true"
 				SubSystem="2"
-				TargetMachine="1"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -89,9 +89,6 @@
 			/>
 			<Tool
 				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCWebDeploymentTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -153,7 +150,6 @@
 				SubSystem="2"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
-				TargetMachine="1"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -172,9 +168,6 @@
 			/>
 			<Tool
 				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCWebDeploymentTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -215,10 +208,6 @@
 			</File>
 			<File
 				RelativePath=".\Source\Explosion.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\Source\Grid.cpp"
 				>
 			</File>
 			<File
@@ -264,10 +253,6 @@
 						UsePrecompiledHeader="1"
 					/>
 				</FileConfiguration>
-			</File>
-			<File
-				RelativePath=".\Source\Target.cpp"
-				>
 			</File>
 			<File
 				RelativePath=".\Source\Test.cpp"
@@ -316,10 +301,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\Source\Grid.h"
-				>
-			</File>
-			<File
 				RelativePath=".\Source\Gunner.h"
 				>
 			</File>
@@ -357,10 +338,6 @@
 			</File>
 			<File
 				RelativePath=".\Source\stdafx.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Source\Target.h"
 				>
 			</File>
 			<File

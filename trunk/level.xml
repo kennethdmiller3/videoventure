@@ -58,14 +58,19 @@
 		</polygon>
 	</drawlist>
 
+	<cloud name="clouds" count="256" mean="256" variance="192"/>
+
 
 	<!-- background shapes -->
 
-	<entity name="background" type="cloud" count="256">
+	<entity name="background" type="">
 		<!-- cloud layer -->
+		<renderable>
+			<drawlist name="clouds"/>
+		</renderable>
 	</entity>
 
-	<entity name="playfield" type="grid">
+	<entity name="playfield" type="">
 		<!-- reference grid -->
 		<renderable>
 			<drawlist>
@@ -624,23 +629,35 @@
 	</template>
 
 	<entity name="gunner1" type="gunner">
-		<offset x="-16" y="0" angle="10"/>
-		<gunner owner="playership" cycle="2" phase="0"/>
+		<gunner>
+			<owner name="playership"/>
+			<weapon cycle="2" phase="0"/>
+			<offset x="-16" y="0" angle="10"/>
+		</gunner>
 	</entity>
 
 	<entity name="gunner2" type="gunner">
-		<offset x="16" y="0" angle="-10"/>
-		<gunner owner="playership" cycle="2" phase="1"/>
+		<gunner>
+			<owner name="playership"/>
+			<weapon cycle="2" phase="1"/>
+			<offset x="16" y="0" angle="-10"/>
+		</gunner>
 	</entity>
 
 	<entity name="gunner3" type="gunner">
-		<offset x="-24" y="-8" angle="25"/>
-		<gunner owner="playership" cycle="2" phase="1"/>
+		<gunner>
+			<owner name="playership"/>
+			<weapon cycle="2" phase="1"/>
+			<offset x="-24" y="-8" angle="25"/>
+		</gunner>
 	</entity>
-
+  
 	<entity name="gunner4" type="gunner">
-		<offset x="24" y="-8" angle="-25"/>
-		<gunner owner="playership" cycle="2" phase="0"/>
+		<gunner>
+			<owner name="playership"/>
+			<weapon cycle="2" phase="0"/>
+			<offset x="24" y="-8" angle="-25"/>
+		</gunner>
 	</entity>
 
 
@@ -670,9 +687,38 @@
 					<scale x="6" y="6"/>
 					<calllist name="circle12"/>
 				</pushmatrix>
+				<lines>
+					<color r="1.0" g="1.0" b="1.0" a="0.5"/>
+					<vertex x="0" y="0"/>
+					<color r="0.0" g="0.0" b="1.0" a="0.0"/>
+					<vertex x="0" y="-25"/>
+				</lines>
 			</drawlist>
 		</renderable>
 		<bullet life="1"/>
 	</template>
 	
+  
+	<!-- player bullet explosion -->
+
+	<template name="playerbulletexplosion" type="">
+		<explosion life="0.25">
+			<corecolor>
+				<color time="0.00" r="0.8" g="0.9" b="1.0" a="1.0"/>
+				<color time="0.25" r="0.0" g="0.5" b="1.0" a="0.0"/>
+			</corecolor>
+			<corescale>
+				<scale time="0.00" x="6.0" y="6.0" z="1.0"/>
+				<scale time="0.25" x="3.0" y="3.0" z="1.0"/>
+			</corescale>
+			<halocolor>
+				<color time="0.00" r="0.4" g="0.7" b="1.0" a="0.5"/>
+				<color time="0.25" r="0.0" g="0.0" b="1.0" a="0.0"/>
+			</halocolor>
+			<haloscale>
+				<scale time="0.00" x="8.0" y="8.0" z="1.0"/>
+				<scale time="0.25" x="16.0" y="16.0" z="1.0"/>
+			</haloscale>
+		</explosion>
+	</template>
 </world>

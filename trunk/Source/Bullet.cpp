@@ -1,33 +1,69 @@
 #include "StdAfx.h"
 #include "Bullet.h"
 #include "Explosion.h"
+#include <boost/pool/pool.hpp>
 
 // bullet attributes
-const float BULLET_RADIUS = 3;
 const float BULLET_LIFE = 1.0f;
 
-// bullet tail geometry
-const float BULLET_TAIL_LENGTH = 0.0625f;
-const float BULLET_TAIL_COLOR[2][4] =
-{
-	{ 1.0f, 1.0f, 1.0f, 0.5f },
-	{ 0.0f, 0.0f, 1.0f, 0.0f }
-};
-
 // bullet pool
-boost::object_pool<Bullet> Bullet::pool;
-
-Bullet::Bullet(unsigned int aId, unsigned int aParentId)
-: Entity(aId)
-, Simulatable()
-, Collidable(Database::collidabletemplate.Get(aParentId))
-, Renderable(Database::renderabletemplate.Get(aParentId))
-, mLife(BULLET_LIFE)
+static boost::pool<boost::default_user_allocator_malloc_free> pool(sizeof(Bullet));
+void *Bullet::operator new(size_t aSize)
 {
+	return pool.malloc();
+}
+void Bullet::operator delete(void *aPtr)
+{
+	pool.free(aPtr);
+}
+
+
+namespace Database
+{
+	Typed<BulletTemplate> bullettemplate("bullettemplate");
+	Typed<Bullet *> bullet("bullet");
+}
+
+
+BulletTemplate::BulletTemplate(void)
+: mLife(BULLET_LIFE)
+{
+}
+
+BulletTemplate::~BulletTemplate(void)
+{
+}
+
+bool BulletTemplate::Configure(TiXmlElement *element)
+{
+	if (Hash(element->Value()) != 0xe894a379 /* "bullet" */)
+		return false;
+
+	element->QueryFloatAttribute("life", &mLife);
+	return true;
+}
+
+
+Bullet::Bullet(void)
+: Simulatable(0)
+, mLife(0.0f)
+{
+}
+
+Bullet::Bullet(const BulletTemplate &aTemplate, unsigned int aId)
+: Simulatable(aId)
+, mLife(aTemplate.mLife)
+{
+	Collidable *collidable = Database::collidable.Get(Simulatable::id);
+	if (collidable)
+		collidable->listeners[Simulatable::id] = this;
 }
 
 Bullet::~Bullet(void)
 {
+	Collidable *collidable = Database::collidable.Get(Simulatable::id);
+	if (collidable)
+		collidable->listeners.erase(Simulatable::id);
 }
 
 void Bullet::Simulate(float aStep)
@@ -36,57 +72,35 @@ void Bullet::Simulate(float aStep)
 	mLife -= aStep;
 	if (mLife <= 0)
 	{
-		pool.destroy(this);
+		Database::Delete(Simulatable::id);
 		return;
 	}
 }
 
 void Bullet::Collide(Collidable &aRecipient, b2Manifold aManifold[], int aCount)
 {
-	// kill the bullet
-//	mLife = 0.0f;
-//	RemoveFromWorld();
-
 	// create an explosion at the contact point
-	Explosion *explosion = Explosion::pool.construct(0, 0x70f5d327 /* "playerbulletexplosion" */);
-	b2Vec2 position(aManifold[0].points[0].position);
-	b2Vec2 normal(aManifold[0].normal);
-	float dist(body->m_shapeList[0].GetMaxRadius()-aManifold[0].points[0].separation);
-	explosion->SetPosition(Vector2(position.x + normal.x * dist, position.y + normal.y * dist));
-	explosion->Init();
-}
+	b2Vec2 position(aManifold[0].points[0].position - aManifold[0].points[0].separation * aManifold[0].normal);
+	const unsigned int template_id = 0x70f5d327 /* "playerbulletexplosion" */;
+	const unsigned int instance_id = Database::Instantiate(template_id, 0, Vector2(position), Vector2(0, 0));
 
-void Bullet::Render(const Matrix2 &transform)
-{
-	// push a transform
-	glPushMatrix();
-
-	// load matrix
-	float m[16] =
+#ifdef BULLET_COLLISION_BOUNCE
+	// reorient to new direction
+	Collidable *collidable = Database::collidable.Get(Simulatable::id);
+	if (collidable)
 	{
-		transform.x.x, transform.x.y, 0, 0,
-		transform.y.x, transform.y.y, 0, 0,
-		0, 0, 1, 0,
-		transform.p.x, transform.p.y, 0, 1
-	};
-	glMultMatrixf( m );
-
-	// draw bullet
-	glCallList(mDraw);
-
-	// reset the transform
-	glPopMatrix();
-
-	// if moving...
-	if (vel.x != 0 && vel.y != 0)
-	{
-		// draw a tail
-		float tail = std::min(1.0f - mLife, BULLET_TAIL_LENGTH);
-		glBegin( GL_LINES );
-		glColor4fv( BULLET_TAIL_COLOR[0] );
-		glVertex2f( transform.p.x, transform.p.y );
-		glColor4fv( BULLET_TAIL_COLOR[1] );
-		glVertex2f( transform.p.x - vel.x * tail, transform.p.y - vel.y * tail );
-		glEnd();
+		b2Body *body = collidable->GetBody();
+		const b2Vec2 velocity = body->GetLinearVelocity();
+		float angle = -atan2f(velocity.x, velocity.y);
+		body->SetOriginPosition(body->GetOriginPosition(), angle);
+		Entity *entity = Database::entity.Get(Simulatable::id);
+		entity->Step();
+		entity->SetTransform(Matrix2(body->GetRotationMatrix(), body->GetOriginPosition()));
+		entity->SetVelocity(Vector2(body->GetLinearVelocity()));
 	}
+#else
+	// kill the bullet
+	// (note: this breaks collision impulse)
+	mLife = 0.0f;
+#endif
 }

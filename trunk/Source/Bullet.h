@@ -5,20 +5,34 @@
 #include "Collidable.h"
 #include "Renderable.h"
 
-#include <boost/pool/object_pool.hpp>
-
-class Bullet :
-	public Entity, public Simulatable, public Collidable, public Renderable
+class BulletTemplate
 {
 public:
-	// bullet pool
-	static boost::object_pool<Bullet> pool;
-
-	// life
+	// life span
 	float mLife;
 
 public:
-	Bullet(unsigned int aId = 0, unsigned int aParentId = 0);
+	BulletTemplate(void);
+	virtual ~BulletTemplate(void);
+
+	// configure
+	virtual bool Configure(TiXmlElement *element);
+};
+
+class Bullet
+	: public Simulatable, Collidable::Listener
+{
+public:
+	// allocation
+	void *operator new(size_t aSize);
+	void operator delete(void *aPtr);
+
+	// life timer
+	float mLife;
+
+public:
+	Bullet(void);
+	Bullet(const BulletTemplate &aTemplate, unsigned int aId);
 	~Bullet(void);
 
 	// simulate
@@ -26,7 +40,10 @@ public:
 
 	// collide
 	virtual void Collide(Collidable &aRecipient, b2Manifold aManifold[], int aCount);
-
-	// render
-	virtual void Render(const Matrix2 &transform);
 };
+
+namespace Database
+{
+	extern Typed<BulletTemplate> bullettemplate;
+	extern Typed<Bullet *> bullet;
+}

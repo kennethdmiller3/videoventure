@@ -1,31 +1,17 @@
 #include "StdAfx.h"
 #include "Cloud.h"
-
-float CLOUD_SIZE_MEAN = 256;
-float CLOUD_SIZE_VARIANCE = 192;
+#include "Renderable.h"
 
 inline float rand_float()
 {
 	return (float)rand() * (1.0f / (float)RAND_MAX);
 }
 
-Cloud::Cloud(unsigned int aId, unsigned int aParentId)
-: Entity(aId)
-, Renderable(Database::renderabletemplate.Get(aParentId))
+GLuint CreateCloudDrawList(int aCount, float aMean, float aVariance)
 {
-}
-
-void Cloud::Init(int aCount)
-{
-	// remove existing draw list
-	if (mDraw)
-	{
-		glDeleteLists(mDraw, 1);
-	}
-
 	// create a new draw list
-	mDraw = glGenLists(1);
-	glNewList(mDraw, GL_COMPILE);
+	GLuint handle = glGenLists(1);
+	glNewList(handle, GL_COMPILE);
 
 	// begin primitive
 	glBegin( GL_QUADS );
@@ -43,8 +29,8 @@ void Cloud::Init(int aCount)
 #endif
 
 		// randomize size
-		float w = (rand_float() - rand_float()) * CLOUD_SIZE_VARIANCE + CLOUD_SIZE_MEAN;
-		float h = (rand_float() - rand_float()) * CLOUD_SIZE_VARIANCE + CLOUD_SIZE_MEAN;
+		float w = (rand_float() - rand_float()) * aVariance + aMean;
+		float h = (rand_float() - rand_float()) * aVariance + aMean;
 
 		// randomize color
 		glColor4f(
@@ -66,14 +52,7 @@ void Cloud::Init(int aCount)
 
 	// finish the draw list
 	glEndList();
-}
 
-Cloud::~Cloud(void)
-{
-}
-
-void Cloud::Render(const Matrix2 &transform)
-{
-	// call draw list
-	glCallList( mDraw );
+	// return the draw list
+	return handle;
 }

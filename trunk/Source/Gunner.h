@@ -7,15 +7,19 @@
 #include "Input.h"
 #include "Player.h"
 
+// gunner actor
 class Gunner : 
-	public Entity, public Controllable, public Simulatable, public Collidable, public Renderable
+	public Controllable, public Simulatable
 {
 protected:
-	// player
-	const Player *player;
+	// owner
+	unsigned int owner;
 
 	// offset
 	Matrix2 offset;
+
+	// control values
+	bool mFire;
 
 	// fire delay
 	float mDelay;
@@ -28,12 +32,6 @@ public:
 
 	// destructor
 	~Gunner(void);
-
-	// set player
-	void SetPlayer(const Player *aPlayer)
-	{
-		player = aPlayer;
-	}
 
 	// set phase
 	void SetPhase(int aPhase)
@@ -52,7 +50,9 @@ public:
 
 	// simulate
 	virtual void Simulate(float aStep);
-
-	// render
-	virtual void Render(const Matrix2 &transform);
 };
+
+namespace Database
+{
+	extern Typed<Gunner *> gunner;
+}

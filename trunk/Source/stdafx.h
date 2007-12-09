@@ -42,6 +42,7 @@ namespace stdext = __gnu_cxx;
 // utility includes
 #include "Hash.h"
 #include "Database.h"
+#include "Input.h"
 
 // arena attributes
 const float ARENA_X_MIN = -2048;
@@ -55,6 +56,9 @@ const int COLLISION_LAYER_PLAYER_BULLET = 1;
 
 // debug function
 extern int DebugPrint(const char *format, ...);
+
+// input system
+extern Input input;
 
 // loader
 void ProcessDrawItems(TiXmlElement *element);

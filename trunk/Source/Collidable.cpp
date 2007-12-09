@@ -6,11 +6,10 @@
 namespace Database
 {
 	Typed<CollidableTemplate> collidabletemplate("collidabletemplate");
-	Typed<Collidable> collidable("collidable");
+	Typed<Collidable *> collidable("collidable");
 }
 
 CollidableTemplate::CollidableTemplate(void)
-: shapes(0)
 {
 }
 
@@ -173,28 +172,25 @@ bool CollidableTemplate::ProcessBodyItem(TiXmlElement *element, b2BodyDef &body)
 
 	case 0x28217089 /* "circle" */:
 		{
-			b2CircleDef *shape = new b2CircleDef;
-			shapes.push_back(shape);
-			ConfigureCircle(element, *shape);
-			body.AddShape(shape);
+			circles.push_back(b2CircleDef());
+			ConfigureCircle(element, circles.back());
+			body.AddShape(&circles.back());
 		}
 		return true;
 
 	case 0x70c67e32 /* "box" */:
 		{
-			b2BoxDef *shape = new b2BoxDef;
-			shapes.push_back(shape);
-			ConfigureBox(element, *shape);
-			body.AddShape(shape);
+			boxes.push_back(b2BoxDef());
+			ConfigureBox(element, boxes.back());
+			body.AddShape(&boxes.back());
 		}
 		return true;
 
 	case 0x84d6a947 /* "poly" */:
 		{
-			b2PolyDef *shape = new b2PolyDef;
-			shapes.push_back(shape);
-			ConfigurePoly(element, *shape);
-			body.AddShape(shape);
+			polys.push_back(b2PolyDef());
+			ConfigurePoly(element, polys.back());
+			body.AddShape(&polys.back());
 		}
 		return true;
 
@@ -212,6 +208,243 @@ bool CollidableTemplate::ConfigureBody(TiXmlElement *element, b2BodyDef &body)
 	}
 	return true;
 }
+
+bool CollidableTemplate::ProcessJointItem(TiXmlElement *element, b2JointDef &joint)
+{
+	const char *name = element->Value();
+	switch (Hash(name))
+	{
+	case 0x115ce60c /* "body1" */:
+		{
+			const char *body1 = element->Attribute("name");
+			BodyMap::iterator itor = bodies.find(Hash(body1));
+			if (itor != bodies.end())
+			{
+				joint.body1 = reinterpret_cast<b2Body *>(&itor->second);
+			}
+		}
+		return true;
+
+	case 0x145ceac5 /* "body2" */:
+		{
+			const char *body2 = element->Attribute("name");
+			BodyMap::iterator itor = bodies.find(Hash(body2));
+			if (itor != bodies.end())
+			{
+				joint.body2 = reinterpret_cast<b2Body *>(&itor->second);
+			}
+		}
+		return true;
+
+	case 0x2c5d8028 /* "collideconnected" */:
+		{
+			int collide = joint.collideConnected;
+			element->QueryIntAttribute("value", &collide);
+			joint.collideConnected = collide != 0;
+		}
+		return true;
+
+	default:
+		return false;
+	}
+}
+
+bool CollidableTemplate::ProcessRevoluteJointItem(TiXmlElement *element, b2RevoluteJointDef &joint)
+{
+	const char *name = element->Value();
+	switch (Hash(name))
+	{
+	case 0x42edcab4 /* "anchor" */:
+		element->QueryFloatAttribute("x", &joint.anchorPoint.x);
+		element->QueryFloatAttribute("y", &joint.anchorPoint.y);
+		return true;
+
+	case 0x32dad934 /* "limit" */:
+		element->QueryFloatAttribute("lower", &joint.lowerAngle);
+		element->QueryFloatAttribute("upper", &joint.upperAngle);
+		joint.enableLimit = true;
+		return true;
+
+	case 0xcaf08472 /* "motor" */:
+		element->QueryFloatAttribute("torque", &joint.motorTorque);
+		element->QueryFloatAttribute("speed", &joint.motorSpeed);
+		joint.enableMotor = true;
+		return true;
+
+	default:
+		return ProcessJointItem(element, joint);
+	}
+}
+
+bool CollidableTemplate::ConfigureRevoluteJoint(TiXmlElement *element, b2RevoluteJointDef &joint)
+{
+	// process child elements
+	for (TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+	{
+		ProcessRevoluteJointItem(child, joint);
+	}
+	return true;
+}
+
+bool CollidableTemplate::ProcessPrismaticJointItem(TiXmlElement *element, b2PrismaticJointDef &joint)
+{
+	const char *name = element->Value();
+	switch (Hash(name))
+	{
+	case 0x42edcab4 /* "anchor" */:
+		element->QueryFloatAttribute("x", &joint.anchorPoint.x);
+		element->QueryFloatAttribute("y", &joint.anchorPoint.y);
+		return true;
+
+	case 0x6d2badf4 /* "axis" */:
+		element->QueryFloatAttribute("x", &joint.axis.x);
+		element->QueryFloatAttribute("y", &joint.axis.y);
+		return true;
+
+	case 0x32dad934 /* "limit" */:
+		element->QueryFloatAttribute("lower", &joint.lowerTranslation);
+		element->QueryFloatAttribute("upper", &joint.upperTranslation);
+		joint.enableLimit = true;
+		return true;
+
+	case 0xcaf08472 /* "motor" */:
+		element->QueryFloatAttribute("force", &joint.motorForce);
+		element->QueryFloatAttribute("speed", &joint.motorSpeed);
+		joint.enableMotor = true;
+		return true;
+
+	default:
+		return ProcessJointItem(element, joint);
+	}
+}
+
+bool CollidableTemplate::ConfigurePrismaticJoint(TiXmlElement *element, b2PrismaticJointDef &joint)
+{
+	// process child elements
+	for (TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+	{
+		ProcessPrismaticJointItem(child, joint);
+	}
+	return true;
+}
+
+bool CollidableTemplate::ProcessDistanceJointItem(TiXmlElement *element, b2DistanceJointDef &joint)
+{
+	const char *name = element->Value();
+	switch (Hash(name))
+	{
+	case 0xe155cf5f /* "anchor1" */:
+		element->QueryFloatAttribute("x", &joint.anchorPoint1.x);
+		element->QueryFloatAttribute("y", &joint.anchorPoint1.y);
+		return true;
+
+	case 0xe255d0f2 /* "anchor2" */:
+		element->QueryFloatAttribute("x", &joint.anchorPoint2.x);
+		element->QueryFloatAttribute("y", &joint.anchorPoint2.y);
+		return true;
+
+	default:
+		return ProcessJointItem(element, joint);
+	}
+}
+
+bool CollidableTemplate::ConfigureDistanceJoint(TiXmlElement *element, b2DistanceJointDef &joint)
+{
+	// process child elements
+	for (TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+	{
+		ProcessDistanceJointItem(child, joint);
+	}
+	return true;
+}
+
+bool CollidableTemplate::ProcessPulleyJointItem(TiXmlElement *element, b2PulleyJointDef &joint)
+{
+	const char *name = element->Value();
+	switch (Hash(name))
+	{
+	case 0xe1acc15d /* "ground1" */:
+		element->QueryFloatAttribute("x", &joint.groundPoint1.x);
+		element->QueryFloatAttribute("y", &joint.groundPoint1.y);
+		return true;
+
+	case 0xdeacbca4 /* "ground2" */:
+		element->QueryFloatAttribute("x", &joint.groundPoint1.x);
+		element->QueryFloatAttribute("y", &joint.groundPoint1.y);
+		return true;
+
+	case 0xe155cf5f /* "anchor1" */:
+		element->QueryFloatAttribute("x", &joint.anchorPoint1.x);
+		element->QueryFloatAttribute("y", &joint.anchorPoint1.y);
+		return true;
+
+	case 0xe255d0f2 /* "anchor2" */:
+		element->QueryFloatAttribute("x", &joint.anchorPoint2.x);
+		element->QueryFloatAttribute("y", &joint.anchorPoint2.y);
+		return true;
+
+	case 0xa4c53aac /* "length1" */:
+		element->QueryFloatAttribute("max", &joint.maxLength1);
+		return true;
+
+	case 0xa7c53f65 /* "length2" */:
+		element->QueryFloatAttribute("max", &joint.maxLength2);
+		return true;
+
+	case 0xc1121e84 /* "ratio" */:
+		element->QueryFloatAttribute("value", &joint.ratio);
+		return true;
+
+	default:
+		return ProcessJointItem(element, joint);
+	}
+}
+
+bool CollidableTemplate::ConfigurePulleyJoint(TiXmlElement *element, b2PulleyJointDef &joint)
+{
+	// process child elements
+	for (TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+	{
+		ProcessPulleyJointItem(child, joint);
+	}
+	return true;
+}
+
+bool CollidableTemplate::ProcessMouseJointItem(TiXmlElement *element, b2MouseJointDef &joint)
+{
+	const char *name = element->Value();
+	switch (Hash(name))
+	{
+	case 0x32608848 /* "target" */:
+		element->QueryFloatAttribute("x", &joint.target.x);
+		element->QueryFloatAttribute("y", &joint.target.y);
+		return true;
+
+	case 0x79a98884 /* "force" */:
+		element->QueryFloatAttribute("max", &joint.maxForce);
+		return true;
+
+	case 0x78e63274 /* "tuning" */:
+		element->QueryFloatAttribute("frequency", &joint.frequencyHz);
+		element->QueryFloatAttribute("damping", &joint.dampingRatio);
+		element->QueryFloatAttribute("timestep", &joint.timeStep);
+		return true;
+
+	default:
+		return ProcessJointItem(element, joint);
+	}
+}
+
+bool CollidableTemplate::ConfigureMouseJoint(TiXmlElement *element, b2MouseJointDef &joint)
+{
+	// process child elements
+	for (TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+	{
+		ProcessMouseJointItem(child, joint);
+	}
+	return true;
+}
+
 
 bool CollidableTemplate::Configure(TiXmlElement *element)
 {
@@ -233,7 +466,44 @@ bool CollidableTemplate::Configure(TiXmlElement *element)
 			}
 			break;
 
-		case 0xaeae0877 /* "joint" */:
+		case 0xef2f9539 /* "revolutejoint" */:
+			{
+				b2RevoluteJointDef joint;
+				CollidableTemplate::ConfigureRevoluteJoint(child, joint);
+			}
+			break;
+
+		case 0x4954853d /* "prismaticjoint" */:
+			{
+				b2PrismaticJointDef joint;
+				CollidableTemplate::ConfigurePrismaticJoint(child, joint);
+			}
+			break;
+
+		case 0x6932d1ee /* "distancejoint" */:
+			{
+				b2DistanceJointDef joint;
+				CollidableTemplate::ConfigureDistanceJoint(child, joint);
+			}
+			break;
+
+		case 0xdd003dc4 /* "pulleyjoint" */:
+			{
+				b2PulleyJointDef joint;
+				CollidableTemplate::ConfigurePulleyJoint(child, joint);
+			}
+			break;
+
+		case 0xc3b5cf50 /* "mousejoint" */:
+			{
+				b2MouseJointDef joint;
+				CollidableTemplate::ConfigureMouseJoint(child, joint);
+			}
+			break;
+
+		case 0x19a3586a /* "gearjoint" */:
+			{
+			}
 			break;
 		}
 	}
@@ -245,12 +515,12 @@ bool CollidableTemplate::Configure(TiXmlElement *element)
 b2World* Collidable::world;
 
 Collidable::Collidable(void)
-: CollidableTemplate()
+: id(0), body(NULL) 
 {
 }
 
-Collidable::Collidable(const CollidableTemplate &aTemplate)
-: CollidableTemplate(aTemplate), body(NULL)
+Collidable::Collidable(const CollidableTemplate &aTemplate, unsigned int aId)
+: id(aId), body(NULL)
 {
 }
 
@@ -262,12 +532,13 @@ Collidable::~Collidable(void)
 void Collidable::AddToWorld(void)
 {
 	// for each body...
-	for (BodyMap::iterator itor = bodies.begin(); itor != bodies.end(); ++itor)
+	const CollidableTemplate &collidable = Database::collidabletemplate.Get(id);
+	for (CollidableTemplate::BodyMap::const_iterator itor = collidable.bodies.begin(); itor != collidable.bodies.end(); ++itor)
 	{
 		// set body position to entity (HACK)
 		b2BodyDef def(itor->second);
 		def.userData = this;
-		Entity *entity = dynamic_cast<Entity *>(this);
+		const Entity *entity = Database::entity.Get(id);
 		if (entity)
 		{
 			const Matrix2 &transform = entity->GetTransform();
@@ -338,44 +609,49 @@ void Collidable::WorldDone(void)
 
 void Collidable::CollideAll(float aStep)
 {
-//	aStep *= (1.0f/16.0f);
-//	for (int i = 0; i < 16; i++)
-	{
-		world->Step(aStep, 16);
-		world->m_broadPhase->Validate();
+	world->Step(aStep, 16);
+	world->m_broadPhase->Validate();
 
-		// for each body...
-		for (b2Body* b = world->GetBodyList(); b; b = b->GetNext())
+	// for each body...
+	for (b2Body* body = world->GetBodyList(); body; body = body->GetNext())
+	{
+		if (!body->IsSleeping() && !body->IsStatic())
 		{
-			if (!b->IsSleeping() && !b->IsStatic())
+			// update the entity position (hack)
+			Collidable *collidable = static_cast<Collidable *>(body->GetUserData());
+			if (collidable)
 			{
-				// update the entity position (hack)
-				Entity *entity = dynamic_cast<Entity *>(static_cast<Collidable *>(b->GetUserData()));
-				if (entity)
-				{
-					entity->Step();
-					entity->SetTransform(Matrix2(b->GetRotationMatrix(), b->GetOriginPosition()));
-					entity->SetVelocity(Vector2(b->GetLinearVelocity()));
-				}
+				Entity *entity = Database::entity.Get(collidable->id);
+				entity->Step();
+				entity->SetTransform(Matrix2(body->GetRotationMatrix(), body->GetOriginPosition()));
+				entity->SetVelocity(Vector2(body->GetLinearVelocity()));
 			}
 		}
+	}
 
-		// for each contact...
-		for (b2Contact* c = world->GetContactList(); c; c = c->GetNext())
+	// for each contact...
+	for (b2Contact* c = world->GetContactList(); c; c = c->GetNext())
+	{
+		// if the shapes are actually touching...
+		if (c->GetManifoldCount() > 0)
 		{
-			// if the shapes are actually touching...
-			if (c->GetManifoldCount() > 0)
+			b2Body* body1 = c->GetShape1()->GetBody();
+			b2Body* body2 = c->GetShape2()->GetBody();
+			Collidable* coll1 = static_cast<Collidable *>(body1->GetUserData());
+			Collidable* coll2 = static_cast<Collidable *>(body2->GetUserData());
+			if (coll1 && coll2)
 			{
-				b2Body* body1 = c->GetShape1()->GetBody();
-				b2Body* body2 = c->GetShape2()->GetBody();
-				Collidable* coll1 = static_cast<Collidable *>(body1->GetUserData());
-				Collidable* coll2 = static_cast<Collidable *>(body2->GetUserData());
-				if (coll1 && coll2)
-				{
-					coll1->Collide(*coll2, c->GetManifolds(), c->GetManifoldCount());
-					coll2->Collide(*coll1, c->GetManifolds(), c->GetManifoldCount());
-				}
+				coll1->Collide(*coll2, c->GetManifolds(), c->GetManifoldCount());
+				coll2->Collide(*coll1, c->GetManifolds(), c->GetManifoldCount());
 			}
 		}
 	}
 }
+
+void Collidable::Collide(Collidable &aRecipient, b2Manifold aManifold[], int aCount)
+{
+	for (ListenerMap::iterator itor = listeners.begin(); itor != listeners.end(); ++itor)
+	{
+		itor->second->Collide(aRecipient, aManifold, aCount);
+	}
+};
