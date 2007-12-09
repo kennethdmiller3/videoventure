@@ -631,7 +631,7 @@ void Collidable::CollideAll(float aStep)
 			{
 				Entity *entity = Database::entity.Get(collidable->id);
 				entity->Step();
-				entity->SetTransform(Matrix2(body->GetRotationMatrix(), body->GetOriginPosition()));
+				entity->SetTransform(body->GetRotation(), Vector2(body->GetOriginPosition()));
 				entity->SetVelocity(Vector2(body->GetLinearVelocity()));
 			}
 		}

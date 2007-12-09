@@ -1438,6 +1438,9 @@ int SDL_main( int argc, char *argv[] )
 		{
 			// deduct a turn
 			sim_timer -= 1.0f;
+			
+			// update database
+			Database::Update();
 
 
 			// INPUT PHASE
@@ -1489,9 +1492,6 @@ int SDL_main( int argc, char *argv[] )
 
 			DebugPrint("coll=%d ", 1000000 * (perf_count3.QuadPart - perf_count2.QuadPart) / perf_freq.QuadPart);
 #endif
-			
-			// update database
-			Database::Update();
 		}
 
 #ifdef PRINT_SIMULATION_TIMER
