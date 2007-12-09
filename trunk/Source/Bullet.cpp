@@ -4,9 +4,6 @@
 #include "Damagable.h"
 #include <boost/pool/pool.hpp>
 
-// bullet attributes
-const float BULLET_LIFE = 1.0f;
-
 // bullet pool
 static boost::pool<boost::default_user_allocator_malloc_free> pool(sizeof(Bullet));
 void *Bullet::operator new(size_t aSize)
@@ -27,7 +24,7 @@ namespace Database
 
 
 BulletTemplate::BulletTemplate(void)
-: mLife(BULLET_LIFE), mDamage(0), mSpawnOnDeath(0)
+: mLife(FLT_MAX), mDamage(0), mRicochet(false), mSpawnOnDeath(0), mSpawnOnExpire(0)
 {
 }
 
@@ -42,6 +39,9 @@ bool BulletTemplate::Configure(TiXmlElement *element)
 
 	element->QueryFloatAttribute("life", &mLife);
 	element->QueryFloatAttribute("damage", &mDamage);
+	int ricochet = mRicochet;
+	element->QueryIntAttribute("ricochet", &ricochet);
+	mRicochet = ricochet != 0;
 	if (const char *spawn = element->Attribute("spawnonexpire"))
 		mSpawnOnExpire = Hash(spawn);
 	if (const char *spawn = element->Attribute("spawnondeath"))
@@ -96,12 +96,23 @@ void Bullet::Collide(Collidable &aRecipient, b2Manifold aManifold[], int aCount)
 {
 	const BulletTemplate &bullet = Database::bullettemplate.Get(Simulatable::id);
 
-	// apply damage
+	// if the recipient is damagable...
+	// and not healing or the target is at max health...
 	unsigned int hitId = aRecipient.GetId();
-	if (Damagable *damagable = Database::damagable.Get(hitId))
+	Damagable *damagable = Database::damagable.Get(hitId);
+	if (damagable && (bullet.mDamage >= 0 || damagable->GetHealth() < Database::damagabletemplate.Get(hitId).mHealth))
 	{
+		// apply damage value
 		damagable->Damage(Simulatable::id, bullet.mDamage);
 	}
+
+	// else if set to ricochet...
+	else if (bullet.mRicochet)
+	{
+		// collide normally
+		return;
+	}
+
 
 #ifdef BULLET_COLLISION_BOUNCE
 	// reorient to new direction
