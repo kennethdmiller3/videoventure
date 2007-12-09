@@ -1535,8 +1535,7 @@ int SDL_main( int argc, char *argv[] )
 			// use 640x480 screen coordinates
 			glLoadIdentity();
 			glScalef( 1.0f / 640, 1.0f / 640, -1.0f );
-			glTranslatef(0.0f, 0.0f, 1.0f);
-			glTranslatef(-0.5f*640, -0.5f*480, 0.0f);
+			glTranslatef(-0.5f*640, -0.5f*640*SCREEN_HEIGHT/SCREEN_WIDTH, 1.0f);
 
 			glBegin(GL_QUADS);
 
