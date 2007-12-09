@@ -69,6 +69,7 @@ bool RenderableTemplate::Configure(TiXmlElement *element)
 
 
 Renderable::List Renderable::sAll;
+float Renderable::sOffset;
 
 Renderable::Renderable(void)
 : id(0), show(false), mDraw(0)
@@ -110,8 +111,11 @@ void Renderable::Hide(void)
 	}
 }
 
-void Renderable::RenderAll(float aRatio)
+void Renderable::RenderAll(float aRatio, float aStep)
 {
+	// compute offset between visible time and simulated time
+	sOffset = (aRatio - 1.0f) * aStep;
+
 	// render matrix
 	Matrix2 transform;
 
