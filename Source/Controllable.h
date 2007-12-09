@@ -10,8 +10,12 @@ private:
 	// list entry
 	List::iterator entry;
 
+protected:
+	// identifier
+	unsigned int id;
+
 public:
-	Controllable(void);
+	Controllable(unsigned int aId);
 	virtual ~Controllable(void);
 
 	// configure

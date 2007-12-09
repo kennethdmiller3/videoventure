@@ -14,20 +14,27 @@ public:
 	virtual bool Configure(TiXmlElement *element);
 };
 
-class Renderable : public RenderableTemplate
+class Renderable
 {
 private:
 	// list of all renderables
 	typedef std::list<Renderable *> List;
 	static List sAll;
 
+	// identifier
+	unsigned int id;
+
 	// list entry
 	List::iterator entry;
 	bool show;
 
+protected:
+	// draw list
+	GLuint mDraw;
+
 public:
 	Renderable(void);
-	Renderable(const RenderableTemplate &aTemplate);
+	Renderable(const RenderableTemplate &aTemplate, unsigned int aId);
 	~Renderable(void);
 
 	// visibility
@@ -42,6 +49,6 @@ public:
 namespace Database
 {
 	extern Typed<RenderableTemplate> renderabletemplate;
-	extern Typed<Renderable> renderable;
+	extern Typed<Renderable *> renderable;
 	extern Typed<GLuint> drawlist;
 }

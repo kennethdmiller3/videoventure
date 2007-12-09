@@ -3,14 +3,17 @@
 
 Controllable::List Controllable::sAll;
 
-Controllable::Controllable(void)
+Controllable::Controllable(unsigned int aId)
+: id(aId), entry(sAll.end())
 {
-	entry = sAll.insert(sAll.end(), this);
+	if (id > 0)
+		entry = sAll.insert(sAll.end(), this);
 }
 
 Controllable::~Controllable(void)
 {
-	sAll.erase(entry);
+	if (entry != sAll.end())
+		sAll.erase(entry);
 }
 
 void Controllable::ControlAll(float aStep)

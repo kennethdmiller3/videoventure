@@ -10,16 +10,24 @@ const Vector2 PLAYER_BULLET_POS[2] =
 	Vector2(4, 0)
 };
 
+namespace Database
+{
+	Typed<Player *> player("player");
+}
+
 // Player Constructor
 Player::Player(unsigned int aId, unsigned int aParentId)
-: Entity(aId)
-, Controllable()
-, Simulatable()
-, Collidable(Database::collidabletemplate.Get(aParentId))
-, Renderable(Database::renderabletemplate.Get(aParentId))
-, input(NULL)
-, mMaxVeloc(200), mMaxAccel(1000), mFriction(50), mMaxOmega(10)
-, mDelay(0.0f), mCycle(0)
+: Controllable(aId)
+, Simulatable(aId)
+, mMaxVeloc(200)
+, mMaxAccel(1000)
+, mFriction(50)
+, mMaxOmega(10)
+, mMove(0, 0)
+, mAim(0, 0)
+, mFire(false)
+, mDelay(0.0f)
+, mCycle(0)
 {
 }
 
@@ -44,22 +52,36 @@ bool Player::Configure(TiXmlElement *element)
 		return true;
 
 	default:
-		return Entity::Configure(element) || Controllable::Configure(element) || Simulatable::Configure(element) || Collidable::Configure(element) || Renderable::Configure(element);
+		return Controllable::Configure(element) || Simulatable::Configure(element);
 	}
 }
 
 // Player Control
 void Player::Control(float aStep)
 {
-	if (!input)
-		return;
+	// set inputs
+	mMove.x = input[Input::MOVE_HORIZONTAL];
+	mMove.y = input[Input::MOVE_VERTICAL];
+	mAim.x = input[Input::AIM_HORIZONTAL];
+	mAim.y = input[Input::AIM_VERTICAL];
+	mFire = input[Input::FIRE_PRIMARY] != 0.0f;
+}
+
+// Player Simulate
+void Player::Simulate(float aStep)
+{
+	// get entity
+	Entity *entity = Database::entity.Get(Simulatable::id);
+
+	// get player collidable
+	const Collidable *collidable = Database::collidable.Get(Simulatable::id);
+	b2Body *body = collidable->GetBody();
 
 	// apply thrust
 	{
-		Vector2 move((*input)[Input::MOVE_HORIZONTAL], (*input)[Input::MOVE_VERTICAL]);
-		float control = std::min(move.LengthSq(), 1.0f);
+		float control = std::min(mMove.LengthSq(), 1.0f);
 		float acc = mFriction + (mMaxAccel - mFriction) * control;
-		Vector2 dv(move * mMaxVeloc - vel);
+		Vector2 dv(mMove * mMaxVeloc - entity->GetVelocity());
 		float it = std::min(acc * aStep / sqrtf(dv.LengthSq() + 0.0001f), 1.0f);
 		Vector2 new_thrust(dv * it * body->GetMass());
 		body->ApplyImpulse(b2Vec2(new_thrust.x, new_thrust.y), body->GetCenterPosition());
@@ -67,9 +89,8 @@ void Player::Control(float aStep)
 
 	// apply steering
 	{
-		Vector2 aim((*input)[Input::AIM_HORIZONTAL], (*input)[Input::AIM_VERTICAL]);
-		float control = std::min(16.0f * aim.LengthSq(), 1.0f);
-		float aim_angle = -atan2f(aim.x, aim.y) - angle_1;
+		float control = std::min(16.0f * mAim.LengthSq(), 1.0f);
+		float aim_angle = -atan2f(mAim.x, mAim.y) - entity->GetAngle();
 		if (aim_angle > float(M_PI))
 			aim_angle -= 2.0f*float(M_PI);
 		else if (aim_angle < -float(M_PI))
@@ -79,28 +100,26 @@ void Player::Control(float aStep)
 	}
 
 	// advance fire timer
-	mDelay -= aStep * mCycle;
+	mDelay -= aStep;
 
 	// if ready to fire...
 	if (mDelay <= 0.0f)
 	{
 		// if triggered...
-		if ((*input)[Input::FIRE_PRIMARY])
+		if (mFire)
 		{
 			// for each shot...
 			for (int i = 0; i < 2; i++)
 			{
 				const Vector2 d = PLAYER_BULLET_POS[i];
-				Bullet *bullet = Bullet::pool.construct(0, 0xd85669f0 /* "playerbullet" */);
-				bullet->SetTransform(angle_1, posit_1);
-				bullet->SetPosition(bullet->GetTransform().Transform(d));
-				bullet->SetVelocity(bullet->GetTransform().y * PLAYER_BULLET_SPEED);
-				bullet->Init();
-				bullet->AddToWorld();
+				Matrix2 transform(entity->GetTransform());
+				transform.p = transform.Transform(PLAYER_BULLET_POS[i]);
+				Database::Instantiate(0xd85669f0 /* "playerbullet" */,
+					transform.Angle(), transform.p, transform.y * PLAYER_BULLET_SPEED);
 			}
 
 			// update weapon delay
-			mDelay += 0.25f;
+			mDelay += 0.1f;
 		}
 		else
 		{
@@ -108,41 +127,6 @@ void Player::Control(float aStep)
 			mDelay = 0.0f;
 		}
 	}
-}
 
-// Player Simulate
-void Player::Simulate(float aStep)
-{
-	// update fire delay
-	mDelay -= aStep;
-	if (mDelay < 0.0f)
-		mDelay = 0.0f;
-}
-
-// Player Collide
-void Player::Collide(Collidable &aRecipient, b2Manifold aManifold[], int aCount)
-{
-}
-
-// Player Render
-void Player::Render(const Matrix2 &transform)
-{
-	// push a transform
-	glPushMatrix();
-
-	// load matrix
-	float m[16] =
-	{
-		transform.x.x, transform.x.y, 0, 0,
-		transform.y.x, transform.y.y, 0, 0,
-		0, 0, 1, 0,
-		transform.p.x, transform.p.y, 0, 1
-	};
-	glMultMatrixf( m );
-
-	// call the draw list
-	glCallList(mDraw);
-
-	// reset the transform
-	glPopMatrix();
+	Database::entity.Close(Simulatable::id);
 }

@@ -10,8 +10,12 @@ private:
 	// list entry
 	List::iterator entry;
 
+protected:
+	// identifier
+	unsigned int id;
+
 public:
-	Simulatable(void);
+	Simulatable(unsigned int aId);
 	virtual ~Simulatable(void);
 
 	// configure

@@ -7,18 +7,21 @@
 #include "Renderable.h"
 #include "Input.h"
 
+// player actor
 class Player : 
-	public Entity, public Controllable, public Simulatable, public Collidable, public Renderable
+	public Controllable, public Simulatable
 {
-	// input
-	const Input *input;
-
 public:
 	// physics parameters
 	float mMaxVeloc;
 	float mMaxAccel;
 	float mFriction;
 	float mMaxOmega;
+
+	// control values
+	Vector2 mMove;
+	Vector2 mAim;
+	bool mFire;
 
 	// fire delay
 	float mDelay;
@@ -31,18 +34,6 @@ public:
 	// destructor
 	~Player(void);
 
-	// get input
-	const Input *GetInput(void) const
-	{
-		return input;
-	}
-
-	// set input
-	void SetInput(const Input *aInput)
-	{
-		input = aInput;
-	}
-
 	// configure
 	virtual bool Configure(TiXmlElement *element);
 
@@ -51,10 +42,9 @@ public:
 
 	// simulate
 	virtual void Simulate(float aStep);
-
-	// collide
-	virtual void Collide(Collidable &aRecipient, b2Manifold aManifold[], int aCount);
-
-	// render
-	virtual void Render(const Matrix2 &transform);
 };
+
+namespace Database
+{
+	extern Typed<Player *> player;
+}

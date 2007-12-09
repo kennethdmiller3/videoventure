@@ -5,7 +5,7 @@
 namespace Database
 {
 	Typed<RenderableTemplate> renderabletemplate("renderabletemplate");
-	Typed<Renderable> renderable("renderable");
+	Typed<Renderable *> renderable("renderable");
 	Typed<GLuint> drawlist("drawlist");
 }
 
@@ -71,14 +71,13 @@ bool RenderableTemplate::Configure(TiXmlElement *element)
 Renderable::List Renderable::sAll;
 
 Renderable::Renderable(void)
-: RenderableTemplate(), show(false)
+: id(0), show(false), mDraw(0)
 {
 }
 
-Renderable::Renderable(const RenderableTemplate &aTemplate)
-: RenderableTemplate(aTemplate), show(false)
+Renderable::Renderable(const RenderableTemplate &aTemplate, unsigned int aId)
+: id(aId), show(false), mDraw(aTemplate.mDraw)
 {
-	Show();
 }
 
 Renderable::~Renderable(void)
@@ -125,12 +124,25 @@ void Renderable::RenderAll(float aRatio)
 		List::iterator next(itor);
 		++next;
 
+		// push a transform
+		glPushMatrix();
+
 		// get the entity (HACK)
-		Entity *entity = dynamic_cast<Entity *>(*itor);
+		const Entity *entity = Database::entity.Get((*itor)->id);
 		if (entity)
 		{
 			// get interpolated transform
 			transform = entity->GetInterpolatedTransform(aRatio);
+
+			// load matrix
+			float m[16] =
+			{
+				transform.x.x, transform.x.y, 0, 0,
+				transform.y.x, transform.y.y, 0, 0,
+				0, 0, 1, 0,
+				transform.p.x, transform.p.y, 0, 1
+			};
+			glMultMatrixf( m );
 		}
 		else
 		{
@@ -140,6 +152,9 @@ void Renderable::RenderAll(float aRatio)
 
 		// render
 		(*itor)->Render(transform);
+
+		// reset the transform
+		glPopMatrix();
 
 		// go to the next iterator
 		itor = next;

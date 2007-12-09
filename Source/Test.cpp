@@ -4,10 +4,8 @@
 // includes
 #include "Timer.h"
 #include "Cloud.h"
-#include "Grid.h"
 #include "Player.h"
 #include "Gunner.h"
-#include "Target.h"
 #include "Bullet.h"
 #include "Explosion.h"
 
@@ -28,6 +26,8 @@ int OPENGL_MULTISAMPLE = 16;
 // simulation attributes
 int SIMULATION_RATE = 60;
 
+// input system
+Input input;
 
 int DebugPrint(const char *format, ...)
 {
@@ -948,78 +948,6 @@ void ProcessDrawItems(TiXmlElement *element)
 	}
 }
 
-static void ProcessEntityItems(TiXmlElement *element)
-{
-	// entity
-	Entity *entity = NULL;
-
-	// get entity identifier
-	const char *name = element->Attribute("name");
-	unsigned int entity_id = Hash(name);
-
-	// get parent identifier
-	const char *type = element->Attribute("type");
-	unsigned int parent_id = Hash(type);
-
-	// create entity based on parent identifier (HACK)
-	switch (parent_id)
-	{
-	case 0x1ac6a97e /* "cloud" */:
-		{
-			Cloud *cloud = new Cloud(entity_id, parent_id);
-
-			int count = 1;
-			element->QueryIntAttribute("count", &count);
-			cloud->Init(count);
-
-			entity = cloud;
-		}
-		break;
-
-	case 0xaf871a91 /* "grid" */:
-		entity = new Grid(entity_id, parent_id);
-		break;
-
-	case 0x2c99c300 /* "player" */:
-		entity = new Player(entity_id, parent_id);
-		break;
-
-	case 0xe063cbaa /* "gunner" */:
-		entity = new Gunner(entity_id, parent_id);
-		break;
-
-	case 0x32608848 /* "target" */:
-	case 0xa7262d15 /* "wall" */:
-		entity = new Target(entity_id, parent_id);
-		break;
-
-	default:
-		break;
-	}
-
-	if (entity)
-	{
-		// set parent
-		Database::parent.Put(entity_id, parent_id);
-
-		// add to entity map
-		Database::entity.Put(entity_id, entity);
-
-		// process child elements
-		for (TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
-		{
-			entity->Configure(child);
-		}
-		
-		// initialize the entity (HACK)
-		Collidable *collidable = dynamic_cast<Collidable *>(entity);
-		if (collidable)
-			collidable->AddToWorld();
-
-		entity->Init();
-	}
-}
-
 static void ProcessTemplateItems(TiXmlElement *element)
 {
 	// get template identifier
@@ -1037,17 +965,41 @@ static void ProcessTemplateItems(TiXmlElement *element)
 		{
 		case 0x74e9dbae /* "collidable" */:
 			{
-				CollidableTemplate collidable;
+				if (!Database::collidabletemplate.Find(template_id))
+					Database::collidabletemplate.Put(template_id, Database::collidabletemplate.Get(parent_id));
+				CollidableTemplate &collidable = Database::collidabletemplate.Open(template_id);
 				collidable.Configure(child);
-				Database::collidabletemplate.Put(template_id, collidable);
+				Database::collidabletemplate.Close(template_id);
 			}
 			break;
 
 		case 0x109dd1ad /* "renderable" */:
 			{
-				RenderableTemplate renderable;
+				if (!Database::renderabletemplate.Find(template_id))
+					Database::renderabletemplate.Put(template_id, Database::renderabletemplate.Get(parent_id));
+				RenderableTemplate &renderable = Database::renderabletemplate.Open(template_id);
 				renderable.Configure(child);
-				Database::renderabletemplate.Put(template_id, renderable);
+				Database::renderabletemplate.Close(template_id);
+			}
+			break;
+
+		case 0xe894a379 /* "bullet" */:
+			{
+				if (!Database::bullettemplate.Find(template_id))
+					Database::bullettemplate.Put(template_id, Database::bullettemplate.Get(parent_id));
+				BulletTemplate &bullet = Database::bullettemplate.Open(template_id);
+				bullet.Configure(child);
+				Database::bullettemplate.Close(template_id);
+			}
+			break;
+
+		case 0x02bb1fe0 /* "explosion" */:
+			{
+				if (!Database::explosiontemplate.Find(template_id))
+					Database::explosiontemplate.Put(template_id, Database::explosiontemplate.Get(parent_id));
+				ExplosionTemplate &explosion = Database::explosiontemplate.Open(template_id);
+				explosion.Configure(child);
+				Database::explosiontemplate.Close(template_id);
 			}
 			break;
 
@@ -1072,10 +1024,90 @@ static void ProcessTemplateItems(TiXmlElement *element)
 				glEndList();
 			}
 			break;
+
+		case 0x1ac6a97e /* "cloud" */:
+			{
+				int count = 1;
+				child->QueryIntAttribute("count", &count);
+				float mean = 256;
+				child->QueryFloatAttribute("mean", &mean);
+				float variance = 192;
+				child->QueryFloatAttribute("variance", &variance);
+				GLuint handle = CreateCloudDrawList(count, mean, variance);
+
+				// get the list name
+				const char *name = child->Attribute("name");
+				if (name)
+				{
+					// register the draw list
+					Database::drawlist.Put(Hash(name), handle);
+				}
+			}
+			break;
 		}
 	}
 
 	Database::parent.Put(template_id, parent_id);
+}
+
+static void ProcessEntityItems(TiXmlElement *element)
+{
+	// get entity identifier
+	const char *name = element->Attribute("name");
+	unsigned int entity_id = Hash(name);
+
+	// get parent identifier
+	const char *type = element->Attribute("type");
+	unsigned int parent_id = Hash(type);
+
+	// process template components
+	ProcessTemplateItems(element);
+
+	// create an entity
+	Entity *entity = new Entity(entity_id);
+	Database::entity.Put(entity_id, entity);
+
+	// inherit template components
+	Database::Inherit(entity_id, parent_id);
+
+	// process child elements
+	// (components with no template equivalent)
+	for (TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+	{
+		if (entity->Configure(child))
+			continue;
+
+		switch (Hash(child->Value()))
+		{
+		case 0x2c99c300 /* "player" */:
+			{
+				Player *player = Database::player.Get(entity_id);
+				if (!player)
+				{
+					player = new Player(entity_id, parent_id);
+					Database::player.Put(entity_id, player);
+				}
+				player->Configure(child);
+			}
+			break;
+
+		case 0xe063cbaa /* "gunner" */:
+			{
+				Gunner *gunner = Database::gunner.Get(entity_id);
+				if (!gunner)
+				{
+					gunner = new Gunner(entity_id, parent_id);
+					Database::gunner.Put(entity_id, gunner);
+				}
+				gunner->Configure(child);
+			}
+			break;
+		}
+	}
+	
+	// activate the instance
+	// (create runtime components)
+	Database::Activate(entity_id);
 }
 
 static void ProcessWorldItems(TiXmlElement *element)
@@ -1087,6 +1119,7 @@ static void ProcessWorldItems(TiXmlElement *element)
 		{
 		case 0x694aaa0b /* "template" */:
 			{
+				// process template items
 				ProcessTemplateItems(child);
 			}
 			break;
@@ -1117,6 +1150,26 @@ static void ProcessWorldItems(TiXmlElement *element)
 
 				// finish the draw list
 				glEndList();
+			}
+			break;
+
+		case 0x1ac6a97e /* "cloud" */:
+			{
+				int count = 1;
+				child->QueryIntAttribute("count", &count);
+				float mean = 256;
+				child->QueryFloatAttribute("mean", &mean);
+				float variance = 192;
+				child->QueryFloatAttribute("variance", &variance);
+				GLuint handle = CreateCloudDrawList(count, mean, variance);
+
+				// get the list name
+				const char *name = child->Attribute("name");
+				if (name)
+				{
+					// register the draw list
+					Database::drawlist.Put(Hash(name), handle);
+				}
 			}
 			break;
 
@@ -1211,9 +1264,6 @@ int SDL_main( int argc, char *argv[] )
 	if( !init() )
 		return 1;    
 
-	// input system
-	Input input;
-
 	{
 		// input binding
 		TiXmlDocument document(inputconfig);
@@ -1289,13 +1339,6 @@ int SDL_main( int argc, char *argv[] )
 		{
 			ProcessWorldItems(element);
 		}
-	}
-
-	// find the player
-	Player *player = dynamic_cast<Player *>(Database::entity.Get(Hash("playership")));
-	if (player)
-	{
-		player->SetInput(&input);
 	}
 
     // timer timer
@@ -1459,6 +1502,7 @@ int SDL_main( int argc, char *argv[] )
 		// push camera transform
 		glPushMatrix();
 
+		const Entity *player = Database::entity.Get(0xeec1dafa /* "playership" */);
 		if (player)
 		{
 			// track player position
@@ -1484,13 +1528,9 @@ int SDL_main( int argc, char *argv[] )
 	}
 	while( !quit );
 
-	// clear pools
-	Bullet::pool.~object_pool();
-	Explosion::pool.~object_pool();
-
 	// remove all entities
-	for (Database::Typed<Entity *>::iterator itor = Database::entity.begin(); itor != Database::entity.end(); ++itor)
-		delete itor->second;
+//	for (Database::Typed<Entity *>::iterator itor = Database::entity.begin(); itor != Database::entity.end(); ++itor)
+//		delete itor->second;
 	Database::entity.clear();
 
 	// remove all drawlists
@@ -1499,9 +1539,14 @@ int SDL_main( int argc, char *argv[] )
 	Database::drawlist.clear();
 
 	// clear databases
-	Database::collidabletemplate.clear();
+	Database::player.clear();
+	Database::gunner.clear();
 	Database::collidable.clear();
+	Database::collidabletemplate.clear();
 	Database::renderable.clear();
+	Database::renderabletemplate.clear();
+	Database::bullettemplate.clear();
+	Database::explosiontemplate.clear();
 
 	// collidable done
 	Collidable::WorldDone();
