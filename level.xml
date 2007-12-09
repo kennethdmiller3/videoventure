@@ -916,5 +916,54 @@
 		<bullet life="1" damage="1" spawnondeath="playerbulletexplosion"/>
 	</template>
 
+	
+	<!-- health powerup -->
+
+	<template name="healthup" type="">
+		<collidable>
+			<body name="main">
+				<circle radius="6">
+					<friction value="0.5"/>
+					<restitution value="0.5"/>
+					<density value="1"/>
+					<category value="3"/>
+					<mask bit2="0" bit4="0"/>
+				</circle>
+				<damping linear="0.5" angular="0.5"/>
+			</body>
+		</collidable>
+		<renderable>
+			<drawlist>
+				<color r="0.2" g="1.0" b="0.1" a="1.0"/>
+				<pushmatrix>
+					<scale x="6" y="6"/>
+					<calllist name="circle8"/>
+				</pushmatrix>
+			</drawlist>
+		</renderable>
+		<bullet damage="-1" ricochet="1"/>
+	</template>
+	
+	<template name="healthupspawner" type="">
+		<spawner>
+			<spawn name="healthup" start="0" cycle="10" track="1"/>
+		</spawner>
+	</template>
+
+	<entity name="healthupspawner1" type="healthupspawner">
+		<position x="96" y="0"/>
+	</entity>
+
+	<entity name="healthupspawner2" type="healthupspawner">
+		<position x="0" y="96"/>
+	</entity>
+
+	<entity name="healthupspawner3" type="healthupspawner">
+		<position x="-96" y="0"/>
+	</entity>
+
+	<entity name="healthupspawner4" type="healthupspawner">
+		<position x="0" y="-96"/>
+	</entity>
 
 </world>

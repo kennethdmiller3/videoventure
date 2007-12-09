@@ -14,6 +14,9 @@ public:
 	// damage value
 	float mDamage;
 
+	// ricochet?
+	bool mRicochet;
+
 	// spawn on death
 	unsigned int mSpawnOnExpire;
 	unsigned int mSpawnOnDeath;
