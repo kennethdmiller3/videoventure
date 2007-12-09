@@ -211,7 +211,7 @@ void Explosion::Simulate(float aStep)
 void Explosion::Render(const Matrix2 &transform)
 {
 	// elapsed time
-	float t = mLifeSpan - mLife;
+	float t = mLifeSpan - mLife + Renderable::sOffset;
 
 	//
 	// DRAW EXPLOSION CORE
@@ -222,26 +222,25 @@ void Explosion::Render(const Matrix2 &transform)
 	{
 		float time = t;
 		Color color = Color();
-		for (ColorKeys::const_iterator colorkey = mCoreColor.begin(); colorkey != mCoreColor.end(); ++colorkey)
-		{
-			if (time < colorkey->time)
-			{
-				color.r = colorkey->start.r + time * colorkey->rate.r;
-				color.g = colorkey->start.g + time * colorkey->rate.g;
-				color.b = colorkey->start.b + time * colorkey->rate.b;
-				color.a = colorkey->start.a + time * colorkey->rate.a;
-				break;
-			}
-			time -= colorkey->time;
-		}
-		glColor4f(color.r, color.g, color.b, color.a);
-	}
-
-	// interpolate scale
-	{
-		float time = t;
-		Scale scale = Scale();
-		for (ScaleKeys::const_iterator scalekey = mCoreScale.begin(); scalekey != mCoreScale.end(); ++scalekey)
+		for (ColorKeys::const_iterator colorkey = mCoreColor.begin(); time >= 0 && colorkey != mCoreColor.end(); time -= colorkey->time, ++colorkey)
+		{																	   
+			if (time < colorkey->time)										   
+			{																   
+				color.r = colorkey->start.r + time * colorkey->rate.r;		   
+				color.g = colorkey->start.g + time * colorkey->rate.g;		   
+				color.b = colorkey->start.b + time * colorkey->rate.b;		   
+				color.a = colorkey->start.a + time * colorkey->rate.a;		   
+				break;														   
+			}																   
+		}																	   
+		glColor4f(color.r, color.g, color.b, color.a);						   
+	}																		   
+																			   
+	// interpolate scale													   
+	{																		   
+		float time = t;														   
+		Scale scale = Scale();												   
+		for (ScaleKeys::const_iterator scalekey = mCoreScale.begin(); time >= 0 && scalekey != mCoreScale.end(); time -= scalekey->time, ++scalekey)
 		{
 			if (time < scalekey->time)
 			{
@@ -250,7 +249,6 @@ void Explosion::Render(const Matrix2 &transform)
 				scale.z = scalekey->start.z + time * scalekey->rate.z;
 				break;
 			}
-			time -= scalekey->time;
 		}
 		glScalef(scale.x, scale.y, scale.z );
 	}
@@ -270,26 +268,25 @@ void Explosion::Render(const Matrix2 &transform)
 	{
 		float time = t;
 		Color color = Color();
-		for (ColorKeys::const_iterator colorkey = mHaloColor.begin(); colorkey != mHaloColor.end(); ++colorkey)
-		{
-			if (time < colorkey->time)
-			{
-				color.r = colorkey->start.r + time * colorkey->rate.r;
-				color.g = colorkey->start.g + time * colorkey->rate.g;
-				color.b = colorkey->start.b + time * colorkey->rate.b;
-				color.a = colorkey->start.a + time * colorkey->rate.a;
-				break;
-			}
-			time -= colorkey->time;
-		}
-		glColor4f(color.r, color.g, color.b, color.a);
-	}
-
-	// interpolate scale
-	{
-		float time = t;
-		Scale scale = Scale();
-		for (ScaleKeys::const_iterator scalekey = mHaloScale.begin(); scalekey != mHaloScale.end(); ++scalekey)
+		for (ColorKeys::const_iterator colorkey = mHaloColor.begin(); time >= 0 && colorkey != mHaloColor.end(); time -= colorkey->time, ++colorkey)
+		{																	   
+			if (time < colorkey->time)										   
+			{																   
+				color.r = colorkey->start.r + time * colorkey->rate.r;		   
+				color.g = colorkey->start.g + time * colorkey->rate.g;		   
+				color.b = colorkey->start.b + time * colorkey->rate.b;		   
+				color.a = colorkey->start.a + time * colorkey->rate.a;		   
+				break;														   
+			}																   
+		}																	   
+		glColor4f(color.r, color.g, color.b, color.a);						   
+	}																		   
+																			   
+	// interpolate scale													   
+	{																		   
+		float time = t;														   
+		Scale scale = Scale();												   
+		for (ScaleKeys::const_iterator scalekey = mHaloScale.begin(); time >= 0 && scalekey != mHaloScale.end(); time -= scalekey->time, ++scalekey)
 		{
 			if (time < scalekey->time)
 			{
@@ -298,7 +295,6 @@ void Explosion::Render(const Matrix2 &transform)
 				scale.z = scalekey->start.z + time * scalekey->rate.z;
 				break;
 			}
-			time -= scalekey->time;
 		}
 		glScalef(scale.x, scale.y, scale.z );
 	}

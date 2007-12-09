@@ -27,6 +27,7 @@ int OPENGL_MULTISAMPLE = 16;
 
 // simulation attributes
 int SIMULATION_RATE = 60;
+float TIME_SCALE = 1.0f;
 
 // input system
 Input input;
@@ -1263,6 +1264,10 @@ int SDL_main( int argc, char *argv[] )
 			case 0xd6974b06 /* "simrate" */:
 				SIMULATION_RATE = atoi(argv[++i]);
 				break;
+
+			case 0x9f2f269e /* "timescale" */:
+				TIME_SCALE = float(atof(argv[++i]));
+				break;
 			}
 		}
 	}
@@ -1431,7 +1436,7 @@ int SDL_main( int argc, char *argv[] )
 			delta = 1000;
 
 		// advance the sim timer
-		sim_timer += delta * sim_rate / 1000.0f;
+		sim_timer += delta * TIME_SCALE * sim_rate / 1000.0f;
 
 		// while simulation turns to run...
 		while (sim_timer > 1.0f)
@@ -1573,7 +1578,8 @@ int SDL_main( int argc, char *argv[] )
 		glTranslatef( -trackpos.x, -trackpos.y, 0 );
 
 		// render all entities
-		Renderable::RenderAll(sim_timer);
+		// (send interpolation ratio and offset from simulation time)
+		Renderable::RenderAll(sim_timer, sim_step);
 
 		// reset camera transform
 		glPopMatrix();

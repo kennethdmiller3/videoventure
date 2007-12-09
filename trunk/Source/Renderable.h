@@ -29,6 +29,9 @@ private:
 	bool show;
 
 protected:
+	// time offset
+	static float sOffset;
+
 	// draw list
 	GLuint mDraw;
 
@@ -42,7 +45,7 @@ public:
 	void Hide(void);
 
 	// render
-	static void RenderAll(float aRatio);
+	static void RenderAll(float aRatio, float aStep);
 	virtual void Render(const Matrix2 &transform);
 };
 
