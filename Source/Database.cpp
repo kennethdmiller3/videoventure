@@ -3,8 +3,10 @@
 #include "Entity.h"
 #include "Collidable.h"
 #include "Renderable.h"
+#include "Damagable.h"
 #include "Bullet.h"
 #include "Explosion.h"
+#include "Spawner.h"
 #include "Player.h"
 #include "Gunner.h"
 #include <new>
@@ -40,32 +42,46 @@ namespace Database
 	// inherit from a template
 	void Inherit(unsigned int aInstanceId, unsigned int aTemplateId)
 	{
-		// instantiate collidable template
+		// inherit collidable template
 		const CollidableTemplate *collidabletemplate = Database::collidabletemplate.Find(aTemplateId);
 		if (collidabletemplate)
 		{
 			Database::collidabletemplate.Put(aInstanceId, *collidabletemplate);
 		}
 
-		// instantiate renderable template
+		// inherit renderable template
 		const RenderableTemplate *renderabletemplate = Database::renderabletemplate.Find(aTemplateId);
 		if (renderabletemplate)
 		{
 			Database::renderabletemplate.Put(aInstanceId, *renderabletemplate);
 		}
 
-		// instantiate bullet template
+		// inherit damagable template
+		const DamagableTemplate *damagabletemplate = Database::damagabletemplate.Find(aTemplateId);
+		if (damagabletemplate)
+		{
+			Database::damagabletemplate.Put(aInstanceId, *damagabletemplate);
+		}
+
+		// inherit bullet template
 		const BulletTemplate *bullettemplate = Database::bullettemplate.Find(aTemplateId);
 		if (bullettemplate)
 		{
 			Database::bullettemplate.Put(aInstanceId, *bullettemplate);
 		}
 
-		// instantiate explosion template
+		// inherit explosion template
 		const ExplosionTemplate *explosiontemplate = Database::explosiontemplate.Find(aTemplateId);
 		if (explosiontemplate)
 		{
 			Database::explosiontemplate.Put(aInstanceId, *explosiontemplate);
+		}
+
+		// inherit spawner template
+		const SpawnerTemplate *spawnertemplate = Database::spawnertemplate.Find(aTemplateId);
+		if (spawnertemplate)
+		{
+			Database::spawnertemplate.Put(aInstanceId, *spawnertemplate);
 		}
 	}
 
@@ -93,6 +109,14 @@ namespace Database
 			renderable->Show();
 		}
 
+		// instantiate damagable template
+		const DamagableTemplate *damagabletemplate = Database::damagabletemplate.Find(aId);
+		if (damagabletemplate)
+		{
+			Damagable *damagable = new Damagable(*damagabletemplate, aId);
+			Database::damagable.Put(aId, damagable);
+		}
+
 		// instantiate bullet template
 		const BulletTemplate *bullettemplate = Database::bullettemplate.Find(aId);
 		if (bullettemplate)
@@ -107,6 +131,14 @@ namespace Database
 		{
 			Explosion *explosion = new Explosion(*explosiontemplate, aId);
 			Database::explosion.Put(aId, explosion);
+		}
+
+		// instantiate spawner template
+		const SpawnerTemplate *spawnertemplate = Database::spawnertemplate.Find(aId);
+		if (spawnertemplate)
+		{
+			Spawner *spawner = new Spawner(*spawnertemplate, aId);
+			Database::spawner.Put(aId, spawner);
 		}
 
 		// initialize gunner (HACK)
@@ -134,6 +166,11 @@ namespace Database
 			delete e;
 			explosion.Delete(aId);
 		}
+		if (Spawner *s = spawner.Get(aId))
+		{
+			delete s;
+			spawner.Delete(aId);
+		}
 		if (Player *p = player.Get(aId))
 		{
 			delete p;
@@ -154,21 +191,45 @@ namespace Database
 			delete r;
 			renderable.Delete(aId);
 		}
+		if (Damagable *d = damagable.Get(aId))
+		{
+			delete d;
+			damagable.Delete(aId);
+		}
 	}
+
+	// deletion queue
+	std::vector<unsigned int> deletequeue(64);
 
 	// delete an identifier
 	void Delete(unsigned int aId)
+	{
+		deletequeue.push_back(aId);
+	}
+
+	// destroy the identifier
+	void Destroy(unsigned int aId)
 	{
 		// deactivate
 		Deactivate(aId);
 
 		// remove template components
-		bullettemplate.Delete(aId);
-		explosiontemplate.Delete(aId);
 		collidabletemplate.Delete(aId);
 		renderabletemplate.Delete(aId);
+		damagabletemplate.Delete(aId);
+		bullettemplate.Delete(aId);
+		explosiontemplate.Delete(aId);
+		spawnertemplate.Delete(aId);
 
 		// remove the entity
 		Database::entity.Delete(aId);
+	}
+
+	// update the database system
+	void Update(void)
+	{
+		for (std::vector<unsigned int>::iterator itor = deletequeue.begin(); itor != deletequeue.end(); ++itor)
+			Destroy(*itor);
+		deletequeue.clear();
 	}
 }

@@ -1,6 +1,7 @@
 #include "StdAfx.h"
 #include "Bullet.h"
 #include "Explosion.h"
+#include "Damagable.h"
 #include <boost/pool/pool.hpp>
 
 // bullet attributes
@@ -26,7 +27,7 @@ namespace Database
 
 
 BulletTemplate::BulletTemplate(void)
-: mLife(BULLET_LIFE)
+: mLife(BULLET_LIFE), mDamage(0), mSpawnOnDeath(0)
 {
 }
 
@@ -40,6 +41,11 @@ bool BulletTemplate::Configure(TiXmlElement *element)
 		return false;
 
 	element->QueryFloatAttribute("life", &mLife);
+	element->QueryFloatAttribute("damage", &mDamage);
+	if (const char *spawn = element->Attribute("spawnonexpire"))
+		mSpawnOnExpire = Hash(spawn);
+	if (const char *spawn = element->Attribute("spawnondeath"))
+		mSpawnOnDeath = Hash(spawn);
 	return true;
 }
 
@@ -72,6 +78,15 @@ void Bullet::Simulate(float aStep)
 	mLife -= aStep;
 	if (mLife <= 0)
 	{
+		Entity *entity = Database::entity.Get(id);
+		if (entity)
+		{
+			const BulletTemplate &bullet = Database::bullettemplate.Get(Simulatable::id);
+			if (bullet.mSpawnOnExpire)
+			{
+				Database::Instantiate(bullet.mSpawnOnExpire, entity->GetAngle(), entity->GetPosition(), Vector2(0, 0));
+			}
+		}
 		Database::Delete(Simulatable::id);
 		return;
 	}
@@ -79,10 +94,14 @@ void Bullet::Simulate(float aStep)
 
 void Bullet::Collide(Collidable &aRecipient, b2Manifold aManifold[], int aCount)
 {
-	// create an explosion at the contact point
-	b2Vec2 position(aManifold[0].points[0].position - aManifold[0].points[0].separation * aManifold[0].normal);
-	const unsigned int template_id = 0x70f5d327 /* "playerbulletexplosion" */;
-	const unsigned int instance_id = Database::Instantiate(template_id, 0, Vector2(position), Vector2(0, 0));
+	const BulletTemplate &bullet = Database::bullettemplate.Get(Simulatable::id);
+
+	// apply damage
+	unsigned int hitId = aRecipient.GetId();
+	if (Damagable *damagable = Database::damagable.Get(hitId))
+	{
+		damagable->Damage(Simulatable::id, bullet.mDamage);
+	}
 
 #ifdef BULLET_COLLISION_BOUNCE
 	// reorient to new direction
@@ -99,8 +118,18 @@ void Bullet::Collide(Collidable &aRecipient, b2Manifold aManifold[], int aCount)
 		entity->SetVelocity(Vector2(body->GetLinearVelocity()));
 	}
 #else
+	// estimate the point of impact
+	b2Vec2 position(aManifold[0].points[0].position - aManifold[0].points[0].separation * aManifold[0].normal);
+
+	// if spawning on death...
+	if (bullet.mSpawnOnDeath)
+	{
+		// spawn the template
+		Database::Instantiate(bullet.mSpawnOnDeath, 0, Vector2(position), Vector2(0, 0));
+	}
+
 	// kill the bullet
 	// (note: this breaks collision impulse)
-	mLife = 0.0f;
+	Database::Delete(Simulatable::id);
 #endif
 }

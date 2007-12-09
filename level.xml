@@ -428,7 +428,7 @@
 			</drawlist>
 		</renderable>
 	</template>
-	
+
 	<entity name="wallA" type="wall">
 		<!-- right wall -->
 		<position x="128.0" y="0.0" angle="0"/>
@@ -451,6 +451,27 @@
 
 
 	<!-- bullseye targets -->
+
+	<template name="targetexplosion" type="">
+		<explosion life="0.5">
+			<corecolor>
+				<color time="0.00" r="1.0" g="0.9" b="0.8" a="1.0"/>
+				<color time="0.50" r="0.0" g="0.5" b="1.0" a="0.0"/>
+			</corecolor>
+			<corescale>
+				<scale time="0.00" x="10.0" y="10.0" z="1.0"/>
+				<scale time="0.50" x="5.0" y="5.0" z="1.0"/>
+			</corescale>
+			<halocolor>
+				<color time="0.00" r="1.0" g="0.7" b="0.4" a="0.5"/>
+				<color time="0.50" r="1.0" g="0.0" b="0.0" a="0.0"/>
+			</halocolor>
+			<haloscale>
+				<scale time="0.00" x="10.0" y="10.0" z="1.0"/>
+				<scale time="0.50" x="30.0" y="30.0" z="1.0"/>
+			</haloscale>
+		</explosion>
+	</template>
 
 	<template name="target" type="">
 		<collidable>
@@ -483,71 +504,242 @@
 				</pushmatrix>
 			</drawlist>
 		</renderable>
+		<damagable health="10" spawnondeath="targetexplosion"/>
+	</template>
+
+	<template name="targetappear" type="">
+		<explosion life="0.25">
+			<corecolor>
+				<color time="0.00" r="1.0" g="1.0" b="1.0" a="0.0"/>
+				<color time="0.25" r="1.0" g="1.0" b="1.0" a="1.0"/>
+			</corecolor>
+			<corescale>
+				<scale time="0.00" x="3.0" y="3.0" z="1.0"/>
+				<scale time="0.25" x="10.0" y="10.0" z="1.0"/>
+			</corescale>
+			<halocolor>
+				<color time="0.00" r="1.0" g="0.0" b="0.0" a="0.0"/>
+				<color time="0.25" r="1.0" g="0.0" b="0.0" a="0.5"/>
+			</halocolor>
+			<haloscale>
+				<scale time="0.00" x="20.0" y="20.0" z="1.0"/>
+				<scale time="0.25" x="10.0" y="10.0" z="1.0"/>
+			</haloscale>
+		</explosion>
 	</template>
 	
-	<entity name="target1" type="target">
+	<template name="targetspawn" type="">
+		<spawner>
+			<spawn name="target" start="0" cycle="5" track="1"/>
+		</spawner>
+	</template>
+
+	<entity name="targetspawn1" type="targetspawn">
 		<position x="256.0" y="0.0"/>
 	</entity>
 
-	<entity name="target2" type="target">
+	<entity name="targetspawn2" type="targetspawn">
 		<position x="236.5" y="98.0"/>
 	</entity>
 
-	<entity name="target3" type="target">
+	<entity name="targetspawn3" type="targetspawn">
 		<position x="181.0" y="181.0"/>
 	</entity>
 
-	<entity name="target4" type="target">
+	<entity name="targetspawn4" type="targetspawn">
 		<position x="98.0" y="236.5"/>
 	</entity>
 
-	<entity name="target5" type="target">
+	<entity name="targetspawn5" type="targetspawn">
 		<position x="0.0" y="256.0"/>
 	</entity>
 
-	<entity name="target6" type="target">
+	<entity name="targetspawn6" type="targetspawn">
 		<position x="-98.0" y="236.5"/>
 	</entity>
 
-	<entity name="target7" type="target">
+	<entity name="targetspawn7" type="targetspawn">
 		<position x="-181.0" y="181.0"/>
 	</entity>
 
-	<entity name="target8" type="target">
+	<entity name="targetspawn8" type="targetspawn">
 		<position x="-236.5" y="98.0"/>
 	</entity>
 
-	<entity name="target9" type="target">
+	<entity name="targetspawn9" type="targetspawn">
 		<position x="-256.0" y="0.0"/>
 	</entity>
 
-	<entity name="target10" type="target">
+	<entity name="targetspawn10" type="targetspawn">
 		<position x="-236.5" y="-98.0"/>
 	</entity>
 
-	<entity name="target11" type="target">
+	<entity name="targetspawn11" type="targetspawn">
 		<position x="-181.0" y="-181.0"/>
 	</entity>
 
-	<entity name="target12" type="target">
+	<entity name="targetspawn12" type="targetspawn">
 		<position x="-98.0" y="-236.5"/>
 	</entity>
 
-	<entity name="target13" type="target">
+	<entity name="targetspawn13" type="targetspawn">
 		<position x="0.0" y="-256.0"/>
 	</entity>
 
-	<entity name="target14" type="target">
+	<entity name="targetspawn14" type="targetspawn">
 		<position x="98.0" y="-236.5"/>
 	</entity>
 
-	<entity name="target15" type="target">
+	<entity name="targetspawn15" type="targetspawn">
 		<position x="181.0" y="-181.0"/>
 	</entity>
 
-	<entity name="target16" type="target">
+	<entity name="targetspawn16" type="targetspawn">
 		<position x="236.5" y="-98.0"/>
 	</entity>
+
+
+	<!-- enemy bullet explosion -->
+
+	<template name="enemybulletexplosion" type="">
+		<explosion life="0.25">
+			<corecolor>
+				<color time="0.00" r="1.0" g="0.9" b="0.8" a="1.0"/>
+				<color time="0.25" r="1.0" g="0.5" b="0.0" a="0.0"/>
+			</corecolor>
+			<corescale>
+				<scale time="0.00" x="6.0" y="6.0" z="1.0"/>
+				<scale time="0.25" x="3.0" y="3.0" z="1.0"/>
+			</corescale>
+			<halocolor>
+				<color time="0.00" r="1.0" g="0.7" b="0.4" a="0.5"/>
+				<color time="0.25" r="1.0" g="0.0" b="0.0" a="0.0"/>
+			</halocolor>
+			<haloscale>
+				<scale time="0.00" x="8.0" y="8.0" z="1.0"/>
+				<scale time="0.25" x="16.0" y="16.0" z="1.0"/>
+			</haloscale>
+		</explosion>
+	</template>
+
+	
+	<!-- enemy bullet -->
+
+	<template name="enemybullet" type="">
+		<collidable>
+			<body name="main">
+				<fast value="1"/>
+				<circle radius="3">
+					<friction value="0"/>
+					<restitution value="1"/>
+					<density value="0.2"/>
+					<category value="4"/>
+					<mask bit3="0" bit4="0"/>
+				</circle>
+			</body>
+		</collidable>
+		<renderable>
+			<drawlist>
+				<color r="1.0" g="0.9" b="0.8" a="1.0"/>
+				<pushmatrix>
+					<scale x="3" y="3"/>
+					<calllist name="circle8"/>
+				</pushmatrix>
+				<color r="1.0" g="0.5" b="0.0" a="0.25"/>
+				<pushmatrix>
+					<scale x="6" y="6"/>
+					<calllist name="circle12"/>
+				</pushmatrix>
+				<lines>
+					<color r="1.0" g="1.0" b="1.0" a="0.5"/>
+					<vertex x="0" y="0"/>
+					<color r="1.0" g="0.0" b="0.0" a="0.0"/>
+					<vertex x="0" y="-25"/>
+				</lines>
+			</drawlist>
+		</renderable>
+		<bullet life="1" damage="1" spawnondeath="enemybulletexplosion"/>
+	</template>
+
+
+	<!-- test bullet spawner -->
+
+	<template name="bulletspawn" type="">
+		<collidable>
+			<body name="main">
+				<circle radius="8">
+					<density value="1"/>
+					<friction value="0.5"/>
+					<restitution value="0.5"/>
+					<category value="3"/>
+				</circle>
+				<damping linear="0.5" angular="0.5"/>
+			</body>
+		</collidable>
+		<renderable>
+			<drawlist>
+				<color r="1.0" g="1.0" b="1.0" a="1.0"/>
+				<pushmatrix>
+					<scale x="3" y="3"/>
+					<translate x="0" y="2"/>
+					<calllist name="circle8"/>
+				</pushmatrix>
+				<color r="1.0" g="0.2" b="0.1" a="1.0"/>
+				<pushmatrix>
+					<scale x="8" y="8"/>
+					<calllist name="circle12"/>
+				</pushmatrix>
+			</drawlist>
+		</renderable>
+		<spawner>
+			<offset x="0" y="8"/>
+			<velocity x="0" y="400"/>
+			<spawn name="enemybullet" delay="0" cycle="0.25" track="0"/>
+		</spawner>
+	</template>
+	
+	<entity name="bulletspawn1" type="bulletspawn">
+		<position x="384.0" y="0.0" angle="270"/>
+	</entity>
+
+	<entity name="bulletspawn2" type="bulletspawn">
+		<position x="0.0" y="384.0" angle="0"/>
+	</entity>
+
+	<entity name="bulletspawn3" type="bulletspawn">
+		<position x="-384.0" y="0.0" angle="90"/>
+	</entity>
+
+	<entity name="bulletspawn4" type="bulletspawn">
+		<position x="0.0" y="-384.0" angle="180"/>
+	</entity>
+	
+
+	<!-- -->
+
+
+	<!-- player ship explosion -->
+
+	<template name="playershipexplosion" type="">
+		<explosion life="1.00">
+			<corecolor>
+				<color time="0.00" r="0.8" g="0.9" b="1.0" a="1.0"/>
+				<color time="1.00" r="0.0" g="0.5" b="1.0" a="0.0"/>
+			</corecolor>
+			<corescale>
+				<scale time="0.00" x="16.0" y="16.0" z="1.0"/>
+				<scale time="1.00" x="4.0" y="4.0" z="1.0"/>
+			</corescale>
+			<halocolor>
+				<color time="0.00" r="0.4" g="0.7" b="1.0" a="0.5"/>
+				<color time="1.00" r="0.0" g="0.0" b="1.0" a="0.0"/>
+			</halocolor>
+			<haloscale>
+				<scale time="0.00" x="16.0" y="16.0" z="1.0"/>
+				<scale time="1.00" x="128.0" y="128.0" z="1.0"/>
+			</haloscale>
+		</explosion>
+	</template>
 
 
 	<!-- player ship -->
@@ -595,11 +787,12 @@
 			</drawlist>
 		</renderable>
 		<player maxveloc="200" maxaccel="1000" friction="50" maxomega="10"/>
+		<damagable health="10" spawnondeath="playershipexplosion"/>
 	</entity>
 
 
 	<!-- player gunners -->
-	
+
 	<template name="gunner" type="">
 		<collidable>
 			<body name="main">
@@ -651,7 +844,7 @@
 			<offset x="-24" y="-8" angle="25"/>
 		</gunner>
 	</entity>
-  
+
 	<entity name="gunner4" type="gunner">
 		<gunner>
 			<owner name="playership"/>
@@ -661,11 +854,36 @@
 	</entity>
 
 
+	<!-- player bullet explosion -->
+
+	<template name="playerbulletexplosion" type="">
+		<explosion life="0.25">
+			<corecolor>
+				<color time="0.00" r="0.8" g="0.9" b="1.0" a="1.0"/>
+				<color time="0.25" r="0.0" g="0.5" b="1.0" a="0.0"/>
+			</corecolor>
+			<corescale>
+				<scale time="0.00" x="6.0" y="6.0" z="1.0"/>
+				<scale time="0.25" x="3.0" y="3.0" z="1.0"/>
+			</corescale>
+			<halocolor>
+				<color time="0.00" r="0.4" g="0.7" b="1.0" a="0.5"/>
+				<color time="0.25" r="0.0" g="0.0" b="1.0" a="0.0"/>
+			</halocolor>
+			<haloscale>
+				<scale time="0.00" x="8.0" y="8.0" z="1.0"/>
+				<scale time="0.25" x="16.0" y="16.0" z="1.0"/>
+			</haloscale>
+		</explosion>
+	</template>
+
+
 	<!-- player bullet -->
-	
+
 	<template name="playerbullet" type="">
 		<collidable>
 			<body name="main">
+				<fast value="1"/>
 				<circle radius="3">
 					<friction value="0"/>
 					<restitution value="1"/>
@@ -695,30 +913,8 @@
 				</lines>
 			</drawlist>
 		</renderable>
-		<bullet life="1"/>
+		<bullet life="1" damage="1" spawnondeath="playerbulletexplosion"/>
 	</template>
-	
-  
-	<!-- player bullet explosion -->
 
-	<template name="playerbulletexplosion" type="">
-		<explosion life="0.25">
-			<corecolor>
-				<color time="0.00" r="0.8" g="0.9" b="1.0" a="1.0"/>
-				<color time="0.25" r="0.0" g="0.5" b="1.0" a="0.0"/>
-			</corecolor>
-			<corescale>
-				<scale time="0.00" x="6.0" y="6.0" z="1.0"/>
-				<scale time="0.25" x="3.0" y="3.0" z="1.0"/>
-			</corescale>
-			<halocolor>
-				<color time="0.00" r="0.4" g="0.7" b="1.0" a="0.5"/>
-				<color time="0.25" r="0.0" g="0.0" b="1.0" a="0.0"/>
-			</halocolor>
-			<haloscale>
-				<scale time="0.00" x="8.0" y="8.0" z="1.0"/>
-				<scale time="0.25" x="16.0" y="16.0" z="1.0"/>
-			</haloscale>
-		</explosion>
-	</template>
+
 </world>

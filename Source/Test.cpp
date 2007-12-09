@@ -8,6 +8,8 @@
 #include "Gunner.h"
 #include "Bullet.h"
 #include "Explosion.h"
+#include "Damagable.h"
+#include "Spawner.h"
 
 // screen attributes
 int SCREEN_WIDTH = 640;
@@ -101,7 +103,7 @@ bool init_GL()
 	glMatrixMode( GL_MODELVIEW );
 	glLoadIdentity();
 	glScalef( -1.0f / 640, -1.0f / 640, -1.0f );
-	glTranslatef(0.0f, 0.0f, 1.0f);
+	glTranslatef( 0.0f, 0.0f, 1.0f );
 
 	// return true if no errors
 	return glGetError() == GL_NO_ERROR;
@@ -958,6 +960,9 @@ static void ProcessTemplateItems(TiXmlElement *element)
 	const char *type = element->Attribute("type");
 	unsigned int parent_id = Hash(type);
 
+	// inherit parent components
+	Database::Inherit(template_id, parent_id);
+
 	for (TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
 		const char *value = child->Value();
@@ -965,8 +970,6 @@ static void ProcessTemplateItems(TiXmlElement *element)
 		{
 		case 0x74e9dbae /* "collidable" */:
 			{
-				if (!Database::collidabletemplate.Find(template_id))
-					Database::collidabletemplate.Put(template_id, Database::collidabletemplate.Get(parent_id));
 				CollidableTemplate &collidable = Database::collidabletemplate.Open(template_id);
 				collidable.Configure(child);
 				Database::collidabletemplate.Close(template_id);
@@ -975,18 +978,22 @@ static void ProcessTemplateItems(TiXmlElement *element)
 
 		case 0x109dd1ad /* "renderable" */:
 			{
-				if (!Database::renderabletemplate.Find(template_id))
-					Database::renderabletemplate.Put(template_id, Database::renderabletemplate.Get(parent_id));
 				RenderableTemplate &renderable = Database::renderabletemplate.Open(template_id);
 				renderable.Configure(child);
 				Database::renderabletemplate.Close(template_id);
 			}
 			break;
 
+		case 0x1b715375 /* "damagable" */:
+			{
+				DamagableTemplate &damagable = Database::damagabletemplate.Open(template_id);
+				damagable.Configure(child);
+				Database::damagabletemplate.Close(template_id);
+			}
+			break;
+
 		case 0xe894a379 /* "bullet" */:
 			{
-				if (!Database::bullettemplate.Find(template_id))
-					Database::bullettemplate.Put(template_id, Database::bullettemplate.Get(parent_id));
 				BulletTemplate &bullet = Database::bullettemplate.Open(template_id);
 				bullet.Configure(child);
 				Database::bullettemplate.Close(template_id);
@@ -995,11 +1002,17 @@ static void ProcessTemplateItems(TiXmlElement *element)
 
 		case 0x02bb1fe0 /* "explosion" */:
 			{
-				if (!Database::explosiontemplate.Find(template_id))
-					Database::explosiontemplate.Put(template_id, Database::explosiontemplate.Get(parent_id));
 				ExplosionTemplate &explosion = Database::explosiontemplate.Open(template_id);
 				explosion.Configure(child);
 				Database::explosiontemplate.Close(template_id);
+			}
+			break;
+
+		case 0x4936726f /* "spawner" */:
+			{
+				SpawnerTemplate &spawner = Database::spawnertemplate.Open(template_id);
+				spawner.Configure(child);
+				Database::spawnertemplate.Close(template_id);
 			}
 			break;
 
@@ -1066,9 +1079,6 @@ static void ProcessEntityItems(TiXmlElement *element)
 	// create an entity
 	Entity *entity = new Entity(entity_id);
 	Database::entity.Put(entity_id, entity);
-
-	// inherit template components
-	Database::Inherit(entity_id, parent_id);
 
 	// process child elements
 	// (components with no template equivalent)
@@ -1355,6 +1365,9 @@ int SDL_main( int argc, char *argv[] )
 	const float sim_step = 1.0f / sim_rate;
 	float sim_timer = 1.0f;
 
+	// camera track position
+	Vector2 trackpos(0, 0);
+
 	// wait for user exit
 	do
 	{
@@ -1476,6 +1489,9 @@ int SDL_main( int argc, char *argv[] )
 
 			DebugPrint("coll=%d ", 1000000 * (perf_count3.QuadPart - perf_count2.QuadPart) / perf_freq.QuadPart);
 #endif
+			
+			// update database
+			Database::Update();
 		}
 
 #ifdef PRINT_SIMULATION_TIMER
@@ -1499,16 +1515,63 @@ int SDL_main( int argc, char *argv[] )
 #endif
 			);
 
-		// push camera transform
-		glPushMatrix();
-
+		// get the player ship
 		const Entity *player = Database::entity.Get(0xeec1dafa /* "playership" */);
 		if (player)
 		{
 			// track player position
-			const Vector2 pos(player->GetInterpolatedPosition(sim_timer));
-			glTranslatef( -pos.x, -pos.y, 0 );
+			trackpos = player->GetInterpolatedPosition(sim_timer);
 		}
+
+		// draw player health (HACK)
+		Damagable *damagable = Database::damagable.Get(0xeec1dafa /* "playership" */);
+		if (damagable)
+		{
+			float health = damagable->GetHealth();
+
+			// push camera transform
+			glPushMatrix();
+
+			// use 640x480 screen coordinates
+			glLoadIdentity();
+			glScalef( 1.0f / 640, 1.0f / 640, -1.0f );
+			glTranslatef(0.0f, 0.0f, 1.0f);
+			glTranslatef(-0.5f*640, -0.5f*480, 0.0f);
+
+			glBegin(GL_QUADS);
+
+			// set color based on health
+			if (health < 5)
+				glColor4f(1.0f, 0.1f + (health - 1) * 0.9f / 4, 0.1f, 1.0f - health * 0.09f);
+			else if (health < 10)
+				glColor4f(0.1f + (10 - health) * 0.9f / 5, 1.0f, 0.1f, 1.0f - health * 0.09f);
+			else
+				glColor4f(0.1f, 1.0f, 0.1f, 0.1f);
+
+			// fill gauge
+			glVertex2f(8, 8);
+			glVertex2f(8 + 8 * health, 8);
+			glVertex2f(8 + 8 * health, 16);
+			glVertex2f(8, 16);
+
+			// background
+			glColor4f(0.0f, 0.0f, 0.0f, 0.1f);
+			glVertex2f(8 + 8 * health, 8);
+			glVertex2f(88, 8);
+			glVertex2f(88, 16);
+			glVertex2f(8 + 8 * health, 16);
+
+			glEnd();
+
+			// reset camera transform
+			glPopMatrix();
+		}
+
+		// push camera transform
+		glPushMatrix();
+
+		// set camera to track position
+		glTranslatef( -trackpos.x, -trackpos.y, 0 );
 
 		// render all entities
 		Renderable::RenderAll(sim_timer);

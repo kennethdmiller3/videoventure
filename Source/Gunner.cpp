@@ -111,10 +111,19 @@ void Gunner::Simulate(float aStep)
 	if (!owner)
 		return;
 
+	// if the owner does not exist...
+	if (!Database::entity.Get(owner))
+	{
+		// self-destruct
+		Database::Delete(Simulatable::id);
+		return;
+	}
+
 	// update collidable body
 	const Collidable *player_collidable = Database::collidable.Get(owner);
 	const Collidable *gunner_collidable = Database::collidable.Get(Simulatable::id);
-	if (player_collidable->GetBody() && gunner_collidable->GetBody())
+	if (player_collidable && player_collidable->GetBody() && 
+		gunner_collidable && gunner_collidable->GetBody())
 	{
 		// cancel velocity offset
 		// (prevents "wiggle" in the joint constraint)
