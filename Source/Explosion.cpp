@@ -30,6 +30,30 @@ ExplosionTemplate::~ExplosionTemplate(void)
 {
 }
 
+bool ExplosionTemplate::ConfigureScaleLinear(TiXmlElement *element, ExplosionTemplate::ScaleLinear &scale)
+{
+	// process child elements
+	for (TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+	{
+		const char *label = child->Value();
+		switch (Hash(label))
+		{
+		case 0x652b04df /* "start" */:
+			child->QueryFloatAttribute("x", &scale.start.x);
+			child->QueryFloatAttribute("y", &scale.start.y);
+			child->QueryFloatAttribute("z", &scale.start.z);
+			break;
+
+		case 0x6a8e75aa /* "end" */:
+			child->QueryFloatAttribute("x", &scale.rate.x);
+			child->QueryFloatAttribute("y", &scale.rate.y);
+			child->QueryFloatAttribute("z", &scale.rate.z);
+			break;
+		}
+	}
+	return true;
+}
+
 bool ExplosionTemplate::ConfigureScale(TiXmlElement *element, ExplosionTemplate::ScaleKeys &scalekeys)
 {
 	// process child elements
@@ -40,13 +64,40 @@ bool ExplosionTemplate::ConfigureScale(TiXmlElement *element, ExplosionTemplate:
 		{
 		case 0x82971c71 /* "scale" */:
 			{
-				float time = 0.0f;
-				child->QueryFloatAttribute("time", &time);
-				Scale &scale = scalekeys[time];
-				child->QueryFloatAttribute("x", &scale.x);
-				child->QueryFloatAttribute("y", &scale.y);
-				child->QueryFloatAttribute("z", &scale.z);
+				scalekeys.push_back(ScaleLinear());
+				ScaleLinear &scale = scalekeys.back();
+				child->QueryFloatAttribute("time", &scale.time);
+				ConfigureScaleLinear(child, scale);
+				scale.rate.x = (scale.rate.x - scale.start.x) / scale.time;
+				scale.rate.y = (scale.rate.y - scale.start.y) / scale.time;
+				scale.rate.z = (scale.rate.z - scale.start.z) / scale.time;
 			}
+			break;
+		}
+	}
+	return true;
+}
+
+bool ExplosionTemplate::ConfigureColorLinear(TiXmlElement *element, ExplosionTemplate::ColorLinear &color)
+{
+	// process child elements
+	for (TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+	{
+		const char *label = child->Value();
+		switch (Hash(label))
+		{
+		case 0x652b04df /* "start" */:
+			child->QueryFloatAttribute("r", &color.start.r);
+			child->QueryFloatAttribute("g", &color.start.g);
+			child->QueryFloatAttribute("b", &color.start.b);
+			child->QueryFloatAttribute("a", &color.start.a);
+			break;
+
+		case 0x6a8e75aa /* "end" */:
+			child->QueryFloatAttribute("r", &color.rate.r);
+			child->QueryFloatAttribute("g", &color.rate.g);
+			child->QueryFloatAttribute("b", &color.rate.b);
+			child->QueryFloatAttribute("a", &color.rate.a);
 			break;
 		}
 	}
@@ -63,13 +114,14 @@ bool ExplosionTemplate::ConfigureColor(TiXmlElement *element, ExplosionTemplate:
 		{
 		case 0x3d7e6258 /* "color" */:
 			{
-				float time = 0.0f;
-				child->QueryFloatAttribute("time", &time);
-				ExplosionTemplate::Color &color = colorkeys[time];
-				child->QueryFloatAttribute("r", &color.r);
-				child->QueryFloatAttribute("g", &color.g);
-				child->QueryFloatAttribute("b", &color.b);
-				child->QueryFloatAttribute("a", &color.a);
+				colorkeys.push_back(ColorLinear());
+				ColorLinear &color = colorkeys.back();
+				child->QueryFloatAttribute("time", &color.time);
+				ConfigureColorLinear(child, color);
+				color.rate.r = (color.rate.r - color.start.r) / color.time;
+				color.rate.g = (color.rate.g - color.start.g) / color.time;
+				color.rate.b = (color.rate.b - color.start.b) / color.time;
+				color.rate.a = (color.rate.a - color.start.a) / color.time;
 			}
 			break;
 		}
@@ -161,55 +213,98 @@ void Explosion::Render(const Matrix2 &transform)
 	// elapsed time
 	float t = mLifeSpan - mLife;
 
-	// draw explosion core
+	//
+	// DRAW EXPLOSION CORE
+
 	glPushMatrix();
-	const ColorKeys::const_iterator corecolorkey0 = --mCoreColor.upper_bound(t);
-	const ColorKeys::const_iterator corecolorkey1 = mCoreColor.upper_bound(t);
-	const Color &corecolor0 = corecolorkey0->second;
-	const Color &corecolor1 = corecolorkey1->second;
-	float corecolorf = (t - corecolorkey0->first) / (corecolorkey1->first - corecolorkey0->first + 0.001f);
-	glColor4f(
-		corecolor0.r + (corecolor1.r - corecolor0.r) * corecolorf,
-		corecolor0.g + (corecolor1.g - corecolor0.g) * corecolorf,
-		corecolor0.b + (corecolor1.b - corecolor0.b) * corecolorf,
-		corecolor0.a + (corecolor1.a - corecolor0.a) * corecolorf
-	);
-	const ScaleKeys::const_iterator corescalekey0 = --mCoreScale.upper_bound(t);
-	const ScaleKeys::const_iterator corescalekey1 = mCoreScale.upper_bound(t);
-	const Scale &corescale0 = corescalekey0->second;
-	const Scale &corescale1 = corescalekey1->second;
-	float corescalef = (t - corescalekey0->first) / (corescalekey1->first - corescalekey0->first + 0.001f);
-	glScalef(
-		corescale0.x + (corescale1.x - corescale0.x) * corescalef,
-		corescale0.y + (corescale1.y - corescale0.y) * corescalef,
-		corescale0.z + (corescale1.z - corescale0.z) * corescalef
-		);
+
+	// interpolate color
+	{
+		float time = t;
+		Color color = Color();
+		for (ColorKeys::const_iterator colorkey = mCoreColor.begin(); colorkey != mCoreColor.end(); ++colorkey)
+		{
+			if (time < colorkey->time)
+			{
+				color.r = colorkey->start.r + time * colorkey->rate.r;
+				color.g = colorkey->start.g + time * colorkey->rate.g;
+				color.b = colorkey->start.b + time * colorkey->rate.b;
+				color.a = colorkey->start.a + time * colorkey->rate.a;
+				break;
+			}
+			time -= colorkey->time;
+		}
+		glColor4f(color.r, color.g, color.b, color.a);
+	}
+
+	// interpolate scale
+	{
+		float time = t;
+		Scale scale = Scale();
+		for (ScaleKeys::const_iterator scalekey = mCoreScale.begin(); scalekey != mCoreScale.end(); ++scalekey)
+		{
+			if (time < scalekey->time)
+			{
+				scale.x = scalekey->start.x + time * scalekey->rate.x;
+				scale.y = scalekey->start.y + time * scalekey->rate.y;
+				scale.z = scalekey->start.z + time * scalekey->rate.z;
+				break;
+			}
+			time -= scalekey->time;
+		}
+		glScalef(scale.x, scale.y, scale.z );
+	}
+
+	// draw core
 	glCallList(mDraw);
+
 	glPopMatrix();
 
-	// draw explosion halo
+
+	//
+	// DRAW EXPLOSION HALO
+
 	glPushMatrix();
-	const ColorKeys::const_iterator halocolorkey0 = --mHaloColor.upper_bound(t);
-	const ColorKeys::const_iterator halocolorkey1 = mHaloColor.upper_bound(t);
-	const Color &halocolor0 = halocolorkey0->second;
-	const Color &halocolor1 = halocolorkey1->second;
-	float halocolorf = (t - halocolorkey0->first) / (halocolorkey1->first - halocolorkey0->first + 0.001f);
-	glColor4f(
-		halocolor0.r + (halocolor1.r - halocolor0.r) * halocolorf,
-		halocolor0.g + (halocolor1.g - halocolor0.g) * halocolorf,
-		halocolor0.b + (halocolor1.b - halocolor0.b) * halocolorf,
-		halocolor0.a + (halocolor1.a - halocolor0.a) * halocolorf
-	);
-	const ScaleKeys::const_iterator haloscalekey0 = --mHaloScale.upper_bound(t);
-	const ScaleKeys::const_iterator haloscalekey1 = mHaloScale.upper_bound(t);
-	const Scale &haloscale0 = haloscalekey0->second;
-	const Scale &haloscale1 = haloscalekey1->second;
-	float haloscalef = (t - haloscalekey0->first) / (haloscalekey1->first - haloscalekey0->first + 0.001f);
-	glScalef(
-		haloscale0.x + (haloscale1.x - haloscale0.x) * haloscalef,
-		haloscale0.y + (haloscale1.y - haloscale0.y) * haloscalef,
-		haloscale0.z + (haloscale1.z - haloscale0.z) * haloscalef
-		);
+
+	// interpolate color
+	{
+		float time = t;
+		Color color = Color();
+		for (ColorKeys::const_iterator colorkey = mHaloColor.begin(); colorkey != mHaloColor.end(); ++colorkey)
+		{
+			if (time < colorkey->time)
+			{
+				color.r = colorkey->start.r + time * colorkey->rate.r;
+				color.g = colorkey->start.g + time * colorkey->rate.g;
+				color.b = colorkey->start.b + time * colorkey->rate.b;
+				color.a = colorkey->start.a + time * colorkey->rate.a;
+				break;
+			}
+			time -= colorkey->time;
+		}
+		glColor4f(color.r, color.g, color.b, color.a);
+	}
+
+	// interpolate scale
+	{
+		float time = t;
+		Scale scale = Scale();
+		for (ScaleKeys::const_iterator scalekey = mHaloScale.begin(); scalekey != mHaloScale.end(); ++scalekey)
+		{
+			if (time < scalekey->time)
+			{
+				scale.x = scalekey->start.x + time * scalekey->rate.x;
+				scale.y = scalekey->start.y + time * scalekey->rate.y;
+				scale.z = scalekey->start.z + time * scalekey->rate.z;
+				break;
+			}
+			time -= scalekey->time;
+		}
+		glScalef(scale.x, scale.y, scale.z );
+	}
+
+	// draw halo
 	glCallList(mDraw);
+
 	glPopMatrix();
 }

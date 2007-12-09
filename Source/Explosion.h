@@ -13,9 +13,11 @@ public:
 
 	// explosion keyframes
 	struct Color { float r; float g; float b; float a; };
-	typedef std::map<float, Color> ColorKeys;
+	struct ColorLinear { float time; Color start; Color rate; };
+	typedef std::vector<ColorLinear> ColorKeys;
 	struct Scale { float x; float y; float z; };
-	typedef std::map<float, Scale> ScaleKeys;
+	struct ScaleLinear { float time; Scale start; Scale rate; };
+	typedef std::vector<ScaleLinear> ScaleKeys;
 	ColorKeys mCoreColor;
 	ScaleKeys mCoreScale;
 	ColorKeys mHaloColor;
@@ -26,7 +28,9 @@ public:
 	~ExplosionTemplate(void);
 
 	// configure
+	bool ConfigureScaleLinear(TiXmlElement *element, ExplosionTemplate::ScaleLinear &scale);
 	bool ConfigureScale(TiXmlElement *element, ScaleKeys &scalekeys);
+	bool ConfigureColorLinear(TiXmlElement *element, ExplosionTemplate::ColorLinear &color);
 	bool ConfigureColor(TiXmlElement *element, ColorKeys &colorkeys);
 	bool Configure(TiXmlElement *element);
 };

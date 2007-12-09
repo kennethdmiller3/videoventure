@@ -455,20 +455,28 @@
 	<template name="targetexplosion" type="">
 		<explosion life="0.5">
 			<corecolor>
-				<color time="0.00" r="1.0" g="0.9" b="0.8" a="1.0"/>
-				<color time="0.50" r="0.0" g="0.5" b="1.0" a="0.0"/>
+				<color time="0.50">
+					<start r="1.0" g="0.9" b="0.8" a="1.0"/>
+					<end   r="1.0" g="0.5" b="0.0" a="0.0"/>
+				</color>
 			</corecolor>
 			<corescale>
-				<scale time="0.00" x="10.0" y="10.0" z="1.0"/>
-				<scale time="0.50" x="5.0" y="5.0" z="1.0"/>
+				<scale time="0.50">
+					<start x="10.0" y="10.0" z="1.0"/>
+					<end   x="5.0" y="5.0" z="1.0"/>
+				</scale>
 			</corescale>
 			<halocolor>
-				<color time="0.00" r="1.0" g="0.7" b="0.4" a="0.5"/>
-				<color time="0.50" r="1.0" g="0.0" b="0.0" a="0.0"/>
+				<color time="0.50">
+					<start r="1.0" g="0.7" b="0.4" a="0.5"/>
+					<end   r="1.0" g="0.0" b="0.0" a="0.0"/>
+				</color>
 			</halocolor>
 			<haloscale>
-				<scale time="0.00" x="10.0" y="10.0" z="1.0"/>
-				<scale time="0.50" x="30.0" y="30.0" z="1.0"/>
+				<scale time="0.50">
+					<start x="10.0" y="10.0" z="1.0"/>
+					<end   x="30.0" y="30.0" z="1.0"/>
+				</scale>
 			</haloscale>
 		</explosion>
 	</template>
@@ -510,20 +518,28 @@
 	<template name="targetappear" type="">
 		<explosion life="0.25">
 			<corecolor>
-				<color time="0.00" r="1.0" g="1.0" b="1.0" a="0.0"/>
-				<color time="0.25" r="1.0" g="1.0" b="1.0" a="1.0"/>
+				<color time="0.25">
+					<start r="1.0" g="1.0" b="1.0" a="0.0"/>
+					<end   r="1.0" g="1.0" b="1.0" a="1.0"/>
+				</color>
 			</corecolor>
 			<corescale>
-				<scale time="0.00" x="3.0" y="3.0" z="1.0"/>
-				<scale time="0.25" x="10.0" y="10.0" z="1.0"/>
+				<scale time="0.25">
+					<start x="3.0" y="3.0" z="1.0"/>
+					<end   x="10.0" y="10.0" z="1.0"/>
+				</scale>
 			</corescale>
 			<halocolor>
-				<color time="0.00" r="1.0" g="0.0" b="0.0" a="0.0"/>
-				<color time="0.25" r="1.0" g="0.0" b="0.0" a="0.5"/>
+				<color time="0.25">
+					<start r="1.0" g="0.0" b="0.0" a="0.0"/>
+					<end   r="1.0" g="0.0" b="0.0" a="0.5"/>
+				</color>
 			</halocolor>
 			<haloscale>
-				<scale time="0.00" x="20.0" y="20.0" z="1.0"/>
-				<scale time="0.25" x="10.0" y="10.0" z="1.0"/>
+				<scale time="0.25">
+					<start x="20.0" y="20.0" z="1.0"/>
+					<end   x="10.0" y="10.0" z="1.0"/>
+				</scale>
 			</haloscale>
 		</explosion>
 	</template>
@@ -604,20 +620,28 @@
 	<template name="enemybulletexplosion" type="">
 		<explosion life="0.25">
 			<corecolor>
-				<color time="0.00" r="1.0" g="0.9" b="0.8" a="1.0"/>
-				<color time="0.25" r="1.0" g="0.5" b="0.0" a="0.0"/>
+				<color time="0.25">
+					<start r="1.0" g="0.9" b="0.8" a="1.0"/>
+					<end   r="1.0" g="0.5" b="0.0" a="0.0"/>
+				</color>
 			</corecolor>
 			<corescale>
-				<scale time="0.00" x="6.0" y="6.0" z="1.0"/>
-				<scale time="0.25" x="3.0" y="3.0" z="1.0"/>
+				<scale time="0.25">
+					<start x="6.0" y="6.0" z="1.0"/>
+					<end   x="3.0" y="3.0" z="1.0"/>
+				</scale>
 			</corescale>
 			<halocolor>
-				<color time="0.00" r="1.0" g="0.7" b="0.4" a="0.5"/>
-				<color time="0.25" r="1.0" g="0.0" b="0.0" a="0.0"/>
+				<color time="0.25">
+					<start r="1.0" g="0.7" b="0.4" a="0.5"/>
+					<end   r="1.0" g="0.0" b="0.0" a="0.0"/>
+				</color>
 			</halocolor>
 			<haloscale>
-				<scale time="0.00" x="8.0" y="8.0" z="1.0"/>
-				<scale time="0.25" x="16.0" y="16.0" z="1.0"/>
+				<scale time="0.25">
+					<start x="8.0" y="8.0" z="1.0"/>
+					<end   x="16.0" y="16.0" z="1.0"/>
+				</scale>
 			</haloscale>
 		</explosion>
 	</template>
@@ -723,20 +747,28 @@
 	<template name="playershipexplosion" type="">
 		<explosion life="1.00">
 			<corecolor>
-				<color time="0.00" r="0.8" g="0.9" b="1.0" a="1.0"/>
-				<color time="1.00" r="0.0" g="0.5" b="1.0" a="0.0"/>
+				<color time="1.00">
+					<start r="0.8" g="0.9" b="1.0" a="1.0"/>
+					<end   r="0.0" g="0.5" b="1.0" a="0.0"/>
+				</color>
 			</corecolor>
 			<corescale>
-				<scale time="0.00" x="16.0" y="16.0" z="1.0"/>
-				<scale time="1.00" x="4.0" y="4.0" z="1.0"/>
+				<scale time="1.00">
+					<start x="16.0" y="16.0" z="1.0"/>
+					<end   x="4.0" y="4.0" z="1.0"/>
+				</scale>
 			</corescale>
 			<halocolor>
-				<color time="0.00" r="0.4" g="0.7" b="1.0" a="0.5"/>
-				<color time="1.00" r="0.0" g="0.0" b="1.0" a="0.0"/>
+				<color time="1.00">
+					<start r="0.4" g="0.7" b="1.0" a="0.5"/>
+					<end   r="0.0" g="0.0" b="1.0" a="0.0"/>
+				</color>
 			</halocolor>
 			<haloscale>
-				<scale time="0.00" x="16.0" y="16.0" z="1.0"/>
-				<scale time="1.00" x="128.0" y="128.0" z="1.0"/>
+				<scale time="1.00">
+					<start x="16.0" y="16.0" z="1.0"/>
+					<end   x="128.0" y="128.0" z="1.0"/>
+				</scale>
 			</haloscale>
 		</explosion>
 	</template>
@@ -859,20 +891,28 @@
 	<template name="playerbulletexplosion" type="">
 		<explosion life="0.25">
 			<corecolor>
-				<color time="0.00" r="0.8" g="0.9" b="1.0" a="1.0"/>
-				<color time="0.25" r="0.0" g="0.5" b="1.0" a="0.0"/>
+				<color time="0.25">
+					<start r="0.8" g="0.9" b="1.0" a="1.0"/>
+					<end   r="0.0" g="0.5" b="1.0" a="0.0"/>
+				</color>
 			</corecolor>
 			<corescale>
-				<scale time="0.00" x="6.0" y="6.0" z="1.0"/>
-				<scale time="0.25" x="3.0" y="3.0" z="1.0"/>
+				<scale time="0.25">
+					<start x="6.0" y="6.0" z="1.0"/>
+					<end   x="3.0" y="3.0" z="1.0"/>
+				</scale>
 			</corescale>
 			<halocolor>
-				<color time="0.00" r="0.4" g="0.7" b="1.0" a="0.5"/>
-				<color time="0.25" r="0.0" g="0.0" b="1.0" a="0.0"/>
+				<color time="0.25">
+					<start r="0.4" g="0.7" b="1.0" a="0.5"/>
+					<end   r="0.0" g="0.0" b="1.0" a="0.0"/>
+				</color>
 			</halocolor>
 			<haloscale>
-				<scale time="0.00" x="8.0" y="8.0" z="1.0"/>
-				<scale time="0.25" x="16.0" y="16.0" z="1.0"/>
+				<scale time="0.25">
+					<start x="8.0" y="8.0" z="1.0"/>
+					<end   x="16.0" y="16.0" z="1.0"/>
+				</scale>
 			</haloscale>
 		</explosion>
 	</template>
