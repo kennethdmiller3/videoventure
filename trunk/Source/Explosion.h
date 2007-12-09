@@ -23,12 +23,12 @@ public:
 
 public:
 	ExplosionTemplate(void);
-	virtual ~ExplosionTemplate(void);
+	~ExplosionTemplate(void);
 
 	// configure
 	bool ConfigureScale(TiXmlElement *element, ScaleKeys &scalekeys);
 	bool ConfigureColor(TiXmlElement *element, ColorKeys &colorkeys);
-	virtual bool Configure(TiXmlElement *element);
+	bool Configure(TiXmlElement *element);
 };
 
 class Explosion :

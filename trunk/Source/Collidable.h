@@ -25,7 +25,7 @@ public:
 
 public:
 	CollidableTemplate(void);
-	virtual ~CollidableTemplate(void);
+	~CollidableTemplate(void);
 
 	// configure
 	bool ProcessShapeItem(TiXmlElement *element, b2ShapeDef &shape);
@@ -47,7 +47,7 @@ public:
 	bool ConfigurePulleyJoint(TiXmlElement *element, b2PulleyJointDef &joint);
 	bool ProcessMouseJointItem(TiXmlElement *element, b2MouseJointDef &joint);
 	bool ConfigureMouseJoint(TiXmlElement *element, b2MouseJointDef &joint);
-	virtual bool Configure(TiXmlElement *element);
+	bool Configure(TiXmlElement *element);
 };
 
 class Collidable
@@ -76,6 +76,11 @@ public:
 	Collidable(void);
 	Collidable(const CollidableTemplate &aTemplate, unsigned int aId);
 	virtual ~Collidable(void);
+
+	unsigned int GetId()
+	{
+		return id;
+	}
 
 	void AddToWorld(void);
 	void RemoveFromWorld(void);

@@ -8,10 +8,10 @@ public:
 
 public:
 	RenderableTemplate(void);
-	virtual ~RenderableTemplate();
+	~RenderableTemplate();
 
 	// configure
-	virtual bool Configure(TiXmlElement *element);
+	bool Configure(TiXmlElement *element);
 };
 
 class Renderable

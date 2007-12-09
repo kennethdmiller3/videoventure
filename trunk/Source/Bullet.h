@@ -11,12 +11,19 @@ public:
 	// life span
 	float mLife;
 
+	// damage value
+	float mDamage;
+
+	// spawn on death
+	unsigned int mSpawnOnExpire;
+	unsigned int mSpawnOnDeath;
+
 public:
 	BulletTemplate(void);
-	virtual ~BulletTemplate(void);
+	~BulletTemplate(void);
 
 	// configure
-	virtual bool Configure(TiXmlElement *element);
+	bool Configure(TiXmlElement *element);
 };
 
 class Bullet

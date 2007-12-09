@@ -170,6 +170,14 @@ bool CollidableTemplate::ProcessBodyItem(TiXmlElement *element, b2BodyDef &body)
 		}
 		return true;
 
+	case 0x029402af /* "fast" */:
+		{
+			int isfast = body.isFast;
+			element->QueryIntAttribute("value", &isfast);
+			body.isFast = isfast != 0;
+		}
+		return true;
+
 	case 0x28217089 /* "circle" */:
 		{
 			circles.push_back(b2CircleDef());

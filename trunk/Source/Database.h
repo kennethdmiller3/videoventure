@@ -73,4 +73,7 @@ namespace Database
 
 	// delete an identifier
 	void Delete(unsigned int aid);
+
+	// update the database system
+	void Update(void);
 }
