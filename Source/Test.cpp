@@ -1376,6 +1376,8 @@ int SDL_main( int argc, char *argv[] )
 	// wait for user exit
 	do
 	{
+		// INPUT PHASE
+
 		// event handler
 		SDL_Event event;
 
@@ -1448,12 +1450,6 @@ int SDL_main( int argc, char *argv[] )
 			Database::Update();
 
 
-			// INPUT PHASE
-
-			// update inputs
-			input.Update();
-
-
 			// CONTROL PHASE
 
 #ifdef PRINT_PERFORMANCE_DETAILS
@@ -1497,6 +1493,10 @@ int SDL_main( int argc, char *argv[] )
 
 			DebugPrint("coll=%d ", 1000000 * (perf_count3.QuadPart - perf_count2.QuadPart) / perf_freq.QuadPart);
 #endif
+
+
+			// update inputs for next step
+			input.Update();
 		}
 
 #ifdef PRINT_SIMULATION_TIMER
