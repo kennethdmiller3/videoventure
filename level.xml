@@ -837,6 +837,12 @@
 				</circle>
 				<allowsleep value="0"/>
 			</body>
+			<prismaticjoint>
+				<body1 name="playership" body="main"/>
+				<body2 body="main"/>
+				<anchor x="0" y="0"/>
+				<limit lower="0" upper="0"/>
+			</prismaticjoint>
 		</collidable>
 		<renderable>
 			<drawlist>
@@ -854,34 +860,34 @@
 	</template>
 
 	<entity name="gunner1" type="gunner">
+		<position x="-16" y="0" angle="10"/>
 		<gunner>
 			<owner name="playership"/>
 			<weapon cycle="2" phase="0"/>
-			<offset x="-16" y="0" angle="10"/>
 		</gunner>
 	</entity>
 
 	<entity name="gunner2" type="gunner">
+		<position x="16" y="0" angle="-10"/>
 		<gunner>
 			<owner name="playership"/>
 			<weapon cycle="2" phase="1"/>
-			<offset x="16" y="0" angle="-10"/>
 		</gunner>
 	</entity>
 
 	<entity name="gunner3" type="gunner">
+		<position x="-24" y="-8" angle="25"/>
 		<gunner>
 			<owner name="playership"/>
 			<weapon cycle="2" phase="1"/>
-			<offset x="-24" y="-8" angle="25"/>
 		</gunner>
 	</entity>
 
 	<entity name="gunner4" type="gunner">
+		<position x="24" y="-8" angle="-25"/>
 		<gunner>
 			<owner name="playership"/>
 			<weapon cycle="2" phase="0"/>
-			<offset x="24" y="-8" angle="-25"/>
 		</gunner>
 	</entity>
 

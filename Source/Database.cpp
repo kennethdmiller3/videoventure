@@ -141,13 +141,6 @@ namespace Database
 			Database::spawner.Put(aId, spawner);
 		}
 
-		// initialize gunner (HACK)
-		Gunner *gunner = Database::gunner.Get(aId);
-		if (gunner)
-		{
-			gunner->Init();
-		}
-
 		// initialize entity (HACK)
 		entity->Init();
 	}

@@ -15,9 +15,6 @@ protected:
 	// owner
 	unsigned int owner;
 
-	// offset
-	Matrix2 offset;
-
 	// control values
 	bool mFire;
 
@@ -41,9 +38,6 @@ public:
 
 	// configure
 	virtual bool Configure(TiXmlElement *element);
-
-	// init
-	virtual void Init(void);
 
 	// control
 	virtual void Control(float aStep);
