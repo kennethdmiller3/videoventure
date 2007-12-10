@@ -19,7 +19,6 @@ Gunner::Gunner(unsigned int aId, unsigned int aParentId)
 : Controllable(aId)
 , Simulatable(aId)
 , owner(0)
-, offset(Vector2(1, 0), Vector2(0, 1), Vector2(0, 0))
 , mFire(false)
 , mDelay(0.0f)
 , mPhase(0)
@@ -48,16 +47,6 @@ bool Gunner::Configure(TiXmlElement *element)
 			owner = Hash(child->Attribute("name"));
 			break;
 
-		case 0x14c8d3ca /* "offset" */:
-			{
-				child->QueryFloatAttribute("x", &offset.p.x);
-				child->QueryFloatAttribute("y", &offset.p.y);
-				float angle = 0.0f;
-				if (child->QueryFloatAttribute("angle", &angle) == TIXML_SUCCESS)
-					offset = Matrix2(angle * float(M_PI) / 180.0f, offset.p);
-			}
-			break;
-
 		case 0x6f332041 /* "weapon" */:
 			child->QueryIntAttribute("cycle", &mCycle);
 			child->QueryIntAttribute("phase", &mPhase);
@@ -66,33 +55,6 @@ bool Gunner::Configure(TiXmlElement *element)
 	}
 
 	return true;
-}
-
-// Gunner Init
-void Gunner::Init(void)
-{
-	// offset from player position
-	Matrix2 transform = offset * Database::entity.Get(owner)->GetTransform();
-	Database::entity.Get(Simulatable::id)->SetTransform(transform);
-
-	// update collidable body
-	const Collidable *player_collidable = Database::collidable.Get(owner);
-	const Collidable *gunner_collidable = Database::collidable.Get(Simulatable::id);
-	if (player_collidable->GetBody() && gunner_collidable->GetBody())
-	{
-		gunner_collidable->GetBody()->SetCenterPosition(transform.p, transform.Angle());
-
-		// constrain to the offset position
-		b2PrismaticJointDef joint;
-		joint.body1 = player_collidable->GetBody();
-		joint.body2 = gunner_collidable->GetBody();
-		joint.anchorPoint = joint.body1->GetCenterPosition();
-		joint.enableLimit = true;
-		joint.motorForce = 100.0f;
-		joint.motorSpeed = 0.0f;
-		joint.enableMotor = true;
-		Collidable::GetWorld()->CreateJoint(&joint);
-	}
 }
 
 // Gunner Control
@@ -117,20 +79,6 @@ void Gunner::Simulate(float aStep)
 		// self-destruct
 		Database::Delete(Simulatable::id);
 		return;
-	}
-
-	// update collidable body
-	const Collidable *player_collidable = Database::collidable.Get(owner);
-	const Collidable *gunner_collidable = Database::collidable.Get(Simulatable::id);
-	if (player_collidable && player_collidable->GetBody() && 
-		gunner_collidable && gunner_collidable->GetBody())
-	{
-		// cancel velocity offset
-		// (prevents "wiggle" in the joint constraint)
-		b2Body *player_body = player_collidable->GetBody();
-		b2Body *gunner_body = gunner_collidable->GetBody();
-		b2Vec2 dv((player_body->GetLinearVelocity() - gunner_body->GetLinearVelocity() - b2Cross(player_body->GetAngularVelocity(), player_body->GetCenterPosition() - gunner_body->GetCenterPosition())));
-		gunner_body->ApplyImpulse(gunner_body->GetMass() * dv, gunner_body->GetCenterPosition());
 	}
 
 	// advance fire timer

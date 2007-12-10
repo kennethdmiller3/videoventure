@@ -20,8 +20,13 @@ public:
 	BodyMap bodies;
 
 	// collision joints
-	typedef stdext::hash_map<unsigned int, b2JointDef> JointMap;
-	JointMap joints;
+	struct JointTemplate { unsigned int name1; unsigned int body1; unsigned int name2; unsigned int body2; };
+	std::list<JointTemplate> joints;
+	std::list<b2RevoluteJointDef> revolutes;
+	std::list<b2PrismaticJointDef> prismatics;
+	std::list<b2DistanceJointDef> distances;
+	std::list<b2PulleyJointDef> pulleys;
+	std::list<b2MouseJointDef> mouses;
 
 public:
 	CollidableTemplate(void);
@@ -58,8 +63,15 @@ protected:
 	// identifier
 	unsigned int id;
 
-	// body
+	// all bodies
+	typedef stdext::hash_map<unsigned int, b2Body *> BodyMap;
+	BodyMap bodies;
+
+	// primary body
 	b2Body *body;
+
+protected:
+	bool SetupJointDef(b2JointDef &joint);
 
 public:
 	class Listener

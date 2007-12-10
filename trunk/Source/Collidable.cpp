@@ -224,23 +224,21 @@ bool CollidableTemplate::ProcessJointItem(TiXmlElement *element, b2JointDef &joi
 	{
 	case 0x115ce60c /* "body1" */:
 		{
-			const char *body1 = element->Attribute("name");
-			BodyMap::iterator itor = bodies.find(Hash(body1));
-			if (itor != bodies.end())
-			{
-				joint.body1 = reinterpret_cast<b2Body *>(&itor->second);
-			}
+			const char *name = element->Attribute("name");
+			const char *body = element->Attribute("body");
+			JointTemplate *data = static_cast<JointTemplate *>(joint.userData);
+			data->name1 = name ? Hash(name) : 0;
+			data->body1 = body ? Hash(body) : 0;
 		}
 		return true;
 
 	case 0x145ceac5 /* "body2" */:
 		{
-			const char *body2 = element->Attribute("name");
-			BodyMap::iterator itor = bodies.find(Hash(body2));
-			if (itor != bodies.end())
-			{
-				joint.body2 = reinterpret_cast<b2Body *>(&itor->second);
-			}
+			const char *name = element->Attribute("name");
+			const char *body = element->Attribute("body");
+			JointTemplate *data = static_cast<JointTemplate *>(joint.userData);
+			data->name2 = name ? Hash(name) : 0;
+			data->body2 = body ? Hash(body) : 0;
 		}
 		return true;
 
@@ -476,35 +474,50 @@ bool CollidableTemplate::Configure(TiXmlElement *element)
 
 		case 0xef2f9539 /* "revolutejoint" */:
 			{
-				b2RevoluteJointDef joint;
+				revolutes.push_back(b2RevoluteJointDef());
+				b2RevoluteJointDef &joint = revolutes.back();
+				joints.push_back(JointTemplate());
+				joint.userData = &joints.back();
 				CollidableTemplate::ConfigureRevoluteJoint(child, joint);
 			}
 			break;
 
 		case 0x4954853d /* "prismaticjoint" */:
 			{
-				b2PrismaticJointDef joint;
+				prismatics.push_back(b2PrismaticJointDef());
+				b2PrismaticJointDef &joint = prismatics.back();
+				joints.push_back(JointTemplate());
+				joint.userData = &joints.back();
 				CollidableTemplate::ConfigurePrismaticJoint(child, joint);
 			}
 			break;
 
 		case 0x6932d1ee /* "distancejoint" */:
 			{
-				b2DistanceJointDef joint;
+				distances.push_back(b2DistanceJointDef());
+				b2DistanceJointDef &joint = distances.back();
+				joints.push_back(JointTemplate());
+				joint.userData = &joints.back();
 				CollidableTemplate::ConfigureDistanceJoint(child, joint);
 			}
 			break;
 
 		case 0xdd003dc4 /* "pulleyjoint" */:
 			{
-				b2PulleyJointDef joint;
+				pulleys.push_back(b2PulleyJointDef());
+				b2PulleyJointDef &joint = pulleys.back();
+				joints.push_back(JointTemplate());
+				joint.userData = &joints.back();
 				CollidableTemplate::ConfigurePulleyJoint(child, joint);
 			}
 			break;
 
 		case 0xc3b5cf50 /* "mousejoint" */:
 			{
-				b2MouseJointDef joint;
+				mouses.push_back(b2MouseJointDef());
+				b2MouseJointDef &joint = mouses.back();
+				joints.push_back(JointTemplate());
+				joint.userData = &joints.back();
 				CollidableTemplate::ConfigureMouseJoint(child, joint);
 			}
 			break;
@@ -537,10 +550,32 @@ Collidable::~Collidable(void)
 	RemoveFromWorld();
 }
 
+bool Collidable::SetupJointDef(b2JointDef &joint)
+{
+	CollidableTemplate::JointTemplate *data = static_cast<CollidableTemplate::JointTemplate *>(joint.userData);
+	Collidable *collidable1 = data->name1 ? Database::collidable.Get(data->name1) : this;
+	if (!collidable1)
+		return false;
+	Collidable *collidable2 = data->name2 ? Database::collidable.Get(data->name2) : this;
+	if (!collidable2)
+		return false;
+	BodyMap::const_iterator body1 = collidable1->bodies.find(data->body1);
+	if (body1 == collidable1->bodies.end())
+		return false;
+	BodyMap::const_iterator body2 = collidable2->bodies.find(data->body2);
+	if (body2 == collidable2->bodies.end())
+		return false;
+	joint.userData = NULL;
+	joint.body1 = body1->second;
+	joint.body2 = body2->second;
+	return true;
+}
+
 void Collidable::AddToWorld(void)
 {
-	// for each body...
 	const CollidableTemplate &collidable = Database::collidabletemplate.Get(id);
+
+	// for each body...
 	for (CollidableTemplate::BodyMap::const_iterator itor = collidable.bodies.begin(); itor != collidable.bodies.end(); ++itor)
 	{
 		// set body position to entity (HACK)
@@ -557,17 +592,67 @@ void Collidable::AddToWorld(void)
 		}
 
 		// create the body
-		body = world->CreateBody(&def);
+		bodies[itor->first] = body = world->CreateBody(&def);
+	}
+
+	// for each joint
+	for (std::list<b2RevoluteJointDef>::const_iterator itor = collidable.revolutes.begin(); itor != collidable.revolutes.end(); ++itor)
+	{
+		b2RevoluteJointDef joint(*itor);
+		if (SetupJointDef(joint))
+		{
+			joint.anchorPoint = joint.body2->GetWorldPoint(joint.anchorPoint);
+			world->CreateJoint(&joint);
+		}
+	}
+	for (std::list<b2PrismaticJointDef>::const_iterator itor = collidable.prismatics.begin(); itor != collidable.prismatics.end(); ++itor)
+	{
+		b2PrismaticJointDef joint(*itor);
+		if (SetupJointDef(joint))
+		{
+			joint.anchorPoint = joint.body2->GetWorldPoint(joint.anchorPoint);
+			world->CreateJoint(&joint);
+		}
+	}
+	for (std::list<b2DistanceJointDef>::const_iterator itor = collidable.distances.begin(); itor != collidable.distances.end(); ++itor)
+	{
+		b2DistanceJointDef joint(*itor);
+		if (SetupJointDef(joint))
+		{
+			joint.anchorPoint1 = joint.body1->GetWorldPoint(joint.anchorPoint1);
+			joint.anchorPoint2 = joint.body2->GetWorldPoint(joint.anchorPoint2);
+			world->CreateJoint(&joint);
+		}
+	}
+	for (std::list<b2PulleyJointDef>::const_iterator itor = collidable.pulleys.begin(); itor != collidable.pulleys.end(); ++itor)
+	{
+		b2PulleyJointDef joint(*itor);
+		if (SetupJointDef(joint))
+		{
+			joint.anchorPoint1 = joint.body1->GetWorldPoint(joint.anchorPoint1);
+			joint.anchorPoint2 = joint.body2->GetWorldPoint(joint.anchorPoint2);
+			world->CreateJoint(&joint);
+		}
+	}
+	for (std::list<b2MouseJointDef>::const_iterator itor = collidable.mouses.begin(); itor != collidable.mouses.end(); ++itor)
+	{
+		b2MouseJointDef joint(*itor);
+		if (SetupJointDef(joint))
+		{
+			world->CreateJoint(&joint);
+		}
 	}
 }
 
 void Collidable::RemoveFromWorld(void)
 {
-	if (body)
+	for (BodyMap::const_iterator itor = bodies.begin(); itor != bodies.end(); ++itor)
 	{
-		world->DestroyBody(body);
-		body = NULL;
+		world->DestroyBody(itor->second);
 	}
+	bodies.clear();
+
+	body = NULL;
 }
 
 
