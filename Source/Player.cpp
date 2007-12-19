@@ -127,6 +127,4 @@ void Player::Simulate(float aStep)
 			mDelay = 0.0f;
 		}
 	}
-
-	Database::entity.Close(Simulatable::id);
 }
