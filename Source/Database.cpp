@@ -197,64 +197,68 @@ namespace Database
 		size_t mask = (1 << shift) - 1;
 		size_t index = ((aKey >> shift) ^ aKey) & mask;
 
-		// while the slot is not empty...
+		// find the entry
 		size_t slot = mMap[index];
 		while (slot != EMPTY)
 		{
-			// if the record identifier matches...
 			if (mKey[slot] == aKey)
-			{
-				// mark as empty
-				mMap[index] = EMPTY;
-
-				// remove the record
-				DeleteRecord(slot);
-
-				// for each subsequent entry...
-				for (size_t next = (index + 1) & mask; mMap[next] != EMPTY; next = (next + 1) & mask)
-				{
-					// re-hash the entry
-					size_t slot = mMap[next];
-					Key key = mKey[slot];
-					for (size_t keyindex = ((key >> shift) ^ key) & mask; keyindex != next; keyindex = (keyindex + 1) & mask)
-					{
-						if (mMap[keyindex] == EMPTY)
-						{
-							mMap[keyindex] = mMap[next];
-							mMap[next] = EMPTY;
-							break;
-						}
-					}
-				}
-
-				// if not the last record...
-				if (slot < mCount - 1)
-				{
-					// move the last record into the slot
-					Key key = mKey[slot] = mKey[mCount-1];
-					CreateRecord(slot, GetRecord(mCount-1));
-					DeleteRecord(mCount-1);
-
-					// update the entry
-					for (size_t keyindex = ((key >> shift) ^ key) & mask; mMap[keyindex] != EMPTY; keyindex = (keyindex + 1) & mask)
-					{
-						if (mMap[keyindex] == mCount-1)
-						{
-							mMap[keyindex] = slot;
-							break;
-						}
-					}
-				}
-
-				// update record count
-				--mCount;
-				return;
-			}
-
-			// go to the next index
+				break;
 			index = (index + 1) & mask;
 			slot = mMap[index];
 		}
+
+		// exit if not found
+		if (slot == EMPTY)
+			return;
+
+		// update record count
+		--mCount;
+
+		// if not the last record...
+		if (slot < mCount)
+		{
+			// move the last record into the slot
+			Key key = mKey[slot] = mKey[mCount];
+			CreateRecord(slot, GetRecord(mCount));
+			DeleteRecord(mCount);
+
+			// update the entry
+			for (size_t keyindex = ((key >> shift) ^ key) & mask; mMap[keyindex] != EMPTY; keyindex = (keyindex + 1) & mask)
+			{
+				if (mMap[keyindex] == mCount)
+				{
+					mMap[keyindex] = slot;
+					break;
+				}
+			}
+		}
+
+		// for each entry in the cluster...
+		size_t nextindex = index;
+		while (1)
+		{
+			// get the next entry
+			nextindex = (nextindex + 1) & mask;
+			size_t nextslot = mMap[nextindex];
+
+			// stop upon reaching the end of the cluster
+			if (nextslot == EMPTY)
+				break;
+
+			// if the entry is out of place, and there is a place for it...
+			Key key = mKey[nextslot];
+			size_t keyindex = ((key >> shift) ^ key) & mask;
+			if ((nextindex > index && (keyindex <= index || keyindex > nextindex)) ||
+				(nextindex < index && (keyindex <= index && keyindex > nextindex)))
+			{
+				// move the entry
+				mMap[index] = mMap[nextindex];
+				index = nextindex;
+			}
+		}
+
+		// clear the empty slot
+		mMap[index] = EMPTY;
 	}
 
 
