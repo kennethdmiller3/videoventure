@@ -13,7 +13,6 @@
 #include <math.h>
 
 // STL includes
-#include <algorithm>
 #include <list>
 #include <vector>
 #ifdef __GNUC__
@@ -62,6 +61,8 @@ extern Input input;
 
 // loader
 void ProcessDrawItems(TiXmlElement *element);
+void ProcessDrawItemsDeferred(TiXmlElement *element, std::vector<unsigned int> &buffer);
+void ExecuteDeferredDrawItems(std::vector<unsigned int> &buffer);
 
 // configuration
 //#define ENABLE_DEPTH_TEST

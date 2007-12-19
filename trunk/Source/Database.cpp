@@ -15,6 +15,249 @@ namespace Database
 {
 	Typed<unsigned int> parent("parent");
 
+	Untyped::Untyped(const char *aName, size_t aStride)
+		: mId(Hash(aName)), mStride(aStride), mBits(8), mLimit(1<<mBits), mCount(0)
+	{
+		mMap = static_cast<size_t *>(malloc(mLimit * 2 * sizeof(size_t)));
+		memset(mMap, EMPTY, mLimit * 2 * sizeof(size_t));
+
+		mKey = static_cast<Key *>(malloc(mLimit * sizeof(Key)));
+		memset(mKey, 0, mLimit * sizeof(Key));
+
+		mPool = static_cast<void **>(malloc((mLimit >> SHIFT) * sizeof(void *)));
+		memset(mPool, 0, (mLimit >> SHIFT) * sizeof(void *));
+	}
+
+	Untyped::~Untyped()
+	{
+		free(mMap);
+		free(mKey);
+		for (size_t slot = 0; slot < mLimit >> SHIFT; ++slot)
+			free(mPool[slot]);
+		free(mPool);
+	}
+
+	void Untyped::Grow(void)
+	{
+		// resize
+		++mBits;
+		mLimit = 1<<mBits;
+		size_t shift = mBits + 1;
+		size_t mask = (1 << shift) - 1;
+
+		// reallocate map
+		free(mMap);
+		mMap = static_cast<size_t *>(malloc(mLimit * 2 * sizeof(size_t)));
+		memset(mMap, EMPTY, mLimit * 2 * sizeof(size_t));
+
+		// reallocate keys
+		mKey = static_cast<Key *>(realloc(mKey, mLimit * sizeof(size_t)));
+		memset(mKey + (mLimit >> 1), 0, (mLimit >> 1) * sizeof(size_t));
+
+		// reallocate pools
+		mPool = static_cast<void **>(realloc(mPool, (mLimit >> SHIFT) * sizeof(size_t)));
+		memset(mPool + (mLimit >> (SHIFT + 1)), 0, (mLimit >> (SHIFT + 1)) * sizeof(void *));
+
+		// rebuild hash
+		for (size_t record = 0; record < mCount; ++record)
+		{
+			// convert key to a hash map index
+			// (HACK: assume key is already a hash)
+			size_t key = mKey[record];
+			size_t index = ((key >> shift) ^ key) & mask;
+
+			// while the slot is not empty...
+			size_t slot = mMap[index];
+			while (slot != EMPTY)
+			{
+				// go to the next index
+				index = (index + 1) & mask;
+				slot = mMap[index];
+			}
+
+			// insert the record key
+			mMap[index] = record;
+		}
+	}
+
+	const void *Untyped::Find(Key aKey) const
+	{
+		// convert key to a hash map index
+		// (HACK: assume key is already a hash)
+		size_t shift = mBits + 1;
+		size_t mask = (1 << shift) - 1;
+		size_t index = ((aKey >> shift) ^ aKey) & mask;
+
+		// while the slot is not empty...
+		size_t slot = mMap[index];
+		while (slot != EMPTY)
+		{
+			// if the record identifier matches...
+			if (mKey[slot] == aKey)
+			{
+				// return the record
+				return GetRecord(slot);
+			}
+
+			// go to the next index
+			index = (index + 1) & mask;
+			slot = mMap[index];
+		}
+
+		return NULL;
+	}
+
+	void Untyped::Put(Key aKey, const void *aValue)
+	{
+		// convert key to a hash map index
+		// (HACK: assume key is already a hash)
+		size_t shift = mBits + 1;
+		size_t mask = (1 << shift) - 1;
+		size_t index = ((aKey >> shift) ^ aKey) & mask;
+
+		// while the slot is not empty...
+		size_t slot = mMap[index];
+		while (slot != EMPTY)
+		{
+			// if the record identifier matches...
+			if (mKey[slot] == aKey)
+			{
+				// update the record
+				UpdateRecord(slot, aValue);
+				return;
+			}
+
+			// go to the next index
+			index = (index + 1) & mask;
+			slot = mMap[index];
+		}
+
+		// grow if the database is full
+		if (mCount >= mLimit)
+			Grow();
+
+		// add a new record
+		slot = mCount++;
+		mMap[index] = slot;
+		mKey[slot] = aKey;
+		if (mPool[slot >> SHIFT] == NULL)
+			mPool[slot >> SHIFT] = malloc(mStride << SHIFT);
+		CreateRecord(slot, aValue);
+	}
+
+	void *Untyped::Open(Key aKey)
+	{
+		// convert key to a hash map index
+		// (HACK: assume key is already a hash)
+		size_t shift = mBits + 1;
+		size_t mask = (1 << shift) - 1;
+		size_t index = ((aKey >> shift) ^ aKey) & mask;
+
+		// while the slot is not empty...
+		size_t slot = mMap[index];
+		while (slot != EMPTY)
+		{
+			// if the record identifier matches...
+			if (mKey[slot] == aKey)
+			{
+				// return the record
+				return GetRecord(slot);
+			}
+
+			// go to the next index
+			index = (index + 1) & mask;
+			slot = mMap[index];
+		}
+
+		// grow if the database is full
+		if (mCount >= mLimit)
+			Grow();
+
+		// add a new record
+		slot = mCount++;
+		mMap[index] = slot;
+		mKey[slot] = aKey;
+		if (mPool[slot >> SHIFT] == NULL)
+			mPool[slot >> SHIFT] = malloc(mStride << SHIFT);
+		CreateRecord(slot);
+
+		// return the record
+		return GetRecord(slot);
+	}
+
+	void Untyped::Close(Key aKey)
+	{
+	}
+
+	void Untyped::Delete(Key aKey)
+	{
+		// convert key to a hash map index
+		// (HACK: assume key is already a hash)
+		size_t shift = mBits + 1;
+		size_t mask = (1 << shift) - 1;
+		size_t index = ((aKey >> shift) ^ aKey) & mask;
+
+		// while the slot is not empty...
+		size_t slot = mMap[index];
+		while (slot != EMPTY)
+		{
+			// if the record identifier matches...
+			if (mKey[slot] == aKey)
+			{
+				// mark as empty
+				mMap[index] = EMPTY;
+
+				// remove the record
+				DeleteRecord(slot);
+
+				// for each subsequent entry...
+				for (size_t next = (index + 1) & mask; mMap[next] != EMPTY; next = (next + 1) & mask)
+				{
+					// re-hash the entry
+					size_t slot = mMap[next];
+					Key key = mKey[slot];
+					for (size_t keyindex = ((key >> shift) ^ key) & mask; keyindex != next; keyindex = (keyindex + 1) & mask)
+					{
+						if (mMap[keyindex] == EMPTY)
+						{
+							mMap[keyindex] = mMap[next];
+							mMap[next] = EMPTY;
+							break;
+						}
+					}
+				}
+
+				// if not the last record...
+				if (slot < mCount - 1)
+				{
+					// move the last record into the slot
+					Key key = mKey[slot] = mKey[mCount-1];
+					CreateRecord(slot, GetRecord(mCount-1));
+					DeleteRecord(mCount-1);
+
+					// update the entry
+					for (size_t keyindex = ((key >> shift) ^ key) & mask; mMap[keyindex] != EMPTY; keyindex = (keyindex + 1) & mask)
+					{
+						if (mMap[keyindex] == mCount-1)
+						{
+							mMap[keyindex] = slot;
+							break;
+						}
+					}
+				}
+
+				// update record count
+				--mCount;
+				return;
+			}
+
+			// go to the next index
+			index = (index + 1) & mask;
+			slot = mMap[index];
+		}
+	}
+
+
 	// instantiate a template
 	unsigned int Instantiate(unsigned int aTemplateId, float aAngle, Vector2 aPosition, Vector2 aVelocity)
 	{
@@ -46,42 +289,48 @@ namespace Database
 		const CollidableTemplate *collidabletemplate = Database::collidabletemplate.Find(aTemplateId);
 		if (collidabletemplate)
 		{
-			Database::collidabletemplate.Put(aInstanceId, *collidabletemplate);
+			CollidableTemplate temp(*collidabletemplate);
+			Database::collidabletemplate.Put(aInstanceId, temp);
 		}
 
 		// inherit renderable template
 		const RenderableTemplate *renderabletemplate = Database::renderabletemplate.Find(aTemplateId);
 		if (renderabletemplate)
 		{
-			Database::renderabletemplate.Put(aInstanceId, *renderabletemplate);
+			RenderableTemplate temp(*renderabletemplate);
+			Database::renderabletemplate.Put(aInstanceId, temp);
 		}
 
 		// inherit damagable template
 		const DamagableTemplate *damagabletemplate = Database::damagabletemplate.Find(aTemplateId);
 		if (damagabletemplate)
 		{
-			Database::damagabletemplate.Put(aInstanceId, *damagabletemplate);
+			DamagableTemplate temp(*damagabletemplate);
+			Database::damagabletemplate.Put(aInstanceId, temp);
 		}
 
 		// inherit bullet template
 		const BulletTemplate *bullettemplate = Database::bullettemplate.Find(aTemplateId);
 		if (bullettemplate)
 		{
-			Database::bullettemplate.Put(aInstanceId, *bullettemplate);
+			BulletTemplate temp(*bullettemplate);
+			Database::bullettemplate.Put(aInstanceId, temp);
 		}
 
 		// inherit explosion template
 		const ExplosionTemplate *explosiontemplate = Database::explosiontemplate.Find(aTemplateId);
 		if (explosiontemplate)
 		{
-			Database::explosiontemplate.Put(aInstanceId, *explosiontemplate);
+			ExplosionTemplate temp(*explosiontemplate);
+			Database::explosiontemplate.Put(aInstanceId, temp);
 		}
 
 		// inherit spawner template
 		const SpawnerTemplate *spawnertemplate = Database::spawnertemplate.Find(aTemplateId);
 		if (spawnertemplate)
 		{
-			Database::spawnertemplate.Put(aInstanceId, *spawnertemplate);
+			SpawnerTemplate temp(*spawnertemplate);
+			Database::spawnertemplate.Put(aInstanceId, temp);
 		}
 	}
 

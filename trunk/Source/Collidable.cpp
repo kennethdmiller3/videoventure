@@ -172,9 +172,9 @@ bool CollidableTemplate::ProcessBodyItem(TiXmlElement *element, b2BodyDef &body)
 
 	case 0x029402af /* "fast" */:
 		{
-			int isfast = body.isFast;
-			element->QueryIntAttribute("value", &isfast);
-			body.isFast = isfast != 0;
+			int isBullet = body.isBullet;
+			element->QueryIntAttribute("value", &isBullet);
+			body.isBullet = isBullet != 0;
 		}
 		return true;
 
@@ -715,9 +715,12 @@ void Collidable::CollideAll(float aStep)
 			if (collidable)
 			{
 				Entity *entity = Database::entity.Get(collidable->id);
-				entity->Step();
-				entity->SetTransform(body->GetRotation(), Vector2(body->GetOriginPosition()));
-				entity->SetVelocity(Vector2(body->GetLinearVelocity()));
+				if (entity)
+				{
+					entity->Step();
+					entity->SetTransform(body->GetRotation(), Vector2(body->GetOriginPosition()));
+					entity->SetVelocity(Vector2(body->GetLinearVelocity()));
+				}
 			}
 		}
 	}
