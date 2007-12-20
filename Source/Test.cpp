@@ -283,10 +283,10 @@ static const unsigned int sHashToAttribMask[][2] =
 };
 #endif
 
-void ExecuteDeferredDrawItems(std::vector<unsigned int> &buffer)
+void ExecuteDeferredDrawItems(const unsigned int buffer[], size_t count)
 {
-	std::vector<unsigned int>::iterator itor = buffer.begin();
-	while (itor < buffer.end())
+	const unsigned int *itor = buffer;
+	while (itor < buffer + count)
 	{
 		switch (*itor++)
 		{
@@ -316,28 +316,28 @@ void ExecuteDeferredDrawItems(std::vector<unsigned int> &buffer)
 
 		case 0xafeef11e /* "glTranslatef" */:
 			{
-				GLfloat x = *reinterpret_cast<GLfloat *>(&*itor++);
-				GLfloat y = *reinterpret_cast<GLfloat *>(&*itor++);
-				GLfloat z = *reinterpret_cast<GLfloat *>(&*itor++);
+				GLfloat x = *reinterpret_cast<const GLfloat *>(&*itor++);
+				GLfloat y = *reinterpret_cast<const GLfloat *>(&*itor++);
+				GLfloat z = *reinterpret_cast<const GLfloat *>(&*itor++);
 				glTranslatef(x, y, z);
 			}
 			break;
 
 		case 0x29e02ba1 /* "glRotatef" */:
 			{
-				GLfloat a = *reinterpret_cast<GLfloat *>(&*itor++);
-				GLfloat x = *reinterpret_cast<GLfloat *>(&*itor++);
-				GLfloat y = *reinterpret_cast<GLfloat *>(&*itor++);
-				GLfloat z = *reinterpret_cast<GLfloat *>(&*itor++);
+				GLfloat a = *reinterpret_cast<const GLfloat *>(&*itor++);
+				GLfloat x = *reinterpret_cast<const GLfloat *>(&*itor++);
+				GLfloat y = *reinterpret_cast<const GLfloat *>(&*itor++);
+				GLfloat z = *reinterpret_cast<const GLfloat *>(&*itor++);
 				glRotatef(a, x, y, z);
 			}
 			break;
 
 		case 0xff71cf6e /* "glScalef" */:
 			{
-				GLfloat x = *reinterpret_cast<GLfloat *>(&*itor++);
-				GLfloat y = *reinterpret_cast<GLfloat *>(&*itor++);
-				GLfloat z = *reinterpret_cast<GLfloat *>(&*itor++);
+				GLfloat x = *reinterpret_cast<const GLfloat *>(&*itor++);
+				GLfloat y = *reinterpret_cast<const GLfloat *>(&*itor++);
+				GLfloat z = *reinterpret_cast<const GLfloat *>(&*itor++);
 				glScalef(x, y, z);
 			}
 			break;
@@ -347,36 +347,36 @@ void ExecuteDeferredDrawItems(std::vector<unsigned int> &buffer)
 			break;
 
 		case 0xca9090d7 /* "glLoadMatrixf" */:
-			glLoadMatrixf(reinterpret_cast<GLfloat *>(&*itor));
+			glLoadMatrixf(reinterpret_cast<const GLfloat *>(&*itor));
 			itor+=16;
 			break;
 
 		case 0x64500671 /* "glMultMatrixf" */:
-			glMultMatrixf(reinterpret_cast<GLfloat *>(&*itor));
+			glMultMatrixf(reinterpret_cast<const GLfloat *>(&*itor));
 			itor+=16;
 			break;
 
 		case 0x94110c7a /* "glVertex4f" */:
-			glVertex4fv(reinterpret_cast<GLfloat *>(&*itor));
+			glVertex4fv(reinterpret_cast<const GLfloat *>(&*itor));
 			itor+=4;
 			break;
 
 		case 0xf2d58094 /* "glNormal3f" */:
-			glNormal3fv(reinterpret_cast<GLfloat *>(&*itor));
+			glNormal3fv(reinterpret_cast<const GLfloat *>(&*itor));
 			itor+=3;
 			break;
 
 		case 0x9d63d16b /* "glColor4f" */:
-			glColor4fv(reinterpret_cast<GLfloat *>(&*itor));
+			glColor4fv(reinterpret_cast<const GLfloat *>(&*itor));
 			itor+=4;
 			break;
 
 		case 0xf3b3b82c /* "glIndexf" */:
-			glIndexf(*reinterpret_cast<GLfloat *>(&*itor++));
+			glIndexf(*reinterpret_cast<const GLfloat *>(&*itor++));
 			break;
 
 		case 0xb78bb2ae /* "glTexCoord4f" */:
-			glTexCoord4fv(reinterpret_cast<GLfloat *>(&*itor));
+			glTexCoord4fv(reinterpret_cast<const GLfloat *>(&*itor));
 			itor+=4;
 			break;
 
@@ -2068,7 +2068,7 @@ static void ProcessTemplateItems(TiXmlElement *element)
 		case 0x74e9dbae /* "collidable" */:
 			{
 				CollidableTemplate &collidable = Database::collidabletemplate.Open(template_id);
-				collidable.Configure(child);
+				collidable.Configure(child, template_id);
 				Database::collidabletemplate.Close(template_id);
 			}
 			break;

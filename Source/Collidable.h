@@ -15,10 +15,6 @@ public:
 	std::list<b2BoxDef> boxes;
 	std::list<b2PolyDef> polys;
 
-	// collision bodies
-	typedef stdext::hash_map<unsigned int, b2BodyDef> BodyMap;
-	BodyMap bodies;
-
 	// collision joints
 	struct JointTemplate { unsigned int name1; unsigned int body1; unsigned int name2; unsigned int body2; };
 	std::list<JointTemplate> joints;
@@ -52,7 +48,7 @@ public:
 	bool ConfigurePulleyJoint(TiXmlElement *element, b2PulleyJointDef &joint);
 	bool ProcessMouseJointItem(TiXmlElement *element, b2MouseJointDef &joint);
 	bool ConfigureMouseJoint(TiXmlElement *element, b2MouseJointDef &joint);
-	bool Configure(TiXmlElement *element);
+	bool Configure(TiXmlElement *element, unsigned int id);
 };
 
 class Collidable
@@ -62,10 +58,6 @@ protected:
 
 	// identifier
 	unsigned int id;
-
-	// all bodies
-	typedef stdext::hash_map<unsigned int, b2Body *> BodyMap;
-	BodyMap bodies;
 
 	// primary body
 	b2Body *body;
@@ -79,10 +71,6 @@ public:
 	public:
 		virtual void Collide(Collidable &aRecipient, b2Manifold aManifold[], int aCount) = 0;
 	};
-
-	// listeners
-	typedef stdext::hash_map<unsigned int, Listener *> ListenerMap;
-	ListenerMap listeners;
 
 public:
 	Collidable(void);
@@ -118,5 +106,8 @@ public:
 namespace Database
 {
 	extern Typed<CollidableTemplate> collidabletemplate;
+	extern Typed<Typed<b2BodyDef> > collidabletemplatebody;
 	extern Typed<Collidable *> collidable;
+	extern Typed<Typed<b2Body *> > collidablebody;
+	extern Typed<Typed<Collidable::Listener *> > collidablelistener;
 }

@@ -15,8 +15,8 @@ namespace Database
 {
 	Typed<unsigned int> parent("parent");
 
-	Untyped::Untyped(const char *aName, size_t aStride)
-		: mId(Hash(aName)), mStride(aStride), mBits(8), mLimit(1<<mBits), mCount(0)
+	Untyped::Untyped(unsigned int aId, size_t aStride)
+		: mId(aId), mStride(aStride), mBits(8), mLimit(1<<mBits), mCount(0)
 	{
 		mMap = static_cast<size_t *>(malloc(mLimit * 2 * sizeof(size_t)));
 		memset(mMap, EMPTY, mLimit * 2 * sizeof(size_t));
@@ -39,8 +39,10 @@ namespace Database
 
 	void Untyped::Clear(void)
 	{
+		memset(mMap, EMPTY, mLimit * 2 * sizeof(size_t));
+		memset(mKey, 0, mLimit * sizeof(Key));
 		for (size_t slot = 0; slot < mCount; ++slot)
-			DeleteRecord(slot);
+			DeleteRecord(GetRecord(slot));
 		mCount = 0;
 	}
 
@@ -49,8 +51,6 @@ namespace Database
 		// resize
 		++mBits;
 		mLimit = 1<<mBits;
-		size_t shift = mBits + 1;
-		size_t mask = (1 << shift) - 1;
 
 		// reallocate map
 		free(mMap);
@@ -78,12 +78,46 @@ namespace Database
 			while (slot != EMPTY)
 			{
 				// go to the next index
-				index = (index + 1) & mask;
+				index = Next(index);
 				slot = mMap[index];
 			}
 
 			// insert the record key
 			mMap[index] = record;
+		}
+	}
+
+	void Untyped::Copy(const Untyped &aSource)
+	{
+		// clear existing pool
+		Clear();
+
+		// copy counts
+		mBits = aSource.mBits;
+		mLimit = aSource.mLimit;
+		mCount = aSource.mCount;
+
+		// copy map
+		free(mMap);
+		mMap = static_cast<size_t *>(malloc(mLimit * 2 * sizeof(size_t)));
+		memcpy(mMap, aSource.mMap, mLimit * 2 * sizeof(size_t));
+
+		// copy keys
+		free(mKey);
+		mKey = static_cast<Key *>(malloc(mLimit * sizeof(size_t)));
+		memcpy(mKey, aSource.mKey, mLimit * sizeof(size_t));
+
+		// copy pools
+		free(mPool);
+		mPool = static_cast<void **>(malloc((mLimit >> SHIFT) * sizeof(size_t)));
+		memset(mPool, 0, (mLimit >> SHIFT) * sizeof(void *));
+		for (size_t slot = 0; slot < mCount; ++slot)
+		{
+			if ((slot & ((1 << SHIFT) - 1)) == 0)
+			{
+				mPool[slot >> SHIFT] = malloc((1 << SHIFT) * mStride);
+			}
+			CreateRecord(GetRecord(slot), aSource.GetRecord(slot));
 		}
 	}
 
@@ -116,7 +150,7 @@ namespace Database
 		if (slot != EMPTY)
 		{
 			// update the record
-			UpdateRecord(slot, aValue);
+			UpdateRecord(GetRecord(slot), aValue);
 			return;
 		}
 
@@ -130,7 +164,7 @@ namespace Database
 		mKey[slot] = aKey;
 		if (mPool[slot >> SHIFT] == NULL)
 			mPool[slot >> SHIFT] = malloc(mStride << SHIFT);
-		CreateRecord(slot, aValue);
+		CreateRecord(GetRecord(slot), aValue);
 	}
 
 	void *Untyped::Open(Key aKey)
@@ -157,7 +191,7 @@ namespace Database
 		mKey[slot] = aKey;
 		if (mPool[slot >> SHIFT] == NULL)
 			mPool[slot >> SHIFT] = malloc(mStride << SHIFT);
-		CreateRecord(slot);
+		CreateRecord(GetRecord(slot));
 
 		// return the record
 		return GetRecord(slot);
@@ -189,8 +223,7 @@ namespace Database
 		{
 			// move the last record into the slot
 			Key key = mKey[slot] = mKey[mCount];
-			CreateRecord(slot, GetRecord(mCount));
-			DeleteRecord(mCount);
+			CreateRecord(GetRecord(slot), GetRecord(mCount));
 
 			// update the entry
 			for (size_t keyindex = Index(key); mMap[keyindex] != EMPTY; keyindex = Next(keyindex))
@@ -202,6 +235,10 @@ namespace Database
 				}
 			}
 		}
+
+		// delete the last record
+		DeleteRecord(GetRecord(mCount));
+		mKey[mCount] = 0;
 
 		// for each entry in the cluster...
 		size_t nextindex = index;
@@ -263,48 +300,49 @@ namespace Database
 		const CollidableTemplate *collidabletemplate = Database::collidabletemplate.Find(aTemplateId);
 		if (collidabletemplate)
 		{
-			CollidableTemplate temp(*collidabletemplate);
-			Database::collidabletemplate.Put(aInstanceId, temp);
+			Database::collidabletemplate.Put(aInstanceId, *collidabletemplate);
+		}
+
+		// inherit collidable bodies
+		const Typed<b2BodyDef> *collidabletemplatebody = Database::collidabletemplatebody.Find(aTemplateId);
+		if (collidabletemplatebody)
+		{
+			Database::collidabletemplatebody.Put(aInstanceId, *collidabletemplatebody);
 		}
 
 		// inherit renderable template
 		const RenderableTemplate *renderabletemplate = Database::renderabletemplate.Find(aTemplateId);
 		if (renderabletemplate)
 		{
-			RenderableTemplate temp(*renderabletemplate);
-			Database::renderabletemplate.Put(aInstanceId, temp);
+			Database::renderabletemplate.Put(aInstanceId, *renderabletemplate);
 		}
 
 		// inherit damagable template
 		const DamagableTemplate *damagabletemplate = Database::damagabletemplate.Find(aTemplateId);
 		if (damagabletemplate)
 		{
-			DamagableTemplate temp(*damagabletemplate);
-			Database::damagabletemplate.Put(aInstanceId, temp);
+			Database::damagabletemplate.Put(aInstanceId, *damagabletemplate);
 		}
 
 		// inherit bullet template
 		const BulletTemplate *bullettemplate = Database::bullettemplate.Find(aTemplateId);
 		if (bullettemplate)
 		{
-			BulletTemplate temp(*bullettemplate);
-			Database::bullettemplate.Put(aInstanceId, temp);
+			Database::bullettemplate.Put(aInstanceId, *bullettemplate);
 		}
 
 		// inherit explosion template
 		const ExplosionTemplate *explosiontemplate = Database::explosiontemplate.Find(aTemplateId);
 		if (explosiontemplate)
 		{
-			ExplosionTemplate temp(*explosiontemplate);
-			Database::explosiontemplate.Put(aInstanceId, temp);
+			Database::explosiontemplate.Put(aInstanceId, *explosiontemplate);
 		}
 
 		// inherit spawner template
 		const SpawnerTemplate *spawnertemplate = Database::spawnertemplate.Find(aTemplateId);
 		if (spawnertemplate)
 		{
-			SpawnerTemplate temp(*spawnertemplate);
-			Database::spawnertemplate.Put(aInstanceId, temp);
+			Database::spawnertemplate.Put(aInstanceId, *spawnertemplate);
 		}
 	}
 
@@ -431,6 +469,7 @@ namespace Database
 
 		// remove template components
 		collidabletemplate.Delete(aId);
+		collidabletemplatebody.Delete(aId);
 		renderabletemplate.Delete(aId);
 		damagabletemplate.Delete(aId);
 		bullettemplate.Delete(aId);
