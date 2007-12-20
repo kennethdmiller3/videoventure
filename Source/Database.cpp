@@ -37,6 +37,13 @@ namespace Database
 		free(mPool);
 	}
 
+	void Untyped::Clear(void)
+	{
+		for (size_t slot = 0; slot < mCount; ++slot)
+			DeleteRecord(slot);
+		mCount = 0;
+	}
+
 	void Untyped::Grow(void)
 	{
 		// resize
@@ -64,7 +71,7 @@ namespace Database
 			// convert key to a hash map index
 			// (HACK: assume key is already a hash)
 			size_t key = mKey[record];
-			size_t index = ((key >> shift) ^ key) & mask;
+			size_t index = Index(key);
 
 			// while the slot is not empty...
 			size_t slot = mMap[index];
@@ -84,26 +91,17 @@ namespace Database
 	{
 		// convert key to a hash map index
 		// (HACK: assume key is already a hash)
-		size_t shift = mBits + 1;
-		size_t mask = (1 << shift) - 1;
-		size_t index = ((aKey >> shift) ^ aKey) & mask;
+		size_t index = Probe(aKey);
 
-		// while the slot is not empty...
+		// if the slot is not empty...
 		size_t slot = mMap[index];
-		while (slot != EMPTY)
+		if (slot != EMPTY)
 		{
-			// if the record identifier matches...
-			if (mKey[slot] == aKey)
-			{
-				// return the record
-				return GetRecord(slot);
-			}
-
-			// go to the next index
-			index = (index + 1) & mask;
-			slot = mMap[index];
+			// return the record
+			return GetRecord(slot);
 		}
 
+		// not found
 		return NULL;
 	}
 
@@ -111,25 +109,15 @@ namespace Database
 	{
 		// convert key to a hash map index
 		// (HACK: assume key is already a hash)
-		size_t shift = mBits + 1;
-		size_t mask = (1 << shift) - 1;
-		size_t index = ((aKey >> shift) ^ aKey) & mask;
+		size_t index = Probe(aKey);
 
-		// while the slot is not empty...
+		// if the slot is not empty...
 		size_t slot = mMap[index];
-		while (slot != EMPTY)
+		if (slot != EMPTY)
 		{
-			// if the record identifier matches...
-			if (mKey[slot] == aKey)
-			{
-				// update the record
-				UpdateRecord(slot, aValue);
-				return;
-			}
-
-			// go to the next index
-			index = (index + 1) & mask;
-			slot = mMap[index];
+			// update the record
+			UpdateRecord(slot, aValue);
+			return;
 		}
 
 		// grow if the database is full
@@ -149,24 +137,14 @@ namespace Database
 	{
 		// convert key to a hash map index
 		// (HACK: assume key is already a hash)
-		size_t shift = mBits + 1;
-		size_t mask = (1 << shift) - 1;
-		size_t index = ((aKey >> shift) ^ aKey) & mask;
+		size_t index = Probe(aKey);
 
-		// while the slot is not empty...
+		// if the slot is not empty...
 		size_t slot = mMap[index];
-		while (slot != EMPTY)
+		if (slot != EMPTY)
 		{
-			// if the record identifier matches...
-			if (mKey[slot] == aKey)
-			{
-				// return the record
-				return GetRecord(slot);
-			}
-
-			// go to the next index
-			index = (index + 1) & mask;
-			slot = mMap[index];
+			// return the record
+			return GetRecord(slot);
 		}
 
 		// grow if the database is full
@@ -193,23 +171,15 @@ namespace Database
 	{
 		// convert key to a hash map index
 		// (HACK: assume key is already a hash)
-		size_t shift = mBits + 1;
-		size_t mask = (1 << shift) - 1;
-		size_t index = ((aKey >> shift) ^ aKey) & mask;
+		size_t index = Probe(aKey);
 
-		// find the entry
+		// if the slot is empty...
 		size_t slot = mMap[index];
-		while (slot != EMPTY)
-		{
-			if (mKey[slot] == aKey)
-				break;
-			index = (index + 1) & mask;
-			slot = mMap[index];
-		}
-
-		// exit if not found
 		if (slot == EMPTY)
+		{
+			// not found
 			return;
+		}
 
 		// update record count
 		--mCount;
@@ -223,7 +193,7 @@ namespace Database
 			DeleteRecord(mCount);
 
 			// update the entry
-			for (size_t keyindex = ((key >> shift) ^ key) & mask; mMap[keyindex] != EMPTY; keyindex = (keyindex + 1) & mask)
+			for (size_t keyindex = Index(key); mMap[keyindex] != EMPTY; keyindex = Next(keyindex))
 			{
 				if (mMap[keyindex] == mCount)
 				{
@@ -238,7 +208,7 @@ namespace Database
 		while (1)
 		{
 			// get the next entry
-			nextindex = (nextindex + 1) & mask;
+			nextindex = Next(nextindex);
 			size_t nextslot = mMap[nextindex];
 
 			// stop upon reaching the end of the cluster
@@ -247,7 +217,7 @@ namespace Database
 
 			// if the entry is out of place, and there is a place for it...
 			Key key = mKey[nextslot];
-			size_t keyindex = ((key >> shift) ^ key) & mask;
+			size_t keyindex = Index(key);
 			if ((nextindex > index && (keyindex <= index || keyindex > nextindex)) ||
 				(nextindex < index && (keyindex <= index && keyindex > nextindex)))
 			{

@@ -2699,27 +2699,23 @@ int SDL_main( int argc, char *argv[] )
 	}
 	while( !quit );
 
-	/*
 	// remove all entities
 //	for (Database::Typed<Entity *>::iterator itor = Database::entity.begin(); itor != Database::entity.end(); ++itor)
 //		delete itor->second;
-	Database::entity.clear();
+	Database::entity.Clear();
 
 	// remove all drawlists
-	for (Database::Typed<GLuint>::iterator itor = Database::drawlist.begin(); itor != Database::drawlist.end(); ++itor)
-		glDeleteLists(itor->second, 1);
-	Database::drawlist.clear();
+	Database::drawlist.Clear();
 
 	// clear databases
-	Database::player.clear();
-	Database::gunner.clear();
-	Database::collidable.clear();
-	Database::collidabletemplate.clear();
-	Database::renderable.clear();
-	Database::renderabletemplate.clear();
-	Database::bullettemplate.clear();
-	Database::explosiontemplate.clear();
-	*/
+	Database::player.Clear();
+	Database::gunner.Clear();
+	Database::collidable.Clear();
+	Database::collidabletemplate.Clear();
+	Database::renderable.Clear();
+	Database::renderabletemplate.Clear();
+	Database::bullettemplate.Clear();
+	Database::explosiontemplate.Clear();
 
 	// collidable done
 	Collidable::WorldDone();
