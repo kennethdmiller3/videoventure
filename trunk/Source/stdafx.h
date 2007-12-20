@@ -15,12 +15,7 @@
 // STL includes
 #include <list>
 #include <vector>
-#ifdef __GNUC__
-#include <ext/hash_map>
-namespace stdext = __gnu_cxx;
-#else
-#include <hash_map>
-#endif
+#include <map>
 
 // SDL includes
 #include "SDL.h"
@@ -42,6 +37,7 @@ namespace stdext = __gnu_cxx;
 #include "Hash.h"
 #include "Database.h"
 #include "Input.h"
+#include "FastDelegate.h"
 
 // arena attributes
 const float ARENA_X_MIN = -2048;

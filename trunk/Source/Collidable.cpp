@@ -9,7 +9,7 @@ namespace Database
 	Typed<Typed<b2BodyDef> > collidabletemplatebody("collidabletemplatebody");
 	Typed<Collidable *> collidable("collidable");
 	Typed<Typed<b2Body *> > collidablebody("collidablebody");
-	Typed<Typed<Collidable::Listener *> > collidablelistener("collidablelistener");
+	Typed<Typed<Collidable::Listener> > collidablelistener("collidablelistener");
 }
 
 CollidableTemplate::CollidableTemplate(void)
@@ -748,8 +748,8 @@ void Collidable::CollideAll(float aStep)
 
 void Collidable::Collide(Collidable &aRecipient, b2Manifold aManifold[], int aCount)
 {
-	for (Database::Typed<Listener *>::Iterator itor(Database::collidablelistener.Find(id)); itor.IsValid(); ++itor)
+	for (Database::Typed<Listener>::Iterator itor(Database::collidablelistener.Find(id)); itor.IsValid(); ++itor)
 	{
-		itor.GetValue()->Collide(aRecipient, aManifold, aCount);
+		itor.GetValue()(aRecipient, aManifold, aCount);
 	}
 };

@@ -66,11 +66,7 @@ protected:
 	bool SetupJointDef(b2JointDef &joint);
 
 public:
-	class Listener
-	{
-	public:
-		virtual void Collide(Collidable &aRecipient, b2Manifold aManifold[], int aCount) = 0;
-	};
+	typedef fastdelegate::FastDelegate3<Collidable &, b2Manifold[], int> Listener;
 
 public:
 	Collidable(void);
@@ -109,5 +105,5 @@ namespace Database
 	extern Typed<Typed<b2BodyDef> > collidabletemplatebody;
 	extern Typed<Collidable *> collidable;
 	extern Typed<Typed<b2Body *> > collidablebody;
-	extern Typed<Typed<Collidable::Listener *> > collidablelistener;
+	extern Typed<Typed<Collidable::Listener> > collidablelistener;
 }
