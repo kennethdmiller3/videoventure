@@ -26,6 +26,7 @@ namespace Database
 
 	protected:
 		void Grow(void);
+		void Copy(const Untyped &aSource);
 
 		inline size_t Untyped::Index(Key aKey) const
 		{
@@ -62,13 +63,19 @@ namespace Database
 		{
 			return static_cast<char *>(mPool[aSlot >> SHIFT]) + (aSlot & ((1 << SHIFT) - 1)) * mStride;
 		}
-		virtual void CreateRecord(size_t aSlot, const void *aSource = NULL) = 0;
-		virtual void UpdateRecord(size_t aSlot, const void *aSource) = 0;
-		virtual void DeleteRecord(size_t aSlot) = 0;
+		virtual void CreateRecord(void *aDest, const void *aSource = NULL) = 0;
+		virtual void UpdateRecord(void *aDest, const void *aSource) = 0;
+		virtual void DeleteRecord(void *aDest) = 0;
 
 	public:
-		Untyped(const char *aName, size_t aStride);
+		Untyped(unsigned int mId, size_t aStride);
 		virtual ~Untyped();
+
+		const Untyped &operator=(const Untyped &aSource)
+		{
+			Copy(aSource);
+			return *this;
+		}
 
 		void Clear();
 
@@ -77,6 +84,57 @@ namespace Database
 		void *Open(Key aKey);
 		void Close(Key aKey);
 		void Delete(Key aKey);
+
+		class Iterator
+		{
+		protected:
+			const Untyped *mDatabase;
+			size_t mSlot;
+
+		public:
+			// default constructor
+			Iterator(const Untyped *aDatabase, size_t aSlot = 0)
+				: mDatabase(aDatabase), mSlot(aSlot)
+			{
+			}
+
+			// copy constructor
+			Iterator(const Iterator &aIterator)
+				: mDatabase(aIterator.mDatabase), mSlot(aIterator.mSlot)
+			{
+			}
+
+			// pre-increment
+			const Iterator &operator++(void)
+			{
+				++mSlot;
+				return *this;
+			}
+			
+			// post-increment
+			const Iterator operator++(int)
+			{
+				return Iterator(mDatabase, mSlot++);
+			}
+
+			// is the iterator valid?
+			bool IsValid(void)
+			{
+				return mDatabase && mSlot >= 0 && mSlot < mDatabase->mCount;
+			}
+
+			// get the iterator key
+			Key GetKey(void)
+			{
+				return mDatabase->mKey[mSlot];
+			}
+
+			// get the iterator value
+			void *GetValue(void)
+			{
+				return mDatabase->GetRecord(mSlot);
+			}
+		};
 	};
 
 	// typed database
@@ -85,30 +143,37 @@ namespace Database
 	protected:
 		const T mNil;
 
-		virtual void CreateRecord(size_t aSlot, const void *aSource = NULL)
+		virtual void CreateRecord(void *aDest, const void *aSource = NULL)
 		{
 			if (aSource)
-				new (GetRecord(aSlot)) T(*static_cast<const T *>(aSource));
+				new (aDest) T(*static_cast<const T *>(aSource));
 			else
-				new (GetRecord(aSlot)) T;
+				new (aDest) T;
 		}
-		virtual void UpdateRecord(size_t aSlot, const void *aSource)
+		virtual void UpdateRecord(void *aDest, const void *aSource)
 		{
-			*static_cast<T *>(GetRecord(aSlot)) = *static_cast<const T *>(aSource);
+			*static_cast<T *>(aDest) = *static_cast<const T *>(aSource);
 		}
-		virtual void DeleteRecord(size_t aSlot)
+		virtual void DeleteRecord(void *aDest)
 		{
-			static_cast<T *>(GetRecord(aSlot))->~T();
+			static_cast<T *>(aDest)->~T();
 		}
 
 	public:
-		Typed(const char *aName)
-			: Untyped(aName, sizeof(T)), mNil()
+		Typed(const char *aName = "")
+			: Untyped(Hash(aName), sizeof(T)), mNil()
 		{
 		}
 
-		~Typed()
+		Typed(const Typed &aDatabase)
+			: Untyped(aDatabase.mId, sizeof(T)), mNil(aDatabase.mNil)
 		{
+			Copy(aDatabase);
+		}
+
+		virtual ~Typed()
+		{
+			Clear();
 		}
 
 		const T *Find(Key aKey) const
@@ -141,6 +206,33 @@ namespace Database
 		{
 			Untyped::Delete(aKey);
 		}
+
+		const Typed &operator=(const Typed &aSource)
+		{
+			Copy(aSource);
+			return *this;
+		}
+
+		class Iterator : public Untyped::Iterator
+		{
+		public:
+			Iterator(const Typed *aDatabase, size_t aSlot = 0)
+				: Untyped::Iterator(aDatabase, aSlot)
+			{
+			}
+
+			Iterator(const Iterator &aIterator)
+				: Untyped::Iterator(aIterator)
+			{
+			}
+
+			// get the iterator value
+			const T &GetValue(void)
+			{
+				const T *t = static_cast<const T *>(Untyped::Iterator::GetValue());
+				return t ? *t : static_cast<const Typed *>(mDatabase)->mNil;
+			}
+		};
 	};
 
 	// parent identifier database

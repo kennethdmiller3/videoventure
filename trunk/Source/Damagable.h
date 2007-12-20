@@ -29,10 +29,6 @@ public:
 		virtual void Damage(unsigned int aSourceId, float aDamage) = 0;
 	};
 
-	// listeners
-	typedef stdext::hash_map<unsigned int, Listener *> ListenerMap;
-	ListenerMap listeners;
-
 public:
 	Damagable(void);
 	Damagable(const DamagableTemplate &aTemplate, unsigned int aId);
@@ -55,4 +51,5 @@ namespace Database
 {
 	extern Typed<DamagableTemplate> damagabletemplate;
 	extern Typed<Damagable *> damagable;
+	extern Typed<Typed<Damagable::Listener *> > damagablelistener;
 }

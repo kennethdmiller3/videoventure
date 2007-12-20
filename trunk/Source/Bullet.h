@@ -30,7 +30,7 @@ public:
 };
 
 class Bullet
-	: public Simulatable, Collidable::Listener
+	: public Simulatable, public Collidable::Listener
 {
 public:
 	// allocation

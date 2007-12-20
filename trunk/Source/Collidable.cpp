@@ -6,7 +6,10 @@
 namespace Database
 {
 	Typed<CollidableTemplate> collidabletemplate("collidabletemplate");
+	Typed<Typed<b2BodyDef> > collidabletemplatebody("collidabletemplatebody");
 	Typed<Collidable *> collidable("collidable");
+	Typed<Typed<b2Body *> > collidablebody("collidablebody");
+	Typed<Typed<Collidable::Listener *> > collidablelistener("collidablelistener");
 }
 
 CollidableTemplate::CollidableTemplate(void)
@@ -452,7 +455,7 @@ bool CollidableTemplate::ConfigureMouseJoint(TiXmlElement *element, b2MouseJoint
 }
 
 
-bool CollidableTemplate::Configure(TiXmlElement *element)
+bool CollidableTemplate::Configure(TiXmlElement *element, unsigned int id)
 {
 	if (Hash(element->Value()) != 0x74e9dbae /* "collidable" */)
 		return false;
@@ -466,9 +469,12 @@ bool CollidableTemplate::Configure(TiXmlElement *element)
 		case 0xdbaa7975 /* "body" */:
 			{
 				// add a body
-				unsigned int id = Hash(child->Attribute("name"));
-				b2BodyDef &body = bodies[id];
+				unsigned int bodyid = Hash(child->Attribute("name"));
+				Database::Typed<b2BodyDef> &bodies = Database::collidabletemplatebody.Open(id);
+				b2BodyDef &body = bodies.Open(bodyid);
 				CollidableTemplate::ConfigureBody(child, body);
+				bodies.Close(bodyid);
+				Database::collidabletemplatebody.Close(id);
 			}
 			break;
 
@@ -547,27 +553,20 @@ Collidable::Collidable(const CollidableTemplate &aTemplate, unsigned int aId)
 
 Collidable::~Collidable(void)
 {
+	Database::collidablelistener.Delete(id);
 	RemoveFromWorld();
 }
 
 bool Collidable::SetupJointDef(b2JointDef &joint)
 {
 	CollidableTemplate::JointTemplate *data = static_cast<CollidableTemplate::JointTemplate *>(joint.userData);
-	Collidable *collidable1 = data->name1 ? Database::collidable.Get(data->name1) : this;
-	if (!collidable1)
-		return false;
-	Collidable *collidable2 = data->name2 ? Database::collidable.Get(data->name2) : this;
-	if (!collidable2)
-		return false;
-	BodyMap::const_iterator body1 = collidable1->bodies.find(data->body1);
-	if (body1 == collidable1->bodies.end())
-		return false;
-	BodyMap::const_iterator body2 = collidable2->bodies.find(data->body2);
-	if (body2 == collidable2->bodies.end())
-		return false;
 	joint.userData = NULL;
-	joint.body1 = body1->second;
-	joint.body2 = body2->second;
+	joint.body1 = Database::collidablebody.Get(data->name1 ? data->name1 : id).Get(data->body1);
+	if (!joint.body1)
+		return false;
+	joint.body2 = Database::collidablebody.Get(data->name2 ? data->name2 : id).Get(data->body2);
+	if (!joint.body2)
+		return false;
 	return true;
 }
 
@@ -576,10 +575,11 @@ void Collidable::AddToWorld(void)
 	const CollidableTemplate &collidable = Database::collidabletemplate.Get(id);
 
 	// for each body...
-	for (CollidableTemplate::BodyMap::const_iterator itor = collidable.bodies.begin(); itor != collidable.bodies.end(); ++itor)
+	Database::Typed<b2Body *> &bodies = Database::collidablebody.Open(id);
+	for (Database::Typed<b2BodyDef>::Iterator itor(Database::collidabletemplatebody.Find(id)); itor.IsValid(); ++itor)
 	{
 		// set body position to entity (HACK)
-		b2BodyDef def(itor->second);
+		b2BodyDef def(itor.GetValue());
 		def.userData = this;
 		const Entity *entity = Database::entity.Get(id);
 		if (entity)
@@ -592,8 +592,10 @@ void Collidable::AddToWorld(void)
 		}
 
 		// create the body
-		bodies[itor->first] = body = world->CreateBody(&def);
+		body = world->CreateBody(&def);
+		bodies.Put(itor.GetKey(), body);
 	}
+	Database::collidablebody.Close(id);
 
 	// for each joint
 	for (std::list<b2RevoluteJointDef>::const_iterator itor = collidable.revolutes.begin(); itor != collidable.revolutes.end(); ++itor)
@@ -646,11 +648,11 @@ void Collidable::AddToWorld(void)
 
 void Collidable::RemoveFromWorld(void)
 {
-	for (BodyMap::const_iterator itor = bodies.begin(); itor != bodies.end(); ++itor)
+	for (Database::Typed<b2Body *>::Iterator itor(Database::collidablebody.Find(id)); itor.IsValid(); ++itor)
 	{
-		world->DestroyBody(itor->second);
+		world->DestroyBody(itor.GetValue());
 	}
-	bodies.clear();
+	Database::collidablebody.Delete(id);
 
 	body = NULL;
 }
@@ -746,8 +748,8 @@ void Collidable::CollideAll(float aStep)
 
 void Collidable::Collide(Collidable &aRecipient, b2Manifold aManifold[], int aCount)
 {
-	for (ListenerMap::iterator itor = listeners.begin(); itor != listeners.end(); ++itor)
+	for (Database::Typed<Listener *>::Iterator itor(Database::collidablelistener.Find(id)); itor.IsValid(); ++itor)
 	{
-		itor->second->Collide(aRecipient, aManifold, aCount);
+		itor.GetValue()->Collide(aRecipient, aManifold, aCount);
 	}
 };
