@@ -30,7 +30,7 @@ public:
 };
 
 class Bullet
-	: public Simulatable, public Collidable::Listener
+	: public Simulatable
 {
 public:
 	// allocation
@@ -49,7 +49,7 @@ public:
 	virtual void Simulate(float aStep);
 
 	// collide
-	virtual void Collide(Collidable &aRecipient, b2Manifold aManifold[], int aCount);
+	void Collide(Collidable &aRecipient, b2Manifold aManifold[], int aCount);
 };
 
 namespace Database

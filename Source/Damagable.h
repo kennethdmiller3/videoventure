@@ -23,11 +23,7 @@ protected:
 	float mHealth;
 
 public:
-	class Listener
-	{
-	public:
-		virtual void Damage(unsigned int aSourceId, float aDamage) = 0;
-	};
+	typedef fastdelegate::FastDelegate2<unsigned int, float> Listener;
 
 public:
 	Damagable(void);
@@ -51,5 +47,5 @@ namespace Database
 {
 	extern Typed<DamagableTemplate> damagabletemplate;
 	extern Typed<Damagable *> damagable;
-	extern Typed<Typed<Damagable::Listener *> > damagablelistener;
+	extern Typed<Typed<Damagable::Listener> > damagablelistener;
 }

@@ -63,8 +63,10 @@ Bullet::Bullet(const BulletTemplate &aTemplate, unsigned int aId)
 	Collidable *collidable = Database::collidable.Get(Simulatable::id);
 	if (collidable)
 	{
-		Database::Typed<Collidable::Listener *> &listeners = Database::collidablelistener.Open(Simulatable::id);
-		listeners.Put(Database::Key(this), this);
+		Database::Typed<Collidable::Listener> &listeners = Database::collidablelistener.Open(Simulatable::id);
+		Collidable::Listener &listener = listeners.Open(Database::Key(this));
+		listener.bind(this, &Bullet::Collide);
+		listeners.Close(Database::Key(this));
 		Database::collidablelistener.Close(Simulatable::id);
 	}
 }
@@ -74,7 +76,7 @@ Bullet::~Bullet(void)
 	Collidable *collidable = Database::collidable.Get(Simulatable::id);
 	if (collidable)
 	{
-		Database::Typed<Collidable::Listener *> &listeners = Database::collidablelistener.Open(Simulatable::id);
+		Database::Typed<Collidable::Listener> &listeners = Database::collidablelistener.Open(Simulatable::id);
 		listeners.Delete(Database::Key(this));
 		Database::collidablelistener.Close(Simulatable::id);
 	}

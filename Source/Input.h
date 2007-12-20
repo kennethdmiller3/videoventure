@@ -25,7 +25,7 @@ public:
 		bool pressed;	// pressed this turn
 		bool released;	// released this turn
 	};
-	typedef stdext::hash_multimap<int, Binding> Map;
+	typedef std::multimap<int, Binding> Map;
 	Map map;
 
 public:

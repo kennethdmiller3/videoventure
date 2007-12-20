@@ -6,7 +6,7 @@ namespace Database
 {
 	Typed<DamagableTemplate> damagabletemplate("damagabletemplate");
 	Typed<Damagable *> damagable("damagable");
-	Typed<Typed<Damagable::Listener *> > damagablelistener("damagablelistener");
+	Typed<Typed<Damagable::Listener> > damagablelistener("damagablelistener");
 }
 
 
@@ -49,9 +49,9 @@ Damagable::~Damagable(void)
 void Damagable::Damage(unsigned int aSourceId, float aDamage)
 {
 	mHealth -= aDamage;
-	for (Database::Typed<Listener *>::Iterator itor(Database::damagablelistener.Find(id)); itor.IsValid(); ++itor)
+	for (Database::Typed<Listener>::Iterator itor(Database::damagablelistener.Find(id)); itor.IsValid(); ++itor)
 	{
-		itor.GetValue()->Damage(aSourceId, aDamage);
+		itor.GetValue()(aSourceId, aDamage);
 	}
 	if (mHealth <= 0)
 	{
