@@ -23,7 +23,7 @@ protected:
 	float mHealth;
 
 public:
-	typedef fastdelegate::FastDelegate2<unsigned int, float> Listener;
+	typedef fastdelegate::FastDelegate<void (unsigned int, float)> Listener;
 
 public:
 	Damagable(void);

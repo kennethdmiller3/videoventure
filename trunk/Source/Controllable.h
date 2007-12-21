@@ -4,7 +4,7 @@ class Controllable
 {
 private:
 	// list of all controllables
-	typedef fastdelegate::FastDelegate1<float> Entry;
+	typedef fastdelegate::FastDelegate<void (float)> Entry;
 	typedef std::list<Entry> List;
 	static List sAll;
 
