@@ -42,12 +42,13 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;..\SDL-1.2.12\include&quot;,&quot;tinyxml&quot;,&quot;..\Box2D\Include&quot;"
+				AdditionalIncludeDirectories="&quot;..\SDL-1.2.12\include&quot;,&quot;tinyxml&quot;,&quot;..\Box2D\Include&quot;,&quot;..\FastDelegate&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CRT_SECURE_NO_WARNINGS"
 				StringPooling="true"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
+				EnableFunctionLevelLinking="true"
 				FloatingPointModel="2"
 				UsePrecompiledHeader="2"
 				BrowseInformation="1"
@@ -119,11 +120,12 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="2"
+				Optimization="1"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="&quot;..\SDL-1.2.12\include&quot;,&quot;tinyxml&quot;,&quot;..\Box2D\Include&quot;"
+				AdditionalIncludeDirectories="&quot;..\SDL-1.2.12\include&quot;,&quot;tinyxml&quot;,&quot;..\Box2D\Include&quot;,&quot;..\FastDelegate&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CRT_SECURE_NO_WARNINGS"
 				StringPooling="true"
+				ExceptionHandling="0"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
 				FloatingPointModel="2"
@@ -220,6 +222,10 @@
 			</File>
 			<File
 				RelativePath=".\Source\Input.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Interpolator.cpp"
 				>
 			</File>
 			<File
@@ -322,6 +328,10 @@
 			</File>
 			<File
 				RelativePath=".\Source\Input.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Interpolator.h"
 				>
 			</File>
 			<File

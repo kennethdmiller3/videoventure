@@ -45,10 +45,6 @@ const float ARENA_X_MAX = 2048;
 const float ARENA_Y_MIN = -2048;
 const float ARENA_Y_MAX = 2048;
 
-// collision layers
-const int COLLISION_LAYER_PLAYER_SHIP = 0;
-const int COLLISION_LAYER_PLAYER_BULLET = 1;
-
 // debug function
 extern int DebugPrint(const char *format, ...);
 
@@ -57,8 +53,8 @@ extern Input input;
 
 // loader
 void ProcessDrawItems(TiXmlElement *element);
-void ProcessDrawItemsDeferred(TiXmlElement *element, std::vector<unsigned int> &buffer);
-void ExecuteDeferredDrawItems(std::vector<unsigned int> &buffer);
+void ProcessDrawItemsDeferred(TiXmlElement *element, unsigned int id, std::vector<unsigned int> &buffer);
+void ExecuteDeferredDrawItems(const unsigned int buffer[], size_t count, float param);
 
 // configuration
 //#define ENABLE_DEPTH_TEST
