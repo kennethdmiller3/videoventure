@@ -430,13 +430,18 @@
 		</collidable>
 		<renderable>
 			<drawlist>
-				<color r="1.0" g="0.9" b="0.3" a="1.0"/>
-				<polygon>
+				<quads>
+					<color r="1.0" g="0.8" b="0.1" a="1.0"/>
+					<vertex x="-6" y="62"/>
+					<vertex x="6" y="62"/>
+					<vertex x="6" y="-62"/>
+					<vertex x="-6" y="-62"/>
+					<color r="1.0" g="1.0" b="1.0" a="1.0"/>
 					<vertex x="-8" y="64"/>
 					<vertex x="8" y="64"/>
 					<vertex x="8" y="-64"/>
 					<vertex x="-8" y="-64"/>
-				</polygon>
+				</quads>
 			</drawlist>
 		</renderable>
 	</template>
@@ -468,15 +473,30 @@
 		<explosion life="1.0">
 			<pushmatrix>
 				<color>
-					<linear time="0.10">
+					<linear time="0.2">
 						<start r="1.0" g="1.0" b="1.0" a="1.0"/>
 						<end   r="1.0" g="1.0" b="1.0" a="0.0"/>
 					</linear>
 				</color>
 				<scale>
-					<linear time="0.1">
+					<linear time="0.2">
 						<start x="20.0" y="20.0"/>
-						<end   x="10.0" y="10.0"/>
+						<end   x="0.0" y="0.0"/>
+					</linear>
+				</scale>
+				<calllist name="circle16"/>
+			</pushmatrix>
+			<pushmatrix>
+				<color>
+					<linear time="0.1">
+						<start r="1.0" g="1.0" b="1.0" a="0.1"/>
+						<end   r="1.0" g="1.0" b="1.0" a="0.0"/>
+					</linear>
+				</color>
+				<scale>
+					<linear time="0.1">
+						<start x="10.0" y="10.0"/>
+						<end   x="100.0" y="100.0"/>
 					</linear>
 				</scale>
 				<calllist name="circle16"/>
@@ -501,32 +521,32 @@
 				<calllist name="circle16"/>
 			</pushmatrix>
 			<pushmatrix>
-				<repeat count="3">
+				<repeat count="6">
 					<repeat count="6">
 						<pushmatrix>
 							<translate>
 								<linear time="0.25">
-									<start x="10" y="0"/>
-									<end   x="40" y="0"/>
+									<start x="0" y="0"/>
+									<end   x="10" y="0"/>
 								</linear>
 							</translate>
 							<color>
 								<linear time="0.25">
-									<start r="1.0" g="0.9" b="0.8" a="1.0"/>
-									<end   r="1.0" g="0.5" b="0.0" a="0.0"/>
+									<start r="1.0" g="0.7" b="0.4" a="0.5"/>
+									<end   r="1.0" g="0.0" b="0.0" a="0.0"/>
 								</linear>
 							</color>
 							<scale>
 								<linear time="0.25">
-									<start x="5.0" y="5.0"/>
-									<end   x="2.0" y="2.0"/>
+									<start x="1.5" y="0.3"/>
+									<end   x="0.5" y="0.3"/>
 								</linear>
 							</scale>
 							<calllist name="circle16"/>
 						</pushmatrix>
 						<rotate angle="60"/>
 					</repeat>
-					<scale x="0.75" y="0.75"/>
+					<scale x="1.5" y="1.5"/>
 					<rotate angle="20"/>
 				</repeat>
 			</pushmatrix>
@@ -1107,12 +1127,16 @@
 		<renderable>
 			<drawlist>
 				<color r="1.0" g="1.0" b="1.0" a="1.0"/>
-				<lines>
-					<vertex x="0" y="4"/>
-					<vertex x="0" y="-4"/>
-					<vertex x="4" y="0"/>
-					<vertex x="-4" y="0"/>
-				</lines>
+				<quads>
+					<vertex x="1" y="4"/>
+					<vertex x="-1" y="4"/>
+					<vertex x="-1" y="-4"/>
+					<vertex x="1" y="-4"/>
+					<vertex x="4" y="1"/>
+					<vertex x="4" y="-1"/>
+					<vertex x="-4" y="-1"/>
+					<vertex x="-4" y="1"/>
+				</quads>
 				<color r="0.2" g="1.0" b="0.1" a="1.0"/>
 				<pushmatrix>
 					<scale x="6" y="6"/>
