@@ -524,6 +524,7 @@ void ExecuteDeferredDrawItems(const unsigned int buffer[], size_t count, float p
 				int length = *itor++;
 				for (int i = 0; i < repeat; i++)
 					ExecuteDeferredDrawItems(itor, length, param);
+				itor += length;
 			}
 			break;
 
