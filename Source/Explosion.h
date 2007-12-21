@@ -3,7 +3,6 @@
 #include "Entity.h"
 #include "Simulatable.h"
 #include "Renderable.h"
-#include <map>
 
 class ExplosionTemplate
 {
@@ -11,32 +10,19 @@ public:
 	// life span
 	float mLifeSpan;
 
-	// explosion keyframes
-	struct Color { float r; float g; float b; float a; };
-	struct ColorLinear { float time; Color start; Color rate; };
-	typedef std::vector<ColorLinear> ColorKeys;
-	struct Scale { float x; float y; float z; };
-	struct ScaleLinear { float time; Scale start; Scale rate; };
-	typedef std::vector<ScaleLinear> ScaleKeys;
-	ColorKeys mCoreColor;
-	ScaleKeys mCoreScale;
-	ColorKeys mHaloColor;
-	ScaleKeys mHaloScale;
+	// drawlist buffer
+	std::vector<unsigned int> mBuffer;
 
 public:
 	ExplosionTemplate(void);
 	~ExplosionTemplate(void);
 
 	// configure
-	bool ConfigureScaleLinear(TiXmlElement *element, ExplosionTemplate::ScaleLinear &scale);
-	bool ConfigureScale(TiXmlElement *element, ScaleKeys &scalekeys);
-	bool ConfigureColorLinear(TiXmlElement *element, ExplosionTemplate::ColorLinear &color);
-	bool ConfigureColor(TiXmlElement *element, ColorKeys &colorkeys);
-	bool Configure(TiXmlElement *element);
+	bool Configure(TiXmlElement *element, unsigned int id);
 };
 
 class Explosion :
-	public ExplosionTemplate, Simulatable, public Renderable
+	public ExplosionTemplate, public Simulatable, public Renderable
 {
 public:
 	// allocation

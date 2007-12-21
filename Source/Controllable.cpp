@@ -7,7 +7,7 @@ Controllable::Controllable(unsigned int aId)
 : id(aId), entry(sAll.end())
 {
 	if (id > 0)
-		entry = sAll.insert(sAll.end(), this);
+		entry = sAll.insert(sAll.end(), Entry(this, &Controllable::Control));
 }
 
 Controllable::~Controllable(void)
@@ -28,7 +28,7 @@ void Controllable::ControlAll(float aStep)
 		++next;
 
 		// control
-		(*itor)->Control(aStep);
+		(*itor)(aStep);
 
 		// go to the next iterator
 		itor = next;

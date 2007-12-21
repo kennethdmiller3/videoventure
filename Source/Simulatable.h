@@ -4,7 +4,8 @@ class Simulatable
 {
 private:
 	// list of all simulatables
-	typedef std::list<Simulatable *> List;
+	typedef fastdelegate::FastDelegate1<float> Entry;
+	typedef std::list<Entry> List;
 	static List sAll;
 
 	// list entry

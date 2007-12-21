@@ -7,7 +7,7 @@ Simulatable::Simulatable(unsigned int aId)
 : id(aId), entry(sAll.end())
 {
 	if (id > 0)
-		entry = sAll.insert(sAll.end(), this);
+		entry = sAll.insert(sAll.end(), Entry(this, &Simulatable::Simulate));
 }
 
 Simulatable::~Simulatable(void)
@@ -28,7 +28,7 @@ void Simulatable::SimulateAll(float aStep)
 		++next;
 
 		// simulate
-		(*itor)->Simulate(aStep);
+		(*itor)(aStep);
 
 		// go to the next iterator
 		itor = next;
