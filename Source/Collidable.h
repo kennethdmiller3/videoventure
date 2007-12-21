@@ -66,7 +66,7 @@ protected:
 	bool SetupJointDef(b2JointDef &joint);
 
 public:
-	typedef fastdelegate::FastDelegate3<Collidable &, b2Manifold[], int> Listener;
+	typedef fastdelegate::FastDelegate<void (Collidable &, b2Manifold[], int)> Listener;
 
 public:
 	Collidable(void);
