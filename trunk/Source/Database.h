@@ -79,7 +79,12 @@ namespace Database
 		};
 
 	public:
-		Untyped(unsigned int mId, size_t aStride, size_t aBits);
+		Untyped(unsigned int aId, size_t aStride, size_t aBits);
+		Untyped(const Untyped &aSource)
+			: mId(0)
+		{
+			assert(false);
+		}
 		virtual ~Untyped();
 
 		const Untyped &operator=(const Untyped &aSource)
@@ -280,4 +285,7 @@ namespace Database
 
 	// update the database system
 	void Update(void);
+
+	// clean up all databases
+	void Cleanup(void);
 }

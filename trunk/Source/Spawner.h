@@ -32,6 +32,12 @@ protected:
 	float mTimer;
 
 public:
+#ifdef USE_POOL_ALLOCATOR
+	// allocation
+	void *operator new(size_t aSize);
+	void operator delete(void *aPtr);
+#endif
+
 	Spawner(void);
 	Spawner(const SpawnerTemplate &aTemplate, unsigned int aId);
 	virtual ~Spawner(void);

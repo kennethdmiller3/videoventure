@@ -10,9 +10,6 @@ public:
 	// life span
 	float mLifeSpan;
 
-	// drawlist buffer
-	std::vector<unsigned int> mBuffer;
-
 public:
 	ExplosionTemplate(void);
 	~ExplosionTemplate(void);
@@ -22,7 +19,7 @@ public:
 };
 
 class Explosion :
-	public Simulatable, public Renderable
+	public Simulatable
 {
 public:
 #ifdef USE_POOL_ALLOCATOR
@@ -41,9 +38,6 @@ public:
 
 	// simulate
 	virtual void Simulate(float aStep);
-
-	// render
-	virtual void Render(const Matrix2 &transform);
 };
 
 namespace Database

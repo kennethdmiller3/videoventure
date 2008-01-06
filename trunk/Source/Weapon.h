@@ -34,6 +34,12 @@ protected:
 	int mPhase;
 
 public:
+#ifdef USE_POOL_ALLOCATOR
+	// allocation
+	void *operator new(size_t aSize);
+	void operator delete(void *aPtr);
+#endif
+
 	Weapon(void);
 	Weapon(const WeaponTemplate &aTemplate, unsigned int aId);
 	virtual ~Weapon(void);

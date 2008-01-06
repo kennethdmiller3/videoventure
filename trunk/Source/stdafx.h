@@ -57,8 +57,10 @@ extern Input input;
 void ProcessTemplateItem(TiXmlElement *element, unsigned int template_id);
 void ProcessTemplateItems(TiXmlElement *element);
 void ProcessEntityItems(TiXmlElement *element);
+void ProcessDrawItem(TiXmlElement *element);
 void ProcessDrawItems(TiXmlElement *element);
-void ProcessDrawItemsDeferred(TiXmlElement *element, unsigned int id, std::vector<unsigned int> &buffer);
+void ProcessDrawItemDeferred(TiXmlElement *element, std::vector<unsigned int> &buffer);
+void ProcessDrawItemsDeferred(TiXmlElement *element, std::vector<unsigned int> &buffer);
 void ExecuteDeferredDrawItems(const unsigned int buffer[], size_t count, float param);
 
 // configuration
@@ -68,3 +70,5 @@ void ExecuteDeferredDrawItems(const unsigned int buffer[], size_t count, float p
 // for consistency between AA modes
 #define ENABLE_SRC_ALPHA_SATURATE
 #define DRAW_FRONT_TO_BACK
+
+#define USE_POOL_ALLOCATOR

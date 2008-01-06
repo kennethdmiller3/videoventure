@@ -26,8 +26,17 @@ class Aimer :
 {
 protected:
 	unsigned int mTarget;
+	float mLeading;
+	float mDelay;
+
 
 public:
+#ifdef USE_POOL_ALLOCATOR
+	// allocation
+	void *operator new(size_t aSize);
+	void operator delete(void *aPtr);
+#endif
+
 	Aimer(const AimerTemplate &aTemplate, unsigned int aId = 0);
 	virtual ~Aimer(void);
 

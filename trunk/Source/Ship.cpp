@@ -4,6 +4,23 @@
 #include "Collidable.h"
 #include "Controller.h"
 
+
+#ifdef USE_POOL_ALLOCATOR
+#include <boost/pool/pool.hpp>
+
+// ship pool
+static boost::pool<boost::default_user_allocator_malloc_free> pool(sizeof(Ship));
+void *Ship::operator new(size_t aSize)
+{
+	return pool.malloc();
+}
+void Ship::operator delete(void *aPtr)
+{
+	pool.free(aPtr);
+}
+#endif
+
+
 namespace Database
 {
 	Typed<ShipTemplate> shiptemplate(0xf71a421d /* "shiptemplate" */);

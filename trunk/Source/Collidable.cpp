@@ -1,7 +1,22 @@
 #include "StdAfx.h"
 #include "Collidable.h"
 #include "Entity.h"
-#include <typeinfo>
+
+#ifdef USE_POOL_ALLOCATOR
+#include <boost/pool/pool.hpp>
+
+// collidable pool
+static boost::pool<boost::default_user_allocator_malloc_free> pool(sizeof(Collidable));
+void *Collidable::operator new(size_t aSize)
+{
+	return pool.malloc();
+}
+void Collidable::operator delete(void *aPtr)
+{
+	pool.free(aPtr);
+}
+#endif
+
 
 namespace Database
 {

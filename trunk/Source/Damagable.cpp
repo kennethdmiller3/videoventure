@@ -2,6 +2,22 @@
 #include "Damagable.h"
 #include "Entity.h"
 
+#ifdef USE_POOL_ALLOCATOR
+#include <boost/pool/pool.hpp>
+
+// damagable pool
+static boost::pool<boost::default_user_allocator_malloc_free> pool(sizeof(Damagable));
+void *Damagable::operator new(size_t aSize)
+{
+	return pool.malloc();
+}
+void Damagable::operator delete(void *aPtr)
+{
+	pool.free(aPtr);
+}
+#endif
+
+
 namespace Database
 {
 	Typed<DamagableTemplate> damagabletemplate(0x5e73241b /* "damagabletemplate" */);

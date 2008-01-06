@@ -2,6 +2,22 @@
 #include "Spawner.h"
 #include "Entity.h"
 
+#ifdef USE_POOL_ALLOCATOR
+#include <boost/pool/pool.hpp>
+
+// spawner pool
+static boost::pool<boost::default_user_allocator_malloc_free> pool(sizeof(Spawner));
+void *Spawner::operator new(size_t aSize)
+{
+	return pool.malloc();
+}
+void Spawner::operator delete(void *aPtr)
+{
+	pool.free(aPtr);
+}
+#endif
+
+
 namespace Database
 {
 	Typed<SpawnerTemplate> spawnertemplate(0x8b6ef6ad /* "spawnertemplate" */);
@@ -41,7 +57,12 @@ namespace Database
 
 // spawner template constructor
 SpawnerTemplate::SpawnerTemplate(void)
-: mOffset(Vector2(1, 0), Vector2(0, 1), Vector2(0, 0)), mVelocity(0, 0), mSpawn(0), mStart(0), mCycle(0), mTrack(false)
+: mOffset(Vector2(1, 0), Vector2(0, 1), Vector2(0, 0))
+, mVelocity(0, 0)
+, mSpawn(0)
+, mStart(0)
+, mCycle(0)
+, mTrack(false)
 {
 }
 

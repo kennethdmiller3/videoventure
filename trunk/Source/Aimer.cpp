@@ -6,6 +6,22 @@
 #include "Weapon.h"
 
 
+#ifdef USE_POOL_ALLOCATOR
+#include <boost/pool/pool.hpp>
+
+// aimer pool
+static boost::pool<boost::default_user_allocator_malloc_free> pool(sizeof(Aimer));
+void *Aimer::operator new(size_t aSize)
+{
+	return pool.malloc();
+}
+void Aimer::operator delete(void *aPtr)
+{
+	pool.free(aPtr);
+}
+#endif
+
+
 namespace Database
 {
 	Typed<AimerTemplate> aimertemplate(0x9bde0ae7 /* "aimertemplate" */);
@@ -71,7 +87,15 @@ bool AimerTemplate::Configure(TiXmlElement *element)
 Aimer::Aimer(const AimerTemplate &aTemplate, unsigned int aId)
 : Controller(aId)
 , mTarget(0)
+, mDelay(0.0f)
+, mLeading(0.0f)
 {
+	// get weapon template (if any)
+	for (Database::Typed<LinkTemplate>::Iterator itor(Database::linktemplate.Find(id)); itor.IsValid(); ++itor)
+	{
+		if (const WeaponTemplate *w = Database::weapontemplate.Find(itor.GetValue().mSecondary))
+			mLeading = w->mVelocity.y;
+	}
 }
 
 Aimer::~Aimer(void)
@@ -81,8 +105,8 @@ Aimer::~Aimer(void)
 Vector2 Aimer::LeadTarget( const Vector2 &startPosition, float bulletSpeed, const Vector2 &targetPosition, const Vector2 &targetVelocity )
 {
 	// extremely simple leading based on distance
-	Vector2 dpos = targetPosition - startPosition;
-	return dpos + targetVelocity * dpos.Length() / bulletSpeed;
+	Vector2 deltaPosition = targetPosition - startPosition;
+	return deltaPosition + targetVelocity * deltaPosition.Length() / bulletSpeed;
 }
 
 // Aimer Control
@@ -101,102 +125,106 @@ void Aimer::Control(float aStep)
 	// get aimer template
 	const AimerTemplate &aimer = Database::aimertemplate.Get(id);
 
-	// get the collision world
-	b2World *world = Collidable::GetWorld();
-
-	// get nearby shapes
-	b2AABB aabb;
-	const float lookRadius = aimer.mRange;
-	aabb.minVertex.Set(entity->GetPosition().x - lookRadius, entity->GetPosition().y - lookRadius);
-	aabb.maxVertex.Set(entity->GetPosition().x + lookRadius, entity->GetPosition().y + lookRadius);
-	const int32 maxCount = 256;
-	b2Shape* shapes[maxCount];
-	int32 count = world->Query(aabb, shapes, maxCount);
-
-	// get team affiliation
-	unsigned int aTeam = Database::team.Get(id);
-
-	// no target yet
-	unsigned int bestTargetId = 0;
-	float bestRange = FLT_MAX;
-
-	// world-to-local transform
-	Matrix2 transform(entity->GetTransform().Inverse());
-
-	// for each shape...
-	for (int32 i = 0; i < count; ++i)
+	// if ready to search...
+	mDelay -= aStep;
+	if (mDelay <= 0.0f)
 	{
-		// get the parent body
-		b2Body* body = shapes[i]->m_body;
+		// update the timer
+		mDelay += 0.25f;
 
-		// get the collidable id
-		unsigned int targetId = reinterpret_cast<unsigned int>(body->GetUserData());
+		// get the collision world
+		b2World *world = Collidable::GetWorld();
 
-		// skip non-entity
-		if (targetId == 0)
-			continue;
-
-		// skip self
-		if (targetId == id)
-			continue;
+		// get nearby shapes
+		b2AABB aabb;
+		const float lookRadius = aimer.mRange;
+		aabb.minVertex.Set(entity->GetPosition().x - lookRadius, entity->GetPosition().y - lookRadius);
+		aabb.maxVertex.Set(entity->GetPosition().x + lookRadius, entity->GetPosition().y + lookRadius);
+		const int32 maxCount = 256;
+		b2Shape* shapes[maxCount];
+		int32 count = world->Query(aabb, shapes, maxCount);
 
 		// get team affiliation
-		unsigned int targetTeam = Database::team.Get(targetId);
+		unsigned int aTeam = Database::team.Get(id);
 
-		// skip neutral
-		if (targetTeam == 0)
-			continue;
+		// no target yet
+		unsigned int bestTargetId = 0;
+		float bestRange = FLT_MAX;
 
-		// skip teammate
-		if (targetTeam == aTeam)
-			continue;
+		// world-to-local transform
+		Matrix2 transform(entity->GetTransform().Inverse());
 
-		// get range
-		Vector2 dir(transform.Transform(Vector2(shapes[i]->GetPosition())));
-		float range = dir.LengthSq();
-
-		// skip if out of range
-		if (range > aimer.mRange * aimer.mRange)
-			continue;
-
-		// if not the current target...
-		if (targetId != mTarget)
+		// for each shape...
+		for (int32 i = 0; i < count; ++i)
 		{
-			// bias range
-			range *= aimer.mFocus;
+			// get the parent body
+			b2Body* body = shapes[i]->m_body;
+
+			// get the collidable id
+			unsigned int targetId = reinterpret_cast<unsigned int>(body->GetUserData());
+
+			// skip non-entity
+			if (targetId == 0)
+				continue;
+
+			// skip self
+			if (targetId == id)
+				continue;
+
+			// get team affiliation
+			unsigned int targetTeam = Database::team.Get(targetId);
+
+			// skip neutral
+			if (targetTeam == 0)
+				continue;
+
+			// skip teammate
+			if (targetTeam == aTeam)
+				continue;
+
+			// get range
+			Vector2 dir(transform.Transform(Vector2(shapes[i]->GetPosition())));
+			float range = dir.LengthSq();
+
+			// skip if out of range
+			if (range > aimer.mRange * aimer.mRange)
+				continue;
+
+			// if not the current target...
+			if (targetId != mTarget)
+			{
+				// bias range
+				range *= aimer.mFocus;
+			}
+
+			// if better than the current range
+			if (bestRange > range)
+			{
+				// use the new target
+				bestRange = range;
+				bestTargetId = targetId;
+			}
 		}
 
-		// if better than the current range
-		if (bestRange > range)
-		{
-			// use the new target
-			bestRange = range;
-			bestTargetId = targetId;
-		}
+		// use the new target
+		mTarget = bestTargetId;
 	}
-
-	// use the new target
-	mTarget = bestTargetId;
 
 	// do nothing if no target
 	if (!mTarget)
 		return;
 
-	// get weapon template (if any)
-	const WeaponTemplate *weapon = NULL;
-	for (Database::Typed<Link *>::Iterator itor(Database::link.Find(id)); itor.IsValid(); ++itor)
-	{
-		if (const WeaponTemplate *w = Database::weapontemplate.Find(itor.GetValue()->GetSecondary()))
-			weapon = w;
-	}
+	// get the target entity
+	Entity *targetEntity = Database::entity.Get(mTarget);
+	if (!targetEntity)
+		return;
 
 	// aim at target lead position
-	Entity *targetEntity = Database::entity.Get(mTarget);
-	if (weapon && weapon->mVelocity.y > 0)
+	if (mLeading > 0.0f)
 	{
 		mAim = LeadTarget(
 			entity->GetPosition(),
-			weapon->mVelocity.y,
+			mLeading,
 			targetEntity->GetPosition(),
 			targetEntity->GetVelocity()
 			);

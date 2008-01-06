@@ -3,8 +3,11 @@
 class RenderableTemplate
 {
 public:
-	// draw list
-	GLuint mDraw;
+	// drawlist buffer
+	std::vector<unsigned int> mBuffer;
+
+	// period
+	float mPeriod;
 
 public:
 	RenderableTemplate(void);
@@ -30,12 +33,19 @@ private:
 
 protected:
 	// time offset
+	static unsigned int sTurn;
 	static float sOffset;
 
-	// draw list
-	GLuint mDraw;
+	// creation turn
+	unsigned int mStart;
 
 public:
+#ifdef USE_POOL_ALLOCATOR
+	// allocation
+	void *operator new(size_t aSize);
+	void operator delete(void *aPtr);
+#endif
+
 	Renderable(void);
 	Renderable(const RenderableTemplate &aTemplate, unsigned int aId);
 	~Renderable(void);
@@ -44,9 +54,15 @@ public:
 	void Show(void);
 	void Hide(void);
 
+	// set turn
+	static void SetTurn(unsigned int aTurn)
+	{
+		sTurn = aTurn;
+	}
+
 	// render
 	static void RenderAll(float aRatio, float aStep);
-	virtual void Render(const Matrix2 &transform);
+	virtual void Render(const Matrix2 &aTransform, float aStep);
 };
 
 namespace Database

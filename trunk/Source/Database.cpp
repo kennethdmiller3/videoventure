@@ -11,6 +11,7 @@
 #include "Gunner.h"
 #include "Aimer.h"
 #include <new>
+#include <deque>
 
 namespace Database
 {
@@ -384,6 +385,16 @@ namespace Database
 	// COMPONENT SYSTEM
 	//
 
+	// activation queue
+	std::deque<unsigned int> activatequeue;
+
+	// deactivation queue
+	std::deque<unsigned int> deactivatequeue;
+
+	// deletion queue
+	std::deque<unsigned int> deletequeue;
+
+
 	// instantiate a template
 	unsigned int Instantiate(unsigned int aTemplateId, float aAngle, Vector2 aPosition, Vector2 aVelocity)
 	{
@@ -406,7 +417,6 @@ namespace Database
 		entity->SetVelocity(aVelocity);
 		entity->Step();
 		Database::entity.Put(aInstanceId, entity);
-		assert(Database::entity.Get(aInstanceId) == entity);
 
 		// activate the instance identifier
 		Activate(aInstanceId);
@@ -436,57 +446,89 @@ namespace Database
 	// activate an identifier
 	void Activate(unsigned int aId)
 	{
-		// initialize entity
-		Entity *entity = Database::entity.Get(aId);
+		// queue activation
+		activatequeue.push_back(aId);
 
-		// for each activation initializer...
-		for (Typed<Initializer::Entry>::Iterator itor(&Initializer::GetActivate()); itor.IsValid(); ++itor)
+		// defer activation if busy
+		if (activatequeue.size() > 1)
+			return;
+
+		// process queued activations
+		while (!activatequeue.empty())
 		{
-			// if the corresponding database has a record...
-			if (GetDatabases().Get(itor.GetKey())->Find(aId))
-			{
-				// call the initializer
-				itor.GetValue()(aId);
-			}
-		}
+			// get the first entry
+			unsigned int aId = activatequeue.front();
 
-		// initialize entity (HACK)
-		entity->Init();
+			// initialize entity
+			Entity *entity = Database::entity.Get(aId);
+
+			// for each activation initializer...
+			for (Typed<Initializer::Entry>::Iterator itor(&Initializer::GetActivate()); itor.IsValid(); ++itor)
+			{
+				// if the corresponding database has a record...
+				if (GetDatabases().Get(itor.GetKey())->Find(aId))
+				{
+					// call the initializer
+					itor.GetValue()(aId);
+				}
+			}
+
+			// initialize entity (HACK)
+			entity->Init();
+
+			// remove from the queue
+			activatequeue.pop_front();
+		}
 	}
 
 	// deactivate an identifier
 	void Deactivate(unsigned int aId)
 	{
-		// for each deactivation initializer...
-		for (Typed<Initializer::Entry>::Iterator itor(&Initializer::GetDeactivate()); itor.IsValid(); ++itor)
-		{
-			// if the corresponding database has a record...
-			if (GetDatabases().Get(itor.GetKey())->Find(aId))
-			{
-				// call the initializer
-				itor.GetValue()(aId);
-			}
-		}
+		// queue deactivation
+		deactivatequeue.push_back(aId);
 
-		// remove runtime components without templates
-		if (Player *p = player.Get(aId))
+		// defer deactivation if busy
+		if (deactivatequeue.size() > 1)
+			return;
+
+		// process queued deactivations
+		while (!deactivatequeue.empty())
 		{
-			delete p;
-			player.Delete(aId);
-		}
-		if (Gunner *g = gunner.Get(aId))
-		{
-			delete g;
-			gunner.Delete(aId);
+			// get the first entry
+			unsigned int aId = deactivatequeue.front();
+
+			// for each deactivation initializer...
+			for (Typed<Initializer::Entry>::Iterator itor(&Initializer::GetDeactivate()); itor.IsValid(); ++itor)
+			{
+				// if the corresponding database has a record...
+				if (GetDatabases().Get(itor.GetKey())->Find(aId))
+				{
+					// call the initializer
+					itor.GetValue()(aId);
+				}
+			}
+
+			// remove runtime components without templates
+			if (Player *p = player.Get(aId))
+			{
+				delete p;
+				player.Delete(aId);
+			}
+			if (Gunner *g = gunner.Get(aId))
+			{
+				delete g;
+				gunner.Delete(aId);
+			}
+
+			// remove from the queue
+			deactivatequeue.pop_front();
 		}
 	}
-
-	// deletion queue
-	std::vector<unsigned int> deletequeue(64);
 
 	// delete an identifier
 	void Delete(unsigned int aId)
 	{
+		// defer deletion
 		deletequeue.push_back(aId);
 	}
 
@@ -510,8 +552,23 @@ namespace Database
 	// update the database system
 	void Update(void)
 	{
-		for (std::vector<unsigned int>::iterator itor = deletequeue.begin(); itor != deletequeue.end(); ++itor)
-			Destroy(*itor);
-		deletequeue.clear();
+		while (!deletequeue.empty())
+		{
+			unsigned int aId = deletequeue.front();
+			deletequeue.pop_front();
+			Destroy(aId);
+		}
+	}
+
+	// clean up all databases
+	void Cleanup(void)
+	{
+		// deactivate all instances
+		for (Typed<Entity *>::Iterator itor(&entity); itor.IsValid(); ++itor)
+			Deactivate(itor.GetKey());
+
+		// clear all registered databases
+		for (Typed<Untyped *>::Iterator itor(&GetDatabases()); itor.IsValid(); ++itor)
+			itor.GetValue()->Clear();
 	}
 }
