@@ -76,7 +76,7 @@ bool RenderableTemplate::Configure(TiXmlElement *element)
 	element->QueryFloatAttribute("period", &mPeriod);
 
 	// process child elements
-	ProcessDrawItemsDeferred(element, mBuffer);
+	ProcessDrawItems(element, mBuffer);
 
 	return true;
 }
@@ -192,5 +192,5 @@ void Renderable::Render(const Matrix2 &aTransform, float aStep)
 		return;
 
 	// execute the deferred draw list
-	ExecuteDeferredDrawItems(&renderable.mBuffer[0], renderable.mBuffer.size(), t);
+	ExecuteDrawItems(&renderable.mBuffer[0], renderable.mBuffer.size(), t);
 };
