@@ -56,6 +56,28 @@ public:
 		return *this;
 	}
 
+	friend const Vector2 operator*(const Vector2 &v1, const Vector2 &v2)
+	{
+		return Vector2(v1.x * v2.x, v1.y * v2.y);
+	}
+
+	Vector2 &operator*=(const Vector2 &v)
+	{
+		*this = *this * v;
+		return *this;
+	}
+
+	friend const Vector2 operator/(const Vector2 &v1, const Vector2 &v2)
+	{
+		return Vector2(v1.x / v2.x, v1.y / v2.y);
+	}
+
+	Vector2 &operator/=(const Vector2 &v)
+	{
+		*this = *this / v;
+		return *this;
+	}
+
 	friend const Vector2 operator*(const Vector2 &v, const float s)
 	{
 		return Vector2(v.x * s, v.y * s);

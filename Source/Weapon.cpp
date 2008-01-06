@@ -61,6 +61,7 @@ namespace Database
 
 WeaponTemplate::WeaponTemplate(void)
 : mOffset(Vector2(1, 0), Vector2(0, 1), Vector2(0, 0))
+, mInherit(1, 1)
 , mVelocity(0, 0)
 , mOrdnance(0)
 , mDelay(1.0f)
@@ -91,6 +92,13 @@ bool WeaponTemplate::Configure(TiXmlElement *element)
 				float angle = 0.0f;
 				if (child->QueryFloatAttribute("angle", &angle) == TIXML_SUCCESS)
 					mOffset = Matrix2(angle * float(M_PI) / 180.0f, mOffset.p);
+			}
+			break;
+
+		case 0xca04efe0 /* "inherit" */:
+			{
+				child->QueryFloatAttribute("x", &mInherit.x);
+				child->QueryFloatAttribute("y", &mInherit.y);
 			}
 			break;
 
@@ -181,7 +189,7 @@ void Weapon::Simulate(float aStep)
 
 				// instantiate a bullet
 				Matrix2 transform(weapon.mOffset * entity->GetInterpolatedTransform(mTimer / aStep));
-				Vector2 velocity(entity->GetVelocity() + transform.Rotate(weapon.mVelocity));
+				Vector2 velocity(transform.Rotate(weapon.mInherit * transform.Unrotate(entity->GetVelocity()) + weapon.mVelocity));
 				unsigned int ordId = Database::Instantiate(weapon.mOrdnance,
 					transform.Angle(), transform.p, velocity);
 

@@ -7,6 +7,7 @@ class SpawnerTemplate
 public:
 	// offset
 	Matrix2 mOffset;
+	Vector2 mInherit;
 	Vector2 mVelocity;
 
 	// item to spawn

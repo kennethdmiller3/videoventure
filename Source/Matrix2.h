@@ -34,13 +34,14 @@ public:
 
 	Matrix2 Inverse(void) const
 	{
-		float a = x.x, b = y.x, c = x.y, d = y.y;
+		// transpose of an orthonormal matrix is its inverse
 		Matrix2 B;
-		float det = a * d - b * c;
-		det = 1.0f / det;
-		B.x.x =  det * a;	B.y.x = -det * c;
-		B.x.y = -det * b;	B.y.y =  det * d;
-		B.p   = -p.x * x + -p.y * y;
+		B.x.x = x.x;
+		B.x.y = y.x;
+		B.y.x = x.y;
+		B.y.y = y.y;
+		B.p.x = -x.Dot(p);
+		B.p.y = -y.Dot(p);
 		return B;
 	}
 
@@ -49,9 +50,19 @@ public:
 		return x * v.x + y * v.y + p;
 	}
 
+	Vector2 Untransform(const Vector2 &v) const
+	{
+		return Unrotate(v - p);
+	}
+
 	Vector2 Rotate(const Vector2 &v) const
 	{
 		return x * v.x + y * v.y;
+	}
+	
+	Vector2 Unrotate(const Vector2 &v) const
+	{
+		return Vector2(x.Dot(v), y.Dot(v));
 	}
 
 	float Angle(void) const

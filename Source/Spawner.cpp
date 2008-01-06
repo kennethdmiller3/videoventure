@@ -59,6 +59,7 @@ namespace Database
 // spawner template constructor
 SpawnerTemplate::SpawnerTemplate(void)
 : mOffset(Vector2(1, 0), Vector2(0, 1), Vector2(0, 0))
+, mInherit(1, 1)
 , mVelocity(0, 0)
 , mSpawn(0)
 , mStart(0)
@@ -91,6 +92,13 @@ bool SpawnerTemplate::Configure(TiXmlElement *element)
 				float angle = 0.0f;
 				if (child->QueryFloatAttribute("angle", &angle) == TIXML_SUCCESS)
 					mOffset = Matrix2(angle * float(M_PI) / 180.0f, mOffset.p);
+			}
+			break;
+
+		case 0xca04efe0 /* "inherit" */:
+			{
+				child->QueryFloatAttribute("x", &mInherit.x);
+				child->QueryFloatAttribute("y", &mInherit.y);
 			}
 			break;
 
@@ -176,7 +184,8 @@ void Spawner::Simulate(float aStep)
 		{
 			// instantiate the spawn entity
 			Matrix2 transform(spawner.mOffset * entity->GetInterpolatedTransform(mTimer / aStep));
-			mSpawn = Database::Instantiate(spawner.mSpawn, transform.Angle(), transform.p, entity->GetVelocity() + transform.Rotate(spawner.mVelocity));
+			Vector2 velocity(transform.Rotate(spawner.mInherit * transform.Unrotate(entity->GetVelocity()) + spawner.mVelocity));
+			mSpawn = Database::Instantiate(spawner.mSpawn, transform.Angle(), transform.p, velocity);
 
 			// if the spawner has a team...
 			unsigned int team = Database::team.Get(id);

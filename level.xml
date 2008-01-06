@@ -867,7 +867,7 @@
 				</pushmatrix>
 			</drawlist>
 		</renderable>
-		<bullet life="2" damage="1" spawnondeath="enemybulletexplosion"/>
+		<bullet life="1" damage="1" spawnonimpact="enemybulletexplosion"/>
 	</template>
 
 
@@ -881,7 +881,110 @@
 		</weapon>
 	</template>
 
+	
+	<!-- enemy explosion -->
 
+	<template name="enemyexplosion" type="">
+		<explosion life="3.0"/>
+		<renderable>
+			<pushmatrix>
+				<color>
+					<linear time="0.4">
+						<start r="1.0" g="1.0" b="1.0" a="1.0"/>
+						<end   r="1.0" g="1.0" b="1.0" a="0.0"/>
+					</linear>
+				</color>
+				<scale>
+					<linear time="0.4">
+						<start x="30.0" y="30.0"/>
+						<end   x="0.0" y="0.0"/>
+					</linear>
+				</scale>
+				<calllist name="circle16"/>
+			</pushmatrix>
+			<pushmatrix>
+				<color>
+					<linear time="0.2">
+						<start r="1.0" g="1.0" b="1.0" a="0.1"/>
+						<end   r="1.0" g="1.0" b="1.0" a="0.0"/>
+					</linear>
+				</color>
+				<scale>
+					<linear time="0.2">
+						<start x="30.0" y="30.0"/>
+						<end   x="150.0" y="150.0"/>
+					</linear>
+				</scale>
+				<calllist name="circle32"/>
+			</pushmatrix>
+			<pushmatrix>
+				<color>
+					<linear time="1.5">
+						<start r="1.0" g="0.9" b="0.8" a="1.0"/>
+						<end   r="1.0" g="0.5" b="0.0" a="0.25"/>
+					</linear>
+					<linear time="1.5">
+						<start r="1.0" g="0.5" b="0.0" a="0.25"/>
+						<end   r="1.0" g="0.0" b="0.0" a="0.0"/>
+					</linear>
+				</color>
+				<scale>
+					<linear time="3.0">
+						<start x="10.0" y="10.0"/>
+						<end   x="0.0" y="0.0"/>
+					</linear>
+				</scale>
+				<calllist name="circle16"/>
+			</pushmatrix>
+			<pushmatrix>
+				<repeat count="6">
+					<repeat count="6">
+						<pushmatrix>
+							<translate>
+								<linear time="0.8">
+									<start x="0" y="0"/>
+									<end   x="80" y="0"/>
+								</linear>
+							</translate>
+							<color>
+								<linear time="0.8">
+									<start r="1.0" g="0.7" b="0.4" a="0.5"/>
+									<end   r="1.0" g="0.0" b="0.0" a="0.0"/>
+								</linear>
+							</color>
+							<scale>
+								<linear time="0.8">
+									<start x="5.0" y="0.5"/>
+									<end   x="0.5" y="0.5"/>
+								</linear>
+							</scale>
+							<calllist name="circle16"/>
+						</pushmatrix>
+						<rotate angle="60"/>
+					</repeat>
+					<scale x="1.25" y="1.25"/>
+					<rotate angle="20"/>
+				</repeat>
+			</pushmatrix>
+			<pushmatrix>
+				<color>
+					<linear time="1.0">
+						<start r="1.0" g="0.7" b="0.4" a="0.5"/>
+						<end   r="1.0" g="0.0" b="0.0" a="0.0"/>
+					</linear>
+				</color>
+				<scale>
+					<linear time="1.0">
+						<start x="15.0" y="15.0"/>
+						<end   x="50.0" y="50.0"/>
+					</linear>
+				</scale>
+				<calllist name="circle16"/>
+			</pushmatrix>
+		</renderable>
+	</template>
+
+	
 	<!-- enemy turret -->
 
 	<template name="enemycannon" type="enemyweapon">
@@ -970,7 +1073,7 @@
 		<aimer range="512" attack="384"/>
 		<team name="enemy"/>
 		<ship maxveloc="0" maxaccel="0" friction="0" maxomega="2"/>
-		<damagable health="10" spawnondeath="targetexplosion"/>
+		<damagable health="10" spawnondeath="enemyexplosion"/>
 	</template>
 
 	<template name="enemyturret1" type="enemyturret">
@@ -1371,12 +1474,112 @@
 		</renderable>
 		<aimer range="512" attack="256"/>
 		<ship maxveloc="120" maxaccel="30" friction="10" maxomega="5"/>
-		<damagable health="3" spawnondeath="targetexplosion"/>
+		<damagable health="3" spawnondeath="enemyexplosion"/>
 		<weapon>
 			<velocity x="0" y="360"/>
 			<ordnance name="enemyfireball"/>
 			<shot delay="0.3"/>
 		</weapon>
+		<team name="enemy"/>
+	</template>
+
+	
+	<!-- enemy mine explosion -->
+
+	<template name="enemymineexplosion" type="">
+		<explosion life="1.0" damage="1" radius="96"/>
+		<renderable>
+			<pushmatrix>
+				<color>
+					<linear time="0.1">
+						<start r="1.0" g="1.0" b="1.0" a="1.0"/>
+						<end   r="1.0" g="1.0" b="1.0" a="0.0"/>
+					</linear>
+				</color>
+				<scale>
+					<linear time="0.1">
+						<start x="16.0" y="16.0"/>
+						<end   x="0.0" y="0.0"/>
+					</linear>
+				</scale>
+				<calllist name="circle16"/>
+			</pushmatrix>
+			<pushmatrix>
+				<color>
+					<linear time="0.15">
+						<start r="1.0" g="0.7" b="0.4" a="0.5"/>
+						<end   r="1.0" g="0.5" b="0.0" a="0.0"/>
+					</linear>
+				</color>
+				<scale>
+					<linear time="0.15">
+						<start x="32.0" y="32.0"/>
+						<end   x="96.0" y="96.0"/>
+					</linear>
+				</scale>
+				<calllist name="circle32"/>
+			</pushmatrix>
+			<pushmatrix>
+				<color>
+					<linear time="1.0">
+						<start r="1.0" g="0.9" b="0.8" a="1.0"/>
+						<end   r="1.0" g="0.5" b="0.0" a="0.0"/>
+					</linear>
+				</color>
+				<scale>
+					<linear time="1.0">
+						<start x="12.0" y="12.0"/>
+						<end   x="0.0" y="0.0"/>
+					</linear>
+				</scale>
+				<calllist name="circle16"/>
+			</pushmatrix>
+			<pushmatrix>
+				<repeat count="3">
+					<repeat count="6">
+						<pushmatrix>
+							<translate>
+								<linear time="0.4">
+									<start x="0" y="0"/>
+									<end   x="50" y="0"/>
+								</linear>
+							</translate>
+							<color>
+								<linear time="0.4">
+									<start r="1.0" g="0.7" b="0.4" a="0.5"/>
+									<end   r="1.0" g="0.0" b="0.0" a="0.0"/>
+								</linear>
+							</color>
+							<scale>
+								<linear time="0.4">
+									<start x="6.0" y="0.5"/>
+									<end   x="0.5" y="0.5"/>
+								</linear>
+							</scale>
+							<calllist name="circle16"/>
+						</pushmatrix>
+						<rotate angle="60"/>
+					</repeat>
+					<scale x="1.25" y="1.25"/>
+					<rotate angle="20"/>
+				</repeat>
+			</pushmatrix>
+			<pushmatrix>
+				<color>
+					<linear time="0.3">
+						<start r="1.0" g="0.7" b="0.4" a="0.5"/>
+						<end   r="1.0" g="0.0" b="0.0" a="0.0"/>
+					</linear>
+				</color>
+				<scale>
+					<linear time="0.3">
+						<start x="16.0" y="16.0"/>
+						<end   x="32.0" y="32.0"/>
+					</linear>
+				</scale>
+				<calllist name="circle16"/>
+			</pushmatrix>
+		</renderable>
 		<team name="enemy"/>
 	</template>
 
@@ -1386,7 +1589,7 @@
 	<template name="enemymine" type="">
 		<collidable>
 			<body name="main">
-				<circle radius="6">
+				<circle radius="16">
 					<friction value="0"/>
 					<restitution value="1"/>
 					<density value="0"/>
@@ -1404,15 +1607,15 @@
 			<pushmatrix>
 				<color>
 					<linear time="0.4">
-						<start r="1.0" g="0.25" b="0.0" a="0.25"/>
-						<end   r="1.0" g="0.75" b="0.0" a="0.25"/>
+						<start r="1.0" g="0.25" b="0.0" a="0.125"/>
+						<end   r="1.0" g="0.75" b="0.0" a="0.125"/>
 					</linear>
 					<linear time="0.4">
-						<start r="1.0" g="0.75" b="0.0" a="0.25"/>
-						<end   r="1.0" g="0.25" b="0.0" a="0.25"/>
+						<start r="1.0" g="0.75" b="0.0" a="0.125"/>
+						<end   r="1.0" g="0.25" b="0.0" a="0.125"/>
 					</linear>
 				</color>
-				<scale x="8" y="8"/>
+				<scale x="16" y="16"/>
 				<calllist name="circle12"/>
 			</pushmatrix>
 			<pushmatrix>
@@ -1424,8 +1627,8 @@
 				</color>
 				<scale>
 					<linear time="0.8">
-						<start x="5" y="5"/>
-						<end   x="15" y="15"/>
+						<start x="6" y="6"/>
+						<end   x="26" y="26"/>
 					</linear>
 				</scale>
 				<line_loop>
@@ -1448,12 +1651,12 @@
 				</color>
 				<scale>
 					<linear time="0.4">
-						<start x="10" y="10"/>
-						<end   x="15" y="15"/>
+						<start x="16" y="16"/>
+						<end   x="26" y="26"/>
 					</linear>
 					<linear time="0.4">
-						<start x="5" y="5"/>
-						<end   x="10" y="10"/>
+						<start x="6" y="6"/>
+						<end   x="16" y="16"/>
 					</linear>
 				</scale>
 				<line_loop>
@@ -1464,7 +1667,7 @@
 				</line_loop>
 			</pushmatrix>
 		</renderable>
-		<bullet life="30" damage="3" spawnondeath="enemyfireballexplosion" spawnonexpire="enemybulletexplosion"/>
+		<bullet life="30" damage="3" spawnondeath="enemymineexplosion" spawnonexpire="enemybulletexplosion"/>
 	</template>
 
 
@@ -1564,7 +1767,7 @@
 		</renderable>
 		<aimer range="512" attack="256"/>
 		<ship maxveloc="90" maxaccel="90" friction="10" maxomega="5"/>
-		<damagable health="5" spawnondeath="targetexplosion"/>
+		<damagable health="5" spawnondeath="enemyexplosion"/>
 		<weapon>
 			<velocity x="0" y="0"/>
 			<ordnance name="enemymine"/>
@@ -1760,7 +1963,7 @@
 		</renderable>
 		<aimer range="512" attack="384"/>
 		<ship maxveloc="90" maxaccel="90" friction="10" maxomega="5"/>
-		<damagable health="3" spawnondeath="targetexplosion"/>
+		<damagable health="3" spawnondeath="enemyexplosion"/>
 		<weapon>
 			<velocity x="0" y="60"/>
 			<ordnance name="enemyspacehum"/>
@@ -1775,7 +1978,7 @@
 	<template name="enemyswarmer" type="">
 		<collidable>
 			<body name="main">
-				<circle radius="5">
+				<circle radius="6">
 					<density value="1"/>
 					<friction value="0.5"/>
 					<restitution value="0.5"/>
@@ -1806,8 +2009,8 @@
 			<drawlist>
 				<color r="1.0" g="0.2" b="0.1" a="1.0"/>
 				<triangle_strip>
-					<vertex x="5" y="-3"/>
-					<vertex x="5" y="-1"/>
+					<vertex x="6" y="-3"/>
+					<vertex x="6" y="-1"/>
 					<vertex x="2" y="-5"/>
 					<vertex x="3" y="2"/>
 					<vertex x="1.5" y="-5"/>
@@ -1817,13 +2020,13 @@
 					<vertex x="-1.5" y="-5"/>
 					<vertex x="-3" y="2"/>
 					<vertex x="-2" y="-5"/>
-					<vertex x="-5" y="-1"/>
-					<vertex x="-5" y="-3"/>
+					<vertex x="-6" y="-1"/>
+					<vertex x="-6" y="-3"/>
 				</triangle_strip>
 			</drawlist>
 		</renderable>
 		<aimer range="512" attack="256"/>
-		<ship maxveloc="90" maxaccel="60" friction="10" maxomega="1"/>
+		<ship maxveloc="120" maxaccel="120" friction="10" maxomega="3"/>
 		<damagable health="1" spawnondeath="enemyfireballexplosion"/>
 		<weapon>
 			<offset x="0" y="5" angle="0"/>
@@ -1840,13 +2043,13 @@
 	<template name="enemyswarmerspawn" type="">
 		<spawner>
 			<offset x="0" y="12"/>
-			<velocity x="0" y="90"/>
+			<inherit x="0.5" y="0.5"/>
+			<velocity x="0" y="120"/>
 			<spawn name="enemyswarmer"/>
 		</spawner>
 	</template>
 	
-	<template name="enemypodexplosion" type="">
-		<bullet life="0.05" spawnonexpire="targetexplosion"/>
+	<template name="enemypodexplosion" type="targetexplosion">
 		<link name="spawn0" secondary="enemyswarmerspawn">
 			<offset x="0" y="0" angle="0"/>
 		</link>
@@ -2071,10 +2274,24 @@
 		<aimer range="512" attack="256"/>
 		<ship maxveloc="150" maxaccel="90" friction="10" maxomega="1.5"/>
 		<damagable health="3" spawnondeath="targetexplosion"/>
-		<link name="gun" secondary="enemyweapon">
-			<offset x="0" y="12" angle="0"/>
+		<link name="lgun" secondary="enemyweapon">
+			<offset x="4" y="0" angle="0"/>
+		</link>
+		<link name="rgun" secondary="enemyweapon">
+			<offset x="-4" y="0" angle="0"/>
 		</link>
 		<team name="enemy"/>
+	</template>
+
+
+	<!-- enemy ship weapon -->
+
+	<template name="enemyshipweapon" type="">
+		<weapon>
+			<velocity x="0" y="240"/>
+			<ordnance name="enemybullet"/>
+			<shot delay="0.2"/>
+		</weapon>
 	</template>
 
 
@@ -2122,11 +2339,11 @@
 		</renderable>
 		<aimer range="512" attack="256"/>
 		<ship maxveloc="120" maxaccel="60" friction="10" maxomega="1"/>
-		<damagable health="10" spawnondeath="targetexplosion"/>
-		<link name="lgun" secondary="enemyweapon">
+		<damagable health="10" spawnondeath="enemyexplosion"/>
+		<link name="lgun" secondary="enemyshipweapon">
 			<offset x="4" y="0" angle="0"/>
 		</link>
-		<link name="rgun" secondary="enemyweapon">
+		<link name="rgun" secondary="enemyshipweapon">
 			<offset x="-4" y="0" angle="0"/>
 		</link>
 		<team name="enemy"/>
@@ -2472,7 +2689,7 @@
 			<spawn name="enemycarrier" start="0" cycle="20" track="0"/>
 		</spawner>
 	</entity>
-
+	
 	
 	<!-- player bullet explosion -->
 
@@ -2577,7 +2794,7 @@
 				</pushmatrix>
 			</drawlist>
 		</renderable>
-		<bullet life="1" damage="1" spawnondeath="playerbulletexplosion"/>
+		<bullet life="1" damage="1" spawnonimpact="playerbulletexplosion"/>
 	</template>
 
 
@@ -2810,7 +3027,7 @@
 				<allowsleep value="0"/>
 			</body>
 		</collidable>
-		<renderable period="0.05">
+		<renderable>
 			<drawlist>
 				<color r="0.4" g="0.5" b="1.0" a="1.0"/>
 				<triangle_strip>
@@ -2960,7 +3177,7 @@
 				</lines>
 			</drawlist>
 		</renderable>
-		<bullet life="1" damage="1" spawnondeath="gunnerbulletexplosion"/>
+		<bullet life="1" damage="1" spawnonimpact="gunnerbulletexplosion"/>
 	</template>
 
 
@@ -3314,17 +3531,27 @@
 					<scale x="2" y="2"/>
 					<color>
 						<linear time="0.3">
-							<start r="0.7" g="1.0" b="0.4" a="1.0"/>
+							<start r="1.0" g="1.0" b="1.0" a="1.0"/>
+							<end   r="0.7" g="1.0" b="0.4" a="0.0"/>
+						</linear>
+					</color>
+					<calllist name="circle8"/>
+				</pushmatrix>
+				<pushmatrix>
+					<scale x="3.5" y="3.5"/>
+					<color>
+						<linear time="0.3">
+							<start r="0.7" g="1.0" b="0.4" a="0.5"/>
 							<end   r="0.5" g="1.0" b="0.0" a="0.0"/>
 						</linear>
 					</color>
 					<calllist name="circle8"/>
 				</pushmatrix>
 				<pushmatrix>
-					<scale x="4" y="4"/>
+					<scale x="5" y="5"/>
 					<color>
 						<linear time="0.4">
-							<start r="0.5" g="1.0" b="0.0" a="0.5"/>
+							<start r="0.5" g="1.0" b="0.0" a="0.25"/>
 							<end   r="0.0" g="1.0" b="0.0" a="0.0"/>
 						</linear>
 					</color>
@@ -3346,26 +3573,40 @@
 					<scale x="2" y="2"/>
 					<color>
 						<linear time="0.15">
-							<start r="0.6" g="1.0" b="0.2" a="0.5"/>
-							<end   r="0.5" g="1.0" b="0.0" a="0.0"/>
+							<start r="0.85" g="1.0" b="0.7" a="0.5"/>
+							<end   r="0.7" g="1.0" b="0.4" a="0.0"/>
 						</linear>
 						<linear time="0.15">
-							<start r="0.7" g="1.0" b="0.4" a="1.0"/>
-							<end   r="0.6" g="1.0" b="0.2" a="0.5"/>
+							<start r="1.0" g="1.0" b="1.0" a="1.0"/>
+							<end   r="0.85" g="1.0" b="0.7" a="0.5"/>
 						</linear>
 					</color>
 					<calllist name="circle8"/>
 				</pushmatrix>
 				<pushmatrix>
-					<scale x="4" y="4"/>
+					<scale x="3.5" y="3.5"/>
 					<color>
 						<linear time="0.15">
-							<start r="0.25" g="1.0" b="0.0" a="0.25"/>
+							<start r="0.6" g="1.0" b="0.2" a="0.25"/>
+							<end   r="0.5" g="1.0" b="0.0" a="0.0"/>
+						</linear>
+						<linear time="0.15">
+							<start r="0.7" g="1.0" b="0.4" a="0.5"/>
+							<end   r="0.6" g="1.0" b="0.2" a="0.25"/>
+						</linear>
+					</color>
+					<calllist name="circle8"/>
+				</pushmatrix>
+				<pushmatrix>
+					<scale x="5" y="5"/>
+					<color>
+						<linear time="0.15">
+							<start r="0.25" g="1.0" b="0.0" a="0.125"/>
 							<end   r="0.0" g="1.0" b="0.0" a="0.0"/>
 						</linear>
 						<linear time="0.15">
-							<start r="0.5" g="1.0" b="0.0" a="0.5"/>
-							<end   r="0.25" g="1.0" b="0.0" a="0.25"/>
+							<start r="0.5" g="1.0" b="0.0" a="0.25"/>
+							<end   r="0.25" g="1.0" b="0.0" a="0.125"/>
 						</linear>
 					</color>
 					<calllist name="circle8"/>
@@ -3423,7 +3664,7 @@
 			<owner name="playership"/>
 		</gunner>
 	</entity>
-
+	
 	
 	<!-- health powerup -->
 
@@ -3566,6 +3807,109 @@
 	</entity>
 
 
+	<!-- friend explosion -->
+
+	<template name="friendexplosion" type="">
+		<explosion life="3.0"/>
+		<renderable>
+			<pushmatrix>
+				<color>
+					<linear time="0.4">
+						<start r="1.0" g="1.0" b="1.0" a="1.0"/>
+						<end   r="1.0" g="1.0" b="1.0" a="0.0"/>
+					</linear>
+				</color>
+				<scale>
+					<linear time="0.4">
+						<start x="30.0" y="30.0"/>
+						<end   x="0.0" y="0.0"/>
+					</linear>
+				</scale>
+				<calllist name="circle16"/>
+			</pushmatrix>
+			<pushmatrix>
+				<color>
+					<linear time="0.2">
+						<start r="1.0" g="1.0" b="1.0" a="0.1"/>
+						<end   r="1.0" g="1.0" b="1.0" a="0.0"/>
+					</linear>
+				</color>
+				<scale>
+					<linear time="0.2">
+						<start x="30.0" y="30.0"/>
+						<end   x="150.0" y="150.0"/>
+					</linear>
+				</scale>
+				<calllist name="circle32"/>
+			</pushmatrix>
+			<pushmatrix>
+				<color>
+					<linear time="1.5">
+						<start r="0.8" g="0.9" b="1.0" a="1.0"/>
+						<end   r="0.0" g="0.5" b="1.0" a="0.25"/>
+					</linear>
+					<linear time="1.5">
+						<start r="0.0" g="0.5" b="1.0" a="0.25"/>
+						<end   r="0.0" g="0.0" b="1.0" a="0.0"/>
+					</linear>
+				</color>
+				<scale>
+					<linear time="3.0">
+						<start x="10.0" y="10.0"/>
+						<end   x="0.0" y="0.0"/>
+					</linear>
+				</scale>
+				<calllist name="circle16"/>
+			</pushmatrix>
+			<pushmatrix>
+				<repeat count="6">
+					<repeat count="6">
+						<pushmatrix>
+							<translate>
+								<linear time="0.8">
+									<start x="0" y="0"/>
+									<end   x="80" y="0"/>
+								</linear>
+							</translate>
+							<color>
+								<linear time="0.8">
+									<start r="0.4" g="0.7" b="1.0" a="0.5"/>
+									<end   r="0.0" g="0.0" b="1.0" a="0.0"/>
+								</linear>
+							</color>
+							<scale>
+								<linear time="0.8">
+									<start x="5.0" y="0.5"/>
+									<end   x="0.5" y="0.5"/>
+								</linear>
+							</scale>
+							<calllist name="circle16"/>
+						</pushmatrix>
+						<rotate angle="60"/>
+					</repeat>
+					<scale x="1.25" y="1.25"/>
+					<rotate angle="20"/>
+				</repeat>
+			</pushmatrix>
+			<pushmatrix>
+				<color>
+					<linear time="1.0">
+						<start r="0.4" g="0.7" b="1.0" a="0.5"/>
+						<end   r="0.0" g="0.0" b="1.0" a="0.0"/>
+					</linear>
+				</color>
+				<scale>
+					<linear time="1.0">
+						<start x="15.0" y="15.0"/>
+						<end   x="50.0" y="50.0"/>
+					</linear>
+				</scale>
+				<calllist name="circle16"/>
+			</pushmatrix>
+		</renderable>
+	</template>
+
+
 	<!-- friend turret -->
 
 	<template name="friendcannon" type="playershipweapon">
@@ -3654,7 +3998,7 @@
 		<aimer range="512" attack="384" focus="1"/>
 		<team name="player"/>
 		<ship maxveloc="0" maxaccel="0" friction="0" maxomega="2"/>
-		<damagable health="10" spawnondeath="targetexplosion"/>
+		<damagable health="10" spawnondeath="friendexplosion"/>
 	</template>
 
 	<template name="friendturret1" type="friendturret">
