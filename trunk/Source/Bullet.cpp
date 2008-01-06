@@ -80,6 +80,8 @@ bool BulletTemplate::Configure(TiXmlElement *element)
 		mSpawnOnExpire = Hash(spawn);
 	if (const char *spawn = element->Attribute("spawnondeath"))
 		mSpawnOnDeath = Hash(spawn);
+	if (const char *spawn = element->Attribute("spawnonimpact"))
+		mSpawnOnImpact = Hash(spawn);
 	return true;
 }
 
@@ -141,20 +143,14 @@ void Bullet::Collide(unsigned int aHitId, float aTime, b2Manifold aManifold[], i
 
 	// if the recipient is damagable...
 	// and not healing or the target is at max health...
+	bool destroy = !bullet.mRicochet;
 	Damagable *damagable = Database::damagable.Get(aHitId);
 	if (damagable && (bullet.mDamage >= 0 || damagable->GetHealth() < Database::damagabletemplate.Get(aHitId).mHealth))
 	{
 		// apply damage value
 		damagable->Damage(id, bullet.mDamage);
+		destroy = true;
 	}
-
-	// else if set to ricochet...
-	else if (bullet.mRicochet)
-	{
-		// collide normally
-		return;
-	}
-
 
 #ifdef BULLET_COLLISION_BOUNCE
 	// reorient to new direction
@@ -171,22 +167,38 @@ void Bullet::Collide(unsigned int aHitId, float aTime, b2Manifold aManifold[], i
 		entity->SetVelocity(Vector2(body->GetLinearVelocity()));
 	}
 #else
-	// estimate the point of impact
-	b2Vec2 position(aManifold[0].points[0].position - aManifold[0].points[0].separation * aManifold[0].normal);
-
-	// if spawning on death...
-	if (bullet.mSpawnOnDeath)
+	// if spawning on impact...
+	if (bullet.mSpawnOnImpact)
 	{
+		// estimate the point of impact
+		b2Vec2 position(aManifold[0].points[0].position - aManifold[0].points[0].separation * aManifold[0].normal);
+
 		// spawn the template
-		unsigned int spawnId = Database::Instantiate(bullet.mSpawnOnDeath, 0, Vector2(position), Vector2(0, 0));
+		unsigned int spawnId = Database::Instantiate(bullet.mSpawnOnImpact, 0, Vector2(position), Vector2(0, 0));
 
 		// set fractional turn
 		if (Renderable *renderable = Database::renderable.Get(spawnId))
 			renderable->SetFraction(aTime);
 	}
 
-	// kill the bullet
-	// (note: this breaks collision impulse)
-	Database::Delete(id);
+	// if destroying the bullet...
+	if (destroy)
+	{
+		// if spawning on death...
+		if (bullet.mSpawnOnDeath)
+		{
+			// get the entity
+			Entity *entity = Database::entity.Get(id);
+			if (entity)
+			{
+				// instantiate the template
+				Database::Instantiate(bullet.mSpawnOnDeath, entity->GetAngle(), entity->GetPosition(), entity->GetVelocity());
+			}
+		}
+
+		// kill the bullet
+		// (note: this breaks collision impulse)
+		Database::Delete(id);
+	}
 #endif
 }

@@ -18,6 +18,7 @@ public:
 	// spawn on death
 	unsigned int mSpawnOnExpire;
 	unsigned int mSpawnOnDeath;
+	unsigned int mSpawnOnImpact;
 
 public:
 	BulletTemplate(void);
