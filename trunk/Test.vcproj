@@ -42,7 +42,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;..\SDL-1.2.13\include&quot;,&quot;tinyxml&quot;,&quot;oglconsole&quot;,&quot;..\Box2D\Include&quot;,&quot;..\FastDelegate&quot;"
+				AdditionalIncludeDirectories="&quot;..\SDL-1.2.13\include&quot;,&quot;tinyxml&quot;,&quot;oglconsole&quot;,&quot;..\Box2D\Include&quot;,&quot;FastDelegate&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CRT_SECURE_NO_WARNINGS;OGLCONSOLE_USE_SDL"
 				StringPooling="true"
 				MinimalRebuild="true"
@@ -123,7 +123,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="1"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="&quot;..\SDL-1.2.13\include&quot;,&quot;tinyxml&quot;,&quot;oglconsole&quot;,&quot;..\Box2D\Include&quot;,&quot;..\FastDelegate&quot;"
+				AdditionalIncludeDirectories="&quot;..\SDL-1.2.13\include&quot;,&quot;tinyxml&quot;,&quot;oglconsole&quot;,&quot;..\Box2D\Include&quot;,&quot;FastDelegate&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CRT_SECURE_NO_WARNINGS;OGLCONSOLE_USE_SDL"
 				StringPooling="true"
 				ExceptionHandling="0"

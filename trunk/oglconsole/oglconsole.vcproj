@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\SDL-1.2.12\include"
+				AdditionalIncludeDirectories="..\..\SDL-1.2.13\include"
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;_CRT_SECURE_NO_WARNINGS;OGLCONSOLE_USE_SDL;GLHEADERINCLUDE=\&quot;SDL_opengl.h\&quot;"
 				StringPooling="true"
 				MinimalRebuild="true"
@@ -109,7 +109,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="1"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="&quot;..\..\SDL-1.2.12\include&quot;"
+				AdditionalIncludeDirectories="..\..\SDL-1.2.13\include"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;_CRT_SECURE_NO_WARNINGS;OGLCONSOLE_USE_SDL;GLHEADERINCLUDE=\&quot;SDL_opengl.h\&quot;"
 				StringPooling="true"
 				ExceptionHandling="0"
