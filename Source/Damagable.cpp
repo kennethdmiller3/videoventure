@@ -108,7 +108,7 @@ void Damagable::Damage(unsigned int aSourceId, float aDamage)
 			const DamagableTemplate &damagable = Database::damagabletemplate.Get(id);
 			if (damagable.mSpawnOnDeath)
 			{
-				Database::Instantiate(damagable.mSpawnOnDeath, entity->GetAngle(), entity->GetPosition(), Vector2(0, 0));
+				Database::Instantiate(damagable.mSpawnOnDeath, entity->GetAngle(), entity->GetPosition(), entity->GetVelocity());
 			}
 		}
 		Database::Delete(id);
