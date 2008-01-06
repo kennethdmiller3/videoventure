@@ -11,10 +11,10 @@ namespace Database
 	protected:
 		const unsigned int mId;
 
-		static const size_t SHIFT = 8;
 		static const size_t EMPTY = ~0U;
 		size_t mStride;		// size of a database record
-		int mBits;			// bit count
+		size_t mShift;		// record block shift
+		size_t mBits;		// bit count
 		size_t mLimit;		// maximum number of database records (1 << bit count)
 		size_t mCount;		// current number of database records
 		size_t *mMap;		// map key to database records (2x maximum)
@@ -25,7 +25,7 @@ namespace Database
 		void Grow(void);
 		void Copy(const Untyped &aSource);
 
-		inline size_t Untyped::Index(Key aKey) const
+		inline size_t Index(Key aKey) const
 		{
 			// convert key to a hash map index
 			// (HACK: assume key is already a hash)
@@ -34,14 +34,14 @@ namespace Database
 			return ((aKey >> shift) ^ aKey) & mask;
 		}
 
-		inline size_t Untyped::Next(size_t aIndex) const
+		inline size_t Next(size_t aIndex) const
 		{
 			size_t shift = mBits + 1;
 			size_t mask = (1 << shift) - 1;
 			return (aIndex + 1) & mask;
 		}
 
-		inline size_t Untyped::Probe(Key aKey) const
+		inline size_t Probe(Key aKey) const
 		{
 			size_t index = Index(aKey);
 
@@ -52,12 +52,13 @@ namespace Database
 				index = Next(index);
 				slot = mMap[index];
 			}
+
 			return index;
 		}
 
 		void *GetRecord(size_t aSlot) const
 		{
-			return static_cast<char *>(mPool[aSlot >> SHIFT]) + (aSlot & ((1 << SHIFT) - 1)) * mStride;
+			return static_cast<char *>(mPool[aSlot >> mShift]) + (aSlot & ((1 << mShift) - 1)) * mStride;
 		}
 		virtual void CreateRecord(void *aDest, const void *aSource = NULL)
 		{
@@ -78,7 +79,7 @@ namespace Database
 		};
 
 	public:
-		Untyped(unsigned int mId, size_t aStride);
+		Untyped(unsigned int mId, size_t aStride, size_t aBits);
 		virtual ~Untyped();
 
 		const Untyped &operator=(const Untyped &aSource)
@@ -93,6 +94,7 @@ namespace Database
 		void Put(Key aKey, const void *aValue);
 		void *Open(Key aKey);
 		void Close(Key aKey);
+		void *Alloc(Key aKey);
 		void Delete(Key aKey);
 
 		class Iterator
@@ -170,13 +172,13 @@ namespace Database
 		}
 
 	public:
-		Typed(const char *aName = NULL)
-			: Untyped(Hash(aName), sizeof(T)), mNil()
+		Typed(unsigned int aId = 0)
+			: Untyped(aId, sizeof(T), aId ? 8 : 4), mNil()
 		{
 		}
 
 		Typed(const Typed &aDatabase)
-			: Untyped(aDatabase.mId, sizeof(T)), mNil(aDatabase.mNil)
+			: Untyped(aDatabase.mId, sizeof(T), aDatabase.mBits), mNil(aDatabase.mNil)
 		{
 			Copy(aDatabase);
 		}
@@ -253,10 +255,10 @@ namespace Database
 	}
 
 	// parent identifier database
-	extern Typed<unsigned int> parent;
+	extern Typed<Key> parent;
 
 	// owner identifier database;
-	extern Typed<unsigned int> owner;
+	extern Typed<Key> owner;
 
 	// team affiliation database
 	extern Typed<unsigned int> team;

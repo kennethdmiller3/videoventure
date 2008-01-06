@@ -2115,7 +2115,8 @@ void ProcessTemplateItems(TiXmlElement *element)
 		ProcessTemplateItem(child, template_id);
 	}
 
-	Database::parent.Put(template_id, parent_id);
+	// set parent
+//	Database::parent.Put(template_id, parent_id);
 }
 
 void ProcessEntityItems(TiXmlElement *element)
@@ -2128,18 +2129,20 @@ void ProcessEntityItems(TiXmlElement *element)
 	const char *type = element->Attribute("type");
 	unsigned int parent_id = Hash(type);
 
-	// process template components
-	ProcessTemplateItems(element);
+	// inherit components from template
+//	Database::Inherit(entity_id, parent_id);
+	
+	// set parent
+	Database::parent.Put(entity_id, parent_id);
+
+	// objects default to owning themselves
+	Database::owner.Put(entity_id, entity_id);
 
 	// create an entity
 	Entity *entity = new Entity(entity_id);
 	Database::entity.Put(entity_id, entity);
 
-	// objects default to owning themselves
-	Database::owner.Put(entity_id, entity_id);
-
 	// process child elements
-	// (components with no template equivalent)
 	for (TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
 		if (entity->Configure(child))
@@ -2171,9 +2174,16 @@ void ProcessEntityItems(TiXmlElement *element)
 				gunner->Configure(child);
 			}
 			break;
+
+		default:
+			{
+				// process the template item
+				ProcessTemplateItem(child, entity_id);
+			}
+			break;
 		}
 	}
-	
+
 	// activate the instance
 	// (create runtime components)
 	Database::Activate(entity_id);
@@ -2184,6 +2194,7 @@ static void ProcessWorldItems(TiXmlElement *element)
 	for (TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
 		const char *value = child->Value();
+		DebugPrint("Processing %s (%s)\n", child->Value(), child->Attribute("name"));
 		switch (Hash(value))
 		{
 		case 0x694aaa0b /* "template" */:
@@ -2351,6 +2362,7 @@ int SDL_main( int argc, char *argv[] )
 
 	{
 		// input binding
+		DebugPrint("Input %s\n", inputconfig);
 		TiXmlDocument document(inputconfig);
 		document.LoadFile();
 
@@ -2414,6 +2426,7 @@ int SDL_main( int argc, char *argv[] )
 
 	{
 		// level configuration
+		DebugPrint("Level %s\n", levelconfig);
 		TiXmlDocument document(levelconfig);
 		document.LoadFile();
 
@@ -2439,6 +2452,8 @@ int SDL_main( int argc, char *argv[] )
 	const float sim_rate = float(SIMULATION_RATE);
 	const float sim_step = 1.0f / sim_rate;
 	float sim_timer = 1.0f;
+
+	DebugPrint("Simulating at %dHz (x%f)\n", SIMULATION_RATE, TIME_SCALE);
 
 	// camera track position
 	Vector2 trackpos(0, 0);
@@ -2665,6 +2680,8 @@ int SDL_main( int argc, char *argv[] )
 #endif
 	}
 	while( !quit );
+
+	DebugPrint("Quitting...\n");
 
 	// remove all entities
 //	for (Database::Typed<Entity *>::iterator itor = Database::entity.begin(); itor != Database::entity.end(); ++itor)

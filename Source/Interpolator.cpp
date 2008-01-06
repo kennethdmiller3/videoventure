@@ -3,8 +3,7 @@
 
 namespace Database
 {
-	Typed<Typed<InterpolatorTemplate> > interpolatortemplate("interpolatortemplate");
-	Typed<Typed<Interpolator> > interpolator;
+	Typed<Typed<InterpolatorTemplate> > interpolatortemplate(0x9074abfe /* "interpolatortemplate" */);
 }
 
 InterpolatorTemplate::InterpolatorTemplate(int aWidth)

@@ -5,7 +5,7 @@ Controller::List Controller::sAll;
 
 namespace Database
 {
-	Typed<Controller *> controller("controller");
+	Typed<Controller *> controller(0xb4652c81 /* "controller" */);
 }
 
 Controller::Controller(unsigned int aId)

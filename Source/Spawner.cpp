@@ -4,8 +4,8 @@
 
 namespace Database
 {
-	Typed<SpawnerTemplate> spawnertemplate("spawnertemplate");
-	Typed<Spawner *> spawner("spawner");
+	Typed<SpawnerTemplate> spawnertemplate(0x8b6ef6ad /* "spawnertemplate" */);
+	Typed<Spawner *> spawner(0x4936726f /* "spawner" */);
 
 	namespace Initializer
 	{

@@ -11,8 +11,8 @@ const float GUNNER_BULLET_SPEED = 800;
 
 namespace Database
 {
-	Typed<WeaponTemplate> weapontemplate("weapontemplate");
-	Typed<Weapon *> weapon("weapon");
+	Typed<WeaponTemplate> weapontemplate(0xb1050fa7 /* "weapontemplate" */);
+	Typed<Weapon *> weapon(0x6f332041 /* "weapon" */);
 
 	namespace Initializer
 	{

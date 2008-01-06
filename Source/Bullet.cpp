@@ -22,8 +22,8 @@ void Bullet::operator delete(void *aPtr)
 
 namespace Database
 {
-	Typed<BulletTemplate> bullettemplate("bullettemplate");
-	Typed<Bullet *> bullet("bullet");
+	Typed<BulletTemplate> bullettemplate(0xa270491f /* "bullettemplate" */);
+	Typed<Bullet *> bullet(0xe894a379 /* "bullet" */);
 
 	namespace Initializer
 	{
@@ -94,18 +94,18 @@ Bullet::Bullet(const BulletTemplate &aTemplate, unsigned int aId)
 : Simulatable(aId)
 , mLife(aTemplate.mLife)
 {
-	Database::Typed<Collidable::Listener> &listeners = Database::collidablelistener.Open(Simulatable::id);
+	Database::Typed<Collidable::Listener> &listeners = Database::collidablelistener.Open(id);
 	Collidable::Listener &listener = listeners.Open(Database::Key(this));
 	listener.bind(this, &Bullet::Collide);
 	listeners.Close(Database::Key(this));
-	Database::collidablelistener.Close(Simulatable::id);
+	Database::collidablelistener.Close(id);
 }
 
 Bullet::~Bullet(void)
 {
-	Database::Typed<Collidable::Listener> &listeners = Database::collidablelistener.Open(Simulatable::id);
+	Database::Typed<Collidable::Listener> &listeners = Database::collidablelistener.Open(id);
 	listeners.Delete(Database::Key(this));
-	Database::collidablelistener.Close(Simulatable::id);
+	Database::collidablelistener.Close(id);
 }
 
 void Bullet::Simulate(float aStep)
@@ -117,20 +117,20 @@ void Bullet::Simulate(float aStep)
 		Entity *entity = Database::entity.Get(id);
 		if (entity)
 		{
-			const BulletTemplate &bullet = Database::bullettemplate.Get(Simulatable::id);
+			const BulletTemplate &bullet = Database::bullettemplate.Get(id);
 			if (bullet.mSpawnOnExpire)
 			{
 				Database::Instantiate(bullet.mSpawnOnExpire, entity->GetAngle(), entity->GetPosition(), Vector2(0, 0));
 			}
 		}
-		Database::Delete(Simulatable::id);
+		Database::Delete(id);
 		return;
 	}
 }
 
 void Bullet::Collide(Collidable &aRecipient, b2Manifold aManifold[], int aCount)
 {
-	const BulletTemplate &bullet = Database::bullettemplate.Get(Simulatable::id);
+	const BulletTemplate &bullet = Database::bullettemplate.Get(id);
 
 	// if the recipient is damagable...
 	// and not healing or the target is at max health...
@@ -139,7 +139,7 @@ void Bullet::Collide(Collidable &aRecipient, b2Manifold aManifold[], int aCount)
 	if (damagable && (bullet.mDamage >= 0 || damagable->GetHealth() < Database::damagabletemplate.Get(hitId).mHealth))
 	{
 		// apply damage value
-		damagable->Damage(Simulatable::id, bullet.mDamage);
+		damagable->Damage(id, bullet.mDamage);
 	}
 
 	// else if set to ricochet...
@@ -152,14 +152,14 @@ void Bullet::Collide(Collidable &aRecipient, b2Manifold aManifold[], int aCount)
 
 #ifdef BULLET_COLLISION_BOUNCE
 	// reorient to new direction
-	Collidable *collidable = Database::collidable.Get(Simulatable::id);
+	Collidable *collidable = Database::collidable.Get(id);
 	if (collidable)
 	{
 		b2Body *body = collidable->GetBody();
 		const b2Vec2 velocity = body->GetLinearVelocity();
 		float angle = -atan2f(velocity.x, velocity.y);
 		body->SetOriginPosition(body->GetOriginPosition(), angle);
-		Entity *entity = Database::entity.Get(Simulatable::id);
+		Entity *entity = Database::entity.Get(id);
 		entity->Step();
 		entity->SetTransform(Matrix2(body->GetRotationMatrix(), body->GetOriginPosition()));
 		entity->SetVelocity(Vector2(body->GetLinearVelocity()));
@@ -177,6 +177,6 @@ void Bullet::Collide(Collidable &aRecipient, b2Manifold aManifold[], int aCount)
 
 	// kill the bullet
 	// (note: this breaks collision impulse)
-	Database::Delete(Simulatable::id);
+	Database::Delete(id);
 #endif
 }

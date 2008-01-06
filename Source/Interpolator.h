@@ -17,12 +17,4 @@ public:
 	bool Apply(float aTarget[], float aTime, int &aIndex);
 };
 
-struct Interpolator
-{
-public:
-	InterpolatorTemplate *mTemplate;
-
-public:
-};
-
 void ProcessInterpolatorItem(TiXmlElement *element, std::vector<unsigned int> &buffer, int width, const char *names[], const float data[]);
