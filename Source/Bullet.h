@@ -49,7 +49,7 @@ public:
 	virtual void Simulate(float aStep);
 
 	// collide
-	void Collide(Collidable &aRecipient, b2Manifold aManifold[], int aCount);
+	void Collide(unsigned int aHitId, float aTime, b2Manifold aManifold[], int aCount);
 };
 
 namespace Database

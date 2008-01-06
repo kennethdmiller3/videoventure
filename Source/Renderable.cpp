@@ -88,12 +88,12 @@ unsigned int Renderable::sTurn;
 float Renderable::sOffset;
 
 Renderable::Renderable(void)
-: id(0), show(false), mStart(sTurn)
+: id(0), show(false), mStart(sTurn), mFraction(0.0f)
 {
 }
 
 Renderable::Renderable(const RenderableTemplate &aTemplate, unsigned int aId)
-: id(aId), show(false), mStart(sTurn)
+: id(aId), show(false), mStart(sTurn), mFraction(0.0f)
 {
 }
 
@@ -187,7 +187,7 @@ void Renderable::Render(const Matrix2 &aTransform, float aStep)
 	const RenderableTemplate &renderable = Database::renderabletemplate.Get(id);
 
 	// elapsed time
-	float t = fmodf((Renderable::sOffset + sTurn - mStart) * aStep, renderable.mPeriod);
+	float t = fmodf((sTurn - mStart + sOffset - mFraction) * aStep, renderable.mPeriod);
 	if (t < 0)
 		return;
 

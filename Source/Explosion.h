@@ -10,6 +10,13 @@ public:
 	// life span
 	float mLifeSpan;
 
+	// damage
+	float mDamage;
+	float mRadius;
+
+	// spawn on expire
+	unsigned int mSpawnOnExpire;
+
 public:
 	ExplosionTemplate(void);
 	~ExplosionTemplate(void);

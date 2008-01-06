@@ -1,6 +1,7 @@
 #include "StdAfx.h"
 #include "Spawner.h"
 #include "Entity.h"
+#include "Renderable.h"
 
 #ifdef USE_POOL_ALLOCATOR
 #include <boost/pool/pool.hpp>
@@ -130,7 +131,7 @@ Spawner::Spawner(void)
 Spawner::Spawner(const SpawnerTemplate &aTemplate, unsigned int aId)
 : Simulatable(aId)
 , mSpawn(0)
-, mTimer(aTemplate.mStart)
+, mTimer(-aTemplate.mStart)
 {
 }
 
@@ -184,6 +185,10 @@ void Spawner::Simulate(float aStep)
 				// propagate team to spawned item
 				Database::team.Put(mSpawn, team);
 			}
+
+			// set fractional turn
+			if (Renderable *renderable = Database::renderable.Get(mSpawn))
+				renderable->SetFraction(mTimer / aStep - 1.0f);
 
 			// set the timer
 			mTimer -= spawner.mCycle;
