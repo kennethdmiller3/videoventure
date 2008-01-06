@@ -790,25 +790,19 @@
 			<drawlist>
 				<color r="1.0" g="1.0" b="1.0" a="1.0"/>
 				<pushmatrix>
-					<scale x="2" y="2"/>
+					<scale x="1" y="8"/>
 					<calllist name="circle8"/>
 				</pushmatrix>
-				<color r="1.0" g="0.9" b="0.8" a="0.5"/>
+				<color r="1.0" g="0.7" b="0.4" a="0.5"/>
 				<pushmatrix>
-					<scale x="4" y="4"/>
+					<scale x="2.5" y="10"/>
 					<calllist name="circle8"/>
 				</pushmatrix>
 				<color r="1.0" g="0.5" b="0.0" a="0.25"/>
 				<pushmatrix>
-					<scale x="6" y="6"/>
-					<calllist name="circle12"/>
+					<scale x="4" y="12"/>
+					<calllist name="circle8"/>
 				</pushmatrix>
-				<lines>
-					<color r="1.0" g="1.0" b="1.0" a="0.5"/>
-					<vertex x="0" y="0"/>
-					<color r="1.0" g="0.0" b="0.0" a="0.0"/>
-					<vertex x="0" y="-25"/>
-				</lines>
 			</drawlist>
 		</renderable>
 		<bullet life="2" damage="1" spawnondeath="enemybulletexplosion"/>
@@ -826,9 +820,9 @@
   </template>
 
 
-  <!-- test enemy -->
+  <!-- enemy turret -->
 
-  <template name="cannon" type="enemyweapon">
+  <template name="enemycannon" type="enemyweapon">
     <renderable>
       <drawlist>
         <color r="0.5" g="0.5" b="0.5" a="1.0"/>
@@ -845,7 +839,7 @@
     </weapon>
   </template>
 
-  <template name="cannon0" type="enemyweapon">
+  <template name="enemycannon0" type="enemyweapon">
     <renderable>
       <drawlist>
         <color r="0.5" g="0.5" b="0.5" a="1.0"/>
@@ -862,7 +856,7 @@
     </weapon>
   </template>
 
-  <template name="cannon1" type="enemyweapon">
+  <template name="enemycannon1" type="enemyweapon">
     <renderable>
       <drawlist>
         <color r="0.5" g="0.5" b="0.5" a="1.0"/>
@@ -879,7 +873,7 @@
     </weapon>
   </template>
 
-  <template name="turret" type="">
+  <template name="enemyturret" type="">
     <collidable>
       <body name="main">
         <circle radius="12">
@@ -917,85 +911,177 @@
     <damagable health="10" spawnondeath="targetexplosion"/>
   </template>
   
-  <template name="turret1" type="turret">
-    <link name="gun" secondary="cannon">
+  <template name="enemyturret1" type="enemyturret">
+    <link name="gun" secondary="enemycannon">
       <offset x="0" y="0" angle="0"/>
     </link>
   </template>
   
-  <template name="turret2" type="turret">
-    <link name="lgun" secondary="cannon0">
+  <template name="enemyturret2" type="enemyturret">
+    <link name="lgun" secondary="enemycannon0">
       <offset x="4" y="0" angle="0"/>
     </link>
-    <link name="rgun" secondary="cannon1">
+    <link name="rgun" secondary="enemycannon1">
       <offset x="-4" y="0" angle="0"/>
     </link>
   </template>
 
-  <template name="turret3" type="turret">
-    <link name="lgun" secondary="cannon0">
+  <template name="enemyturret3" type="enemyturret">
+    <link name="lgun" secondary="enemycannon0">
       <offset x="5" y="-3" angle="-5"/>
     </link>
-    <link name="mgun" secondary="cannon">
+    <link name="mgun" secondary="enemycannon">
       <offset x="0" y="0" angle="0"/>
     </link>
-    <link name="rgun" secondary="cannon1">
+    <link name="rgun" secondary="enemycannon1">
       <offset x="-5" y="-3" angle="5"/>
     </link>
   </template>
   
-  <template name="turret1spawn" type="">
+  <template name="enemyturret1spawn" type="">
     <spawner>
-      <spawn name="turret1" start="0" cycle="5" track="1"/>
+      <spawn name="enemyturret1" start="0" cycle="5" track="1"/>
     </spawner>
   </template>
 
-  <template name="turret2spawn" type="">
+  <template name="enemyturret2spawn" type="">
     <spawner>
-      <spawn name="turret2" start="0" cycle="5" track="1"/>
+      <spawn name="enemyturret2" start="0" cycle="5" track="1"/>
     </spawner>
   </template>
 
-  <template name="turret3spawn" type="">
+  <template name="enemyturret3spawn" type="">
     <spawner>
-      <spawn name="turret3" start="0" cycle="5" track="1"/>
+      <spawn name="enemyturret3" start="0" cycle="5" track="1"/>
     </spawner>
   </template>
 
-  <template name="turretcluster" type="">
-    <link name="turret3" secondary="turret3spawn">
+  <template name="enemyturretcluster" type="">
+    <link name="enemyturret3" secondary="enemyturret3spawn">
       <offset x="0" y="0"/>
     </link>
-    <link name="turret2a" secondary="turret2spawn">
+    <link name="enemyturret2a" secondary="enemyturret2spawn">
       <offset x="64" y="16"/>
     </link>
-    <link name="turret2b" secondary="turret2spawn">
+    <link name="enemyturret2b" secondary="enemyturret2spawn">
       <offset x="-64" y="16"/>
     </link>
-    <link name="turret1a" secondary="turret1spawn">
+    <link name="enemyturret1a" secondary="enemyturret1spawn">
       <offset x="128" y="-16"/>
     </link>
-    <link name="turret1b" secondary="turret1spawn">
+    <link name="enemyturret1b" secondary="enemyturret1spawn">
       <offset x="-128" y="-16"/>
     </link>
   </template>
   
-  <entity name="enemyspawn1" type="turretcluster">
+  <entity name="enemyspawn1" type="enemyturretcluster">
     <position x="384.0" y="0.0" angle="270"/>
   </entity>
 
-  <entity name="enemyspawn2" type="turretcluster">
+  <entity name="enemyspawn2" type="enemyturretcluster">
     <position x="0.0" y="384.0" angle="0"/>
   </entity>
 
-  <entity name="enemyspawn3" type="turretcluster">
+  <entity name="enemyspawn3" type="enemyturretcluster">
     <position x="-384.0" y="0.0" angle="90"/>
   </entity>
 
-  <entity name="enemyspawn4" type="turretcluster">
+  <entity name="enemyspawn4" type="enemyturretcluster">
     <position x="0.0" y="-384.0" angle="180"/>
   </entity>
 
+  
+  <!-- enemy ship -->
+
+  <template name="enemyship" type="">
+    <position x="0" y="0"/>
+    <collidable>
+      <body name="main">
+        <circle radius="16">
+          <density value="1"/>
+          <friction value="0.5"/>
+          <restitution value="0.5"/>
+          <category value="3"/>
+        </circle>
+        <allowsleep value="0"/>
+      </body>
+    </collidable>
+    <renderable>
+      <drawlist>
+        <color r="1.0" g="0.2" b="0.1" a="1.0"/>
+        <triangle_strip>
+          <vertex x="16" y="-16"/>
+          <vertex x="16" y="-11"/>
+          <vertex x="5" y="-16"/>
+          <vertex x="6" y="-6"/>
+          <vertex x="4" y="-13"/>
+          <vertex x="6" y="1"/>
+          <vertex x="3" y="-13"/>
+          <vertex x="3" y="4"/>
+          <vertex x="2" y="-16"/>
+          <vertex x="2" y="16"/>
+          <vertex x="0" y="-16"/>
+          <vertex x="-2" y="16"/>
+          <vertex x="-2" y="-16"/>
+          <vertex x="-3" y="4"/>
+          <vertex x="-3" y="-13"/>
+          <vertex x="-6" y="1"/>
+          <vertex x="-4" y="-13"/>
+          <vertex x="-6" y="-6"/>
+          <vertex x="-5" y="-16"/>
+          <vertex x="-16" y="-11"/>
+          <vertex x="-16" y="-16"/>
+        </triangle_strip>
+      </drawlist>
+    </renderable>
+    <aimer range="512" attack="256"/>
+    <ship maxveloc="120" maxaccel="60" friction="10" maxomega="1"/>
+    <damagable health="3" spawnondeath="targetexplosion"/>
+    <link name="gun" secondary="enemyweapon">
+      <offset x="0" y="16" angle="0"/>
+    </link>
+    <team name="enemy"/>
+  </template>
+
+  <entity name="enemyshipspawn1" type="">
+    <position x="-128" y="2048" angle="180"/>
+    <velocity x="0" y="-120"/>
+    <spawner>
+      <spawn name="enemyship" start="0" cycle="5" track="0"/>
+    </spawner>
+  </entity>
+
+  <entity name="enemyshipspawn2" type="">
+    <position x="-64" y="2048" angle="180"/>
+    <velocity x="0" y="-120"/>
+    <spawner>
+      <spawn name="enemyship" start="2" cycle="5" track="0"/>
+    </spawner>
+  </entity>
+
+  <entity name="enemyshipspawn3" type="">
+    <position x="0" y="2048" angle="180"/>
+    <velocity x="0" y="-120"/>
+    <spawner>
+      <spawn name="enemyship" start="4" cycle="5" track="0"/>
+    </spawner>
+  </entity>
+
+  <entity name="enemyshipspawn4" type="">
+    <position x="64" y="2048" angle="180"/>
+    <velocity x="0" y="-120"/>
+    <spawner>
+      <spawn name="enemyship" start="1" cycle="5" track="0"/>
+    </spawner>
+  </entity>
+
+  <entity name="enemyshipspawn5" type="">
+    <position x="128" y="2048" angle="180"/>
+    <velocity x="0" y="-120"/>
+    <spawner>
+      <spawn name="enemyship" start="3" cycle="5" track="0"/>
+    </spawner>
+  </entity>
 
   <!-- player bullet explosion -->
 
@@ -1770,4 +1856,123 @@
 		<position x="0" y="-96"/>
 	</entity>
 
+  
+  <!-- friend turret -->
+
+  <template name="friendcannon" type="playershipweapon">
+    <renderable>
+      <drawlist>
+        <color r="0.5" g="0.5" b="0.5" a="1.0"/>
+        <quads>
+          <vertex x="2" y="20"/>
+          <vertex x="3" y="6"/>
+          <vertex x="-3" y="6"/>
+          <vertex x="-2" y="20"/>
+        </quads>
+      </drawlist>
+    </renderable>
+    <weapon>
+      <offset x="0" y="20"/>
+    </weapon>
+  </template>
+
+  <template name="friendcannon0" type="playershipweapon">
+    <renderable>
+      <drawlist>
+        <color r="0.5" g="0.5" b="0.5" a="1.0"/>
+        <quads>
+          <vertex x="2" y="20"/>
+          <vertex x="3" y="4"/>
+          <vertex x="-3" y="6"/>
+          <vertex x="-2" y="20"/>
+        </quads>
+      </drawlist>
+    </renderable>
+    <weapon>
+      <offset x="0" y="20"/>
+    </weapon>
+  </template>
+
+  <template name="friendcannon1" type="playershipweapon">
+    <renderable>
+      <drawlist>
+        <color r="0.5" g="0.5" b="0.5" a="1.0"/>
+        <quads>
+          <vertex x="2" y="20"/>
+          <vertex x="3" y="6"/>
+          <vertex x="-3" y="4"/>
+          <vertex x="-2" y="20"/>
+        </quads>
+      </drawlist>
+    </renderable>
+    <weapon>
+      <offset x="0" y="20"/>
+    </weapon>
+  </template>
+
+  <template name="friendturret" type="">
+    <collidable>
+      <body name="main">
+        <circle radius="12">
+          <density value="1"/>
+          <friction value="0.5"/>
+          <restitution value="0.5"/>
+          <category value="1"/>
+        </circle>
+        <allowsleep value="0"/>
+        <damping linear="0.5"/>
+      </body>
+    </collidable>
+    <renderable>
+      <drawlist>
+        <color r="0.7" g="0.7" b="0.7" a="1.0"/>
+        <pushmatrix>
+          <scale x="8" y="8"/>
+          <calllist name="circle16"/>
+        </pushmatrix>
+        <color r="1.0" g="1.0" b="1.0" a="1.0"/>
+        <pushmatrix>
+          <scale x="10" y="10"/>
+          <calllist name="circle16"/>
+        </pushmatrix>
+        <color r="0.1" g="0.2" b="1.0" a="1.0"/>
+        <pushmatrix>
+          <scale x="12" y="12"/>
+          <calllist name="circle16"/>
+        </pushmatrix>
+      </drawlist>
+    </renderable>
+    <aimer range="512" attack="256" focus="1"/>
+    <team name="player"/>
+    <ship maxveloc="0" maxaccel="0" friction="0" maxomega="5"/>
+    <damagable health="10" spawnondeath="targetexplosion"/>
+  </template>
+
+  <template name="friendturret1" type="friendturret">
+    <link name="gun" secondary="friendcannon">
+      <offset x="0" y="0" angle="0"/>
+    </link>
+  </template>
+
+  <template name="friendturret2" type="friendturret">
+    <link name="lgun" secondary="friendcannon0">
+      <offset x="4" y="0" angle="0"/>
+    </link>
+    <link name="rgun" secondary="friendcannon1">
+      <offset x="-4" y="0" angle="0"/>
+    </link>
+  </template>
+
+  <template name="friendturret3" type="friendturret">
+    <link name="lgun" secondary="friendcannon0">
+      <offset x="5" y="-3" angle="-5"/>
+    </link>
+    <link name="mgun" secondary="friendcannon">
+      <offset x="0" y="0" angle="0"/>
+    </link>
+    <link name="rgun" secondary="friendcannon1">
+      <offset x="-5" y="-3" angle="5"/>
+    </link>
+  </template>
+  
 </world>

@@ -13,7 +13,6 @@ namespace Database
 
 		static const size_t SHIFT = 8;
 		static const size_t EMPTY = ~0U;
-		static const size_t DELETED = ~1U;
 		size_t mStride;		// size of a database record
 		int mBits;			// bit count
 		size_t mLimit;		// maximum number of database records (1 << bit count)
