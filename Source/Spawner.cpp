@@ -61,7 +61,7 @@ SpawnerTemplate::SpawnerTemplate(void)
 , mVelocity(0, 0)
 , mSpawn(0)
 , mStart(0)
-, mCycle(0)
+, mCycle(FLT_MAX)
 , mTrack(false)
 {
 }
