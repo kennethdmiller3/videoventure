@@ -102,11 +102,10 @@ Aimer::~Aimer(void)
 {
 }
 
-Vector2 Aimer::LeadTarget( const Vector2 &startPosition, float bulletSpeed, const Vector2 &targetPosition, const Vector2 &targetVelocity )
+Vector2 Aimer::LeadTarget(float bulletSpeed, const Vector2 &targetPosition, const Vector2 &targetVelocity)
 {
 	// extremely simple leading based on distance
-	Vector2 deltaPosition = targetPosition - startPosition;
-	return deltaPosition + targetVelocity * deltaPosition.Length() / bulletSpeed;
+	return targetPosition + targetVelocity * targetPosition.Length() / bulletSpeed;
 }
 
 // Aimer Control
@@ -222,11 +221,9 @@ void Aimer::Control(float aStep)
 	// aim at target lead position
 	if (mLeading > 0.0f)
 	{
-		mAim = LeadTarget(
-			entity->GetPosition(),
-			mLeading,
-			targetEntity->GetPosition(),
-			targetEntity->GetVelocity()
+		mAim = LeadTarget(mLeading,
+			targetEntity->GetPosition() - entity->GetPosition(),
+			targetEntity->GetVelocity() - entity->GetVelocity()
 			);
 	}
 	else

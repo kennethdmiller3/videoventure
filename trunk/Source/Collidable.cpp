@@ -787,21 +787,11 @@ void Collidable::CollideAll(float aStep)
 			b2Body* body2 = c->GetShape2()->GetBody();
 			Database::Key id1 = reinterpret_cast<Database::Key>(body1->GetUserData());
 			Database::Key id2 = reinterpret_cast<Database::Key>(body2->GetUserData());
-			Collidable* coll1 = Database::collidable.Get(id1);
-			Collidable* coll2 = Database::collidable.Get(id2);
-			if (coll1 && coll2)
-			{
-				coll1->Collide(*coll2, c->GetManifolds(), c->GetManifoldCount());
-				coll2->Collide(*coll1, c->GetManifolds(), c->GetManifoldCount());
-			}
+			float toi = 1.0f;
+			for (Database::Typed<Listener>::Iterator itor(Database::collidablelistener.Find(id1)); itor.IsValid(); ++itor)
+				itor.GetValue()(id2, toi, c->GetManifolds(), c->GetManifoldCount());
+			for (Database::Typed<Listener>::Iterator itor(Database::collidablelistener.Find(id2)); itor.IsValid(); ++itor)
+				itor.GetValue()(id1, toi, c->GetManifolds(), c->GetManifoldCount());
 		}
 	}
 }
-
-void Collidable::Collide(Collidable &aRecipient, b2Manifold aManifold[], int aCount)
-{
-	for (Database::Typed<Listener>::Iterator itor(Database::collidablelistener.Find(id)); itor.IsValid(); ++itor)
-	{
-		itor.GetValue()(aRecipient, aManifold, aCount);
-	}
-};

@@ -4,6 +4,7 @@
 #include "Entity.h"
 #include "Controller.h"
 #include "Link.h"
+#include "Renderable.h"
 
 #ifdef USE_POOL_ALLOCATOR
 #include <boost/pool/pool.hpp>
@@ -180,9 +181,13 @@ void Weapon::Simulate(float aStep)
 
 				// instantiate a bullet
 				Matrix2 transform(weapon.mOffset * entity->GetInterpolatedTransform(mTimer / aStep));
-				Database::Instantiate(weapon.mOrdnance,
-					transform.Angle(), transform.p,
-					transform.Rotate(weapon.mVelocity));
+				Vector2 velocity(entity->GetVelocity() + transform.Rotate(weapon.mVelocity));
+				unsigned int ordId = Database::Instantiate(weapon.mOrdnance,
+					transform.Angle(), transform.p, velocity);
+
+				// set fractional turn
+				if (Renderable *renderable = Database::renderable.Get(ordId))
+					renderable->SetFraction(mTimer / aStep - 1.0f);
 
 				// wrap around
 				mPhase = weapon.mCycle - 1;

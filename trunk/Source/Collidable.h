@@ -66,7 +66,7 @@ protected:
 	bool SetupJointDef(b2JointDef &joint);
 
 public:
-	typedef fastdelegate::FastDelegate<void (Collidable &, b2Manifold[], int)> Listener;
+	typedef fastdelegate::FastDelegate<void (unsigned int, float, b2Manifold[], int)> Listener;
 
 public:
 #ifdef USE_POOL_ALLOCATOR
@@ -102,7 +102,6 @@ public:
 
 	// control
 	static void CollideAll(float aStep);
-	virtual void Collide(Collidable &aRecipient, b2Manifold aManifold[], int aCount);
 };
 
 namespace Database

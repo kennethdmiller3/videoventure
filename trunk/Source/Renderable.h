@@ -38,6 +38,7 @@ protected:
 
 	// creation turn
 	unsigned int mStart;
+	float mFraction;
 
 public:
 #ifdef USE_POOL_ALLOCATOR
@@ -58,6 +59,10 @@ public:
 	static void SetTurn(unsigned int aTurn)
 	{
 		sTurn = aTurn;
+	}
+	void SetFraction(float aFraction)
+	{
+		mFraction = aFraction;
 	}
 
 	// render

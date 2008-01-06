@@ -95,22 +95,36 @@ Damagable::~Damagable(void)
 
 void Damagable::Damage(unsigned int aSourceId, float aDamage)
 {
+	// ignore damage if already destroyed
+	if (mHealth <= 0)
+		return;
+
+	// deduct damage from health
 	mHealth -= aDamage;
+
+	// notify all damagable listeners
 	for (Database::Typed<Listener>::Iterator itor(Database::damagablelistener.Find(id)); itor.IsValid(); ++itor)
 	{
 		itor.GetValue()(aSourceId, aDamage);
 	}
+
+	// if destroyed...
 	if (mHealth <= 0)
 	{
-		Entity *entity = Database::entity.Get(id);
-		if (entity)
+		// if spawn on death...
+		const DamagableTemplate &damagable = Database::damagabletemplate.Get(id);
+		if (damagable.mSpawnOnDeath)
 		{
-			const DamagableTemplate &damagable = Database::damagabletemplate.Get(id);
-			if (damagable.mSpawnOnDeath)
+			// get the entity
+			Entity *entity = Database::entity.Get(id);
+			if (entity)
 			{
+				// instantiate the template
 				Database::Instantiate(damagable.mSpawnOnDeath, entity->GetAngle(), entity->GetPosition(), entity->GetVelocity());
 			}
 		}
+
+		// delete the entity
 		Database::Delete(id);
 	}
 }

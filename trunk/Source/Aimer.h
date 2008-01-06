@@ -44,7 +44,7 @@ public:
 	virtual void Control(float aStep);
 
 protected:
-	Vector2 LeadTarget(const Vector2 &startPosition, float bulletSpeed, const Vector2 &targetPosition, const Vector2 &targetVelocity);
+	Vector2 LeadTarget(float bulletSpeed, const Vector2 &targetPosition, const Vector2 &targetVelocity);
 };
 
 namespace Database

@@ -4,6 +4,7 @@
 	Version="9.00"
 	Name="tinyxml_lib"
 	ProjectGUID="{C406DAEC-0886-4771-8DEA-9D7329B46CC1}"
+	RootNamespace="tinyxml_lib"
 	TargetFrameworkVersion="131072"
 	>
 	<Platforms>
@@ -17,7 +18,7 @@
 		<Configuration
 			Name="Release|Win32"
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
-			IntermediateDirectory="$(ConfigurationName)"
+			IntermediateDirectory="$(SolutionDir)$(ConfigurationName)\$(ProjectName)"
 			ConfigurationType="4"
 			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC60.vsprops"
 			UseOfMFC="0"
@@ -47,10 +48,6 @@
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
 				FloatingPointModel="2"
-				PrecompiledHeaderFile=".\Release/tinyxml_lib.pch"
-				AssemblerListingLocation=".\Release/"
-				ObjectFile=".\Release/"
-				ProgramDataBaseFileName=".\Release/"
 				WarningLevel="3"
 				SuppressStartupBanner="true"
 			/>
@@ -67,7 +64,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile="Release\tinyxml.lib"
+				OutputFile="$(OutDir)\tinyxml.lib"
 				SuppressStartupBanner="true"
 			/>
 			<Tool
@@ -79,7 +76,6 @@
 			<Tool
 				Name="VCBscMakeTool"
 				SuppressStartupBanner="true"
-				OutputFile=".\Release/tinyxml_lib.bsc"
 			/>
 			<Tool
 				Name="VCFxCopTool"
@@ -91,7 +87,7 @@
 		<Configuration
 			Name="Debug|Win32"
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
-			IntermediateDirectory="$(ConfigurationName)"
+			IntermediateDirectory="$(SolutionDir)$(ConfigurationName)\$(ProjectName)"
 			ConfigurationType="4"
 			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC60.vsprops"
 			UseOfMFC="0"
@@ -123,10 +119,6 @@
 				RuntimeLibrary="3"
 				EnableFunctionLevelLinking="true"
 				FloatingPointModel="2"
-				PrecompiledHeaderFile=".\Debug/tinyxml_lib.pch"
-				AssemblerListingLocation=".\Debug/"
-				ObjectFile=".\Debug/"
-				ProgramDataBaseFileName=".\Debug/"
 				BrowseInformation="1"
 				WarningLevel="4"
 				SuppressStartupBanner="true"
@@ -145,7 +137,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile="Debug\tinyxmld.lib"
+				OutputFile="$(OutDir)\tinyxmld.lib"
 				SuppressStartupBanner="true"
 			/>
 			<Tool
@@ -157,7 +149,6 @@
 			<Tool
 				Name="VCBscMakeTool"
 				SuppressStartupBanner="true"
-				OutputFile=".\Debug/tinyxml_lib.bsc"
 			/>
 			<Tool
 				Name="VCFxCopTool"

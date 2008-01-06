@@ -112,31 +112,37 @@ void Bullet::Simulate(float aStep)
 {
 	// count down life
 	mLife -= aStep;
+
+	// if expired...
 	if (mLife <= 0)
 	{
-		Entity *entity = Database::entity.Get(id);
-		if (entity)
+		// if spawning on expire...
+		const BulletTemplate &bullet = Database::bullettemplate.Get(id);
+		if (bullet.mSpawnOnExpire)
 		{
-			const BulletTemplate &bullet = Database::bullettemplate.Get(id);
-			if (bullet.mSpawnOnExpire)
+			// get the entity
+			Entity *entity = Database::entity.Get(id);
+			if (entity)
 			{
-				Database::Instantiate(bullet.mSpawnOnExpire, entity->GetAngle(), entity->GetPosition(), Vector2(0, 0));
+				// spawn template at entity location
+				Database::Instantiate(bullet.mSpawnOnExpire, entity->GetAngle(), entity->GetPosition(), entity->GetVelocity());
 			}
 		}
+
+		// delete the entity
 		Database::Delete(id);
 		return;
 	}
 }
 
-void Bullet::Collide(Collidable &aRecipient, b2Manifold aManifold[], int aCount)
+void Bullet::Collide(unsigned int aHitId, float aTime, b2Manifold aManifold[], int aCount)
 {
 	const BulletTemplate &bullet = Database::bullettemplate.Get(id);
 
 	// if the recipient is damagable...
 	// and not healing or the target is at max health...
-	unsigned int hitId = aRecipient.GetId();
-	Damagable *damagable = Database::damagable.Get(hitId);
-	if (damagable && (bullet.mDamage >= 0 || damagable->GetHealth() < Database::damagabletemplate.Get(hitId).mHealth))
+	Damagable *damagable = Database::damagable.Get(aHitId);
+	if (damagable && (bullet.mDamage >= 0 || damagable->GetHealth() < Database::damagabletemplate.Get(aHitId).mHealth))
 	{
 		// apply damage value
 		damagable->Damage(id, bullet.mDamage);
@@ -172,7 +178,11 @@ void Bullet::Collide(Collidable &aRecipient, b2Manifold aManifold[], int aCount)
 	if (bullet.mSpawnOnDeath)
 	{
 		// spawn the template
-		Database::Instantiate(bullet.mSpawnOnDeath, 0, Vector2(position), Vector2(0, 0));
+		unsigned int spawnId = Database::Instantiate(bullet.mSpawnOnDeath, 0, Vector2(position), Vector2(0, 0));
+
+		// set fractional turn
+		if (Renderable *renderable = Database::renderable.Get(spawnId))
+			renderable->SetFraction(aTime);
 	}
 
 	// kill the bullet
