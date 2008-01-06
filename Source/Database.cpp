@@ -100,19 +100,12 @@ namespace Database
 		// rebuild hash
 		for (size_t record = 0; record < mCount; ++record)
 		{
+			// get the record key
+			size_t key = mKey[record];
+
 			// convert key to a hash map index
 			// (HACK: assume key is already a hash)
-			size_t key = mKey[record];
-			size_t index = Index(key);
-
-			// while the slot is not empty...
-			size_t slot = mMap[index];
-			while (slot != EMPTY)
-			{
-				// go to the next index
-				index = Next(index);
-				slot = mMap[index];
-			}
+			size_t index = Probe(key);
 
 			// insert the record key
 			mMap[index] = record;
@@ -195,6 +188,7 @@ namespace Database
 
 		// add a new record
 		slot = mCount++;
+		index = Probe(aKey);
 		mMap[index] = slot;
 		mKey[slot] = aKey;
 		if (mPool[slot >> SHIFT] == NULL)
@@ -223,6 +217,7 @@ namespace Database
 
 		// add a new record
 		slot = mCount++;
+		index = Probe(aKey);
 		mMap[index] = slot;
 		mKey[slot] = aKey;
 		if (mPool[slot >> SHIFT] == NULL)
@@ -345,18 +340,19 @@ namespace Database
 		const unsigned int aInstanceTag = Entity::TakeId();
 		const unsigned int aInstanceId = Hash(&aInstanceTag, sizeof(aInstanceTag), aTemplateId);
 
+		// inherit components from template
+		Inherit(aInstanceId, aTemplateId);
+
+		// objects default to owning themselves
+		owner.Put(aInstanceId, aInstanceId);
+
 		// create a new entity
 		Entity *entity = new Entity(aInstanceId);
 		entity->SetTransform(aAngle, aPosition);
 		entity->SetVelocity(aVelocity);
 		entity->Step();
 		Database::entity.Put(aInstanceId, entity);
-
-		// inherit components from template
-		Inherit(aInstanceId, aTemplateId);
-
-		// objects default to owning themselves
-		owner.Put(aInstanceId, aInstanceId);
+		assert(Database::entity.Get(aInstanceId) == entity);
 
 		// activate the instance identifier
 		Activate(aInstanceId);
@@ -428,11 +424,6 @@ namespace Database
 		{
 			delete g;
 			gunner.Delete(aId);
-		}
-		if (Aimer *a = aimer.Get(aId))
-		{
-			delete a;
-			aimer.Delete(aId);
 		}
 	}
 

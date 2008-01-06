@@ -2504,8 +2504,8 @@ int SDL_main( int argc, char *argv[] )
 
 		// clamp ticks to something sensible
 		// (while debugging, for example)
-		if (delta > 1000)
-			delta = 1000;
+		if (delta > 100)
+			delta = 100;
 
 		// advance the sim timer
 		sim_timer += delta * TIME_SCALE * sim_rate / 1000.0f;

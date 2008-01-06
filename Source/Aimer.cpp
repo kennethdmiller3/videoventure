@@ -48,7 +48,7 @@ namespace Database
 AimerTemplate::AimerTemplate(void)
 : mRange(256.0f)
 , mAttack(256.0f)
-, mFocus(16.0f)
+, mFocus(1.0f)
 {
 }
 
@@ -203,6 +203,7 @@ void Aimer::Control(float aStep)
 		targetEntity->GetVelocity()
 		);
 	mAim /= mAim.Length();
+	mMove = mAim;
 
 	// fire if lined up and within attack range
 	mFire = (entity->GetTransform().y.Dot(mAim) > 0.95f) && 
