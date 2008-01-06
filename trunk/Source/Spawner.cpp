@@ -164,17 +164,17 @@ void Spawner::Simulate(float aStep)
 	}
 
 	// advance the timer
-	mTimer -= aStep;
+	mTimer += aStep;
 
 	// if the timer elapses...
-	if (mTimer <= 0.0f)
+	while (mTimer > 0.0f)
 	{
 		// get the spawner entity
 		Entity *entity = Database::entity.Get(id);
 		if (entity)
 		{
 			// instantiate the spawn entity
-			Matrix2 transform(spawner.mOffset * entity->GetTransform());
+			Matrix2 transform(spawner.mOffset * entity->GetInterpolatedTransform(mTimer / aStep));
 			mSpawn = Database::Instantiate(spawner.mSpawn, transform.Angle(), transform.p, entity->GetVelocity() + transform.Rotate(spawner.mVelocity));
 
 			// if the spawner has a team...
@@ -186,7 +186,7 @@ void Spawner::Simulate(float aStep)
 			}
 
 			// set the timer
-			mTimer += spawner.mCycle;
+			mTimer -= spawner.mCycle;
 		}
 	}
 }

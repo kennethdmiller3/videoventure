@@ -31,11 +31,18 @@ bool OPENGL_SWAPCONTROL = true;
 bool OPENGL_ANTIALIAS = false;
 int OPENGL_MULTISAMPLE = 16;
 
+// debug output
+bool DEBUGPRINT_OUTPUTCONSOLE = false;
+bool DEBUGPRINT_OUTPUTDEBUG = true;
+
 // simulation attributes
 int SIMULATION_RATE = 60;
 float TIME_SCALE = 1.0f;
 
-#define PRINT_PERFORMANCE_DETAILS
+// console
+OGLCONSOLE_Console console;
+
+//#define PRINT_PERFORMANCE_DETAILS
 //#define PRINT_SIMULATION_TIMER
 #define TRACE_OPENGL_ATTRIBUTES
 
@@ -49,7 +56,10 @@ int DebugPrint(const char *format, ...)
 #ifdef WIN32
 	char buf[4096];
 	int n = vsnprintf(buf, sizeof(buf), format, ap);
-	OutputDebugStringA(buf);
+	if (DEBUGPRINT_OUTPUTCONSOLE)
+		OutputDebugStringA(buf);
+	if (DEBUGPRINT_OUTPUTCONSOLE && console)
+		OGLCONSOLE_Output(console, "%s", buf);
 #else
 	int n = vfprintf(stderr, format, ap);
 #endif
@@ -187,7 +197,7 @@ bool init()
 		return false;
 
     /* Initialize OGLCONSOLE */                                                                      
-    OGLCONSOLE_Create();                                                                             
+    console = OGLCONSOLE_Create();                                                                             
     OGLCONSOLE_EnterKey(cmdCB);                                                                      
 
 	// initialize OpenGL
@@ -2400,6 +2410,14 @@ int SDL_main( int argc, char *argv[] )
 			case 0x9f2f269e /* "timescale" */:
 				TIME_SCALE = float(atof(argv[++i]));
 				break;
+
+			case 0x94c716fd /* "outputconsole" */:
+				DEBUGPRINT_OUTPUTCONSOLE = atoi(argv[++i]) != 0;
+				break;
+
+			case 0x54822903 /* "outputdebug" */:
+				DEBUGPRINT_OUTPUTDEBUG = atoi(argv[++i]) != 0;
+				break;
 			}
 		}
 	}
@@ -2596,10 +2614,6 @@ int SDL_main( int argc, char *argv[] )
 		{
 			// deduct a turn
 			sim_timer -= 1.0f;
-
-			// advance the turn counter
-			++sim_turn;
-			Renderable::SetTurn(sim_turn);
 			
 			// update database
 			Database::Update();
@@ -2652,6 +2666,10 @@ int SDL_main( int argc, char *argv[] )
 
 			// update inputs for next step
 			input.Update();
+
+			// advance the turn counter
+			++sim_turn;
+			Renderable::SetTurn(sim_turn);
 		}
 
 #ifdef PRINT_SIMULATION_TIMER
@@ -2687,7 +2705,9 @@ int SDL_main( int argc, char *argv[] )
 		Damagable *damagable = Database::damagable.Get(0xeec1dafa /* "playership" */);
 		if (damagable)
 		{
-			float health = damagable->GetHealth();
+			// health ratio
+			const DamagableTemplate &damagabletemplate = Database::damagabletemplate.Get(0xeec1dafa /* "playership" */);
+			float health = damagable->GetHealth() / damagabletemplate.mHealth;
 
 			// push camera transform
 			glPushMatrix();
@@ -2700,25 +2720,25 @@ int SDL_main( int argc, char *argv[] )
 			glBegin(GL_QUADS);
 
 			// set color based on health
-			if (health < 5)
-				glColor4f(1.0f, 0.1f + (health - 1) * 0.9f / 4, 0.1f, 1.0f - health * 0.09f);
-			else if (health < 10)
-				glColor4f(0.1f + (10 - health) * 0.9f / 5, 1.0f, 0.1f, 1.0f - health * 0.09f);
+			if (health < 0.5f)
+				glColor4f(1.0f, 0.1f + health * 0.9f / 0.5f, 0.1f, 1.0f - health * 0.9f);
+			else if (health < 100)
+				glColor4f(0.1f + (1.0f - health) * 0.9f / 0.5f, 1.0f, 0.1f, 1.0f - health * 0.9f);
 			else
 				glColor4f(0.1f, 1.0f, 0.1f, 0.1f);
 
 			// fill gauge
 			glVertex2f(8, 8);
-			glVertex2f(8 + 8 * health, 8);
-			glVertex2f(8 + 8 * health, 16);
+			glVertex2f(8 + 100 * health, 8);
+			glVertex2f(8 + 100 * health, 16);
 			glVertex2f(8, 16);
 
 			// background
 			glColor4f(0.0f, 0.0f, 0.0f, 0.1f);
-			glVertex2f(8 + 8 * health, 8);
-			glVertex2f(88, 8);
-			glVertex2f(88, 16);
-			glVertex2f(8 + 8 * health, 16);
+			glVertex2f(8 + 100 * health, 8);
+			glVertex2f(108, 8);
+			glVertex2f(108, 16);
+			glVertex2f(8 + 100 * health, 16);
 
 			glEnd();
 

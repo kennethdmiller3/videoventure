@@ -123,14 +123,14 @@ bool WeaponTemplate::Configure(TiXmlElement *element)
 
 Weapon::Weapon(void)
 : Simulatable(0)
-, mDelay(0.0f)
+, mTimer(0.0f)
 , mPhase(0)
 {
 }
 
 Weapon::Weapon(const WeaponTemplate &aTemplate, unsigned int aId)
 : Simulatable(aId)
-, mDelay(0.0f)
+, mTimer(0.0f)
 , mPhase(aTemplate.mPhase)
 {
 }
@@ -160,17 +160,17 @@ void Weapon::Simulate(float aStep)
 		return;
 	}
 
-	// get template data
-	const WeaponTemplate &weapon = Database::weapontemplate.Get(id);
-
 	// advance fire timer
-	mDelay -= aStep * weapon.mCycle;
+	mTimer += aStep;
 
-	// if ready to fire...
-	if (mDelay <= 0.0f)
+	// if triggered...
+	if (controller->mFire)
 	{
-		// if triggered...
-		if (controller->mFire)
+		// get template data
+		const WeaponTemplate &weapon = Database::weapontemplate.Get(id);
+
+		// if ready to fire...
+		while (mTimer > 0.0f)
 		{
 			// if firing on this phase...
 			if (mPhase == 0)
@@ -179,7 +179,7 @@ void Weapon::Simulate(float aStep)
 				Entity *entity = Database::entity.Get(id);
 
 				// instantiate a bullet
-				Matrix2 transform(weapon.mOffset * entity->GetTransform());
+				Matrix2 transform(weapon.mOffset * entity->GetInterpolatedTransform(mTimer / aStep));
 				Database::Instantiate(weapon.mOrdnance,
 					transform.Angle(), transform.p,
 					transform.Rotate(weapon.mVelocity));
@@ -194,12 +194,15 @@ void Weapon::Simulate(float aStep)
 			}
 
 			// update weapon delay
-			mDelay += weapon.mDelay;
+			mTimer -= weapon.mDelay / weapon.mCycle;
 		}
-		else
+	}
+	else
+	{
+		if (mTimer > 0.0f)
 		{
 			// clamp fire delay
-			mDelay = 0.0f;
+			mTimer = 0.0f;
 		}
 	}
 }

@@ -29,8 +29,8 @@ class Weapon
 	: public Simulatable
 {
 protected:
-	// fire delay
-	float mDelay;
+	// fire timer
+	float mTimer;
 	int mPhase;
 
 public:
