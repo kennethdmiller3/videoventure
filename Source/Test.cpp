@@ -23,6 +23,11 @@ int SCREEN_HEIGHT = 480;
 int SCREEN_DEPTH = 0;
 bool SCREEN_FULLSCREEN = false;
 
+// view attributes
+float VIEW_SIZE = 640;
+float VIEW_AIM = 0;
+float VIEW_AIM_FILTER = 0.002f;
+
 // opengl attributes
 bool OPENGL_DOUBLEBUFFER = true;
 bool OPENGL_STEREO = false;
@@ -145,7 +150,7 @@ bool init_GL()
 	// set base modelview matrix
 	glMatrixMode( GL_MODELVIEW );
 	glLoadIdentity();
-	glScalef( -1.0f / 640, -1.0f / 640, -1.0f );
+	glScalef( -1.0f / VIEW_SIZE, -1.0f / VIEW_SIZE, -1.0f );
 	glTranslatef( 0.0f, 0.0f, 1.0f );
 
 	// return true if no errors
@@ -1747,6 +1752,18 @@ int SDL_main( int argc, char *argv[] )
 				OPENGL_ACCELERATED = atoi(argv[++i]) != 0;
 				break;
 
+			case 0x1ae79789 /* "viewsize" */:
+				VIEW_SIZE = float(atof(argv[++i]));
+				break;
+
+			case 0x8e6b4341 /* "viewaim" */:
+				VIEW_AIM = float(atof(argv[++i]));
+				break;
+
+			case 0xd49cb7d3 /* "viewaimfilter" */:
+				VIEW_AIM_FILTER = float(atof(argv[++i])) / 1000.0f;
+				break;
+
 			case 0xf9d86f7b /* "input" */:
 				inputconfig = argv[++i];
 				break;
@@ -1889,6 +1906,7 @@ int SDL_main( int argc, char *argv[] )
 
 	// camera track position
 	Vector2 trackpos(0, 0);
+	Vector2 trackaim(0, 0);
 
 	// wait for user exit
 	do
@@ -2051,6 +2069,17 @@ int SDL_main( int argc, char *argv[] )
 		{
 			// track player position
 			trackpos = player->GetInterpolatedPosition(sim_timer);
+
+			// if applying view aim
+			if (VIEW_AIM)
+			{
+				const Controller *controller = Database::controller.Get(0xeec1dafa /* "playership" */);
+				if (controller)
+				{
+					trackaim += VIEW_AIM_FILTER * delta * (controller->mAim - trackaim);
+					trackpos += trackaim * VIEW_AIM;
+				}
+			}
 		}
 
 		// draw player health (HACK)
