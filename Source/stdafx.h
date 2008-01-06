@@ -57,11 +57,9 @@ extern Input input;
 void ProcessTemplateItem(TiXmlElement *element, unsigned int template_id);
 void ProcessTemplateItems(TiXmlElement *element);
 void ProcessEntityItems(TiXmlElement *element);
-void ProcessDrawItem(TiXmlElement *element);
-void ProcessDrawItems(TiXmlElement *element);
-void ProcessDrawItemDeferred(TiXmlElement *element, std::vector<unsigned int> &buffer);
-void ProcessDrawItemsDeferred(TiXmlElement *element, std::vector<unsigned int> &buffer);
-void ExecuteDeferredDrawItems(const unsigned int buffer[], size_t count, float param);
+void ProcessDrawItem(TiXmlElement *element, std::vector<unsigned int> &buffer);
+void ProcessDrawItems(TiXmlElement *element, std::vector<unsigned int> &buffer);
+void ExecuteDrawItems(const unsigned int buffer[], size_t count, float param);
 
 // configuration
 //#define ENABLE_DEPTH_TEST
