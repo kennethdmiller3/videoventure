@@ -21,11 +21,6 @@ public:
 	// control values
 	Vector2 mMove;
 	Vector2 mAim;
-	bool mFire;
-
-	// fire delay
-	float mDelay;
-	int mCycle;
 
 public:
 	// constructor

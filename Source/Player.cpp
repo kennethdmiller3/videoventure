@@ -2,14 +2,6 @@
 #include "Player.h"
 #include "Bullet.h"
 
-// player bullet physics
-const float PLAYER_BULLET_SPEED = 800;
-const Vector2 PLAYER_BULLET_POS[2] =
-{
-	Vector2(-4, 0),
-	Vector2(4, 0)
-};
-
 namespace Database
 {
 	Typed<Player *> player("player");
@@ -25,9 +17,6 @@ Player::Player(unsigned int aId, unsigned int aParentId)
 , mMaxOmega(10)
 , mMove(0, 0)
 , mAim(0, 0)
-, mFire(false)
-, mDelay(0.0f)
-, mCycle(0)
 {
 }
 
@@ -64,7 +53,6 @@ void Player::Control(float aStep)
 	mMove.y = input[Input::MOVE_VERTICAL];
 	mAim.x = input[Input::AIM_HORIZONTAL];
 	mAim.y = input[Input::AIM_VERTICAL];
-	mFire = input[Input::FIRE_PRIMARY] != 0.0f;
 }
 
 // Player Simulate
@@ -97,34 +85,5 @@ void Player::Simulate(float aStep)
 			aim_angle += 2.0f*float(M_PI);
 		float new_omega = std::min(std::max(aim_angle / aStep, -mMaxOmega * control), mMaxOmega * control);
 		body->SetAngularVelocity(new_omega);
-	}
-
-	// advance fire timer
-	mDelay -= aStep;
-
-	// if ready to fire...
-	if (mDelay <= 0.0f)
-	{
-		// if triggered...
-		if (mFire)
-		{
-			// for each shot...
-			for (int i = 0; i < 2; i++)
-			{
-				const Vector2 d = PLAYER_BULLET_POS[i];
-				Matrix2 transform(entity->GetTransform());
-				transform.p = transform.Transform(PLAYER_BULLET_POS[i]);
-				Database::Instantiate(0xd85669f0 /* "playerbullet" */,
-					transform.Angle(), transform.p, transform.y * PLAYER_BULLET_SPEED);
-			}
-
-			// update weapon delay
-			mDelay += 0.1f;
-		}
-		else
-		{
-			// clamp fire delay
-			mDelay = 0.0f;
-		}
 	}
 }

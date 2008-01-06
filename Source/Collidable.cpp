@@ -611,7 +611,7 @@ void Collidable::AddToWorld(void)
 	{
 		// set body position to entity (HACK)
 		b2BodyDef def(itor.GetValue());
-		def.userData = this;
+		def.userData = reinterpret_cast<void *>(id);
 		const Entity *entity = Database::entity.Get(id);
 		if (entity)
 		{
@@ -741,13 +741,17 @@ void Collidable::CollideAll(float aStep)
 	// for each body...
 	for (b2Body* body = world->GetBodyList(); body; body = body->GetNext())
 	{
+		// if the body is not sleeping or static...
 		if (!body->IsSleeping() && !body->IsStatic())
 		{
+			// get the database key
+			Database::Key id = reinterpret_cast<Database::Key>(body->GetUserData());
+
 			// update the entity position (hack)
-			Collidable *collidable = static_cast<Collidable *>(body->GetUserData());
+			Collidable *collidable = Database::collidable.Get(id);
 			if (collidable)
 			{
-				Entity *entity = Database::entity.Get(collidable->id);
+				Entity *entity = Database::entity.Get(id);
 				if (entity)
 				{
 					entity->Step();
@@ -766,8 +770,10 @@ void Collidable::CollideAll(float aStep)
 		{
 			b2Body* body1 = c->GetShape1()->GetBody();
 			b2Body* body2 = c->GetShape2()->GetBody();
-			Collidable* coll1 = static_cast<Collidable *>(body1->GetUserData());
-			Collidable* coll2 = static_cast<Collidable *>(body2->GetUserData());
+			Database::Key id1 = reinterpret_cast<Database::Key>(body1->GetUserData());
+			Database::Key id2 = reinterpret_cast<Database::Key>(body2->GetUserData());
+			Collidable* coll1 = Database::collidable.Get(id1);
+			Collidable* coll2 = Database::collidable.Get(id2);
 			if (coll1 && coll2)
 			{
 				coll1->Collide(*coll2, c->GetManifolds(), c->GetManifoldCount());

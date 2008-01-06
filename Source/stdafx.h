@@ -54,6 +54,9 @@ extern int DebugPrint(const char *format, ...);
 extern Input input;
 
 // loader
+void ProcessTemplateItem(TiXmlElement *element, unsigned int template_id);
+void ProcessTemplateItems(TiXmlElement *element);
+void ProcessEntityItems(TiXmlElement *element);
 void ProcessDrawItems(TiXmlElement *element);
 void ProcessDrawItemsDeferred(TiXmlElement *element, unsigned int id, std::vector<unsigned int> &buffer);
 void ExecuteDeferredDrawItems(const unsigned int buffer[], size_t count, float param);

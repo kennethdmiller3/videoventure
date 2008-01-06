@@ -1,9 +1,7 @@
 #pragma once
 
-#include "Entity.h"
 #include "Simulatable.h"
 #include "Collidable.h"
-#include "Renderable.h"
 
 class BulletTemplate
 {
