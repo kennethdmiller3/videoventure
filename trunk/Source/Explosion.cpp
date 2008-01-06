@@ -1,13 +1,9 @@
 #include "StdAfx.h"
 #include "Explosion.h"
+
+
+#ifdef USE_POOL_ALLOCATOR
 #include <boost/pool/pool.hpp>
-
-namespace Database
-{
-	Typed<ExplosionTemplate> explosiontemplate("explosiontemplate");
-	Typed<Explosion *> explosion("explosion");
-};
-
 
 // explosion pool
 static boost::pool<boost::default_user_allocator_malloc_free> pool(sizeof(Explosion));
@@ -19,6 +15,44 @@ void Explosion::operator delete(void *aPtr)
 {
 	pool.free(aPtr);
 }
+#endif
+
+
+namespace Database
+{
+	Typed<ExplosionTemplate> explosiontemplate("explosiontemplate");
+	Typed<Explosion *> explosion("explosion");
+
+	namespace Initializer
+	{
+		class ExplosionInitializer
+		{
+		public:
+			ExplosionInitializer()
+			{
+				AddActivate(0xbde38dea /* "explosiontemplate" */, Entry(this, &ExplosionInitializer::Activate));
+				AddDeactivate(0xbde38dea /* "explosiontemplate" */, Entry(this, &ExplosionInitializer::Deactivate));
+			}
+
+			void Activate(unsigned int aId)
+			{
+				const ExplosionTemplate &explosiontemplate = Database::explosiontemplate.Get(aId);
+				Explosion *explosion = new Explosion(explosiontemplate, aId);
+				Database::explosion.Put(aId, explosion);
+			}
+
+			void Deactivate(unsigned int aId)
+			{
+				if (Explosion *explosion = Database::explosion.Get(aId))
+				{
+					delete explosion;
+					Database::explosion.Delete(aId);
+				}
+			}
+		}
+		explosioninitializer;
+	}
+};
 
 
 ExplosionTemplate::ExplosionTemplate(void)
@@ -49,16 +83,14 @@ bool ExplosionTemplate::Configure(TiXmlElement *element, unsigned int id)
 
 
 Explosion::Explosion(void)
-: ExplosionTemplate()
-, Simulatable(0)
+: Simulatable(0)
 , Renderable()
 , mLife(0)
 {
 }
 
 Explosion::Explosion(const ExplosionTemplate &aTemplate, unsigned int aId)
-: ExplosionTemplate(aTemplate)
-, Simulatable(aId)
+: Simulatable(aId)
 , Renderable(RenderableTemplate(), aId)
 , mLife(aTemplate.mLifeSpan)
 {
@@ -88,11 +120,11 @@ void Explosion::Simulate(float aStep)
 
 void Explosion::Render(const Matrix2 &transform)
 {
-	// elapsed time
-	float t = mLifeSpan - mLife + Renderable::sOffset;
-
 	// get the explosion template
 	const ExplosionTemplate &explosion = Database::explosiontemplate.Get(Simulatable::id);
+
+	// elapsed time
+	float t = explosion.mLifeSpan - mLife + Renderable::sOffset;
 
 	// execute the deferred draw list
 	ExecuteDeferredDrawItems(&explosion.mBuffer[0], explosion.mBuffer.size(), t);

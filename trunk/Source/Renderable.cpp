@@ -7,6 +7,38 @@ namespace Database
 	Typed<RenderableTemplate> renderabletemplate("renderabletemplate");
 	Typed<Renderable *> renderable("renderable");
 	Typed<GLuint> drawlist("drawlist");
+
+	namespace Initializer
+	{
+		class RenderableInitializer
+		{
+		public:
+			RenderableInitializer()
+			{
+				AddActivate(0x0cb54133 /* "renderabletemplate" */, Entry(this, &RenderableInitializer::Activate));
+				AddDeactivate(0x0cb54133 /* "renderabletemplate" */, Entry(this, &RenderableInitializer::Deactivate));
+			}
+
+			void Activate(unsigned int aId)
+			{
+				const RenderableTemplate &renderabletemplate = Database::renderabletemplate.Get(aId);
+				Renderable *renderable = new Renderable(renderabletemplate, aId);
+				Database::renderable.Put(aId, renderable);
+				renderable->Show();
+			}
+
+			void Deactivate(unsigned int aId)
+			{
+				if (Renderable *renderable = Database::renderable.Get(aId))
+				{
+					renderable->Hide();
+					delete renderable;
+					Database::renderable.Delete(aId);
+				}
+			}
+		}
+		renderableinitializer;
+	}
 }
 
 RenderableTemplate::RenderableTemplate(void)

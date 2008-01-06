@@ -5,8 +5,6 @@ namespace Database
 	// database aKey
 	typedef unsigned int Key;
 
-	// boost::object_pool<T> pool;
-
 	// untyped (core) database
 	class Untyped
 	{
@@ -58,14 +56,27 @@ namespace Database
 			return index;
 		}
 
-		// implemented in typed databases
 		void *GetRecord(size_t aSlot) const
 		{
 			return static_cast<char *>(mPool[aSlot >> SHIFT]) + (aSlot & ((1 << SHIFT) - 1)) * mStride;
 		}
-		virtual void CreateRecord(void *aDest, const void *aSource = NULL) = 0;
-		virtual void UpdateRecord(void *aDest, const void *aSource) = 0;
-		virtual void DeleteRecord(void *aDest) = 0;
+		virtual void CreateRecord(void *aDest, const void *aSource = NULL)
+		{
+			if (aSource)
+				memcpy(aDest, aSource, mStride);
+			else
+				memset(aDest, 0, mStride);
+		}
+		virtual void UpdateRecord(void *aDest, const void *aSource)
+		{
+			if (aSource)
+				memcpy(aDest, aSource, mStride);
+			else
+				memset(aDest, 0, mStride);
+		}
+		virtual void DeleteRecord(void *aDest)
+		{
+		};
 
 	public:
 		Untyped(unsigned int mId, size_t aStride);
@@ -160,7 +171,7 @@ namespace Database
 		}
 
 	public:
-		Typed(const char *aName = "")
+		Typed(const char *aName = NULL)
 			: Untyped(Hash(aName), sizeof(T)), mNil()
 		{
 		}
@@ -234,6 +245,13 @@ namespace Database
 			}
 		};
 	};
+
+	namespace Initializer
+	{
+		typedef fastdelegate::FastDelegate<void (unsigned int)> Entry;
+		void AddActivate(unsigned int aDatabaseId, Entry aActivate);
+		void AddDeactivate(unsigned int aDatabaseId, Entry aDeactivate);
+	}
 
 	// parent identifier database
 	extern Typed<unsigned int> parent;

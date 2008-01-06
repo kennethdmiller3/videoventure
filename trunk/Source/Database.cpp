@@ -13,8 +13,23 @@
 
 namespace Database
 {
+	// get database of databases
+	// (wrapped in a function to handle global initialization order)
+	Typed<Untyped *> &GetDatabases()
+	{
+		static Typed<Untyped *> databases;
+		return databases;
+	}
+
+	// parent links
 	Typed<unsigned int> parent("parent");
 
+
+	//
+	// UNTYPED DATABASE
+	//
+
+	// constructor
 	Untyped::Untyped(unsigned int aId, size_t aStride)
 		: mId(aId), mStride(aStride), mBits(8), mLimit(1<<mBits), mCount(0)
 	{
@@ -26,10 +41,17 @@ namespace Database
 
 		mPool = static_cast<void **>(malloc((mLimit >> SHIFT) * sizeof(void *)));
 		memset(mPool, 0, (mLimit >> SHIFT) * sizeof(void *));
+
+		if (mId)
+			GetDatabases().Put(mId, this);
 	}
 
+	// destructor
 	Untyped::~Untyped()
 	{
+		if (mId)
+			GetDatabases().Delete(mId);
+
 		free(mMap);
 		free(mKey);
 		for (size_t slot = 0; slot < mLimit >> SHIFT; ++slot)
@@ -37,6 +59,7 @@ namespace Database
 		free(mPool);
 	}
 
+	// clear all records
 	void Untyped::Clear(void)
 	{
 		memset(mMap, EMPTY, mLimit * 2 * sizeof(size_t));
@@ -46,6 +69,8 @@ namespace Database
 		mCount = 0;
 	}
 
+	// grow the database
+	// (doubles the size)
 	void Untyped::Grow(void)
 	{
 		// resize
@@ -87,6 +112,7 @@ namespace Database
 		}
 	}
 
+	// copy a source database
 	void Untyped::Copy(const Untyped &aSource)
 	{
 		// clear existing pool
@@ -121,6 +147,7 @@ namespace Database
 		}
 	}
 
+	// find the record for a specified key
 	const void *Untyped::Find(Key aKey) const
 	{
 		// convert key to a hash map index
@@ -139,6 +166,7 @@ namespace Database
 		return NULL;
 	}
 
+	// create or update a record for a specified key
 	void Untyped::Put(Key aKey, const void *aValue)
 	{
 		// convert key to a hash map index
@@ -167,6 +195,7 @@ namespace Database
 		CreateRecord(GetRecord(slot), aValue);
 	}
 
+	// get or create the record for a specified key
 	void *Untyped::Open(Key aKey)
 	{
 		// convert key to a hash map index
@@ -197,10 +226,12 @@ namespace Database
 		return GetRecord(slot);
 	}
 
+	// close a record once done
 	void Untyped::Close(Key aKey)
 	{
 	}
 
+	// delete a record for a specified key
 	void Untyped::Delete(Key aKey)
 	{
 		// convert key to a hash map index
@@ -269,6 +300,37 @@ namespace Database
 	}
 
 
+	//
+	// INITIALIZER SYSTEM
+	//
+	namespace Initializer
+	{
+		typedef fastdelegate::FastDelegate<void (unsigned int)> Entry;
+
+		Typed<Entry> &GetActivate()
+		{
+			static Typed<Entry> onactivate;
+			return onactivate;
+		}
+		void AddActivate(unsigned int aDatabaseId, Entry aActivate)
+		{
+			GetActivate().Put(aDatabaseId, aActivate);
+		}
+		Typed<Entry> &GetDeactivate()
+		{
+			static Typed<Entry> ondeactivate;
+			return ondeactivate;
+		}
+		void AddDeactivate(unsigned int aDatabaseId, Entry aDeactivate)
+		{
+			GetDeactivate().Put(aDatabaseId, aDeactivate);
+		}
+	}
+
+	//
+	// COMPONENT SYSTEM
+	//
+
 	// instantiate a template
 	unsigned int Instantiate(unsigned int aTemplateId, float aAngle, Vector2 aPosition, Vector2 aVelocity)
 	{
@@ -296,53 +358,18 @@ namespace Database
 	// inherit from a template
 	void Inherit(unsigned int aInstanceId, unsigned int aTemplateId)
 	{
-		// inherit collidable template
-		const CollidableTemplate *collidabletemplate = Database::collidabletemplate.Find(aTemplateId);
-		if (collidabletemplate)
+		// for each registered database...
+		for (Typed<Untyped *>::Iterator itor(&GetDatabases()); itor.IsValid(); ++itor)
 		{
-			Database::collidabletemplate.Put(aInstanceId, *collidabletemplate);
-		}
+			// get the database
+			Untyped *database = itor.GetValue();
 
-		// inherit collidable bodies
-		const Typed<b2BodyDef> *collidabletemplatebody = Database::collidabletemplatebody.Find(aTemplateId);
-		if (collidabletemplatebody)
-		{
-			Database::collidabletemplatebody.Put(aInstanceId, *collidabletemplatebody);
-		}
-
-		// inherit renderable template
-		const RenderableTemplate *renderabletemplate = Database::renderabletemplate.Find(aTemplateId);
-		if (renderabletemplate)
-		{
-			Database::renderabletemplate.Put(aInstanceId, *renderabletemplate);
-		}
-
-		// inherit damagable template
-		const DamagableTemplate *damagabletemplate = Database::damagabletemplate.Find(aTemplateId);
-		if (damagabletemplate)
-		{
-			Database::damagabletemplate.Put(aInstanceId, *damagabletemplate);
-		}
-
-		// inherit bullet template
-		const BulletTemplate *bullettemplate = Database::bullettemplate.Find(aTemplateId);
-		if (bullettemplate)
-		{
-			Database::bullettemplate.Put(aInstanceId, *bullettemplate);
-		}
-
-		// inherit explosion template
-		const ExplosionTemplate *explosiontemplate = Database::explosiontemplate.Find(aTemplateId);
-		if (explosiontemplate)
-		{
-			Database::explosiontemplate.Put(aInstanceId, *explosiontemplate);
-		}
-
-		// inherit spawner template
-		const SpawnerTemplate *spawnertemplate = Database::spawnertemplate.Find(aTemplateId);
-		if (spawnertemplate)
-		{
-			Database::spawnertemplate.Put(aInstanceId, *spawnertemplate);
+			// if the database has a record for the template...
+			if (const void *data = database->Find(aTemplateId))
+			{
+				// duplicate into the instance
+				database->Put(aInstanceId, data);
+			}
 		}
 	}
 
@@ -352,54 +379,15 @@ namespace Database
 		// initialize entity
 		Entity *entity = Database::entity.Get(aId);
 
-		// instantiate collidable template
-		const CollidableTemplate *collidabletemplate = Database::collidabletemplate.Find(aId);
-		if (collidabletemplate)
+		// for each activation initializer...
+		for (Typed<Initializer::Entry>::Iterator itor(&Initializer::GetActivate()); itor.IsValid(); ++itor)
 		{
-			Collidable *collidable = new Collidable(*collidabletemplate, aId);
-			Database::collidable.Put(aId, collidable);
-			collidable->AddToWorld();
-		}
-
-		// instantiate renderable template
-		const RenderableTemplate *renderabletemplate = Database::renderabletemplate.Find(aId);
-		if (renderabletemplate)
-		{
-			Renderable *renderable = new Renderable(*renderabletemplate, aId);
-			Database::renderable.Put(aId, renderable);
-			renderable->Show();
-		}
-
-		// instantiate damagable template
-		const DamagableTemplate *damagabletemplate = Database::damagabletemplate.Find(aId);
-		if (damagabletemplate)
-		{
-			Damagable *damagable = new Damagable(*damagabletemplate, aId);
-			Database::damagable.Put(aId, damagable);
-		}
-
-		// instantiate bullet template
-		const BulletTemplate *bullettemplate = Database::bullettemplate.Find(aId);
-		if (bullettemplate)
-		{
-			Bullet *bullet = new Bullet(*bullettemplate, aId);
-			Database::bullet.Put(aId, bullet);
-		}
-
-		// instantiate explosion template
-		const ExplosionTemplate *explosiontemplate = Database::explosiontemplate.Find(aId);
-		if (explosiontemplate)
-		{
-			Explosion *explosion = new Explosion(*explosiontemplate, aId);
-			Database::explosion.Put(aId, explosion);
-		}
-
-		// instantiate spawner template
-		const SpawnerTemplate *spawnertemplate = Database::spawnertemplate.Find(aId);
-		if (spawnertemplate)
-		{
-			Spawner *spawner = new Spawner(*spawnertemplate, aId);
-			Database::spawner.Put(aId, spawner);
+			// if the corresponding database has a record...
+			if (GetDatabases().Get(itor.GetKey())->Find(aId))
+			{
+				// call the initializer
+				itor.GetValue()(aId);
+			}
 		}
 
 		// initialize entity (HACK)
@@ -409,22 +397,18 @@ namespace Database
 	// deactivate an identifier
 	void Deactivate(unsigned int aId)
 	{
-		// remove components
-		if (Bullet *b = bullet.Get(aId))
+		// for each deactivation initializer...
+		for (Typed<Initializer::Entry>::Iterator itor(&Initializer::GetDeactivate()); itor.IsValid(); ++itor)
 		{
-			delete b;
-			bullet.Delete(aId);
+			// if the corresponding database has a record...
+			if (GetDatabases().Get(itor.GetKey())->Find(aId))
+			{
+				// call the initializer
+				itor.GetValue()(aId);
+			}
 		}
-		if (Explosion *e = explosion.Get(aId))
-		{
-			delete e;
-			explosion.Delete(aId);
-		}
-		if (Spawner *s = spawner.Get(aId))
-		{
-			delete s;
-			spawner.Delete(aId);
-		}
+
+		// remove runtime components without templates
 		if (Player *p = player.Get(aId))
 		{
 			delete p;
@@ -434,21 +418,6 @@ namespace Database
 		{
 			delete g;
 			gunner.Delete(aId);
-		}
-		if (Collidable *c = collidable.Get(aId))
-		{
-			delete c;
-			collidable.Delete(aId);
-		}
-		if (Renderable *r = renderable.Get(aId))
-		{
-			delete r;
-			renderable.Delete(aId);
-		}
-		if (Damagable *d = damagable.Get(aId))
-		{
-			delete d;
-			damagable.Delete(aId);
 		}
 	}
 
@@ -467,17 +436,15 @@ namespace Database
 		// deactivate
 		Deactivate(aId);
 
-		// remove template components
-		collidabletemplate.Delete(aId);
-		collidabletemplatebody.Delete(aId);
-		renderabletemplate.Delete(aId);
-		damagabletemplate.Delete(aId);
-		bullettemplate.Delete(aId);
-		explosiontemplate.Delete(aId);
-		spawnertemplate.Delete(aId);
+		// for each registered database...
+		for (Typed<Untyped *>::Iterator itor(&GetDatabases()); itor.IsValid(); ++itor)
+		{
+			// get the database
+			Untyped *database = itor.GetValue();
 
-		// remove the entity
-		Database::entity.Delete(aId);
+			// delete the record
+			database->Delete(aId);
+		}
 	}
 
 	// update the database system
