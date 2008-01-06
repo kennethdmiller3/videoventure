@@ -4,7 +4,7 @@
 
 namespace Database
 {
-	Typed<Entity *> entity("entity");
+	Typed<Entity *> entity(0xd33ff5da /* "entity" */);
 }
 
 Entity::List Entity::sAll;

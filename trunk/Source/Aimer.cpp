@@ -8,8 +8,8 @@
 
 namespace Database
 {
-	Typed<AimerTemplate> aimertemplate("aimertemplate");
-	Typed<Aimer *> aimer("aimer");
+	Typed<AimerTemplate> aimertemplate(0x9bde0ae7 /* "aimertemplate" */);
+	Typed<Aimer *> aimer(0x2ea90881 /* "aimer" */);
 
 	namespace Initializer
 	{
@@ -80,13 +80,9 @@ Aimer::~Aimer(void)
 
 Vector2 Aimer::LeadTarget( const Vector2 &startPosition, float bulletSpeed, const Vector2 &targetPosition, const Vector2 &targetVelocity )
 {
-	Vector2 D = targetPosition - startPosition;
-	float E = D.Dot( D );
-	float F = 2 * targetVelocity.Dot( D );
-	float G = bulletSpeed * bulletSpeed - targetVelocity.Dot( targetVelocity );
-	float t = ( F + sqrt( F * F + 4 * G * E) ) / ( G * 2 );
-
-	return D / t + targetVelocity;
+	// extremely simple leading based on distance
+	Vector2 dpos = targetPosition - startPosition;
+	return dpos + targetVelocity * dpos.Length() / bulletSpeed;
 }
 
 // Aimer Control
@@ -196,13 +192,20 @@ void Aimer::Control(float aStep)
 
 	// aim at target lead position
 	Entity *targetEntity = Database::entity.Get(mTarget);
-	mAim = LeadTarget(
-		entity->GetPosition(),
-		weapon ? weapon->mVelocity.y : FLT_MAX,
-		targetEntity->GetPosition(),
-		targetEntity->GetVelocity()
-		);
-	mAim /= mAim.Length();
+	if (weapon && weapon->mVelocity.y > 0)
+	{
+		mAim = LeadTarget(
+			entity->GetPosition(),
+			weapon->mVelocity.y,
+			targetEntity->GetPosition(),
+			targetEntity->GetVelocity()
+			);
+	}
+	else
+	{
+		mAim = targetEntity->GetPosition() - entity->GetPosition();
+	}
+	mAim /= (mAim.Length() + FLT_EPSILON);
 	mMove = mAim;
 
 	// fire if lined up and within attack range

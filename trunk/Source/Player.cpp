@@ -4,7 +4,7 @@
 
 namespace Database
 {
-	Typed<Player *> player("player");
+	Typed<Player *> player(0x2c99c300 /* "player" */);
 }
 
 // Player Constructor

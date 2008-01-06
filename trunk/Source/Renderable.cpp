@@ -4,9 +4,9 @@
 
 namespace Database
 {
-	Typed<RenderableTemplate> renderabletemplate("renderabletemplate");
-	Typed<Renderable *> renderable("renderable");
-	Typed<GLuint> drawlist("drawlist");
+	Typed<RenderableTemplate> renderabletemplate(0x0cb54133 /* "renderabletemplate" */);
+	Typed<Renderable *> renderable(0x109dd1ad /* "renderable" */);
+	Typed<GLuint> drawlist(0xc98b019b /* "drawlist" */);
 
 	namespace Initializer
 	{

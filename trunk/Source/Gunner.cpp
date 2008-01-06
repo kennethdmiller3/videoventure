@@ -4,7 +4,7 @@
 
 namespace Database
 {
-	Typed<Gunner *> gunner("gunner");
+	Typed<Gunner *> gunner(0xe063cbaa /* "gunner" */);
 }
 
 // Gunner Constructor

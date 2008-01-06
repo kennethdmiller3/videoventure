@@ -5,11 +5,11 @@
 
 namespace Database
 {
-	Typed<CollidableTemplate> collidabletemplate("collidabletemplate");
-	Typed<Typed<b2BodyDef> > collidabletemplatebody("collidabletemplatebody");
-	Typed<Collidable *> collidable("collidable");
-	Typed<Typed<b2Body *> > collidablebody("collidablebody");
-	Typed<Typed<Collidable::Listener> > collidablelistener("collidablelistener");
+	Typed<CollidableTemplate> collidabletemplate(0xa7380c00 /* "collidabletemplate" */);
+	Typed<Typed<b2BodyDef> > collidabletemplatebody(0x66727d0c /* "collidabletemplatebody" */);
+	Typed<Collidable *> collidable(0x74e9dbae /* "collidable" */);
+	Typed<Typed<b2Body *> > collidablebody(0x6ccc2b62 /* "collidablebody" */);
+	Typed<Typed<Collidable::Listener> > collidablelistener(0xf4c15fb2 /* "collidablelistener" */);
 
 	namespace Initializer
 	{

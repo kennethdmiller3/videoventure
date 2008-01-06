@@ -4,9 +4,9 @@
 
 namespace Database
 {
-	Typed<DamagableTemplate> damagabletemplate("damagabletemplate");
-	Typed<Damagable *> damagable("damagable");
-	Typed<Typed<Damagable::Listener> > damagablelistener("damagablelistener");
+	Typed<DamagableTemplate> damagabletemplate(0x5e73241b /* "damagabletemplate" */);
+	Typed<Damagable *> damagable(0x1b715375 /* "damagable" */);
+	Typed<Typed<Damagable::Listener> > damagablelistener(0x1e01f5e1 /* "damagablelistener" */);
 
 	namespace Initializer
 	{

@@ -20,8 +20,8 @@ void Explosion::operator delete(void *aPtr)
 
 namespace Database
 {
-	Typed<ExplosionTemplate> explosiontemplate("explosiontemplate");
-	Typed<Explosion *> explosion("explosion");
+	Typed<ExplosionTemplate> explosiontemplate(0xbde38dea /* "explosiontemplate" */);
+	Typed<Explosion *> explosion(0x02bb1fe0 /* "explosion" */);
 
 	namespace Initializer
 	{

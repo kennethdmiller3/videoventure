@@ -6,8 +6,8 @@
 
 namespace Database
 {
-	extern Typed<ShipTemplate> shiptemplate("shiptemplate");
-	Typed<Ship *> ship("ship");
+	Typed<ShipTemplate> shiptemplate(0xf71a421d /* "shiptemplate" */);
+	Typed<Ship *> ship(0xac56f17f /* "ship" */);
 
 	namespace Initializer
 	{

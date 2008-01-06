@@ -23,13 +23,13 @@ namespace Database
 	}
 
 	// parent identifier database
-	Typed<unsigned int> parent("parent");
+	Typed<Key> parent(0xeacdfcfd /* "parent" */);
 
 	// owner identifier database
-	Typed<unsigned int> owner("owner");
+	Typed<Key> owner(0xf5674cd4 /* "owner" */);
 
 	// team identifier database
-	extern Typed<unsigned int> team("team");
+	Typed<unsigned int> team(0xa2fd7d0c /* "team" */);
 
 
 	//
@@ -37,17 +37,24 @@ namespace Database
 	//
 
 	// constructor
-	Untyped::Untyped(unsigned int aId, size_t aStride)
-		: mId(aId), mStride(aStride), mBits(8), mLimit(1<<mBits), mCount(0)
+	Untyped::Untyped(unsigned int aId, size_t aStride, size_t aBits)
+		: mId(aId), mStride(aStride), mShift(0), mBits(aBits), mLimit(1<<mBits), mCount(0)
 	{
+		// adjust block shift
+		for (mShift = 0; mShift < mBits; ++mShift)
+		{
+			if ((mStride << mShift) >= 1024)
+				break;
+		}
+
 		mMap = static_cast<size_t *>(malloc(mLimit * 2 * sizeof(size_t)));
 		memset(mMap, EMPTY, mLimit * 2 * sizeof(size_t));
 
 		mKey = static_cast<Key *>(malloc(mLimit * sizeof(Key)));
 		memset(mKey, 0, mLimit * sizeof(Key));
 
-		mPool = static_cast<void **>(malloc((mLimit >> SHIFT) * sizeof(void *)));
-		memset(mPool, 0, (mLimit >> SHIFT) * sizeof(void *));
+		mPool = static_cast<void **>(malloc((mLimit >> mShift) * sizeof(void *)));
+		memset(mPool, 0, (mLimit >> mShift) * sizeof(void *));
 
 		if (mId)
 			GetDatabases().Put(mId, this);
@@ -61,7 +68,7 @@ namespace Database
 
 		free(mMap);
 		free(mKey);
-		for (size_t slot = 0; slot < mLimit >> SHIFT; ++slot)
+		for (size_t slot = 0; slot < mLimit >> mShift; ++slot)
 			free(mPool[slot]);
 		free(mPool);
 	}
@@ -84,6 +91,8 @@ namespace Database
 		++mBits;
 		mLimit = 1<<mBits;
 
+		DebugPrint("Grow database %08x stride=%d shift=%d limit=%d count=%d\n", mId, mStride, mShift, mLimit, mCount);
+
 		// reallocate map
 		free(mMap);
 		mMap = static_cast<size_t *>(malloc(mLimit * 2 * sizeof(size_t)));
@@ -94,8 +103,8 @@ namespace Database
 		memset(mKey + (mLimit >> 1), 0, (mLimit >> 1) * sizeof(size_t));
 
 		// reallocate pools
-		mPool = static_cast<void **>(realloc(mPool, (mLimit >> SHIFT) * sizeof(size_t)));
-		memset(mPool + (mLimit >> (SHIFT + 1)), 0, (mLimit >> (SHIFT + 1)) * sizeof(void *));
+		mPool = static_cast<void **>(realloc(mPool, (mLimit >> mShift) * sizeof(size_t)));
+		memset(mPool + (mLimit >> (mShift + 1)), 0, (mLimit >> (mShift + 1)) * sizeof(void *));
 
 		// rebuild hash
 		for (size_t record = 0; record < mCount; ++record)
@@ -135,13 +144,13 @@ namespace Database
 
 		// copy pools
 		free(mPool);
-		mPool = static_cast<void **>(malloc((mLimit >> SHIFT) * sizeof(size_t)));
-		memset(mPool, 0, (mLimit >> SHIFT) * sizeof(void *));
+		mPool = static_cast<void **>(malloc((mLimit >> mShift) * sizeof(size_t)));
+		memset(mPool, 0, (mLimit >> mShift) * sizeof(void *));
 		for (size_t slot = 0; slot < mCount; ++slot)
 		{
-			if ((slot & ((1 << SHIFT) - 1)) == 0)
+			if ((slot & ((1 << mShift) - 1)) == 0)
 			{
-				mPool[slot >> SHIFT] = malloc((1 << SHIFT) * mStride);
+				mPool[slot >> mShift] = malloc((1 << mShift) * mStride);
 			}
 			CreateRecord(GetRecord(slot), aSource.GetRecord(slot));
 		}
@@ -161,6 +170,11 @@ namespace Database
 			// return the record
 			return GetRecord(slot);
 		}
+
+		// check parent
+		if (this != &parent)
+			if (Key aParentKey = parent.Get(aKey))
+				return Find(aParentKey);
 
 		// not found
 		return NULL;
@@ -191,8 +205,8 @@ namespace Database
 		index = Probe(aKey);
 		mMap[index] = slot;
 		mKey[slot] = aKey;
-		if (mPool[slot >> SHIFT] == NULL)
-			mPool[slot >> SHIFT] = malloc(mStride << SHIFT);
+		if (mPool[slot >> mShift] == NULL)
+			mPool[slot >> mShift] = malloc(mStride << mShift);
 		CreateRecord(GetRecord(slot), aValue);
 	}
 
@@ -220,9 +234,14 @@ namespace Database
 		index = Probe(aKey);
 		mMap[index] = slot;
 		mKey[slot] = aKey;
-		if (mPool[slot >> SHIFT] == NULL)
-			mPool[slot >> SHIFT] = malloc(mStride << SHIFT);
-		CreateRecord(GetRecord(slot));
+		if (mPool[slot >> mShift] == NULL)
+			mPool[slot >> mShift] = malloc(mStride << mShift);
+		// check parent
+		const void *source = NULL;
+		if (this != &parent)
+			if (Key aParentKey = parent.Get(aKey))
+				source = Find(aParentKey);
+		CreateRecord(GetRecord(slot), source);
 
 		// return the record
 		return GetRecord(slot);
@@ -231,6 +250,38 @@ namespace Database
 	// close a record once done
 	void Untyped::Close(Key aKey)
 	{
+	}
+
+	// allocate the record for a specified key
+	void *Untyped::Alloc(Key aKey)
+	{
+		// convert key to a hash map index
+		// (HACK: assume key is already a hash)
+		size_t index = Probe(aKey);
+
+		// if the slot is not empty...
+		size_t slot = mMap[index];
+		if (slot != EMPTY)
+		{
+			// return the record
+			assert(false);
+			return NULL;
+		}
+
+		// grow if the database is full
+		if (mCount >= mLimit)
+			Grow();
+
+		// add a new record
+		slot = mCount++;
+		index = Probe(aKey);
+		mMap[index] = slot;
+		mKey[slot] = aKey;
+		if (mPool[slot >> mShift] == NULL)
+			mPool[slot >> mShift] = malloc(mStride << mShift);
+
+		// return the record
+		return GetRecord(slot);
 	}
 
 	// delete a record for a specified key
@@ -339,9 +390,12 @@ namespace Database
 		// generate an instance identifier
 		const unsigned int aInstanceTag = Entity::TakeId();
 		const unsigned int aInstanceId = Hash(&aInstanceTag, sizeof(aInstanceTag), aTemplateId);
-
+	
 		// inherit components from template
-		Inherit(aInstanceId, aTemplateId);
+//		Inherit(aInstanceId, aTemplateId);
+
+		// set parent
+		parent.Put(aInstanceId, aTemplateId);
 
 		// objects default to owning themselves
 		owner.Put(aInstanceId, aInstanceId);

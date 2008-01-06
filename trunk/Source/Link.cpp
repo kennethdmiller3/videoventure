@@ -4,9 +4,9 @@
 
 namespace Database
 {
-	Typed<Typed<LinkTemplate> > linktemplate("linktemplate");
-	Typed<Typed<Link *> > link("link");
-	Typed<unsigned int> backlink("backlink");
+	Typed<Typed<LinkTemplate> > linktemplate(0x801f01af /* "linktemplate" */);
+	Typed<Typed<Link *> > link(0x0ddb0669 /* "link" */);
+	Typed<unsigned int> backlink(0xe3736e9a /* "backlink" */);
 
 	namespace Initializer
 	{
@@ -116,8 +116,8 @@ Link::Link(const LinkTemplate &aTemplate, unsigned int aId)
 		Database::backlink.Put(mSecondary, aId);
 
 		// propagate ownership
-		unsigned int aOwnerId = Database::owner.Get(aId);
-		Database::owner.Put(mSecondary, aOwnerId);
+		if (const unsigned int *aOwnerId = Database::owner.Find(aId))
+			Database::owner.Put(mSecondary, *aOwnerId);
 	}
 }
 
