@@ -16,6 +16,8 @@ inline unsigned int Hash(const void *data, size_t len, unsigned int hash = 21661
 }
 inline unsigned int Hash(const char *string)
 {
+	if (string == 0)
+		return 0;
 	unsigned int hash = 2166136261u;
 	for (const char *s = string; *s != 0; ++s)
 	{

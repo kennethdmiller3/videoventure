@@ -2,6 +2,9 @@
 #include "Bullet.h"
 #include "Explosion.h"
 #include "Damagable.h"
+
+
+#ifdef USE_POOL_ALLOCATOR
 #include <boost/pool/pool.hpp>
 
 // bullet pool
@@ -14,12 +17,43 @@ void Bullet::operator delete(void *aPtr)
 {
 	pool.free(aPtr);
 }
+#endif
 
 
 namespace Database
 {
 	Typed<BulletTemplate> bullettemplate("bullettemplate");
 	Typed<Bullet *> bullet("bullet");
+
+	namespace Initializer
+	{
+		class BulletInitializer
+		{
+		public:
+			BulletInitializer()
+			{
+				AddActivate(0xa270491f /* "bullettemplate" */, Entry(this, &BulletInitializer::Activate));
+				AddDeactivate(0xa270491f /* "bullettemplate" */, Entry(this, &BulletInitializer::Deactivate));
+			}
+
+			void Activate(unsigned int aId)
+			{
+				const BulletTemplate &bullettemplate = Database::bullettemplate.Get(aId);
+				Bullet *bullet = new Bullet(bullettemplate, aId);
+				Database::bullet.Put(aId, bullet);
+			}
+
+			void Deactivate(unsigned int aId)
+			{
+				if (Bullet *bullet = Database::bullet.Get(aId))
+				{
+					delete bullet;
+					Database::bullet.Delete(aId);
+				}
+			}
+		}
+		bulletinitializer;
+	}
 }
 
 
@@ -60,26 +94,18 @@ Bullet::Bullet(const BulletTemplate &aTemplate, unsigned int aId)
 : Simulatable(aId)
 , mLife(aTemplate.mLife)
 {
-	Collidable *collidable = Database::collidable.Get(Simulatable::id);
-	if (collidable)
-	{
-		Database::Typed<Collidable::Listener> &listeners = Database::collidablelistener.Open(Simulatable::id);
-		Collidable::Listener &listener = listeners.Open(Database::Key(this));
-		listener.bind(this, &Bullet::Collide);
-		listeners.Close(Database::Key(this));
-		Database::collidablelistener.Close(Simulatable::id);
-	}
+	Database::Typed<Collidable::Listener> &listeners = Database::collidablelistener.Open(Simulatable::id);
+	Collidable::Listener &listener = listeners.Open(Database::Key(this));
+	listener.bind(this, &Bullet::Collide);
+	listeners.Close(Database::Key(this));
+	Database::collidablelistener.Close(Simulatable::id);
 }
 
 Bullet::~Bullet(void)
 {
-	Collidable *collidable = Database::collidable.Get(Simulatable::id);
-	if (collidable)
-	{
-		Database::Typed<Collidable::Listener> &listeners = Database::collidablelistener.Open(Simulatable::id);
-		listeners.Delete(Database::Key(this));
-		Database::collidablelistener.Close(Simulatable::id);
-	}
+	Database::Typed<Collidable::Listener> &listeners = Database::collidablelistener.Open(Simulatable::id);
+	listeners.Delete(Database::Key(this));
+	Database::collidablelistener.Close(Simulatable::id);
 }
 
 void Bullet::Simulate(float aStep)

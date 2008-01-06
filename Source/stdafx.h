@@ -27,6 +27,9 @@
 // Box2D includes
 #include "Box2D.h"
 
+// FastDelegate includes
+#include "FastDelegate.h"
+
 // 2d math
 #include "Vector2.h"
 #include "Sphere2.h"
@@ -37,7 +40,6 @@
 #include "Hash.h"
 #include "Database.h"
 #include "Input.h"
-#include "FastDelegate.h"
 
 // arena attributes
 const float ARENA_X_MIN = -2048;

@@ -7,6 +7,37 @@ namespace Database
 	Typed<DamagableTemplate> damagabletemplate("damagabletemplate");
 	Typed<Damagable *> damagable("damagable");
 	Typed<Typed<Damagable::Listener> > damagablelistener("damagablelistener");
+
+	namespace Initializer
+	{
+		class DamagableInitializer
+		{
+		public:
+			DamagableInitializer()
+			{
+				AddActivate(0x5e73241b /* "damagabletemplate" */, Entry(this, &DamagableInitializer::Activate));
+				AddDeactivate(0x5e73241b /* "damagabletemplate" */, Entry(this, &DamagableInitializer::Deactivate));
+			}
+
+			void Activate(unsigned int aId)
+			{
+				const DamagableTemplate &damagabletemplate = Database::damagabletemplate.Get(aId);
+				Damagable *damagable = new Damagable(damagabletemplate, aId);
+				Database::damagable.Put(aId, damagable);
+			}
+
+			void Deactivate(unsigned int aId)
+			{
+				if (Damagable *damagable = Database::damagable.Get(aId))
+				{
+					delete damagable;
+					Database::damagable.Delete(aId);
+					Database::damagablelistener.Delete(aId);
+				}
+			}
+		}
+		damagableinitializer;
+	}
 }
 
 

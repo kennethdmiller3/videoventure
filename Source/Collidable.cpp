@@ -10,6 +10,39 @@ namespace Database
 	Typed<Collidable *> collidable("collidable");
 	Typed<Typed<b2Body *> > collidablebody("collidablebody");
 	Typed<Typed<Collidable::Listener> > collidablelistener("collidablelistener");
+
+	namespace Initializer
+	{
+		class CollidableInitializer
+		{
+		public:
+			CollidableInitializer()
+			{
+				AddActivate(0xa7380c00 /* "collidabletemplate" */, Entry(this, &CollidableInitializer::Activate));
+				AddDeactivate(0xa7380c00 /* "collidabletemplate" */, Entry(this, &CollidableInitializer::Deactivate));
+			}
+
+			void Activate(unsigned int aId)
+			{
+				const CollidableTemplate &collidabletemplate = Database::collidabletemplate.Get(aId);
+				Collidable *collidable = new Collidable(collidabletemplate, aId);
+				Database::collidable.Put(aId, collidable);
+				collidable->AddToWorld();
+			}
+
+			void Deactivate(unsigned int aId)
+			{
+				if (Collidable *collidable = Database::collidable.Get(aId))
+				{
+					collidable->RemoveFromWorld();
+					delete collidable;
+					Database::collidable.Delete(aId);
+					Database::collidablelistener.Delete(aId);
+				}
+			}
+		}
+		collidableinitializer;
+	}
 }
 
 CollidableTemplate::CollidableTemplate(void)
@@ -553,8 +586,6 @@ Collidable::Collidable(const CollidableTemplate &aTemplate, unsigned int aId)
 
 Collidable::~Collidable(void)
 {
-	Database::collidablelistener.Delete(id);
-	RemoveFromWorld();
 }
 
 bool Collidable::SetupJointDef(b2JointDef &joint)

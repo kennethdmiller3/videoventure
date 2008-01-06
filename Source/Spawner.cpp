@@ -6,6 +6,36 @@ namespace Database
 {
 	Typed<SpawnerTemplate> spawnertemplate("spawnertemplate");
 	Typed<Spawner *> spawner("spawner");
+
+	namespace Initializer
+	{
+		class SpawnerInitializer
+		{
+		public:
+			SpawnerInitializer()
+			{
+				AddActivate(0x8b6ef6ad /* "spawnertemplate" */, Entry(this, &SpawnerInitializer::Activate));
+				AddDeactivate(0x8b6ef6ad /* "spawnertemplate" */, Entry(this, &SpawnerInitializer::Deactivate));
+			}
+
+			void Activate(unsigned int aId)
+			{
+				const SpawnerTemplate &spawnertemplate = Database::spawnertemplate.Get(aId);
+				Spawner *spawner = new Spawner(spawnertemplate, aId);
+				Database::spawner.Put(aId, spawner);
+			}
+
+			void Deactivate(unsigned int aId)
+			{
+				if (Spawner *spawner = Database::spawner.Get(aId))
+				{
+					delete spawner;
+					Database::spawner.Delete(aId);
+				}
+			}
+		}
+		spawnerinitializer;
+	}
 }
 
 

@@ -33,9 +33,11 @@ class Bullet
 	: public Simulatable
 {
 public:
+#ifdef USE_POOL_ALLOCATOR
 	// allocation
 	void *operator new(size_t aSize);
 	void operator delete(void *aPtr);
+#endif
 
 	// life timer
 	float mLife;
