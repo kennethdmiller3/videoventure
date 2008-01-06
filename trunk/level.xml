@@ -871,162 +871,6 @@
 	<!-- -->
 
 
-	<!-- player ship explosion -->
-
-	<template name="playershipexplosion" type="">
-		<explosion life="1.00">
-			<pushmatrix>
-				<color>
-					<linear time="1.00">
-						<start r="0.8" g="0.9" b="1.0" a="1.0"/>
-						<end   r="0.0" g="0.5" b="1.0" a="0.0"/>
-					</linear>
-				</color>
-				<scale>
-					<linear time="1.00">
-						<start x="16.0" y="16.0"/>
-						<end   x="4.0" y="4.0"/>
-					</linear>
-				</scale>
-				<calllist name="circle16"/>
-			</pushmatrix>
-			<pushmatrix>
-				<color>
-					<linear time="1.00">
-						<start r="0.4" g="0.7" b="1.0" a="0.5"/>
-						<end   r="0.0" g="0.0" b="1.0" a="0.0"/>
-					</linear>
-				</color>
-				<scale>
-					<linear time="1.00">
-						<start x="16.0" y="16.0"/>
-						<end   x="128.0" y="128.0"/>
-					</linear>
-				</scale>
-				<calllist name="circle16"/>
-			</pushmatrix>
-		</explosion>
-	</template>
-
-
-	<!-- player ship -->
-
-	<entity name="playership" type="player">
-		<position x="0" y="0"/>
-		<collidable>
-			<body name="main">
-				<circle radius="16">
-					<density value="1"/>
-					<friction value="0.5"/>
-					<restitution value="0.5"/>
-					<category value="1"/>
-					<mask bit2="0"/>
-				</circle>
-				<allowsleep value="0"/>
-			</body>
-		</collidable>
-		<renderable>
-			<drawlist>
-				<color r="1.0" g="1.0" b="1.0" a="1.0"/>
-				<triangle_strip>
-					<vertex x="16" y="-16"/>
-					<vertex x="16" y="-11"/>
-					<vertex x="5" y="-16"/>
-					<vertex x="6" y="-6"/>
-					<vertex x="4" y="-13"/>
-					<vertex x="6" y="1"/>
-					<vertex x="3" y="-13"/>
-					<vertex x="3" y="4"/>
-					<vertex x="2" y="-16"/>
-					<vertex x="2" y="16"/>
-					<vertex x="0" y="-16"/>
-					<vertex x="-2" y="16"/>
-					<vertex x="-2" y="-16"/>
-					<vertex x="-3" y="4"/>
-					<vertex x="-3" y="-13"/>
-					<vertex x="-6" y="1"/>
-					<vertex x="-4" y="-13"/>
-					<vertex x="-6" y="-6"/>
-					<vertex x="-5" y="-16"/>
-					<vertex x="-16" y="-11"/>
-					<vertex x="-16" y="-16"/>
-				</triangle_strip>
-			</drawlist>
-		</renderable>
-		<player maxveloc="200" maxaccel="1000" friction="50" maxomega="10"/>
-		<damagable health="10" spawnondeath="playershipexplosion"/>
-	</entity>
-
-
-	<!-- player gunners -->
-
-	<template name="gunner" type="">
-		<collidable>
-			<body name="main">
-				<circle radius="5">
-					<density value="0.1"/>
-					<friction value="0.5"/>
-					<restitution value="0.5"/>
-					<category value="2"/>
-					<mask bit0="0" bit1="0" bit2="0"/>
-				</circle>
-				<allowsleep value="0"/>
-			</body>
-			<revolutejoint>
-				<body1 name="playership" body="main"/>
-				<body2 body="main"/>
-				<anchor x="0" y="0"/>
-				<limit lower="0" upper="0"/>
-			</revolutejoint>
-		</collidable>
-		<renderable>
-			<drawlist>
-				<color r="0.5" g="0.5" b="0.5" a="1.0"/>
-				<triangles>
-					<vertex x="0" y="4"/>
-					<vertex x="2" y="1"/>
-					<vertex x="-2" y="1"/>
-				</triangles>
-				<color r="1.0" g="1.0" b="1.0" a="1.0"/>
-				<scale x="5" y="5"/>
-				<calllist name="circle12"/>
-			</drawlist>
-		</renderable>
-	</template>
-
-	<entity name="gunner1" type="gunner">
-		<position x="-16" y="0" angle="10"/>
-		<gunner>
-			<owner name="playership"/>
-			<weapon cycle="2" phase="0"/>
-		</gunner>
-	</entity>
-
-	<entity name="gunner2" type="gunner">
-		<position x="16" y="0" angle="-10"/>
-		<gunner>
-			<owner name="playership"/>
-			<weapon cycle="2" phase="1"/>
-		</gunner>
-	</entity>
-
-	<entity name="gunner3" type="gunner">
-		<position x="-24" y="-8" angle="25"/>
-		<gunner>
-			<owner name="playership"/>
-			<weapon cycle="2" phase="1"/>
-		</gunner>
-	</entity>
-
-	<entity name="gunner4" type="gunner">
-		<position x="24" y="-8" angle="-25"/>
-		<gunner>
-			<owner name="playership"/>
-			<weapon cycle="2" phase="0"/>
-		</gunner>
-	</entity>
-
-
 	<!-- player bullet explosion -->
 
 	<template name="playerbulletexplosion" type="">
@@ -1138,8 +982,216 @@
 		<bullet life="1" damage="1" spawnondeath="playerbulletexplosion"/>
 	</template>
 
-	
-	<!-- health powerup -->
+  
+  <!-- player ship weapon -->
+
+  <template name="playershipweapon" type="">
+    <weapon>
+      <velocity x="0" y="800"/>
+      <ordnance name="playerbullet"/>
+      <shot delay="0.1"/>
+    </weapon>
+  </template>
+
+
+  <!-- player ship explosion -->
+
+  <template name="playershipexplosion" type="">
+    <explosion life="1.00">
+      <pushmatrix>
+        <color>
+          <linear time="1.00">
+            <start r="0.8" g="0.9" b="1.0" a="1.0"/>
+            <end   r="0.0" g="0.5" b="1.0" a="0.0"/>
+          </linear>
+        </color>
+        <scale>
+          <linear time="1.00">
+            <start x="16.0" y="16.0"/>
+            <end   x="4.0" y="4.0"/>
+          </linear>
+        </scale>
+        <calllist name="circle16"/>
+      </pushmatrix>
+      <pushmatrix>
+        <color>
+          <linear time="1.00">
+            <start r="0.4" g="0.7" b="1.0" a="0.5"/>
+            <end   r="0.0" g="0.0" b="1.0" a="0.0"/>
+          </linear>
+        </color>
+        <scale>
+          <linear time="1.00">
+            <start x="16.0" y="16.0"/>
+            <end   x="128.0" y="128.0"/>
+          </linear>
+        </scale>
+        <calllist name="circle16"/>
+      </pushmatrix>
+    </explosion>
+  </template>
+
+
+  <!-- player ship -->
+
+  <entity name="playership" type="player">
+    <position x="0" y="0"/>
+    <collidable>
+      <body name="main">
+        <circle radius="16">
+          <density value="1"/>
+          <friction value="0.5"/>
+          <restitution value="0.5"/>
+          <category value="1"/>
+          <mask bit2="0"/>
+        </circle>
+        <allowsleep value="0"/>
+      </body>
+    </collidable>
+    <renderable>
+      <drawlist>
+        <color r="1.0" g="1.0" b="1.0" a="1.0"/>
+        <triangle_strip>
+          <vertex x="16" y="-16"/>
+          <vertex x="16" y="-11"/>
+          <vertex x="5" y="-16"/>
+          <vertex x="6" y="-6"/>
+          <vertex x="4" y="-13"/>
+          <vertex x="6" y="1"/>
+          <vertex x="3" y="-13"/>
+          <vertex x="3" y="4"/>
+          <vertex x="2" y="-16"/>
+          <vertex x="2" y="16"/>
+          <vertex x="0" y="-16"/>
+          <vertex x="-2" y="16"/>
+          <vertex x="-2" y="-16"/>
+          <vertex x="-3" y="4"/>
+          <vertex x="-3" y="-13"/>
+          <vertex x="-6" y="1"/>
+          <vertex x="-4" y="-13"/>
+          <vertex x="-6" y="-6"/>
+          <vertex x="-5" y="-16"/>
+          <vertex x="-16" y="-11"/>
+          <vertex x="-16" y="-16"/>
+        </triangle_strip>
+      </drawlist>
+    </renderable>
+    <player maxveloc="200" maxaccel="1000" friction="50" maxomega="10"/>
+    <damagable health="10" spawnondeath="playershipexplosion"/>
+    <link name="lgun" secondary="playershipweapon">
+      <offset x="4" y="0" angle="0"/>
+    </link>
+    <link name="rgun" secondary="playershipweapon">
+      <offset x="-4" y="0" angle="0"/>
+    </link>
+    </entity>
+
+
+  <!-- player gunner weapon -->
+
+  <template name="playergunnerweapon" type="">
+    <weapon>
+      <velocity x="0" y="800"/>
+      <ordnance name="playerbullet"/>
+      <shot delay="0.2" cycle="2"/>
+    </weapon>
+  </template>
+  
+  <template name="playergunnerweapon0" type="playergunnerweapon">
+    <weapon>
+      <shot phase="0"/>
+    </weapon>
+  </template>
+  
+  <template name="playergunnerweapon1" type="playergunnerweapon">
+    <weapon>
+      <shot phase="1"/>
+    </weapon>
+  </template>
+
+
+  <!-- player gunners -->
+
+  <template name="gunner" type="">
+    <collidable>
+      <body name="main">
+        <circle radius="5">
+          <density value="0.1"/>
+          <friction value="0.5"/>
+          <restitution value="0.5"/>
+          <category value="2"/>
+          <mask bit0="0" bit1="0" bit2="0"/>
+        </circle>
+        <allowsleep value="0"/>
+      </body>
+      <revolutejoint>
+        <body1 name="playership" body="main"/>
+        <body2 body="main"/>
+        <anchor x="0" y="0"/>
+        <limit lower="0" upper="0"/>
+      </revolutejoint>
+    </collidable>
+    <renderable>
+      <drawlist>
+        <color r="0.5" g="0.5" b="0.5" a="1.0"/>
+        <triangles>
+          <vertex x="0" y="4"/>
+          <vertex x="2" y="1"/>
+          <vertex x="-2" y="1"/>
+        </triangles>
+        <color r="1.0" g="1.0" b="1.0" a="1.0"/>
+        <scale x="5" y="5"/>
+        <calllist name="circle12"/>
+      </drawlist>
+    </renderable>
+    <link name="lgun">
+      <offset x="0" y="0" angle="5"/>
+    </link>
+    <link name="rgun">
+      <offset x="0" y="0" angle="-5"/>
+    </link>
+  </template>
+
+  <template name="gunner0" type="gunner">
+    <link name="lgun" secondary="playergunnerweapon0"/>
+    <link name="rgun" secondary="playergunnerweapon0"/>
+  </template>
+
+  <template name="gunner1" type="gunner">
+    <link name="lgun" secondary="playergunnerweapon1"/>
+    <link name="rgun" secondary="playergunnerweapon1"/>
+  </template>
+
+  <entity name="gunnerA" type="gunner0">
+    <position x="-16" y="0" angle="10"/>
+    <gunner>
+      <owner name="playership"/>
+    </gunner>
+  </entity>
+
+  <entity name="gunnerB" type="gunner1">
+    <position x="16" y="0" angle="-10"/>
+    <gunner>
+      <owner name="playership"/>
+    </gunner>
+  </entity>
+
+  <entity name="gunnerC" type="gunner1">
+    <position x="-24" y="-8" angle="25"/>
+    <gunner>
+      <owner name="playership"/>
+    </gunner>
+  </entity>
+
+  <entity name="gunnerD" type="gunner0">
+    <position x="24" y="-8" angle="-25"/>
+    <gunner>
+      <owner name="playership"/>
+    </gunner>
+  </entity>
+
+  
+  <!-- health powerup -->
 
 	<template name="healthupexplosion" type="">
 		<explosion life="1.0">

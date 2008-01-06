@@ -6,10 +6,12 @@
 #include "Cloud.h"
 #include "Player.h"
 #include "Gunner.h"
+#include "Weapon.h"
 #include "Bullet.h"
 #include "Explosion.h"
 #include "Damagable.h"
 #include "Spawner.h"
+#include "Link.h"
 #include "Interpolator.h"
 
 // screen attributes
@@ -1953,7 +1955,123 @@ void ProcessDrawItems(TiXmlElement *element)
 	}
 }
 
-static void ProcessTemplateItems(TiXmlElement *element)
+void ProcessTemplateItem(TiXmlElement *element, unsigned int template_id)
+{
+	const char *value = element->Value();
+	switch (Hash(value))
+	{
+	case 0x74e9dbae /* "collidable" */:
+		{
+			CollidableTemplate &collidable = Database::collidabletemplate.Open(template_id);
+			collidable.Configure(element, template_id);
+			Database::collidabletemplate.Close(template_id);
+		}
+		break;
+
+	case 0x109dd1ad /* "renderable" */:
+		{
+			RenderableTemplate &renderable = Database::renderabletemplate.Open(template_id);
+			renderable.Configure(element);
+			Database::renderabletemplate.Close(template_id);
+		}
+		break;
+
+	case 0x1b715375 /* "damagable" */:
+		{
+			DamagableTemplate &damagable = Database::damagabletemplate.Open(template_id);
+			damagable.Configure(element);
+			Database::damagabletemplate.Close(template_id);
+		}
+		break;
+
+	case 0x0ddb0669 /* "link" */:
+		{
+			Database::Typed<LinkTemplate> &links = Database::linktemplate.Open(template_id);
+			unsigned int sub_id = Hash(element->Attribute("name"));
+			LinkTemplate &link = links.Open(sub_id);
+			link.Configure(element);
+			links.Close(sub_id);
+			Database::linktemplate.Close(template_id);
+		}
+		break;
+
+	case 0x6f332041 /* "weapon" */:
+		{
+			WeaponTemplate &weapon = Database::weapontemplate.Open(template_id);
+			weapon.Configure(element);
+			Database::weapontemplate.Close(template_id);
+		}
+		break;
+
+	case 0xe894a379 /* "bullet" */:
+		{
+			BulletTemplate &bullet = Database::bullettemplate.Open(template_id);
+			bullet.Configure(element);
+			Database::bullettemplate.Close(template_id);
+		}
+		break;
+
+	case 0x02bb1fe0 /* "explosion" */:
+		{
+			ExplosionTemplate &explosion = Database::explosiontemplate.Open(template_id);
+			explosion.Configure(element, template_id);
+			Database::explosiontemplate.Close(template_id);
+		}
+		break;
+
+	case 0x4936726f /* "spawner" */:
+		{
+			SpawnerTemplate &spawner = Database::spawnertemplate.Open(template_id);
+			spawner.Configure(element);
+			Database::spawnertemplate.Close(template_id);
+		}
+		break;
+
+	case 0xc98b019b /* "drawlist" */:
+		{
+			// create a new draw list
+			GLuint handle = glGenLists(1);
+			glNewList(handle, GL_COMPILE);
+
+			// get the list name
+			const char *name = element->Attribute("name");
+			if (name)
+			{
+				// register the draw list
+				Database::drawlist.Put(Hash(name), handle);
+			}
+
+			// process draw items
+			ProcessDrawItems(element);
+
+			// finish the draw list
+			glEndList();
+		}
+		break;
+
+	case 0x1ac6a97e /* "cloud" */:
+		{
+			int count = 1;
+			element->QueryIntAttribute("count", &count);
+			float mean = 256;
+			element->QueryFloatAttribute("mean", &mean);
+			float variance = 192;
+			element->QueryFloatAttribute("variance", &variance);
+			GLuint handle = CreateCloudDrawList(count, mean, variance);
+
+			// get the list name
+			const char *name = element->Attribute("name");
+			if (name)
+			{
+				// register the draw list
+				Database::drawlist.Put(Hash(name), handle);
+			}
+		}
+		break;
+	}
+}
+
+void ProcessTemplateItems(TiXmlElement *element)
 {
 	// get template identifier
 	const char *name = element->Attribute("name");
@@ -1966,107 +2084,17 @@ static void ProcessTemplateItems(TiXmlElement *element)
 	// inherit parent components
 	Database::Inherit(template_id, parent_id);
 
+	// for each child element...
 	for (TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
-		const char *value = child->Value();
-		switch (Hash(value))
-		{
-		case 0x74e9dbae /* "collidable" */:
-			{
-				CollidableTemplate &collidable = Database::collidabletemplate.Open(template_id);
-				collidable.Configure(child, template_id);
-				Database::collidabletemplate.Close(template_id);
-			}
-			break;
-
-		case 0x109dd1ad /* "renderable" */:
-			{
-				RenderableTemplate &renderable = Database::renderabletemplate.Open(template_id);
-				renderable.Configure(child);
-				Database::renderabletemplate.Close(template_id);
-			}
-			break;
-
-		case 0x1b715375 /* "damagable" */:
-			{
-				DamagableTemplate &damagable = Database::damagabletemplate.Open(template_id);
-				damagable.Configure(child);
-				Database::damagabletemplate.Close(template_id);
-			}
-			break;
-
-		case 0xe894a379 /* "bullet" */:
-			{
-				BulletTemplate &bullet = Database::bullettemplate.Open(template_id);
-				bullet.Configure(child);
-				Database::bullettemplate.Close(template_id);
-			}
-			break;
-
-		case 0x02bb1fe0 /* "explosion" */:
-			{
-				ExplosionTemplate &explosion = Database::explosiontemplate.Open(template_id);
-				explosion.Configure(child, template_id);
-				Database::explosiontemplate.Close(template_id);
-			}
-			break;
-
-		case 0x4936726f /* "spawner" */:
-			{
-				SpawnerTemplate &spawner = Database::spawnertemplate.Open(template_id);
-				spawner.Configure(child);
-				Database::spawnertemplate.Close(template_id);
-			}
-			break;
-
-		case 0xc98b019b /* "drawlist" */:
-			{
-				// create a new draw list
-				GLuint handle = glGenLists(1);
-				glNewList(handle, GL_COMPILE);
-
-				// get the list name
-				const char *name = child->Attribute("name");
-				if (name)
-				{
-					// register the draw list
-					Database::drawlist.Put(Hash(name), handle);
-				}
-
-				// process draw items
-				ProcessDrawItems(child);
-
-				// finish the draw list
-				glEndList();
-			}
-			break;
-
-		case 0x1ac6a97e /* "cloud" */:
-			{
-				int count = 1;
-				child->QueryIntAttribute("count", &count);
-				float mean = 256;
-				child->QueryFloatAttribute("mean", &mean);
-				float variance = 192;
-				child->QueryFloatAttribute("variance", &variance);
-				GLuint handle = CreateCloudDrawList(count, mean, variance);
-
-				// get the list name
-				const char *name = child->Attribute("name");
-				if (name)
-				{
-					// register the draw list
-					Database::drawlist.Put(Hash(name), handle);
-				}
-			}
-			break;
-		}
+		// process the template item
+		ProcessTemplateItem(child, template_id);
 	}
 
 	Database::parent.Put(template_id, parent_id);
 }
 
-static void ProcessEntityItems(TiXmlElement *element)
+void ProcessEntityItems(TiXmlElement *element)
 {
 	// get entity identifier
 	const char *name = element->Attribute("name");

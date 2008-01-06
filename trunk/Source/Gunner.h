@@ -9,19 +9,11 @@
 
 // gunner actor
 class Gunner : 
-	public Controllable, public Simulatable
+	public Simulatable
 {
 protected:
 	// owner
 	unsigned int owner;
-
-	// control values
-	bool mFire;
-
-	// fire delay
-	float mDelay;
-	int mPhase;
-	int mCycle;
 
 public:
 	// constructor
@@ -30,17 +22,8 @@ public:
 	// destructor
 	~Gunner(void);
 
-	// set phase
-	void SetPhase(int aPhase)
-	{
-		mPhase = aPhase;
-	}
-
 	// configure
 	virtual bool Configure(TiXmlElement *element);
-
-	// control
-	virtual void Control(float aStep);
 
 	// simulate
 	virtual void Simulate(float aStep);
