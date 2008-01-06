@@ -72,39 +72,24 @@ bool ExplosionTemplate::Configure(TiXmlElement *element, unsigned int id)
 
 	element->QueryFloatAttribute("life", &mLifeSpan);
 
-	int coreindex = 0;
-	int haloindex = 0;
-
-	// process child elements
-	ProcessDrawItemsDeferred(element, id, mBuffer);
-
 	return true;
 }
 
 
 Explosion::Explosion(void)
 : Simulatable(0)
-, Renderable()
 , mLife(0)
 {
 }
 
 Explosion::Explosion(const ExplosionTemplate &aTemplate, unsigned int aId)
 : Simulatable(aId)
-, Renderable(RenderableTemplate(), aId)
 , mLife(aTemplate.mLifeSpan)
 {
-	// add as a renderable (HACK)
-	Database::renderable.Put(Simulatable::id, this);
-
-	// set as visible
-	Renderable::Show();
 }
 
 Explosion::~Explosion(void)
 {
-	// remove as a renderable (HACK)
-	Database::renderable.Delete(Simulatable::id);
 }
 
 void Explosion::Simulate(float aStep)
@@ -116,16 +101,4 @@ void Explosion::Simulate(float aStep)
 		Database::Delete(Simulatable::id);
 		return;
 	}
-}
-
-void Explosion::Render(const Matrix2 &transform)
-{
-	// get the explosion template
-	const ExplosionTemplate &explosion = Database::explosiontemplate.Get(Simulatable::id);
-
-	// elapsed time
-	float t = explosion.mLifeSpan - mLife + Renderable::sOffset;
-
-	// execute the deferred draw list
-	ExecuteDeferredDrawItems(&explosion.mBuffer[0], explosion.mBuffer.size(), t);
 }

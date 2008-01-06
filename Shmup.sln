@@ -4,10 +4,13 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tinyxml_lib", "tinyxml\tiny
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Test", "test.vcproj", "{FC5E6837-9810-43F3-AE5D-A4CDDDF5D1AF}"
 	ProjectSection(ProjectDependencies) = postProject
+		{9E5C6B71-7126-46AE-BF6B-6FA443E4DB7C} = {9E5C6B71-7126-46AE-BF6B-6FA443E4DB7C}
 		{C406DAEC-0886-4771-8DEA-9D7329B46CC1} = {C406DAEC-0886-4771-8DEA-9D7329B46CC1}
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Hash", "Hash\Hash.vcproj", "{E6A62552-2C5D-430F-9DFF-DEA7FC3F723F}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "oglconsole", "oglconsole\oglconsole.vcproj", "{9E5C6B71-7126-46AE-BF6B-6FA443E4DB7C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -27,6 +30,10 @@ Global
 		{E6A62552-2C5D-430F-9DFF-DEA7FC3F723F}.Debug|Win32.Build.0 = Debug|Win32
 		{E6A62552-2C5D-430F-9DFF-DEA7FC3F723F}.Release|Win32.ActiveCfg = Release|Win32
 		{E6A62552-2C5D-430F-9DFF-DEA7FC3F723F}.Release|Win32.Build.0 = Release|Win32
+		{9E5C6B71-7126-46AE-BF6B-6FA443E4DB7C}.Debug|Win32.ActiveCfg = Debug|Win32
+		{9E5C6B71-7126-46AE-BF6B-6FA443E4DB7C}.Debug|Win32.Build.0 = Debug|Win32
+		{9E5C6B71-7126-46AE-BF6B-6FA443E4DB7C}.Release|Win32.ActiveCfg = Release|Win32
+		{9E5C6B71-7126-46AE-BF6B-6FA443E4DB7C}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

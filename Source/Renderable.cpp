@@ -2,6 +2,22 @@
 #include "Renderable.h"
 #include "Entity.h"
 
+#ifdef USE_POOL_ALLOCATOR
+#include <boost/pool/pool.hpp>
+
+// renderable pool
+static boost::pool<boost::default_user_allocator_malloc_free> pool(sizeof(Renderable));
+void *Renderable::operator new(size_t aSize)
+{
+	return pool.malloc();
+}
+void Renderable::operator delete(void *aPtr)
+{
+	pool.free(aPtr);
+}
+#endif
+
+
 namespace Database
 {
 	Typed<RenderableTemplate> renderabletemplate(0x0cb54133 /* "renderabletemplate" */);
@@ -42,7 +58,7 @@ namespace Database
 }
 
 RenderableTemplate::RenderableTemplate(void)
-: mDraw(0)
+: mPeriod(FLT_MAX)
 {
 }
 
@@ -56,44 +72,11 @@ bool RenderableTemplate::Configure(TiXmlElement *element)
 	if (Hash(element->Value()) != 0x109dd1ad /* "renderable" */)
 		return false;
 
+	// animation period
+	element->QueryFloatAttribute("period", &mPeriod);
+
 	// process child elements
-	for (TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
-	{
-		const char *label = child->Value();
-		switch (Hash(label))
-		{
-		case 0xc98b019b /* "drawlist" */:
-			{
-				// get the list name
-				const char *name = child->Attribute("name");
-				if (name)
-				{
-					// find the named drawlist
-					// (or 0 if not found)
-					mDraw = Database::drawlist.Get(Hash(name));
-				}
-				else if (child->FirstChildElement())
-				{
-					// create a new draw list
-					GLuint handle = glGenLists(1);
-					glNewList(handle, GL_COMPILE);
-
-					// process draw items
-					ProcessDrawItems(child);
-
-					// finish the draw list
-					glEndList();
-
-					// use the anonymous drawlist
-					mDraw = handle;
-				}
-			}
-			break;
-
-		default:
-			break;
-		}
-	}
+	ProcessDrawItemsDeferred(element, mBuffer);
 
 	return true;
 }
@@ -101,15 +84,16 @@ bool RenderableTemplate::Configure(TiXmlElement *element)
 
 
 Renderable::List Renderable::sAll;
+unsigned int Renderable::sTurn;
 float Renderable::sOffset;
 
 Renderable::Renderable(void)
-: id(0), show(false), mDraw(0)
+: id(0), show(false), mStart(sTurn)
 {
 }
 
 Renderable::Renderable(const RenderableTemplate &aTemplate, unsigned int aId)
-: id(aId), show(false), mDraw(aTemplate.mDraw)
+: id(aId), show(false), mStart(sTurn)
 {
 }
 
@@ -146,7 +130,7 @@ void Renderable::Hide(void)
 void Renderable::RenderAll(float aRatio, float aStep)
 {
 	// compute offset between visible time and simulated time
-	sOffset = (aRatio - 1.0f) * aStep;
+	sOffset = (aRatio - 1.0f);
 
 	// render matrix
 	Matrix2 transform;
@@ -187,7 +171,7 @@ void Renderable::RenderAll(float aRatio, float aStep)
 		}
 
 		// render
-		(*itor)->Render(transform);
+		(*itor)->Render(transform, aStep);
 
 		// reset the transform
 		glPopMatrix();
@@ -197,7 +181,16 @@ void Renderable::RenderAll(float aRatio, float aStep)
 	}
 }
 
-void Renderable::Render(const Matrix2 &transform)
+void Renderable::Render(const Matrix2 &aTransform, float aStep)
 {
-	glCallList(mDraw);
+	// get the renderable template
+	const RenderableTemplate &renderable = Database::renderabletemplate.Get(id);
+
+	// elapsed time
+	float t = fmodf((Renderable::sOffset + sTurn - mStart) * aStep, renderable.mPeriod);
+	if (t < 0)
+		return;
+
+	// execute the deferred draw list
+	ExecuteDeferredDrawItems(&renderable.mBuffer[0], renderable.mBuffer.size(), t);
 };

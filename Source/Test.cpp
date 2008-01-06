@@ -2,6 +2,7 @@
 #include "stdafx.h"
 
 // includes
+#include "oglconsole.h"                                                                              
 #include "Timer.h"
 #include "Cloud.h"
 #include "Player.h"
@@ -34,6 +35,10 @@ int OPENGL_MULTISAMPLE = 16;
 int SIMULATION_RATE = 60;
 float TIME_SCALE = 1.0f;
 
+#define PRINT_PERFORMANCE_DETAILS
+//#define PRINT_SIMULATION_TIMER
+#define TRACE_OPENGL_ATTRIBUTES
+
 // input system
 Input input;
 
@@ -50,6 +55,28 @@ int DebugPrint(const char *format, ...)
 #endif
 	va_end(ap);
 	return n;
+}
+
+void cmdCB(OGLCONSOLE_Console console, char *cmd)
+{
+	// process commands here
+	char buf[256];
+	strncpy(buf, cmd, sizeof(buf)-1);
+	buf[sizeof(buf)-1] = '\0';
+	char *token = strtok(buf, " \t");
+	switch (Hash(token))
+	{
+	case 0xafd071e5 /* "test" */:
+		{
+			token = strtok(NULL, " \t");
+			while (token)
+			{
+				OGLCONSOLE_Output(console, "%s\n", token);
+				token = strtok(NULL, " \t");
+			}
+		}
+		break;
+	}
 }
 
 bool init_GL()
@@ -159,6 +186,10 @@ bool init()
 	if( SDL_SetVideoMode( SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_DEPTH, flags ) == NULL )
 		return false;
 
+    /* Initialize OGLCONSOLE */                                                                      
+    OGLCONSOLE_Create();                                                                             
+    OGLCONSOLE_EnterKey(cmdCB);                                                                      
+
 	// initialize OpenGL
 	if( !init_GL() )
 		return false;    
@@ -166,7 +197,6 @@ bool init()
 	// set window title
 	SDL_WM_SetCaption( "OpenGL Test", NULL );
 
-#define TRACE_OPENGL_ATTRIBUTES
 #ifdef TRACE_OPENGL_ATTRIBUTES
 	int value;
 
@@ -222,6 +252,9 @@ bool init()
 
 void clean_up()
 {
+    /* clean up oglconsole */                                                                        
+    OGLCONSOLE_Quit();
+
 	// quit SDL
 	SDL_Quit();
 }
@@ -547,7 +580,7 @@ static const char * sTexCoordNames[] = { "s", "t", "r", "q" };
 static const char * sIndexNames[] = { "c" };
 static const char * sMatrixNames[] = { "m0", "m1", "m2", "m3", "m4", "m5", "m6", "m7", "m8", "m9", "m10", "m11", "m12", "m13", "m14", "m15" };
 
-void ProcessDrawDataDeferred(TiXmlElement *element, unsigned int id, std::vector<unsigned int> &buffer, int width, const char *names[], const float data[])
+void ProcessDrawDataDeferred(TiXmlElement *element, std::vector<unsigned int> &buffer, int width, const char *names[], const float data[])
 {
 	if (const char *name = element->Attribute("name"))
 	{
@@ -577,7 +610,7 @@ void ProcessDrawDataDeferred(TiXmlElement *element, unsigned int id, std::vector
 	}
 }
 
-void ProcessDrawItemDeferred(TiXmlElement *element, unsigned int id, std::vector<unsigned int> &buffer)
+void ProcessDrawItemDeferred(TiXmlElement *element, std::vector<unsigned int> &buffer)
 {
 	const char *label = element->Value();
 	switch (Hash(label))
@@ -585,7 +618,7 @@ void ProcessDrawItemDeferred(TiXmlElement *element, unsigned int id, std::vector
 	case 0x974c9474 /* "pushmatrix" */:
 		{
 			buffer.push_back(0xf6604733 /* "glPushMatrix" */);
-			ProcessDrawItemsDeferred(element, id, buffer);
+			ProcessDrawItemsDeferred(element, buffer);
 			buffer.push_back(0xfc8a1d94 /* "glPopMatrix" */);
 		}
 		break;
@@ -721,7 +754,7 @@ void ProcessDrawItemDeferred(TiXmlElement *element, unsigned int id, std::vector
 			}
 			buffer.push_back(0xa471ec02 /* "glPushAttrib" */);
 			buffer.push_back(mask);
-			ProcessDrawItemsDeferred(element, id, buffer);
+			ProcessDrawItemsDeferred(element, buffer);
 			buffer.push_back(0x73c4cda1 /* "glPopAttrib" */);
 		}
 		break;
@@ -749,7 +782,7 @@ void ProcessDrawItemDeferred(TiXmlElement *element, unsigned int id, std::vector
 			}
 			buffer.push_back(0x485249b9 /* "glPushClientAttrib" */);
 			buffer.push_back(mask);
-			ProcessDrawItemsDeferred(element, id, buffer);
+			ProcessDrawItemsDeferred(element, buffer);
 			buffer.push_back(0xbfd4add2 /* "glPopClientAttrib" */);
 		}
 		break;
@@ -758,7 +791,7 @@ void ProcessDrawItemDeferred(TiXmlElement *element, unsigned int id, std::vector
 		{
 			float data[3] = { 0.0f, 0.0f, 0.0f };
 			buffer.push_back(0xafeef11e /* "glTranslatef" */);
-			ProcessDrawDataDeferred(element, id, buffer, 3, sPositionNames, data);
+			ProcessDrawDataDeferred(element, buffer, 3, sPositionNames, data);
 		}
 		break;
 
@@ -766,7 +799,7 @@ void ProcessDrawItemDeferred(TiXmlElement *element, unsigned int id, std::vector
 		{
 			float data[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
 			buffer.push_back(0x29e02ba1 /* "glRotatef" */);
-			ProcessDrawDataDeferred(element, id, buffer, 4, sRotationNames, data);
+			ProcessDrawDataDeferred(element, buffer, 4, sRotationNames, data);
 		}
 		break;
 
@@ -774,7 +807,7 @@ void ProcessDrawItemDeferred(TiXmlElement *element, unsigned int id, std::vector
 		{
 			float data[3] = { 1.0f, 1.0f, 1.0f };
 			buffer.push_back(0xff71cf6e /* "glScalef" */);
-			ProcessDrawDataDeferred(element, id, buffer, 3, sPositionNames, data);
+			ProcessDrawDataDeferred(element, buffer, 3, sPositionNames, data);
 		}
 		break;
 
@@ -826,14 +859,14 @@ void ProcessDrawItemDeferred(TiXmlElement *element, unsigned int id, std::vector
 		{
 			float data[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
 			buffer.push_back(0x94110c7a /* "glVertex4f" */);
-			ProcessDrawDataDeferred(element, id, buffer, 4, sPositionNames, data);
+			ProcessDrawDataDeferred(element, buffer, 4, sPositionNames, data);
 		}
 		break;
 	case 0xe68b9c52 /* "normal" */:
 		{
 			float data[3] = { 0.0f, 0.0f, 0.0f };
 			buffer.push_back(0xf2d58094 /* "glNormal3f" */);
-			ProcessDrawDataDeferred(element, id, buffer, 4, sPositionNames, data);
+			ProcessDrawDataDeferred(element, buffer, 4, sPositionNames, data);
 		}
 		break;
 
@@ -841,7 +874,7 @@ void ProcessDrawItemDeferred(TiXmlElement *element, unsigned int id, std::vector
 		{
 			float data[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
 			buffer.push_back(0x9d63d16b /* "glColor4f" */);
-			ProcessDrawDataDeferred(element, id, buffer, 4, sColorNames, data);
+			ProcessDrawDataDeferred(element, buffer, 4, sColorNames, data);
 		}
 		break;
 
@@ -849,7 +882,7 @@ void ProcessDrawItemDeferred(TiXmlElement *element, unsigned int id, std::vector
 		{
 			float data[1] = { 0.0f };
 			buffer.push_back(0xf3b3b82c /* "glIndexf" */);
-			ProcessDrawDataDeferred(element, id, buffer, 1, sIndexNames, data);
+			ProcessDrawDataDeferred(element, buffer, 1, sIndexNames, data);
 		}
 		break;
 
@@ -857,7 +890,7 @@ void ProcessDrawItemDeferred(TiXmlElement *element, unsigned int id, std::vector
 		{
 			float data[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
 			buffer.push_back(0xb78bb2ae /* "glTexCoord4f" */);
-			ProcessDrawDataDeferred(element, id, buffer, 4, sTexCoordNames, data);
+			ProcessDrawDataDeferred(element, buffer, 4, sTexCoordNames, data);
 		}
 		break;
 
@@ -879,7 +912,7 @@ void ProcessDrawItemDeferred(TiXmlElement *element, unsigned int id, std::vector
 		{
 			buffer.push_back(0xb70e76e3 /* "glBegin" */);
 			buffer.push_back(GL_POINTS);
-			ProcessDrawItemsDeferred(element, id, buffer);
+			ProcessDrawItemsDeferred(element, buffer);
 			buffer.push_back(0x50257afb /* "glEnd" */);
 		}
 		break;
@@ -888,7 +921,7 @@ void ProcessDrawItemDeferred(TiXmlElement *element, unsigned int id, std::vector
 		{
 			buffer.push_back(0xb70e76e3 /* "glBegin" */);
 			buffer.push_back(GL_LINES);
-			ProcessDrawItemsDeferred(element, id, buffer);
+			ProcessDrawItemsDeferred(element, buffer);
 			buffer.push_back(0x50257afb /* "glEnd" */);
 		}
 		break;
@@ -897,7 +930,7 @@ void ProcessDrawItemDeferred(TiXmlElement *element, unsigned int id, std::vector
 		{
 			buffer.push_back(0xb70e76e3 /* "glBegin" */);
 			buffer.push_back(GL_LINE_LOOP);
-			ProcessDrawItemsDeferred(element, id, buffer);
+			ProcessDrawItemsDeferred(element, buffer);
 			buffer.push_back(0x50257afb /* "glEnd" */);
 		}
 		break;
@@ -906,7 +939,7 @@ void ProcessDrawItemDeferred(TiXmlElement *element, unsigned int id, std::vector
 		{
 			buffer.push_back(0xb70e76e3 /* "glBegin" */);
 			buffer.push_back(GL_LINE_STRIP);
-			ProcessDrawItemsDeferred(element, id, buffer);
+			ProcessDrawItemsDeferred(element, buffer);
 			buffer.push_back(0x50257afb /* "glEnd" */);
 		}
 		break;
@@ -915,7 +948,7 @@ void ProcessDrawItemDeferred(TiXmlElement *element, unsigned int id, std::vector
 		{
 			buffer.push_back(0xb70e76e3 /* "glBegin" */);
 			buffer.push_back(GL_TRIANGLES);
-			ProcessDrawItemsDeferred(element, id, buffer);
+			ProcessDrawItemsDeferred(element, buffer);
 			buffer.push_back(0x50257afb /* "glEnd" */);
 		}
 		break;
@@ -924,7 +957,7 @@ void ProcessDrawItemDeferred(TiXmlElement *element, unsigned int id, std::vector
 		{
 			buffer.push_back(0xb70e76e3 /* "glBegin" */);
 			buffer.push_back(GL_TRIANGLE_STRIP);
-			ProcessDrawItemsDeferred(element, id, buffer);
+			ProcessDrawItemsDeferred(element, buffer);
 			buffer.push_back(0x50257afb /* "glEnd" */);
 		}
 		break;
@@ -933,7 +966,7 @@ void ProcessDrawItemDeferred(TiXmlElement *element, unsigned int id, std::vector
 		{
 			buffer.push_back(0xb70e76e3 /* "glBegin" */);
 			buffer.push_back(GL_TRIANGLE_FAN);
-			ProcessDrawItemsDeferred(element, id, buffer);
+			ProcessDrawItemsDeferred(element, buffer);
 			buffer.push_back(0x50257afb /* "glEnd" */);
 		}
 		break;
@@ -942,7 +975,7 @@ void ProcessDrawItemDeferred(TiXmlElement *element, unsigned int id, std::vector
 		{
 			buffer.push_back(0xb70e76e3 /* "glBegin" */);
 			buffer.push_back(GL_QUADS);
-			ProcessDrawItemsDeferred(element, id, buffer);
+			ProcessDrawItemsDeferred(element, buffer);
 			buffer.push_back(0x50257afb /* "glEnd" */);
 		}
 		break;
@@ -951,7 +984,7 @@ void ProcessDrawItemDeferred(TiXmlElement *element, unsigned int id, std::vector
 		{
 			buffer.push_back(0xb70e76e3 /* "glBegin" */);
 			buffer.push_back(GL_QUAD_STRIP);
-			ProcessDrawItemsDeferred(element, id, buffer);
+			ProcessDrawItemsDeferred(element, buffer);
 			buffer.push_back(0x50257afb /* "glEnd" */);
 		}
 		break;
@@ -960,7 +993,7 @@ void ProcessDrawItemDeferred(TiXmlElement *element, unsigned int id, std::vector
 		{
 			buffer.push_back(0xb70e76e3 /* "glBegin" */);
 			buffer.push_back(GL_POLYGON);
-			ProcessDrawItemsDeferred(element, id, buffer);
+			ProcessDrawItemsDeferred(element, buffer);
 			buffer.push_back(0x50257afb /* "glEnd" */);
 		}
 		break;
@@ -977,6 +1010,24 @@ void ProcessDrawItemDeferred(TiXmlElement *element, unsigned int id, std::vector
 					buffer.push_back(drawlist);
 				}
 			}
+		}
+		break;
+
+	case 0xc98b019b /* "drawlist" */:
+		{
+			// create a new draw list
+			GLuint handle = glGenLists(1);
+			glNewList(handle, GL_COMPILE);
+
+			// process draw items
+			ProcessDrawItems(element);
+
+			// finish the draw list
+			glEndList();
+
+			// use the anonymous drawlist
+			buffer.push_back(0x9525d6fe /* "glCallList" */);
+			buffer.push_back(handle);
 		}
 		break;
 
@@ -1269,7 +1320,7 @@ void ProcessDrawItemDeferred(TiXmlElement *element, unsigned int id, std::vector
 			buffer.push_back(count);
 			buffer.push_back(0);
 			int start = buffer.size();
-			ProcessDrawItemsDeferred(element, id, buffer);
+			ProcessDrawItemsDeferred(element, buffer);
 			buffer[start-1] = buffer.size() - start;
 		}
 		break;
@@ -1279,12 +1330,12 @@ void ProcessDrawItemDeferred(TiXmlElement *element, unsigned int id, std::vector
 	}
 }
 
-void ProcessDrawItemsDeferred(TiXmlElement *element, unsigned int id, std::vector<unsigned int> &buffer)
+void ProcessDrawItemsDeferred(TiXmlElement *element, std::vector<unsigned int> &buffer)
 {
 	// process child elements
 	for (TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
-		ProcessDrawItemDeferred(child, id, buffer);
+		ProcessDrawItemDeferred(child, buffer);
 	}
 }
 
@@ -2218,7 +2269,7 @@ static void ProcessWorldItems(TiXmlElement *element)
 				if (name)
 				{
 					std::vector<unsigned int> buffer;
-					ProcessDrawItemsDeferred(child, Hash(name), buffer);
+					ProcessDrawItemsDeferred(child, buffer);
 				}
 			}
 			break;
@@ -2360,6 +2411,16 @@ int SDL_main( int argc, char *argv[] )
 	if( !init() )
 		return 1;    
 
+	// clear the screen
+	glClear(
+		GL_COLOR_BUFFER_BIT
+#ifdef ENABLE_DEPTH_BUFFER
+		| GL_DEPTH_BUFFER_BIT
+#endif
+		);
+	// show the screen
+	SDL_GL_SwapBuffers();
+
 	{
 		// input binding
 		DebugPrint("Input %s\n", inputconfig);
@@ -2452,6 +2513,7 @@ int SDL_main( int argc, char *argv[] )
 	const float sim_rate = float(SIMULATION_RATE);
 	const float sim_step = 1.0f / sim_rate;
 	float sim_timer = 1.0f;
+	unsigned int sim_turn = 0;
 
 	DebugPrint("Simulating at %dHz (x%f)\n", SIMULATION_RATE, TIME_SCALE);
 
@@ -2469,6 +2531,10 @@ int SDL_main( int argc, char *argv[] )
 		// process events
 		while( SDL_PollEvent( &event ) )
 		{
+			/* Give the console first dibs on event processing */                                    
+            if (OGLCONSOLE_SDLEvent(&event))
+				continue;
+
 			switch (event.type)
 			{
 			case SDL_KEYDOWN:
@@ -2526,10 +2592,14 @@ int SDL_main( int argc, char *argv[] )
 		sim_timer += delta * TIME_SCALE * sim_rate / 1000.0f;
 
 		// while simulation turns to run...
-		while (sim_timer > 1.0f)
+		while (sim_timer >= 1.0f)
 		{
 			// deduct a turn
 			sim_timer -= 1.0f;
+
+			// advance the turn counter
+			++sim_turn;
+			Renderable::SetTurn(sim_turn);
 			
 			// update database
 			Database::Update();
@@ -2552,7 +2622,7 @@ int SDL_main( int argc, char *argv[] )
 			LARGE_INTEGER perf_count1;
 			QueryPerformanceCounter(&perf_count1);
 
-			DebugPrint("ctrl=%d ", 1000000 * (perf_count1.QuadPart - perf_count0.QuadPart) / perf_freq.QuadPart);
+			DebugPrint("C=%d ", 1000000 * (perf_count1.QuadPart - perf_count0.QuadPart) / perf_freq.QuadPart);
 #endif
 
 			// SIMULATION PHASE
@@ -2565,7 +2635,7 @@ int SDL_main( int argc, char *argv[] )
 			LARGE_INTEGER perf_count2;
 			QueryPerformanceCounter(&perf_count2);
 
-			DebugPrint("simu=%d ", 1000000 * (perf_count2.QuadPart - perf_count1.QuadPart) / perf_freq.QuadPart);
+			DebugPrint("S=%d ", 1000000 * (perf_count2.QuadPart - perf_count1.QuadPart) / perf_freq.QuadPart);
 #endif
 
 			// COLLISION PHASE
@@ -2576,7 +2646,7 @@ int SDL_main( int argc, char *argv[] )
 			LARGE_INTEGER perf_count3;
 			QueryPerformanceCounter(&perf_count3);
 
-			DebugPrint("coll=%d ", 1000000 * (perf_count3.QuadPart - perf_count2.QuadPart) / perf_freq.QuadPart);
+			DebugPrint("P=%d ", 1000000 * (perf_count3.QuadPart - perf_count2.QuadPart) / perf_freq.QuadPart);
 #endif
 
 
@@ -2669,6 +2739,9 @@ int SDL_main( int argc, char *argv[] )
 		// reset camera transform
 		glPopMatrix();
 
+		/* Render our console */
+		OGLCONSOLE_Draw();
+
 		// show the screen
 		SDL_GL_SwapBuffers();
 
@@ -2676,30 +2749,15 @@ int SDL_main( int argc, char *argv[] )
 		LARGE_INTEGER perf_count1;
 		QueryPerformanceCounter(&perf_count1);
 
-		DebugPrint("rend=%d\n", 1000000 * (perf_count1.QuadPart - perf_count0.QuadPart) / perf_freq.QuadPart);
+		DebugPrint("R=%d\n", 1000000 * (perf_count1.QuadPart - perf_count0.QuadPart) / perf_freq.QuadPart);
 #endif
 	}
 	while( !quit );
 
 	DebugPrint("Quitting...\n");
 
-	// remove all entities
-//	for (Database::Typed<Entity *>::iterator itor = Database::entity.begin(); itor != Database::entity.end(); ++itor)
-//		delete itor->second;
-	Database::entity.Clear();
-
-	// remove all drawlists
-	Database::drawlist.Clear();
-
-	// clear databases
-	Database::player.Clear();
-	Database::gunner.Clear();
-	Database::collidable.Clear();
-	Database::collidabletemplate.Clear();
-	Database::renderable.Clear();
-	Database::renderabletemplate.Clear();
-	Database::bullettemplate.Clear();
-	Database::explosiontemplate.Clear();
+	// clear all databases
+	Database::Cleanup();
 
 	// collidable done
 	Collidable::WorldDone();

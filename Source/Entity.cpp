@@ -2,6 +2,22 @@
 #include "Entity.h"
 #include <algorithm>
 
+#ifdef USE_POOL_ALLOCATOR
+#include <boost/pool/pool.hpp>
+
+// entity pool
+static boost::pool<boost::default_user_allocator_malloc_free> pool(sizeof(Entity));
+void *Entity::operator new(size_t aSize)
+{
+	return pool.malloc();
+}
+void Entity::operator delete(void *aPtr)
+{
+	pool.free(aPtr);
+}
+#endif
+
+
 namespace Database
 {
 	Typed<Entity *> entity(0xd33ff5da /* "entity" */);

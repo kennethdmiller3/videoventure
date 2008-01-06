@@ -2,6 +2,22 @@
 #include "Link.h"
 #include "Entity.h"
 
+#ifdef USE_POOL_ALLOCATOR
+#include <boost/pool/pool.hpp>
+
+// link pool
+static boost::pool<boost::default_user_allocator_malloc_free> pool(sizeof(Link));
+void *Link::operator new(size_t aSize)
+{
+	return pool.malloc();
+}
+void Link::operator delete(void *aPtr)
+{
+	pool.free(aPtr);
+}
+#endif
+
+
 namespace Database
 {
 	Typed<Typed<LinkTemplate> > linktemplate(0x801f01af /* "linktemplate" */);
@@ -142,8 +158,8 @@ void Link::Simulate(float aStep)
 
 		// update secondary transform
 		Matrix2 transform(link.mOffset * entity->GetTransform());
+		secondary->Step();
 		secondary->SetTransform(transform);
 		secondary->SetVelocity(entity->GetVelocity());
-		secondary->Step();
 	}
 }

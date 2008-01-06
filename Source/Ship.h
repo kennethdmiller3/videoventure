@@ -25,6 +25,12 @@ class Ship :
 	public Simulatable
 {
 public:
+#ifdef USE_POOL_ALLOCATOR
+	// allocation
+	void *operator new(size_t aSize);
+	void operator delete(void *aPtr);
+#endif
+
 	// constructor
 	Ship(void);
 	Ship(const ShipTemplate &aTemplate, unsigned int aId = 0);

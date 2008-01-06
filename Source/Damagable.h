@@ -26,6 +26,12 @@ public:
 	typedef fastdelegate::FastDelegate<void (unsigned int, float)> Listener;
 
 public:
+#ifdef USE_POOL_ALLOCATOR
+	// allocation
+	void *operator new(size_t aSize);
+	void operator delete(void *aPtr);
+#endif
+
 	Damagable(void);
 	Damagable(const DamagableTemplate &aTemplate, unsigned int aId);
 	virtual ~Damagable(void);

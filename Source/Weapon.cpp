@@ -5,8 +5,20 @@
 #include "Controller.h"
 #include "Link.h"
 
-// gunner bullet physics
-const float GUNNER_BULLET_SPEED = 800;
+#ifdef USE_POOL_ALLOCATOR
+#include <boost/pool/pool.hpp>
+
+// weapon pool
+static boost::pool<boost::default_user_allocator_malloc_free> pool(sizeof(Weapon));
+void *Weapon::operator new(size_t aSize)
+{
+	return pool.malloc();
+}
+void Weapon::operator delete(void *aPtr)
+{
+	pool.free(aPtr);
+}
+#endif
 
 
 namespace Database
@@ -139,14 +151,17 @@ bool Weapon::Configure(TiXmlElement *element)
 // Weapon Simulate
 void Weapon::Simulate(float aStep)
 {
-	// get template data
-	const WeaponTemplate &weapon = Database::weapontemplate.Get(id);
-
 	// get controller
 	unsigned int aOwnerId = Database::owner.Get(id);
 	const Controller *controller = Database::controller.Get(aOwnerId);
 	if (!controller)
+	{
+		Database::Delete(id);
 		return;
+	}
+
+	// get template data
+	const WeaponTemplate &weapon = Database::weapontemplate.Get(id);
 
 	// advance fire timer
 	mDelay -= aStep * weapon.mCycle;
