@@ -122,7 +122,7 @@ Spawner::~Spawner(void)
 void Spawner::Simulate(float aStep)
 {
 	// get the spawner template
-	const SpawnerTemplate &spawner = Database::spawnertemplate.Get(Simulatable::id);
+	const SpawnerTemplate &spawner = Database::spawnertemplate.Get(id);
 
 	// if tracking the spawned item...
 	if (spawner.mTrack)
@@ -149,12 +149,20 @@ void Spawner::Simulate(float aStep)
 	if (mTimer <= 0.0f)
 	{
 		// get the spawner entity
-		Entity *entity = Database::entity.Get(Simulatable::id);
+		Entity *entity = Database::entity.Get(id);
 		if (entity)
 		{
 			// instantiate the spawn entity
 			Matrix2 transform(spawner.mOffset * entity->GetTransform());
 			mSpawn = Database::Instantiate(spawner.mSpawn, transform.Angle(), transform.p, entity->GetVelocity() + transform.Rotate(spawner.mVelocity));
+
+			// if the spawner has a team...
+			unsigned int team = Database::team.Get(id);
+			if (team)
+			{
+				// propagate team to spawned item
+				Database::team.Put(mSpawn, team);
+			}
 
 			// set the timer
 			mTimer += spawner.mCycle;

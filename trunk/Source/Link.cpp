@@ -6,6 +6,7 @@ namespace Database
 {
 	Typed<Typed<LinkTemplate> > linktemplate("linktemplate");
 	Typed<Typed<Link *> > link("link");
+	Typed<unsigned int> backlink("backlink");
 
 	namespace Initializer
 	{
@@ -110,6 +111,13 @@ Link::Link(const LinkTemplate &aTemplate, unsigned int aId)
 		Matrix2 transform(aTemplate.mOffset * entity->GetTransform());
 		mSecondary = Database::Instantiate(aTemplate.mSecondary,
 			transform.Angle(), transform.p, entity->GetVelocity());
+
+		// create a backlink
+		Database::backlink.Put(mSecondary, aId);
+
+		// propagate ownership
+		unsigned int aOwnerId = Database::owner.Get(aId);
+		Database::owner.Put(mSecondary, aOwnerId);
 	}
 }
 
@@ -136,5 +144,6 @@ void Link::Simulate(float aStep)
 		Matrix2 transform(link.mOffset * entity->GetTransform());
 		secondary->SetTransform(transform);
 		secondary->SetVelocity(entity->GetVelocity());
+		secondary->Step();
 	}
 }

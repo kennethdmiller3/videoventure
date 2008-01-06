@@ -9,6 +9,7 @@
 #include "Spawner.h"
 #include "Player.h"
 #include "Gunner.h"
+#include "Aimer.h"
 #include <new>
 
 namespace Database
@@ -21,8 +22,14 @@ namespace Database
 		return databases;
 	}
 
-	// parent links
+	// parent identifier database
 	Typed<unsigned int> parent("parent");
+
+	// owner identifier database
+	Typed<unsigned int> owner("owner");
+
+	// team identifier database
+	extern Typed<unsigned int> team("team");
 
 
 	//
@@ -348,6 +355,9 @@ namespace Database
 		// inherit components from template
 		Inherit(aInstanceId, aTemplateId);
 
+		// objects default to owning themselves
+		owner.Put(aInstanceId, aInstanceId);
+
 		// activate the instance identifier
 		Activate(aInstanceId);
 
@@ -418,6 +428,11 @@ namespace Database
 		{
 			delete g;
 			gunner.Delete(aId);
+		}
+		if (Aimer *a = aimer.Get(aId))
+		{
+			delete a;
+			aimer.Delete(aId);
 		}
 	}
 

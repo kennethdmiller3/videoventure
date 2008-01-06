@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Simulatable.h"
-#include "Controllable.h"
 
 class WeaponTemplate
 {
@@ -27,12 +26,9 @@ public:
 };
 
 class Weapon
-	: public Controllable, public Simulatable
+	: public Simulatable
 {
 protected:
-	// control values
-	bool mFire;
-
 	// fire delay
 	float mDelay;
 	int mPhase;
@@ -44,9 +40,6 @@ public:
 
 	// configure
 	bool Configure(TiXmlElement *element);
-
-	// control
-	virtual void Control(float aStep);
 
 	// simulate
 	virtual void Simulate(float aStep);

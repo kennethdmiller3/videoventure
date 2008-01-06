@@ -465,16 +465,16 @@
 	<!-- bullseye targets -->
 
 	<template name="targetexplosion" type="">
-		<explosion life="1.0">
+		<explosion life="2.0">
 			<pushmatrix>
 				<color>
-					<linear time="0.2">
+					<linear time="0.3">
 						<start r="1.0" g="1.0" b="1.0" a="1.0"/>
 						<end   r="1.0" g="1.0" b="1.0" a="0.0"/>
 					</linear>
 				</color>
 				<scale>
-					<linear time="0.2">
+					<linear time="0.3">
 						<start x="20.0" y="20.0"/>
 						<end   x="0.0" y="0.0"/>
 					</linear>
@@ -483,14 +483,14 @@
 			</pushmatrix>
 			<pushmatrix>
 				<color>
-					<linear time="0.1">
+					<linear time="0.2">
 						<start r="1.0" g="1.0" b="1.0" a="0.1"/>
 						<end   r="1.0" g="1.0" b="1.0" a="0.0"/>
 					</linear>
 				</color>
 				<scale>
-					<linear time="0.1">
-						<start x="10.0" y="10.0"/>
+					<linear time="0.2">
+						<start x="20.0" y="20.0"/>
 						<end   x="100.0" y="100.0"/>
 					</linear>
 				</scale>
@@ -498,17 +498,17 @@
 			</pushmatrix>
 			<pushmatrix>
 				<color>
-					<linear time="0.50">
+					<linear time="1.0">
 						<start r="1.0" g="0.9" b="0.8" a="1.0"/>
 						<end   r="1.0" g="0.5" b="0.0" a="0.25"/>
 					</linear>
-					<linear time="0.50">
+					<linear time="1.0">
 						<start r="1.0" g="0.5" b="0.0" a="0.25"/>
 						<end   r="1.0" g="0.0" b="0.0" a="0.0"/>
 					</linear>
 				</color>
 				<scale>
-					<linear time="1.00">
+					<linear time="2.0">
 						<start x="10.0" y="10.0"/>
 						<end   x="0.0" y="0.0"/>
 					</linear>
@@ -520,40 +520,40 @@
 					<repeat count="6">
 						<pushmatrix>
 							<translate>
-								<linear time="0.25">
+								<linear time="0.5">
 									<start x="0" y="0"/>
-									<end   x="10" y="0"/>
+									<end   x="50" y="0"/>
 								</linear>
 							</translate>
 							<color>
-								<linear time="0.25">
+								<linear time="0.5">
 									<start r="1.0" g="0.7" b="0.4" a="0.5"/>
 									<end   r="1.0" g="0.0" b="0.0" a="0.0"/>
 								</linear>
 							</color>
 							<scale>
-								<linear time="0.25">
-									<start x="1.5" y="0.3"/>
-									<end   x="0.5" y="0.3"/>
+								<linear time="0.5">
+									<start x="5.0" y="0.5"/>
+									<end   x="0.5" y="0.5"/>
 								</linear>
 							</scale>
 							<calllist name="circle16"/>
 						</pushmatrix>
 						<rotate angle="60"/>
 					</repeat>
-					<scale x="1.5" y="1.5"/>
+					<scale x="1.25" y="1.25"/>
 					<rotate angle="20"/>
 				</repeat>
 			</pushmatrix>
 			<pushmatrix>
 				<color>
-					<linear time="0.50">
+					<linear time="1.0">
 						<start r="1.0" g="0.7" b="0.4" a="0.5"/>
 						<end   r="1.0" g="0.0" b="0.0" a="0.0"/>
 					</linear>
 				</color>
 				<scale>
-					<linear time="0.50">
+					<linear time="1.0">
 						<start x="10.0" y="10.0"/>
 						<end   x="30.0" y="30.0"/>
 					</linear>
@@ -731,7 +731,7 @@
 				</color>
 				<scale>
 					<linear time="0.1">
-						<start x="5.0" y="5.0"/>
+						<start x="8.0" y="8.0"/>
 						<end   x="30.0" y="30.0"/>
 					</linear>
 				</scale>
@@ -811,67 +811,193 @@
 				</lines>
 			</drawlist>
 		</renderable>
-		<bullet life="1" damage="1" spawnondeath="enemybulletexplosion"/>
+		<bullet life="2" damage="1" spawnondeath="enemybulletexplosion"/>
 	</template>
 
 
-	<!-- test bullet spawner -->
+  <!-- enemy weapon -->
 
-	<template name="bulletspawn" type="">
-		<collidable>
-			<body name="main">
-				<circle radius="8">
-					<density value="1"/>
-					<friction value="0.5"/>
-					<restitution value="0.5"/>
-					<category value="3"/>
-				</circle>
-				<damping linear="0.5" angular="0.5"/>
-			</body>
-		</collidable>
-		<renderable>
-			<drawlist>
-				<color r="1.0" g="1.0" b="1.0" a="1.0"/>
-				<pushmatrix>
-					<scale x="3" y="3"/>
-					<translate x="0" y="2"/>
-					<calllist name="circle8"/>
-				</pushmatrix>
-				<color r="1.0" g="0.2" b="0.1" a="1.0"/>
-				<pushmatrix>
-					<scale x="8" y="8"/>
-					<calllist name="circle12"/>
-				</pushmatrix>
-			</drawlist>
-		</renderable>
-		<spawner>
-			<offset x="0" y="8"/>
-			<velocity x="0" y="400"/>
-			<spawn name="enemybullet" delay="0" cycle="0.25" track="0"/>
-		</spawner>
-	</template>
-	
-	<entity name="bulletspawn1" type="bulletspawn">
-		<position x="384.0" y="0.0" angle="270"/>
-	</entity>
-
-	<entity name="bulletspawn2" type="bulletspawn">
-		<position x="0.0" y="384.0" angle="0"/>
-	</entity>
-
-	<entity name="bulletspawn3" type="bulletspawn">
-		<position x="-384.0" y="0.0" angle="90"/>
-	</entity>
-
-	<entity name="bulletspawn4" type="bulletspawn">
-		<position x="0.0" y="-384.0" angle="180"/>
-	</entity>
-	
-
-	<!-- -->
+  <template name="enemyweapon" type="">
+    <weapon>
+      <velocity x="0" y="240"/>
+      <ordnance name="enemybullet"/>
+      <shot delay="0.3"/>
+    </weapon>
+  </template>
 
 
-	<!-- player bullet explosion -->
+  <!-- test enemy -->
+
+  <template name="cannon" type="enemyweapon">
+    <renderable>
+      <drawlist>
+        <color r="0.5" g="0.5" b="0.5" a="1.0"/>
+        <quads>
+          <vertex x="2" y="20"/>
+          <vertex x="3" y="6"/>
+          <vertex x="-3" y="6"/>
+          <vertex x="-2" y="20"/>
+        </quads>
+      </drawlist>
+    </renderable>
+    <weapon>
+      <offset x="0" y="20"/>
+    </weapon>
+  </template>
+
+  <template name="cannon0" type="enemyweapon">
+    <renderable>
+      <drawlist>
+        <color r="0.5" g="0.5" b="0.5" a="1.0"/>
+        <quads>
+          <vertex x="2" y="20"/>
+          <vertex x="3" y="4"/>
+          <vertex x="-3" y="6"/>
+          <vertex x="-2" y="20"/>
+        </quads>
+      </drawlist>
+    </renderable>
+    <weapon>
+      <offset x="0" y="20"/>
+    </weapon>
+  </template>
+
+  <template name="cannon1" type="enemyweapon">
+    <renderable>
+      <drawlist>
+        <color r="0.5" g="0.5" b="0.5" a="1.0"/>
+        <quads>
+          <vertex x="2" y="20"/>
+          <vertex x="3" y="6"/>
+          <vertex x="-3" y="4"/>
+          <vertex x="-2" y="20"/>
+        </quads>
+      </drawlist>
+    </renderable>
+    <weapon>
+      <offset x="0" y="20"/>
+    </weapon>
+  </template>
+
+  <template name="turret" type="">
+    <collidable>
+      <body name="main">
+        <circle radius="12">
+          <density value="1"/>
+          <friction value="0.5"/>
+          <restitution value="0.5"/>
+          <category value="3"/>
+        </circle>
+        <damping linear="0.5"/>
+        <allowsleep value="0"/>
+      </body>
+    </collidable>
+    <renderable>
+      <drawlist>
+        <color r="0.7" g="0.7" b="0.7" a="1.0"/>
+        <pushmatrix>
+          <scale x="8" y="8"/>
+          <calllist name="circle16"/>
+        </pushmatrix>
+        <color r="1.0" g="1.0" b="1.0" a="1.0"/>
+        <pushmatrix>
+          <scale x="10" y="10"/>
+          <calllist name="circle16"/>
+        </pushmatrix>
+        <color r="1.0" g="0.2" b="0.1" a="1.0"/>
+        <pushmatrix>
+          <scale x="12" y="12"/>
+          <calllist name="circle16"/>
+        </pushmatrix>
+      </drawlist>
+    </renderable>
+    <aimer range="256" attack="192"/>
+    <team name="enemy"/>
+    <ship maxveloc="0" maxaccel="0" friction="0" maxomega="2"/>
+    <damagable health="10" spawnondeath="targetexplosion"/>
+  </template>
+  
+  <template name="turret1" type="turret">
+    <link name="gun" secondary="cannon">
+      <offset x="0" y="0" angle="0"/>
+    </link>
+  </template>
+  
+  <template name="turret2" type="turret">
+    <link name="lgun" secondary="cannon0">
+      <offset x="4" y="0" angle="0"/>
+    </link>
+    <link name="rgun" secondary="cannon1">
+      <offset x="-4" y="0" angle="0"/>
+    </link>
+  </template>
+
+  <template name="turret3" type="turret">
+    <link name="lgun" secondary="cannon0">
+      <offset x="5" y="-3" angle="-5"/>
+    </link>
+    <link name="mgun" secondary="cannon">
+      <offset x="0" y="0" angle="0"/>
+    </link>
+    <link name="rgun" secondary="cannon1">
+      <offset x="-5" y="-3" angle="5"/>
+    </link>
+  </template>
+  
+  <template name="turret1spawn" type="">
+    <spawner>
+      <spawn name="turret1" start="0" cycle="5" track="1"/>
+    </spawner>
+  </template>
+
+  <template name="turret2spawn" type="">
+    <spawner>
+      <spawn name="turret2" start="0" cycle="5" track="1"/>
+    </spawner>
+  </template>
+
+  <template name="turret3spawn" type="">
+    <spawner>
+      <spawn name="turret3" start="0" cycle="5" track="1"/>
+    </spawner>
+  </template>
+
+  <template name="turretcluster" type="">
+    <link name="turret3" secondary="turret3spawn">
+      <offset x="0" y="0"/>
+    </link>
+    <link name="turret2a" secondary="turret2spawn">
+      <offset x="64" y="16"/>
+    </link>
+    <link name="turret2b" secondary="turret2spawn">
+      <offset x="-64" y="16"/>
+    </link>
+    <link name="turret1a" secondary="turret1spawn">
+      <offset x="128" y="-16"/>
+    </link>
+    <link name="turret1b" secondary="turret1spawn">
+      <offset x="-128" y="-16"/>
+    </link>
+  </template>
+  
+  <entity name="enemyspawn1" type="turretcluster">
+    <position x="384.0" y="0.0" angle="270"/>
+  </entity>
+
+  <entity name="enemyspawn2" type="turretcluster">
+    <position x="0.0" y="384.0" angle="0"/>
+  </entity>
+
+  <entity name="enemyspawn3" type="turretcluster">
+    <position x="-384.0" y="0.0" angle="90"/>
+  </entity>
+
+  <entity name="enemyspawn4" type="turretcluster">
+    <position x="0.0" y="-384.0" angle="180"/>
+  </entity>
+
+
+  <!-- player bullet explosion -->
 
 	<template name="playerbulletexplosion" type="">
 		<explosion life="0.5">
@@ -899,7 +1025,7 @@
 				</color>
 				<scale>
 					<linear time="0.1">
-						<start x="5.0" y="5.0"/>
+						<start x="8.0" y="8.0"/>
 						<end   x="30.0" y="30.0"/>
 					</linear>
 				</scale>
@@ -908,8 +1034,8 @@
 			<pushmatrix>
 				<color>
 					<linear time="0.5">
-						<start r="0.8" g="0.9" b="1.0" a="1.0"/>
-						<end   r="0.0" g="0.5" b="1.0" a="0.0"/>
+						<start r="0.9" g="0.8" b="1.0" a="1.0"/>
+						<end   r="0.5" g="0.0" b="1.0" a="0.0"/>
 					</linear>
 				</color>
 				<scale>
@@ -923,7 +1049,7 @@
 			<pushmatrix>
 				<color>
 					<linear time="0.3">
-						<start r="0.4" g="0.7" b="1.0" a="0.5"/>
+						<start r="0.7" g="0.4" b="1.0" a="0.5"/>
 						<end   r="0.0" g="0.0" b="1.0" a="0.0"/>
 					</linear>
 				</color>
@@ -945,7 +1071,7 @@
 		<collidable>
 			<body name="main">
 				<fast value="1"/>
-				<circle radius="3">
+				<circle radius="2">
 					<friction value="0"/>
 					<restitution value="1"/>
 					<density value="0.2"/>
@@ -956,28 +1082,22 @@
 		</collidable>
 		<renderable>
 			<drawlist>
-				<color r="1.0" g="1.0" b="1.0" a="1.0"/>
+        <color r="1.0" g="1.0" b="1.0" a="1.0"/>
 				<pushmatrix>
-					<scale x="2" y="2"/>
+					<scale x="1" y="8"/>
 					<calllist name="circle8"/>
 				</pushmatrix>
-				<color r="0.8" g="0.9" b="1.0" a="0.5"/>
+				<color r="0.7" g="0.4" b="1.0" a="0.5"/>
 				<pushmatrix>
-					<scale x="4" y="4"/>
+					<scale x="2.5" y="10"/>
 					<calllist name="circle8"/>
 				</pushmatrix>
-				<color r="0.0" g="0.5" b="1.0" a="0.25"/>
+				<color r="0.5" g="0.0" b="1.0" a="0.25"/>
 				<pushmatrix>
-					<scale x="6" y="6"/>
-					<calllist name="circle12"/>
+					<scale x="4" y="12"/>
+					<calllist name="circle8"/>
 				</pushmatrix>
-				<lines>
-					<color r="1.0" g="1.0" b="1.0" a="0.5"/>
-					<vertex x="0" y="0"/>
-					<color r="0.0" g="0.0" b="1.0" a="0.0"/>
-					<vertex x="0" y="-25"/>
-				</lines>
-			</drawlist>
+      </drawlist>
 		</renderable>
 		<bullet life="1" damage="1" spawnondeath="playerbulletexplosion"/>
 	</template>
@@ -987,7 +1107,7 @@
 
   <template name="playershipweapon" type="">
     <weapon>
-      <velocity x="0" y="800"/>
+      <velocity x="0" y="480"/>
       <ordnance name="playerbullet"/>
       <shot delay="0.1"/>
     </weapon>
@@ -1076,7 +1196,8 @@
         </triangle_strip>
       </drawlist>
     </renderable>
-    <player maxveloc="200" maxaccel="1000" friction="50" maxomega="10"/>
+    <player/>
+    <ship maxveloc="120" maxaccel="1000" friction="50" maxomega="20"/>
     <damagable health="10" spawnondeath="playershipexplosion"/>
     <link name="lgun" secondary="playershipweapon">
       <offset x="4" y="0" angle="0"/>
@@ -1084,33 +1205,146 @@
     <link name="rgun" secondary="playershipweapon">
       <offset x="-4" y="0" angle="0"/>
     </link>
-    </entity>
+    <team name="player"/>
+  </entity>
 
 
-  <!-- player gunner weapon -->
+  <!-- gunner bullet explosion -->
 
-  <template name="playergunnerweapon" type="">
+  <template name="gunnerbulletexplosion" type="">
+    <explosion life="0.5">
+      <pushmatrix>
+        <color>
+          <linear time="0.1">
+            <start r="1.0" g="1.0" b="1.0" a="1.0"/>
+            <end   r="1.0" g="1.0" b="1.0" a="0.0"/>
+          </linear>
+        </color>
+        <scale>
+          <linear time="0.1">
+            <start x="8.0" y="8.0"/>
+            <end   x="0.0" y="0.0"/>
+          </linear>
+        </scale>
+        <calllist name="circle16"/>
+      </pushmatrix>
+      <pushmatrix>
+        <color>
+          <linear time="0.1">
+            <start r="1.0" g="1.0" b="1.0" a="0.1"/>
+            <end   r="1.0" g="1.0" b="1.0" a="0.0"/>
+          </linear>
+        </color>
+        <scale>
+          <linear time="0.1">
+            <start x="8.0" y="8.0"/>
+            <end   x="30.0" y="30.0"/>
+          </linear>
+        </scale>
+        <calllist name="circle16"/>
+      </pushmatrix>
+      <pushmatrix>
+        <color>
+          <linear time="0.5">
+            <start r="0.8" g="0.9" b="1.0" a="1.0"/>
+            <end   r="0.0" g="0.5" b="1.0" a="0.0"/>
+          </linear>
+        </color>
+        <scale>
+          <linear time="0.5">
+            <start x="6.0" y="6.0"/>
+            <end   x="0.0" y="0.0"/>
+          </linear>
+        </scale>
+        <calllist name="circle16"/>
+      </pushmatrix>
+      <pushmatrix>
+        <color>
+          <linear time="0.3">
+            <start r="0.4" g="0.7" b="1.0" a="0.5"/>
+            <end   r="0.0" g="0.0" b="1.0" a="0.0"/>
+          </linear>
+        </color>
+        <scale>
+          <linear time="0.3">
+            <start x="8.0" y="8.0"/>
+            <end   x="16.0" y="16.0"/>
+          </linear>
+        </scale>
+        <calllist name="circle16"/>
+      </pushmatrix>
+    </explosion>
+  </template>
+
+
+  <!-- gunner bullet -->
+
+  <template name="gunnerbullet" type="">
+    <collidable>
+      <body name="main">
+        <fast value="1"/>
+        <circle radius="2">
+          <friction value="0"/>
+          <restitution value="1"/>
+          <density value="0.2"/>
+          <category value="2"/>
+          <mask bit1="0" bit2="0"/>
+        </circle>
+      </body>
+    </collidable>
+    <renderable>
+      <drawlist>
+        <color r="1.0" g="1.0" b="1.0" a="1.0"/>
+        <pushmatrix>
+          <scale x="2" y="2"/>
+          <calllist name="circle8"/>
+        </pushmatrix>
+        <color r="0.4" g="0.7" b="1.0" a="0.5"/>
+        <pushmatrix>
+          <scale x="4" y="4"/>
+          <calllist name="circle8"/>
+        </pushmatrix>
+        <color r="0.0" g="0.5" b="1.0" a="0.25"/>
+        <pushmatrix>
+          <scale x="6" y="6"/>
+          <calllist name="circle12"/>
+        </pushmatrix>
+        <lines>
+          <color r="1.0" g="1.0" b="1.0" a="0.5"/>
+          <vertex x="0" y="0"/>
+          <color r="0.0" g="0.0" b="1.0" a="0.0"/>
+          <vertex x="0" y="-25"/>
+        </lines>
+      </drawlist>
+    </renderable>
+    <bullet life="1" damage="1" spawnondeath="gunnerbulletexplosion"/>
+  </template>
+  
+  
+  <!-- gunner weapon -->
+
+  <template name="gunnerweapon" type="">
     <weapon>
-      <velocity x="0" y="800"/>
-      <ordnance name="playerbullet"/>
-      <shot delay="0.2" cycle="2"/>
+      <velocity x="0" y="480"/>
+      <ordnance name="gunnerbullet"/>
+      <shot delay="0.2"/>
+    </weapon>
+  </template>
+
+  <template name="gunnerweapon0" type="gunnerweapon">
+    <weapon>
+      <shot phase="0" cycle="2"/>
     </weapon>
   </template>
   
-  <template name="playergunnerweapon0" type="playergunnerweapon">
+  <template name="gunnerweapon1" type="gunnerweapon">
     <weapon>
-      <shot phase="0"/>
-    </weapon>
-  </template>
-  
-  <template name="playergunnerweapon1" type="playergunnerweapon">
-    <weapon>
-      <shot phase="1"/>
+      <shot phase="1" cycle="2"/>
     </weapon>
   </template>
 
 
-  <!-- player gunners -->
+  <!-- gunners -->
 
   <template name="gunner" type="">
     <collidable>
@@ -1153,13 +1387,13 @@
   </template>
 
   <template name="gunner0" type="gunner">
-    <link name="lgun" secondary="playergunnerweapon0"/>
-    <link name="rgun" secondary="playergunnerweapon0"/>
+    <link name="lgun" secondary="gunnerweapon0"/>
+    <link name="rgun" secondary="gunnerweapon0"/>
   </template>
 
   <template name="gunner1" type="gunner">
-    <link name="lgun" secondary="playergunnerweapon1"/>
-    <link name="rgun" secondary="playergunnerweapon1"/>
+    <link name="lgun" secondary="gunnerweapon1"/>
+    <link name="rgun" secondary="gunnerweapon1"/>
   </template>
 
   <entity name="gunnerA" type="gunner0">
@@ -1190,7 +1424,213 @@
     </gunner>
   </entity>
 
+
+  <!-- force bullet explosion -->
+
+  <template name="forcebulletexplosion" type="">
+    <explosion life="1.0">
+      <pushmatrix>
+        <color>
+          <linear time="0.1">
+            <start r="1.0" g="1.0" b="1.0" a="1.0"/>
+            <end   r="1.0" g="1.0" b="1.0" a="0.0"/>
+          </linear>
+        </color>
+        <scale>
+          <linear time="0.1">
+            <start x="16.0" y="16.0"/>
+            <end   x="0.0" y="0.0"/>
+          </linear>
+        </scale>
+        <calllist name="circle16"/>
+      </pushmatrix>
+      <pushmatrix>
+        <color>
+          <linear time="0.1">
+            <start r="1.0" g="1.0" b="1.0" a="0.1"/>
+            <end   r="1.0" g="1.0" b="1.0" a="0.0"/>
+          </linear>
+        </color>
+        <scale>
+          <linear time="0.1">
+            <start x="16.0" y="16.0"/>
+            <end   x="80.0" y="80.0"/>
+          </linear>
+        </scale>
+        <calllist name="circle16"/>
+      </pushmatrix>
+      <pushmatrix>
+        <color>
+          <linear time="1.0">
+            <start r="0.9" g="1.0" b="0.8" a="1.0"/>
+            <end   r="0.5" g="1.0" b="0.0" a="0.0"/>
+          </linear>
+        </color>
+        <scale>
+          <linear time="1.0">
+            <start x="12.0" y="12.0"/>
+            <end   x="0.0" y="0.0"/>
+          </linear>
+        </scale>
+        <calllist name="circle16"/>
+      </pushmatrix>
+      <pushmatrix>
+        <repeat count="3">
+          <repeat count="6">
+            <pushmatrix>
+              <translate>
+                <linear time="0.25">
+                  <start x="0" y="0"/>
+                  <end   x="40" y="0"/>
+                </linear>
+              </translate>
+              <color>
+                <linear time="0.25">
+                  <start r="0.7" g="1.0" b="0.4" a="0.5"/>
+                  <end   r="0.0" g="1.0" b="0.0" a="0.0"/>
+                </linear>
+              </color>
+              <scale>
+                <linear time="0.25">
+                  <start x="6.0" y="0.5"/>
+                  <end   x="0.5" y="0.5"/>
+                </linear>
+              </scale>
+              <calllist name="circle16"/>
+            </pushmatrix>
+            <rotate angle="60"/>
+          </repeat>
+          <scale x="1.25" y="1.25"/>
+          <rotate angle="20"/>
+        </repeat>
+      </pushmatrix>
+      <pushmatrix>
+        <color>
+          <linear time="0.3">
+            <start r="0.7" g="1.0" b="0.4" a="0.5"/>
+            <end   r="0.0" g="1.0" b="0.0" a="0.0"/>
+          </linear>
+        </color>
+        <scale>
+          <linear time="0.3">
+            <start x="16.0" y="16.0"/>
+            <end   x="32.0" y="32.0"/>
+          </linear>
+        </scale>
+        <calllist name="circle16"/>
+      </pushmatrix>
+    </explosion>
+  </template>
+
   
+  <!-- force bullet -->
+
+  <template name="forcebullet" type="">
+    <collidable>
+      <body name="main">
+        <fast value="1"/>
+        <circle radius="5">
+          <friction value="0"/>
+          <restitution value="1"/>
+          <density value="0.2"/>
+          <category value="2"/>
+          <mask bit1="0" bit2="0"/>
+        </circle>
+      </body>
+    </collidable>
+    <renderable>
+      <drawlist>
+        <pushmatrix>
+          <color r="1.0" g="1.0" b="1.0" a="1.0"/>
+          <scale x="5" y="5"/>
+          <calllist name="circle16"/>
+        </pushmatrix>
+        <pushmatrix>
+          <color r="0.7" g="1.0" b="0.4" a="0.5"/>
+          <scale x="7" y="7"/>
+          <calllist name="circle16"/>
+        </pushmatrix>
+        <pushmatrix>
+          <color r="0.5" g="1.0" b="0.0" a="0.25"/>
+          <scale x="9" y="9"/>
+          <calllist name="circle16"/>
+        </pushmatrix>
+        <pushmatrix>
+          <translate x="0" y="-12"/>
+          <color r="0.7" g="1.0" b="0.4" a="0.5"/>
+          <scale x="4" y="4"/>
+          <calllist name="circle12"/>
+        </pushmatrix>
+        <pushmatrix>
+          <translate x="0" y="-20"/>
+          <color r="0.5" g="1.0" b="0.0" a="0.25"/>
+          <scale x="3" y="3"/>
+          <calllist name="circle12"/>
+        </pushmatrix>
+      </drawlist>
+    </renderable>
+    <bullet life="1" damage="10" spawnondeath="forcebulletexplosion"/>
+  </template>
+  
+  
+  <!-- force weapon -->
+
+  <template name="forceweapon" type="">
+    <weapon>
+      <velocity x="0" y="480"/>
+      <ordnance name="forcebullet"/>
+      <shot delay="1.0"/>
+    </weapon>
+  </template>
+
+
+  <!-- force -->
+
+  <template name="force" type="">
+    <collidable>
+      <body name="main">
+        <circle radius="8">
+          <density value="0.1"/>
+          <friction value="0.5"/>
+          <restitution value="0.5"/>
+          <category value="2"/>
+          <mask bit0="0" bit1="0" bit2="0"/>
+        </circle>
+        <allowsleep value="0"/>
+      </body>
+      <revolutejoint>
+        <body1 name="playership" body="main"/>
+        <body2 body="main"/>
+        <anchor x="0" y="0"/>
+        <limit lower="0" upper="0"/>
+      </revolutejoint>
+    </collidable>
+    <renderable>
+      <drawlist>
+        <color r="0.5" g="0.5" b="0.5" a="1.0"/>
+        <triangles>
+          <vertex x="0" y="6"/>
+          <vertex x="2" y="1"/>
+          <vertex x="-2" y="1"/>
+        </triangles>
+        <color r="1.0" g="1.0" b="1.0" a="1.0"/>
+        <scale x="7" y="7"/>
+        <calllist name="circle16"/>
+      </drawlist>
+    </renderable>
+    <link name="gun" secondary="forceweapon">
+      <offset x="0" y="4" angle="0"/>
+    </link>
+  </template>
+
+  <entity name="forceA" type="force">
+    <position x="0" y="26" angle="0"/>
+    <gunner>
+      <owner name="playership"/>
+    </gunner>
+  </entity>
+  
+
   <!-- health powerup -->
 
 	<template name="healthupexplosion" type="">

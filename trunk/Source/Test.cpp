@@ -5,6 +5,8 @@
 #include "Timer.h"
 #include "Cloud.h"
 #include "Player.h"
+#include "Aimer.h"
+#include "Ship.h"
 #include "Gunner.h"
 #include "Weapon.h"
 #include "Bullet.h"
@@ -1995,6 +1997,22 @@ void ProcessTemplateItem(TiXmlElement *element, unsigned int template_id)
 		}
 		break;
 
+	case 0x2ea90881 /* "aimer" */:
+		{
+			AimerTemplate &aimer = Database::aimertemplate.Open(template_id);
+			aimer.Configure(element);
+			Database::aimertemplate.Close(template_id);
+		}
+		break;
+
+	case 0xac56f17f /* "ship" */:
+		{
+			ShipTemplate &ship = Database::shiptemplate.Open(template_id);
+			ship.Configure(element);
+			Database::shiptemplate.Close(template_id);
+		}
+		break;
+
 	case 0x6f332041 /* "weapon" */:
 		{
 			WeaponTemplate &weapon = Database::weapontemplate.Open(template_id);
@@ -2068,6 +2086,12 @@ void ProcessTemplateItem(TiXmlElement *element, unsigned int template_id)
 			}
 		}
 		break;
+
+	case 0xa2fd7d0c /* "team" */:
+		{
+			Database::team.Put(template_id, Hash(element->Attribute("name")));
+		}
+		break;
 	}
 }
 
@@ -2111,6 +2135,9 @@ void ProcessEntityItems(TiXmlElement *element)
 	Entity *entity = new Entity(entity_id);
 	Database::entity.Put(entity_id, entity);
 
+	// objects default to owning themselves
+	Database::owner.Put(entity_id, entity_id);
+
 	// process child elements
 	// (components with no template equivalent)
 	for (TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
@@ -2125,7 +2152,8 @@ void ProcessEntityItems(TiXmlElement *element)
 				Player *player = Database::player.Get(entity_id);
 				if (!player)
 				{
-					player = new Player(entity_id, parent_id);
+					player = new Player(entity_id);
+					Database::controller.Put(entity_id, player);
 					Database::player.Put(entity_id, player);
 				}
 				player->Configure(child);
@@ -2137,7 +2165,7 @@ void ProcessEntityItems(TiXmlElement *element)
 				Gunner *gunner = Database::gunner.Get(entity_id);
 				if (!gunner)
 				{
-					gunner = new Gunner(entity_id, parent_id);
+					gunner = new Gunner(entity_id);
 					Database::gunner.Put(entity_id, gunner);
 				}
 				gunner->Configure(child);
@@ -2503,7 +2531,7 @@ int SDL_main( int argc, char *argv[] )
 #endif
 
 			// control all entities
-			Controllable::ControlAll(sim_step);
+			Controller::ControlAll(sim_step);
 
 #ifdef PRINT_PERFORMANCE_DETAILS
 			LARGE_INTEGER perf_count1;

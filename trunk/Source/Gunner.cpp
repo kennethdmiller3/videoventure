@@ -1,6 +1,6 @@
 #include "StdAfx.h"
 #include "Gunner.h"
-#include "Bullet.h"
+#include "Entity.h"
 
 namespace Database
 {
@@ -8,9 +8,8 @@ namespace Database
 }
 
 // Gunner Constructor
-Gunner::Gunner(unsigned int aId, unsigned int aParentId)
+Gunner::Gunner(unsigned int aId)
 : Simulatable(aId)
-, owner(0)
 {
 }
 
@@ -32,7 +31,10 @@ bool Gunner::Configure(TiXmlElement *element)
 		switch (Hash(label))
 		{
 		case 0xf5674cd4 /* "owner" */:
-			owner = Hash(child->Attribute("name"));
+			{
+				unsigned int owner = Hash(child->Attribute("name"));
+				Database::owner.Put(id, Database::owner.Get(owner));
+			}
 			break;
 		}
 	}
@@ -43,14 +45,14 @@ bool Gunner::Configure(TiXmlElement *element)
 // Gunner Simulate
 void Gunner::Simulate(float aStep)
 {
-	if (!owner)
-		return;
+	// get the owner
+	unsigned int aOwnerId = Database::owner.Get(id);
 
 	// if the owner does not exist...
-	if (!Database::entity.Get(owner))
+	if (!Database::entity.Find(aOwnerId))
 	{
 		// self-destruct
-		Database::Delete(Simulatable::id);
+		Database::Delete(id);
 		return;
 	}
 }

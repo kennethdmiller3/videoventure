@@ -1,6 +1,6 @@
 #pragma once
 
-class Controllable
+class Controller
 {
 private:
 	// list of all controllables
@@ -16,8 +16,14 @@ protected:
 	unsigned int id;
 
 public:
-	Controllable(unsigned int aId);
-	virtual ~Controllable(void);
+	// controls
+	Vector2 mMove;
+	Vector2 mAim;
+	bool mFire;
+
+public:
+	Controller(unsigned int aId);
+	virtual ~Controller(void);
 
 	// configure
 	virtual bool Configure(TiXmlElement *element) { return false; }
@@ -26,3 +32,8 @@ public:
 	static void ControlAll(float aStep);
 	virtual void Control(float aStep) = 0;
 };
+
+namespace Database
+{
+	extern Typed<Controller *> controller;
+}
