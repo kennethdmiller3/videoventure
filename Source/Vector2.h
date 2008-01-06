@@ -97,4 +97,14 @@ public:
 	{
 		return sqrtf(LengthSq());
 	}
+
+	float DistSq(const Vector2 &v) const
+	{
+		return (v.x - x) * (v.x - x) + (v.y - y) * (v.y - y);
+	}
+
+	float Dist(const Vector2 &v) const
+	{
+		return sqrtf(DistSq(v));
+	}
 };

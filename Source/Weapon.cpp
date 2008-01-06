@@ -2,6 +2,8 @@
 #include "Weapon.h"
 #include "Bullet.h"
 #include "Entity.h"
+#include "Controller.h"
+#include "Link.h"
 
 // gunner bullet physics
 const float GUNNER_BULLET_SPEED = 800;
@@ -109,8 +111,6 @@ bool WeaponTemplate::Configure(TiXmlElement *element)
 
 Weapon::Weapon(void)
 : Simulatable(0)
-, Controllable(0)
-, mFire(false)
 , mDelay(0.0f)
 , mPhase(0)
 {
@@ -118,9 +118,7 @@ Weapon::Weapon(void)
 
 Weapon::Weapon(const WeaponTemplate &aTemplate, unsigned int aId)
 : Simulatable(aId)
-, Controllable(aId)
-, mFire(false)
-, mDelay(aTemplate.mDelay)
+, mDelay(0.0f)
 , mPhase(aTemplate.mPhase)
 {
 }
@@ -138,18 +136,17 @@ bool Weapon::Configure(TiXmlElement *element)
 	return true;
 }
 
-// Weapon Control
-void Weapon::Control(float aStep)
-{
-	// get fire control
-	mFire = input[Input::FIRE_PRIMARY] != 0.0f;
-}
-
 // Weapon Simulate
 void Weapon::Simulate(float aStep)
 {
 	// get template data
-	const WeaponTemplate &weapon = Database::weapontemplate.Get(Simulatable::id);
+	const WeaponTemplate &weapon = Database::weapontemplate.Get(id);
+
+	// get controller
+	unsigned int aOwnerId = Database::owner.Get(id);
+	const Controller *controller = Database::controller.Get(aOwnerId);
+	if (!controller)
+		return;
 
 	// advance fire timer
 	mDelay -= aStep * weapon.mCycle;
@@ -158,13 +155,13 @@ void Weapon::Simulate(float aStep)
 	if (mDelay <= 0.0f)
 	{
 		// if triggered...
-		if (mFire)
+		if (controller->mFire)
 		{
 			// if firing on this phase...
 			if (mPhase == 0)
 			{
 				// get the entity
-				Entity *entity = Database::entity.Get(Simulatable::id);
+				Entity *entity = Database::entity.Get(id);
 
 				// instantiate a bullet
 				Matrix2 transform(weapon.mOffset * entity->GetTransform());

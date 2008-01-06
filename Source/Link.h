@@ -33,6 +33,11 @@ public:
 	Link(const LinkTemplate &aTemplate, unsigned int aId);
 	virtual ~Link(void);
 
+	unsigned int GetSecondary(void) const
+	{
+		return mSecondary;
+	}
+
 	// simulate
 	virtual void Simulate(float aStep);
 };
@@ -41,4 +46,5 @@ namespace Database
 {
 	extern Typed<Typed<LinkTemplate> > linktemplate;
 	extern Typed<Typed<Link *> > link;
+	extern Typed<unsigned int> backlink;
 }

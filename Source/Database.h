@@ -256,6 +256,12 @@ namespace Database
 	// parent identifier database
 	extern Typed<unsigned int> parent;
 
+	// owner identifier database;
+	extern Typed<unsigned int> owner;
+
+	// team affiliation database
+	extern Typed<unsigned int> team;
+
 	// instantiate a template
 	unsigned int Instantiate(unsigned int aTemplateId, float aAngle, Vector2 aPosition, Vector2 aVelocity);
 

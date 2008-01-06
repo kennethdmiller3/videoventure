@@ -185,6 +185,10 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath=".\Source\Aimer.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\Source\Bullet.cpp"
 				>
 			</File>
@@ -197,7 +201,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\Source\Controllable.cpp"
+				RelativePath=".\Source\Controller.cpp"
 				>
 			</File>
 			<File
@@ -238,6 +242,10 @@
 			</File>
 			<File
 				RelativePath=".\Source\Renderable.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Ship.cpp"
 				>
 			</File>
 			<File
@@ -291,6 +299,10 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
+				RelativePath=".\Source\Aimer.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Source\AlignedBox2.h"
 				>
 			</File>
@@ -307,7 +319,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\Source\Controllable.h"
+				RelativePath=".\Source\Controller.h"
 				>
 			</File>
 			<File
@@ -356,6 +368,10 @@
 			</File>
 			<File
 				RelativePath=".\Source\Renderable.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Ship.h"
 				>
 			</File>
 			<File

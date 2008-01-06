@@ -32,6 +32,18 @@ public:
 	{
 	}
 
+	Matrix2 Inverse(void) const
+	{
+		float a = x.x, b = y.x, c = x.y, d = y.y;
+		Matrix2 B;
+		float det = a * d - b * c;
+		det = 1.0f / det;
+		B.x.x =  det * a;	B.y.x = -det * c;
+		B.x.y = -det * b;	B.y.y =  det * d;
+		B.p   = -p.x * x + -p.y * y;
+		return B;
+	}
+
 	Vector2 Transform(const Vector2 &v) const
 	{
 		return x * v.x + y * v.y + p;
@@ -39,7 +51,7 @@ public:
 
 	Vector2 Rotate(const Vector2 &v) const
 	{
-		return x* v.x + y * v.y;
+		return x * v.x + y * v.y;
 	}
 
 	float Angle(void) const
