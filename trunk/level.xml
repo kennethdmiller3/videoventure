@@ -4,6 +4,16 @@
 
 	<!-- draw lists -->
 
+	<drawlist name="square">
+		<!-- 4 vertex square -->
+		<polygon>
+			<vertex x="1.000000" y="1.000000"/>
+			<vertex x="-1.000000" y="1.000000"/>
+			<vertex x="-1.000000" y="-1.00000"/>
+			<vertex x="1.000000" y="-1.00000"/>
+		</polygon>
+	</drawlist>
+
 	<drawlist name="diamond">
 		<!-- 4 vertex diamond -->
 		<polygon>
@@ -581,14 +591,14 @@
 					<density value="1"/>
 					<friction value="0.5"/>
 					<restitution value="0.5"/>
-					<category value="3"/>
+					<category value="1"/>
 				</circle>
 				<damping linear="0.5" angular="0.5"/>
 			</body>
 		</collidable>
 		<renderable>
 			<drawlist>
-				<color r="1.0" g="0.2" b="0.1" a="1.0"/>
+				<color r="0.1" g="0.2" b="1.0" a="1.0"/>
 				<pushmatrix>
 					<scale x="4" y="4"/>
 					<calllist name="circle8"/>
@@ -598,7 +608,7 @@
 					<scale x="7" y="7"/>
 					<calllist name="circle12"/>
 				</pushmatrix>
-				<color r="1.0" g="0.2" b="0.1" a="1.0"/>
+				<color r="0.1" g="0.2" b="1.0" a="1.0"/>
 				<pushmatrix>
 					<scale x="10" y="10"/>
 					<calllist name="circle16"/>
@@ -606,6 +616,7 @@
 			</drawlist>
 		</renderable>
 		<damagable health="10" spawnondeath="targetexplosion"/>
+		<team name="player"/>
 	</template>
 
 	<template name="targetappear" type="">
@@ -1001,9 +1012,8 @@
 
 	<entity name="enemyturretcluster4" type="enemyturretcluster">
 		<position x="1024.0" y="-1024.0" angle="-45"/>
-	</entity>
-
-
+	</entity>	
+	
 
 	<!-- enemy fireball explosion -->
 
@@ -1713,10 +1723,201 @@
 		<ship maxveloc="90" maxaccel="90" friction="10" maxomega="5"/>
 		<damagable health="3" spawnondeath="targetexplosion"/>
 		<weapon>
-			<velocity x="0" y="30"/>
+			<velocity x="0" y="60"/>
 			<ordnance name="enemyspacehum"/>
 			<shot delay="0.6"/>
 		</weapon>
+		<team name="enemy"/>
+	</template>
+
+
+	<!-- enemy swarmer -->
+
+	<template name="enemyswarmer" type="">
+		<collidable>
+			<body name="main">
+				<circle radius="5">
+					<density value="1"/>
+					<friction value="0.5"/>
+					<restitution value="0.5"/>
+					<category value="3"/>
+				</circle>
+				<allowsleep value="0"/>
+			</body>
+		</collidable>
+		<renderable>
+			<drawlist>
+				<color r="1.0" g="0.2" b="0.1" a="1.0"/>
+				<triangle_strip>
+					<vertex x="5" y="-3"/>
+					<vertex x="5" y="-1"/>
+					<vertex x="2" y="-5"/>
+					<vertex x="3" y="2"/>
+					<vertex x="1.5" y="-5"/>
+					<vertex x="1.5" y="5"/>
+					<vertex x="0" y="-5"/>
+					<vertex x="-1.5" y="5"/>
+					<vertex x="-1.5" y="-5"/>
+					<vertex x="-3" y="2"/>
+					<vertex x="-2" y="-5"/>
+					<vertex x="-5" y="-1"/>
+					<vertex x="-5" y="-3"/>
+				</triangle_strip>
+			</drawlist>
+		</renderable>
+		<aimer range="512" attack="256"/>
+		<ship maxveloc="90" maxaccel="60" friction="10" maxomega="1"/>
+		<damagable health="1" spawnondeath="enemyfireballexplosion"/>
+		<link name="gun" secondary="enemyweapon">
+			<offset x="0" y="5" angle="0"/>
+		</link>
+		<team name="enemy"/>
+	</template>
+
+
+	<!-- enemy pod -->
+
+	<template name="enemyswarmerspawn" type="">
+		<spawner>
+			<offset x="0" y="12"/>
+			<velocity x="0" y="120"/>
+			<spawn name="enemyswarmer"/>
+		</spawner>
+	</template>
+	
+	<template name="enemypodexplosion" type="">
+		<bullet life="0.05" spawnonexpire="targetexplosion"/>
+		<link name="spawn0" secondary="enemyswarmerspawn">
+			<offset x="0" y="0" angle="0"/>
+		</link>
+		<link name="spawn1" secondary="enemyswarmerspawn">
+			<offset x="0" y="0" angle="45"/>
+		</link>
+		<link name="spawn2" secondary="enemyswarmerspawn">
+			<offset x="0" y="0" angle="90"/>
+		</link>
+		<link name="spawn3" secondary="enemyswarmerspawn">
+			<offset x="0" y="0" angle="135"/>
+		</link>
+		<link name="spawn4" secondary="enemyswarmerspawn">
+			<offset x="0" y="0" angle="180"/>
+		</link>
+		<link name="spawn5" secondary="enemyswarmerspawn">
+			<offset x="0" y="0" angle="225"/>
+		</link>
+		<link name="spawn6" secondary="enemyswarmerspawn">
+			<offset x="0" y="0" angle="270"/>
+		</link>
+		<link name="spawn7" secondary="enemyswarmerspawn">
+			<offset x="0" y="0" angle="315"/>
+		</link>
+	</template>
+
+	<template name="enemypod" type="">
+		<collidable>
+			<body name="main">
+				<circle radius="10">
+					<density value="1"/>
+					<friction value="0.5"/>
+					<restitution value="0.5"/>
+					<category value="3"/>
+				</circle>
+				<allowsleep value="0"/>
+			</body>
+		</collidable>
+		<renderable period="0.8">
+			<pushmatrix>
+				<scale>
+					<linear time="0.4">
+						<start x="2" y="2"/>
+						<end   x="5" y="5"/>
+					</linear>
+					<linear time="0.4">
+						<start x="5" y="5"/>
+						<end   x="2" y="2"/>
+					</linear>
+				</scale>
+				<color>
+					<linear time="0.4">
+						<start r="1.0" g="1.0" b="1.0" a="1.0"/>
+						<end   r="1.0" g="0.8" b="0.1" a="1.0"/>
+					</linear>
+					<linear time="0.4">
+						<start r="1.0" g="0.8" b="0.1" a="1.0"/>
+						<end   r="1.0" g="1.0" b="1.0" a="1.0"/>
+					</linear>
+				</color>
+				<calllist name="diamond"/>
+			</pushmatrix>
+			<pushmatrix>
+				<scale>
+					<linear time="0.4">
+						<start x="8" y="8"/>
+						<end   x="5" y="5"/>
+					</linear>
+					<linear time="0.4">
+						<start x="5" y="5"/>
+						<end   x="8" y="8"/>
+					</linear>
+				</scale>
+				<color>
+					<linear time="0.4">
+						<start r="1.0" g="0.8" b="0.1" a="1.0"/>
+						<end   r="1.0" g="0.2" b="0.1" a="1.0"/>
+					</linear>
+					<linear time="0.4">
+						<start r="1.0" g="0.2" b="0.1" a="1.0"/>
+						<end   r="1.0" g="0.8" b="0.1" a="1.0"/>
+					</linear>
+				</color>
+				<calllist name="diamond"/>
+			</pushmatrix>
+			<pushmatrix>
+				<scale x="10" y="10"/>
+				<color r="1.0" g="0.2" b="0.1" a="1.0"/>
+				<calllist name="diamond"/>
+			</pushmatrix>
+			<repeat count="4">
+				<pushmatrix>
+					<translate x="12" y="0"/>
+					<scale x="2.5" y="1.5"/>
+					<color>
+						<linear time="0.4">
+							<start r="1.0" g="0.8" b="0.1" a="1.0"/>
+							<end   r="1.0" g="0.2" b="0.1" a="0.0"/>
+						</linear>
+						<linear time="0.4">
+							<start r="1.0" g="0.2" b="0.1" a="0.0"/>
+							<end   r="1.0" g="0.8" b="0.1" a="1.0"/>
+						</linear>
+					</color>
+					<calllist name="square"/>
+				</pushmatrix>
+				<rotate angle="90"/>
+			</repeat>
+			<rotate angle="45"/>
+			<repeat count="4">
+				<pushmatrix>
+					<translate x="10" y="0"/>
+					<scale x="2.0" y="1.5"/>
+					<color>
+						<linear time="0.4">
+							<start r="1.0" g="0.2" b="0.1" a="0.0"/>
+							<end   r="1.0" g="0.8" b="0.1" a="1.0"/>
+						</linear>
+						<linear time="0.4">
+							<start r="1.0" g="0.8" b="0.1" a="1.0"/>
+							<end   r="1.0" g="0.2" b="0.1" a="0.0"/>
+						</linear>
+					</color>
+					<calllist name="square"/>
+				</pushmatrix>
+				<rotate angle="90"/>
+			</repeat>
+		</renderable>
+		<aimer range="512" attack="0"/>
+		<ship maxveloc="90" maxaccel="30" friction="10" maxomega="0.5"/>
+		<damagable health="5" spawnondeath="enemypodexplosion"/>
 		<team name="enemy"/>
 	</template>
 	
@@ -1759,7 +1960,7 @@
 		<ship maxveloc="180" maxaccel="120" friction="10" maxomega="2"/>
 		<damagable health="1" spawnondeath="enemyfireballexplosion"/>
 		<link name="gun" secondary="enemyweapon">
-			<offset x="0" y="16" angle="0"/>
+			<offset x="0" y="8" angle="0"/>
 		</link>
 		<team name="enemy"/>
 	</template>
@@ -1811,7 +2012,7 @@
 		<ship maxveloc="150" maxaccel="90" friction="10" maxomega="1.5"/>
 		<damagable health="3" spawnondeath="targetexplosion"/>
 		<link name="gun" secondary="enemyweapon">
-			<offset x="0" y="16" angle="0"/>
+			<offset x="0" y="12" angle="0"/>
 		</link>
 		<team name="enemy"/>
 	</template>
@@ -2047,8 +2248,8 @@
 				</triangle_strip>
 			</drawlist>
 		</renderable>
-		<aimer range="512" attack="512"/>
-		<ship maxveloc="60" maxaccel="10" friction="10" maxomega="0.1"/>
+		<aimer range="1024" attack="512"/>
+		<ship maxveloc="90" maxaccel="10" friction="10" maxomega="0.1"/>
 		<damagable health="200" spawnondeath="minibossexplosion"/>
 		<link name="lgun" secondary="enemyweapon">
 			<offset x="4" y="16" angle="0"/>
@@ -2107,7 +2308,7 @@
 	</entity>
 
 	<entity name="enemyminelayerspawn1" type="">
-		<position x="-128" y="2048" angle="180"/>
+		<position x="-96" y="2048" angle="180"/>
 		<velocity x="0" y="-180"/>
 		<spawner>
 			<spawn name="enemyminelayer" start="1" cycle="5" track="0"/>
@@ -2115,7 +2316,7 @@
 	</entity>
 
 	<entity name="enemyminelayerspawn2" type="">
-		<position x="128" y="2048" angle="180"/>
+		<position x="96" y="2048" angle="180"/>
 		<velocity x="0" y="-180"/>
 		<spawner>
 			<spawn name="enemyminelayer" start="1" cycle="5" track="0"/>
@@ -2123,7 +2324,7 @@
 	</entity>
 
 	<entity name="enemydynamospawn1" type="">
-		<position x="-128" y="2048" angle="180"/>
+		<position x="-160" y="2048" angle="180"/>
 		<velocity x="0" y="-180"/>
 		<spawner>
 			<spawn name="enemydynamo" start="2" cycle="5" track="0"/>
@@ -2131,10 +2332,26 @@
 	</entity>
 
 	<entity name="enemydynamospawn2" type="">
-		<position x="128" y="2048" angle="180"/>
+		<position x="160" y="2048" angle="180"/>
 		<velocity x="0" y="-180"/>
 		<spawner>
 			<spawn name="enemydynamo" start="2" cycle="5" track="0"/>
+		</spawner>
+	</entity>
+	
+	<entity name="enemypodspawn1" type="">
+		<position x="-128" y="2048" angle="180"/>
+		<velocity x="0" y="-180"/>
+		<spawner>
+			<spawn name="enemypod" start="3" cycle="5" track="0"/>
+		</spawner>
+	</entity>
+
+	<entity name="enemypodspawn2" type="">
+		<position x="128" y="2048" angle="180"/>
+		<velocity x="0" y="-180"/>
+		<spawner>
+			<spawn name="enemypod" start="3" cycle="5" track="0"/>
 		</spawner>
 	</entity>
 
@@ -2162,7 +2379,7 @@
 		</spawner>
 	</entity>
 
-
+	
 	<!-- player bullet explosion -->
 
 	<template name="playerbulletexplosion" type="">
