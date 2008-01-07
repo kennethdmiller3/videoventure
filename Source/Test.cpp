@@ -61,7 +61,7 @@ int DebugPrint(const char *format, ...)
 #ifdef WIN32
 	char buf[4096];
 	int n = vsnprintf(buf, sizeof(buf), format, ap);
-	if (DEBUGPRINT_OUTPUTCONSOLE)
+	if (DEBUGPRINT_OUTPUTDEBUG)
 		OutputDebugStringA(buf);
 	if (DEBUGPRINT_OUTPUTCONSOLE && console)
 		OGLCONSOLE_Output(console, "%s", buf);
@@ -2011,8 +2011,6 @@ int SDL_main( int argc, char *argv[] )
 
 			// SIMULATION PHASE
 			// (generate forces)
-
-			// simulate all entities
 			Simulatable::SimulateAll(sim_step);
 
 #ifdef PRINT_PERFORMANCE_DETAILS
@@ -2033,6 +2031,9 @@ int SDL_main( int argc, char *argv[] )
 			DebugPrint("P=%d ", 1000000 * (perf_count3.QuadPart - perf_count2.QuadPart) / perf_freq.QuadPart);
 #endif
 
+			// UPDATE PHASE
+			// (use updated positions)
+			Updatable::UpdateAll(sim_step);
 
 			// update inputs for next step
 			input.Update();

@@ -91,7 +91,13 @@ public:
 		angle_1 = aAngle;
 	}
 
-	// get angle
+	// get previous angle
+	float GetPrevAngle() const
+	{
+		return angle_0;
+	}
+
+	// get current angle
 	float GetAngle() const
 	{
 		return angle_1;
@@ -114,7 +120,13 @@ public:
 		posit_1 = aPos;
 	}
 
-	// get position
+	// get previous position
+	const Vector2 &GetPrevPosition() const
+	{
+		return posit_0;
+	}
+
+	// get current position
 	const Vector2 &GetPosition() const
 	{
 		return posit_1;
