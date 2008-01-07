@@ -186,7 +186,7 @@ void Explosion::Simulate(float aStep)
 		}
 
 		// delete the entity
-		Database::Delete(Simulatable::id);
+		Database::Delete(id);
 		return;
 	}
 }

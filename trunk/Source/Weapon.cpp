@@ -131,14 +131,14 @@ bool WeaponTemplate::Configure(TiXmlElement *element)
 
 
 Weapon::Weapon(void)
-: Simulatable(0)
+: Updatable(0)
 , mTimer(0.0f)
 , mPhase(0)
 {
 }
 
 Weapon::Weapon(const WeaponTemplate &aTemplate, unsigned int aId)
-: Simulatable(aId)
+: Updatable(aId)
 , mTimer(0.0f)
 , mPhase(aTemplate.mPhase)
 {
@@ -157,8 +157,8 @@ bool Weapon::Configure(TiXmlElement *element)
 	return true;
 }
 
-// Weapon Simulate
-void Weapon::Simulate(float aStep)
+// Weapon Update
+void Weapon::Update(float aStep)
 {
 	// get controller
 	unsigned int aOwnerId = Database::owner.Get(id);
@@ -195,7 +195,7 @@ void Weapon::Simulate(float aStep)
 
 				// set fractional turn
 				if (Renderable *renderable = Database::renderable.Get(ordId))
-					renderable->SetFraction(mTimer / aStep - 1.0f);
+					renderable->SetFraction(mTimer / aStep);
 
 				// wrap around
 				mPhase = weapon.mCycle - 1;

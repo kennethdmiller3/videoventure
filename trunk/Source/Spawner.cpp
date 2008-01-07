@@ -129,7 +129,7 @@ bool SpawnerTemplate::Configure(TiXmlElement *element)
 
 // spawner default constructor
 Spawner::Spawner(void)
-: Simulatable(0)
+: Updatable(0)
 , mSpawn(0)
 , mTimer(0)
 {
@@ -137,7 +137,7 @@ Spawner::Spawner(void)
 
 // spawner instantiation constructor
 Spawner::Spawner(const SpawnerTemplate &aTemplate, unsigned int aId)
-: Simulatable(aId)
+: Updatable(aId)
 , mSpawn(0)
 , mTimer(-aTemplate.mStart)
 {
@@ -148,8 +148,8 @@ Spawner::~Spawner(void)
 {
 }
 
-// spawner simulation
-void Spawner::Simulate(float aStep)
+// spawner update
+void Spawner::Update(float aStep)
 {
 	// get the spawner template
 	const SpawnerTemplate &spawner = Database::spawnertemplate.Get(id);
@@ -197,10 +197,10 @@ void Spawner::Simulate(float aStep)
 
 			// set fractional turn
 			if (Renderable *renderable = Database::renderable.Get(mSpawn))
-				renderable->SetFraction(mTimer / aStep - 1.0f);
-
-			// set the timer
-			mTimer -= spawner.mCycle;
+				renderable->SetFraction(mTimer / aStep);
 		}
+
+		// set the timer
+		mTimer -= spawner.mCycle;
 	}
 }

@@ -151,6 +151,15 @@ void Renderable::RenderAll(float aRatio, float aStep)
 		const Entity *entity = Database::entity.Get((*itor)->id);
 		if (entity)
 		{
+#ifdef RENDER_SIMULATION_POSITIONS
+			// draw line between last and current simulated position
+			glBegin(GL_LINES);
+			glColor4f(0.0f, 0.0f, 1.0f, 1.0f);
+			glVertex2f(entity->GetPrevPosition().x, entity->GetPrevPosition().y);
+			glColor4f(1.0f, 0.0f, 0.0f, 1.0f);
+			glVertex2f(entity->GetPosition().x, entity->GetPosition().y);
+			glEnd();
+#endif
 			// get interpolated transform
 			transform = entity->GetInterpolatedTransform(aRatio);
 

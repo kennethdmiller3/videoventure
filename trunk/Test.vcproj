@@ -290,6 +290,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Source\Updatable.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\Source\Weapon.cpp"
 				>
 			</File>
@@ -401,6 +405,10 @@
 			</File>
 			<File
 				RelativePath=".\Source\Timer.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Updatable.h"
 				>
 			</File>
 			<File

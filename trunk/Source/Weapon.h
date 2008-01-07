@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Simulatable.h"
+#include "Updatable.h"
 
 class WeaponTemplate
 {
@@ -27,7 +27,7 @@ public:
 };
 
 class Weapon
-	: public Simulatable
+	: public Updatable
 {
 protected:
 	// fire timer
@@ -48,8 +48,8 @@ public:
 	// configure
 	bool Configure(TiXmlElement *element);
 
-	// simulate
-	virtual void Simulate(float aStep);
+	// update
+	virtual void Update(float aStep);
 };
 
 namespace Database

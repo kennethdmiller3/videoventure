@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Simulatable.h"
+#include "Updatable.h"
 
 class SpawnerTemplate
 {
@@ -26,7 +26,7 @@ public:
 };
 
 class Spawner
-	: public Simulatable
+	: public Updatable
 {
 protected:
 	unsigned int mSpawn;
@@ -43,7 +43,8 @@ public:
 	Spawner(const SpawnerTemplate &aTemplate, unsigned int aId);
 	virtual ~Spawner(void);
 
-	virtual void Simulate(float aStep);
+	// update
+	virtual void Update(float aStep);
 };
 
 namespace Database

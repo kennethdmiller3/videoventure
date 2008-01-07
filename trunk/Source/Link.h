@@ -1,5 +1,6 @@
 #pragma once
-#include "simulatable.h"
+
+#include "Updatable.h"
 
 class LinkTemplate
 {
@@ -22,7 +23,7 @@ public:
 };
 
 class Link :
-	public Simulatable
+	public Updatable
 {
 protected:
 	unsigned int mSub;
@@ -44,8 +45,8 @@ public:
 		return mSecondary;
 	}
 
-	// simulate
-	virtual void Simulate(float aStep);
+	// update
+	virtual void Update(float aStep);
 };
 
 namespace Database

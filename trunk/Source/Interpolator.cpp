@@ -65,7 +65,7 @@ bool InterpolatorTemplate::Apply(float aTarget[], float aTime, int &aIndex)
 static void ProcessInterpolatorKeyItem(TiXmlElement *element, InterpolatorTemplate &interpolator, const char *names[], const float data[])
 {
 	// get key duration
-	float duration = 0.0f;
+	float duration = FLT_MAX;
 	element->QueryFloatAttribute("time", &duration);
 
 	// add a key

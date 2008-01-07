@@ -108,13 +108,13 @@ bool LinkTemplate::Configure(TiXmlElement *element)
 
 
 Link::Link(void)
-: Simulatable(0)
+: Updatable(0)
 , mSecondary(0)
 {
 }
 
 Link::Link(const LinkTemplate &aTemplate, unsigned int aId)
-: Simulatable(aId)
+: Updatable(aId)
 , mSub(aTemplate.mSub)
 , mSecondary(0)
 {
@@ -145,16 +145,16 @@ Link::~Link(void)
 	}
 }
 
-void Link::Simulate(float aStep)
+void Link::Update(float aStep)
 {
 	if (mSecondary)
 	{
 		// get entities
-		Entity *entity = Database::entity.Get(Simulatable::id);
+		Entity *entity = Database::entity.Get(id);
 		Entity *secondary = Database::entity.Get(mSecondary);
 
 		// get template data
-		const LinkTemplate &link = Database::linktemplate.Get(Simulatable::id).Get(mSub);
+		const LinkTemplate &link = Database::linktemplate.Get(id).Get(mSub);
 
 		// update secondary transform
 		Matrix2 transform(link.mOffset * entity->GetTransform());
