@@ -167,8 +167,9 @@ void Bullet::Collide(unsigned int aHitId, float aTime, b2Manifold aManifold[], i
 		else
 		{
 			// if the recipient's owner is damagable and needs health...
-			Damagable *damagable = Database::damagable.Get(Database::owner.Get(aHitId));
-			if (damagable && (damagable->GetHealth() < Database::damagabletemplate.Get(aHitId).mHealth))
+			unsigned int aHitOwnerId = Database::owner.Get(aHitId);
+			Damagable *damagable = Database::damagable.Get(aHitOwnerId);
+			if (damagable && (damagable->GetHealth() < Database::damagabletemplate.Get(aHitOwnerId).mHealth))
 			{
 				// apply healing value
 				damagable->Damage(id, bullet.mDamage);
