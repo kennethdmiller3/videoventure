@@ -2,7 +2,7 @@
 #include "Bullet.h"
 #include "Explosion.h"
 #include "Damagable.h"
-
+#include "Link.h"
 
 #ifdef USE_POOL_ALLOCATOR
 #include <boost/pool/pool.hpp>
@@ -141,15 +141,40 @@ void Bullet::Collide(unsigned int aHitId, float aTime, b2Manifold aManifold[], i
 {
 	const BulletTemplate &bullet = Database::bullettemplate.Get(id);
 
-	// if the recipient is damagable...
-	// and not healing or the target is at max health...
+	// if the bullet applies damage...
 	bool destroy = !bullet.mRicochet;
-	Damagable *damagable = Database::damagable.Get(aHitId);
-	if (damagable && (bullet.mDamage >= 0 || damagable->GetHealth() < Database::damagabletemplate.Get(aHitId).mHealth))
+	if (bullet.mDamage >= 0)
 	{
-		// apply damage value
-		damagable->Damage(id, bullet.mDamage);
-		destroy = true;
+		// if the recipient is damagable...
+		Damagable *damagable = Database::damagable.Get(aHitId);
+		if (damagable)
+		{
+			// apply damage value
+			damagable->Damage(id, bullet.mDamage);
+			destroy = true;
+		}
+	}
+	else
+	{
+		// if the recipient is damagable and needs health...
+		Damagable *damagable = Database::damagable.Get(aHitId);
+		if (damagable && (damagable->GetHealth() < Database::damagabletemplate.Get(aHitId).mHealth))
+		{
+			// apply healing value
+			damagable->Damage(id, bullet.mDamage);
+			destroy = true;
+		}
+		else
+		{
+			// if the recipient's owner is damagable and needs health...
+			Damagable *damagable = Database::damagable.Get(Database::owner.Get(aHitId));
+			if (damagable && (damagable->GetHealth() < Database::damagabletemplate.Get(aHitId).mHealth))
+			{
+				// apply healing value
+				damagable->Damage(id, bullet.mDamage);
+				destroy = true;
+			}
+		}
 	}
 
 #ifdef BULLET_COLLISION_BOUNCE
