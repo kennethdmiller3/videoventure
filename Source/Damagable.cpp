@@ -135,6 +135,12 @@ void Damagable::Damage(unsigned int aSourceId, float aDamage)
 		const DamagableTemplate &damagable = Database::damagabletemplate.Get(id);
 		if (damagable.mSpawnOnDeath)
 		{
+#ifdef USE_CHANGE_DYNAMIC_TYPE
+			// change dynamic type
+			Database::Deactivate(id);
+			Database::parent.Put(id, damagable.mSpawnOnDeath);
+			Database::Activate(id);
+#else
 			// get the entity
 			Entity *entity = Database::entity.Get(id);
 			if (entity)
@@ -142,9 +148,14 @@ void Damagable::Damage(unsigned int aSourceId, float aDamage)
 				// instantiate the template
 				Database::Instantiate(damagable.mSpawnOnDeath, entity->GetAngle(), entity->GetPosition(), entity->GetVelocity());
 			}
+#endif
 		}
-
-		// delete the entity
-		Database::Delete(id);
+#ifdef USE_CHANGE_DYNAMIC_TYPE
+		else
+#endif
+		{
+			// delete the entity
+			Database::Delete(id);
+		}
 	}
 }

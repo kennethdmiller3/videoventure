@@ -1,6 +1,7 @@
 #include "StdAfx.h"
 #include "Link.h"
 #include "Entity.h"
+#include "Collidable.h"
 
 #ifdef USE_POOL_ALLOCATOR
 #include <boost/pool/pool.hpp>
@@ -157,6 +158,30 @@ Link::Link(const LinkTemplate &aTemplate, unsigned int aId)
 		// propagate ownership
 		if (const unsigned int *aOwnerId = Database::owner.Find(aId))
 			Database::owner.Put(mSecondary, *aOwnerId);
+
+		// if linking two collidables...
+		if (Database::collidabletemplate.Find(aId) &&
+			Database::collidabletemplate.Find(mSecondary))
+		{
+			// disable update
+			Deactivate();
+
+			// add a revolute joint to the linked template (HACK)
+			CollidableTemplate &collidable = Database::collidabletemplate.Open(mSecondary);
+			collidable.joints.push_back(CollidableTemplate::JointTemplate());
+			CollidableTemplate::JointTemplate &jointtemplate = collidable.joints.back();
+			jointtemplate.name1 = aId;
+			jointtemplate.body1 = 0xea90e208 /* "main" */;
+			jointtemplate.name2 = mSecondary;
+			jointtemplate.body2 = 0xea90e208 /* "main" */;
+			collidable.revolutes.push_back(b2RevoluteJointDef());
+			b2RevoluteJointDef &joint = collidable.revolutes.back();
+			joint.userData = &jointtemplate;
+			joint.lowerAngle = 0.0f;
+			joint.upperAngle = 0.0f;
+			joint.enableLimit = true;
+			Database::collidabletemplate.Close(mSecondary);
+		}
 	}
 }
 

@@ -276,6 +276,7 @@ namespace Database
 	extern Typed<unsigned int> team;
 
 	// instantiate a template
+	void Instantiate(unsigned int aInstanceId, unsigned int aTemplateId, float aAngle, Vector2 aPosition, Vector2 aVelocity);
 	unsigned int Instantiate(unsigned int aTemplateId, float aAngle, Vector2 aPosition, Vector2 aVelocity);
 
 	// inherit from a template

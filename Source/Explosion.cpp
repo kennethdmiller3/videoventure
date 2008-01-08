@@ -196,6 +196,12 @@ void Explosion::Simulate(float aStep)
 		const ExplosionTemplate &explosion = Database::explosiontemplate.Get(id);
 		if (explosion.mSpawnOnExpire)
 		{
+#ifdef USE_CHANGE_DYNAMIC_TYPE
+			// change dynamic type
+			Database::Deactivate(id);
+			Database::parent.Put(id, explosion.mSpawnOnExpire);
+			Database::Activate(id);
+#else
 			// get the entity
 			Entity *entity = Database::entity.Get(id);
 			if (entity)
@@ -203,10 +209,16 @@ void Explosion::Simulate(float aStep)
 				// spawn template at the entity location
 				Database::Instantiate(explosion.mSpawnOnExpire, entity->GetAngle(), entity->GetPosition(), entity->GetVelocity());
 			}
+#endif
+		}
+#ifdef USE_CHANGE_DYNAMIC_TYPE
+		else
+#endif
+		{
+			// delete the entity
+			Database::Delete(id);
 		}
 
-		// delete the entity
-		Database::Delete(id);
 		return;
 	}
 }

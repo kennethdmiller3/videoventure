@@ -142,6 +142,12 @@ void Bullet::Simulate(float aStep)
 		const BulletTemplate &bullet = Database::bullettemplate.Get(id);
 		if (bullet.mSpawnOnExpire)
 		{
+#ifdef USE_CHANGE_DYNAMIC_TYPE
+			// change dynamic type
+			Database::Deactivate(id);
+			Database::parent.Put(id, bullet.mSpawnOnExpire);
+			Database::Activate(id);
+#else
 			// get the entity
 			Entity *entity = Database::entity.Get(id);
 			if (entity)
@@ -149,10 +155,16 @@ void Bullet::Simulate(float aStep)
 				// spawn template at entity location
 				Database::Instantiate(bullet.mSpawnOnExpire, entity->GetAngle(), entity->GetPosition(), entity->GetVelocity());
 			}
+#endif
+		}
+#ifdef USE_CHANGE_DYNAMIC_TYPE
+		else
+#endif
+		{
+			// delete the entity
+			Database::Delete(id);
 		}
 
-		// delete the entity
-		Database::Delete(id);
 		return;
 	}
 }
@@ -233,18 +245,29 @@ void Bullet::Collide(unsigned int aHitId, float aTime, b2Manifold aManifold[], i
 		// if spawning on death...
 		if (bullet.mSpawnOnDeath)
 		{
+#ifdef USE_CHANGE_DYNAMIC_TYPE
+			// change dynamic type
+			Database::Deactivate(id);
+			Database::parent.Put(id, bullet.mSpawnOnDeath);
+			Database::Activate(id);
+#else
 			// get the entity
 			Entity *entity = Database::entity.Get(id);
 			if (entity)
 			{
 				// instantiate the template
-				Database::Instantiate(bullet.mSpawnOnDeath, entity->GetAngle(), entity->GetPosition(), entity->GetVelocity());
+				Database::Instantiate(id, bullet.mSpawnOnDeath, entity->GetAngle(), entity->GetPosition(), entity->GetVelocity());
 			}
+#endif
 		}
-
-		// kill the bullet
-		// (note: this breaks collision impulse)
-		Database::Delete(id);
+#ifdef USE_CHANGE_DYNAMIC_TYPE
+		else
+#endif
+		{
+			// kill the bullet
+			// (note: this breaks collision impulse)
+			Database::Delete(id);
+		}
 	}
 #endif
 }

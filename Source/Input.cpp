@@ -25,6 +25,32 @@ void Input::Bind(LOGICAL aLogical, int aType, int aDevice, int aControl, float a
 
 void Input::Update(void)
 {
+	float scale;
+	
+	// limit magnitude of move control 1
+	scale = value[MOVE_VERTICAL]*value[MOVE_VERTICAL]+value[MOVE_HORIZONTAL]*value[MOVE_HORIZONTAL];
+	if (scale > 1.0f)
+		scale = 1.0f / sqrtf(scale);
+	else
+		scale = 1.0f;
+	output[MOVE_VERTICAL] = value[MOVE_VERTICAL] * scale;
+	output[MOVE_HORIZONTAL] = value[MOVE_HORIZONTAL] * scale;
+
+	// limit magnitude of aim control to 1
+	scale = value[AIM_VERTICAL]*value[AIM_VERTICAL]+value[AIM_HORIZONTAL]*value[AIM_HORIZONTAL];
+	if (scale > 1.0f)
+		scale = 1.0f / sqrtf(scale);
+	else
+		scale = 1.0f;
+	output[AIM_VERTICAL] = value[AIM_VERTICAL] * scale;
+	output[AIM_HORIZONTAL] = value[AIM_HORIZONTAL] * scale;
+
+	// limit magnitude of fire control to 1
+	output[FIRE_PRIMARY] = std::min(std::max(value[FIRE_PRIMARY], -1.0f), 1.0f);
+}
+
+void Input::Step(void)
+{
 	for (Map::iterator itor = map.begin(); itor != map.end(); itor++)
 	{
 		Binding &binding = itor->second;

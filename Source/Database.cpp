@@ -11,7 +11,6 @@
 #include "Gunner.h"
 #include "Aimer.h"
 #include <new>
-#include <deque>
 
 namespace Database
 {
@@ -430,14 +429,9 @@ namespace Database
 	// deletion queue
 	std::deque<unsigned int> deletequeue;
 
-
 	// instantiate a template
-	unsigned int Instantiate(unsigned int aTemplateId, float aAngle, Vector2 aPosition, Vector2 aVelocity)
+	void Instantiate(unsigned int aInstanceId, unsigned int aTemplateId, float aAngle, Vector2 aPosition, Vector2 aVelocity)
 	{
-		// generate an instance identifier
-		const unsigned int aInstanceTag = Entity::TakeId();
-		const unsigned int aInstanceId = Hash(&aInstanceTag, sizeof(aInstanceTag), aTemplateId);
-	
 		// inherit components from template
 //		Inherit(aInstanceId, aTemplateId);
 
@@ -456,6 +450,17 @@ namespace Database
 
 		// activate the instance identifier
 		Activate(aInstanceId);
+	}
+
+	// instantiate a template (automatically-generated identifier)
+	unsigned int Instantiate(unsigned int aTemplateId, float aAngle, Vector2 aPosition, Vector2 aVelocity)
+	{
+		// generate an instance identifier
+		const unsigned int aInstanceTag = Entity::TakeId();
+		const unsigned int aInstanceId = Hash(&aInstanceTag, sizeof(aInstanceTag), aTemplateId);
+
+		// instantiate the template
+		Instantiate(aInstanceId, aTemplateId, aAngle, aPosition, aVelocity);
 
 		// return the instance identifier
 		return aInstanceId;
