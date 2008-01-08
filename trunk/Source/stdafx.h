@@ -16,6 +16,7 @@
 #include <list>
 #include <vector>
 #include <map>
+#include <deque>
 
 // SDL includes
 #include "SDL.h"
@@ -67,3 +68,4 @@ void ProcessEntityItems(const TiXmlElement *element);
 #define DRAW_FRONT_TO_BACK
 
 #define USE_POOL_ALLOCATOR
+#define USE_CHANGE_DYNAMIC_TYPE

@@ -25,8 +25,8 @@ int SCREEN_DEPTH = 0;
 bool SCREEN_FULLSCREEN = false;
 
 // view attributes
-float VIEW_SIZE = 640;
-float VIEW_AIM = 0;
+float VIEW_SIZE = 320;
+float VIEW_AIM = 100;
 float VIEW_AIM_FILTER = 0.002f;
 
 // opengl attributes
@@ -393,19 +393,6 @@ void ProcessEntityItems(const TiXmlElement *element)
 
 		switch (Hash(child->Value()))
 		{
-		case 0x2c99c300 /* "player" */:
-			{
-				Player *player = Database::player.Get(entity_id);
-				if (!player)
-				{
-					player = new Player(entity_id);
-					Database::controller.Put(entity_id, player);
-					Database::player.Put(entity_id, player);
-				}
-				player->Configure(child);
-			}
-			break;
-
 		case 0xe063cbaa /* "gunner" */:
 			{
 				Gunner *gunner = Database::gunner.Get(entity_id);
@@ -778,8 +765,8 @@ int SDL_main( int argc, char *argv[] )
 				input.OnRelease( INPUT_TYPE_KEYBOARD, event.key.which, event.key.keysym.sym );
 				break;
 			case SDL_MOUSEMOTION:
-				input.OnAxis( INPUT_TYPE_MOUSE_AXIS, event.motion.which, 0, float(event.motion.x - SCREEN_WIDTH/2) );
-				input.OnAxis( INPUT_TYPE_MOUSE_AXIS, event.motion.which, 1, float(event.motion.y - SCREEN_HEIGHT/2) );
+				input.OnAxis( INPUT_TYPE_MOUSE_AXIS, event.motion.which, 0, float(event.motion.x * 2 - SCREEN_WIDTH) / float(SCREEN_HEIGHT) );
+				input.OnAxis( INPUT_TYPE_MOUSE_AXIS, event.motion.which, 1, float(event.motion.y * 2 - SCREEN_HEIGHT) / float(SCREEN_HEIGHT) );
 				break;
 			case SDL_MOUSEBUTTONDOWN:
 				input.OnPress( INPUT_TYPE_MOUSE_BUTTON, event.button.which, event.button.button );
@@ -822,6 +809,9 @@ int SDL_main( int argc, char *argv[] )
 			
 			// update database
 			Database::Update();
+
+			// update input values
+			input.Update();
 
 
 			// CONTROL PHASE
@@ -870,8 +860,8 @@ int SDL_main( int argc, char *argv[] )
 			// (use updated positions)
 			Updatable::UpdateAll(sim_step);
 
-			// update inputs for next step
-			input.Update();
+			// step inputs for next turn
+			input.Step();
 
 			// advance the turn counter
 			++sim_turn;
@@ -899,68 +889,69 @@ int SDL_main( int argc, char *argv[] )
 #endif
 			);
 
-		// get the player ship
-		const Entity *player = Database::entity.Get(0xeec1dafa /* "playership" */);
-		if (player)
+		// for each player...
+		for (Database::Typed<Player *>::Iterator itor(&Database::player); itor.IsValid(); ++itor)
 		{
+			// get the entity
+			Entity *entity = Database::entity.Get(itor.GetKey());
+
 			// track player position
-			trackpos = player->GetInterpolatedPosition(sim_timer);
+			trackpos = entity->GetInterpolatedPosition(sim_timer);
 
 			// if applying view aim
 			if (VIEW_AIM)
 			{
-				const Controller *controller = Database::controller.Get(0xeec1dafa /* "playership" */);
-				if (controller)
-				{
-					trackaim += VIEW_AIM_FILTER * delta * (controller->mAim - trackaim);
-					trackpos += trackaim * VIEW_AIM;
-				}
+				if (Database::ship.Get(itor.GetKey()))
+					trackaim += VIEW_AIM_FILTER * delta * (itor.GetValue()->mAim - trackaim);
+				else
+					trackaim -= VIEW_AIM_FILTER * delta * trackaim;
+				trackpos += trackaim * VIEW_AIM;
 			}
-		}
 
-		// draw player health (HACK)
-		Damagable *damagable = Database::damagable.Get(0xeec1dafa /* "playership" */);
-		if (damagable)
-		{
-			// health ratio
-			const DamagableTemplate &damagabletemplate = Database::damagabletemplate.Get(0xeec1dafa /* "playership" */);
-			float health = damagable->GetHealth() / damagabletemplate.mHealth;
+			// draw player health (HACK)
+			Damagable *damagable = Database::damagable.Get(itor.GetKey());
+			if (damagable)
+			{
+				// health ratio
+				const DamagableTemplate &damagabletemplate = Database::damagabletemplate.Get(itor.GetKey());
+				float health = damagable->GetHealth() / damagabletemplate.mHealth;
 
-			// push camera transform
-			glPushMatrix();
+				// push camera transform
+				glPushMatrix();
 
-			// use 640x480 screen coordinates
-			glLoadIdentity();
-			glScalef( 1.0f / 640, 1.0f / 640, -1.0f );
-			glTranslatef(-0.5f*640, -0.5f*640*SCREEN_HEIGHT/SCREEN_WIDTH, 1.0f);
+				// use 640x480 screen coordinates
+				glLoadIdentity();
+				glScalef( 1.0f / 640, 1.0f / 640, -1.0f );
+				glTranslatef(-0.5f*640, -0.5f*640*SCREEN_HEIGHT/SCREEN_WIDTH, 1.0f);
 
-			glBegin(GL_QUADS);
+				glBegin(GL_QUADS);
 
-			// set color based on health
-			if (health < 0.5f)
-				glColor4f(1.0f, 0.1f + health * 0.9f / 0.5f, 0.1f, 1.0f - health * 0.9f);
-			else if (health < 100)
-				glColor4f(0.1f + (1.0f - health) * 0.9f / 0.5f, 1.0f, 0.1f, 1.0f - health * 0.9f);
-			else
-				glColor4f(0.1f, 1.0f, 0.1f, 0.1f);
+				// set color based on health
+				if (health < 0.5f)
+					glColor4f(1.0f, 0.1f + health * 0.9f / 0.5f, 0.1f, 1.0f - health * 0.9f);
+				else if (health < 100)
+					glColor4f(0.1f + (1.0f - health) * 0.9f / 0.5f, 1.0f, 0.1f, 1.0f - health * 0.9f);
+				else
+					glColor4f(0.1f, 1.0f, 0.1f, 0.1f);
 
-			// fill gauge
-			glVertex2f(8, 8);
-			glVertex2f(8 + 100 * health, 8);
-			glVertex2f(8 + 100 * health, 16);
-			glVertex2f(8, 16);
+				// fill gauge
+				glVertex2f(8, 8);
+				glVertex2f(8 + 100 * health, 8);
+				glVertex2f(8 + 100 * health, 16);
+				glVertex2f(8, 16);
 
-			// background
-			glColor4f(0.0f, 0.0f, 0.0f, 0.1f);
-			glVertex2f(8 + 100 * health, 8);
-			glVertex2f(108, 8);
-			glVertex2f(108, 16);
-			glVertex2f(8 + 100 * health, 16);
+				// background
+				glColor4f(0.0f, 0.0f, 0.0f, 0.1f);
+				glVertex2f(8 + 100 * health, 8);
+				glVertex2f(108, 8);
+				glVertex2f(108, 16);
+				glVertex2f(8 + 100 * health, 16);
 
-			glEnd();
+				glEnd();
 
-			// reset camera transform
-			glPopMatrix();
+				// reset camera transform
+				glPopMatrix();
+			}
 		}
 
 		// push camera transform

@@ -14,6 +14,7 @@ public:
 		NUM_LOGICAL
 	};
 	float value[NUM_LOGICAL];
+	float output[NUM_LOGICAL];
 
 	// input binding map
 	struct Binding
@@ -38,6 +39,9 @@ public:
 	// update inputs
 	void Update(void);
 
+	// step inputs
+	void Step(void);
+
 	// key events
 	void OnAxis(int aType, int aDevice, int aControl, float aValue);
 	void OnPress(int aType, int aDevice, int aControl);
@@ -46,6 +50,6 @@ public:
 	// get logical input
 	inline float operator[](LOGICAL aLogical) const
 	{
-		return std::min(std::max(value[aLogical], -1.0f), 1.0f);
+		return output[aLogical];
 	}
 };

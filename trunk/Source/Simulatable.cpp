@@ -2,35 +2,49 @@
 #include "Simulatable.h"
 
 Simulatable::List Simulatable::sAll;
+Simulatable::Remove Simulatable::sRemove;
 
 Simulatable::Simulatable(unsigned int aId)
 : id(aId), entry(sAll.end())
 {
 	if (id > 0)
-		entry = sAll.insert(sAll.end(), Entry(this, &Simulatable::Simulate));
+		Activate();
 }
 
 Simulatable::~Simulatable(void)
 {
+	Deactivate();
+}
+
+void Simulatable::Activate(void)
+{
+	if (entry == sAll.end())
+	{
+		entry = sAll.insert(sAll.end(), Entry(this, &Simulatable::Simulate));
+	}
+}
+
+void Simulatable::Deactivate(void)
+{
 	if (entry != sAll.end())
-		sAll.erase(entry);
+	{
+		sRemove.push_back(entry);
+		entry->clear();
+		entry = sAll.end();
+	}
 }
 
 void Simulatable::SimulateAll(float aStep)
 {
-	// simulate all simulatables
-	List::iterator itor = sAll.begin();
-	while (itor != sAll.end())
+	// perform pending deactivations
+	while (!sRemove.empty())
 	{
-		// get the next iterator
-		// (in case the entry gets deleted)
-		List::iterator next(itor);
-		++next;
-
-		// simulate
-		(*itor)(aStep);
-
-		// go to the next iterator
-		itor = next;
+		sAll.erase(sRemove.front());
+		sRemove.pop_front();
 	}
+
+	// simulate all simulatables
+	for (List::iterator itor = sAll.begin(); itor != sAll.end(); ++itor)
+		if (*itor)
+			(*itor)(aStep);
 }
