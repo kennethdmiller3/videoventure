@@ -25,6 +25,26 @@ namespace Database
 	Typed<BulletTemplate> bullettemplate(0xa270491f /* "bullettemplate" */);
 	Typed<Bullet *> bullet(0xe894a379 /* "bullet" */);
 
+	namespace Loader
+	{
+		class BulletLoader
+		{
+		public:
+			BulletLoader()
+			{
+				AddConfigure(0xe894a379 /* "bullet" */, Entry(this, &BulletLoader::Configure));
+			}
+
+			void Configure(unsigned int aId, const TiXmlElement *element)
+			{
+				BulletTemplate &bullet = Database::bullettemplate.Open(aId);
+				bullet.Configure(element);
+				Database::bullettemplate.Close(aId);
+			}
+		}
+		bulletloader;
+	}
+
 	namespace Initializer
 	{
 		class BulletInitializer
@@ -66,7 +86,7 @@ BulletTemplate::~BulletTemplate(void)
 {
 }
 
-bool BulletTemplate::Configure(TiXmlElement *element)
+bool BulletTemplate::Configure(const TiXmlElement *element)
 {
 	if (Hash(element->Value()) != 0xe894a379 /* "bullet" */)
 		return false;

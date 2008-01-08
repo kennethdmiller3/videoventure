@@ -355,12 +355,48 @@ namespace Database
 
 
 	//
+	// LOADER SYSTEM
+	//
+	namespace Loader
+	{
+		Typed<Entry> &GetConfigureDB()
+		{
+			static Typed<Entry> configure;
+			return configure;
+		}
+		void AddConfigure(unsigned int aTagId, Entry aConfigure)
+		{
+			GetConfigureDB().Put(aTagId, aConfigure);
+		}
+		const Entry &GetConfigure(unsigned int aTagId)
+		{
+			return GetConfigureDB().Get(aTagId);
+		}
+
+		class TeamLoader
+		{
+		public:
+			TeamLoader()
+			{
+				AddConfigure(0xa2fd7d0c /* "team" */, Entry(this, &TeamLoader::Configure));
+			}
+
+			void Configure(unsigned int aId, const TiXmlElement *element)
+			{
+				unsigned int &team = Database::team.Open(aId);
+				team = Hash(element->Attribute("name"));
+				Database::team.Close(aId);
+			}
+		}
+		teamloader;
+
+	}
+
+	//
 	// INITIALIZER SYSTEM
 	//
 	namespace Initializer
 	{
-		typedef fastdelegate::FastDelegate<void (unsigned int)> Entry;
-
 		Typed<Entry> &GetActivate()
 		{
 			static Typed<Entry> onactivate;

@@ -152,7 +152,7 @@ public:
 	}
 
 	// configure
-	virtual bool Configure(TiXmlElement *element);
+	virtual bool Configure(const TiXmlElement *element);
 
 	// init
 	virtual void Init(void)

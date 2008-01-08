@@ -22,7 +22,7 @@ public:
 	SpawnerTemplate(void);
 	~SpawnerTemplate(void);
 
-	bool Configure(TiXmlElement *element);
+	bool Configure(const TiXmlElement *element);
 };
 
 class Spawner

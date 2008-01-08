@@ -23,7 +23,7 @@ public:
 	~WeaponTemplate(void);
 
 	// configure
-	bool Configure(TiXmlElement *element);
+	bool Configure(const TiXmlElement *element);
 };
 
 class Weapon
@@ -46,7 +46,7 @@ public:
 	virtual ~Weapon(void);
 
 	// configure
-	bool Configure(TiXmlElement *element);
+	bool Configure(const TiXmlElement *element);
 
 	// update
 	virtual void Update(float aStep);

@@ -24,6 +24,29 @@ namespace Database
 	Typed<Typed<Link *> > link(0x0ddb0669 /* "link" */);
 	Typed<unsigned int> backlink(0xe3736e9a /* "backlink" */);
 
+	namespace Loader
+	{
+		class LinkLoader
+		{
+		public:
+			LinkLoader()
+			{
+				AddConfigure(0x0ddb0669 /* "link" */, Entry(this, &LinkLoader::Configure));
+			}
+
+			void Configure(unsigned int aId, const TiXmlElement *element)
+			{
+				Database::Typed<LinkTemplate> &links = Database::linktemplate.Open(aId);
+				unsigned int aSubId = Hash(element->Attribute("name"));
+				LinkTemplate &link = links.Open(aSubId);
+				link.Configure(element);
+				links.Close(aSubId);
+				Database::linktemplate.Close(aId);
+			}
+		}
+		linkloader;
+	}
+
 	namespace Initializer
 	{
 		class LinkInitializer
@@ -76,7 +99,7 @@ LinkTemplate::~LinkTemplate(void)
 {
 }
 
-bool LinkTemplate::Configure(TiXmlElement *element)
+bool LinkTemplate::Configure(const TiXmlElement *element)
 {
 	if (Hash(element->Value()) != 0x0ddb0669 /* "link" */)
 		return false;
@@ -87,7 +110,7 @@ bool LinkTemplate::Configure(TiXmlElement *element)
 		mSecondary = Hash(secondary);
 
 	// process child elements
-	for (TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
 		const char *label = child->Value();
 		switch (Hash(label))

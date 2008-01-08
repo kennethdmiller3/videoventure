@@ -20,7 +20,7 @@ public:
 	virtual ~Simulatable(void);
 
 	// configure
-	virtual bool Configure(TiXmlElement *element) { return false; }
+	virtual bool Configure(const TiXmlElement *element) { return false; }
 
 	// simulate
 	static void SimulateAll(float aStep);

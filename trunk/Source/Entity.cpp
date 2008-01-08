@@ -43,7 +43,7 @@ Entity::~Entity(void)
 }
 
 // configure
-bool Entity::Configure(TiXmlElement *element)
+bool Entity::Configure(const TiXmlElement *element)
 {
 	const char *label = element->Value();
 	switch (Hash(label))

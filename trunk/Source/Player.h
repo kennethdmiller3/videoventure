@@ -14,7 +14,7 @@ public:
 	~Player(void);
 
 	// configure
-	virtual bool Configure(TiXmlElement *element);
+	virtual bool Configure(const TiXmlElement *element);
 
 	// control
 	virtual void Control(float aStep);

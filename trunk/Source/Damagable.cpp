@@ -24,6 +24,26 @@ namespace Database
 	Typed<Damagable *> damagable(0x1b715375 /* "damagable" */);
 	Typed<Typed<Damagable::Listener> > damagablelistener(0x1e01f5e1 /* "damagablelistener" */);
 
+	namespace Loader
+	{
+		class DamagableLoader
+		{
+		public:
+			DamagableLoader()
+			{
+				AddConfigure(0x1b715375 /* "damagable" */, Entry(this, &DamagableLoader::Configure));
+			}
+
+			void Configure(unsigned int aId, const TiXmlElement *element)
+			{
+				DamagableTemplate &damagable = Database::damagabletemplate.Open(aId);
+				damagable.Configure(element);
+				Database::damagabletemplate.Close(aId);
+			}
+		}
+		damagableloader;
+	}
+
 	namespace Initializer
 	{
 		class DamagableInitializer
@@ -66,7 +86,7 @@ DamagableTemplate::~DamagableTemplate(void)
 {
 }
 
-bool DamagableTemplate::Configure(TiXmlElement *element)
+bool DamagableTemplate::Configure(const TiXmlElement *element)
 {
 	if (Hash(element->Value()) != 0x1b715375 /* "damagable" */)
 		return false;

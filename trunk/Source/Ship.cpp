@@ -26,6 +26,26 @@ namespace Database
 	Typed<ShipTemplate> shiptemplate(0xf71a421d /* "shiptemplate" */);
 	Typed<Ship *> ship(0xac56f17f /* "ship" */);
 
+	namespace Loader
+	{
+		class ShipLoader
+		{
+		public:
+			ShipLoader()
+			{
+				AddConfigure(0xac56f17f /* "ship" */, Entry(this, &ShipLoader::Configure));
+			}
+
+			void Configure(unsigned int aId, const TiXmlElement *element)
+			{
+				ShipTemplate &ship = Database::shiptemplate.Open(aId);
+				ship.Configure(element);
+				Database::shiptemplate.Close(aId);
+			}
+		}
+		shiploader;
+	}
+
 	namespace Initializer
 	{
 		class ShipInitializer
@@ -72,7 +92,7 @@ ShipTemplate::~ShipTemplate(void)
 }
 
 // Ship Template Configure
-bool ShipTemplate::Configure(TiXmlElement *element)
+bool ShipTemplate::Configure(const TiXmlElement *element)
 {
 	if (Hash(element->Value()) != 0xac56f17f /* "ship" */)
 		return false;
@@ -103,7 +123,7 @@ Ship::~Ship(void)
 }
 
 // configure
-bool Ship::Configure(TiXmlElement *element)
+bool Ship::Configure(const TiXmlElement *element)
 {
 	return Simulatable::Configure(element);
 }

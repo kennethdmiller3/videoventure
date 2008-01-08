@@ -27,6 +27,26 @@ namespace Database
 	Typed<AimerTemplate> aimertemplate(0x9bde0ae7 /* "aimertemplate" */);
 	Typed<Aimer *> aimer(0x2ea90881 /* "aimer" */);
 
+	namespace Loader
+	{
+		class AimerLoader
+		{
+		public:
+			AimerLoader()
+			{
+				AddConfigure(0x2ea90881 /* "aimer" */, Entry(this, &AimerLoader::Configure));
+			}
+
+			void Configure(unsigned int aId, const TiXmlElement *element)
+			{
+				AimerTemplate &aimer = Database::aimertemplate.Open(aId);
+				aimer.Configure(element);
+				Database::aimertemplate.Close(aId);
+			}
+		}
+		aimerloader;
+	}
+
 	namespace Initializer
 	{
 		class AimerInitializer
@@ -72,7 +92,7 @@ AimerTemplate::~AimerTemplate(void)
 {
 }
 
-bool AimerTemplate::Configure(TiXmlElement *element)
+bool AimerTemplate::Configure(const TiXmlElement *element)
 {
 	if (Hash(element->Value()) != 0x2ea90881 /* "aimer" */)
 		return false;

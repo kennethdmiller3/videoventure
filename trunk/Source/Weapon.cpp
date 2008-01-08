@@ -27,6 +27,26 @@ namespace Database
 	Typed<WeaponTemplate> weapontemplate(0xb1050fa7 /* "weapontemplate" */);
 	Typed<Weapon *> weapon(0x6f332041 /* "weapon" */);
 
+	namespace Loader
+	{
+		class WeaponLoader
+		{
+		public:
+			WeaponLoader()
+			{
+				AddConfigure(0x6f332041 /* "weapon" */, Entry(this, &WeaponLoader::Configure));
+			}
+
+			void Configure(unsigned int aId, const TiXmlElement *element)
+			{
+				WeaponTemplate &weapon = Database::weapontemplate.Open(aId);
+				weapon.Configure(element);
+				Database::weapontemplate.Close(aId);
+			}
+		}
+		weaponloader;
+	}
+
 	namespace Initializer
 	{
 		class WeaponInitializer
@@ -74,13 +94,13 @@ WeaponTemplate::~WeaponTemplate(void)
 {
 }
 
-bool WeaponTemplate::Configure(TiXmlElement *element)
+bool WeaponTemplate::Configure(const TiXmlElement *element)
 {
 	if (Hash(element->Value()) != 0x6f332041 /* "weapon" */)
 		return false;
 
 	// process child elements
-	for (TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
 		const char *label = child->Value();
 		switch (Hash(label))
@@ -149,7 +169,7 @@ Weapon::~Weapon(void)
 }
 
 // Weapon Configure
-bool Weapon::Configure(TiXmlElement *element)
+bool Weapon::Configure(const TiXmlElement *element)
 {
 	if (Hash(element->Value()) != 0x6f332041 /* "weapon" */)
 		return false;

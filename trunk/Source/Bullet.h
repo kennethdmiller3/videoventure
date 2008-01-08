@@ -25,7 +25,7 @@ public:
 	~BulletTemplate(void);
 
 	// configure
-	bool Configure(TiXmlElement *element);
+	bool Configure(const TiXmlElement *element);
 };
 
 class Bullet

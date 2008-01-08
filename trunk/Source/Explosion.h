@@ -22,7 +22,7 @@ public:
 	~ExplosionTemplate(void);
 
 	// configure
-	bool Configure(TiXmlElement *element, unsigned int id);
+	bool Configure(const TiXmlElement *element, unsigned int id);
 };
 
 class Explosion :

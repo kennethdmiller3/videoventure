@@ -19,7 +19,7 @@ Player::~Player(void)
 }
 
 // configure
-bool Player::Configure(TiXmlElement *element)
+bool Player::Configure(const TiXmlElement *element)
 {
 	return Controller::Configure(element);
 }

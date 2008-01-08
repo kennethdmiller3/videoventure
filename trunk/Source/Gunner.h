@@ -14,7 +14,7 @@ public:
 	~Gunner(void);
 
 	// configure
-	virtual bool Configure(TiXmlElement *element);
+	virtual bool Configure(const TiXmlElement *element);
 
 	// simulate
 	virtual void Simulate(float aStep);

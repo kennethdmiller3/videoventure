@@ -17,7 +17,7 @@ public:
 	~ShipTemplate(void);
 
 	// configure
-	bool Configure(TiXmlElement *element);
+	bool Configure(const TiXmlElement *element);
 };
 
 // ship actor
@@ -39,7 +39,7 @@ public:
 	~Ship(void);
 
 	// configure
-	virtual bool Configure(TiXmlElement *element);
+	virtual bool Configure(const TiXmlElement *element);
 
 	// simulate
 	virtual void Simulate(float aStep);

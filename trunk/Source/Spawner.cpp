@@ -24,6 +24,26 @@ namespace Database
 	Typed<SpawnerTemplate> spawnertemplate(0x8b6ef6ad /* "spawnertemplate" */);
 	Typed<Spawner *> spawner(0x4936726f /* "spawner" */);
 
+	namespace Loader
+	{
+		class SpawnerLoader
+		{
+		public:
+			SpawnerLoader()
+			{
+				AddConfigure(0x4936726f /* "spawner" */, Entry(this, &SpawnerLoader::Configure));
+			}
+
+			void Configure(unsigned int aId, const TiXmlElement *element)
+			{
+				SpawnerTemplate &spawner = Database::spawnertemplate.Open(aId);
+				spawner.Configure(element);
+				Database::spawnertemplate.Close(aId);
+			}
+		}
+		spawnerloader;
+	}
+
 	namespace Initializer
 	{
 		class SpawnerInitializer
@@ -74,13 +94,13 @@ SpawnerTemplate::~SpawnerTemplate(void)
 }
 
 // spawner template configure
-bool SpawnerTemplate::Configure(TiXmlElement *element)
+bool SpawnerTemplate::Configure(const TiXmlElement *element)
 {
 	if (Hash(element->Value()) != 0x4936726f /* "spawner" */)
 		return false;
 
 	// process child elements
-	for (TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
 		const char *label = child->Value();
 		switch (Hash(label))
