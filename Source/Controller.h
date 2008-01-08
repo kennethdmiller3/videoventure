@@ -26,7 +26,7 @@ public:
 	virtual ~Controller(void);
 
 	// configure
-	virtual bool Configure(TiXmlElement *element) { return false; }
+	virtual bool Configure(const TiXmlElement *element) { return false; }
 
 	// control
 	static void ControlAll(float aStep);

@@ -17,7 +17,7 @@ public:
 	~AimerTemplate(void);
 
 	// configure
-	bool Configure(TiXmlElement *element);
+	bool Configure(const TiXmlElement *element);
 };
 
 // aimer controller

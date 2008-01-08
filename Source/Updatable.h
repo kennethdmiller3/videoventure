@@ -20,7 +20,7 @@ public:
 	virtual ~Updatable(void);
 
 	// configure
-	virtual bool Configure(TiXmlElement *element) { return false; }
+	virtual bool Configure(const TiXmlElement *element) { return false; }
 
 	// update
 	static void UpdateAll(float aStep);

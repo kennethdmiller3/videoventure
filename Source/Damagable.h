@@ -12,7 +12,7 @@ public:
 	DamagableTemplate(void);
 	~DamagableTemplate(void);
 
-	bool Configure(TiXmlElement *element);
+	bool Configure(const TiXmlElement *element);
 };
 
 class Damagable

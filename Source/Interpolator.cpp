@@ -62,7 +62,7 @@ bool InterpolatorTemplate::Apply(float aTarget[], float aTime, int &aIndex)
 	return true;
 }
 
-static void ProcessInterpolatorKeyItem(TiXmlElement *element, InterpolatorTemplate &interpolator, const char *names[], const float data[])
+static void ProcessInterpolatorKeyItem(const TiXmlElement *element, InterpolatorTemplate &interpolator, const char *names[], const float data[])
 {
 	// get key duration
 	float duration = FLT_MAX;
@@ -72,7 +72,7 @@ static void ProcessInterpolatorKeyItem(TiXmlElement *element, InterpolatorTempla
 	float *key = interpolator.AddKey(duration);
 
 	// process child elements
-	for (TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
 		const char *label = child->Value();
 		switch (Hash(label))
@@ -102,7 +102,7 @@ static void ProcessInterpolatorKeyItem(TiXmlElement *element, InterpolatorTempla
 	}
 }
 
-void ProcessInterpolatorItem(TiXmlElement *element, std::vector<unsigned int> &buffer, int width, const char *names[], const float data[])
+void ProcessInterpolatorItem(const TiXmlElement *element, std::vector<unsigned int> &buffer, int width, const char *names[], const float data[])
 {
 	if (!element->FirstChildElement())
 		return;
@@ -114,7 +114,7 @@ void ProcessInterpolatorItem(TiXmlElement *element, std::vector<unsigned int> &b
 	float time = 0.0f;
 
 	// process child elements
-	for (TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
 		const char *label = child->Value();
 		switch (Hash(label))

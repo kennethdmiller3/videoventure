@@ -1,6 +1,43 @@
 #include "StdAfx.h"
 #include "Cloud.h"
-#include "Renderable.h"
+#include "Drawlist.h"
+
+
+namespace Database
+{
+	namespace Loader
+	{
+		class CloudLoader
+		{
+		public:
+			CloudLoader()
+			{
+				AddConfigure(0x74e9dbae /* "cloud" */, Entry(this, &CloudLoader::Configure));
+			}
+
+			void Configure(unsigned int aId, const TiXmlElement *element)
+			{
+				int count = 1;
+				element->QueryIntAttribute("count", &count);
+				float mean = 256;
+				element->QueryFloatAttribute("mean", &mean);
+				float variance = 192;
+				element->QueryFloatAttribute("variance", &variance);
+				GLuint handle = CreateCloudDrawList(count, mean, variance);
+
+				// get the list name
+				const char *name = element->Attribute("name");
+				if (name)
+				{
+					// register the draw list
+					Database::drawlist.Put(Hash(name), handle);
+				}
+			}
+		}
+		cloudloader;
+	}
+
+}
 
 inline float rand_float()
 {

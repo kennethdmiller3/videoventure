@@ -19,13 +19,13 @@ Gunner::~Gunner(void)
 }
 
 // configure
-bool Gunner::Configure(TiXmlElement *element)
+bool Gunner::Configure(const TiXmlElement *element)
 {
 	if (Hash(element->Value()) != 0xe063cbaa /* "gunner" */)
 		return false;
 
 	// process child elements
-	for (TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
 		const char *label = child->Value();
 		switch (Hash(label))

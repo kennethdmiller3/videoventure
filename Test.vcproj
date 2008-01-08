@@ -214,6 +214,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Source\Drawlist.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\Source\Entity.cpp"
 				>
 			</File>
@@ -333,6 +337,10 @@
 			</File>
 			<File
 				RelativePath=".\Source\Database.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Drawlist.h"
 				>
 			</File>
 			<File

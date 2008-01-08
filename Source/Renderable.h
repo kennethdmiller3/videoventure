@@ -14,7 +14,7 @@ public:
 	~RenderableTemplate();
 
 	// configure
-	bool Configure(TiXmlElement *element);
+	bool Configure(const TiXmlElement *element);
 };
 
 class Renderable
@@ -74,5 +74,4 @@ namespace Database
 {
 	extern Typed<RenderableTemplate> renderabletemplate;
 	extern Typed<Renderable *> renderable;
-	extern Typed<GLuint> drawlist;
 }

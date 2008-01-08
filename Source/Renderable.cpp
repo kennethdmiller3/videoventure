@@ -1,5 +1,6 @@
 #include "StdAfx.h"
 #include "Renderable.h"
+#include "Drawlist.h"
 #include "Entity.h"
 
 #ifdef USE_POOL_ALLOCATOR
@@ -22,7 +23,26 @@ namespace Database
 {
 	Typed<RenderableTemplate> renderabletemplate(0x0cb54133 /* "renderabletemplate" */);
 	Typed<Renderable *> renderable(0x109dd1ad /* "renderable" */);
-	Typed<GLuint> drawlist(0xc98b019b /* "drawlist" */);
+
+	namespace Loader
+	{
+		class RenderableLoader
+		{
+		public:
+			RenderableLoader()
+			{
+				AddConfigure(0x109dd1ad /* "renderable" */, Entry(this, &RenderableLoader::Configure));
+			}
+
+			void Configure(unsigned int aId, const TiXmlElement *element)
+			{
+				RenderableTemplate &renderable = Database::renderabletemplate.Open(aId);
+				renderable.Configure(element);
+				Database::renderabletemplate.Close(aId);
+			}
+		}
+		renderableloader;
+	}
 
 	namespace Initializer
 	{
@@ -67,7 +87,7 @@ RenderableTemplate::~RenderableTemplate(void)
 }
 
 // configure
-bool RenderableTemplate::Configure(TiXmlElement *element)
+bool RenderableTemplate::Configure(const TiXmlElement *element)
 {
 	if (Hash(element->Value()) != 0x109dd1ad /* "renderable" */)
 		return false;

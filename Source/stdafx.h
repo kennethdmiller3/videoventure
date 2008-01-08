@@ -54,12 +54,9 @@ extern int DebugPrint(const char *format, ...);
 extern Input input;
 
 // loader
-void ProcessTemplateItem(TiXmlElement *element, unsigned int template_id);
-void ProcessTemplateItems(TiXmlElement *element);
-void ProcessEntityItems(TiXmlElement *element);
-void ProcessDrawItem(TiXmlElement *element, std::vector<unsigned int> &buffer);
-void ProcessDrawItems(TiXmlElement *element, std::vector<unsigned int> &buffer);
-void ExecuteDrawItems(const unsigned int buffer[], size_t count, float param);
+void ProcessTemplateItem(const TiXmlElement *element, unsigned int template_id);
+void ProcessTemplateItems(const TiXmlElement *element);
+void ProcessEntityItems(const TiXmlElement *element);
 
 // configuration
 //#define ENABLE_DEPTH_TEST

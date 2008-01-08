@@ -17,4 +17,4 @@ public:
 	bool Apply(float aTarget[], float aTime, int &aIndex);
 };
 
-void ProcessInterpolatorItem(TiXmlElement *element, std::vector<unsigned int> &buffer, int width, const char *names[], const float data[]);
+void ProcessInterpolatorItem(const TiXmlElement *element, std::vector<unsigned int> &buffer, int width, const char *names[], const float data[]);

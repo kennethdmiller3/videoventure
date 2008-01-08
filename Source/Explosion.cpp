@@ -25,6 +25,26 @@ namespace Database
 	Typed<ExplosionTemplate> explosiontemplate(0xbde38dea /* "explosiontemplate" */);
 	Typed<Explosion *> explosion(0x02bb1fe0 /* "explosion" */);
 
+	namespace Loader
+	{
+		class ExplosionLoader
+		{
+		public:
+			ExplosionLoader()
+			{
+				AddConfigure(0x02bb1fe0 /* "explosion" */, Entry(this, &ExplosionLoader::Configure));
+			}
+
+			void Configure(unsigned int aId, const TiXmlElement *element)
+			{
+				ExplosionTemplate &explosion = Database::explosiontemplate.Open(aId);
+				explosion.Configure(element, aId);
+				Database::explosiontemplate.Close(aId);
+			}
+		}
+		explosionloader;
+	}
+
 	namespace Initializer
 	{
 		class ExplosionInitializer
@@ -68,7 +88,7 @@ ExplosionTemplate::~ExplosionTemplate(void)
 }
 
 
-bool ExplosionTemplate::Configure(TiXmlElement *element, unsigned int id)
+bool ExplosionTemplate::Configure(const TiXmlElement *element, unsigned int id)
 {
 	if (Hash(element->Value()) != 0x02bb1fe0 /* "explosion" */)
 		return false;

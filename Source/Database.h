@@ -252,6 +252,13 @@ namespace Database
 		};
 	};
 
+	namespace Loader
+	{
+		typedef fastdelegate::FastDelegate<void (unsigned int, const TiXmlElement *)> Entry;
+		void AddConfigure(unsigned int aTagId, Entry aConfigure);
+		const Entry &GetConfigure(unsigned int aTagId);
+	}
+
 	namespace Initializer
 	{
 		typedef fastdelegate::FastDelegate<void (unsigned int)> Entry;

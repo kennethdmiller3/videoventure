@@ -19,7 +19,7 @@ public:
 	~LinkTemplate(void);
 
 	// configure
-	bool Configure(TiXmlElement *element);
+	bool Configure(const TiXmlElement *element);
 };
 
 class Link :
