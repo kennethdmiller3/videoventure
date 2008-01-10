@@ -84,7 +84,9 @@ namespace Database
 AimerTemplate::AimerTemplate(void)
 : mRange(256.0f)
 , mAttack(256.0f)
+, mAngle(0.95f)
 , mFocus(1.0f)
+, mLeading(0.0f)
 {
 }
 
@@ -99,7 +101,10 @@ bool AimerTemplate::Configure(const TiXmlElement *element)
 
 	element->QueryFloatAttribute("range", &mRange);
 	element->QueryFloatAttribute("attack", &mAttack);
+	if (element->QueryFloatAttribute("angle", &mAngle) == TIXML_SUCCESS)
+		mAngle = cosf(mAngle * float(M_PI) / 180.0f);
 	element->QueryFloatAttribute("focus", &mFocus);
+	element->QueryFloatAttribute("leading", &mLeading);
 	return true;
 }
 
@@ -108,14 +113,7 @@ Aimer::Aimer(const AimerTemplate &aTemplate, unsigned int aId)
 : Controller(aId)
 , mTarget(0)
 , mDelay(0.0f)
-, mLeading(0.0f)
 {
-	// get weapon template (if any)
-	for (Database::Typed<LinkTemplate>::Iterator itor(Database::linktemplate.Find(id)); itor.IsValid(); ++itor)
-	{
-		if (const WeaponTemplate *w = Database::weapontemplate.Find(itor.GetValue().mSecondary))
-			mLeading = w->mVelocity.y;
-	}
 }
 
 Aimer::~Aimer(void)
@@ -239,9 +237,9 @@ void Aimer::Control(float aStep)
 		return;
 
 	// aim at target lead position
-	if (mLeading > 0.0f)
+	if (aimer.mLeading != 0.0f)
 	{
-		mAim = LeadTarget(mLeading,
+		mAim = LeadTarget(aimer.mLeading,
 			targetEntity->GetPosition() - entity->GetPosition(),
 			targetEntity->GetVelocity() - entity->GetVelocity()
 			);
@@ -254,6 +252,6 @@ void Aimer::Control(float aStep)
 	mMove = mAim;
 
 	// fire if lined up and within attack range
-	mFire = (entity->GetTransform().y.Dot(mAim) > 0.95f) && 
+	mFire = (entity->GetTransform().y.Dot(mAim) > aimer.mAngle) && 
 		entity->GetPosition().DistSq(targetEntity->GetPosition()) < aimer.mAttack * aimer.mAttack;
 }
