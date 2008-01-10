@@ -7,10 +7,16 @@ class AimerTemplate
 public:
 	// target range
 	float mRange;
+
+	// attack cone
 	float mAttack;
+	float mAngle;
 
 	// direction focus
 	float mFocus;
+
+	// leading
+	float mLeading;
 
 public:
 	AimerTemplate(void);
@@ -26,7 +32,6 @@ class Aimer :
 {
 protected:
 	unsigned int mTarget;
-	float mLeading;
 	float mDelay;
 
 
