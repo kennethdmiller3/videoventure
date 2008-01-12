@@ -2729,7 +2729,7 @@
 	</template>
 
 
-	<!-- enemy spawners
+	<!-- enemy spawners -->
 
 	<entity name="enemyshipsmallspawn1">
 		<position x="-192" y="2048" angle="180"/>
@@ -2835,7 +2835,6 @@
 		</spawner>
 	</entity>
 	
-	-->
 
 	<!-- gunner bullet explosion -->
 
