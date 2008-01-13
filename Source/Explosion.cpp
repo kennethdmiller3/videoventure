@@ -164,10 +164,10 @@ Explosion::Explosion(const ExplosionTemplate &aTemplate, unsigned int aId)
 
 			// get range
 			Vector2 dir(transform.Transform(Vector2(shapes[i]->GetPosition())));
-			float range = dir.LengthSq();
+			float range = dir.Length() - shapes[i]->GetMaxRadius() * 0.5f;
 
 			// skip if out of range
-			if (range > aTemplate.mRadius * aTemplate.mRadius)
+			if (range > aTemplate.mRadius)
 				continue;
 
 			// if the recipient is damagable...
@@ -176,7 +176,10 @@ Explosion::Explosion(const ExplosionTemplate &aTemplate, unsigned int aId)
 			if (damagable && (aTemplate.mDamage >= 0 || damagable->GetHealth() < Database::damagabletemplate.Get(targetId).mHealth))
 			{
 				// apply damage value
-				damagable->Damage(id, aTemplate.mDamage * (1.0f - range / (aTemplate.mRadius * aTemplate.mRadius)));
+				if (range < 0)
+					damagable->Damage(id, aTemplate.mDamage);
+				else
+					damagable->Damage(id, aTemplate.mDamage * (1.0f - (range * range) / (aTemplate.mRadius * aTemplate.mRadius)));
 			}
 		}
 	}

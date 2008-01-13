@@ -248,10 +248,16 @@ void Aimer::Control(float aStep)
 	{
 		mAim = targetEntity->GetPosition() - entity->GetPosition();
 	}
+
+	// in attack range?
+	bool inRange = mAim.LengthSq() < aimer.mAttack * aimer.mAttack;
+
+	// normalize aim
 	mAim /= (mAim.Length() + FLT_EPSILON);
+
+	// move in aim direction
 	mMove = mAim;
 
 	// fire if lined up and within attack range
-	mFire = (entity->GetTransform().y.Dot(mAim) > aimer.mAngle) && 
-		entity->GetPosition().DistSq(targetEntity->GetPosition()) < aimer.mAttack * aimer.mAttack;
+	mFire = inRange && (entity->GetTransform().y.Dot(mAim) > aimer.mAngle);
 }
