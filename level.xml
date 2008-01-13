@@ -1023,8 +1023,17 @@
 			<spawn name="enemymissiletrail" start="0" cycle="0.016667" track="0"/>
 		</spawner>
 	</template>
-
 	
+	<template name="enemyweaponmissile">
+		<weapon>
+			<offset x="0" y="10"/>
+			<velocity x="0" y="90"/>
+			<ordnance name="enemymissile"/>
+			<shot delay="0.6"/>
+		</weapon>
+	</template>
+	
+
 	<!-- enemy explosion -->
 
 	<template name="enemyexplosion">
@@ -1181,7 +1190,7 @@
 		</weapon>
 	</template>
 
-	<template name="enemycannonmissile" type="">
+	<template name="enemycannonmissile" type="enemyweaponmissile">
 		<renderable>
 			<drawlist>
 				<quads>
@@ -1198,12 +1207,6 @@
 				</quads>
 			</drawlist>
 		</renderable>
-		<weapon>
-			<offset x="0" y="10"/>
-			<velocity x="0" y="60"/>
-			<ordnance name="enemymissile"/>
-			<shot delay="0.6"/>
-		</weapon>
 	</template>
 
 	<template name="enemyturret">
@@ -2707,11 +2710,14 @@
 		<aimer range="1024" attack="512" leading="240"/>
 		<ship maxveloc="90" maxaccel="10" friction="10" maxomega="0.1"/>
 		<damagable health="200" spawnondeath="minibossexplosion"/>
-		<link name="lgun" secondary="enemyweapon">
-			<offset x="4" y="16" angle="0"/>
+		<link name="mgun" secondary="enemyweaponmissile">
+			<offset x="0" y="48" angle="0"/>
 		</link>
-		<link name="rgun" secondary="enemyweapon">
-			<offset x="-4" y="16" angle="0"/>
+		<link name="lgun" secondary="enemyweaponmissile">
+			<offset x="10" y="36" angle="-30"/>
+		</link>
+		<link name="rgun" secondary="enemyweaponmissile">
+			<offset x="-10" y="36" angle="30"/>
 		</link>
 		<link name="lfport" secondary="enemylaunch0">
 			<offset x="16" y="4" angle="-90"/>
@@ -2986,14 +2992,6 @@
 				</circle>
 				<allowsleep value="0"/>
 			</body>
-			<!--
-			<revolutejoint>
-				<body1 name="player" body="main"/>
-				<body2 body="main"/>
-				<anchor x="0" y="0"/>
-				<limit lower="0" upper="0"/>
-			</revolutejoint>
-			-->
 		</collidable>
 		<renderable>
 			<drawlist>
@@ -3380,14 +3378,6 @@
 				</circle>
 				<allowsleep value="0"/>
 			</body>
-			<!--
-			<revolutejoint>
-				<body1 name="player" body="main"/>
-				<body2 body="main"/>
-				<anchor x="0" y="0"/>
-				<limit lower="0" upper="0"/>
-			</revolutejoint>
-			-->
 		</collidable>
 		<renderable>
 			<drawlist>
@@ -3526,6 +3516,75 @@
 			<ordnance name="playerbullet"/>
 			<shot delay="0.1"/>
 		</weapon>
+	</template>
+	
+	
+	<!-- player multiple -->
+
+	<template name="multiple" type="playershipweapon">
+		<renderable period="0.5">
+			<pushmatrix>
+				<color r="1.0" g="1.0" b="1.0" a="1.0"/>
+				<scale>
+					<linear time="0.25">
+						<start x="1.0" y="1.5"/>
+						<end   x="2.0" y="2.5"/>
+					</linear>
+					<linear time="0.25">
+						<start x="2.0" y="2.5"/>
+						<end   x="1.0" y="1.5"/>
+					</linear>
+				</scale>
+				<calllist name="circle16"/>
+			</pushmatrix>
+			<pushmatrix>
+				<color r="0.7" g="0.4" b="1.0" a="0.5"/>
+				<scale>
+					<linear time="0.25">
+						<start x="2.0" y="2.5"/>
+						<end   x="4.0" y="4.5"/>
+					</linear>
+					<linear time="0.25">
+						<start x="4.0" y="4.5"/>
+						<end   x="2.0" y="2.5"/>
+					</linear>
+				</scale>
+				<calllist name="circle16"/>
+			</pushmatrix>
+			<pushmatrix>
+				<color r="0.5" g="0.0" b="1.0" a="0.25"/>
+				<scale>
+					<linear time="0.25">
+						<start x="4.0" y="4.5"/>
+						<end   x="6.0" y="6.5"/>
+					</linear>
+					<linear time="0.25">
+						<start x="6.0" y="6.5"/>
+						<end   x="4.0" y="4.5"/>
+					</linear>
+				</scale>
+				<calllist name="circle16"/>
+			</pushmatrix>
+		</renderable>
+		<gunner follow="24"/>
+	</template>
+
+	<template name="multiple2" type="multiple">
+		<link name="multiple" secondary="multiple" updateangle="0" updateposition="0">
+			<offset x="0" y="0"/>
+		</link>
+	</template>
+
+	<template name="multiple3" type="multiple">
+		<link name="multiple" secondary="multiple2" updateangle="0" updateposition="0">
+			<offset x="0" y="0"/>
+		</link>
+	</template>
+
+	<template name="multiple4" type="multiple">
+		<link name="multiple" secondary="multiple3" updateangle="0" updateposition="0">
+			<offset x="0" y="0"/>
+		</link>
 	</template>
 
 
@@ -3751,6 +3810,9 @@
 		</link>
 		<link name="forceA" secondary="force">
 			<offset x="0" y="13" angle="0"/>
+		</link>
+		<link name="multiple" secondary="multiple4" updateposition="0" updateangle="0">
+			<offset x="0" y="-16" angle="0"/>
 		</link>
 		<team name="blue"/>
 	</template>
