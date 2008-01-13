@@ -1712,12 +1712,12 @@
 				<color>
 					<linear time="0.15">
 						<start r="1.0" g="0.7" b="0.4" a="0.5"/>
-						<end   r="1.0" g="0.5" b="0.0" a="0.125"/>
+						<end   r="1.0" g="0.5" b="0.0" a="0.0"/>
 					</linear>
 				</color>
 				<scale>
 					<linear time="0.15">
-						<start x="8.0" y="8.0"/>
+						<start x="32.0" y="32.0"/>
 						<end   x="64.0" y="64.0"/>
 					</linear>
 				</scale>
@@ -1871,7 +1871,7 @@
 				<calllist name="circle32"/>
 			</pushmatrix>
 		</renderable>
-		<bullet life="30" damage="3" spawnondeath="enemymineexplosion" spawnonexpire="enemybulletexplosion"/>
+		<bullet life="10" damage="3" spawnondeath="enemymineexplosion" spawnonexpire="enemybulletexplosion"/>
 	</template>
 
 
@@ -1969,8 +1969,8 @@
 				<calllist name="diamond"/>
 			</pushmatrix>
 		</renderable>
-		<aimer range="512" attack="256" leading="30"/>
-		<ship maxveloc="120" maxaccel="60" friction="10" maxomega="5"/>
+		<aimer range="512" attack="64" leading="30" angle="180"/>
+		<ship maxveloc="120" maxaccel="60" friction="10" maxomega="2"/>
 		<damagable health="5" spawnondeath="enemyexplosion"/>
 		<weapon>
 			<velocity x="0" y="0"/>
@@ -2707,7 +2707,7 @@
 				</triangle_strip>
 			</drawlist>
 		</renderable>
-		<aimer range="1024" attack="512" leading="240"/>
+		<aimer range="1024" attack="512" leading="240" angle="180"/>
 		<ship maxveloc="90" maxaccel="10" friction="10" maxomega="0.1"/>
 		<damagable health="200" spawnondeath="minibossexplosion"/>
 		<link name="mgun" secondary="enemyweaponmissile">
@@ -2930,25 +2930,19 @@
 			<drawlist>
 				<color r="1.0" g="1.0" b="1.0" a="1.0"/>
 				<pushmatrix>
-					<scale x="1" y="1"/>
+					<scale x="0.5" y="4"/>
 					<calllist name="circle8"/>
 				</pushmatrix>
 				<color r="0.4" g="0.7" b="1.0" a="0.5"/>
 				<pushmatrix>
-					<scale x="2" y="2"/>
+					<scale x="1.25" y="5"/>
 					<calllist name="circle8"/>
 				</pushmatrix>
 				<color r="0.0" g="0.5" b="1.0" a="0.25"/>
 				<pushmatrix>
-					<scale x="3" y="3"/>
-					<calllist name="circle12"/>
+					<scale x="2" y="6"/>
+					<calllist name="circle8"/>
 				</pushmatrix>
-				<lines>
-					<color r="1.0" g="1.0" b="1.0" a="0.5"/>
-					<vertex x="0" y="0"/>
-					<color r="0.0" g="0.0" b="1.0" a="0.0"/>
-					<vertex x="0" y="-16"/>
-				</lines>
 			</drawlist>
 		</renderable>
 		<bullet life="1" damage="1" spawnonimpact="gunnerbulletexplosion"/>
@@ -2978,7 +2972,7 @@
 	</template>
 
 
-	<!-- gunners -->
+	<!-- gunner option -->
 
 	<template name="gunner">
 		<collidable>
@@ -3039,10 +3033,266 @@
 	</template>
 
 
+	<!-- bit bullet explosion -->
+
+	<template name="bitbulletexplosion">
+		<explosion life="1.0" damage="1" radius="40"/>
+		<renderable>
+			<pushmatrix>
+				<color>
+					<linear time="0.1">
+						<start r="1.0" g="1.0" b="1.0" a="1.0"/>
+						<end   r="1.0" g="1.0" b="1.0" a="0.0"/>
+					</linear>
+				</color>
+				<scale>
+					<linear time="0.1">
+						<start x="8.0" y="8.0"/>
+						<end   x="0.0" y="0.0"/>
+					</linear>
+				</scale>
+				<calllist name="circle16"/>
+			</pushmatrix>
+			<pushmatrix>
+				<color>
+					<linear time="0.1">
+						<start r="0.7" g="1.0" b="0.4" a="0.5"/>
+						<end   r="0.5" g="1.0" b="0.0" a="0.0"/>
+					</linear>
+				</color>
+				<scale>
+					<linear time="0.1">
+						<start x="20.0" y="20.0"/>
+						<end   x="40.0" y="40.0"/>
+					</linear>
+				</scale>
+				<calllist name="circle32"/>
+			</pushmatrix>
+			<pushmatrix>
+				<color>
+					<linear time="0.75">
+						<start r="0.9" g="1.0" b="0.8" a="1.0"/>
+						<end   r="0.5" g="1.0" b="0.0" a="0.0"/>
+					</linear>
+				</color>
+				<scale>
+					<linear time="0.75">
+						<start x="4.0" y="4.0"/>
+						<end   x="0.0" y="0.0"/>
+					</linear>
+				</scale>
+				<calllist name="circle16"/>
+			</pushmatrix>
+			<pushmatrix>
+				<repeat count="3">
+					<repeat count="6">
+						<pushmatrix>
+							<translate>
+								<linear time="0.3">
+									<start x="0" y="0"/>
+									<end   x="25" y="0"/>
+								</linear>
+							</translate>
+							<color>
+								<linear time="0.3">
+									<start r="0.7" g="1.0" b="0.4" a="0.5"/>
+									<end   r="0.0" g="1.0" b="0.0" a="0.0"/>
+								</linear>
+							</color>
+							<scale>
+								<linear time="0.3">
+									<start x="6.0" y="0.5"/>
+									<end   x="0.5" y="0.5"/>
+								</linear>
+							</scale>
+							<calllist name="circle16"/>
+						</pushmatrix>
+						<rotate angle="60"/>
+					</repeat>
+					<scale x="1.25" y="1.25"/>
+					<rotate angle="20"/>
+				</repeat>
+			</pushmatrix>
+			<pushmatrix>
+				<color>
+					<linear time="0.2">
+						<start r="0.7" g="1.0" b="0.4" a="0.5"/>
+						<end   r="0.0" g="1.0" b="0.0" a="0.0"/>
+					</linear>
+				</color>
+				<scale>
+					<linear time="0.2">
+						<start x="4.0" y="4.0"/>
+						<end   x="12.0" y="12.0"/>
+					</linear>
+				</scale>
+				<calllist name="circle32"/>
+			</pushmatrix>
+		</renderable>
+		<team name="blue"/>
+	</template>
+
+
+	<!-- bit bullet -->
+
+	<template name="bitbullet">
+		<collidable>
+			<body name="main">
+				<fast value="1"/>
+				<circle radius="2">
+					<friction value="0"/>
+					<restitution value="1"/>
+					<density value="0.2"/>
+					<category value="2"/>
+					<mask bit1="0" bit2="0" bit4="0"/>
+				</circle>
+			</body>
+		</collidable>
+		<renderable period="0.4">
+			<drawlist>
+				<pushmatrix>
+					<color r="1.0" g="1.0" b="1.0" a="1.0"/>
+					<scale x="1.5" y="1.5"/>
+					<calllist name="circle16"/>
+				</pushmatrix>
+				<pushmatrix>
+					<color r="0.7" g="1.0" b="0.4" a="0.5"/>
+					<scale x="2.5" y="2.5"/>
+					<calllist name="circle16"/>
+				</pushmatrix>
+				<pushmatrix>
+					<color r="0.5" g="1.0" b="0.0" a="0.25"/>
+					<scale x="3.5" y="3.5"/>
+					<calllist name="circle16"/>
+				</pushmatrix>
+				<pushmatrix>
+					<translate x="0" y="-5"/>
+					<color r="0.7" g="1.0" b="0.4" a="0.5"/>
+					<scale x="1.5" y="1.5"/>
+					<calllist name="circle12"/>
+				</pushmatrix>
+				<pushmatrix>
+					<translate x="0" y="-8"/>
+					<color r="0.5" g="1.0" b="0.0" a="0.25"/>
+					<scale x="1.25" y="1.25"/>
+					<calllist name="circle12"/>
+				</pushmatrix>
+				<pushmatrix>
+					<translate x="0" y="-10"/>
+					<color r="0.0" g="1.0" b="0.0" a="0.125"/>
+					<scale x="1.0" y="1.0"/>
+					<calllist name="circle12"/>
+				</pushmatrix>
+			</drawlist>
+		</renderable>
+		<bullet life="1.5" damage="2" spawnondeath="bitbulletexplosion"/>
+	</template>
+
+
+	<!-- bit option -->
+
+	<drawlist name="semicircle16">
+		<polygon>
+			<vertex x="1.000000" y="0.000000"/>
+			<vertex x="0.923880" y="0.382683"/>
+			<vertex x="0.707107" y="0.707107"/>
+			<vertex x="0.382683" y="0.923880"/>
+			<vertex x="0.000000" y="1.000000"/>
+			<vertex x="-0.382683" y="0.923880"/>
+			<vertex x="-0.707107" y="0.707107"/>
+			<vertex x="-0.923880" y="0.382683"/>
+			<vertex x="-1.000000" y="0.00000"/>
+		</polygon>
+	</drawlist>
+
+	<drawlist name="bitcore">
+		<pushmatrix>
+			<color r="1.0" g="1.0" b="1.0" a="1.0"/>
+			<scale x="1.5" y="1.5"/>
+			<calllist name="circle16"/>
+		</pushmatrix>
+		<pushmatrix>
+			<color r="0.7" g="1.0" b="0.4" a="0.5"/>
+			<scale x="2.0" y="2.0"/>
+			<calllist name="circle16"/>
+		</pushmatrix>
+		<pushmatrix>
+			<color r="0.5" g="1.0" b="0.0" a="0.25"/>
+			<scale x="2.5" y="2.5"/>
+			<calllist name="circle16"/>
+		</pushmatrix>
+	</drawlist>
+
+	<drawlist name="bitshell">
+		<pushmatrix>
+			<color r="0.8" g="0.8" b="0.8" a="1.0"/>
+			<scale x="2.0" y="2.0"/>
+			<calllist name="semicircle16"/>
+		</pushmatrix>
+		<pushmatrix>
+			<color r="0.6" g="0.6" b="0.6" a="1.0"/>
+			<scale x="3.0" y="3.0"/>
+			<calllist name="semicircle16"/>
+		</pushmatrix>
+		<pushmatrix>
+			<color r="0.4" g="0.4" b="0.4" a="1.0"/>
+			<scale x="4.0" y="4.0"/>
+			<calllist name="semicircle16"/>
+		</pushmatrix>
+	</drawlist>
+
+	<template name="bit" type="bitweapon">
+		<collidable>
+			<body name="main">
+				<circle radius="4">
+					<density value="0.1"/>
+					<friction value="0.5"/>
+					<restitution value="0.25"/>
+					<category value="1"/>
+					<mask bit2="0"/>
+				</circle>
+				<allowsleep value="0"/>
+			</body>
+		</collidable>
+		<weapon>
+			<velocity x="0" y="360"/>
+			<ordnance name="bitbullet"/>
+			<shot delay="0.666667" cycle="2"/>
+		</weapon>
+		<team name="blue"/>
+	</template>
+
+	<template name="bit1" type="bit">
+		<renderable>
+			<pushmatrix>
+				<rotate angle="-90"/>
+				<calllist name="bitshell"/>
+			</pushmatrix>
+			<calllist name="bitcore"/>
+		</renderable>
+		<weapon>
+			<shot phase="0"/>
+		</weapon>
+	</template>
+
+	<template name="bit2" type="bit">
+		<renderable>
+			<pushmatrix>
+				<rotate angle="90"/>
+				<calllist name="bitshell"/>
+			</pushmatrix>
+			<calllist name="bitcore"/>
+		</renderable>
+		<weapon>
+			<shot phase="1"/>
+		</weapon>
+	</template>
+	
+	
 	<!-- force bullet explosion -->
 
 	<template name="forcebulletexplosion">
-		<explosion life="1.0" damage="5" radius="96"/>
+		<explosion life="1.0" damage="5" radius="64"/>
 		<renderable>
 			<pushmatrix>
 				<color>
@@ -3069,7 +3319,7 @@
 				<scale>
 					<linear time="0.1">
 						<start x="32.0" y="32.0"/>
-						<end   x="96.0" y="96.0"/>
+						<end   x="64.0" y="64.0"/>
 					</linear>
 				</scale>
 				<calllist name="circle32"/>
@@ -3083,7 +3333,7 @@
 				</color>
 				<scale>
 					<linear time="1.0">
-						<start x="12.0" y="12.0"/>
+						<start x="8.0" y="8.0"/>
 						<end   x="0.0" y="0.0"/>
 					</linear>
 				</scale>
@@ -3128,8 +3378,8 @@
 				</color>
 				<scale>
 					<linear time="0.3">
-						<start x="12.0" y="12.0"/>
-						<end   x="32.0" y="32.0"/>
+						<start x="8.0" y="8.0"/>
+						<end   x="24.0" y="24.0"/>
 					</linear>
 				</scale>
 				<calllist name="circle32"/>
@@ -3145,7 +3395,7 @@
 		<collidable>
 			<body name="main">
 				<fast value="1"/>
-				<circle radius="3">
+				<circle radius="4">
 					<friction value="0"/>
 					<restitution value="1"/>
 					<density value="0.2"/>
@@ -3155,60 +3405,20 @@
 			</body>
 		</collidable>
 		<renderable period="0.4">
-			<pushmatrix>
-				<rotate>
-					<linear time="0.4">
-						<start angle="0"/>
-						<end angle="120"/>
-					</linear>
-				</rotate>
-				<scale x="16" y="16"/>
-				<repeat count="6">
-					<polygon>
-						<color r="0.7" g="1.0" b="0.4" a="0.125"/>
-						<vertex x="0" y="0"/>
-						<color r="0.5" g="1.0" b="0.0" a="0.0"/>
-						<vertex x="0.195090" y="0.980785"/>
-						<vertex x="0.000000" y="1.000000"/>
-						<vertex x="-0.195090" y="0.980785"/>
-					</polygon>
-					<rotate angle="60"/>
-				</repeat>
-			</pushmatrix>
-			<pushmatrix>
-				<rotate>
-					<linear time="0.4">
-						<start angle="0"/>
-						<end angle="-180"/>
-					</linear>
-				</rotate>
-				<scale x="12" y="12"/>
-				<repeat count="6">
-					<polygon>
-						<color r="0.7" g="1.0" b="0.4" a="0.25"/>
-						<vertex x="0" y="0"/>
-						<color r="0.5" g="1.0" b="0.0" a="0.0"/>
-						<vertex x="0.195090" y="0.980785"/>
-						<vertex x="0.000000" y="1.000000"/>
-						<vertex x="-0.195090" y="0.980785"/>
-					</polygon>
-					<rotate angle="60"/>
-				</repeat>
-			</pushmatrix>
 			<drawlist>
 				<pushmatrix>
 					<color r="1.0" g="1.0" b="1.0" a="1.0"/>
-					<scale x="2" y="2"/>
+					<scale x="3.0" y="3.0"/>
 					<calllist name="circle16"/>
 				</pushmatrix>
 				<pushmatrix>
 					<color r="0.7" g="1.0" b="0.4" a="0.5"/>
-					<scale x="3.5" y="3.5"/>
+					<scale x="4.0" y="4.0"/>
 					<calllist name="circle16"/>
 				</pushmatrix>
 				<pushmatrix>
 					<color r="0.5" g="1.0" b="0.0" a="0.25"/>
-					<scale x="5" y="5"/>
+					<scale x="5.0" y="5.0"/>
 					<calllist name="circle16"/>
 				</pushmatrix>
 				<pushmatrix>
@@ -3231,7 +3441,7 @@
 				</pushmatrix>
 			</drawlist>
 		</renderable>
-		<bullet life="1" damage="5" spawnondeath="forcebulletexplosion"/>
+		<bullet life="1.5" damage="5" spawnondeath="forcebulletexplosion"/>
 	</template>
 
 
@@ -3239,14 +3449,14 @@
 
 	<template name="forceweapon">
 		<weapon>
-			<velocity x="0" y="480"/>
+			<velocity x="0" y="360"/>
 			<ordnance name="forcebullet"/>
 			<shot delay="1.0"/>
 		</weapon>
 	</template>
 
 
-	<!-- force -->
+	<!-- force option (level 1) -->
 
 	<template name="forcecannon" type="forceweapon">
 		<renderable period="0.3">
@@ -3370,7 +3580,7 @@
 	<template name="force" type="forcecannon">
 		<collidable>
 			<body name="main">
-				<circle radius="4">
+				<circle radius="5">
 					<density value="0.1"/>
 					<friction value="0.5"/>
 					<restitution value="0.25"/>
@@ -3384,6 +3594,11 @@
 			<drawlist>
 				<pushmatrix>
 					<color r="1.0" g="1.0" b="1.0" a="1.0"/>
+					<scale x="2" y="2"/>
+					<calllist name="circle16"/>
+				</pushmatrix>
+				<pushmatrix>
+					<color r="0.9" g="1.0" b="0.8" a="0.75"/>
 					<scale x="3" y="3"/>
 					<calllist name="circle16"/>
 				</pushmatrix>
@@ -3400,6 +3615,33 @@
 			</drawlist>
 		</renderable>
 		<team name="blue"/>
+	</template>
+	
+	
+	<!-- force option (level 2) -->
+	
+	<template name="force2" type="force">
+		<weapon>
+			<shot delay="0.5"/>
+		</weapon>
+	</template>
+
+	
+	<!-- force option (level 3) -->
+
+	<template name="force3" type="force">
+		<weapon>
+			<shot delay="0.333333"/>
+		</weapon>
+	</template>
+
+
+	<!-- force option (level 4) -->
+
+	<template name="force4" type="force">
+		<weapon>
+			<shot delay="0.25"/>
+		</weapon>
 	</template>
 
 
@@ -3799,6 +4041,7 @@
 		<link name="rgun" secondary="playershipweapon">
 			<offset x="-2" y="0" angle="0"/>
 		</link>
+		<!-- -->
 		<link name="gunnerA" secondary="gunner0">
 			<offset x="-8" y="0" angle="10"/>
 		</link>
@@ -3811,12 +4054,23 @@
 		<link name="gunnerD" secondary="gunner0">
 			<offset x="12" y="-4" angle="-25"/>
 		</link>
-		<link name="forceA" secondary="force">
-			<offset x="0" y="13" angle="0"/>
+		<!-- -->
+		<link name="force" secondary="force4">
+			<offset x="0" y="16" angle="0"/>
 		</link>
+		<!--
+		<link name="bit1" secondary="bit1">
+			<offset x="16" y="0"/>
+		</link>
+		<link name="bit2" secondary="bit2">
+			<offset x="-16" y="0"/>
+		</link>
+		-->
+		<!-- -->
 		<link name="multiple" secondary="multiple4" updateposition="0" updateangle="0">
 			<offset x="0" y="-16" angle="0"/>
 		</link>
+		<!-- -->
 		<team name="blue"/>
 	</template>
 

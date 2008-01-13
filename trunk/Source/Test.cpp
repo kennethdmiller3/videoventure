@@ -27,7 +27,7 @@ bool SCREEN_FULLSCREEN = false;
 // view attributes
 float VIEW_SIZE = 320;
 float VIEW_AIM = 100;
-float VIEW_AIM_FILTER = 0.002f;
+float VIEW_AIM_FILTER = 2.0f;
 
 // opengl attributes
 bool OPENGL_DOUBLEBUFFER = true;
@@ -37,6 +37,7 @@ bool OPENGL_SWAPCONTROL = true;
 bool OPENGL_ANTIALIAS = false;
 int OPENGL_MULTISAMPLE = 16;
 
+
 // debug output
 bool DEBUGPRINT_OUTPUTCONSOLE = false;
 bool DEBUGPRINT_OUTPUTDEBUG = true;
@@ -44,6 +45,10 @@ bool DEBUGPRINT_OUTPUTDEBUG = true;
 // simulation attributes
 int SIMULATION_RATE = 60;
 float TIME_SCALE = 1.0f;
+
+// rendering attributes
+int RENDER_MOTIONBLUR = 1;
+
 
 // default input configuration
 const char *INPUT_CONFIG = "input.xml";
@@ -550,7 +555,7 @@ int ProcessCommand( unsigned int aCommand, char *aParam[] )
 		return 1;
 
 	case 0xd49cb7d3 /* "viewaimfilter" */:
-		VIEW_AIM_FILTER = float(atof(aParam[0])) / 1000.0f;
+		VIEW_AIM_FILTER = float(atof(aParam[0]));
 		return 1;
 
 	case 0xf9d86f7b /* "input" */:
@@ -567,6 +572,10 @@ int ProcessCommand( unsigned int aCommand, char *aParam[] )
 
 	case 0x9f2f269e /* "timescale" */:
 		TIME_SCALE = float(atof(aParam[0]));
+		return 1;
+
+	case 0xf744f3b2 /* "motionblur" */:
+		RENDER_MOTIONBLUR = atoi(aParam[0]);
 		return 1;
 
 	case 0x94c716fd /* "outputconsole" */:
@@ -779,23 +788,116 @@ int SDL_main( int argc, char *argv[] )
 		if (delta > 100)
 			delta = 100;
 
-		// advance the sim timer
-		sim_timer += delta * TIME_SCALE * sim_rate / 1000.0f;
+		// delta time
+		float delta_time = delta * TIME_SCALE / 1000.0f / RENDER_MOTIONBLUR;
 
-		// while simulation turns to run...
-		while (sim_timer >= 1.0f)
+		// delta step
+		float delta_step = delta_time * sim_rate;
+
+		// for each motion-blur step
+		for (int blur = 0; blur < RENDER_MOTIONBLUR; ++blur)
 		{
-			// deduct a turn
-			sim_timer -= 1.0f;
-			
-			// update database
-			Database::Update();
+			// advance the sim timer
+			sim_timer += delta_step;
 
-			// update input values
-			input.Update();
+			// while simulation turns to run...
+			while (sim_timer >= 1.0f)
+			{
+				// deduct a turn
+				sim_timer -= 1.0f;
+				
+				// update database
+				Database::Update();
+
+				// update input values
+				input.Update();
 
 
-			// CONTROL PHASE
+				// CONTROL PHASE
+
+#ifdef PRINT_PERFORMANCE_DETAILS
+				LARGE_INTEGER perf_freq;
+				QueryPerformanceFrequency(&perf_freq);
+
+				LARGE_INTEGER perf_count0;
+				QueryPerformanceCounter(&perf_count0);
+#endif
+
+				// control all entities
+				Controller::ControlAll(sim_step);
+
+#ifdef PRINT_PERFORMANCE_DETAILS
+				LARGE_INTEGER perf_count1;
+				QueryPerformanceCounter(&perf_count1);
+
+				DebugPrint("C=%d ", 1000000 * (perf_count1.QuadPart - perf_count0.QuadPart) / perf_freq.QuadPart);
+#endif
+
+				// SIMULATION PHASE
+				// (generate forces)
+				Simulatable::SimulateAll(sim_step);
+
+#ifdef PRINT_PERFORMANCE_DETAILS
+				LARGE_INTEGER perf_count2;
+				QueryPerformanceCounter(&perf_count2);
+
+				DebugPrint("S=%d ", 1000000 * (perf_count2.QuadPart - perf_count1.QuadPart) / perf_freq.QuadPart);
+#endif
+
+				// COLLISION PHASE
+				// (apply forces and update positions)
+				Collidable::CollideAll(sim_step);
+
+#ifdef PRINT_PERFORMANCE_DETAILS
+				LARGE_INTEGER perf_count3;
+				QueryPerformanceCounter(&perf_count3);
+
+				DebugPrint("P=%d ", 1000000 * (perf_count3.QuadPart - perf_count2.QuadPart) / perf_freq.QuadPart);
+#endif
+
+				// UPDATE PHASE
+				// (use updated positions)
+				Updatable::UpdateAll(sim_step);
+
+				// step inputs for next turn
+				input.Step();
+
+				// advance the turn counter
+				++sim_turn;
+				Renderable::SetTurn(sim_turn);
+			}
+
+#ifdef PRINT_SIMULATION_TIMER
+			DebugPrint("delta=%d ticks=%d sim_t=%f\n", delta, ticks, sim_timer);
+#endif
+
+			// RENDERING PHASE
+
+			// for each player...
+			for (Database::Typed<Player *>::Iterator itor(&Database::player); itor.IsValid(); ++itor)
+			{
+				// get the entity
+				Entity *entity = Database::entity.Get(itor.GetKey());
+
+				// track player position
+				trackpos = entity->GetInterpolatedPosition(sim_timer);
+
+				// if applying view aim
+				if (VIEW_AIM)
+				{
+					if (Database::ship.Get(itor.GetKey()))
+						trackaim += VIEW_AIM_FILTER * delta_time * (itor.GetValue()->mAim - trackaim);
+					else
+						trackaim -= VIEW_AIM_FILTER * delta_time * trackaim;
+					trackpos += trackaim * VIEW_AIM;
+				}
+			}
+
+			// push camera transform
+			glPushMatrix();
+
+			// set camera to track position
+			glTranslatef( -trackpos.x, -trackpos.y, 0 );
 
 #ifdef PRINT_PERFORMANCE_DETAILS
 			LARGE_INTEGER perf_freq;
@@ -804,91 +906,44 @@ int SDL_main( int argc, char *argv[] )
 			LARGE_INTEGER perf_count0;
 			QueryPerformanceCounter(&perf_count0);
 #endif
-
-			// control all entities
-			Controller::ControlAll(sim_step);
-
-#ifdef PRINT_PERFORMANCE_DETAILS
-			LARGE_INTEGER perf_count1;
-			QueryPerformanceCounter(&perf_count1);
-
-			DebugPrint("C=%d ", 1000000 * (perf_count1.QuadPart - perf_count0.QuadPart) / perf_freq.QuadPart);
+			// clear the screen
+			glClear(
+				GL_COLOR_BUFFER_BIT
+#ifdef ENABLE_DEPTH_BUFFER
+				| GL_DEPTH_BUFFER_BIT
 #endif
+				);
 
-			// SIMULATION PHASE
-			// (generate forces)
-			Simulatable::SimulateAll(sim_step);
+			// render all entities
+			// (send interpolation ratio and offset from simulation time)
+			Renderable::RenderAll(sim_timer, sim_step);
 
-#ifdef PRINT_PERFORMANCE_DETAILS
-			LARGE_INTEGER perf_count2;
-			QueryPerformanceCounter(&perf_count2);
+			// reset camera transform
+			glPopMatrix();
 
-			DebugPrint("S=%d ", 1000000 * (perf_count2.QuadPart - perf_count1.QuadPart) / perf_freq.QuadPart);
-#endif
-
-			// COLLISION PHASE
-			// (apply forces and update positions)
-			Collidable::CollideAll(sim_step);
-
-#ifdef PRINT_PERFORMANCE_DETAILS
-			LARGE_INTEGER perf_count3;
-			QueryPerformanceCounter(&perf_count3);
-
-			DebugPrint("P=%d ", 1000000 * (perf_count3.QuadPart - perf_count2.QuadPart) / perf_freq.QuadPart);
-#endif
-
-			// UPDATE PHASE
-			// (use updated positions)
-			Updatable::UpdateAll(sim_step);
-
-			// step inputs for next turn
-			input.Step();
-
-			// advance the turn counter
-			++sim_turn;
-			Renderable::SetTurn(sim_turn);
+			// if performing motion blur...
+			if (RENDER_MOTIONBLUR > 1)
+			{
+				// accumulate the image
+				glAccum(blur ? GL_ACCUM : GL_LOAD, 1);
+			}
 		}
 
-#ifdef PRINT_SIMULATION_TIMER
-		DebugPrint("delta=%d ticks=%d sim_t=%f\n", delta, ticks, sim_timer);
-#endif
+		// if performing motion blur...
+		if (RENDER_MOTIONBLUR > 1)
+		{
+			// return the accumulated image
+			glAccum(GL_RETURN, 1.0f / float(RENDER_MOTIONBLUR));
+		}
 
-		// RENDERING PHASE
+		// switch blend mode
+		glPushAttrib(GL_COLOR_BUFFER_BIT);
+		glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
 
-#ifdef PRINT_PERFORMANCE_DETAILS
-		LARGE_INTEGER perf_freq;
-		QueryPerformanceFrequency(&perf_freq);
-
-		LARGE_INTEGER perf_count0;
-		QueryPerformanceCounter(&perf_count0);
-#endif
-		// clear the screen
-		glClear(
-			GL_COLOR_BUFFER_BIT
-#ifdef ENABLE_DEPTH_BUFFER
-			| GL_DEPTH_BUFFER_BIT
-#endif
-			);
 
 		// for each player...
 		for (Database::Typed<Player *>::Iterator itor(&Database::player); itor.IsValid(); ++itor)
 		{
-			// get the entity
-			Entity *entity = Database::entity.Get(itor.GetKey());
-
-			// track player position
-			trackpos = entity->GetInterpolatedPosition(sim_timer);
-
-			// if applying view aim
-			if (VIEW_AIM)
-			{
-				if (Database::ship.Get(itor.GetKey()))
-					trackaim += VIEW_AIM_FILTER * delta * (itor.GetValue()->mAim - trackaim);
-				else
-					trackaim -= VIEW_AIM_FILTER * delta * trackaim;
-				trackpos += trackaim * VIEW_AIM;
-			}
-
 			// draw player health (HACK)
 			Damagable *damagable = Database::damagable.Get(itor.GetKey());
 			if (damagable)
@@ -935,18 +990,8 @@ int SDL_main( int argc, char *argv[] )
 			}
 		}
 
-		// push camera transform
-		glPushMatrix();
-
-		// set camera to track position
-		glTranslatef( -trackpos.x, -trackpos.y, 0 );
-
-		// render all entities
-		// (send interpolation ratio and offset from simulation time)
-		Renderable::RenderAll(sim_timer, sim_step);
-
-		// reset camera transform
-		glPopMatrix();
+		// restore blend mode
+		glPopAttrib();
 
 		/* Render our console */
 		OGLCONSOLE_Draw();
