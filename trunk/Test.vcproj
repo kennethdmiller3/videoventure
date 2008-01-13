@@ -262,10 +262,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\Source\Sprite.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\Source\stdafx.cpp"
 				>
 				<FileConfiguration
@@ -397,10 +393,6 @@
 			</File>
 			<File
 				RelativePath=".\Source\Sphere2.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Source\Sprite.h"
 				>
 			</File>
 			<File

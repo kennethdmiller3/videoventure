@@ -7,4 +7,5 @@ extern void ExecuteDrawItems(const unsigned int buffer[], size_t count, float pa
 namespace Database
 {
 	extern Typed<GLuint> drawlist;
+	extern Typed<GLuint> texture;
 }

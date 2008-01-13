@@ -356,6 +356,11 @@ void ProcessTemplateItems(const TiXmlElement *element)
 	// inherit parent components
 	Database::Inherit(template_id, parent_id);
 
+	// set name
+	std::string &namebuf = Database::name.Open(template_id);
+	namebuf = name;
+	Database::name.Close(template_id);
+
 	// for each child element...
 	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
@@ -379,6 +384,11 @@ void ProcessEntityItems(const TiXmlElement *element)
 
 	// inherit components from template
 //	Database::Inherit(entity_id, parent_id);
+
+	// set name
+	std::string &namebuf = Database::name.Open(entity_id);
+	namebuf = name;
+	Database::name.Close(entity_id);
 	
 	// set parent
 	Database::parent.Put(entity_id, parent_id);
@@ -464,6 +474,134 @@ static void ProcessWorldItems(const TiXmlElement *element)
 
 				// finish the draw list
 				glEndList();
+			}
+			break;
+
+		case 0x3c6468f4 /* "texture" */:
+			if (const char *file = child->Attribute("file"))
+			{
+				if (SDL_Surface *surface = SDL_LoadBMP(file))
+				{ 	 
+					// check if the width is a power of 2
+					if ((surface->w & (surface->w - 1)) != 0)
+					{
+						DebugPrint("warning: %s width %d is not a power of 2\n", file, surface->w);
+					}
+					
+					// check if the height is a power of 2
+					if ((surface->h & (surface->h - 1)) != 0)
+					{
+						DebugPrint("warning: %s height %d is not a power of 2\n", file, surface->h);
+					}
+				 
+					// get the number of channels in the SDL surface
+					GLenum texture_format;
+					GLint color_size = surface->format->BytesPerPixel;
+					if (color_size == 4)     // contains an alpha channel
+					{
+						if (surface->format->Rmask == 0x000000ff)
+							texture_format = GL_RGBA;
+						else
+							texture_format = GL_BGRA;
+					}
+					else if (color_size == 3)     // no alpha channel
+					{
+						if (surface->format->Rmask == 0x000000ff)
+							texture_format = GL_RGB;
+						else
+							texture_format = GL_BGR;
+					}
+					else
+					{
+						DebugPrint("warning: %s is not truecolor\n", file);
+						SDL_FreeSurface( surface );
+						break;
+					}
+
+					// generate a texture object handle
+					GLuint texture;
+					glGenTextures( 1, &texture );
+
+					// get the list name
+					const char *name = child->Attribute("name");
+					if (name)
+					{
+						// register the draw list
+						Database::texture.Put(Hash(name), texture);
+					}
+
+					// save texture state
+					glPushAttrib(GL_TEXTURE_BIT);
+
+					// bind the texture object
+					glBindTexture(GL_TEXTURE_2D, texture);
+
+					// mode
+					GLint mode;
+
+					// set blend mode
+					switch (Hash(child->Attribute("mode")))
+					{
+					default:
+					case 0x818f75ae /* "modulate" */:	mode = GL_MODULATE; break;
+					case 0xde15f6ae /* "decal" */:		mode = GL_DECAL; break;
+					case 0x0bbc40d8 /* "blend" */:		mode = GL_BLEND; break;
+					case 0xa13884c3 /* "replace" */:	mode = GL_REPLACE; break;
+					}
+					glTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, mode );
+
+					// set minification filter
+					switch (Hash(child->Attribute("minfilter")))
+					{
+					default:
+					case 0xc42bfa19 /* "nearest" */:			mode = GL_NEAREST; break;
+					case 0xd00594c0 /* "linear" */:				mode = GL_LINEAR; break;
+					case 0x70bf16c1 /* "nearestmipnearest" */:	mode = GL_NEAREST_MIPMAP_NEAREST; break;
+					case 0xc81505e8 /* "linearmipnearest" */:	mode = GL_LINEAR_MIPMAP_NEAREST; break;
+					case 0x95d62f98 /* "nearestmiplinear" */:	mode = GL_NEAREST_MIPMAP_LINEAR; break;
+					case 0x1274a447 /* "linearmiplinear" */:	mode = GL_LINEAR_MIPMAP_LINEAR; break;
+					}
+					glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, mode );
+
+					// set magnification filter
+					switch (Hash(child->Attribute("magfilter")))
+					{
+					default:
+					case 0xc42bfa19 /* "nearest" */:			mode = GL_NEAREST; break;
+					case 0xd00594c0 /* "linear" */:				mode = GL_LINEAR; break;
+					}
+				    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, mode );
+
+					// set s wrapping
+					switch (Hash(child->Attribute("wraps")))
+					{
+					default:
+					case 0xa82efcbc /* "clamp" */:				mode = GL_CLAMP; break;
+					case 0xd99ba82a /* "repeat" */:				mode = GL_REPEAT; break;
+					}
+					glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, mode );
+
+					// set t wrapping
+					switch (Hash(child->Attribute("wrapt")))
+					{
+					default:
+					case 0xa82efcbc /* "clamp" */:				mode = GL_CLAMP; break;
+					case 0xd99ba82a /* "repeat" */:				mode = GL_REPEAT; break;
+					}
+					glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, mode );
+
+					// set texture image data
+					glTexImage2D(
+						GL_TEXTURE_2D, 0, color_size, surface->w, surface->h, 0,
+						texture_format, GL_UNSIGNED_BYTE, surface->pixels
+						);
+
+					// restore texture state
+					glPopAttrib();
+
+					// free the surface
+					SDL_FreeSurface( surface );
+				}
 			}
 			break;
 
@@ -584,6 +722,59 @@ int ProcessCommand( unsigned int aCommand, char *aParam[] )
 
 	case 0x54822903 /* "outputdebug" */:
 		DEBUGPRINT_OUTPUTDEBUG = atoi(aParam[0]) != 0;
+		return 1;
+
+	case 0xa165ddb8 /* "database" */:
+		{
+			unsigned int id = Hash(aParam[0]);
+			Database::Untyped *db = Database::GetDatabases().Get(id);
+			if (db)
+			{
+				OGLCONSOLE_Output(console, "stride=%d shift=%d bits=%d limit=%d count=%d\n",
+					db->GetStride(), db->GetShift(), db->GetBits(), db->GetLimit(), db->GetCount());
+			}
+			else
+			{
+				OGLCONSOLE_Output(console, "database \"%s\" (0x%08x) not found\n", aParam[0], id);
+			}
+		}
+		return 1;
+
+	case 0xbdf0855a /* "find" */:
+		{
+			unsigned int id = Hash(aParam[0]);
+			Database::Untyped *db = Database::GetDatabases().Get(id);
+			if (db)
+			{
+				unsigned int key = Hash(aParam[1]);
+				if (const void *data = db->Find(key))
+				{
+					OGLCONSOLE_Output(console, "record \"%s\" (0x%08x) data=0x%p\n", aParam[1], key, data);
+				}
+				else
+				{
+					OGLCONSOLE_Output(console, "record \"%s\" (0x%08x) not found\n", aParam[1], key);
+				}
+			}
+			else
+			{
+				OGLCONSOLE_Output(console, "database \"%s\" (0x%08x) not found\n", aParam[0], id);
+			}
+		}
+		return 2;
+
+	case 0x0cfb5881 /* "list" */:
+		{
+			unsigned int id = Hash(aParam[0]);
+			Database::Untyped *db = Database::GetDatabases().Get(id);
+			if (db)
+			{
+				for (Database::Untyped::Iterator itor(db); itor.IsValid(); ++itor)
+				{
+					OGLCONSOLE_Output(console, "%d: name=\"%s\" key=0x%08x data=0x%p\n", itor.GetSlot(), Database::name.Get(itor.GetKey()).c_str(), itor.GetKey(), itor.GetValue());
+				}
+			}
+		}
 		return 1;
 
 	default:
