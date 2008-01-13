@@ -22,6 +22,9 @@ namespace Database
 		return databases;
 	}
 
+	// name database
+	Typed<std::string> name(0x8d39bde6 /* "name" */);
+
 	// parent identifier database
 	Typed<Key> parent(0xeacdfcfd /* "parent" */);
 

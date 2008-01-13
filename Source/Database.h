@@ -95,6 +95,27 @@ namespace Database
 
 		void Clear();
 
+		size_t GetStride(void)
+		{
+			return mStride;
+		}
+		size_t GetShift(void)
+		{
+			return mShift;
+		}
+		size_t GetBits(void)
+		{
+			return mBits;
+		}
+		size_t GetLimit(void)
+		{
+			return mLimit;
+		}
+		size_t GetCount(void)
+		{
+			return mCount;
+		}
+
 		const void *Find(Key aKey) const;
 		void Put(Key aKey, const void *aValue);
 		void *Open(Key aKey);
@@ -138,6 +159,12 @@ namespace Database
 			bool IsValid(void)
 			{
 				return mDatabase && mSlot >= 0 && mSlot < mDatabase->mCount;
+			}
+
+			// get the iterator slot
+			size_t GetSlot(void)
+			{
+				return mSlot;
 			}
 
 			// get the iterator key
@@ -265,6 +292,12 @@ namespace Database
 		void AddActivate(unsigned int aDatabaseId, Entry aActivate);
 		void AddDeactivate(unsigned int aDatabaseId, Entry aDeactivate);
 	}
+
+	// get database of databases
+	Typed<Untyped *> &GetDatabases();
+
+	// name database
+	extern Typed<std::string> name;
 
 	// parent identifier database
 	extern Typed<Key> parent;

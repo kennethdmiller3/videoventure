@@ -5,6 +5,7 @@
 namespace Database
 {
 	Typed<GLuint> drawlist(0xc98b019b /* "drawlist" */);
+	Typed<GLuint> texture(0x3c6468f4 /* "texture" */);
 
 	namespace Loader
 	{
@@ -410,7 +411,23 @@ void ProcessDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buf
 		}
 		break;
 
-	case 0x3c6468f4 /* "texture" */:
+	case 0x4dead571 /* "bindtexture" */:
+		{
+			const char *name = element->Attribute("name");
+			if (name)
+			{
+				GLuint texture = Database::texture.Get(Hash(name));
+				if (texture)
+				{
+					// bind the texture object
+					buffer.push_back(0x2ed38a3d /* "glEnable" */);
+					buffer.push_back(GL_TEXTURE_2D);
+					buffer.push_back(0x51956b0c /* "glBindTexture" */);
+					buffer.push_back(GL_TEXTURE_2D);
+					buffer.push_back(texture);
+				}
+			}
+		}
 		break;
 
 	case 0xbc9567c6 /* "points" */:
@@ -903,6 +920,19 @@ void ExecuteDrawItems(const unsigned int buffer[], size_t count, float param)
 	{
 		switch (*itor++)
 		{
+		case 0x2ed38a3d /* "glEnable" */:
+			glEnable(*itor++);
+			break;
+
+		case 0xbc4dc976 /* "glDisable" */:
+			glDisable(*itor++);
+			break;
+
+		case 0x51956b0c /* "glBindTexture" */:
+			glBindTexture(itor[0], itor[1]);
+			itor += 2;
+			break;
+
 		case 0xf6604733 /* "glPushMatrix" */:
 			glPushMatrix();
 			break;
