@@ -93,6 +93,8 @@ LinkTemplate::LinkTemplate(void)
 : mOffset(Vector2(1, 0), Vector2(0, 1), Vector2(0, 0))
 , mSub(0)
 , mSecondary(0)
+, mUpdateAngle(true)
+, mUpdatePosition(true)
 {
 }
 
@@ -109,6 +111,14 @@ bool LinkTemplate::Configure(const TiXmlElement *element)
 		mSub = Hash(name);
 	if (const char *secondary = element->Attribute("secondary"))
 		mSecondary = Hash(secondary);
+
+	int updateangle = mUpdateAngle;
+	element->QueryIntAttribute("updateangle", &updateangle);
+	mUpdateAngle = updateangle != 0;
+
+	int updateposition = mUpdatePosition;
+	element->QueryIntAttribute("updateposition", &updateposition);
+	mUpdatePosition = updateposition != 0;
 
 	// process child elements
 	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
@@ -159,6 +169,13 @@ Link::Link(const LinkTemplate &aTemplate, unsigned int aId)
 		if (const unsigned int *aOwnerId = Database::owner.Find(aId))
 			Database::owner.Put(mSecondary, *aOwnerId);
 
+		// if not updating angle or position...
+		if (!aTemplate.mUpdateAngle && !aTemplate.mUpdatePosition)
+		{
+			// disable udpate
+			Deactivate();
+		}
+
 		// if linking two collidables...
 		if (Database::collidabletemplate.Find(aId) &&
 			Database::collidabletemplate.Find(mSecondary))
@@ -207,7 +224,14 @@ void Link::Update(float aStep)
 		// update secondary transform
 		Matrix2 transform(link.mOffset * entity->GetTransform());
 		secondary->Step();
-		secondary->SetTransform(transform);
-		secondary->SetVelocity(entity->GetVelocity());
+		if (link.mUpdateAngle)
+		{
+			secondary->SetAngle(transform.Angle());
+		}
+		if (link.mUpdatePosition)
+		{
+			secondary->SetPosition(transform.p);
+			secondary->SetVelocity(entity->GetVelocity());
+		}
 	}
 }

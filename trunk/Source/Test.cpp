@@ -218,6 +218,9 @@ bool init()
 	if( SDL_SetVideoMode( SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_DEPTH, flags ) == NULL )
 		return false;
 
+	// set window title
+	SDL_WM_SetCaption( "Shmup!", NULL );
+
     /* Initialize OGLCONSOLE */                                                                      
     console = OGLCONSOLE_Create();                                                                             
     OGLCONSOLE_EnterKey(cmdCB);                                                                      
@@ -225,9 +228,6 @@ bool init()
 	// initialize OpenGL
 	if( !init_GL() )
 		return false;    
-
-	// set window title
-	SDL_WM_SetCaption( "OpenGL Test", NULL );
 
 #ifdef TRACE_OPENGL_ATTRIBUTES
 	int value;
@@ -391,27 +391,8 @@ void ProcessEntityItems(const TiXmlElement *element)
 		if (entity->Configure(child))
 			continue;
 
-		switch (Hash(child->Value()))
-		{
-		case 0xe063cbaa /* "gunner" */:
-			{
-				Gunner *gunner = Database::gunner.Get(entity_id);
-				if (!gunner)
-				{
-					gunner = new Gunner(entity_id);
-					Database::gunner.Put(entity_id, gunner);
-				}
-				gunner->Configure(child);
-			}
-			break;
-
-		default:
-			{
-				// process the template item
-				ProcessTemplateItem(child, entity_id);
-			}
-			break;
-		}
+		// process the template item
+		ProcessTemplateItem(child, entity_id);
 	}
 
 	// activate the instance

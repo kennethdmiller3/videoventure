@@ -14,6 +14,10 @@ public:
 	// secondary
 	unsigned int mSecondary;
 
+	// update flags
+	bool mUpdateAngle;
+	bool mUpdatePosition;
+
 public:
 	LinkTemplate(void);
 	~LinkTemplate(void);
