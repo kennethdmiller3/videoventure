@@ -79,6 +79,8 @@ namespace Database
 
 ExplosionTemplate::ExplosionTemplate(void)
 : mLifeSpan(0.25f)
+, mDamage(0.0f)
+, mRadius(0.0f)
 , mSpawnOnExpire(0)
 {
 }
