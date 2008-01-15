@@ -1097,6 +1097,7 @@ int SDL_main( int argc, char *argv[] )
 			LARGE_INTEGER perf_count0;
 			QueryPerformanceCounter(&perf_count0);
 #endif
+
 			// clear the screen
 			glClear(
 				GL_COLOR_BUFFER_BIT
@@ -1116,7 +1117,7 @@ int SDL_main( int argc, char *argv[] )
 			if (RENDER_MOTIONBLUR > 1)
 			{
 				// accumulate the image
-				glAccum(blur ? GL_ACCUM : GL_LOAD, 1);
+				glAccum(blur ? GL_ACCUM : GL_LOAD, 1.0f / float(RENDER_MOTIONBLUR));
 			}
 		}
 
@@ -1124,7 +1125,7 @@ int SDL_main( int argc, char *argv[] )
 		if (RENDER_MOTIONBLUR > 1)
 		{
 			// return the accumulated image
-			glAccum(GL_RETURN, 1.0f / float(RENDER_MOTIONBLUR));
+			glAccum(GL_RETURN, 1);
 		}
 
 		// switch blend mode

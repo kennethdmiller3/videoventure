@@ -1,6 +1,7 @@
 #include "StdAfx.h"
 #include "Collidable.h"
 #include "Entity.h"
+#include "Link.h"
 
 #ifdef USE_POOL_ALLOCATOR
 #include <boost/pool/pool.hpp>
@@ -116,7 +117,7 @@ bool CollidableTemplate::ProcessShapeItem(const TiXmlElement *element, b2ShapeDe
 		{
 			int category = 0;
 			element->QueryIntAttribute("value", &category);
-			shape.categoryBits = 1<<category;
+			shape.categoryBits = (category >= 0) ? (1<<category) : 0;
 		}
 		return true;
 
@@ -337,14 +338,17 @@ bool CollidableTemplate::ProcessRevoluteJointItem(const TiXmlElement *element, b
 		return true;
 
 	case 0x32dad934 /* "limit" */:
-		element->QueryFloatAttribute("lower", &joint.lowerAngle);
-		element->QueryFloatAttribute("upper", &joint.upperAngle);
+		if (element->QueryFloatAttribute("lower", &joint.lowerAngle) == TIXML_SUCCESS)
+			joint.lowerAngle *= float(M_PI) / 180.0f;
+		if (element->QueryFloatAttribute("upper", &joint.upperAngle) == TIXML_SUCCESS)
+			joint.upperAngle *= float(M_PI) / 180.0f;
 		joint.enableLimit = true;
 		return true;
 
 	case 0xcaf08472 /* "motor" */:
 		element->QueryFloatAttribute("torque", &joint.motorTorque);
-		element->QueryFloatAttribute("speed", &joint.motorSpeed);
+		if (element->QueryFloatAttribute("speed", &joint.motorSpeed) == TIXML_SUCCESS)
+			joint.motorSpeed *= float(M_PI) / 180.0f;
 		joint.enableMotor = true;
 		return true;
 
@@ -626,11 +630,13 @@ Collidable::~Collidable(void)
 bool Collidable::SetupJointDef(b2JointDef &joint)
 {
 	CollidableTemplate::JointTemplate *data = static_cast<CollidableTemplate::JointTemplate *>(joint.userData);
+	unsigned int id1 = data->name1 == 0xe3736e9a /* "backlink" */ ? Database::backlink.Get(id) : data->name1;
 	joint.userData = NULL;
-	joint.body1 = Database::collidablebody.Get(data->name1 ? data->name1 : id).Get(data->body1);
+	joint.body1 = Database::collidablebody.Get(id1 ? id1 : id).Get(data->body1);
 	if (!joint.body1)
 		return false;
-	joint.body2 = Database::collidablebody.Get(data->name2 ? data->name2 : id).Get(data->body2);
+	unsigned int id2 = data->name2 == 0xe3736e9a /* "backlink" */ ? Database::backlink.Get(id) : data->name2;
+	joint.body2 = Database::collidablebody.Get(id2 ? id2 : id).Get(data->body2);
 	if (!joint.body2)
 		return false;
 	return true;
@@ -654,7 +660,7 @@ void Collidable::AddToWorld(void)
 			def.rotation = transform.Angle();
 			def.position = transform.p;
 			def.linearVelocity = entity->GetVelocity();
-			def.angularVelocity = 0.0f;
+			def.angularVelocity = entity->GetOmega();
 		}
 
 		// create the body
@@ -792,6 +798,7 @@ void Collidable::CollideAll(float aStep)
 					entity->Step();
 					entity->SetTransform(body->GetRotation(), Vector2(body->GetOriginPosition()));
 					entity->SetVelocity(Vector2(body->GetLinearVelocity()));
+					entity->SetOmega(body->GetAngularVelocity());
 				}
 			}
 		}

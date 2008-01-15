@@ -28,7 +28,8 @@ protected:
 	Vector2 posit_1;
 
 	// current velocity
-	Vector2 vel;
+	float omega;
+	Vector2 veloc;
 
 public:
 #ifdef USE_POOL_ALLOCATOR
@@ -114,6 +115,18 @@ public:
 		return angle_0 + angle_d * aRatio;
 	}
 
+	// set omega
+	void SetOmega(float aOmega)
+	{
+		omega = aOmega;
+	}
+
+	// get omega
+	const float GetOmega() const
+	{
+		return omega;
+	}
+
 	// set position
 	void SetPosition(const Vector2 &aPos)
 	{
@@ -142,13 +155,13 @@ public:
 	// set velocity
 	void SetVelocity(const Vector2 &aVel)
 	{
-		vel = aVel;
+		veloc = aVel;
 	}
 
 	// get velocity
 	const Vector2 &GetVelocity() const
 	{
-		return vel;
+		return veloc;
 	}
 
 	// configure

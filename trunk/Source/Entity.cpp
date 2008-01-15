@@ -30,7 +30,8 @@ Entity::Entity(unsigned int id)
 : id(id)
 , angle_0(0), posit_0(0, 0)
 , angle_1(0), posit_1(0, 0)
-, vel(0, 0)
+, veloc(0, 0)
+, omega(0)
 {
 	if (id > 0)
 		entry = sAll.insert(sAll.end(), this);
@@ -48,23 +49,18 @@ bool Entity::Configure(const TiXmlElement *element)
 	const char *label = element->Value();
 	switch (Hash(label))
 	{
-	case 0x21ac415f /* "rotation" */:
-		{
-		}
-		return true;
-
 	case 0x934f4e0a /* "position" */:
-		{
-			element->QueryFloatAttribute("x", &posit_1.x);
-			element->QueryFloatAttribute("y", &posit_1.y);
-			if (element->QueryFloatAttribute("angle", &angle_1) == TIXML_SUCCESS)
-				angle_1 *= float(M_PI) / 180.0f;
-		}
+		element->QueryFloatAttribute("x", &posit_1.x);
+		element->QueryFloatAttribute("y", &posit_1.y);
+		if (element->QueryFloatAttribute("angle", &angle_1) == TIXML_SUCCESS)
+			angle_1 *= float(M_PI) / 180.0f;
 		return true;
 
 	case 0x32741c32 /* "velocity" */:
-		element->QueryFloatAttribute("x", &vel.x);
-		element->QueryFloatAttribute("y", &vel.y);
+		element->QueryFloatAttribute("x", &veloc.x);
+		element->QueryFloatAttribute("y", &veloc.y);
+		if (element->QueryFloatAttribute("angle", &omega) == TIXML_SUCCESS)
+			omega *= float(M_PI) / 180.0f;
 		return true;
 
 	default:

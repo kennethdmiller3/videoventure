@@ -158,4 +158,5 @@ void Gunner::Simulate(float aStep)
 	entity->SetPosition(mTrackPos.front());
 	entity->SetAngle(owner->GetAngle());
 	entity->SetVelocity(owner->GetVelocity());	// <-- HACK!
+	entity->SetOmega(owner->GetOmega());
 }
