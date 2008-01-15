@@ -211,7 +211,7 @@ void Weapon::Update(float aStep)
 				Matrix2 transform(weapon.mOffset * entity->GetInterpolatedTransform(mTimer / aStep));
 				Vector2 velocity(transform.Rotate(weapon.mInherit * transform.Unrotate(entity->GetVelocity()) + weapon.mVelocity));
 				unsigned int ordId = Database::Instantiate(weapon.mOrdnance,
-					transform.Angle(), transform.p, velocity);
+					transform.Angle(), transform.p, velocity, 0);
 
 				// set fractional turn
 				if (Renderable *renderable = Database::renderable.Get(ordId))

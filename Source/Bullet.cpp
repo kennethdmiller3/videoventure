@@ -153,7 +153,7 @@ void Bullet::Simulate(float aStep)
 			if (entity)
 			{
 				// spawn template at entity location
-				Database::Instantiate(bullet.mSpawnOnExpire, entity->GetAngle(), entity->GetPosition(), entity->GetVelocity());
+				Database::Instantiate(bullet.mSpawnOnExpire, entity->GetAngle(), entity->GetPosition(), entity->GetVelocity(), entity->GetOmega());
 			}
 #endif
 		}
@@ -232,7 +232,7 @@ void Bullet::Collide(unsigned int aHitId, float aTime, b2Manifold aManifold[], i
 		b2Vec2 position(aManifold[0].points[0].position - aManifold[0].points[0].separation * aManifold[0].normal);
 
 		// spawn the template
-		unsigned int spawnId = Database::Instantiate(bullet.mSpawnOnImpact, 0, Vector2(position), Vector2(0, 0));
+		unsigned int spawnId = Database::Instantiate(bullet.mSpawnOnImpact, 0, Vector2(position), Vector2(0, 0), 0);
 
 		// set fractional turn
 		if (Renderable *renderable = Database::renderable.Get(spawnId))
@@ -256,7 +256,7 @@ void Bullet::Collide(unsigned int aHitId, float aTime, b2Manifold aManifold[], i
 			if (entity)
 			{
 				// instantiate the template
-				Database::Instantiate(id, bullet.mSpawnOnDeath, entity->GetAngle(), entity->GetPosition(), entity->GetVelocity());
+				Database::Instantiate(id, bullet.mSpawnOnDeath, entity->GetAngle(), entity->GetPosition(), entity->GetVelocity(), entity->GetOmega());
 			}
 #endif
 		}

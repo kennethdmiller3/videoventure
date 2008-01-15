@@ -433,7 +433,7 @@ namespace Database
 	std::deque<unsigned int> deletequeue;
 
 	// instantiate a template
-	void Instantiate(unsigned int aInstanceId, unsigned int aTemplateId, float aAngle, Vector2 aPosition, Vector2 aVelocity)
+	void Instantiate(unsigned int aInstanceId, unsigned int aTemplateId, float aAngle, Vector2 aPosition, Vector2 aVelocity, float aOmega)
 	{
 		// inherit components from template
 //		Inherit(aInstanceId, aTemplateId);
@@ -448,6 +448,7 @@ namespace Database
 		Entity *entity = new Entity(aInstanceId);
 		entity->SetTransform(aAngle, aPosition);
 		entity->SetVelocity(aVelocity);
+		entity->SetOmega(aOmega);
 		entity->Step();
 		Database::entity.Put(aInstanceId, entity);
 
@@ -456,14 +457,14 @@ namespace Database
 	}
 
 	// instantiate a template (automatically-generated identifier)
-	unsigned int Instantiate(unsigned int aTemplateId, float aAngle, Vector2 aPosition, Vector2 aVelocity)
+	unsigned int Instantiate(unsigned int aTemplateId, float aAngle, Vector2 aPosition, Vector2 aVelocity, float aOmega)
 	{
 		// generate an instance identifier
 		const unsigned int aInstanceTag = Entity::TakeId();
 		const unsigned int aInstanceId = Hash(&aInstanceTag, sizeof(aInstanceTag), aTemplateId);
 
 		// instantiate the template
-		Instantiate(aInstanceId, aTemplateId, aAngle, aPosition, aVelocity);
+		Instantiate(aInstanceId, aTemplateId, aAngle, aPosition, aVelocity, aOmega);
 
 		// return the instance identifier
 		return aInstanceId;

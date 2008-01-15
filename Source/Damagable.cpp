@@ -146,7 +146,7 @@ void Damagable::Damage(unsigned int aSourceId, float aDamage)
 			if (entity)
 			{
 				// instantiate the template
-				Database::Instantiate(damagable.mSpawnOnDeath, entity->GetAngle(), entity->GetPosition(), entity->GetVelocity());
+				Database::Instantiate(damagable.mSpawnOnDeath, entity->GetAngle(), entity->GetPosition(), entity->GetVelocity(), entity->GetOmega());
 			}
 #endif
 		}

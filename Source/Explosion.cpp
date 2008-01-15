@@ -212,7 +212,7 @@ void Explosion::Simulate(float aStep)
 			if (entity)
 			{
 				// spawn template at the entity location
-				Database::Instantiate(explosion.mSpawnOnExpire, entity->GetAngle(), entity->GetPosition(), entity->GetVelocity());
+				Database::Instantiate(explosion.mSpawnOnExpire, entity->GetAngle(), entity->GetPosition(), entity->GetVelocity(), entity->GetOmega());
 			}
 #endif
 		}
