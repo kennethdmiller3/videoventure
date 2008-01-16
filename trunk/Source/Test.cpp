@@ -172,8 +172,8 @@ bool init_GL()
 	// set base modelview matrix
 	glMatrixMode( GL_MODELVIEW );
 	glLoadIdentity();
-	glScalef( -1.0f / VIEW_SIZE, -1.0f / VIEW_SIZE, -1.0f );
-	glTranslatef( 0.0f, 0.0f, 1.0f );
+	glScalef( -1.0f / VIEW_SIZE, -1.0f / VIEW_SIZE, -1.0f / 256.0f );
+	glTranslatef( 0.0f, 0.0f, 256.0f );
 
 	// return true if no errors
 	return glGetError() == GL_NO_ERROR;
@@ -1132,7 +1132,6 @@ int SDL_main( int argc, char *argv[] )
 		glPushAttrib(GL_COLOR_BUFFER_BIT);
 		glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
 
-
 		// for each player...
 		for (Database::Typed<Player *>::Iterator itor(&Database::player); itor.IsValid(); ++itor)
 		{
@@ -1144,13 +1143,16 @@ int SDL_main( int argc, char *argv[] )
 				const DamagableTemplate &damagabletemplate = Database::damagabletemplate.Get(itor.GetKey());
 				float health = damagable->GetHealth() / damagabletemplate.mHealth;
 
-				// push camera transform
+				// push projection transform
+				glMatrixMode(GL_PROJECTION);
 				glPushMatrix();
+				glLoadIdentity();
+				glOrtho(0, 640, 480, 0, -1, 1);
 
 				// use 640x480 screen coordinates
+				glMatrixMode(GL_MODELVIEW);
+				glPushMatrix();
 				glLoadIdentity();
-				glScalef( 1.0f / 640, 1.0f / 640, -1.0f );
-				glTranslatef(-0.5f*640, -0.5f*640*SCREEN_HEIGHT/SCREEN_WIDTH, 1.0f);
 
 				glBegin(GL_QUADS);
 
@@ -1178,6 +1180,9 @@ int SDL_main( int argc, char *argv[] )
 				glEnd();
 
 				// reset camera transform
+				glMatrixMode(GL_PROJECTION);
+				glPopMatrix();
+				glMatrixMode(GL_MODELVIEW);
 				glPopMatrix();
 			}
 		}

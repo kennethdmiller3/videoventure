@@ -60,7 +60,7 @@ GLuint CreateCloudDrawList(int aCount, float aMean, float aVariance)
 		float x = ARENA_X_MIN + rand_float() * (ARENA_X_MAX - ARENA_X_MIN);
 		float y = ARENA_Y_MIN + rand_float() * (ARENA_Y_MAX - ARENA_Y_MIN);
 #ifdef DRAW_FRONT_TO_BACK
-		float z = 1.0f + i * (3.0f / aCount);
+		float z = 256.0f + i * (768.0f / aCount);
 #else
 		float z = 1.0f + (aCount - 1 - i) * (3.0f / aCount);
 #endif
