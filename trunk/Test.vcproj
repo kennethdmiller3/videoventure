@@ -286,10 +286,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\Source\Timer.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\Source\Updatable.cpp"
 				>
 			</File>
@@ -401,10 +397,6 @@
 			</File>
 			<File
 				RelativePath=".\Source\targetver.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Source\Timer.h"
 				>
 			</File>
 			<File

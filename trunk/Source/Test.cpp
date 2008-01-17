@@ -3,7 +3,6 @@
 
 // includes
 #include "oglconsole.h"                                                                              
-#include "Timer.h"
 #include "Cloud.h"
 #include "Player.h"
 #include "Aimer.h"
@@ -890,20 +889,17 @@ int SDL_main( int argc, char *argv[] )
 		}
 	}
 
-    // timer timer
-    Timer timer;
-    
-    // start timer
-    timer.start();
-
 	// last ticks
-	int ticks = timer.get_ticks();
+	unsigned int ticks = SDL_GetTicks();
 
 	// simulation timer
 	const float sim_rate = float(SIMULATION_RATE);
 	const float sim_step = 1.0f / sim_rate;
-	float sim_timer = 1.0f;
+	float sim_turns = 1.0f;
 	unsigned int sim_turn = 0;
+
+	// pause state
+	bool paused = false;
 
 	DebugPrint("Simulating at %dHz (x%f)\n", SIMULATION_RATE, TIME_SCALE);
 
@@ -936,10 +932,7 @@ int SDL_main( int argc, char *argv[] )
 				}
 				else if (event.key.keysym.sym == SDLK_PAUSE)
 				{
-					if (timer.is_paused())
-						timer.unpause();
-					else
-						timer.pause();
+					paused = !paused;
 				}
 				break;
 			case SDL_KEYUP:
@@ -971,7 +964,7 @@ int SDL_main( int argc, char *argv[] )
 		}
 
 		// get loop time in ticks
-		int delta = timer.get_ticks() - ticks;
+		unsigned int delta = SDL_GetTicks() - ticks;
 		ticks += delta;
 
 		// clamp ticks to something sensible
@@ -980,22 +973,42 @@ int SDL_main( int argc, char *argv[] )
 			delta = 100;
 
 		// delta time
-		float delta_time = delta * TIME_SCALE / 1000.0f / RENDER_MOTIONBLUR;
+		float delta_time, delta_turns;
 
-		// delta step
-		float delta_step = delta_time * sim_rate;
+		if (paused)
+		{
+			// advance 1/60th of a second
+			delta_time = TIME_SCALE / 60.0f / RENDER_MOTIONBLUR;
+
+			// turns to advance per step
+			delta_turns = delta_time * sim_rate;
+
+			// set turn counter to almost reach a new turn
+			sim_turns = 1.0f - FLT_EPSILON - delta_turns * RENDER_MOTIONBLUR;
+
+			// freeze time
+			delta_time = 0.0f;
+		}
+		else
+		{
+			// time to advance per step
+			delta_time = delta * TIME_SCALE / 1000.0f / RENDER_MOTIONBLUR;
+
+			// turns to advance per step
+			delta_turns = delta_time * sim_rate;
+		}
 
 		// for each motion-blur step
 		for (int blur = 0; blur < RENDER_MOTIONBLUR; ++blur)
 		{
 			// advance the sim timer
-			sim_timer += delta_step;
+			sim_turns += delta_turns;
 
 			// while simulation turns to run...
-			while (sim_timer >= 1.0f)
+			while (sim_turns >= 1.0f)
 			{
 				// deduct a turn
-				sim_timer -= 1.0f;
+				sim_turns -= 1.0f;
 				
 				// update database
 				Database::Update();
@@ -1059,7 +1072,7 @@ int SDL_main( int argc, char *argv[] )
 			}
 
 #ifdef PRINT_SIMULATION_TIMER
-			DebugPrint("delta=%d ticks=%d sim_t=%f\n", delta, ticks, sim_timer);
+			DebugPrint("delta=%d ticks=%d sim_t=%f\n", delta, ticks, sim_turns);
 #endif
 
 			// RENDERING PHASE
@@ -1071,7 +1084,7 @@ int SDL_main( int argc, char *argv[] )
 				Entity *entity = Database::entity.Get(itor.GetKey());
 
 				// track player position
-				trackpos = entity->GetInterpolatedPosition(sim_timer);
+				trackpos = entity->GetInterpolatedPosition(sim_turns);
 
 				// if applying view aim
 				if (VIEW_AIM)
@@ -1108,7 +1121,7 @@ int SDL_main( int argc, char *argv[] )
 
 			// render all entities
 			// (send interpolation ratio and offset from simulation time)
-			Renderable::RenderAll(sim_timer, sim_step);
+			Renderable::RenderAll(sim_turns, sim_step);
 
 			// reset camera transform
 			glPopMatrix();

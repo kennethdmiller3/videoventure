@@ -952,6 +952,57 @@
 	</template>
 
 
+	<!-- enemy pulse bullet -->
+
+	<template name="enemypulsebullet">
+		<collidable>
+			<body name="main">
+				<fast value="1"/>
+				<circle radius="1">
+					<friction value="0"/>
+					<restitution value="1"/>
+					<density value="0.2"/>
+					<category value="4"/>
+					<mask bit2="0" bit3="0" bit4="0"/>
+				</circle>
+			</body>
+		</collidable>
+		<renderable>
+			<drawlist>
+				<color r="1.0" g="1.0" b="1.0" a="1.0"/>
+				<pushmatrix>
+					<scale x="1.5" y="1.5"/>
+					<calllist name="diamond"/>
+				</pushmatrix>
+				<color r="1.0" g="1.0" b="1.0" a="0.5"/>
+				<pushmatrix>
+					<scale x="2.0" y="2.0"/>
+					<calllist name="diamond"/>
+				</pushmatrix>
+				<color r="1.0" g="1.0" b="1.0" a="0.25"/>
+				<pushmatrix>
+					<scale x="2.5" y="2.5"/>
+					<calllist name="diamond"/>
+				</pushmatrix>
+			</drawlist>
+		</renderable>
+		<bullet life="1" damage="1" spawnonimpact="enemybulletexplosion"/>
+	</template>
+
+
+	<!-- enemy pulse weapon -->
+
+	<template name="enemypulseweapon">
+		<weapon>
+			<velocity x="0" y="180"/>
+			<ordnance name="enemypulsebullet"/>
+			<shot delay="0.5"/>
+		</weapon>
+	</template>
+	
+	
+	<!-- enemy missile -->
+
 	<template name="enemymissiletrail">
 		<explosion life="1.0"/>
 		<renderable>
@@ -1765,36 +1816,36 @@
 					<pushmatrix>
 						<scale>
 							<linear time="0.1">
-								<start x="0.5" y="2.5"/>
-								<end   x="0.5" y="0.5"/>
+								<start x="1.0" y="3.0"/>
+								<end   x="1.0" y="1.0"/>
 							</linear>
 							<linear time="0.1">
-								<start x="0.5" y="0.5"/>
-								<end   x="0.5" y="2.5"/>
+								<start x="1.0" y="1.0"/>
+								<end   x="1.0" y="3.0"/>
 							</linear>
 							<linear time="0.1">
-								<start x="0.5" y="2.5"/>
-								<end   x="0.5" y="0.5"/>
+								<start x="1.0" y="3.0"/>
+								<end   x="1.0" y="1.0"/>
 							</linear>
 							<linear time="0.1">
-								<start x="0.5" y="0.5"/>
-								<end   x="0.5" y="2.5"/>
+								<start x="1.0" y="1.0"/>
+								<end   x="1.0" y="3.0"/>
 							</linear>
 							<linear time="0.1">
-								<start x="0.5" y="2.5"/>
-								<end   x="0.5" y="0.5"/>
+								<start x="1.0" y="3.0"/>
+								<end   x="1.0" y="1.0"/>
 							</linear>
 							<linear time="0.1">
-								<start x="0.5" y="0.5"/>
-								<end   x="0.5" y="2.5"/>
+								<start x="1.0" y="1.0"/>
+								<end   x="1.0" y="3.0"/>
 							</linear>
 							<linear time="0.1">
-								<start x="0.5" y="2.5"/>
-								<end   x="0.5" y="0.5"/>
+								<start x="1.0" y="3.0"/>
+								<end   x="1.0" y="1.0"/>
 							</linear>
 							<linear time="0.1">
-								<start x="0.5" y="0.5"/>
-								<end   x="0.5" y="2.5"/>
+								<start x="1.0" y="1.0"/>
+								<end   x="1.0" y="3.0"/>
 							</linear>
 						</scale>
 						<calllist name="diamond"/>
@@ -1806,36 +1857,36 @@
 					<pushmatrix>
 						<scale>
 							<linear time="0.1">
-								<start x="0.5" y="0.5"/>
-								<end   x="0.5" y="2.5"/>
+								<start x="1.0" y="1.0"/>
+								<end   x="1.0" y="3.0"/>
 							</linear>
 							<linear time="0.1">
-								<start x="0.5" y="2.5"/>
-								<end   x="0.5" y="0.5"/>
+								<start x="1.0" y="3.0"/>
+								<end   x="1.0" y="1.0"/>
 							</linear>
 							<linear time="0.1">
-								<start x="0.5" y="0.5"/>
-								<end   x="0.5" y="2.5"/>
+								<start x="1.0" y="1.0"/>
+								<end   x="1.0" y="3.0"/>
 							</linear>
 							<linear time="0.1">
-								<start x="0.5" y="2.5"/>
-								<end   x="0.5" y="0.5"/>
+								<start x="1.0" y="3.0"/>
+								<end   x="1.0" y="1.0"/>
 							</linear>
 							<linear time="0.1">
-								<start x="0.5" y="0.5"/>
-								<end   x="0.5" y="2.5"/>
+								<start x="1.0" y="1.0"/>
+								<end   x="1.0" y="3.0"/>
 							</linear>
 							<linear time="0.1">
-								<start x="0.5" y="2.5"/>
-								<end   x="0.5" y="0.5"/>
+								<start x="1.0" y="3.0"/>
+								<end   x="1.0" y="1.0"/>
 							</linear>
 							<linear time="0.1">
-								<start x="0.5" y="0.5"/>
-								<end   x="0.5" y="2.5"/>
+								<start x="1.0" y="1.0"/>
+								<end   x="1.0" y="3.0"/>
 							</linear>
 							<linear time="0.1">
-								<start x="0.5" y="2.5"/>
-								<end   x="0.5" y="0.5"/>
+								<start x="1.0" y="3.0"/>
+								<end   x="1.0" y="1.0"/>
 							</linear>
 						</scale>
 						<calllist name="diamond"/>
@@ -1906,7 +1957,7 @@
 				<calllist name="circle32"/>
 			</pushmatrix>
 		</renderable>
-		<bullet life="10" damage="3" spawnondeath="enemymineexplosion" spawnonexpire="enemybulletexplosion"/>
+		<bullet life="5" damage="3" spawnondeath="enemymineexplosion" spawnonexpire="enemybulletexplosion"/>
 	</template>
 
 
@@ -1928,16 +1979,16 @@
 			<pushmatrix>
 				<scale>
 					<linear time="0.2">
-						<start x="0" y="0"/>
-						<end   x="1" y="1"/>
+						<start x="0.0" y="0.0"/>
+						<end   x="1.5" y="1.5"/>
 					</linear>
 					<linear time="0.2">
-						<start x="0" y="0"/>
-						<end   x="1" y="1"/>
+						<start x="0.0" y="0.0"/>
+						<end   x="1.5" y="1.5"/>
 					</linear>
 					<linear time="0.2">
-						<start x="0" y="0"/>
-						<end   x="1" y="1"/>
+						<start x="0.0" y="0.0"/>
+						<end   x="1.5" y="1.5"/>
 					</linear>
 				</scale>
 				<color>
@@ -1959,16 +2010,16 @@
 			<pushmatrix>
 				<scale>
 					<linear time="0.2">
-						<start x="1" y="1"/>
-						<end   x="2" y="2"/>
+						<start x="1.5" y="1.5"/>
+						<end   x="3.0" y="3.0"/>
 					</linear>
 					<linear time="0.2">
-						<start x="1" y="1"/>
-						<end   x="2" y="2"/>
+						<start x="1.5" y="1.5"/>
+						<end   x="3.0" y="3.0"/>
 					</linear>
 					<linear time="0.2">
-						<start x="1" y="1"/>
-						<end   x="2" y="2"/>
+						<start x="1.5" y="1.5"/>
+						<end   x="3.0" y="3.0"/>
 					</linear>
 				</scale>
 				<color>
@@ -1990,16 +2041,16 @@
 			<pushmatrix>
 				<scale>
 					<linear time="0.2">
-						<start x="2" y="2"/>
-						<end   x="3" y="3"/>
+						<start x="3.0" y="3.0"/>
+						<end   x="4.5" y="4.5"/>
 					</linear>
 					<linear time="0.2">
-						<start x="2" y="2"/>
-						<end   x="3" y="3"/>
+						<start x="3.0" y="3.0"/>
+						<end   x="4.5" y="4.5"/>
 					</linear>
 					<linear time="0.2">
-						<start x="2" y="2"/>
-						<end   x="3" y="3"/>
+						<start x="3.0" y="3.0"/>
+						<end   x="4.5" y="4.5"/>
 					</linear>
 				</scale>
 				<color>
@@ -2019,7 +2070,7 @@
 				<calllist name="diamond"/>
 			</pushmatrix>
 			<pushmatrix>
-				<scale x="3" y="3"/>
+				<scale x="4.5" y="4.5"/>
 				<color>
 					<linear time="0.2">
 						<start r="1.0" g="1.0" b="1.0" a="1.0"/>
@@ -2038,23 +2089,23 @@
 			</pushmatrix>
 			<pushmatrix>
 				<color r="1.0" g="0.5" b="0.1" a="1.0"/>
-				<scale x="4" y="4"/>
+				<scale x="5" y="5"/>
 				<calllist name="diamond"/>
 			</pushmatrix>
 			<pushmatrix>
 				<translate x="0" y="-3"/>
 				<color r="1.0" g="0.2" b="0.1" a="1.0"/>
-				<scale x="3" y="3"/>
+				<scale x="4" y="4"/>
 				<calllist name="diamond"/>
 			</pushmatrix>
 		</renderable>
 		<aimer range="512" attack="64" leading="60" angle="180"/>
-		<ship maxveloc="60" maxaccel="120" friction="10" maxomega="1"/>
+		<ship maxveloc="60" maxaccel="120" friction="10" maxomega="3"/>
 		<damagable health="5" spawnondeath="enemyexplosion"/>
 		<weapon>
 			<velocity x="0" y="0"/>
 			<ordnance name="enemymine"/>
-			<shot delay="1.0"/>
+			<shot delay="0.5"/>
 		</weapon>
 		<team name="red"/>
 	</template>
@@ -2068,13 +2119,13 @@
 			<pushmatrix>
 				<scale>
 					<linear time="0.2">
-						<start x="2" y="2"/>
-						<end   x="1" y="1"/>
+						<start x="1.5" y="1.5"/>
+						<end   x="0.5" y="0.5"/>
 					</linear>
 				</scale>
 				<color>
 					<linear time="0.2">
-						<start r="1.0" g="1.0" b="1.0" a="0.5"/>
+						<start r="1.0" g="1.0" b="1.0" a="1.0"/>
 						<end   r="1.0" g="1.0" b="1.0" a="0.0"/>
 					</linear>
 				</color>
@@ -2083,13 +2134,13 @@
 			<pushmatrix>
 				<scale>
 					<linear time="0.2">
-						<start x="3" y="3"/>
-						<end   x="1.5" y="1.5"/>
+						<start x="2.5" y="2.5"/>
+						<end   x="1.0" y="1.0"/>
 					</linear>
 				</scale>
 				<color>
 					<linear time="0.2">
-						<start r="1.0" g="0.2" b="0.1" a="0.25"/>
+						<start r="1.0" g="0.2" b="0.1" a="0.5"/>
 						<end   r="1.0" g="0.2" b="0.1" a="0.0"/>
 					</linear>
 				</color>
@@ -2102,76 +2153,30 @@
 		<collidable>
 			<body name="main">
 				<fast value="1"/>
-				<circle radius="4">
+				<circle radius="3">
 					<friction value="0"/>
 					<restitution value="1"/>
 					<density value="0.2"/>
 					<category value="3"/>
-					<mask bit3="0" bit4="0"/>
+					<mask bit4="0"/>
 				</circle>
 			</body>
 		</collidable>
 		<renderable period="0.1">
 			<pushmatrix>
-				<scale>
-					<linear time="0.05">
-						<start x="0" y="0"/>
-						<end   x="0" y="0"/>
-					</linear>
-					<linear time="0.05">
-						<start x="1" y="1"/>
-						<end   x="1" y="1"/>
-					</linear>
-				</scale>
-				<color r="1.0" g="1.0" b="1.0"/>
-				<calllist name="square"/>
-			</pushmatrix>
-			<color>
-				<linear time="0.05">
-					<start r="1.0" g="0.2" b="0.1" a="0.0"/>
-					<end   r="1.0" g="0.2" b="0.1" a="0.0"/>
-				</linear>
-				<linear time="0.05">
-					<start r="1.0" g="0.2" b="0.1" a="1.0"/>
-					<end   r="1.0" g="0.2" b="0.1" a="1.0"/>
-				</linear>
-			</color>
-			<pushmatrix>
-				<scale>
-					<linear time="0.05">
-						<start x="0" y="0"/>
-						<end   x="0" y="0"/>
-					</linear>
-					<linear time="0.05">
-						<start x="1" y="5"/>
-						<end   x="1" y="5"/>
-					</linear>
-				</scale>
-				<calllist name="diamond"/>
-			</pushmatrix>
-			<pushmatrix>
-				<scale>
-					<linear time="0.05">
-						<start x="0" y="0"/>
-						<end   x="0" y="0"/>
-					</linear>
-					<linear time="0.05">
-						<start x="5" y="1"/>
-						<end   x="5" y="1"/>
-					</linear>
-				</scale>
-				<calllist name="diamond"/>
-			</pushmatrix>
-			<pushmatrix>
 				<color r="0.2" g="0.2" b="0.2" a="1.0"/>
 				<scale>
-					<linear time="0.05">
+					<linear time="0.033333">
 						<start x="2.5" y="2.5"/>
-						<end   x="2.5" y="2.5"/>
+						<end   x="0.0" y="0.0"/>
 					</linear>
-					<linear time="0.05">
-						<start x="0" y="0"/>
-						<end   x="0" y="0"/>
+					<linear time="0.033333">
+						<start x="0.0" y="0.0"/>
+						<end   x="0.0" y="0.0"/>
+					</linear>
+					<linear time="0.033333">
+						<start x="0.0" y="0.0"/>
+						<end   x="2.5" y="2.5"/>
 					</linear>
 				</scale>
 				<calllist name="diamond"/>
@@ -2179,22 +2184,35 @@
 			<pushmatrix>
 				<color r="1.0" g="1.0" b="1.0" a="1.0"/>
 				<scale>
-					<linear time="0.05">
-						<start x="4" y="4"/>
-						<end   x="4" y="4"/>
+					<linear time="0.033333">
+						<start x="4.0" y="4.0"/>
+						<end   x="1.5" y="1.5"/>
 					</linear>
-					<linear time="0.05">
-						<start x="0" y="0"/>
-						<end   x="0" y="0"/>
+					<linear time="0.033333">
+						<start x="1.5" y="1.5"/>
+						<end   x="1.5" y="1.5"/>
+					</linear>
+					<linear time="0.033333">
+						<start x="1.5" y="1.5"/>
+						<end   x="4.0" y="4.0"/>
 					</linear>
 				</scale>
+				<calllist name="diamond"/>
+			</pushmatrix>
+			<color r="1.0" g="0.2" b="0.1" a="1.0"/>
+			<pushmatrix>
+				<scale x="1.5" y="4"/>
+				<calllist name="diamond"/>
+			</pushmatrix>
+			<pushmatrix>
+				<scale x="4" y="1.5"/>
 				<calllist name="diamond"/>
 			</pushmatrix>
 		</renderable>
 		<bullet life="30" damage="3" ricochet="1" spawnondeath="enemyfireballexplosion" spawnonexpire="enemybulletexplosion"/>
 		<damagable health="1" spawnondeath="enemyfireballexplosion"/>
 		<aimer range="512" attack="0" leading="0"/>
-		<ship maxveloc="90" maxaccel="360" friction="10" maxomega="1"/>
+		<ship maxveloc="120" maxaccel="360" friction="10" maxomega="1"/>
 		<team name="red"/>
 		<spawner>
 			<spawn name="enemyspacehumtrail" start="0" cycle="0.1" track="0"/>
@@ -2238,25 +2256,22 @@
 						</linear>
 					</translate>
 					<drawlist>
+						<color r="1.0" g="1.0" b="1.0" a="1.0"/>
 						<pushmatrix>
-							<scale x="1" y="1"/>
-							<color r="1.0" g="1.0" b="1.0" a="1.0"/>
-							<pushmatrix>
-								<translate x="3" y="0"/>
-								<calllist name="diamond"/>
-							</pushmatrix>
-							<pushmatrix>
-								<translate x="0" y="3"/>
-								<calllist name="diamond"/>
-							</pushmatrix>
-							<pushmatrix>
-								<translate x="-3" y="0"/>
-								<calllist name="diamond"/>
-							</pushmatrix>
-							<pushmatrix>
-								<translate x="0" y="-3"/>
-								<calllist name="diamond"/>
-							</pushmatrix>
+							<translate x="3" y="0"/>
+							<calllist name="diamond"/>
+						</pushmatrix>
+						<pushmatrix>
+							<translate x="0" y="3"/>
+							<calllist name="diamond"/>
+						</pushmatrix>
+						<pushmatrix>
+							<translate x="-3" y="0"/>
+							<calllist name="diamond"/>
+						</pushmatrix>
+						<pushmatrix>
+							<translate x="0" y="-3"/>
+							<calllist name="diamond"/>
 						</pushmatrix>
 						<pushmatrix>
 							<scale x="2" y="2"/>
@@ -2277,9 +2292,9 @@
 		<ship maxveloc="90" maxaccel="90" friction="10" maxomega="1"/>
 		<damagable health="3" spawnondeath="enemyexplosion"/>
 		<weapon>
-			<velocity x="0" y="90"/>
+			<velocity x="0" y="60"/>
 			<ordnance name="enemyspacehum"/>
-			<shot delay="0.6"/>
+			<shot delay="1.0"/>
 		</weapon>
 		<team name="red"/>
 	</template>
@@ -2328,9 +2343,9 @@
 					<vertex x="1" y="-2"/>
 					<vertex x="1.5" y="1.5"/>
 					<vertex x="0.75" y="-2"/>
-					<vertex x="0.75" y="3"/>
+					<vertex x="0.5" y="3"/>
 					<vertex x="0" y="-2"/>
-					<vertex x="-0.75" y="3"/>
+					<vertex x="-0.5" y="3"/>
 					<vertex x="-0.75" y="-2"/>
 					<vertex x="-1.5" y="1.5"/>
 					<vertex x="-1" y="-2"/>
@@ -2339,13 +2354,13 @@
 				</triangle_strip>
 			</drawlist>
 		</renderable>
-		<aimer range="512" attack="128" leading="240"/>
-		<ship maxveloc="120" maxaccel="120" friction="10" maxomega="3"/>
+		<aimer range="512" attack="128" leading="180"/>
+		<ship maxveloc="120" maxaccel="240" friction="10" maxomega="2"/>
 		<damagable health="1" spawnondeath="enemyfireballexplosion"/>
 		<weapon>
 			<offset x="0" y="3" angle="0"/>
-			<velocity x="0" y="240"/>
-			<ordnance name="enemybullet"/>
+			<velocity x="0" y="180"/>
+			<ordnance name="enemypulsebullet"/>
 			<shot delay="1.0"/>
 		</weapon>
 		<team name="red"/>
@@ -2393,7 +2408,7 @@
 	<template name="enemypod">
 		<collidable>
 			<body name="main">
-				<circle radius="5">
+				<circle radius="4">
 					<density value="1"/>
 					<friction value="0.5"/>
 					<restitution value="0.5"/>
@@ -2402,24 +2417,24 @@
 				<allowsleep value="0"/>
 			</body>
 		</collidable>
-		<renderable period="0.8">
+		<renderable period="0.3">
 			<pushmatrix>
 				<scale>
-					<linear time="0.4">
+					<linear time="0.15">
 						<start x="1" y="1"/>
-						<end   x="2.5" y="2.5"/>
+						<end   x="2" y="2"/>
 					</linear>
-					<linear time="0.4">
+					<linear time="0.15">
 						<start x="2.5" y="2.5"/>
 						<end   x="1" y="1"/>
 					</linear>
 				</scale>
 				<color>
-					<linear time="0.4">
+					<linear time="0.15">
 						<start r="1.0" g="1.0" b="1.0" a="1.0"/>
 						<end   r="1.0" g="0.8" b="0.1" a="1.0"/>
 					</linear>
-					<linear time="0.4">
+					<linear time="0.15">
 						<start r="1.0" g="0.8" b="0.1" a="1.0"/>
 						<end   r="1.0" g="1.0" b="1.0" a="1.0"/>
 					</linear>
@@ -2429,8 +2444,8 @@
 			<pushmatrix>
 				<scale>
 					<linear time="0.4">
-						<start x="4" y="4"/>
-						<end   x="2.5" y="2.5"/>
+						<start x="3" y="3"/>
+						<end   x="2" y="2"/>
 					</linear>
 					<linear time="0.4">
 						<start x="2.5" y="2.5"/>
@@ -2450,44 +2465,56 @@
 				<calllist name="diamond"/>
 			</pushmatrix>
 			<pushmatrix>
-				<scale x="5" y="5"/>
+				<scale x="4" y="4"/>
 				<color r="1.0" g="0.2" b="0.1" a="1.0"/>
 				<calllist name="diamond"/>
 			</pushmatrix>
-			<repeat count="4">
+			<repeat count="2">
 				<pushmatrix>
-					<translate x="6" y="0"/>
-					<scale x="1.5" y="0.75"/>
+					<translate x="5" y="0"/>
 					<color>
-						<linear time="0.4">
+						<linear time="0.3">
 							<start r="1.0" g="0.8" b="0.1" a="1.0"/>
-							<end   r="1.0" g="0.2" b="0.1" a="0.0"/>
-						</linear>
-						<linear time="0.4">
-							<start r="1.0" g="0.2" b="0.1" a="0.0"/>
-							<end   r="1.0" g="0.8" b="0.1" a="1.0"/>
+							<end   r="1.0" g="0.2" b="0.1" a="0.4"/>
 						</linear>
 					</color>
-					<calllist name="square"/>
+					<calllist name="diamond"/>
 				</pushmatrix>
-				<rotate angle="90"/>
+				<rotate angle="180"/>
+			</repeat>
+			<rotate angle="90"/>
+			<repeat count="2">
+				<pushmatrix>
+					<translate x="5" y="0"/>
+					<color>
+						<linear time="0.1">
+							<start r="1.0" g="0.4" b="0.1" a="0.6"/>
+							<end   r="1.0" g="0.2" b="0.1" a="0.4"/>
+						</linear>
+						<linear time="0.2">
+							<start r="1.0" g="0.8" b="0.1" a="1.0"/>
+							<end   r="1.0" g="0.4" b="0.1" a="0.6"/>
+						</linear>
+					</color>
+					<calllist name="diamond"/>
+				</pushmatrix>
+				<rotate angle="180"/>
 			</repeat>
 			<rotate angle="45"/>
 			<repeat count="4">
 				<pushmatrix>
-					<translate x="5" y="0"/>
-					<scale x="1.0" y="0.75"/>
+					<translate x="4" y="0"/>
 					<color>
-						<linear time="0.4">
-							<start r="1.0" g="0.2" b="0.1" a="0.0"/>
-							<end   r="1.0" g="0.8" b="0.1" a="1.0"/>
+						<linear time="0.2">
+							<start r="1.0" g="0.6" b="0.1" a="0.8"/>
+							<end   r="1.0" g="0.2" b="0.1" a="0.4"/>
 						</linear>
-						<linear time="0.4">
+						<linear time="0.1">
 							<start r="1.0" g="0.8" b="0.1" a="1.0"/>
-							<end   r="1.0" g="0.2" b="0.1" a="0.0"/>
+							<end   r="1.0" g="0.6" b="0.1" a="0.8"/>
 						</linear>
 					</color>
-					<calllist name="square"/>
+					<calllist name="diamond"/>
 				</pushmatrix>
 				<rotate angle="90"/>
 			</repeat>
@@ -3006,7 +3033,7 @@
 		<position x="-192" y="2048" angle="180"/>
 		<velocity x="0" y="-180"/>
 		<spawner>
-			<spawn name="enemyshipsmall" start="0" cycle="2" track="0"/>
+			<spawn name="enemyshipsmall" start="0" cycle="3" track="0"/>
 		</spawner>
 	</entity>
 
@@ -3014,23 +3041,7 @@
 		<position x="192" y="2048" angle="180"/>
 		<velocity x="0" y="-180"/>
 		<spawner>
-			<spawn name="enemyshipsmall" start="0" cycle="2" track="0"/>
-		</spawner>
-	</entity>
-	
-	<entity name="enemycommandshipspawn1">
-		<position x="-160" y="2048" angle="180"/>
-		<velocity x="0" y="-180"/>
-		<spawner>
-			<spawn name="enemycommandship" start="0" cycle="2" track="0"/>
-		</spawner>
-	</entity>
-
-	<entity name="enemycommandshipspawn2">
-		<position x="160" y="2048" angle="180"/>
-		<velocity x="0" y="-180"/>
-		<spawner>
-			<spawn name="enemycommandship" start="0" cycle="2" track="0"/>
+			<spawn name="enemyshipsmall" start="0" cycle="3" track="0"/>
 		</spawner>
 	</entity>
 	
@@ -3038,7 +3049,7 @@
 		<position x="-128" y="2048" angle="180"/>
 		<velocity x="0" y="-180"/>
 		<spawner>
-			<spawn name="enemyfirebomber" start="0" cycle="5" track="0"/>
+			<spawn name="enemyfirebomber" start="0" cycle="6" track="0"/>
 		</spawner>
 	</entity>
 
@@ -3046,7 +3057,7 @@
 		<position x="128" y="2048" angle="180"/>
 		<velocity x="0" y="-180"/>
 		<spawner>
-			<spawn name="enemyfirebomber" start="0" cycle="5" track="0"/>
+			<spawn name="enemyfirebomber" start="0" cycle="6" track="0"/>
 		</spawner>
 	</entity>
 
@@ -3054,7 +3065,7 @@
 		<position x="-96" y="2048" angle="180"/>
 		<velocity x="0" y="-180"/>
 		<spawner>
-			<spawn name="enemybomber" start="1" cycle="5" track="0"/>
+			<spawn name="enemybomber" start="1" cycle="6" track="0"/>
 		</spawner>
 	</entity>
 
@@ -3062,7 +3073,7 @@
 		<position x="96" y="2048" angle="180"/>
 		<velocity x="0" y="-180"/>
 		<spawner>
-			<spawn name="enemybomber" start="1" cycle="5" track="0"/>
+			<spawn name="enemybomber" start="1" cycle="6" track="0"/>
 		</spawner>
 	</entity>
 
@@ -3070,7 +3081,7 @@
 		<position x="-160" y="2048" angle="180"/>
 		<velocity x="0" y="-180"/>
 		<spawner>
-			<spawn name="enemydynamo" start="2" cycle="5" track="0"/>
+			<spawn name="enemydynamo" start="2" cycle="6" track="0"/>
 		</spawner>
 	</entity>
 
@@ -3078,15 +3089,15 @@
 		<position x="160" y="2048" angle="180"/>
 		<velocity x="0" y="-180"/>
 		<spawner>
-			<spawn name="enemydynamo" start="2" cycle="5" track="0"/>
+			<spawn name="enemydynamo" start="2" cycle="6" track="0"/>
 		</spawner>
 	</entity>
-
+	
 	<entity name="enemypodspawn1">
 		<position x="-128" y="2048" angle="180"/>
 		<velocity x="0" y="-180"/>
 		<spawner>
-			<spawn name="enemypod" start="3" cycle="5" track="0"/>
+			<spawn name="enemypod" start="3" cycle="6" track="0"/>
 		</spawner>
 	</entity>
 
@@ -3094,7 +3105,23 @@
 		<position x="128" y="2048" angle="180"/>
 		<velocity x="0" y="-180"/>
 		<spawner>
-			<spawn name="enemypod" start="3" cycle="5" track="0"/>
+			<spawn name="enemypod" start="3" cycle="6" track="0"/>
+		</spawner>
+	</entity>
+
+	<entity name="enemycommandshipspawn1">
+		<position x="-160" y="2048" angle="180"/>
+		<velocity x="0" y="-180"/>
+		<spawner>
+			<spawn name="enemycommandship" start="4" cycle="6" track="0"/>
+		</spawner>
+	</entity>
+
+	<entity name="enemycommandshipspawn2">
+		<position x="160" y="2048" angle="180"/>
+		<velocity x="0" y="-180"/>
+		<spawner>
+			<spawn name="enemycommandship" start="4" cycle="6" track="0"/>
 		</spawner>
 	</entity>
 
@@ -3102,7 +3129,7 @@
 		<position x="-64" y="2048" angle="180"/>
 		<velocity x="0" y="-180"/>
 		<spawner>
-			<spawn name="enemyship" start="0" cycle="3" track="0"/>
+			<spawn name="enemyship" start="5" cycle="6" track="0"/>
 		</spawner>
 	</entity>
 
@@ -3110,7 +3137,7 @@
 		<position x="64" y="2048" angle="180"/>
 		<velocity x="0" y="-180"/>
 		<spawner>
-			<spawn name="enemyship" start="0" cycle="3" track="0"/>
+			<spawn name="enemyship" start="5" cycle="6" track="0"/>
 		</spawner>
 	</entity>
 
@@ -3121,7 +3148,7 @@
 			<spawn name="enemycarrier" start="0" cycle="20" track="0"/>
 		</spawner>
 	</entity>
-	
+		
 
 	<!-- gunner bullet explosion -->
 
@@ -4314,7 +4341,7 @@
 			<calllist name="ship"/>
 		</renderable>
 		<player/>
-		<ship maxveloc="120" maxaccel="600" friction="50" maxomega="20"/>
+		<ship maxveloc="150" maxaccel="600" friction="30" maxomega="20"/>
 		<damagable health="10" spawnondeath="playershipdeath"/>
 		<link name="lgun" secondary="playershipweapon">
 			<offset x="2" y="0" angle="0"/>
