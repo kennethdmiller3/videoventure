@@ -2288,11 +2288,11 @@
 				<rotate angle="180"/>
 			</repeat>
 		</renderable>
-		<aimer range="512" attack="192" leading="90" angle="90"/>
+		<aimer range="512" attack="192" leading="210" angle="90"/>
 		<ship maxveloc="90" maxaccel="90" friction="10" maxomega="1"/>
 		<damagable health="3" spawnondeath="enemyexplosion"/>
 		<weapon>
-			<velocity x="0" y="60"/>
+			<velocity x="0" y="210"/>
 			<ordnance name="enemyspacehum"/>
 			<shot delay="1.0"/>
 		</weapon>
