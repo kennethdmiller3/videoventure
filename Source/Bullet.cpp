@@ -173,39 +173,51 @@ void Bullet::Collide(unsigned int aHitId, float aTime, b2Manifold aManifold[], i
 {
 	const BulletTemplate &bullet = Database::bullettemplate.Get(id);
 
+	// get team affiliation
+	unsigned int aTeam = Database::team.Get(id);
+	unsigned int aHitTeam = Database::team.Get(aHitId);
+
 	// if the bullet applies damage...
 	bool destroy = !bullet.mRicochet;
 	if (bullet.mDamage >= 0)
 	{
-		// if the recipient is damagable...
-		Damagable *damagable = Database::damagable.Get(aHitId);
-		if (damagable)
+		// if not hitting a teammate...
+		if (!aTeam || !aHitTeam || aTeam != aHitTeam)
 		{
-			// apply damage value
-			damagable->Damage(id, bullet.mDamage);
-			destroy = true;
+			// if the recipient is damagable...
+			Damagable *damagable = Database::damagable.Get(aHitId);
+			if (damagable)
+			{
+				// apply damage value
+				damagable->Damage(id, bullet.mDamage);
+				destroy = true;
+			}
 		}
 	}
 	else
 	{
-		// if the recipient is damagable and needs health...
-		Damagable *damagable = Database::damagable.Get(aHitId);
-		if (damagable && (damagable->GetHealth() < Database::damagabletemplate.Get(aHitId).mHealth))
+		// if not hitting an enemy...
+		if (!aTeam || !aHitTeam || aTeam == aHitTeam)
 		{
-			// apply healing value
-			damagable->Damage(id, bullet.mDamage);
-			destroy = true;
-		}
-		else
-		{
-			// if the recipient's owner is damagable and needs health...
-			unsigned int aHitOwnerId = Database::owner.Get(aHitId);
-			Damagable *damagable = Database::damagable.Get(aHitOwnerId);
-			if (damagable && (damagable->GetHealth() < Database::damagabletemplate.Get(aHitOwnerId).mHealth))
+			// if the recipient is damagable and needs health...
+			Damagable *damagable = Database::damagable.Get(aHitId);
+			if (damagable && (damagable->GetHealth() < Database::damagabletemplate.Get(aHitId).mHealth))
 			{
 				// apply healing value
 				damagable->Damage(id, bullet.mDamage);
 				destroy = true;
+			}
+			else
+			{
+				// if the recipient's owner is damagable and needs health...
+				unsigned int aHitOwnerId = Database::owner.Get(aHitId);
+				Damagable *damagable = Database::damagable.Get(aHitOwnerId);
+				if (damagable && (damagable->GetHealth() < Database::damagabletemplate.Get(aHitOwnerId).mHealth))
+				{
+					// apply healing value
+					damagable->Damage(id, bullet.mDamage);
+					destroy = true;
+				}
 			}
 		}
 	}
