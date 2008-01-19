@@ -553,18 +553,6 @@ namespace Database
 				}
 			}
 
-			// remove runtime components without templates
-			if (Player *p = player.Get(aId))
-			{
-				delete p;
-				player.Delete(aId);
-			}
-			if (Gunner *g = gunner.Get(aId))
-			{
-				delete g;
-				gunner.Delete(aId);
-			}
-
 			// remove from the queue
 			deactivatequeue.pop_front();
 		}
@@ -582,6 +570,12 @@ namespace Database
 	{
 		// deactivate
 		Deactivate(aId);
+
+		// delete the entity
+		if (Entity *entity = Database::entity.Get(aId))
+		{
+			delete entity;
+		}
 
 		// for each registered database...
 		for (Typed<Untyped *>::Iterator itor(&GetDatabases()); itor.IsValid(); ++itor)
@@ -610,7 +604,10 @@ namespace Database
 	{
 		// deactivate all instances
 		for (Typed<Entity *>::Iterator itor(&entity); itor.IsValid(); ++itor)
+		{
 			Deactivate(itor.GetKey());
+			delete itor.GetValue();
+		}
 
 		// clear all registered databases
 		for (Typed<Untyped *>::Iterator itor(&GetDatabases()); itor.IsValid(); ++itor)
