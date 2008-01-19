@@ -4,6 +4,7 @@
 #include "Entity.h"
 #include "Link.h"
 #include "Weapon.h"
+#include "Damagable.h"
 
 
 #ifdef USE_POOL_ALLOCATOR
@@ -197,6 +198,10 @@ void Aimer::Control(float aStep)
 
 			// skip teammate
 			if (targetTeam == aTeam)
+				continue;
+
+			// skip indestructible
+			if (!Database::damagable.Find(targetId))
 				continue;
 
 			// get range
