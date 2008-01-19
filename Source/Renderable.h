@@ -6,6 +6,9 @@ public:
 	// drawlist buffer
 	std::vector<unsigned int> mBuffer;
 
+	// bounding radius
+	float mRadius;
+
 	// period
 	float mPeriod;
 
@@ -21,15 +24,21 @@ class Renderable
 {
 private:
 	// list of all renderables
-	typedef std::list<Renderable *> List;
-	static List sAll;
+	static Renderable *sHead;
+	static Renderable *sTail;
 
 	// identifier
 	unsigned int id;
 
-	// list entry
-	List::iterator entry;
+	// linked list
+	Renderable *mNext;
+	Renderable *mPrev;
+
+	// show?
 	bool show;
+
+	// bounding radius
+	float mRadius;
 
 protected:
 	// time offset
@@ -66,8 +75,8 @@ public:
 	}
 
 	// render
-	static void RenderAll(float aRatio, float aStep);
-	virtual void Render(const Matrix2 &aTransform, float aStep);
+	static void RenderAll(float aRatio, float aStep, const AlignedBox2 &aView);
+	void Render(float aStep);
 };
 
 namespace Database

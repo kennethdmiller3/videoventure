@@ -78,7 +78,8 @@ namespace Database
 }
 
 RenderableTemplate::RenderableTemplate(void)
-: mPeriod(FLT_MAX)
+: mRadius(0)
+, mPeriod(FLT_MAX)
 {
 }
 
@@ -95,6 +96,11 @@ bool RenderableTemplate::Configure(const TiXmlElement *element)
 	// animation period
 	element->QueryFloatAttribute("period", &mPeriod);
 
+	// bounds
+//	element->QueryFloatAttribute("x", &mBounds.p.x);
+//	element->QueryFloatAttribute("y", &mBounds.p.y);
+	element->QueryFloatAttribute("radius", &mRadius);
+
 	// process child elements
 	ProcessDrawItems(element, mBuffer);
 
@@ -103,17 +109,18 @@ bool RenderableTemplate::Configure(const TiXmlElement *element)
 
 
 
-Renderable::List Renderable::sAll;
+Renderable *Renderable::sHead;
+Renderable *Renderable::sTail;
 unsigned int Renderable::sTurn;
 float Renderable::sOffset;
 
 Renderable::Renderable(void)
-: id(0), show(false), mStart(sTurn), mFraction(0.0f)
+: id(0), mNext(NULL), mPrev(NULL), show(false), mRadius(0), mStart(sTurn), mFraction(0.0f)
 {
 }
 
 Renderable::Renderable(const RenderableTemplate &aTemplate, unsigned int aId)
-: id(aId), show(false), mStart(sTurn), mFraction(0.0f)
+: id(aId), mNext(NULL), mPrev(NULL), show(false), mRadius(aTemplate.mRadius), mStart(sTurn), mFraction(0.0f)
 {
 }
 
@@ -129,9 +136,15 @@ void Renderable::Show(void)
 	if (!show)
 	{
 #ifdef DRAW_FRONT_TO_BACK
-		entry = sAll.insert(sAll.begin(), this);
+		mNext = sHead;
+		if (sHead)
+			sHead->mPrev = this;
+		sHead = this;
 #else
-		entry = sAll.insert(sAll.end(), this);
+		mPrev = sTail;
+		if (sTail)
+			sTail->mNext = this;
+		sTail = this;
 #endif
 		show = true;
 	}
@@ -141,34 +154,47 @@ void Renderable::Hide(void)
 {
 	if (show)
 	{
-		sAll.erase(entry);
-		entry = sAll.end();
+		if (sHead == this)
+			sHead = mNext;
+		if (sTail == this)
+			sTail = mPrev;
+		if (mNext)
+			mNext->mPrev = mPrev;
+		if (mPrev)
+			mPrev->mNext = mNext;
+		mNext = NULL;
+		mPrev = NULL;
 		show = false;
 	}
 }
 
-void Renderable::RenderAll(float aRatio, float aStep)
+void Renderable::RenderAll(float aRatio, float aStep, const AlignedBox2 &aView)
 {
 	// compute offset between visible time and simulated time
 	sOffset = (aRatio - 1.0f);
 
 	// render matrix
-	Matrix2 transform;
+	float angle;
+	Vector2 position;
+
+#ifdef RENDER_STATS
+	// stats
+	int drawn = 0, culled = 0;
+#endif
 
 	// render all renderables
-	List::iterator itor = sAll.begin();
-	while (itor != sAll.end())
+	Renderable *itor = sHead;
+	while (itor)
 	{
 		// get the next iterator
 		// (in case the entry gets deleted)
-		List::iterator next(itor);
-		++next;
+		Renderable *next = itor->mNext;
 
-		// push a transform
-		glPushMatrix();
+		// get the identifier
+		unsigned int id = itor->id;
 
 		// get the entity (HACK)
-		const Entity *entity = Database::entity.Get((*itor)->id);
+		const Entity *entity = Database::entity.Get(id);
 		if (entity)
 		{
 #ifdef RENDER_SIMULATION_POSITIONS
@@ -181,36 +207,57 @@ void Renderable::RenderAll(float aRatio, float aStep)
 			glEnd();
 #endif
 			// get interpolated transform
-			transform = entity->GetInterpolatedTransform(aRatio);
-
-			// load matrix
-			float m[16] =
-			{
-				transform.x.x, transform.x.y, 0, 0,
-				transform.y.x, transform.y.y, 0, 0,
-				0, 0, 1, 0,
-				transform.p.x, transform.p.y, 0, 1
-			};
-			glMultMatrixf( m );
+			angle = entity->GetInterpolatedAngle(aRatio);
+			position = entity->GetInterpolatedPosition(aRatio);
 		}
 		else
 		{
 			// use identity matrix
-			transform = Matrix2(Vector2(1, 0), Vector2(0, 1), Vector2(0, 0));
+			angle = 0;
+			position.x = 0;
+			position.y = 0;
 		}
 
-		// render
-		(*itor)->Render(transform, aStep);
+		// if within the view area...
+		if (position.x + itor->mRadius >= aView.min.x &&
+			position.y + itor->mRadius >= aView.min.y &&
+			position.x - itor->mRadius <= aView.max.x &&
+			position.y - itor->mRadius <= aView.max.y)
+		{
+			// push a transform
+			glPushMatrix();
 
-		// reset the transform
-		glPopMatrix();
+			// load matrix
+			glTranslatef(position.x, position.y, 0);
+			glRotatef(angle*180/float(M_PI), 0.0f, 0.0f, 1.0f);
+
+			// render
+			itor->Render(aStep);
+
+			// reset the transform
+			glPopMatrix();
+
+#ifdef RENDER_STATS
+			++drawn;
+#endif
+		}
+#ifdef RENDER_STATS
+		else
+		{
+			++culled;
+		}
+#endif
 
 		// go to the next iterator
 		itor = next;
 	}
+
+#ifdef RENDER_STATS
+	DebugPrint("d=%d/%d\n", drawn, drawn+culled);
+#endif
 }
 
-void Renderable::Render(const Matrix2 &aTransform, float aStep)
+void Renderable::Render(float aStep)
 {
 	// get the renderable template
 	const RenderableTemplate &renderable = Database::renderabletemplate.Get(id);

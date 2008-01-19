@@ -186,33 +186,98 @@
 		</triangle_strip>
 	</drawlist>
 
-	<cloud name="clouds" count="1024" mean="128" variance="96"/>
-
-	<drawlist>
-		<scale>
-			<linear time="1.0">
-				<start x="5" y="5"/>
-				<end x="20" y="20"/>
-			</linear>
-			<linear time="1.0">
-				<start x="20" y="20"/>
-				<end x="5" y="5"/>
-			</linear>
-		</scale>
-	</drawlist>
-
 	<!-- background shapes -->
 
-	<entity name="background">
-		<!-- cloud layer -->
-		<renderable>
+	<!-- clouds
+	<cloud name="clouds" count="1024">
+		<x average="0" variance="2048"/>
+		<y average="0" variance="2048"/>
+		<z average="640" variance="384"/>
+		<width average="128" variance="96"/>
+		<height average="128" variance="96"/>
+		<red average="0.375" variance="0.125"/>
+		<green average="0.375" variance="0.125"/>
+		<blue average="0.375" variance="0.125"/>
+		<alpha average="0.75" variance="0"/>
+	</cloud>
+	<entity name="clouds">
+		<renderable radius="2048">
 			<calllist name="clouds"/>
 		</renderable>
 	</entity>
+	-->
+	
+	<!-- starfield -->
+	<cloud name="starfield" count="128">
+		<x average="0" variance="512"/>
+		<y average="0" variance="512"/>
+		<z average="640" variance="384"/>
+		<width average="1" variance="0"/>
+		<height average="1" variance="0"/>
+		<red average="0.75" variance="0.25"/>
+		<green average="0.75" variance="0.25"/>
+		<blue average="0.75" variance="0.25"/>
+		<alpha average="1" variance="0"/>
+	</cloud>
+	<template name="starfield">
+		<renderable radius="1536">
+			<calllist name="starfield"/>
+		</renderable>
+	</template>
+	<entity name="starfield11" type="starfield">
+		<position x="1536" y="1536"/>
+	</entity>
+	<entity name="starfield12" type="starfield">
+		<position x="512" y="1536"/>
+	</entity>
+	<entity name="starfield13" type="starfield">
+		<position x="-512" y="1536"/>
+	</entity>
+	<entity name="starfield14" type="starfield">
+		<position x="-1536" y="1536"/>
+	</entity>
+	<entity name="starfield21" type="starfield">
+		<position x="1536" y="512"/>
+	</entity>
+	<entity name="starfield22" type="starfield">
+		<position x="512" y="512"/>
+	</entity>
+	<entity name="starfield23" type="starfield">
+		<position x="-512" y="512"/>
+	</entity>
+	<entity name="starfield24" type="starfield">
+		<position x="-1536" y="512"/>
+	</entity>
+	<entity name="starfield31" type="starfield">
+		<position x="1536" y="-512"/>
+	</entity>
+	<entity name="starfield32" type="starfield">
+		<position x="512" y="-512"/>
+	</entity>
+	<entity name="starfield33" type="starfield">
+		<position x="-512" y="-512"/>
+	</entity>
+	<entity name="starfield34" type="starfield">
+		<position x="-1536" y="-512"/>
+	</entity>
+	<entity name="starfield41" type="starfield">
+		<position x="1536" y="-1536"/>
+	</entity>
+	<entity name="starfield42" type="starfield">
+		<position x="512" y="-1536"/>
+	</entity>
+	<entity name="starfield43" type="starfield">
+		<position x="-512" y="-1536"/>
+	</entity>
+	<entity name="starfield44" type="starfield">
+		<position x="-1536" y="-1536"/>
+	</entity>
 
+
+	<!-- reference grid -->
+	
 	<entity name="playfield">
-		<!-- reference grid -->
-		<renderable>
+		<renderable radius="2048">
 			<drawlist>
 				<scale x="64" y="64"/>
 				<color r="1.0" g="1.0" b="1.0" a="1.0"/>
@@ -556,7 +621,7 @@
 				</box>
 			</body>
 		</collidable>
-		<renderable>
+		<renderable radius="64">
 			<drawlist>
 				<color r="1.0" g="0.9" b="0.1" a="1.0"/>
 				<quads>
@@ -594,7 +659,7 @@
 
 	<template name="targetexplosion">
 		<explosion life="2.0"/>
-		<renderable>
+		<renderable radius="200">
 			<pushmatrix>
 				<color>
 					<linear time="0.3">
@@ -651,7 +716,7 @@
 							<translate>
 								<linear time="0.5">
 									<start x="0" y="0"/>
-									<end   x="50" y="0"/>
+									<end   x="200" y="0"/>
 								</linear>
 							</translate>
 							<color>
@@ -662,15 +727,15 @@
 							</color>
 							<scale>
 								<linear time="0.5">
-									<start x="5.0" y="0.5"/>
-									<end   x="0.5" y="0.5"/>
+									<start x="15.0" y="1.0"/>
+									<end   x="1.0" y="1.0"/>
 								</linear>
 							</scale>
 							<calllist name="circle16"/>
 						</pushmatrix>
 						<rotate angle="60"/>
 					</repeat>
-					<scale x="1.25" y="1.25"/>
+					<scale x="0.8" y="0.8"/>
 					<rotate angle="20"/>
 				</repeat>
 			</pushmatrix>
@@ -704,7 +769,7 @@
 				<damping linear="5.0" angular="5.0"/>
 			</body>
 		</collidable>
-		<renderable>
+		<renderable radius="5">
 			<drawlist>
 				<color r="0.1" g="0.2" b="1.0" a="1.0"/>
 				<pushmatrix>
@@ -729,7 +794,7 @@
 
 	<template name="targetappear">
 		<explosion life="0.25" spawnonexpire="target"/>
-		<renderable>
+		<renderable radius="20">
 			<pushmatrix>
 				<color>
 					<linear time="0.25">
@@ -838,7 +903,7 @@
 
 	<template name="enemybulletexplosion">
 		<explosion life="0.5"/>
-		<renderable>
+		<renderable radius="16">
 			<pushmatrix>
 				<color>
 					<linear time="0.1">
@@ -918,7 +983,7 @@
 				</circle>
 			</body>
 		</collidable>
-		<renderable>
+		<renderable radius="6">
 			<drawlist>
 				<color r="1.0" g="1.0" b="1.0" a="1.0"/>
 				<pushmatrix>
@@ -967,7 +1032,7 @@
 				</circle>
 			</body>
 		</collidable>
-		<renderable>
+		<renderable radius="2.5">
 			<drawlist>
 				<color r="1.0" g="1.0" b="1.0" a="1.0"/>
 				<pushmatrix>
@@ -1005,7 +1070,7 @@
 
 	<template name="enemymissiletrail">
 		<explosion life="1.0"/>
-		<renderable>
+		<renderable radius="4">
 			<pushmatrix>
 				<scale>
 					<linear time="1.0">
@@ -1037,7 +1102,7 @@
 				</box>
 			</body>
 		</collidable>
-		<renderable period="0.4">
+		<renderable radius="11" period="0.4">
 			<color r="1.0" g="0.2" b="0.1" a="1.0"/>
 			<polygon>
 				<vertex x="0" y="5"/>
@@ -1089,7 +1154,7 @@
 
 	<template name="enemyexplosion">
 		<explosion life="3.0"/>
-		<renderable>
+		<renderable radius="320">
 			<pushmatrix>
 				<color>
 					<linear time="0.4">
@@ -1146,7 +1211,7 @@
 							<translate>
 								<linear time="0.8">
 									<start x="0" y="0"/>
-									<end   x="80" y="0"/>
+									<end   x="320" y="0"/>
 								</linear>
 							</translate>
 							<color>
@@ -1157,15 +1222,15 @@
 							</color>
 							<scale>
 								<linear time="0.8">
-									<start x="5.0" y="0.5"/>
-									<end   x="0.5" y="0.5"/>
+									<start x="15.0" y="1.0"/>
+									<end   x="1.0" y="1.0"/>
 								</linear>
 							</scale>
 							<calllist name="circle16"/>
 						</pushmatrix>
 						<rotate angle="60"/>
 					</repeat>
-					<scale x="1.25" y="1.25"/>
+					<scale x="0.8" y="0.8"/>
 					<rotate angle="20"/>
 				</repeat>
 			</pushmatrix>
@@ -1191,7 +1256,7 @@
 	<!-- enemy turret -->
 
 	<template name="enemycannon" type="enemyweapon">
-		<renderable>
+		<renderable radius="10">
 			<drawlist>
 				<color r="0.5" g="0.5" b="0.5" a="1.0"/>
 				<quads>
@@ -1208,7 +1273,7 @@
 	</template>
 
 	<template name="enemycannon0" type="enemyweapon">
-		<renderable>
+		<renderable radius="10">
 			<drawlist>
 				<color r="0.5" g="0.5" b="0.5" a="1.0"/>
 				<quads>
@@ -1225,7 +1290,7 @@
 	</template>
 
 	<template name="enemycannon1" type="enemyweapon">
-		<renderable>
+		<renderable radius="10">
 			<drawlist>
 				<color r="0.5" g="0.5" b="0.5" a="1.0"/>
 				<quads>
@@ -1242,7 +1307,7 @@
 	</template>
 
 	<template name="enemycannonmissile" type="enemyweaponmissile">
-		<renderable>
+		<renderable radius="7">
 			<drawlist>
 				<quads>
 					<color r="0.5" g="0.5" b="0.5" a="1.0"/>
@@ -1273,7 +1338,7 @@
 				<allowsleep value="0"/>
 			</body>
 		</collidable>
-		<renderable>
+		<renderable radius="6">
 			<drawlist>
 				<color r="0.7" g="0.7" b="0.7" a="1.0"/>
 				<pushmatrix>
@@ -1398,7 +1463,7 @@
 
 	<template name="enemyfireballexplosion">
 		<explosion life="1.0"/>
-		<renderable>
+		<renderable radius="100">
 			<pushmatrix>
 				<color>
 					<linear time="0.1">
@@ -1451,7 +1516,7 @@
 							<translate>
 								<linear time="0.4">
 									<start x="0" y="0"/>
-									<end   x="50" y="0"/>
+									<end   x="100" y="0"/>
 								</linear>
 							</translate>
 							<color>
@@ -1462,15 +1527,15 @@
 							</color>
 							<scale>
 								<linear time="0.4">
-									<start x="6.0" y="0.5"/>
-									<end   x="0.5" y="0.5"/>
+									<start x="12.0" y="1.0"/>
+									<end   x="1.0" y="1.0"/>
 								</linear>
 							</scale>
 							<calllist name="circle16"/>
 						</pushmatrix>
 						<rotate angle="60"/>
 					</repeat>
-					<scale x="1.25" y="1.25"/>
+					<scale x="0.8" y="0.8"/>
 					<rotate angle="20"/>
 				</repeat>
 			</pushmatrix>
@@ -1497,7 +1562,7 @@
 
 	<template name="enemyfireballtrail">
 		<explosion life="0.2"/>
-		<renderable>
+		<renderable radius="1.5">
 			<pushmatrix>
 				<scale>
 					<linear time="0.2">
@@ -1529,7 +1594,7 @@
 				</circle>
 			</body>
 		</collidable>
-		<renderable period="0.1">
+		<renderable radius="6" period="0.1">
 			<drawlist>
 				<pushmatrix>
 					<color r="1.0" g="0.6" b="0.1" a="1.0"/>
@@ -1646,7 +1711,7 @@
 				<allowsleep value="0"/>
 			</body>
 		</collidable>
-		<renderable period="1.0">
+		<renderable radius="6" period="1.0">
 			<pushmatrix>
 				<rotate>
 					<linear time="1.0">
@@ -1699,7 +1764,7 @@
 
 	<template name="enemymineexplosion">
 		<explosion life="1.0" damage="1" radius="64"/>
-		<renderable>
+		<renderable radius="100">
 			<pushmatrix>
 				<color>
 					<linear time="0.1">
@@ -1752,7 +1817,7 @@
 							<translate>
 								<linear time="0.4">
 									<start x="0" y="0"/>
-									<end   x="50" y="0"/>
+									<end   x="100" y="0"/>
 								</linear>
 							</translate>
 							<color>
@@ -1763,15 +1828,15 @@
 							</color>
 							<scale>
 								<linear time="0.4">
-									<start x="6.0" y="0.5"/>
-									<end   x="0.5" y="0.5"/>
+									<start x="12.0" y="1.0"/>
+									<end   x="1.0" y="1.0"/>
 								</linear>
 							</scale>
 							<calllist name="circle16"/>
 						</pushmatrix>
 						<rotate angle="60"/>
 					</repeat>
-					<scale x="1.25" y="1.25"/>
+					<scale x="0.8" y="0.8"/>
 					<rotate angle="20"/>
 				</repeat>
 			</pushmatrix>
@@ -1809,7 +1874,7 @@
 				</circle>
 			</body>
 		</collidable>
-		<renderable period="0.8">
+		<renderable radius="12" period="0.8">
 			<color r="1.0" g="1.0" b="1.0" a="1.0"/>
 			<pushmatrix>
 				<repeat count="2">
@@ -1975,7 +2040,7 @@
 				<allowsleep value="0"/>
 			</body>
 		</collidable>
-		<renderable period="0.6">
+		<renderable radius="7" period="0.6">
 			<pushmatrix>
 				<scale>
 					<linear time="0.2">
@@ -2115,7 +2180,7 @@
 
 	<template name="enemyspacehumtrail">
 		<explosion life="0.2"/>
-		<renderable>
+		<renderable radius="2.5">
 			<pushmatrix>
 				<scale>
 					<linear time="0.2">
@@ -2152,7 +2217,6 @@
 	<template name="enemyspacehum">
 		<collidable>
 			<body name="main">
-				<fast value="1"/>
 				<circle radius="3">
 					<friction value="0"/>
 					<restitution value="1"/>
@@ -2162,7 +2226,7 @@
 				</circle>
 			</body>
 		</collidable>
-		<renderable period="0.1">
+		<renderable radius="4" period="0.1">
 			<pushmatrix>
 				<color r="0.2" g="0.2" b="0.2" a="1.0"/>
 				<scale>
@@ -2234,7 +2298,7 @@
 				<allowsleep value="0"/>
 			</body>
 		</collidable>
-		<renderable period="0.133333">
+		<renderable radius="8" period="0.133333">
 			<repeat count="2">
 				<pushmatrix>
 					<translate>
@@ -2314,7 +2378,7 @@
 				<allowsleep value="0"/>
 			</body>
 		</collidable>
-		<renderable period="1.0">
+		<renderable radius="3" period="1.0">
 			<color>
 				<linear time="0.5">
 					<start r="1.0" g="0.3" b="0.1" a="1.0"/>
@@ -2417,7 +2481,7 @@
 				<allowsleep value="0"/>
 			</body>
 		</collidable>
-		<renderable period="0.3">
+		<renderable radius="6" period="0.3">
 			<pushmatrix>
 				<scale>
 					<linear time="0.15">
@@ -2540,7 +2604,7 @@
 				</circle>
 			</body>
 		</collidable>
-		<renderable period="0.066667">
+		<renderable radius="4" period="0.066667">
 			<color>
 				<linear time="0.033333">
 					<start r="1.0" g="1.0" b="0.1" a="1.0"/>
@@ -2589,7 +2653,7 @@
 				</circle>
 			</body>
 		</collidable>
-		<renderable period="0.066667">
+		<renderable radius="3.5" period="0.066667">
 			<color>
 				<linear time="0.033333">
 					<start r="1.0" g="0.8" b="0.1" a="1.0"/>
@@ -2632,7 +2696,7 @@
 				<allowsleep value="0"/>
 			</body>
 		</collidable>
-		<renderable period="0.4">
+		<renderable radius="6" period="0.4">
 			<color>
 				<linear time="0.2">
 					<start r="1.0" g="1.0" b="1.0" a="1.0"/>
@@ -2701,7 +2765,7 @@
 				<allowsleep value="0"/>
 			</body>
 		</collidable>
-		<renderable>
+		<renderable radius="4">
 			<color r="1.0" g="0.2" b="0.1" a="1.0"/>
 			<calllist name="shiptiny"/>
 		</renderable>
@@ -2729,7 +2793,7 @@
 				<allowsleep value="0"/>
 			</body>
 		</collidable>
-		<renderable>
+		<renderable radius="6">
 			<color r="1.0" g="0.2" b="0.1" a="1.0"/>
 			<calllist name="shipsmall"/>
 		</renderable>
@@ -2771,7 +2835,7 @@
 				<allowsleep value="0"/>
 			</body>
 		</collidable>
-		<renderable>
+		<renderable radius="8">
 			<drawlist>
 				<color r="1.0" g="0.2" b="0.1" a="1.0"/>
 				<calllist name="ship"/>
@@ -2794,7 +2858,7 @@
 
 	<template name="minibossexplosion">
 		<explosion life="3.0"/>
-		<renderable>
+		<renderable radius="600">
 			<pushmatrix>
 				<color>
 					<linear time="1.0">
@@ -2851,7 +2915,7 @@
 							<translate>
 								<linear time="2.5">
 									<start x="0" y="0"/>
-									<end   x="150" y="0"/>
+									<end   x="600" y="0"/>
 								</linear>
 							</translate>
 							<color>
@@ -2862,15 +2926,15 @@
 							</color>
 							<scale>
 								<linear time="2.5">
-									<start x="10.0" y="0.5"/>
-									<end   x="0.5" y="0.5"/>
+									<start x="40.0" y="2.0"/>
+									<end   x="2.0" y="2.0"/>
 								</linear>
 							</scale>
 							<calllist name="circle16"/>
 						</pushmatrix>
 						<rotate angle="30"/>
 					</repeat>
-					<scale x="1.25" y="1.25"/>
+					<scale x="0.8" y="0.8"/>
 					<rotate angle="10"/>
 				</repeat>
 			</pushmatrix>
@@ -2966,7 +3030,7 @@
 				<allowsleep value="0"/>
 			</body>
 		</collidable>
-		<renderable>
+		<renderable radius="50">
 			<drawlist>
 				<color r="1.0" g="0.2" b="0.1" a="1.0"/>
 				<triangle_strip>
@@ -3154,7 +3218,7 @@
 
 	<template name="gunnerbulletexplosion">
 		<explosion life="0.5"/>
-		<renderable>
+		<renderable radius="16">
 			<pushmatrix>
 				<color>
 					<linear time="0.1">
@@ -3234,7 +3298,7 @@
 				</circle>
 			</body>
 		</collidable>
-		<renderable>
+		<renderable radius="6">
 			<drawlist>
 				<color r="1.0" g="1.0" b="1.0" a="1.0"/>
 				<pushmatrix>
@@ -3295,7 +3359,7 @@
 				<allowsleep value="0"/>
 			</body>
 		</collidable>
-		<renderable>
+		<renderable radius="4">
 			<drawlist>
 				<color r="0.5" g="0.5" b="0.5" a="1.0"/>
 				<quads>
@@ -3345,7 +3409,7 @@
 
 	<template name="bitbulletexplosion">
 		<explosion life="1.0" damage="1" radius="40"/>
-		<renderable>
+		<renderable radius="50">
 			<pushmatrix>
 				<color>
 					<linear time="0.1">
@@ -3398,7 +3462,7 @@
 							<translate>
 								<linear time="0.3">
 									<start x="0" y="0"/>
-									<end   x="25" y="0"/>
+									<end   x="50" y="0"/>
 								</linear>
 							</translate>
 							<color>
@@ -3409,15 +3473,15 @@
 							</color>
 							<scale>
 								<linear time="0.3">
-									<start x="6.0" y="0.5"/>
-									<end   x="0.5" y="0.5"/>
+									<start x="12.0" y="1.0"/>
+									<end   x="1.0" y="1.0"/>
 								</linear>
 							</scale>
 							<calllist name="circle16"/>
 						</pushmatrix>
 						<rotate angle="60"/>
 					</repeat>
-					<scale x="1.25" y="1.25"/>
+					<scale x="0.8" y="0.8"/>
 					<rotate angle="20"/>
 				</repeat>
 			</pushmatrix>
@@ -3456,7 +3520,7 @@
 				</circle>
 			</body>
 		</collidable>
-		<renderable period="0.4">
+		<renderable radius="11" period="0.4">
 			<drawlist>
 				<pushmatrix>
 					<color r="1.0" g="1.0" b="1.0" a="1.0"/>
@@ -3571,7 +3635,7 @@
 	</template>
 
 	<template name="bit1" type="bit">
-		<renderable>
+		<renderable radius="4">
 			<pushmatrix>
 				<rotate angle="-90"/>
 				<calllist name="bitshell"/>
@@ -3584,7 +3648,7 @@
 	</template>
 
 	<template name="bit2" type="bit">
-		<renderable>
+		<renderable radius="4">
 			<pushmatrix>
 				<rotate angle="90"/>
 				<calllist name="bitshell"/>
@@ -3601,7 +3665,7 @@
 
 	<template name="forcebulletexplosion">
 		<explosion life="1.0" damage="5" radius="64"/>
-		<renderable>
+		<renderable radius="100">
 			<pushmatrix>
 				<color>
 					<linear time="0.1">
@@ -3654,7 +3718,7 @@
 							<translate>
 								<linear time="0.4">
 									<start x="0" y="0"/>
-									<end   x="50" y="0"/>
+									<end   x="100" y="0"/>
 								</linear>
 							</translate>
 							<color>
@@ -3665,15 +3729,15 @@
 							</color>
 							<scale>
 								<linear time="0.4">
-									<start x="6.0" y="0.5"/>
-									<end   x="0.5" y="0.5"/>
+									<start x="12.0" y="1.0"/>
+									<end   x="1.0" y="1.0"/>
 								</linear>
 							</scale>
 							<calllist name="circle16"/>
 						</pushmatrix>
 						<rotate angle="60"/>
 					</repeat>
-					<scale x="1.25" y="1.25"/>
+					<scale x="0.8" y="0.8"/>
 					<rotate angle="20"/>
 				</repeat>
 			</pushmatrix>
@@ -3712,7 +3776,7 @@
 				</circle>
 			</body>
 		</collidable>
-		<renderable period="0.4">
+		<renderable radius="16" period="0.4">
 			<drawlist>
 				<pushmatrix>
 					<color r="1.0" g="1.0" b="1.0" a="1.0"/>
@@ -3767,7 +3831,7 @@
 	<!-- force option (level 1) -->
 
 	<template name="forcecannon" type="forceweapon">
-		<renderable period="0.3">
+		<renderable radius="14" period="0.3">
 			<drawlist>
 				<color r="0.5" g="0.5" b="0.5" a="1.0"/>
 				<pushmatrix>
@@ -3957,7 +4021,7 @@
 
 	<template name="playerbulletexplosion">
 		<explosion life="0.5"/>
-		<renderable>
+		<renderable radius="8">
 			<pushmatrix>
 				<color>
 					<linear time="0.1">
@@ -4037,7 +4101,7 @@
 				</circle>
 			</body>
 		</collidable>
-		<renderable>
+		<renderable radius="6">
 			<drawlist>
 				<color r="1.0" g="1.0" b="1.0" a="1.0"/>
 				<pushmatrix>
@@ -4074,7 +4138,7 @@
 	<!-- player multiple -->
 
 	<template name="multiple" type="playershipweapon">
-		<renderable period="0.5">
+		<renderable radius="6" period="0.5">
 			<pushmatrix>
 				<color r="1.0" g="1.0" b="1.0" a="1.0"/>
 				<scale>
@@ -4145,7 +4209,7 @@
 
 	<template name="playershipexplosion">
 		<explosion life="3.0"/>
-		<renderable>
+		<renderable radius="1000">
 			<pushmatrix>
 				<color>
 					<linear time="1.0">
@@ -4202,7 +4266,7 @@
 							<translate>
 								<linear time="3.0">
 									<start x="0" y="0"/>
-									<end   x="250" y="0"/>
+									<end   x="1000" y="0"/>
 								</linear>
 							</translate>
 							<color>
@@ -4213,15 +4277,15 @@
 							</color>
 							<scale>
 								<linear time="3.0">
-									<start x="5.0" y="0.5"/>
-									<end   x="0.5" y="0.5"/>
+									<start x="15.0" y="1.0"/>
+									<end   x="1.0" y="1.0"/>
 								</linear>
 							</scale>
 							<calllist name="circle16"/>
 						</pushmatrix>
 						<rotate angle="30"/>
 					</repeat>
-					<scale x="1.25" y="1.25"/>
+					<scale x="0.8" y="0.8"/>
 					<rotate angle="18"/>
 				</repeat>
 			</pushmatrix>
@@ -4295,7 +4359,7 @@
 				<allowsleep value="0"/>
 			</body>
 		</collidable>
-		<renderable period="0.05">
+		<renderable radius="8" period="0.05">
 			<color>
 				<linear time="0.033333">
 					<start r="1.0" g="1.0" b="1.0" a="1.0"/>
@@ -4336,7 +4400,7 @@
 				<allowsleep value="0"/>
 			</body>
 		</collidable>
-		<renderable>
+		<renderable radius="8">
 			<color r="0.4" g="0.5" b="1.0" a="1.0"/>
 			<calllist name="ship"/>
 		</renderable>
@@ -4383,7 +4447,7 @@
 	</template>
 
 	<template name="playershipwarp">
-		<renderable>
+		<renderable radius="2048">
 			<color>
 				<linear time="0.75">
 					<start r="1.0" g="1.0" b="1.0" a="0.0"/>
@@ -4418,7 +4482,7 @@
 
 	<template name="healthupexplosion">
 		<explosion life="1.0"/>
-		<renderable>
+		<renderable radius="45">
 			<pushmatrix>
 				<color>
 					<linear time="0.5">
@@ -4467,7 +4531,7 @@
 								</linear>
 								<linear time="0.5">
 									<start x="15.0" y="1.0"/>
-									<end   x="2.0" y="2.0"/>
+									<end   x="1.0" y="1.0"/>
 								</linear>
 							</scale>
 							<calllist name="circle16"/>
@@ -4509,7 +4573,7 @@
 				<damping linear="5.0" angular="5.0"/>
 			</body>
 		</collidable>
-		<renderable>
+		<renderable radius="4">
 			<drawlist>
 				<color r="1.0" g="1.0" b="1.0" a="1.0"/>
 				<quads>
@@ -4534,7 +4598,7 @@
 
 	<template name="healthupappear">
 		<explosion life="0.25" spawnonexpire="healthup"/>
-		<renderable>
+		<renderable radius="20">
 			<pushmatrix>
 				<color>
 					<linear time="0.25">
@@ -4595,7 +4659,7 @@
 
 	<template name="friendexplosion">
 		<explosion life="3.0"/>
-		<renderable>
+		<renderable radius="320">
 			<pushmatrix>
 				<color>
 					<linear time="0.4">
@@ -4652,7 +4716,7 @@
 							<translate>
 								<linear time="0.8">
 									<start x="0" y="0"/>
-									<end   x="80" y="0"/>
+									<end   x="320" y="0"/>
 								</linear>
 							</translate>
 							<color>
@@ -4663,15 +4727,15 @@
 							</color>
 							<scale>
 								<linear time="0.8">
-									<start x="5.0" y="0.5"/>
-									<end   x="0.5" y="0.5"/>
+									<start x="15.0" y="1.0"/>
+									<end   x="1.0" y="1.0"/>
 								</linear>
 							</scale>
 							<calllist name="circle16"/>
 						</pushmatrix>
 						<rotate angle="60"/>
 					</repeat>
-					<scale x="1.25" y="1.25"/>
+					<scale x="0.8" y="0.8"/>
 					<rotate angle="20"/>
 				</repeat>
 			</pushmatrix>
@@ -4697,7 +4761,7 @@
 	<!-- friend turret -->
 
 	<template name="friendcannon" type="playershipweapon">
-		<renderable>
+		<renderable radius="10">
 			<drawlist>
 				<color r="0.5" g="0.5" b="0.5" a="1.0"/>
 				<quads>
@@ -4714,7 +4778,7 @@
 	</template>
 
 	<template name="friendcannon0" type="playershipweapon">
-		<renderable>
+		<renderable radius="10">
 			<drawlist>
 				<color r="0.5" g="0.5" b="0.5" a="1.0"/>
 				<quads>
@@ -4731,7 +4795,7 @@
 	</template>
 
 	<template name="friendcannon1" type="playershipweapon">
-		<renderable>
+		<renderable radius="10">
 			<drawlist>
 				<color r="0.5" g="0.5" b="0.5" a="1.0"/>
 				<quads>
@@ -4760,7 +4824,7 @@
 				<damping linear="10.0"/>
 			</body>
 		</collidable>
-		<renderable>
+		<renderable radius="6">
 			<drawlist>
 				<color r="0.7" g="0.7" b="0.7" a="1.0"/>
 				<pushmatrix>

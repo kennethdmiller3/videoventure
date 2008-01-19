@@ -36,10 +36,14 @@ bool OPENGL_SWAPCONTROL = true;
 bool OPENGL_ANTIALIAS = false;
 int OPENGL_MULTISAMPLE = 16;
 
-
 // debug output
 bool DEBUGPRINT_OUTPUTCONSOLE = false;
-bool DEBUGPRINT_OUTPUTDEBUG = true;
+bool DEBUGPRINT_OUTPUTDEBUG = false;
+bool DEBUGPRINT_OUTPUTSTDERR = false;
+
+// visual profiler
+bool PROFILER_OUTPUTSCREEN = false;
+bool PROFILER_OUTPUTPRINT = false;
 
 // simulation attributes
 int SIMULATION_RATE = 60;
@@ -59,7 +63,9 @@ const char *LEVEL_CONFIG = "level.xml";
 // console
 OGLCONSOLE_Console console;
 
-//#define PRINT_PERFORMANCE_DETAILS
+#define GET_PERFORMANCE_DETAILS
+#define PRINT_PERFORMANCE_DETAILS
+#define DRAW_PERFORMANCE_DETAILS
 //#define PRINT_SIMULATION_TIMER
 #define TRACE_OPENGL_ATTRIBUTES
 
@@ -81,6 +87,8 @@ int DebugPrint(const char *format, ...)
 		OutputDebugStringA(buf);
 	if (DEBUGPRINT_OUTPUTCONSOLE && console)
 		OGLCONSOLE_Output(console, "%s", buf);
+	if (DEBUGPRINT_OUTPUTSTDERR)
+		fputs(buf, stderr);
 #else
 	int n = vfprintf(stderr, format, ap);
 #endif
@@ -606,21 +614,7 @@ static void ProcessWorldItems(const TiXmlElement *element)
 
 		case 0x1ac6a97e /* "cloud" */:
 			{
-				int count = 1;
-				child->QueryIntAttribute("count", &count);
-				float mean = 256;
-				child->QueryFloatAttribute("mean", &mean);
-				float variance = 192;
-				child->QueryFloatAttribute("variance", &variance);
-				GLuint handle = CreateCloudDrawList(count, mean, variance);
-
-				// get the list name
-				const char *name = child->Attribute("name");
-				if (name)
-				{
-					// register the draw list
-					Database::drawlist.Put(Hash(name), handle);
-				}
+				ProcessCloudItems(child);
 			}
 			break;
 
@@ -721,6 +715,18 @@ int ProcessCommand( unsigned int aCommand, char *aParam[] )
 
 	case 0x54822903 /* "outputdebug" */:
 		DEBUGPRINT_OUTPUTDEBUG = atoi(aParam[0]) != 0;
+		return 1;
+
+	case 0x8940763c /* "outputstderr" */:
+		DEBUGPRINT_OUTPUTSTDERR = atoi(aParam[0]) != 0;
+		return 1;
+
+	case 0xfbcc8f02 /* "profilescreen" */:
+		PROFILER_OUTPUTSCREEN = atoi(aParam[0]) != 0;
+		return 1;
+
+	case 0x85e872f9 /* "profileprint" */:
+		PROFILER_OUTPUTPRINT = atoi(aParam[0]) != 0;
 		return 1;
 
 	case 0xa165ddb8 /* "database" */:
@@ -907,9 +913,35 @@ int SDL_main( int argc, char *argv[] )
 	Vector2 trackpos(0, 0);
 	Vector2 trackaim(0, 0);
 
+#ifdef GET_PERFORMANCE_DETAILS
+	LARGE_INTEGER perf_freq;
+	QueryPerformanceFrequency(&perf_freq);
+
+	static const int NUM_SAMPLES = 640;
+	LONGLONG control_time[NUM_SAMPLES] = { 0 };
+	LONGLONG simulate_time[NUM_SAMPLES] = { 0 };
+	LONGLONG collide_time[NUM_SAMPLES] = { 0 };
+	LONGLONG update_time[NUM_SAMPLES] = { 0 };
+	LONGLONG render_time[NUM_SAMPLES] = { 0 };
+	LONGLONG display_time[NUM_SAMPLES] = { 0 };
+	int profile_index = -1;
+#endif
+
 	// wait for user exit
 	do
 	{
+
+#ifdef GET_PERFORMANCE_DETAILS
+		if (!paused)
+			profile_index = (profile_index + 1) % NUM_SAMPLES;
+		control_time[profile_index] = 0;
+		simulate_time[profile_index] = 0;
+		collide_time[profile_index] = 0;
+		update_time[profile_index] = 0;
+		render_time[profile_index] = 0;
+		display_time[profile_index] = 0;
+#endif
+
 		// INPUT PHASE
 
 		// event handler
@@ -1019,10 +1051,7 @@ int SDL_main( int argc, char *argv[] )
 
 				// CONTROL PHASE
 
-#ifdef PRINT_PERFORMANCE_DETAILS
-				LARGE_INTEGER perf_freq;
-				QueryPerformanceFrequency(&perf_freq);
-
+#ifdef GET_PERFORMANCE_DETAILS
 				LARGE_INTEGER perf_count0;
 				QueryPerformanceCounter(&perf_count0);
 #endif
@@ -1030,38 +1059,41 @@ int SDL_main( int argc, char *argv[] )
 				// control all entities
 				Controller::ControlAll(sim_step);
 
-#ifdef PRINT_PERFORMANCE_DETAILS
+#ifdef GET_PERFORMANCE_DETAILS
 				LARGE_INTEGER perf_count1;
 				QueryPerformanceCounter(&perf_count1);
-
-				DebugPrint("C=%d ", 1000000 * (perf_count1.QuadPart - perf_count0.QuadPart) / perf_freq.QuadPart);
+				control_time[profile_index] += perf_count1.QuadPart - perf_count0.QuadPart;
 #endif
 
 				// SIMULATION PHASE
 				// (generate forces)
 				Simulatable::SimulateAll(sim_step);
 
-#ifdef PRINT_PERFORMANCE_DETAILS
+#ifdef GET_PERFORMANCE_DETAILS
 				LARGE_INTEGER perf_count2;
 				QueryPerformanceCounter(&perf_count2);
-
-				DebugPrint("S=%d ", 1000000 * (perf_count2.QuadPart - perf_count1.QuadPart) / perf_freq.QuadPart);
+				simulate_time[profile_index] += perf_count2.QuadPart - perf_count1.QuadPart;
 #endif
 
 				// COLLISION PHASE
 				// (apply forces and update positions)
 				Collidable::CollideAll(sim_step);
 
-#ifdef PRINT_PERFORMANCE_DETAILS
+#ifdef GET_PERFORMANCE_DETAILS
 				LARGE_INTEGER perf_count3;
 				QueryPerformanceCounter(&perf_count3);
-
-				DebugPrint("P=%d ", 1000000 * (perf_count3.QuadPart - perf_count2.QuadPart) / perf_freq.QuadPart);
+				collide_time[profile_index] += perf_count3.QuadPart - perf_count2.QuadPart;
 #endif
 
 				// UPDATE PHASE
 				// (use updated positions)
 				Updatable::UpdateAll(sim_step);
+
+#ifdef GET_PERFORMANCE_DETAILS
+				LARGE_INTEGER perf_count4;
+				QueryPerformanceCounter(&perf_count4);
+				update_time[profile_index] += perf_count4.QuadPart - perf_count3.QuadPart;
+#endif
 
 				// step inputs for next turn
 				input.Step();
@@ -1073,6 +1105,14 @@ int SDL_main( int argc, char *argv[] )
 
 #ifdef PRINT_SIMULATION_TIMER
 			DebugPrint("delta=%d ticks=%d sim_t=%f\n", delta, ticks, sim_turns);
+#endif
+
+#ifdef GET_PERFORMANCE_DETAILS
+			LARGE_INTEGER perf_freq;
+			QueryPerformanceFrequency(&perf_freq);
+
+			LARGE_INTEGER perf_count0;
+			QueryPerformanceCounter(&perf_count0);
 #endif
 
 			// RENDERING PHASE
@@ -1103,14 +1143,6 @@ int SDL_main( int argc, char *argv[] )
 			// set camera to track position
 			glTranslatef( -trackpos.x, -trackpos.y, 0 );
 
-#ifdef PRINT_PERFORMANCE_DETAILS
-			LARGE_INTEGER perf_freq;
-			QueryPerformanceFrequency(&perf_freq);
-
-			LARGE_INTEGER perf_count0;
-			QueryPerformanceCounter(&perf_count0);
-#endif
-
 			// clear the screen
 			glClear(
 				GL_COLOR_BUFFER_BIT
@@ -1119,9 +1151,16 @@ int SDL_main( int argc, char *argv[] )
 #endif
 				);
 
+			// view area
+			AlignedBox2 view;
+			view.min.x = trackpos.x - VIEW_SIZE * 0.5f;
+			view.max.x = trackpos.x + VIEW_SIZE * 0.5f;
+			view.min.y = trackpos.y - VIEW_SIZE * 0.5f * SCREEN_HEIGHT / SCREEN_WIDTH;
+			view.max.y = trackpos.y + VIEW_SIZE * 0.5f * SCREEN_HEIGHT / SCREEN_WIDTH;
+
 			// render all entities
 			// (send interpolation ratio and offset from simulation time)
-			Renderable::RenderAll(sim_turns, sim_step);
+			Renderable::RenderAll(sim_turns, sim_step, view);
 
 			// reset camera transform
 			glPopMatrix();
@@ -1132,7 +1171,18 @@ int SDL_main( int argc, char *argv[] )
 				// accumulate the image
 				glAccum(blur ? GL_ACCUM : GL_LOAD, 1.0f / float(RENDER_MOTIONBLUR));
 			}
+
+#ifdef GET_PERFORMANCE_DETAILS
+			LARGE_INTEGER perf_count1;
+			QueryPerformanceCounter(&perf_count1);
+			render_time[profile_index] += perf_count1.QuadPart - perf_count0.QuadPart;
+#endif
 		}
+
+#ifdef GET_PERFORMANCE_DETAILS
+		LARGE_INTEGER perf_count0;
+		QueryPerformanceCounter(&perf_count0);
+#endif
 
 		// if performing motion blur...
 		if (RENDER_MOTIONBLUR > 1)
@@ -1145,6 +1195,17 @@ int SDL_main( int argc, char *argv[] )
 		glPushAttrib(GL_COLOR_BUFFER_BIT);
 		glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
 
+		// push projection transform
+		glMatrixMode(GL_PROJECTION);
+		glPushMatrix();
+		glLoadIdentity();
+		glOrtho(0, 640, 480, 0, -1, 1);
+
+		// use 640x480 screen coordinates
+		glMatrixMode(GL_MODELVIEW);
+		glPushMatrix();
+		glLoadIdentity();
+
 		// for each player...
 		for (Database::Typed<Player *>::Iterator itor(&Database::player); itor.IsValid(); ++itor)
 		{
@@ -1155,17 +1216,6 @@ int SDL_main( int argc, char *argv[] )
 				// health ratio
 				const DamagableTemplate &damagabletemplate = Database::damagabletemplate.Get(itor.GetKey());
 				float health = damagable->GetHealth() / damagabletemplate.mHealth;
-
-				// push projection transform
-				glMatrixMode(GL_PROJECTION);
-				glPushMatrix();
-				glLoadIdentity();
-				glOrtho(0, 640, 480, 0, -1, 1);
-
-				// use 640x480 screen coordinates
-				glMatrixMode(GL_MODELVIEW);
-				glPushMatrix();
-				glLoadIdentity();
 
 				glBegin(GL_QUADS);
 
@@ -1191,30 +1241,130 @@ int SDL_main( int argc, char *argv[] )
 				glVertex2f(8 + 100 * health, 16);
 
 				glEnd();
-
-				// reset camera transform
-				glMatrixMode(GL_PROJECTION);
-				glPopMatrix();
-				glMatrixMode(GL_MODELVIEW);
-				glPopMatrix();
 			}
 		}
 
+		// reset camera transform
+		glMatrixMode(GL_PROJECTION);
+		glPopMatrix();
+		glMatrixMode(GL_MODELVIEW);
+		glPopMatrix();
+
 		// restore blend mode
 		glPopAttrib();
+
+#ifdef GET_PERFORMANCE_DETAILS
+		LARGE_INTEGER perf_count1;
+		QueryPerformanceCounter(&perf_count1);
+		render_time[profile_index] += perf_count1.QuadPart - perf_count0.QuadPart;
+
+		// force a render flush
+		glFinish();
+
+		LARGE_INTEGER perf_count2;
+		QueryPerformanceCounter(&perf_count2);
+		display_time[profile_index] += perf_count2.QuadPart - perf_count1.QuadPart;
+#endif
+
+#ifdef DRAW_PERFORMANCE_DETAILS
+		if (PROFILER_OUTPUTSCREEN)
+		{
+			// switch blend mode
+			glPushAttrib(GL_COLOR_BUFFER_BIT);
+			glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
+
+			// push projection transform
+			glMatrixMode(GL_PROJECTION);
+			glPushMatrix();
+			glLoadIdentity();
+			glOrtho(0, 640, 480, 0, -1, 1);
+
+			// use 640x480 screen coordinates
+			glMatrixMode(GL_MODELVIEW);
+			glPushMatrix();
+			glLoadIdentity();
+
+			const LONGLONG * const band_time[6] =
+			{
+				control_time,
+				simulate_time,
+				collide_time,
+				update_time,
+				render_time,
+				render_time,
+			};
+			const float band_color[6][4] =
+			{
+				{1.0f, 0.0f, 0.0f, 0.5f},
+				{1.0f, 1.0f, 0.0f, 0.5f},
+				{0.0f, 1.0f, 0.0f, 0.5f},
+				{0.0f, 0.5f, 1.0f, 0.5f},
+				{1.0f, 0.0f, 1.0f, 0.5f},
+				{0.5f, 0.5f, 0.5f, 0.5f}
+			};
+
+
+			// generate y samples
+			float sample_y[7][NUM_SAMPLES];
+			for (int i = 0; i < NUM_SAMPLES; ++i)
+			{
+				int index = (profile_index + i) % NUM_SAMPLES;
+
+				float y = 1.0f;
+				sample_y[0][i] = 480.0f * y;
+				for (int band = 0; band < 6; ++band)
+				{
+					y -= 60.0f * band_time[band][index] / perf_freq.QuadPart;
+					sample_y[band+1][i] = 480.0f * y;
+				}
+			}
+
+			for (int band = 0; band < 6; ++band)
+			{
+				glColor4fv(band_color[band]);
+				float x = 0;
+				float dx = 640.0f / NUM_SAMPLES;
+				glBegin(GL_QUADS);
+				for (int i = 0; i < NUM_SAMPLES; i++)
+				{
+					glVertex3f(x, sample_y[band][i], 0);
+					glVertex3f(x+dx, sample_y[band][i], 0);
+					glVertex3f(x+dx, sample_y[band+1][i], 0);
+					glVertex3f(x, sample_y[band+1][i], 0);
+					x += dx;
+				}
+				glEnd();
+			}
+
+			// reset camera transform
+			glMatrixMode(GL_PROJECTION);
+			glPopMatrix();
+			glMatrixMode(GL_MODELVIEW);
+			glPopMatrix();
+
+			// restore blend mode
+			glPopAttrib();
+		}
+#endif
+
+#ifdef PRINT_PERFORMANCE_DETAILS
+		if (PROFILER_OUTPUTPRINT)
+		{
+			DebugPrint("C=%d S=%d P=%d U=%d R=%d D=%d\n",
+				1000000 * control_time[profile_index] / perf_freq.QuadPart,
+				1000000 * simulate_time[profile_index] / perf_freq.QuadPart,
+				1000000 * collide_time[profile_index] / perf_freq.QuadPart,
+				1000000 * update_time[profile_index] / perf_freq.QuadPart,
+				1000000 * render_time[profile_index] / perf_freq.QuadPart,
+				1000000 * display_time[profile_index] / perf_freq.QuadPart);
+		}
+#endif
 
 		/* Render our console */
 		OGLCONSOLE_Draw();
 
 		// show the screen
 		SDL_GL_SwapBuffers();
-
-#ifdef PRINT_PERFORMANCE_DETAILS
-		LARGE_INTEGER perf_count1;
-		QueryPerformanceCounter(&perf_count1);
-
-		DebugPrint("R=%d\n", 1000000 * (perf_count1.QuadPart - perf_count0.QuadPart) / perf_freq.QuadPart);
-#endif
 	}
 	while( !quit );
 
