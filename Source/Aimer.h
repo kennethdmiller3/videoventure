@@ -5,7 +5,8 @@
 class AimerTemplate
 {
 public:
-	// target range
+	// target scan
+	float mPeriod;
 	float mRange;
 
 	// attack cone

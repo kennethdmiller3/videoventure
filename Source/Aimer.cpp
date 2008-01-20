@@ -83,7 +83,8 @@ namespace Database
 
 
 AimerTemplate::AimerTemplate(void)
-: mRange(256.0f)
+: mPeriod(1.0f)
+, mRange(256.0f)
 , mAttack(256.0f)
 , mAngle(0.95f)
 , mFocus(1.0f)
@@ -100,6 +101,7 @@ bool AimerTemplate::Configure(const TiXmlElement *element)
 	if (Hash(element->Value()) != 0x2ea90881 /* "aimer" */)
 		return false;
 
+	element->QueryFloatAttribute("period", &mPeriod);
 	element->QueryFloatAttribute("range", &mRange);
 	element->QueryFloatAttribute("attack", &mAttack);
 	if (element->QueryFloatAttribute("angle", &mAngle) == TIXML_SUCCESS)
@@ -113,7 +115,7 @@ bool AimerTemplate::Configure(const TiXmlElement *element)
 Aimer::Aimer(const AimerTemplate &aTemplate, unsigned int aId)
 : Controller(aId)
 , mTarget(0)
-, mDelay(0.0f)
+, mDelay(aTemplate.mPeriod * aId / UINT_MAX)
 {
 }
 
@@ -148,7 +150,7 @@ void Aimer::Control(float aStep)
 	if (mDelay <= 0.0f)
 	{
 		// update the timer
-		mDelay += 0.25f;
+		mDelay += aimer.mPeriod;
 
 		// get the collision world
 		b2World *world = Collidable::GetWorld();
