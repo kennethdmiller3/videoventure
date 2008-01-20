@@ -63,6 +63,7 @@ namespace Database
 				const WeaponTemplate &weapontemplate = Database::weapontemplate.Get(aId);
 				Weapon *weapon = new Weapon(weapontemplate, aId);
 				Database::weapon.Put(aId, weapon);
+				weapon->Activate();
 			}
 
 			void Deactivate(unsigned int aId)

@@ -60,6 +60,7 @@ namespace Database
 				const SpawnerTemplate &spawnertemplate = Database::spawnertemplate.Get(aId);
 				Spawner *spawner = new Spawner(spawnertemplate, aId);
 				Database::spawner.Put(aId, spawner);
+				spawner->Activate();
 			}
 
 			void Deactivate(unsigned int aId)

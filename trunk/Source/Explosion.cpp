@@ -61,6 +61,7 @@ namespace Database
 				const ExplosionTemplate &explosiontemplate = Database::explosiontemplate.Get(aId);
 				Explosion *explosion = new Explosion(explosiontemplate, aId);
 				Database::explosion.Put(aId, explosion);
+				explosion->Activate();
 			}
 
 			void Deactivate(unsigned int aId)

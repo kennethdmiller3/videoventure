@@ -26,8 +26,6 @@ public:
 		bool pressed;	// pressed this turn
 		bool released;	// released this turn
 	};
-	typedef std::multimap<int, Binding> Map;
-	Map map;
 
 public:
 	Input(void);

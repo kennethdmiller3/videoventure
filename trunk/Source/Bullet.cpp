@@ -61,6 +61,7 @@ namespace Database
 				const BulletTemplate &bullettemplate = Database::bullettemplate.Get(aId);
 				Bullet *bullet = new Bullet(bullettemplate, aId);
 				Database::bullet.Put(aId, bullet);
+				bullet->Activate();
 			}
 
 			void Deactivate(unsigned int aId)

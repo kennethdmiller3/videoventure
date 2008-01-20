@@ -44,6 +44,7 @@ namespace Database
 				const GunnerTemplate &gunnertemplate = Database::gunnertemplate.Get(aId);
 				Gunner *gunner = new Gunner(gunnertemplate, aId);
 				Database::gunner.Put(aId, gunner);
+				gunner->Activate();
 			}
 
 			void Deactivate(unsigned int aId)

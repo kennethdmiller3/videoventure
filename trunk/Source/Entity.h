@@ -5,15 +5,8 @@
 class Entity
 {
 private:
-	// list of all entities
-	typedef std::list<Entity *> List;
-	static List sAll;
-
 	// next available identifier
 	static unsigned int sNextId;
-
-	// list entry
-	List::iterator entry;
 
 protected:
 	// identifier

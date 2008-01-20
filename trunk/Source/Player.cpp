@@ -43,6 +43,7 @@ namespace Database
 				Player *player = new Player(aId);
 				Database::player.Put(aId, player);
 				Database::controller.Put(aId, player);
+				player->Activate();
 			}
 
 			void Deactivate(unsigned int aId)

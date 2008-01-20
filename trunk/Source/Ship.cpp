@@ -62,6 +62,7 @@ namespace Database
 				const ShipTemplate &shiptemplate = Database::shiptemplate.Get(aId);
 				Ship *ship = new Ship(shiptemplate, aId);
 				Database::ship.Put(aId, ship);
+				ship->Activate();
 			}
 
 			void Deactivate(unsigned int aId)

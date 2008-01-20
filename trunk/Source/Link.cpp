@@ -67,9 +67,61 @@ namespace Database
 				for (Typed<LinkTemplate>::Iterator itor(Database::linktemplate.Find(aId)); itor.IsValid(); ++itor)
 				{
 					// create the link
-					const LinkTemplate &linktemplate = itor.GetValue();
+					LinkTemplate linktemplate(itor.GetValue());
+
+					// get the source entity
+					Entity *entity = Database::entity.Get(aId);
+
+					// instantiate the linked template
+					Matrix2 transform(linktemplate.mOffset * entity->GetTransform());
+					unsigned int mSecondary = Database::Instantiate(linktemplate.mSecondary,
+						transform.Angle(), transform.p, entity->GetVelocity(), entity->GetOmega());
+					linktemplate.mSecondary = mSecondary;
+
+					// create the link
 					Link *link = new Link(linktemplate, aId);
 					links.Put(itor.GetKey(), link);
+
+					// create a backlink
+					Database::backlink.Put(mSecondary, aId);
+
+					// propagate ownership
+					if (const unsigned int *aOwnerId = Database::owner.Find(aId))
+						Database::owner.Put(mSecondary, *aOwnerId);
+
+					// if linking two collidables...
+					if (Database::collidabletemplate.Find(aId) &&
+						Database::collidabletemplate.Find(mSecondary))
+					{
+						// if updating position
+						if (linktemplate.mUpdatePosition)
+						{
+							// add a revolute joint to the linked template (HACK)
+							CollidableTemplate &collidable = Database::collidabletemplate.Open(mSecondary);
+							collidable.joints.push_back(CollidableTemplate::JointTemplate());
+							CollidableTemplate::JointTemplate &jointtemplate = collidable.joints.back();
+							jointtemplate.name1 = aId;
+							jointtemplate.body1 = 0xea90e208 /* "main" */;
+							jointtemplate.name2 = mSecondary;
+							jointtemplate.body2 = 0xea90e208 /* "main" */;
+							collidable.revolutes.push_back(b2RevoluteJointDef());
+							b2RevoluteJointDef &joint = collidable.revolutes.back();
+							joint.userData = &jointtemplate;
+							if (linktemplate.mUpdateAngle)
+							{
+								joint.lowerAngle = 0.0f;
+								joint.upperAngle = 0.0f;
+								joint.enableLimit = true;
+							}
+							Database::collidabletemplate.Close(mSecondary);
+						}
+					}
+					// else if updating angle or position...
+					else if (linktemplate.mUpdateAngle || linktemplate.mUpdatePosition)
+					{
+						// activate link update
+						link->Activate();
+					}
 				}
 
 				Database::link.Close(aId);
@@ -150,62 +202,8 @@ Link::Link(void)
 Link::Link(const LinkTemplate &aTemplate, unsigned int aId)
 : Updatable(aId)
 , mSub(aTemplate.mSub)
-, mSecondary(0)
+, mSecondary(aTemplate.mSecondary)
 {
-	if (aTemplate.mSecondary)
-	{
-		// get the source entity
-		Entity *entity = Database::entity.Get(aId);
-
-		// instantiate the linked template
-		Matrix2 transform(aTemplate.mOffset * entity->GetTransform());
-		mSecondary = Database::Instantiate(aTemplate.mSecondary,
-			transform.Angle(), transform.p, entity->GetVelocity(), entity->GetOmega());
-
-		// create a backlink
-		Database::backlink.Put(mSecondary, aId);
-
-		// propagate ownership
-		if (const unsigned int *aOwnerId = Database::owner.Find(aId))
-			Database::owner.Put(mSecondary, *aOwnerId);
-
-		// if not updating angle or position...
-		if (!aTemplate.mUpdateAngle && !aTemplate.mUpdatePosition)
-		{
-			// disable udpate
-			Deactivate();
-		}
-
-		// if linking two collidables...
-		if (Database::collidabletemplate.Find(aId) &&
-			Database::collidabletemplate.Find(mSecondary))
-		{
-			// disable update
-			Deactivate();
-
-			if (aTemplate.mUpdatePosition)
-			{
-				// add a revolute joint to the linked template (HACK)
-				CollidableTemplate &collidable = Database::collidabletemplate.Open(mSecondary);
-				collidable.joints.push_back(CollidableTemplate::JointTemplate());
-				CollidableTemplate::JointTemplate &jointtemplate = collidable.joints.back();
-				jointtemplate.name1 = aId;
-				jointtemplate.body1 = 0xea90e208 /* "main" */;
-				jointtemplate.name2 = mSecondary;
-				jointtemplate.body2 = 0xea90e208 /* "main" */;
-				collidable.revolutes.push_back(b2RevoluteJointDef());
-				b2RevoluteJointDef &joint = collidable.revolutes.back();
-				joint.userData = &jointtemplate;
-				if (aTemplate.mUpdateAngle)
-				{
-					joint.lowerAngle = 0.0f;
-					joint.upperAngle = 0.0f;
-					joint.enableLimit = true;
-				}
-				Database::collidabletemplate.Close(mSecondary);
-			}
-		}
-	}
 }
 
 Link::~Link(void)

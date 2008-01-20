@@ -23,7 +23,7 @@ namespace Database
 	Typed<Entity *> entity(0xd33ff5da /* "entity" */);
 }
 
-Entity::List Entity::sAll;
+
 unsigned int Entity::sNextId = 1;
 
 Entity::Entity(unsigned int id)
@@ -33,14 +33,10 @@ Entity::Entity(unsigned int id)
 , veloc(0, 0)
 , omega(0)
 {
-	if (id > 0)
-		entry = sAll.insert(sAll.end(), this);
 }
 
 Entity::~Entity(void)
 {
-	if (id > 0)
-		sAll.erase(entry);
 }
 
 // configure
