@@ -65,6 +65,7 @@ namespace Database
 				Aimer *aimer = new Aimer(aimertemplate, aId);
 				Database::aimer.Put(aId, aimer);
 				Database::controller.Put(aId, aimer);
+				aimer->Activate();
 			}
 
 			void Deactivate(unsigned int aId)

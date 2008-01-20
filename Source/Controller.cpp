@@ -1,49 +1,80 @@
 #include "StdAfx.h"
 #include "Controller.h"
 
-Controller::List Controller::sAll;
-
 namespace Database
 {
 	Typed<Controller *> controller(0xb4652c81 /* "controller" */);
 }
 
+// list of all controllers
+static Controller *sHead;
+static Controller *sTail;
+static Controller *sNext;
+
 Controller::Controller(unsigned int aId)
 : id(aId)
-, entry(sAll.end())
+, mNext(NULL)
+, mPrev(NULL)
+, entry()
 , mMove(0, 0)
 , mAim(0, 0)
 , mFire(false)
 {
-	if (id > 0)
-	{
-		entry = sAll.insert(sAll.end(), Entry(this, &Controller::Control));
-	}
 }
 
 Controller::~Controller(void)
 {
-	if (entry != sAll.end())
+	Deactivate();
+}
+
+void Controller::Activate(void)
+{
+	if (entry.empty())
 	{
-		sAll.erase(entry);
+		entry.bind(this, &Controller::Control);
+		mPrev = sTail;
+		if (sTail)
+			sTail->mNext = this;
+		sTail = this;
+		if (!sHead)
+			sHead = this;
+	}
+}
+
+void Controller::Deactivate(void)
+{
+	if (!entry.empty())
+	{
+		entry.clear();
+		if (sHead == this)
+			sHead = mNext;
+		if (sTail == this)
+			sTail = mPrev;
+		if (sNext == this)
+			sNext = mNext;
+		if (mNext)
+			mNext->mPrev = mPrev;
+		if (mPrev)
+			mPrev->mNext = mNext;
+		mNext = NULL;
+		mPrev = NULL;
 	}
 }
 
 void Controller::ControlAll(float aStep)
 {
 	// update all controllers
-	List::iterator itor = sAll.begin();
-	while (itor != sAll.end())
+	Controller *itor = sHead;
+	while (itor)
 	{
 		// get the next iterator
 		// (in case the entry gets deleted)
-		List::iterator next(itor);
-		++next;
+		sNext = itor->mNext;
 
-		// control
-		(*itor)(aStep);
+		// perform simulation
+		(itor->entry)(aStep);
 
 		// go to the next iterator
-		itor = next;
+		itor = sNext;
 	}
 }

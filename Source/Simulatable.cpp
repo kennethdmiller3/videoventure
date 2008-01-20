@@ -1,14 +1,14 @@
 #include "StdAfx.h"
 #include "Simulatable.h"
 
-Simulatable::List Simulatable::sAll;
-Simulatable::Remove Simulatable::sRemove;
+// list of all simulatables
+static Simulatable *sHead;
+static Simulatable *sTail;
+static Simulatable *sNext;
 
 Simulatable::Simulatable(unsigned int aId)
-: id(aId), entry(sAll.end())
+: id(aId), mNext(NULL), mPrev(NULL), entry()
 {
-	if (id > 0)
-		Activate();
 }
 
 Simulatable::~Simulatable(void)
@@ -18,33 +18,52 @@ Simulatable::~Simulatable(void)
 
 void Simulatable::Activate(void)
 {
-	if (entry == sAll.end())
+	if (entry.empty())
 	{
-		entry = sAll.insert(sAll.end(), Entry(this, &Simulatable::Simulate));
+		entry.bind(this, &Simulatable::Simulate);
+		mPrev = sTail;
+		if (sTail)
+			sTail->mNext = this;
+		sTail = this;
+		if (!sHead)
+			sHead = this;
 	}
 }
 
 void Simulatable::Deactivate(void)
 {
-	if (entry != sAll.end())
+	if (!entry.empty())
 	{
-		sRemove.push_back(entry);
-		entry->clear();
-		entry = sAll.end();
+		entry.clear();
+		if (sHead == this)
+			sHead = mNext;
+		if (sTail == this)
+			sTail = mPrev;
+		if (sNext == this)
+			sNext = mNext;
+		if (mNext)
+			mNext->mPrev = mPrev;
+		if (mPrev)
+			mPrev->mNext = mNext;
+		mNext = NULL;
+		mPrev = NULL;
 	}
 }
 
 void Simulatable::SimulateAll(float aStep)
 {
-	// perform pending deactivations
-	while (!sRemove.empty())
-	{
-		sAll.erase(sRemove.front());
-		sRemove.pop_front();
-	}
-
 	// simulate all simulatables
-	for (List::iterator itor = sAll.begin(); itor != sAll.end(); ++itor)
-		if (*itor)
-			(*itor)(aStep);
+	Simulatable *itor = sHead;
+	while (itor)
+	{
+		// get the next iterator
+		// (in case the entry gets deleted)
+		sNext = itor->mNext;
+
+		// perform simulation
+		(itor->entry)(aStep);
+
+		// go to the next iterator
+		itor = sNext;
+	}
 }

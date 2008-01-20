@@ -2,18 +2,18 @@
 
 class Controller
 {
-private:
-	// list of all controllables
-	typedef fastdelegate::FastDelegate<void (float)> Entry;
-	typedef std::list<Entry> List;
-	static List sAll;
-
-	// list entry
-	List::iterator entry;
-
 protected:
 	// identifier
 	unsigned int id;
+
+private:
+	// linked list
+	Controller *mNext;
+	Controller *mPrev;
+
+	// list entry
+	typedef fastdelegate::FastDelegate<void (float)> Entry;
+	Entry entry;
 
 public:
 	// controls
@@ -24,6 +24,10 @@ public:
 public:
 	Controller(unsigned int aId);
 	virtual ~Controller(void);
+
+	// activate
+	void Activate(void);
+	void Deactivate(void);
 
 	// configure
 	virtual bool Configure(const TiXmlElement *element) { return false; }

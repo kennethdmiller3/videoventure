@@ -1,6 +1,11 @@
 #include "StdAfx.h"
 #include "Input.h"
 
+namespace Database
+{
+	Typed<Typed<Input::Binding> > inputbinding;
+}
+
 Input::Input(void)
 {
 	memset(value, 0, sizeof(value));
@@ -13,14 +18,16 @@ Input::~Input(void)
 void Input::Bind(LOGICAL aLogical, int aType, int aDevice, int aControl, float aDeadzone, float aScale)
 {
 	int aPhysical = (aType << 24) | (aDevice << 16) | aControl;
-	Binding binding;
+	Database::Typed<Input::Binding> &bindings = Database::inputbinding.Open(aPhysical);
+	Binding &binding = bindings.Open(aLogical);
 	binding.target = aLogical;
 	binding.deadzone = aDeadzone;
 	binding.scale = aScale;
 	binding.previous = 0.0f;
 	binding.pressed = false;
 	binding.released = false;
-	map.insert(Map::value_type(aPhysical, binding));
+	bindings.Close(aLogical);
+	Database::inputbinding.Close(aPhysical);
 }
 
 void Input::Update(void)
@@ -51,17 +58,20 @@ void Input::Update(void)
 
 void Input::Step(void)
 {
-	for (Map::iterator itor = map.begin(); itor != map.end(); itor++)
+	for (Database::Typed<Database::Typed<Input::Binding> >::Iterator inputitor(&Database::inputbinding); inputitor.IsValid(); ++inputitor)
 	{
-		Binding &binding = itor->second;
-		if (binding.released)
+		for (Database::Typed<Input::Binding>::Iterator bindingitor(&inputitor.GetValue()); bindingitor.IsValid(); ++bindingitor)
 		{
-			if (binding.pressed)
+			Binding &binding = const_cast<Binding &>(bindingitor.GetValue());
+			if (binding.released)
 			{
-				value[binding.target] -= binding.scale;
-				binding.pressed = false;
+				if (binding.pressed)
+				{
+					value[binding.target] -= binding.scale;
+					binding.pressed = false;
+				}
+				binding.released = false;
 			}
-			binding.released = false;
 		}
 	}
 }
@@ -69,10 +79,9 @@ void Input::Step(void)
 void Input::OnAxis(int aType, int aDevice, int aControl, float aValue)
 {
 	int aPhysical = (aType << 24) | (aDevice << 16) | aControl;
-	std::pair<Map::iterator, Map::iterator> p = map.equal_range(aPhysical);
-	for (Map::iterator itor = p.first; itor != p.second; ++itor)
+	for (Database::Typed<Input::Binding>::Iterator bindingitor(Database::inputbinding.Find(aPhysical)); bindingitor.IsValid(); ++bindingitor)
 	{
-		Binding &binding = itor->second;
+		Binding &binding = const_cast<Binding &>(bindingitor.GetValue());
 		float scaled = aValue;
 		if (scaled < -binding.deadzone)
 			scaled = (scaled + binding.deadzone) * binding.scale;
@@ -91,10 +100,9 @@ void Input::OnAxis(int aType, int aDevice, int aControl, float aValue)
 void Input::OnPress(int aType, int aDevice, int aControl)
 {
 	int aPhysical = (aType << 24) | (aDevice << 16) | aControl;
-	std::pair<Map::iterator, Map::iterator> p = map.equal_range(aPhysical);
-	for (Map::iterator itor = p.first; itor != p.second; ++itor)
+	for (Database::Typed<Input::Binding>::Iterator bindingitor(Database::inputbinding.Find(aPhysical)); bindingitor.IsValid(); ++bindingitor)
 	{
-		Binding &binding = itor->second;
+		Binding &binding = const_cast<Binding &>(bindingitor.GetValue());
 		if (!binding.pressed)
 		{
 			value[binding.target] += binding.scale;
@@ -106,10 +114,9 @@ void Input::OnPress(int aType, int aDevice, int aControl)
 void Input::OnRelease(int aType, int aDevice, int aControl)
 {
 	int aPhysical = (aType << 24) | (aDevice << 16) | aControl;
-	std::pair<Map::iterator, Map::iterator> p = map.equal_range(aPhysical);
-	for (Map::iterator itor = p.first; itor != p.second; ++itor)
+	for (Database::Typed<Input::Binding>::Iterator bindingitor(Database::inputbinding.Find(aPhysical)); bindingitor.IsValid(); ++bindingitor)
 	{
-		Binding &binding = itor->second;
+		Binding &binding = const_cast<Binding &>(bindingitor.GetValue());
 		binding.released = true;
 	}
 }

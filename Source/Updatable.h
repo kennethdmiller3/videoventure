@@ -2,20 +2,18 @@
 
 class Updatable
 {
-private:
-	// list of all updatables
-	typedef fastdelegate::FastDelegate<void (float)> Entry;
-	typedef std::list<Entry> List;
-	static List sAll;
-	typedef std::deque<List::iterator> Remove;
-	static Remove sRemove;
-
-	// list entry
-	List::iterator entry;
-
 protected:
 	// identifier
 	unsigned int id;
+
+private:
+	// linked list
+	Updatable *mNext;
+	Updatable *mPrev;
+
+	// list entry
+	typedef fastdelegate::FastDelegate<void (float)> Entry;
+	Entry entry;
 
 public:
 	Updatable(unsigned int aId);

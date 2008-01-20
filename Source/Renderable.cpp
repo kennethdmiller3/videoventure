@@ -140,11 +140,15 @@ void Renderable::Show(void)
 		if (sHead)
 			sHead->mPrev = this;
 		sHead = this;
+		if (!sTail)
+			sTail = this;
 #else
 		mPrev = sTail;
 		if (sTail)
 			sTail->mNext = this;
 		sTail = this;
+		if (!sHead)
+			sHead = this;
 #endif
 		show = true;
 	}
