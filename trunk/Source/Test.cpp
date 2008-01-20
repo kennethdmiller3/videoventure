@@ -29,9 +29,6 @@ float VIEW_AIM = 100;
 float VIEW_AIM_FILTER = 2.0f;
 
 // opengl attributes
-bool OPENGL_DOUBLEBUFFER = true;
-bool OPENGL_STEREO = false;
-bool OPENGL_ACCELERATED = true;
 bool OPENGL_SWAPCONTROL = true;
 bool OPENGL_ANTIALIAS = false;
 int OPENGL_MULTISAMPLE = 16;
@@ -73,7 +70,7 @@ OGLCONSOLE_Console console;
 Input input;
 
 // forward declaration
-int ProcessCommand( unsigned int aCommand, char *aParam[] );
+int ProcessCommand( unsigned int aCommand, char *aParam[], int aCount );
 
 // debug output
 int DebugPrint(const char *format, ...)
@@ -120,7 +117,7 @@ void cmdCB(OGLCONSOLE_Console console, char *cmd)
 	}
 
 	// process the command
-	ProcessCommand(command, param);
+	ProcessCommand(command, param, count);
 }
 
 bool init_GL()
@@ -216,11 +213,8 @@ bool init()
 #ifndef ENABLE_DEPTH_TEST
 	SDL_GL_SetAttribute( SDL_GL_DEPTH_SIZE, 0 );
 #endif
-	SDL_GL_SetAttribute( SDL_GL_DOUBLEBUFFER, OPENGL_DOUBLEBUFFER );
-	SDL_GL_SetAttribute( SDL_GL_STEREO, OPENGL_STEREO );
 	SDL_GL_SetAttribute( SDL_GL_MULTISAMPLEBUFFERS, OPENGL_MULTISAMPLE > 1 );
 	SDL_GL_SetAttribute( SDL_GL_MULTISAMPLESAMPLES, OPENGL_MULTISAMPLE );
-//	SDL_GL_SetAttribute( SDL_GL_ACCELERATED_VISUAL, OPENGL_ACCELERATED );		// this breaks multisampling for some reason...
 	SDL_GL_SetAttribute( SDL_GL_SWAP_CONTROL, OPENGL_SWAPCONTROL );
 
 	// create the window
@@ -636,151 +630,363 @@ enum InputType
 
 
 // commands
-int ProcessCommand( unsigned int aCommand, char *aParam[] )
+int ProcessCommand( unsigned int aCommand, char *aParam[], int aCount )
 {
 	switch (aCommand)
 	{
 	case 0x1d215c8f /* "resolution" */:
-		SCREEN_WIDTH = atoi(aParam[0]);
-		SCREEN_HEIGHT = atoi(aParam[1]);
-		return 2;
+		if (aCount >= 2)
+		{
+			SCREEN_WIDTH = atoi(aParam[0]);
+			SCREEN_HEIGHT = atoi(aParam[1]);
+			return 2;
+		}
+		else
+		{
+			OGLCONSOLE_Output(console, "resoution: %dx%d\n", SCREEN_WIDTH, SCREEN_HEIGHT);
+			return 0;
+		}
 
 	case 0xfe759eea /* "depth" */:
-		SCREEN_DEPTH = atoi(aParam[0]);
-		return 1;
+		if (aCount >= 1)
+		{
+			SCREEN_DEPTH = atoi(aParam[0]);
+			return 1;
+		}
+		else
+		{
+			OGLCONSOLE_Output(console, "depth: %dbpp\n", SCREEN_DEPTH);
+			return 0;
+		}
 
 	case 0x5032fb58 /* "fullscreen" */:
-		SCREEN_FULLSCREEN = atoi(aParam[0]) != 0;
-		return 1;
+		if (aCount >= 1)
+		{
+			SCREEN_FULLSCREEN = atoi(aParam[0]) != 0;
+			return 1;
+		}
+		else
+		{
+			OGLCONSOLE_Output(console, "fullscreen: %d\n", SCREEN_FULLSCREEN);
+			return 0;
+		}
 
 	case 0x06f8f066 /* "vsync" */:
-		OPENGL_SWAPCONTROL = atoi(aParam[0]) != 0;
-		return 1;
+		if (aCount >= 1)
+		{
+			OPENGL_SWAPCONTROL = atoi(aParam[0]) != 0;
+			return 1;
+		}
+		else
+		{
+			OGLCONSOLE_Output(console, "vsync: %d\n", OPENGL_SWAPCONTROL);
+			return 0;
+		}
 
 	case 0x35c8978f /* "antialias" */:
-		OPENGL_ANTIALIAS = atoi(aParam[0]) != 0;
-		return 1;
+		if (aCount >= 1)
+		{
+			OPENGL_ANTIALIAS = atoi(aParam[0]) != 0;
+			return 1;
+		}
+		else
+		{
+			OGLCONSOLE_Output(console, "antialias: %d\n", OPENGL_ANTIALIAS);
+			return 0;
+		}
 
 	case 0x47d0f228 /* "multisample" */:
-		OPENGL_MULTISAMPLE = atoi(aParam[0]);
-		return 1;
-
-	case 0x68b9bf22 /* "doublebuffer" */:
-		OPENGL_DOUBLEBUFFER = atoi(aParam[0]) != 0;
-		return 1;
-
-	case 0xcc87a64d /* "stereo" */:
-		OPENGL_STEREO = atoi(aParam[0]) != 0;
-		return 1;
-
-	case 0xb5708afc /* "accelerated" */:
-		OPENGL_ACCELERATED = atoi(aParam[0]) != 0;
-		return 1;
+		if (aCount >= 1)
+		{
+			OPENGL_MULTISAMPLE = atoi(aParam[0]);
+			return 1;
+		}
+		else
+		{
+			OGLCONSOLE_Output(console, "multisample: %d\n", OPENGL_MULTISAMPLE);
+			return 0;
+		}
 
 	case 0x1ae79789 /* "viewsize" */:
-		VIEW_SIZE = float(atof(aParam[0]));
-		return 1;
+		if (aCount >= 1)
+		{
+			VIEW_SIZE = float(atof(aParam[0]));
+			return 1;
+		}
+		else
+		{
+			OGLCONSOLE_Output(console, "viewsize: %d\n", VIEW_SIZE);
+			return 0;
+		}
 
 	case 0x8e6b4341 /* "viewaim" */:
-		VIEW_AIM = float(atof(aParam[0]));
-		return 1;
+		if (aCount >= 1)
+		{
+			VIEW_AIM = float(atof(aParam[0]));
+			return 1;
+		}
+		else
+		{
+			OGLCONSOLE_Output(console, "viewaim: %d\n", VIEW_AIM);
+			return 0;
+		}
 
 	case 0xd49cb7d3 /* "viewaimfilter" */:
-		VIEW_AIM_FILTER = float(atof(aParam[0]));
-		return 1;
+		if (aCount >= 1)
+		{
+			VIEW_AIM_FILTER = float(atof(aParam[0]));
+			return 1;
+		}
+		else
+		{
+			OGLCONSOLE_Output(console, "viewaimfilter: %f\n", VIEW_AIM_FILTER);
+			return 0;
+		}
 
 	case 0xf9d86f7b /* "input" */:
-		INPUT_CONFIG = aParam[0];
-		return 1;
+		if (aCount >= 1)
+		{
+			INPUT_CONFIG = aParam[0];
+			return 1;
+		}
+		else
+		{
+			OGLCONSOLE_Output(console, "input: %s\n", INPUT_CONFIG);
+			return 0;
+		}
 
 	case 0x9b99e7dd /* "level" */:
-		LEVEL_CONFIG = aParam[0];
-		return 1;
+		if (aCount >= 1)
+		{
+			LEVEL_CONFIG = aParam[0];
+			return 1;
+		}
+		else
+		{
+			OGLCONSOLE_Output(console, "level: %s\n", LEVEL_CONFIG);
+			return 0;
+		}
 
 	case 0xd6974b06 /* "simrate" */:
-		SIMULATION_RATE = atoi(aParam[0]);
-		return 1;
+		if (aCount >= 1)
+		{
+			SIMULATION_RATE = atoi(aParam[0]);
+			return 1;
+		}
+		else
+		{
+			OGLCONSOLE_Output(console, "simrate: %d\n", SIMULATION_RATE);
+			return 0;
+		}
 
 	case 0x9f2f269e /* "timescale" */:
-		TIME_SCALE = float(atof(aParam[0]));
-		return 1;
+		if (aCount >= 1)
+		{
+			TIME_SCALE = float(atof(aParam[0]));
+			return 1;
+		}
+		else
+		{
+			OGLCONSOLE_Output(console, "timescale: %f\n", TIME_SCALE);
+			return 0;
+		}
 
 	case 0xf744f3b2 /* "motionblur" */:
-		RENDER_MOTIONBLUR = atoi(aParam[0]);
-		return 1;
+		if (aCount >= 1)
+		{
+			RENDER_MOTIONBLUR = atoi(aParam[0]);
+			return 1;
+		}
+		else
+		{
+			OGLCONSOLE_Output(console, "motionblur: %d\n", RENDER_MOTIONBLUR);
+			return 0;
+		}
 
 	case 0x94c716fd /* "outputconsole" */:
-		DEBUGPRINT_OUTPUTCONSOLE = atoi(aParam[0]) != 0;
-		return 1;
+		if (aCount >= 1)
+		{
+			DEBUGPRINT_OUTPUTCONSOLE = atoi(aParam[0]) != 0;
+			return 1;
+		}
+		else
+		{
+			OGLCONSOLE_Output(console, "outputconsole: %d\n", DEBUGPRINT_OUTPUTCONSOLE);
+			return 0;
+		}
 
 	case 0x54822903 /* "outputdebug" */:
-		DEBUGPRINT_OUTPUTDEBUG = atoi(aParam[0]) != 0;
-		return 1;
+		if (aCount >= 1)
+		{
+			DEBUGPRINT_OUTPUTDEBUG = atoi(aParam[0]) != 0;
+			return 1;
+		}
+		else
+		{
+			OGLCONSOLE_Output(console, "outputdebug: %d\n", DEBUGPRINT_OUTPUTDEBUG);
+			return 0;
+		}
 
 	case 0x8940763c /* "outputstderr" */:
-		DEBUGPRINT_OUTPUTSTDERR = atoi(aParam[0]) != 0;
-		return 1;
+		if (aCount >= 1)
+		{
+			DEBUGPRINT_OUTPUTSTDERR = atoi(aParam[0]) != 0;
+			return 1;
+		}
+		else
+		{
+			OGLCONSOLE_Output(console, "outputstderr: %d\n", DEBUGPRINT_OUTPUTSTDERR);
+			return 0;
+		}
 
 	case 0xfbcc8f02 /* "profilescreen" */:
-		PROFILER_OUTPUTSCREEN = atoi(aParam[0]) != 0;
-		return 1;
+		if (aCount >= 1)
+		{
+			PROFILER_OUTPUTSCREEN = atoi(aParam[0]) != 0;
+			return 1;
+		}
+		else
+		{
+			OGLCONSOLE_Output(console, "profilescreen: %d\n", PROFILER_OUTPUTSCREEN);
+			return 0;
+		}
 
 	case 0x85e872f9 /* "profileprint" */:
-		PROFILER_OUTPUTPRINT = atoi(aParam[0]) != 0;
-		return 1;
+		if (aCount >= 1)
+		{
+			PROFILER_OUTPUTPRINT = atoi(aParam[0]) != 0;
+			return 1;
+		}
+		else
+		{
+			OGLCONSOLE_Output(console, "profileprint: %d\n", PROFILER_OUTPUTPRINT);
+			return 0;
+		}
 
 	case 0xa165ddb8 /* "database" */:
+		if (aCount >= 1)
 		{
-			unsigned int id = Hash(aParam[0]);
+			// get the database identifier
+			unsigned int id;
+			if (!sscanf(aParam[0], "0x%x", &id))
+				id = Hash(aParam[0]);
+
+			// get the dtabase
 			Database::Untyped *db = Database::GetDatabases().Get(id);
 			if (db)
 			{
+				// list database properties
 				OGLCONSOLE_Output(console, "stride=%d shift=%d bits=%d limit=%d count=%d\n",
 					db->GetStride(), db->GetShift(), db->GetBits(), db->GetLimit(), db->GetCount());
 			}
 			else
 			{
+				// not found
 				OGLCONSOLE_Output(console, "database \"%s\" (0x%08x) not found\n", aParam[0], id);
 			}
+			return 1;
 		}
-		return 1;
+		else
+		{
+			// list all database identifiers
+			OGLCONSOLE_Output(console, "databases:\n");
+			for (Database::Untyped::Iterator itor(&Database::GetDatabases()); itor.IsValid(); ++itor)
+			{
+				OGLCONSOLE_Output(console, "0x%08x\n", itor.GetKey());
+			}
+			return 0;
+		}
 
 	case 0xbdf0855a /* "find" */:
+		if (aCount >= 1)
 		{
-			unsigned int id = Hash(aParam[0]);
+			// get the database identifier
+			unsigned int id;
+			if (!sscanf(aParam[0], "0x%x", &id))
+				id = Hash(aParam[0]);
+
+			// get the database
 			Database::Untyped *db = Database::GetDatabases().Get(id);
 			if (db)
 			{
-				unsigned int key = Hash(aParam[1]);
-				if (const void *data = db->Find(key))
+				// if supplying a key...
+				if (aCount >= 2)
 				{
-					OGLCONSOLE_Output(console, "record \"%s\" (0x%08x) data=0x%p\n", aParam[1], key, data);
+					// if the key is an identifier...
+					unsigned int key = 0;
+					if (sscanf(aParam[1], "0x%x", &key))
+					{
+						// look up the identifier
+						if (const void *value = db->Find(key))
+						{
+							const std::string &name = Database::name.Get(key);
+							OGLCONSOLE_Output(console, "name=\"%s\" key=0x%08x data=0x%p\n", name.c_str(), key, value);
+						}
+						else
+						{
+							OGLCONSOLE_Output(console, "no record found\n");
+						}
+					}
+					else
+					{
+						// list all keys matching the string name
+						OGLCONSOLE_Output(console, "records matching \"%s\":\n", aParam[1]);
+						for (Database::Untyped::Iterator itor(db); itor.IsValid(); ++itor)
+						{
+							const std::string &name = Database::name.Get(itor.GetKey());
+							if (_stricmp(name.c_str(), aParam[1]) == 0)
+							{
+								OGLCONSOLE_Output(console, "%d: name=\"%s\" key=0x%08x data=0x%p\n", itor.GetSlot(), name.c_str(), itor.GetKey(), itor.GetValue());
+							}
+						}
+					}
+					return 2;
 				}
 				else
 				{
-					OGLCONSOLE_Output(console, "record \"%s\" (0x%08x) not found\n", aParam[1], key);
+					// list the contents of the database
+					for (Database::Untyped::Iterator itor(db); itor.IsValid(); ++itor)
+					{
+						const std::string &name = Database::name.Get(itor.GetKey());
+						OGLCONSOLE_Output(console, "%d: name=\"%s\" key=0x%08x data=0x%p\n", itor.GetSlot(), name.c_str(), itor.GetKey(), itor.GetValue());
+					}
 				}
 			}
 			else
 			{
+				// not found
 				OGLCONSOLE_Output(console, "database \"%s\" (0x%08x) not found\n", aParam[0], id);
 			}
+			return 1;
 		}
-		return 2;
-
-	case 0x0cfb5881 /* "list" */:
+		else
 		{
-			unsigned int id = Hash(aParam[0]);
-			Database::Untyped *db = Database::GetDatabases().Get(id);
-			if (db)
+			return 0;
+		}
+
+	case 0x1bf51169 /* "components" */:
+		if (aCount >= 1)
+		{
+			// get the identifier
+			unsigned int key;
+			if (!sscanf(aParam[0], "0x%x", &key))
+				key = Hash(aParam[0]);
+
+			// for each database...
+			for (Database::Typed<Database::Untyped *>::Iterator itor(&Database::GetDatabases()); itor.IsValid(); ++itor)
 			{
-				for (Database::Untyped::Iterator itor(db); itor.IsValid(); ++itor)
+				// if the database contains a record for the identifier...
+				if (const void *value = itor.GetValue()->Find(key))
 				{
-					OGLCONSOLE_Output(console, "%d: name=\"%s\" key=0x%08x data=0x%p\n", itor.GetSlot(), Database::name.Get(itor.GetKey()).c_str(), itor.GetKey(), itor.GetValue());
+					OGLCONSOLE_Output(console, "database 0x%08x data=0x%p\n", itor.GetKey(), value);
 				}
 			}
+			return 1;
 		}
-		return 1;
+		else
+		{
+			return 0;
+		}
 
 	default:
 		return 0;
@@ -793,9 +999,25 @@ int SDL_main( int argc, char *argv[] )
 	// process command-line arguments
 	for (int i = 1; i < argc; ++i)
 	{
+		// if the argument is a command...
 		if (argv[i][0] == '-' || argv[i][0] == '/')
 		{
-			i += ProcessCommand(Hash(argv[i]+1), argv+i+1);
+			// get command hash
+			unsigned int command = Hash(argv[i]+1);
+
+			// scan for next command
+			int count = 0;
+			for (int j = i+1; j < argc; j++)
+			{
+				if (argv[j][0] == '-' || argv[j][0] == '/')
+				{
+					break;
+				}
+				++count;
+			}
+
+			ProcessCommand(command, argv+i+1, count);
+			i += count;
 		}
 	}
 
