@@ -150,6 +150,7 @@
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="&quot;..\SDL-1.2.13\lib&quot;,&quot;..\Box2D\Library&quot;"
 				GenerateDebugInformation="true"
+				GenerateMapFile="true"
 				SubSystem="2"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
@@ -255,6 +256,10 @@
 			</File>
 			<File
 				RelativePath=".\Source\Simulatable.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Sound.cpp"
 				>
 			</File>
 			<File
@@ -381,6 +386,10 @@
 			</File>
 			<File
 				RelativePath=".\Source\Simulatable.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Sound.h"
 				>
 			</File>
 			<File

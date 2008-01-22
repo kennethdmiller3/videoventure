@@ -4,11 +4,29 @@
 
 namespace Database
 {
+	Typed<std::vector<unsigned int> > dynamicdrawlist(0xdf3cf9c0 /* "dynamicdrawlist" */);
 	Typed<GLuint> drawlist(0xc98b019b /* "drawlist" */);
 	Typed<GLuint> texture(0x3c6468f4 /* "texture" */);
 
 	namespace Loader
 	{
+		class DynamicDrawlistLoader
+		{
+		public:
+			DynamicDrawlistLoader()
+			{
+				AddConfigure(0xdf3cf9c0 /* "dynamicdrawlist" */, Entry(this, &DynamicDrawlistLoader::Configure));
+			}
+
+			void Configure(unsigned int aId, const TiXmlElement *element)
+			{
+				std::vector<unsigned int> &buffer = Database::dynamicdrawlist.Open(aId);
+				ProcessDrawItems(element, buffer);
+				Database::dynamicdrawlist.Close(aId);
+			}
+		}
+		dynamicdrawlistloader;
+
 		class DrawlistLoader
 		{
 		public:
@@ -23,13 +41,8 @@ namespace Database
 				GLuint handle = glGenLists(1);
 				glNewList(handle, GL_COMPILE);
 
-				// get the list name
-				const char *name = element->Attribute("name");
-				if (name)
-				{
-					// register the draw list
-					Database::drawlist.Put(Hash(name), handle);
-				}
+				// register the draw list
+				Database::drawlist.Put(aId, handle);
 
 				// get (optional) parameter value
 				float param = 0.0f;
@@ -48,6 +61,149 @@ namespace Database
 			}
 		}
 		drawlistloader;
+
+		class TextureLoader
+		{
+		public:
+			TextureLoader()
+			{
+				AddConfigure(0x3c6468f4 /* "texture" */, Entry(this, &TextureLoader::Configure));
+			}
+
+			void Configure(unsigned int aId, const TiXmlElement *element)
+			{
+				for (const TiXmlElement *child = element->FirstChildElement(); child; child = child->NextSiblingElement())
+				{
+					switch (Hash(child->Value()))
+					{
+					case 0xaaea5743 /* "file" */:
+						if (const char *file = child->Attribute("name"))
+						{
+							// get the surface
+							SDL_Surface *surface = SDL_LoadBMP(file);
+							if (!surface)
+								continue;
+
+							// check if the width is a power of 2
+							if ((surface->w & (surface->w - 1)) != 0)
+							{
+								DebugPrint("warning: %s width %d is not a power of 2\n", file, surface->w);
+							}
+							
+							// check if the height is a power of 2
+							if ((surface->h & (surface->h - 1)) != 0)
+							{
+								DebugPrint("warning: %s height %d is not a power of 2\n", file, surface->h);
+							}
+						 
+							// get the number of channels in the SDL surface
+							GLenum texture_format;
+							GLint color_size = surface->format->BytesPerPixel;
+							if (color_size == 4)     // contains an alpha channel
+							{
+								if (surface->format->Rmask == 0x000000ff)
+									texture_format = GL_RGBA;
+								else
+									texture_format = GL_BGRA;
+							}
+							else if (color_size == 3)     // no alpha channel
+							{
+								if (surface->format->Rmask == 0x000000ff)
+									texture_format = GL_RGB;
+								else
+									texture_format = GL_BGR;
+							}
+							else
+							{
+								DebugPrint("warning: %s is not truecolor\n", file);
+								SDL_FreeSurface( surface );
+								break;
+							}
+
+							// generate a texture object handle
+							GLuint texture;
+							glGenTextures( 1, &texture );
+
+							// register the texture
+							Database::texture.Put(aId, texture);
+
+							// save texture state
+							glPushAttrib(GL_TEXTURE_BIT);
+
+							// bind the texture object
+							glBindTexture(GL_TEXTURE_2D, texture);
+
+							// mode
+							GLint mode;
+
+							// set blend mode
+							switch (Hash(child->Attribute("mode")))
+							{
+							default:
+							case 0x818f75ae /* "modulate" */:	mode = GL_MODULATE; break;
+							case 0xde15f6ae /* "decal" */:		mode = GL_DECAL; break;
+							case 0x0bbc40d8 /* "blend" */:		mode = GL_BLEND; break;
+							case 0xa13884c3 /* "replace" */:	mode = GL_REPLACE; break;
+							}
+							glTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, mode );
+
+							// set minification filter
+							switch (Hash(child->Attribute("minfilter")))
+							{
+							default:
+							case 0xc42bfa19 /* "nearest" */:			mode = GL_NEAREST; break;
+							case 0xd00594c0 /* "linear" */:				mode = GL_LINEAR; break;
+							case 0x70bf16c1 /* "nearestmipnearest" */:	mode = GL_NEAREST_MIPMAP_NEAREST; break;
+							case 0xc81505e8 /* "linearmipnearest" */:	mode = GL_LINEAR_MIPMAP_NEAREST; break;
+							case 0x95d62f98 /* "nearestmiplinear" */:	mode = GL_NEAREST_MIPMAP_LINEAR; break;
+							case 0x1274a447 /* "linearmiplinear" */:	mode = GL_LINEAR_MIPMAP_LINEAR; break;
+							}
+							glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, mode );
+
+							// set magnification filter
+							switch (Hash(child->Attribute("magfilter")))
+							{
+							default:
+							case 0xc42bfa19 /* "nearest" */:			mode = GL_NEAREST; break;
+							case 0xd00594c0 /* "linear" */:				mode = GL_LINEAR; break;
+							}
+							glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, mode );
+
+							// set s wrapping
+							switch (Hash(child->Attribute("wraps")))
+							{
+							default:
+							case 0xa82efcbc /* "clamp" */:				mode = GL_CLAMP; break;
+							case 0xd99ba82a /* "repeat" */:				mode = GL_REPEAT; break;
+							}
+							glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, mode );
+
+							// set t wrapping
+							switch (Hash(child->Attribute("wrapt")))
+							{
+							default:
+							case 0xa82efcbc /* "clamp" */:				mode = GL_CLAMP; break;
+							case 0xd99ba82a /* "repeat" */:				mode = GL_REPEAT; break;
+							}
+							glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, mode );
+
+							// set texture image data
+							glTexImage2D(
+								GL_TEXTURE_2D, 0, color_size, surface->w, surface->h, 0,
+								texture_format, GL_UNSIGNED_BYTE, surface->pixels
+								);
+
+							// restore texture state
+							glPopAttrib();
+
+							// free the surface
+							SDL_FreeSurface( surface );
+						}
+					}
+				}
+			}
+		}
+		textureloader;
 	}
 
 }

@@ -216,7 +216,7 @@ void Bullet::Collide(unsigned int aHitId, float aTime, b2Manifold aManifold[], i
 				if (damagable && (damagable->GetHealth() < Database::damagabletemplate.Get(aHitOwnerId).mHealth))
 				{
 					// apply healing value
-					damagable->Damage(id, bullet.mDamage);
+					damagable->Damage(id, std::max(bullet.mDamage, damagable->GetHealth() - Database::damagabletemplate.Get(aHitOwnerId).mHealth));
 					destroy = true;
 				}
 			}

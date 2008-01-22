@@ -54,6 +54,17 @@ extern int DebugPrint(const char *format, ...);
 // input system
 extern Input input;
 
+// fast reciprocal square root
+inline float InvSqrt(float x)
+{
+	float xhalf = 0.5f*x;
+	int i = *(int*)&x; // get bits for floating value
+	i = 0x5f375a86- (i>>1); // gives initial guess y0
+	x = *(float*)&i; // convert bits back to float
+	x = x*(1.5f-xhalf*x*x); // Newton step, repeating increases accuracy
+	return x;
+}
+
 // loader
 void ProcessTemplateItem(const TiXmlElement *element, unsigned int template_id);
 void ProcessTemplateItems(const TiXmlElement *element);
@@ -69,3 +80,5 @@ void ProcessEntityItems(const TiXmlElement *element);
 
 #define USE_POOL_ALLOCATOR
 #define USE_CHANGE_DYNAMIC_TYPE
+
+const int AUDIO_FREQUENCY = 44100;

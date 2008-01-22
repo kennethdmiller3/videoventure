@@ -16,6 +16,7 @@
 #include "Link.h"
 #include "Interpolator.h"
 #include "Drawlist.h"
+#include "Sound.h"
 
 // screen attributes
 int SCREEN_WIDTH = 640;
@@ -68,6 +69,9 @@ OGLCONSOLE_Console console;
 
 // input system
 Input input;
+
+// listener position (HACK)
+Vector2 listenerpos;
 
 // forward declaration
 int ProcessCommand( unsigned int aCommand, char *aParam[], int aCount );
@@ -284,6 +288,21 @@ bool init()
 	}
 #endif
 
+	extern void mixaudio(void *unused, Uint8 *stream, int len);
+	SDL_AudioSpec fmt;
+	fmt.freq = AUDIO_FREQUENCY;
+	fmt.format = AUDIO_S16;
+	fmt.channels = 2;
+	fmt.samples = 1024;
+	fmt.callback = mixaudio;
+	fmt.userdata = &listenerpos;
+
+	/* Open the audio device and start playing sound! */
+	if ( SDL_OpenAudio(&fmt, NULL) < 0 ) {
+		DebugPrint("Unable to open audio: %s\n", SDL_GetError());
+	}
+	SDL_PauseAudio(0);
+
 	// success!
 	return true;    
 }
@@ -292,6 +311,8 @@ void clean_up()
 {
     /* clean up oglconsole */                                                                        
     OGLCONSOLE_Quit();
+
+	SDL_CloseAudio();
 
 	// quit SDL
 	SDL_Quit();
@@ -438,174 +459,6 @@ static void ProcessWorldItems(const TiXmlElement *element)
 			}
 			break;
 
-		case 0x7f04120a /* "animateddrawlist" */:
-			{
-				// get the list name
-				const char *name = child->Attribute("name");
-				if (name)
-				{
-					std::vector<unsigned int> buffer;
-					ProcessDrawItems(child, buffer);
-				}
-			}
-			break;
-
-		case 0xc98b019b /* "drawlist" */:
-			{
-				// create a new draw list
-				GLuint handle = glGenLists(1);
-				glNewList(handle, GL_COMPILE);
-
-				// get the list name
-				const char *name = child->Attribute("name");
-				if (name)
-				{
-					// register the draw list
-					Database::drawlist.Put(Hash(name), handle);
-				}
-
-				// get (optional) parameter value
-				float param = 0.0f;
-				child->QueryFloatAttribute("param", &param);
-
-				// process draw items
-				std::vector<unsigned int> drawlist;
-				ProcessDrawItems(child, drawlist);
-				ExecuteDrawItems(&drawlist[0], drawlist.size(), param);
-
-				// finish the draw list
-				glEndList();
-			}
-			break;
-
-		case 0x3c6468f4 /* "texture" */:
-			if (const char *file = child->Attribute("file"))
-			{
-				if (SDL_Surface *surface = SDL_LoadBMP(file))
-				{ 	 
-					// check if the width is a power of 2
-					if ((surface->w & (surface->w - 1)) != 0)
-					{
-						DebugPrint("warning: %s width %d is not a power of 2\n", file, surface->w);
-					}
-					
-					// check if the height is a power of 2
-					if ((surface->h & (surface->h - 1)) != 0)
-					{
-						DebugPrint("warning: %s height %d is not a power of 2\n", file, surface->h);
-					}
-				 
-					// get the number of channels in the SDL surface
-					GLenum texture_format;
-					GLint color_size = surface->format->BytesPerPixel;
-					if (color_size == 4)     // contains an alpha channel
-					{
-						if (surface->format->Rmask == 0x000000ff)
-							texture_format = GL_RGBA;
-						else
-							texture_format = GL_BGRA;
-					}
-					else if (color_size == 3)     // no alpha channel
-					{
-						if (surface->format->Rmask == 0x000000ff)
-							texture_format = GL_RGB;
-						else
-							texture_format = GL_BGR;
-					}
-					else
-					{
-						DebugPrint("warning: %s is not truecolor\n", file);
-						SDL_FreeSurface( surface );
-						break;
-					}
-
-					// generate a texture object handle
-					GLuint texture;
-					glGenTextures( 1, &texture );
-
-					// get the list name
-					const char *name = child->Attribute("name");
-					if (name)
-					{
-						// register the draw list
-						Database::texture.Put(Hash(name), texture);
-					}
-
-					// save texture state
-					glPushAttrib(GL_TEXTURE_BIT);
-
-					// bind the texture object
-					glBindTexture(GL_TEXTURE_2D, texture);
-
-					// mode
-					GLint mode;
-
-					// set blend mode
-					switch (Hash(child->Attribute("mode")))
-					{
-					default:
-					case 0x818f75ae /* "modulate" */:	mode = GL_MODULATE; break;
-					case 0xde15f6ae /* "decal" */:		mode = GL_DECAL; break;
-					case 0x0bbc40d8 /* "blend" */:		mode = GL_BLEND; break;
-					case 0xa13884c3 /* "replace" */:	mode = GL_REPLACE; break;
-					}
-					glTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, mode );
-
-					// set minification filter
-					switch (Hash(child->Attribute("minfilter")))
-					{
-					default:
-					case 0xc42bfa19 /* "nearest" */:			mode = GL_NEAREST; break;
-					case 0xd00594c0 /* "linear" */:				mode = GL_LINEAR; break;
-					case 0x70bf16c1 /* "nearestmipnearest" */:	mode = GL_NEAREST_MIPMAP_NEAREST; break;
-					case 0xc81505e8 /* "linearmipnearest" */:	mode = GL_LINEAR_MIPMAP_NEAREST; break;
-					case 0x95d62f98 /* "nearestmiplinear" */:	mode = GL_NEAREST_MIPMAP_LINEAR; break;
-					case 0x1274a447 /* "linearmiplinear" */:	mode = GL_LINEAR_MIPMAP_LINEAR; break;
-					}
-					glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, mode );
-
-					// set magnification filter
-					switch (Hash(child->Attribute("magfilter")))
-					{
-					default:
-					case 0xc42bfa19 /* "nearest" */:			mode = GL_NEAREST; break;
-					case 0xd00594c0 /* "linear" */:				mode = GL_LINEAR; break;
-					}
-				    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, mode );
-
-					// set s wrapping
-					switch (Hash(child->Attribute("wraps")))
-					{
-					default:
-					case 0xa82efcbc /* "clamp" */:				mode = GL_CLAMP; break;
-					case 0xd99ba82a /* "repeat" */:				mode = GL_REPEAT; break;
-					}
-					glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, mode );
-
-					// set t wrapping
-					switch (Hash(child->Attribute("wrapt")))
-					{
-					default:
-					case 0xa82efcbc /* "clamp" */:				mode = GL_CLAMP; break;
-					case 0xd99ba82a /* "repeat" */:				mode = GL_REPEAT; break;
-					}
-					glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, mode );
-
-					// set texture image data
-					glTexImage2D(
-						GL_TEXTURE_2D, 0, color_size, surface->w, surface->h, 0,
-						texture_format, GL_UNSIGNED_BYTE, surface->pixels
-						);
-
-					// restore texture state
-					glPopAttrib();
-
-					// free the surface
-					SDL_FreeSurface( surface );
-				}
-			}
-			break;
-
 		case 0x1ac6a97e /* "cloud" */:
 			{
 				ProcessCloudItems(child);
@@ -613,6 +466,11 @@ static void ProcessWorldItems(const TiXmlElement *element)
 			break;
 
 		default:
+			{
+				const Database::Loader::Entry &configure = Database::Loader::GetConfigure(Hash(value));
+				if (configure)
+					configure(Hash(child->Attribute("name")), child);
+			}
 			break;
 		}
 	}
@@ -988,6 +846,17 @@ int ProcessCommand( unsigned int aCommand, char *aParam[], int aCount )
 			return 0;
 		}
 
+	case 0x0e0d9594 /* "sound" */:
+		if (aCount >= 1)
+		{
+			PlaySound(Hash(aParam[0]));
+			return 1;
+		}
+		else
+		{
+			return 0;
+		}
+		
 	default:
 		return 0;
 	}
@@ -1129,6 +998,8 @@ int SDL_main( int argc, char *argv[] )
 	// pause state
 	bool paused = false;
 
+	PlaySound(0x94326baa /* "startup" */);
+
 	DebugPrint("Simulating at %dHz (x%f)\n", SIMULATION_RATE, TIME_SCALE);
 
 	// camera track position
@@ -1187,6 +1058,7 @@ int SDL_main( int argc, char *argv[] )
 				else if (event.key.keysym.sym == SDLK_PAUSE)
 				{
 					paused = !paused;
+					SDL_PauseAudio(paused);
 				}
 				break;
 			case SDL_KEYUP:
@@ -1347,6 +1219,9 @@ int SDL_main( int argc, char *argv[] )
 
 				// track player position
 				trackpos = entity->GetInterpolatedPosition(sim_turns);
+
+				// set listener position
+				listenerpos = trackpos;
 
 				// if applying view aim
 				if (VIEW_AIM)
@@ -1591,6 +1466,9 @@ int SDL_main( int argc, char *argv[] )
 	while( !quit );
 
 	DebugPrint("Quitting...\n");
+
+	// stop audio
+	SDL_PauseAudio(1);
 
 	// clear all databases
 	Database::Cleanup();
