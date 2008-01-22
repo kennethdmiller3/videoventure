@@ -170,8 +170,83 @@ void Bullet::Simulate(float aStep)
 	}
 }
 
-void Bullet::Collide(unsigned int aHitId, float aTime, b2Manifold aManifold[], int aCount)
+void Bullet::Kill(void)
 {
+		// if spawning on expire...
+		const BulletTemplate &bullet = Database::bullettemplate.Get(id);
+		if (bullet.mSpawnOnDeath)
+		{
+#ifdef USE_CHANGE_DYNAMIC_TYPE
+			// change dynamic type
+			Database::Deactivate(id);
+			Database::parent.Put(id, bullet.mSpawnOnDeath);
+			Database::Activate(id);
+#else
+			// get the entity
+			Entity *entity = Database::entity.Get(id);
+			if (entity)
+			{
+				// spawn template at entity location
+				Database::Instantiate(bullet.mSpawnOnExpire, entity->GetAngle(), entity->GetPosition(), entity->GetVelocity(), entity->GetOmega());
+			}
+#endif
+		}
+#ifdef USE_CHANGE_DYNAMIC_TYPE
+		else
+#endif
+		{
+			// delete the entity
+			Database::Delete(id);
+		}
+
+		return;
+}
+
+
+class BulletKillUpdate : public Updatable
+{
+public:
+#ifdef USE_POOL_ALLOCATOR
+	void *operator new(size_t aSize);
+	void operator delete(void *aPtr);
+#endif
+
+	BulletKillUpdate(unsigned int aId)
+		: Updatable(aId)
+	{
+		Activate();
+	}
+
+	void Update(float aStep)
+	{
+		if (Bullet *bullet =Database::bullet.Get(id))
+			bullet->Kill();
+		Deactivate();
+		delete this;
+	}
+};
+
+#ifdef USE_POOL_ALLOCATOR
+// kill update pool
+static boost::pool<boost::default_user_allocator_malloc_free> killpool(sizeof(BulletKillUpdate));
+
+void *BulletKillUpdate::operator new(size_t aSize)
+{
+	return killpool.malloc();
+}
+void BulletKillUpdate::operator delete(void *aPtr)
+{
+	killpool.free(aPtr);
+}
+#endif
+
+
+void Bullet::Collide(unsigned int aHitId, float aTime, const b2Manifold aManifold[], int aCount)
+{
+	// do nothing if expired...
+	if (mLife <= 0)
+		return;
+
 	const BulletTemplate &bullet = Database::bullettemplate.Get(id);
 
 	// get team affiliation
@@ -251,36 +326,11 @@ void Bullet::Collide(unsigned int aHitId, float aTime, b2Manifold aManifold[], i
 		if (Renderable *renderable = Database::renderable.Get(spawnId))
 			renderable->SetFraction(aTime);
 	}
+#endif
 
-	// if destroying the bullet...
 	if (destroy)
 	{
-		// if spawning on death...
-		if (bullet.mSpawnOnDeath)
-		{
-#ifdef USE_CHANGE_DYNAMIC_TYPE
-			// change dynamic type
-			Database::Deactivate(id);
-			Database::parent.Put(id, bullet.mSpawnOnDeath);
-			Database::Activate(id);
-#else
-			// get the entity
-			Entity *entity = Database::entity.Get(id);
-			if (entity)
-			{
-				// instantiate the template
-				Database::Instantiate(id, bullet.mSpawnOnDeath, entity->GetAngle(), entity->GetPosition(), entity->GetVelocity(), entity->GetOmega());
-			}
-#endif
-		}
-#ifdef USE_CHANGE_DYNAMIC_TYPE
-		else
-#endif
-		{
-			// kill the bullet
-			// (note: this breaks collision impulse)
-			Database::Delete(id);
-		}
+		BulletKillUpdate *kill = new BulletKillUpdate(id);
+		mLife = 0.0f;
 	}
-#endif
 }

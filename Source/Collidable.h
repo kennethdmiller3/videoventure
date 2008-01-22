@@ -7,13 +7,11 @@ const int COLLISION_LAYERS = 32;
 class CollidableTemplate
 {
 public:
+	// identifier
+	unsigned int id;
 	// collision layer
 	int layer;
 
-	// collision shapes
-	std::list<b2CircleDef> circles;
-	std::list<b2BoxDef> boxes;
-	std::list<b2PolyDef> polys;
 
 	// collision joints
 	struct JointTemplate { unsigned int name1; unsigned int body1; unsigned int name2; unsigned int body2; };
@@ -32,9 +30,9 @@ public:
 	bool ProcessShapeItem(const TiXmlElement *element, b2ShapeDef &shape);
 	bool ConfigureShape(const TiXmlElement *element, b2ShapeDef &shape);
 	bool ConfigureCircle(const TiXmlElement *element, b2CircleDef &shape);
-	bool ConfigureBox(const TiXmlElement *element, b2BoxDef &shape);
-	bool ProcessPolyItem(const TiXmlElement *element, b2PolyDef &shape);
-	bool ConfigurePoly(const TiXmlElement *element, b2PolyDef &shape);
+	bool ConfigureBox(const TiXmlElement *element, b2PolygonDef &shape);
+	bool ProcessPolyItem(const TiXmlElement *element, b2PolygonDef &shape);
+	bool ConfigurePoly(const TiXmlElement *element, b2PolygonDef &shape);
 	bool ProcessBodyItem(const TiXmlElement *element, b2BodyDef &body);
 	bool ConfigureBody(const TiXmlElement *element, b2BodyDef &body);
 	bool ProcessJointItem(const TiXmlElement *element, b2JointDef &joint);
@@ -66,7 +64,7 @@ protected:
 	bool SetupJointDef(b2JointDef &joint);
 
 public:
-	typedef fastdelegate::FastDelegate<void (unsigned int, float, b2Manifold[], int)> Listener;
+	typedef fastdelegate::FastDelegate<void (unsigned int, float, const b2Manifold[], int)> Listener;
 
 public:
 #ifdef USE_POOL_ALLOCATOR

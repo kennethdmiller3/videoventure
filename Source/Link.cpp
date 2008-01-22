@@ -107,8 +107,11 @@ namespace Database
 							collidable.revolutes.push_back(b2RevoluteJointDef());
 							b2RevoluteJointDef &joint = collidable.revolutes.back();
 							joint.userData = &jointtemplate;
+							joint.localAnchor1.Set(linktemplate.mOffset.p.x, linktemplate.mOffset.p.y);
+							joint.localAnchor2.Set(0, 0);
 							if (linktemplate.mUpdateAngle)
 							{
+								joint.referenceAngle = linktemplate.mOffset.Angle();
 								joint.lowerAngle = 0.0f;
 								joint.upperAngle = 0.0f;
 								joint.enableLimit = true;
