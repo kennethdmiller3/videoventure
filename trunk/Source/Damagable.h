@@ -38,6 +38,8 @@ public:
 
 	void Damage(unsigned int aSourceId, float aDamage);
 
+	void Kill(void);
+
 	float GetHealth(void)
 	{
 		return mHealth;

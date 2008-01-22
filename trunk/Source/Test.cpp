@@ -1020,6 +1020,11 @@ int SDL_main( int argc, char *argv[] )
 	int profile_index = -1;
 #endif
 
+#ifdef COLLECT_DEBUG_DRAW
+	// create a new draw list
+	GLuint debugdraw = glGenLists(1);
+#endif
+
 	// wait for user exit
 	do
 	{
@@ -1133,6 +1138,11 @@ int SDL_main( int argc, char *argv[] )
 			// while simulation turns to run...
 			while (sim_turns >= 1.0f)
 			{
+#ifdef COLLECT_DEBUG_DRAW
+				// collect any debug draw
+				glNewList(debugdraw, GL_COMPILE);
+#endif
+
 				// deduct a turn
 				sim_turns -= 1.0f;
 				
@@ -1195,6 +1205,11 @@ int SDL_main( int argc, char *argv[] )
 				// advance the turn counter
 				++sim_turn;
 				Renderable::SetTurn(sim_turn);
+
+#ifdef COLLECT_DEBUG_DRAW
+				// finish the draw list
+				glEndList();
+#endif
 			}
 
 #ifdef PRINT_SIMULATION_TIMER
@@ -1254,6 +1269,11 @@ int SDL_main( int argc, char *argv[] )
 			view.max.x = trackpos.x + VIEW_SIZE * 0.5f;
 			view.min.y = trackpos.y - VIEW_SIZE * 0.5f * SCREEN_HEIGHT / SCREEN_WIDTH;
 			view.max.y = trackpos.y + VIEW_SIZE * 0.5f * SCREEN_HEIGHT / SCREEN_WIDTH;
+
+#ifdef COLLECT_DEBUG_DRAW
+			// debug draw
+			glCallList(debugdraw);
+#endif
 
 			// render all entities
 			// (send interpolation ratio and offset from simulation time)

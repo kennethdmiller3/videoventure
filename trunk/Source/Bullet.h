@@ -50,7 +50,10 @@ public:
 	virtual void Simulate(float aStep);
 
 	// collide
-	void Collide(unsigned int aHitId, float aTime, b2Manifold aManifold[], int aCount);
+	void Collide(unsigned int aHitId, float aTime, const b2Manifold aManifold[], int aCount);
+
+	// kill
+	void Kill(void);
 };
 
 namespace Database

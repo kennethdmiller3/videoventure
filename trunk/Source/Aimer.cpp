@@ -159,8 +159,8 @@ void Aimer::Control(float aStep)
 		// get nearby shapes
 		b2AABB aabb;
 		const float lookRadius = aimer.mRange;
-		aabb.minVertex.Set(entity->GetPosition().x - lookRadius, entity->GetPosition().y - lookRadius);
-		aabb.maxVertex.Set(entity->GetPosition().x + lookRadius, entity->GetPosition().y + lookRadius);
+		aabb.lowerBound.Set(entity->GetPosition().x - lookRadius, entity->GetPosition().y - lookRadius);
+		aabb.upperBound.Set(entity->GetPosition().x + lookRadius, entity->GetPosition().y + lookRadius);
 		const int32 maxCount = 256;
 		b2Shape* shapes[maxCount];
 		int32 count = world->Query(aabb, shapes, maxCount);
@@ -208,7 +208,7 @@ void Aimer::Control(float aStep)
 				continue;
 
 			// get range
-			Vector2 dir(transform.Transform(Vector2(shapes[i]->GetPosition())));
+			Vector2 dir(transform.Transform(Vector2(body->GetOriginPosition())));
 			float range = dir.Length() - 0.5f * shapes[i]->GetMaxRadius();
 
 			// skip if out of range

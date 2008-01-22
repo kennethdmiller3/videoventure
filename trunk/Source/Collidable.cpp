@@ -23,6 +23,8 @@ namespace Database
 {
 	Typed<CollidableTemplate> collidabletemplate(0xa7380c00 /* "collidabletemplate" */);
 	Typed<Typed<b2BodyDef> > collidabletemplatebody(0x66727d0c /* "collidabletemplatebody" */);
+	Typed<std::vector<b2CircleDef> > collidabletemplatecircle(0xa72cf124 /* "collidabletemplatecircle" */);
+	Typed<std::vector<b2PolygonDef> > collidabletemplatepolygon(0x8ce45056 /* "collidabletemplatepolygon" */);
 	Typed<Collidable *> collidable(0x74e9dbae /* "collidable" */);
 	Typed<Typed<b2Body *> > collidablebody(0x6ccc2b62 /* "collidablebody" */);
 	Typed<Typed<Collidable::Listener> > collidablelistener(0xf4c15fb2 /* "collidablelistener" */);
@@ -94,13 +96,6 @@ bool CollidableTemplate::ProcessShapeItem(const TiXmlElement *element, b2ShapeDe
 	const char *name = element->Value();
 	switch (Hash(name))
 	{
-	case 0x934f4e0a /* "position" */:
-		element->QueryFloatAttribute("x", &shape.localPosition.x);
-		element->QueryFloatAttribute("y", &shape.localPosition.y);
-		if (element->QueryFloatAttribute("angle", &shape.localRotation) == TIXML_SUCCESS)
-			shape.localRotation *= float(M_PI)/180.0f;
-		return true;
-
 	case 0xa51be2bb /* "friction" */:
 		element->QueryFloatAttribute("value", &shape.friction);
 		return true;
@@ -145,6 +140,14 @@ bool CollidableTemplate::ProcessShapeItem(const TiXmlElement *element, b2ShapeDe
 		}
 		return true;
 
+	case 0x83b6367b /* "sensor" */:
+		{
+			int sensor = shape.isSensor;
+			element->QueryIntAttribute("value", &sensor);
+			shape.isSensor = sensor != 0;
+		}
+		return true;
+
 	default:
 		return false;
 	}
@@ -167,15 +170,38 @@ bool CollidableTemplate::ConfigureCircle(const TiXmlElement *element, b2CircleDe
 	return true;
 }
 
-bool CollidableTemplate::ConfigureBox(const TiXmlElement *element, b2BoxDef &shape)
+bool CollidableTemplate::ConfigureBox(const TiXmlElement *element, b2PolygonDef &shape)
 {
-	element->QueryFloatAttribute("w", &shape.extents.x);
-	element->QueryFloatAttribute("h", &shape.extents.y);
+	// half-width and half-height
+	float w = 0, h = 0;
+	element->QueryFloatAttribute("w", &w);
+	element->QueryFloatAttribute("h", &h);
+
+	// center and rotation
+	b2Vec2 center(0.0f, 0.0f);
+	float rotation = 0.0f;
+
+	// process child elements
+	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+	{
+		switch (Hash(child->Value()))
+		{
+		case 0x934f4e0a /* "position" */:
+			element->QueryFloatAttribute("x", &center.x);
+			element->QueryFloatAttribute("y", &center.y);
+			if (element->QueryFloatAttribute("angle", &rotation) == TIXML_SUCCESS)
+				 rotation *= float(M_PI)/180.0f;
+			break;
+		}
+	}
+
+	shape.SetAsBox(w, h, center, rotation);
+
 	ConfigureShape(element, shape);
 	return true;
 }
 
-bool CollidableTemplate::ProcessPolyItem(const TiXmlElement *element, b2PolyDef &shape)
+bool CollidableTemplate::ProcessPolyItem(const TiXmlElement *element, b2PolygonDef &shape)
 {
 	const char *name = element->Value();
 	switch (Hash(name))
@@ -191,7 +217,7 @@ bool CollidableTemplate::ProcessPolyItem(const TiXmlElement *element, b2PolyDef 
 	}
 }
 
-bool CollidableTemplate::ConfigurePoly(const TiXmlElement *element, b2PolyDef &shape)
+bool CollidableTemplate::ConfigurePoly(const TiXmlElement *element, b2PolygonDef &shape)
 {
 	// process child elements
 	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
@@ -210,15 +236,8 @@ bool CollidableTemplate::ProcessBodyItem(const TiXmlElement *element, b2BodyDef 
 	case 0x934f4e0a /* "position" */:
 		element->QueryFloatAttribute("x", &body.position.x);
 		element->QueryFloatAttribute("y", &body.position.y);
-		if (element->QueryFloatAttribute("angle", &body.rotation) == TIXML_SUCCESS)
-			 body.rotation *= float(M_PI)/180.0f;
-		return true;
-
-	case 0x32741c32 /* "velocity" */:
-		element->QueryFloatAttribute("x", &body.linearVelocity.x);
-		element->QueryFloatAttribute("y", &body.linearVelocity.y);
-		if (element->QueryFloatAttribute("angle", &body.angularVelocity) == TIXML_SUCCESS)
-			body.angularVelocity *= float(M_PI)/180.0f;
+		if (element->QueryFloatAttribute("angle", &body.angle) == TIXML_SUCCESS)
+			 body.angle *= float(M_PI)/180.0f;
 		return true;
 
 	case 0xbb61b895 /* "damping" */:
@@ -231,6 +250,14 @@ bool CollidableTemplate::ProcessBodyItem(const TiXmlElement *element, b2BodyDef 
 			int allowsleep = body.allowSleep;
 			element->QueryIntAttribute("value", &allowsleep);
 			body.allowSleep = allowsleep != 0;
+		}
+		return true;
+
+	case 0xa3ae0ca2 /* "startsleep" */:
+		{
+			int startsleep = body.isSleeping;
+			element->QueryIntAttribute("value", &startsleep);
+			body.isSleeping = startsleep != 0;
 		}
 		return true;
 
@@ -252,25 +279,31 @@ bool CollidableTemplate::ProcessBodyItem(const TiXmlElement *element, b2BodyDef 
 
 	case 0x28217089 /* "circle" */:
 		{
-			circles.push_back(b2CircleDef());
-			ConfigureCircle(element, circles.back());
-			body.AddShape(&circles.back());
+			std::vector<b2CircleDef> &shapes = Database::collidabletemplatecircle.Open(id);
+			shapes.push_back(b2CircleDef());
+			b2CircleDef &shape = shapes.back();
+			ConfigureCircle(element, shape);
+			Database::collidabletemplatecircle.Close(id);
 		}
 		return true;
 
 	case 0x70c67e32 /* "box" */:
 		{
-			boxes.push_back(b2BoxDef());
-			ConfigureBox(element, boxes.back());
-			body.AddShape(&boxes.back());
+			std::vector<b2PolygonDef> &shapes = Database::collidabletemplatepolygon.Open(id);
+			shapes.push_back(b2PolygonDef());
+			b2PolygonDef &shape = shapes.back();
+			ConfigureBox(element, shape);
+			Database::collidabletemplatepolygon.Close(id);
 		}
 		return true;
 
 	case 0x84d6a947 /* "poly" */:
 		{
-			polys.push_back(b2PolyDef());
-			ConfigurePoly(element, polys.back());
-			body.AddShape(&polys.back());
+			std::vector<b2PolygonDef> &shapes = Database::collidabletemplatepolygon.Open(id);
+			shapes.push_back(b2PolygonDef());
+			b2PolygonDef &shape = shapes.back();
+			ConfigurePoly(element, shape);
+			Database::collidabletemplatepolygon.Close(id);
 		}
 		return true;
 
@@ -281,6 +314,11 @@ bool CollidableTemplate::ProcessBodyItem(const TiXmlElement *element, b2BodyDef 
 
 bool CollidableTemplate::ConfigureBody(const TiXmlElement *element, b2BodyDef &body)
 {
+	// set static flag
+	int isstatic = body.type == b2BodyDef::e_staticBody;
+	element->QueryIntAttribute("static", &isstatic);
+	body.type = isstatic ? b2BodyDef::e_staticBody : b2BodyDef::e_dynamicBody;
+
 	// process child elements
 	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
@@ -332,9 +370,19 @@ bool CollidableTemplate::ProcessRevoluteJointItem(const TiXmlElement *element, b
 	const char *name = element->Value();
 	switch (Hash(name))
 	{
-	case 0x42edcab4 /* "anchor" */:
-		element->QueryFloatAttribute("x", &joint.anchorPoint.x);
-		element->QueryFloatAttribute("y", &joint.anchorPoint.y);
+	case 0xe155cf5f /* "anchor1" */:
+		element->QueryFloatAttribute("x", &joint.localAnchor1.x);
+		element->QueryFloatAttribute("y", &joint.localAnchor1.y);
+		return true;
+
+	case 0xe255d0f2 /* "anchor2" */:
+		element->QueryFloatAttribute("x", &joint.localAnchor2.x);
+		element->QueryFloatAttribute("y", &joint.localAnchor2.y);
+		return true;
+
+	case 0xad544418 /* "angle" */:
+		if (element->QueryFloatAttribute("value", &joint.referenceAngle) == TIXML_SUCCESS)
+			joint.referenceAngle *= float(M_PI)/180.0f;
 		return true;
 
 	case 0x32dad934 /* "limit" */:
@@ -346,7 +394,7 @@ bool CollidableTemplate::ProcessRevoluteJointItem(const TiXmlElement *element, b
 		return true;
 
 	case 0xcaf08472 /* "motor" */:
-		element->QueryFloatAttribute("torque", &joint.motorTorque);
+		element->QueryFloatAttribute("torque", &joint.maxMotorTorque);
 		if (element->QueryFloatAttribute("speed", &joint.motorSpeed) == TIXML_SUCCESS)
 			joint.motorSpeed *= float(M_PI) / 180.0f;
 		joint.enableMotor = true;
@@ -372,14 +420,24 @@ bool CollidableTemplate::ProcessPrismaticJointItem(const TiXmlElement *element, 
 	const char *name = element->Value();
 	switch (Hash(name))
 	{
-	case 0x42edcab4 /* "anchor" */:
-		element->QueryFloatAttribute("x", &joint.anchorPoint.x);
-		element->QueryFloatAttribute("y", &joint.anchorPoint.y);
+	case 0xe155cf5f /* "anchor1" */:
+		element->QueryFloatAttribute("x", &joint.localAnchor1.x);
+		element->QueryFloatAttribute("y", &joint.localAnchor1.y);
+		return true;
+
+	case 0xe255d0f2 /* "anchor2" */:
+		element->QueryFloatAttribute("x", &joint.localAnchor2.x);
+		element->QueryFloatAttribute("y", &joint.localAnchor2.y);
 		return true;
 
 	case 0x6d2badf4 /* "axis" */:
-		element->QueryFloatAttribute("x", &joint.axis.x);
-		element->QueryFloatAttribute("y", &joint.axis.y);
+		element->QueryFloatAttribute("x", &joint.localAxis1.x);
+		element->QueryFloatAttribute("y", &joint.localAxis1.y);
+		return true;
+
+	case 0xad544418 /* "angle" */:
+		if (element->QueryFloatAttribute("value", &joint.referenceAngle) == TIXML_SUCCESS)
+			joint.referenceAngle *= float(M_PI)/180.0f;
 		return true;
 
 	case 0x32dad934 /* "limit" */:
@@ -389,7 +447,7 @@ bool CollidableTemplate::ProcessPrismaticJointItem(const TiXmlElement *element, 
 		return true;
 
 	case 0xcaf08472 /* "motor" */:
-		element->QueryFloatAttribute("force", &joint.motorForce);
+		element->QueryFloatAttribute("force", &joint.maxMotorForce);
 		element->QueryFloatAttribute("speed", &joint.motorSpeed);
 		joint.enableMotor = true;
 		return true;
@@ -415,13 +473,13 @@ bool CollidableTemplate::ProcessDistanceJointItem(const TiXmlElement *element, b
 	switch (Hash(name))
 	{
 	case 0xe155cf5f /* "anchor1" */:
-		element->QueryFloatAttribute("x", &joint.anchorPoint1.x);
-		element->QueryFloatAttribute("y", &joint.anchorPoint1.y);
+		element->QueryFloatAttribute("x", &joint.localAnchor1.x);
+		element->QueryFloatAttribute("y", &joint.localAnchor1.y);
 		return true;
 
 	case 0xe255d0f2 /* "anchor2" */:
-		element->QueryFloatAttribute("x", &joint.anchorPoint2.x);
-		element->QueryFloatAttribute("y", &joint.anchorPoint2.y);
+		element->QueryFloatAttribute("x", &joint.localAnchor2.x);
+		element->QueryFloatAttribute("y", &joint.localAnchor2.y);
 		return true;
 
 	default:
@@ -445,23 +503,23 @@ bool CollidableTemplate::ProcessPulleyJointItem(const TiXmlElement *element, b2P
 	switch (Hash(name))
 	{
 	case 0xe1acc15d /* "ground1" */:
-		element->QueryFloatAttribute("x", &joint.groundPoint1.x);
-		element->QueryFloatAttribute("y", &joint.groundPoint1.y);
+		element->QueryFloatAttribute("x", &joint.groundAnchor1.x);
+		element->QueryFloatAttribute("y", &joint.groundAnchor1.y);
 		return true;
 
 	case 0xdeacbca4 /* "ground2" */:
-		element->QueryFloatAttribute("x", &joint.groundPoint1.x);
-		element->QueryFloatAttribute("y", &joint.groundPoint1.y);
+		element->QueryFloatAttribute("x", &joint.groundAnchor2.x);
+		element->QueryFloatAttribute("y", &joint.groundAnchor2.y);
 		return true;
 
 	case 0xe155cf5f /* "anchor1" */:
-		element->QueryFloatAttribute("x", &joint.anchorPoint1.x);
-		element->QueryFloatAttribute("y", &joint.anchorPoint1.y);
+		element->QueryFloatAttribute("x", &joint.localAnchor1.x);
+		element->QueryFloatAttribute("y", &joint.localAnchor1.y);
 		return true;
 
 	case 0xe255d0f2 /* "anchor2" */:
-		element->QueryFloatAttribute("x", &joint.anchorPoint2.x);
-		element->QueryFloatAttribute("y", &joint.anchorPoint2.y);
+		element->QueryFloatAttribute("x", &joint.localAnchor2.x);
+		element->QueryFloatAttribute("y", &joint.localAnchor2.y);
 		return true;
 
 	case 0xa4c53aac /* "length1" */:
@@ -532,6 +590,9 @@ bool CollidableTemplate::Configure(const TiXmlElement *element, unsigned int id)
 	if (Hash(element->Value()) != 0x74e9dbae /* "collidable" */)
 		return false;
 
+	// save identifier
+	this->id = id;
+
 	// process child elements
 	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
@@ -544,6 +605,7 @@ bool CollidableTemplate::Configure(const TiXmlElement *element, unsigned int id)
 				unsigned int bodyid = Hash(child->Attribute("name"));
 				Database::Typed<b2BodyDef> &bodies = Database::collidabletemplatebody.Open(id);
 				b2BodyDef &body = bodies.Open(bodyid);
+				body.type = b2BodyDef::e_dynamicBody;
 				CollidableTemplate::ConfigureBody(child, body);
 				bodies.Close(bodyid);
 				Database::collidabletemplatebody.Close(id);
@@ -613,6 +675,209 @@ bool CollidableTemplate::Configure(const TiXmlElement *element, unsigned int id)
 
 b2World* Collidable::world;
 
+/// Implement this class to get collision results. You can use these results for
+/// things like sounds and game logic. You can also use this class to tweak contact 
+/// settings. These tweaks persist until you tweak the settings again or the contact
+/// is destroyed.
+/// @warning You cannot create/destroy Box2D entities inside these callbacks.
+class ContactListener : public b2ContactListener
+{
+public:
+
+	/// Called whenever a contact is updated and the shapes are touching. A single
+	/// may be updated multiple times per time step.
+	/// @param contact the contact object.
+	virtual void Report(const b2Contact* contact)
+	{
+#ifdef COLLIDABLE_TRACE_LISTENER
+		DebugPrint("report id1=0x%08x id2=0x%08x manifold=%d new=%d\n",
+			reinterpret_cast<unsigned int>(shape1->m_userData),
+			reinterpret_cast<unsigned int>(shape2->m_userData),
+			manifoldCount, newContact);
+#endif
+		// if the shapes are actually touching...
+		if (contact->GetManifoldCount() > 0)
+		{
+			b2Shape *shape1 = const_cast<b2Contact *>(contact)->GetShape1();
+			b2Shape *shape2 = const_cast<b2Contact *>(contact)->GetShape2();
+			Database::Key id1 = reinterpret_cast<Database::Key>(shape1->GetUserData());
+			Database::Key id2 = reinterpret_cast<Database::Key>(shape2->GetUserData());
+			for (Database::Typed<Collidable::Listener>::Iterator itor(Database::collidablelistener.Find(id1)); itor.IsValid(); ++itor)
+				itor.GetValue()(id2, shape1->m_body->m_t, const_cast<b2Contact *>(contact)->GetManifolds(), const_cast<b2Contact *>(contact)->GetManifoldCount());
+			for (Database::Typed<Collidable::Listener>::Iterator itor(Database::collidablelistener.Find(id2)); itor.IsValid(); ++itor)
+				itor.GetValue()(id1, shape2->m_body->m_t, const_cast<b2Contact *>(contact)->GetManifolds(), const_cast<b2Contact *>(contact)->GetManifoldCount());
+		}
+	};
+
+	/// Called when contact ends. This does not mean the contact object is destroyed,
+	/// it just means that there are no contact points.
+	/// @param shape1 the first shape in the contact.
+	/// @param shape2 the second shape in the contact.
+	virtual void End(const b2Shape* shape1, const b2Shape* shape2)
+	{
+#ifdef COLLIDABLE_TRACE_LISTENER
+		DebugPrint("end id1=0x%08x id2=0x%08x\n",
+			reinterpret_cast<unsigned int>(shape1->m_userData),
+			reinterpret_cast<unsigned int>(shape2->m_userData));
+#endif
+	}
+}
+contactListener;
+
+
+#ifdef COLLIDABLE_DEBUG_DRAW
+// This class implements debug drawing callbacks that are invoked
+// inside b2World::Step.
+class DebugDraw : public b2DebugDraw
+{
+public:
+	void DrawPolygon(const b2Vec2* vertices, int32 vertexCount, const b2Color& color);
+	void DrawSolidPolygon(const b2Vec2* vertices, int32 vertexCount, const b2Color& color);
+	void DrawCircle(const b2Vec2& center, float32 radius, const b2Color& color);
+	void DrawSolidCircle(const b2Vec2& center, float32 radius, const b2Vec2& axis, const b2Color& color);
+	void DrawPoint(const b2Vec2& p, const b2Color& color);
+	void DrawSegment(const b2Vec2& p1, const b2Vec2& p2, const b2Color& color);
+	void DrawAxis(const b2Vec2& point, const b2Vec2& axis, const b2Color& color);
+	void DrawXForm(const b2XForm& xf);
+	void DrawForce(const b2Vec2& point, const b2Vec2& force, const b2Color& color);
+}
+debugDraw;
+
+void DebugDraw::DrawPolygon(const b2Vec2* vertices, int32 vertexCount, const b2Color& color)
+{
+	glColor3f(color.r, color.g, color.b);
+	glBegin(GL_LINE_LOOP);
+	for (int32 i = 0; i < vertexCount; ++i)
+	{
+		glVertex2f(vertices[i].x, vertices[i].y);
+	}
+	glEnd();
+}
+
+void DebugDraw::DrawSolidPolygon(const b2Vec2* vertices, int32 vertexCount, const b2Color& color)
+{
+	glColor4f(0.5f * color.r, 0.5f * color.g, 0.5f * color.b, 0.5f);
+	glBegin(GL_TRIANGLE_FAN);
+	for (int32 i = 0; i < vertexCount; ++i)
+	{
+		glVertex2f(vertices[i].x, vertices[i].y);
+	}
+	glEnd();
+
+	glColor4f(color.r, color.g, color.b, 1.0f);
+	glBegin(GL_LINE_LOOP);
+	for (int32 i = 0; i < vertexCount; ++i)
+	{
+		glVertex2f(vertices[i].x, vertices[i].y);
+	}
+	glEnd();
+}
+
+void DebugDraw::DrawCircle(const b2Vec2& center, float32 radius, const b2Color& color)
+{
+	const float32 k_segments = 16.0f;
+	const float32 k_increment = 2.0f * b2_pi / k_segments;
+	float32 theta = 0.0f;
+	glColor3f(color.r, color.g, color.b);
+	glBegin(GL_LINE_LOOP);
+	for (int32 i = 0; i < k_segments; ++i)
+	{
+		b2Vec2 v = center + radius * b2Vec2(cosf(theta), sinf(theta));
+		glVertex2f(v.x, v.y);
+		theta += k_increment;
+	}
+	glEnd();
+}
+
+void DebugDraw::DrawSolidCircle(const b2Vec2& center, float32 radius, const b2Vec2& axis, const b2Color& color)
+{
+	const float32 k_segments = 16.0f;
+	const float32 k_increment = 2.0f * b2_pi / k_segments;
+	float32 theta = 0.0f;
+	glColor4f(0.5f * color.r, 0.5f * color.g, 0.5f * color.b, 0.5f);
+	glBegin(GL_TRIANGLE_FAN);
+	for (int32 i = 0; i < k_segments; ++i)
+	{
+		b2Vec2 v = center + radius * b2Vec2(cosf(theta), sinf(theta));
+		glVertex2f(v.x, v.y);
+		theta += k_increment;
+	}
+	glEnd();
+
+	theta = 0.0f;
+	glColor4f(color.r, color.g, color.b, 1.0f);
+	glBegin(GL_LINE_LOOP);
+	for (int32 i = 0; i < k_segments; ++i)
+	{
+		b2Vec2 v = center + radius * b2Vec2(cosf(theta), sinf(theta));
+		glVertex2f(v.x, v.y);
+		theta += k_increment;
+	}
+	glEnd();
+
+	b2Vec2 p = center + radius * axis;
+	glBegin(GL_LINES);
+	glVertex2f(center.x, center.y);
+	glVertex2f(p.x, p.y);
+	glEnd();
+}
+
+void DebugDraw::DrawPoint(const b2Vec2& p, const b2Color& color)
+{
+	glColor3f(color.r, color.g, color.b);
+	glPointSize(4.0f);
+	glBegin(GL_POINTS);
+	glVertex2f(p.x, p.y);
+	glEnd();
+	glPointSize(1.0f);
+}
+
+void DebugDraw::DrawSegment(const b2Vec2& p1, const b2Vec2& p2, const b2Color& color)
+{
+	glColor3f(color.r, color.g, color.b);
+	glBegin(GL_LINES);
+	glVertex2f(p1.x, p1.y);
+	glVertex2f(p2.x, p2.y);
+	glEnd();
+}
+
+void DebugDraw::DrawAxis(const b2Vec2& point, const b2Vec2& axis, const b2Color& color)
+{
+	const float32 k_axisScale = 0.3f;
+	b2Vec2 p1 = point;
+	b2Vec2 p2 = point + k_axisScale	* axis;
+	DrawSegment(p1, p2, color);
+}
+
+void DebugDraw::DrawXForm(const b2XForm& xf)
+{
+	b2Vec2 p1 = xf.position, p2;
+	const float32 k_axisScale = 0.4f;
+	glBegin(GL_LINES);
+	
+	glColor3f(1.0f, 0.0f, 0.0f);
+	glVertex2f(p1.x, p1.y);
+	p2 = p1 + k_axisScale * xf.R.col1;
+	glVertex2f(p2.x, p2.y);
+
+	glColor3f(0.0f, 1.0f, 0.0f);
+	glVertex2f(p1.x, p1.y);
+	p2 = p1 + k_axisScale * xf.R.col2;
+	glVertex2f(p2.x, p2.y);
+
+	glEnd();
+}
+
+void DebugDraw::DrawForce(const b2Vec2& point, const b2Vec2& force, const b2Color& color)
+{
+	const float32 k_forceScale = 0.1f;
+	b2Vec2 p1 = point;
+	b2Vec2 p2 = point + k_forceScale * force;
+	DrawSegment(p1, p2, color);
+}
+#endif
+
+
 Collidable::Collidable(void)
 : id(0), body(NULL) 
 {
@@ -650,21 +915,47 @@ void Collidable::AddToWorld(void)
 	Database::Typed<b2Body *> &bodies = Database::collidablebody.Open(id);
 	for (Database::Typed<b2BodyDef>::Iterator itor(Database::collidabletemplatebody.Find(id)); itor.IsValid(); ++itor)
 	{
-		// set body position to entity (HACK)
+		// copy the body definition
 		b2BodyDef def(itor.GetValue());
+
+		// set userdata identifier and body position to entity (HACK)
 		def.userData = reinterpret_cast<void *>(id);
 		const Entity *entity = Database::entity.Get(id);
 		if (entity)
 		{
 			const Matrix2 &transform = entity->GetTransform();
-			def.rotation = transform.Angle();
+			def.angle = transform.Angle();
 			def.position = transform.p;
-			def.linearVelocity = entity->GetVelocity();
-			def.angularVelocity = entity->GetOmega();
 		}
 
 		// create the body
-		body = world->CreateBody(&def);
+		body = world->Create(&def);
+
+		// add shapes
+		const std::vector<b2CircleDef> &circles = Database::collidabletemplatecircle.Get(id);
+		for (std::vector<b2CircleDef>::const_iterator circleitor = circles.begin(); circleitor != circles.end(); ++circleitor)
+		{
+			b2CircleDef circle(*circleitor);
+			circle.userData = reinterpret_cast<void *>(id);
+			body->AddShape(world->Create(&circle));
+		}
+		const std::vector<b2PolygonDef> &polygons = Database::collidabletemplatepolygon.Get(id);
+		for (std::vector<b2PolygonDef>::const_iterator polygonitor = polygons.begin(); polygonitor != polygons.end(); ++polygonitor)
+		{
+			b2PolygonDef polygon(*polygonitor);
+			polygon.userData = reinterpret_cast<void *>(id);
+			body->AddShape(world->Create(&polygon));
+		}
+
+		// compute mass
+		body->SetMassFromShapes();
+
+		if (entity)
+		{
+			body->SetLinearVelocity(entity->GetVelocity());
+			body->SetAngularVelocity(entity->GetOmega());
+		}
+
 		bodies.Put(itor.GetKey(), body);
 	}
 	Database::collidablebody.Close(id);
@@ -675,8 +966,7 @@ void Collidable::AddToWorld(void)
 		b2RevoluteJointDef joint(*itor);
 		if (SetupJointDef(joint))
 		{
-			joint.anchorPoint = joint.body2->GetWorldPoint(joint.anchorPoint);
-			world->CreateJoint(&joint);
+			world->Create(&joint);
 		}
 	}
 	for (std::list<b2PrismaticJointDef>::const_iterator itor = collidable.prismatics.begin(); itor != collidable.prismatics.end(); ++itor)
@@ -684,8 +974,7 @@ void Collidable::AddToWorld(void)
 		b2PrismaticJointDef joint(*itor);
 		if (SetupJointDef(joint))
 		{
-			joint.anchorPoint = joint.body2->GetWorldPoint(joint.anchorPoint);
-			world->CreateJoint(&joint);
+			world->Create(&joint);
 		}
 	}
 	for (std::list<b2DistanceJointDef>::const_iterator itor = collidable.distances.begin(); itor != collidable.distances.end(); ++itor)
@@ -693,9 +982,7 @@ void Collidable::AddToWorld(void)
 		b2DistanceJointDef joint(*itor);
 		if (SetupJointDef(joint))
 		{
-			joint.anchorPoint1 = joint.body1->GetWorldPoint(joint.anchorPoint1);
-			joint.anchorPoint2 = joint.body2->GetWorldPoint(joint.anchorPoint2);
-			world->CreateJoint(&joint);
+			world->Create(&joint);
 		}
 	}
 	for (std::list<b2PulleyJointDef>::const_iterator itor = collidable.pulleys.begin(); itor != collidable.pulleys.end(); ++itor)
@@ -703,9 +990,7 @@ void Collidable::AddToWorld(void)
 		b2PulleyJointDef joint(*itor);
 		if (SetupJointDef(joint))
 		{
-			joint.anchorPoint1 = joint.body1->GetWorldPoint(joint.anchorPoint1);
-			joint.anchorPoint2 = joint.body2->GetWorldPoint(joint.anchorPoint2);
-			world->CreateJoint(&joint);
+			world->Create(&joint);
 		}
 	}
 	for (std::list<b2MouseJointDef>::const_iterator itor = collidable.mouses.begin(); itor != collidable.mouses.end(); ++itor)
@@ -713,7 +998,7 @@ void Collidable::AddToWorld(void)
 		b2MouseJointDef joint(*itor);
 		if (SetupJointDef(joint))
 		{
-			world->CreateJoint(&joint);
+			world->Create(&joint);
 		}
 	}
 }
@@ -722,7 +1007,7 @@ void Collidable::RemoveFromWorld(void)
 {
 	for (Database::Typed<b2Body *>::Iterator itor(Database::collidablebody.Find(id)); itor.IsValid(); ++itor)
 	{
-		world->DestroyBody(itor.GetValue());
+		world->Destroy(itor.GetValue());
 	}
 	Database::collidablebody.Delete(id);
 
@@ -736,37 +1021,43 @@ void Collidable::WorldInit(void)
 {
 	// physics world
 	b2AABB worldAABB;
-	worldAABB.minVertex.Set(ARENA_X_MIN - 32, ARENA_Y_MIN - 32);
-	worldAABB.maxVertex.Set(ARENA_X_MAX + 32, ARENA_Y_MAX + 32);
+	worldAABB.lowerBound.Set(ARENA_X_MIN - 32, ARENA_Y_MIN - 32);
+	worldAABB.upperBound.Set(ARENA_X_MAX + 32, ARENA_Y_MAX + 32);
 	b2Vec2 gravity;
 	gravity.Set(0.0f, 0.0f);
 	bool doSleep = true;
 	world = new b2World(worldAABB, gravity, doSleep);
 
+	// set contact listener
+	world->SetListener(&contactListener);
+
+#ifdef COLLIDABLE_DEBUG_DRAW
+	// set debug render
+	world->SetDebugDraw(&debugDraw);
+	debugDraw.SetFlags(-1);
+#endif
+
 	// create perimeter walls
-	b2BodyDef body;
+	b2BodyDef bodydef;
+	b2Body *body = world->Create(&bodydef);
 
-	b2BoxDef top;
-	top.localPosition.Set(0.5f * (ARENA_X_MAX + ARENA_X_MIN), ARENA_Y_MIN - 16);
-	top.extents.Set(0.5f * (ARENA_X_MAX - ARENA_X_MIN) + 32, 16);
-	body.AddShape(&top);
+	b2PolygonDef top;
+	top.SetAsBox(0.5f * (ARENA_X_MAX - ARENA_X_MIN) + 32, 16, b2Vec2(0.5f * (ARENA_X_MAX + ARENA_X_MIN), ARENA_Y_MIN - 16), 0);
+	body->AddShape(world->Create(&top));
 
-	b2BoxDef bottom;
-	bottom.localPosition.Set(0.5f * (ARENA_X_MAX + ARENA_X_MIN), ARENA_Y_MAX + 16);
-	bottom.extents.Set(0.5f * (ARENA_X_MAX - ARENA_X_MIN) + 32, 16);
-	body.AddShape(&bottom);
+	b2PolygonDef bottom;
+	bottom.SetAsBox(0.5f * (ARENA_X_MAX - ARENA_X_MIN) + 32, 16, b2Vec2(0.5f * (ARENA_X_MAX + ARENA_X_MIN), ARENA_Y_MAX + 16), 0);
+	body->AddShape(world->Create(&bottom));
 
-	b2BoxDef left;
-	left.localPosition.Set(ARENA_X_MIN - 16, 0.5f * (ARENA_Y_MAX + ARENA_Y_MIN));
-	left.extents.Set(16, 0.5f * (ARENA_Y_MAX - ARENA_Y_MIN) + 32);
-	body.AddShape(&left);
+	b2PolygonDef left;
+	left.SetAsBox(16, 0.5f * (ARENA_Y_MAX - ARENA_Y_MIN) + 32, b2Vec2(ARENA_X_MIN - 16, 0.5f * (ARENA_Y_MAX + ARENA_Y_MIN)), 0);
+	body->AddShape(world->Create(&left));
 
-	b2BoxDef right;
-	right.localPosition.Set(ARENA_X_MAX + 16, 0.5f * (ARENA_Y_MAX + ARENA_Y_MIN));
-	right.extents.Set(16, 0.5f * (ARENA_Y_MAX - ARENA_Y_MIN) + 32);
-	body.AddShape(&right);
+	b2PolygonDef right;
+	right.SetAsBox(16, 0.5f * (ARENA_Y_MAX - ARENA_Y_MIN) + 32, b2Vec2(ARENA_X_MAX + 16, 0.5f * (ARENA_Y_MAX + ARENA_Y_MIN)), 0);
+	body->AddShape(world->Create(&right));
 
-	world->CreateBody(&body);
+	body->SetMassFromShapes();
 }
 
 void Collidable::WorldDone(void)
@@ -796,29 +1087,11 @@ void Collidable::CollideAll(float aStep)
 				if (entity)
 				{
 					entity->Step();
-					entity->SetTransform(body->GetRotation(), Vector2(body->GetOriginPosition()));
+					entity->SetTransform(body->GetAngle(), Vector2(body->GetOriginPosition()));
 					entity->SetVelocity(Vector2(body->GetLinearVelocity()));
 					entity->SetOmega(body->GetAngularVelocity());
 				}
 			}
-		}
-	}
-
-	// for each contact...
-	for (b2Contact* c = world->GetContactList(); c; c = c->GetNext())
-	{
-		// if the shapes are actually touching...
-		if (c->GetManifoldCount() > 0)
-		{
-			b2Body* body1 = c->GetShape1()->GetBody();
-			b2Body* body2 = c->GetShape2()->GetBody();
-			Database::Key id1 = reinterpret_cast<Database::Key>(body1->GetUserData());
-			Database::Key id2 = reinterpret_cast<Database::Key>(body2->GetUserData());
-			float toi = 1.0f;
-			for (Database::Typed<Listener>::Iterator itor(Database::collidablelistener.Find(id1)); itor.IsValid(); ++itor)
-				itor.GetValue()(id2, toi, c->GetManifolds(), c->GetManifoldCount());
-			for (Database::Typed<Listener>::Iterator itor(Database::collidablelistener.Find(id2)); itor.IsValid(); ++itor)
-				itor.GetValue()(id1, toi, c->GetManifolds(), c->GetManifoldCount());
 		}
 	}
 }

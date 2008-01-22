@@ -1,6 +1,7 @@
 #include "StdAfx.h"
 #include "Damagable.h"
 #include "Entity.h"
+#include "Updatable.h"
 
 #ifdef USE_POOL_ALLOCATOR
 #include <boost/pool/pool.hpp>
@@ -113,6 +114,43 @@ Damagable::~Damagable(void)
 	Database::damagablelistener.Delete(id);
 }
 
+class DamagableKillUpdate : public Updatable
+{
+public:
+#ifdef USE_POOL_ALLOCATOR
+	void *operator new(size_t aSize);
+	void operator delete(void *aPtr);
+#endif
+
+	DamagableKillUpdate(unsigned int aId)
+		: Updatable(aId)
+	{
+		Activate();
+	}
+
+	void Update(float aStep)
+	{
+		if (Damagable *damagable =Database::damagable.Get(id))
+			damagable->Kill();
+		Deactivate();
+		delete this;
+	}
+};
+
+#ifdef USE_POOL_ALLOCATOR
+// kill update pool
+static boost::pool<boost::default_user_allocator_malloc_free> killpool(sizeof(DamagableKillUpdate));
+
+void *DamagableKillUpdate::operator new(size_t aSize)
+{
+	return killpool.malloc();
+}
+void DamagableKillUpdate::operator delete(void *aPtr)
+{
+	killpool.free(aPtr);
+}
+#endif
+
 void Damagable::Damage(unsigned int aSourceId, float aDamage)
 {
 	// ignore damage if already destroyed
@@ -131,31 +169,36 @@ void Damagable::Damage(unsigned int aSourceId, float aDamage)
 	// if destroyed...
 	if (mHealth <= 0)
 	{
-		// if spawn on death...
-		const DamagableTemplate &damagable = Database::damagabletemplate.Get(id);
-		if (damagable.mSpawnOnDeath)
-		{
+		DamagableKillUpdate *kill = new DamagableKillUpdate(id);
+	}
+}
+
+void Damagable::Kill(void)
+{
+	// if spawn on death...
+	const DamagableTemplate &damagable = Database::damagabletemplate.Get(id);
+	if (damagable.mSpawnOnDeath)
+	{
 #ifdef USE_CHANGE_DYNAMIC_TYPE
-			// change dynamic type
-			Database::Deactivate(id);
-			Database::parent.Put(id, damagable.mSpawnOnDeath);
-			Database::Activate(id);
+		// change dynamic type
+		Database::Deactivate(id);
+		Database::parent.Put(id, damagable.mSpawnOnDeath);
+		Database::Activate(id);
 #else
-			// get the entity
-			Entity *entity = Database::entity.Get(id);
-			if (entity)
-			{
-				// instantiate the template
-				Database::Instantiate(damagable.mSpawnOnDeath, entity->GetAngle(), entity->GetPosition(), entity->GetVelocity(), entity->GetOmega());
-			}
-#endif
-		}
-#ifdef USE_CHANGE_DYNAMIC_TYPE
-		else
-#endif
+		// get the entity
+		Entity *entity = Database::entity.Get(id);
+		if (entity)
 		{
-			// delete the entity
-			Database::Delete(id);
+			// instantiate the template
+			Database::Instantiate(damagable.mSpawnOnDeath, entity->GetAngle(), entity->GetPosition(), entity->GetVelocity(), entity->GetOmega());
 		}
+#endif
+	}
+#ifdef USE_CHANGE_DYNAMIC_TYPE
+	else
+#endif
+	{
+		// delete the entity
+		Database::Delete(id);
 	}
 }

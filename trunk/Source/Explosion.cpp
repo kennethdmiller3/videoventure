@@ -127,8 +127,8 @@ Explosion::Explosion(const ExplosionTemplate &aTemplate, unsigned int aId)
 		// get nearby shapes
 		b2AABB aabb;
 		const float lookRadius = aTemplate.mRadius;
-		aabb.minVertex.Set(entity->GetPosition().x - lookRadius, entity->GetPosition().y - lookRadius);
-		aabb.maxVertex.Set(entity->GetPosition().x + lookRadius, entity->GetPosition().y + lookRadius);
+		aabb.lowerBound.Set(entity->GetPosition().x - lookRadius, entity->GetPosition().y - lookRadius);
+		aabb.upperBound.Set(entity->GetPosition().x + lookRadius, entity->GetPosition().y + lookRadius);
 		const int32 maxCount = 256;
 		b2Shape* shapes[maxCount];
 		int32 count = world->Query(aabb, shapes, maxCount);
@@ -164,7 +164,7 @@ Explosion::Explosion(const ExplosionTemplate &aTemplate, unsigned int aId)
 				continue;
 
 			// get range
-			Vector2 dir(transform.Transform(Vector2(shapes[i]->GetPosition())));
+			Vector2 dir(transform.Transform(Vector2(body->GetOriginPosition())));
 			float range = dir.Length() - shapes[i]->GetMaxRadius() * 0.5f;
 
 			// skip if out of range
