@@ -37,7 +37,7 @@ void Input::Update(void)
 	// limit magnitude of move control 1
 	scale = value[MOVE_VERTICAL]*value[MOVE_VERTICAL]+value[MOVE_HORIZONTAL]*value[MOVE_HORIZONTAL];
 	if (scale > 1.0f)
-		scale = 1.0f / sqrtf(scale);
+		scale = InvSqrt(scale);
 	else
 		scale = 1.0f;
 	output[MOVE_VERTICAL] = value[MOVE_VERTICAL] * scale;
@@ -46,7 +46,7 @@ void Input::Update(void)
 	// limit magnitude of aim control to 1
 	scale = value[AIM_VERTICAL]*value[AIM_VERTICAL]+value[AIM_HORIZONTAL]*value[AIM_HORIZONTAL];
 	if (scale > 1.0f)
-		scale = 1.0f / sqrtf(scale);
+		scale = InvSqrt(scale);
 	else
 		scale = 1.0f;
 	output[AIM_VERTICAL] = value[AIM_VERTICAL] * scale;

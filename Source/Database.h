@@ -155,6 +155,19 @@ namespace Database
 				return Iterator(mDatabase, mSlot++);
 			}
 
+			// pre-decrement
+			const Iterator &operator--(void)
+			{
+				--mSlot;
+				return *this;
+			}
+			
+			// post-decrement
+			const Iterator operator--(int)
+			{
+				return Iterator(mDatabase, mSlot--);
+			}
+
 			// is the iterator valid?
 			bool IsValid(void)
 			{

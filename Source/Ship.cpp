@@ -151,7 +151,7 @@ void Ship::Simulate(float aStep)
 		float control = std::min(mMove.LengthSq(), 1.0f);
 		float acc = ship.mFriction + (ship.mMaxAccel - ship.mFriction) * control;
 		Vector2 dv(mMove * ship.mMaxVeloc - entity->GetVelocity());
-		float it = std::min(acc / sqrtf(dv.LengthSq() + 0.0001f), 1.0f / aStep);
+		float it = std::min(acc * InvSqrt(dv.LengthSq() + 0.0001f), 1.0f / aStep);
 		Vector2 new_thrust(dv * it * body->GetMass());
 		body->ApplyForce(b2Vec2(new_thrust.x, new_thrust.y), body->GetCenterPosition());
 	}
