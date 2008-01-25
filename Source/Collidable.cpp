@@ -684,42 +684,30 @@ class ContactListener : public b2ContactListener
 {
 public:
 
-	/// Called whenever a contact is updated and the shapes are touching. A single
-	/// may be updated multiple times per time step.
-	/// @param contact the contact object.
-	virtual void Report(const b2Contact* contact)
+	/// Called when a contact point is added. This includes the geometry
+	/// and the forces.
+	virtual void Add(b2ContactPoint* point)
 	{
-#ifdef COLLIDABLE_TRACE_LISTENER
-		DebugPrint("report id1=0x%08x id2=0x%08x manifold=%d new=%d\n",
-			reinterpret_cast<unsigned int>(shape1->m_userData),
-			reinterpret_cast<unsigned int>(shape2->m_userData),
-			manifoldCount, newContact);
-#endif
-		// if the shapes are actually touching...
-		if (contact->GetManifoldCount() > 0)
-		{
-			b2Shape *shape1 = const_cast<b2Contact *>(contact)->GetShape1();
-			b2Shape *shape2 = const_cast<b2Contact *>(contact)->GetShape2();
-			Database::Key id1 = reinterpret_cast<Database::Key>(shape1->GetUserData());
-			Database::Key id2 = reinterpret_cast<Database::Key>(shape2->GetUserData());
-			for (Database::Typed<Collidable::Listener>::Iterator itor(Database::collidablelistener.Find(id1)); itor.IsValid(); ++itor)
-				itor.GetValue()(id1, id2, shape1->m_body->m_t, const_cast<b2Contact *>(contact)->GetManifolds(), const_cast<b2Contact *>(contact)->GetManifoldCount());
-			for (Database::Typed<Collidable::Listener>::Iterator itor(Database::collidablelistener.Find(id2)); itor.IsValid(); ++itor)
-				itor.GetValue()(id2, id1, shape2->m_body->m_t, const_cast<b2Contact *>(contact)->GetManifolds(), const_cast<b2Contact *>(contact)->GetManifoldCount());
-		}
+		b2Shape *shape1 = point->shape1;
+		b2Shape *shape2 = point->shape2;
+		Database::Key id1 = reinterpret_cast<Database::Key>(shape1->GetUserData());
+		Database::Key id2 = reinterpret_cast<Database::Key>(shape2->GetUserData());
+		for (Database::Typed<Collidable::Listener>::Iterator itor(Database::collidablelistener.Find(id1)); itor.IsValid(); ++itor)
+			itor.GetValue()(id1, id2, shape1->m_body->m_t, *point);
+		for (Database::Typed<Collidable::Listener>::Iterator itor(Database::collidablelistener.Find(id2)); itor.IsValid(); ++itor)
+			itor.GetValue()(id2, id1, shape2->m_body->m_t, *point);
 	};
 
-	/// Called when contact ends. This does not mean the contact object is destroyed,
-	/// it just means that there are no contact points.
-	/// @param shape1 the first shape in the contact.
-	/// @param shape2 the second shape in the contact.
-	virtual void End(const b2Shape* shape1, const b2Shape* shape2)
+	/// Called when a contact point persists. This includes the geometry
+	/// and the forces.
+	virtual void Persist(b2ContactPoint* point)
 	{
-#ifdef COLLIDABLE_TRACE_LISTENER
-		DebugPrint("end id1=0x%08x id2=0x%08x\n",
-			reinterpret_cast<unsigned int>(shape1->m_userData),
-			reinterpret_cast<unsigned int>(shape2->m_userData));
-#endif
+	}
+
+	/// Called when a contact point is removed. This includes the last
+	/// computed geometry and forces.
+	virtual void Remove(b2ContactPoint* point)
+	{
 	}
 }
 contactListener;

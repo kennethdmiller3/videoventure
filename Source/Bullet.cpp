@@ -241,7 +241,7 @@ void BulletKillUpdate::operator delete(void *aPtr)
 #endif
 
 
-void Bullet::Collide(unsigned int aId, unsigned int aHitId, float aTime, const b2Manifold aManifold[], int aCount)
+void Bullet::Collide(unsigned int aId, unsigned int aHitId, float aTime, const b2ContactPoint &aPoint)
 {
 	// do nothing if expired...
 	if (mLife <= 0)
@@ -316,7 +316,7 @@ void Bullet::Collide(unsigned int aId, unsigned int aHitId, float aTime, const b
 	if (bullet.mSpawnOnImpact)
 	{
 		// estimate the point of impact
-		b2Vec2 position(aManifold[0].points[0].position - aManifold[0].points[0].separation * aManifold[0].normal);
+		b2Vec2 position(aPoint.position - aPoint.separation * aPoint.normal);
 
 		// spawn the template
 		unsigned int spawnId = Database::Instantiate(bullet.mSpawnOnImpact, Database::owner.Get(id), 0, Vector2(position), Vector2(0, 0), 0);
