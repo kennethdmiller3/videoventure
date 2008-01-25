@@ -64,7 +64,7 @@ protected:
 	bool SetupJointDef(b2JointDef &joint);
 
 public:
-	typedef fastdelegate::FastDelegate<void (unsigned int, float, const b2Manifold[], int)> Listener;
+	typedef fastdelegate::FastDelegate<void (unsigned int, unsigned int, float, const b2Manifold[], int)> Listener;
 
 public:
 #ifdef USE_POOL_ALLOCATOR

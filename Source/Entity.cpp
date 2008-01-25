@@ -59,6 +59,10 @@ bool Entity::Configure(const TiXmlElement *element)
 			omega *= float(M_PI) / 180.0f;
 		return true;
 
+	case 0xf5674cd4 /* "owner" */:
+		Database::owner.Put(id, Hash(element->Attribute("name")));
+		return true;
+
 	default:
 		return false;
 	}

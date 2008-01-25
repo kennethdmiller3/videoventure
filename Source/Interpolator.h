@@ -3,16 +3,24 @@
 class InterpolatorTemplate
 {
 public:
-	int mWidth;
-	int mStride;
-	int mCount;
-	float *mKeys;
-
+	int mWidth;		// data width in floats
+	int mStride;	// data stride in floats
+	int mCount;		// number of keyframes
+	float *mKeys;	// keyframe data
+	
 public:
 	InterpolatorTemplate(int aWidth = 0);
 	~InterpolatorTemplate();
 
-	float *AddKey(float aDuration);
+	float *GetKey(int aIndex)
+	{
+		return mKeys + aIndex * mStride;
+	}
+	float *GetValues(int aIndex)
+	{
+		return mKeys + aIndex * mStride + 1;
+	}
+	float *AddKey(float aTime);
 
 	bool Apply(float aTarget[], float aTime, int &aIndex);
 };

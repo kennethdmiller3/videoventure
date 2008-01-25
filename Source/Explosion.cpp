@@ -174,13 +174,25 @@ Explosion::Explosion(const ExplosionTemplate &aTemplate, unsigned int aId)
 			// if the recipient is damagable...
 			// and not healing or the target is at max health...
 			Damagable *damagable = Database::damagable.Get(targetId);
-			if (damagable && (aTemplate.mDamage >= 0 || damagable->GetHealth() < Database::damagabletemplate.Get(targetId).mHealth))
+			if (damagable)
 			{
-				// apply damage value
-				if (range < 0)
-					damagable->Damage(id, aTemplate.mDamage);
-				else
-					damagable->Damage(id, aTemplate.mDamage * (1.0f - (range * range) / (aTemplate.mRadius * aTemplate.mRadius)));
+				// get base damage
+				float damage = aTemplate.mDamage;
+
+				// apply damage falloff
+				if (range > 0)
+				{
+					damage *= (1.0f - (range * range) / (aTemplate.mRadius * aTemplate.mRadius));
+				}
+
+				// limit healing
+				if (damage < 0)
+				{
+					damage = std::max(damage, damagable->GetHealth() - Database::damagabletemplate.Get(targetId).mHealth);
+				}
+
+				// apply damage
+				damagable->Damage(id, damage);
 			}
 		}
 	}
@@ -213,7 +225,7 @@ void Explosion::Simulate(float aStep)
 			if (entity)
 			{
 				// spawn template at the entity location
-				Database::Instantiate(explosion.mSpawnOnExpire, entity->GetAngle(), entity->GetPosition(), entity->GetVelocity(), entity->GetOmega());
+				Database::Instantiate(explosion.mSpawnOnExpire, Database::owner.Get(id), entity->GetAngle(), entity->GetPosition(), entity->GetVelocity(), entity->GetOmega());
 			}
 #endif
 		}

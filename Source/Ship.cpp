@@ -140,16 +140,22 @@ void Ship::Simulate(float aStep)
 
 	// get ship collidable
 	const Collidable *collidable = Database::collidable.Get(id);
+	if (!collidable)
+		return;
 	b2Body *body = collidable->GetBody();
+	if (!body)
+		return;
 
 	// get ship controller
 	const Controller *controller = Database::controller.Get(id);
+	if (!controller)
+		return;
 
 	// apply thrust
 	{
 		const Vector2 &mMove = controller->mMove;
 		float control = std::min(mMove.LengthSq(), 1.0f);
-		float acc = ship.mFriction + (ship.mMaxAccel - ship.mFriction) * control;
+		float acc = Lerp(ship.mFriction, ship.mMaxAccel, control);
 		Vector2 dv(mMove * ship.mMaxVeloc - entity->GetVelocity());
 		float it = std::min(acc * InvSqrt(dv.LengthSq() + 0.0001f), 1.0f / aStep);
 		Vector2 new_thrust(dv * it * body->GetMass());

@@ -233,6 +233,20 @@ namespace Database
 			Clear();
 		}
 
+		const T &GetDefault(void) const
+		{
+			return mNil;
+		}
+
+		T &OpenDefault(void)
+		{
+			return mNil;
+		}
+
+		void CloseDefault(void)
+		{
+		}
+
 		const T *Find(Key aKey) const
 		{
 			return static_cast<const T *>(Untyped::Find(aKey));
@@ -321,9 +335,12 @@ namespace Database
 	// team affiliation database
 	extern Typed<unsigned int> team;
 
+	// point value database (TO DO: move to a more appropriate location)
+	extern Typed<int> points;
+
 	// instantiate a template
-	void Instantiate(unsigned int aInstanceId, unsigned int aTemplateId, float aAngle, Vector2 aPosition, Vector2 aVelocity = Vector2(0, 0), float aOmega = 0);
-	unsigned int Instantiate(unsigned int aTemplateId, float aAngle, Vector2 aPosition, Vector2 aVelocity = Vector2(0, 0), float aOmega = 0);
+	void Instantiate(unsigned int aInstanceId, unsigned int aTemplateId, unsigned int aOwnerId, float aAngle, Vector2 aPosition, Vector2 aVelocity = Vector2(0, 0), float aOmega = 0);
+	unsigned int Instantiate(unsigned int aTemplateId, unsigned int aOwnerId, float aAngle, Vector2 aPosition, Vector2 aVelocity = Vector2(0, 0), float aOmega = 0);
 
 	// inherit from a template
 	void Inherit(unsigned int aInstanceId, unsigned int aTemplateId);

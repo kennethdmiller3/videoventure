@@ -703,9 +703,9 @@ public:
 			Database::Key id1 = reinterpret_cast<Database::Key>(shape1->GetUserData());
 			Database::Key id2 = reinterpret_cast<Database::Key>(shape2->GetUserData());
 			for (Database::Typed<Collidable::Listener>::Iterator itor(Database::collidablelistener.Find(id1)); itor.IsValid(); ++itor)
-				itor.GetValue()(id2, shape1->m_body->m_t, const_cast<b2Contact *>(contact)->GetManifolds(), const_cast<b2Contact *>(contact)->GetManifoldCount());
+				itor.GetValue()(id1, id2, shape1->m_body->m_t, const_cast<b2Contact *>(contact)->GetManifolds(), const_cast<b2Contact *>(contact)->GetManifoldCount());
 			for (Database::Typed<Collidable::Listener>::Iterator itor(Database::collidablelistener.Find(id2)); itor.IsValid(); ++itor)
-				itor.GetValue()(id1, shape2->m_body->m_t, const_cast<b2Contact *>(contact)->GetManifolds(), const_cast<b2Contact *>(contact)->GetManifoldCount());
+				itor.GetValue()(id2, id1, shape2->m_body->m_t, const_cast<b2Contact *>(contact)->GetManifolds(), const_cast<b2Contact *>(contact)->GetManifoldCount());
 		}
 	};
 

@@ -61,6 +61,12 @@ const char *LEVEL_CONFIG = "level.xml";
 // console
 OGLCONSOLE_Console console;
 
+// text display (HACK)
+extern "C" GLuint OGLCONSOLE_glFontHandle;
+extern "C" void OGLCONSOLE_DrawString(char *s, double x, double y, double w, double h, double z);
+extern "C" void OGLCONSOLE_DrawCharacter(int c, double x, double y, double w, double h, double z);
+
+
 #define GET_PERFORMANCE_DETAILS
 #define PRINT_PERFORMANCE_DETAILS
 #define DRAW_PERFORMANCE_DETAILS
@@ -1108,17 +1114,14 @@ int SDL_main( int argc, char *argv[] )
 
 		if (paused)
 		{
-			// advance 1/60th of a second
-			delta_time = TIME_SCALE / 60.0f / RENDER_MOTIONBLUR;
+			// freeze time
+			delta_time = 0.0f;
 
 			// turns to advance per step
-			delta_turns = delta_time * sim_rate;
+			delta_turns = TIME_SCALE / 60.0f / RENDER_MOTIONBLUR * sim_rate;
 
 			// set turn counter to almost reach a new turn
 			sim_turns = 1.0f - FLT_EPSILON - delta_turns * RENDER_MOTIONBLUR;
-
-			// freeze time
-			delta_time = 0.0f;
 		}
 		else
 		{
@@ -1227,7 +1230,7 @@ int SDL_main( int argc, char *argv[] )
 			// RENDERING PHASE
 
 			// for each player...
-			for (Database::Typed<Player *>::Iterator itor(&Database::player); itor.IsValid(); ++itor)
+			for (Database::Typed<PlayerController *>::Iterator itor(&Database::playercontroller); itor.IsValid(); ++itor)
 			{
 				// get the entity
 				Entity *entity = Database::entity.Get(itor.GetKey());
@@ -1306,10 +1309,13 @@ int SDL_main( int argc, char *argv[] )
 		{
 			// return the accumulated image
 			glAccum(GL_RETURN, 1);
+
+			// return time to real time
+			delta_time *= RENDER_MOTIONBLUR;
 		}
 
 		// switch blend mode
-		glPushAttrib(GL_COLOR_BUFFER_BIT);
+		glPushAttrib(GL_COLOR_BUFFER_BIT | GL_TEXTURE_BIT);
 		glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
 
 		// push projection transform
@@ -1324,41 +1330,198 @@ int SDL_main( int argc, char *argv[] )
 		glLoadIdentity();
 
 		// for each player...
+		int playerindex = 0;
 		for (Database::Typed<Player *>::Iterator itor(&Database::player); itor.IsValid(); ++itor)
 		{
+			// get the attached entity identifier
+			unsigned int id = itor.GetValue()->mAttach;
+
 			// draw player health (HACK)
-			Damagable *damagable = Database::damagable.Get(itor.GetKey());
+			float health = 0.0f;
+			Damagable *damagable = Database::damagable.Get(id);
 			if (damagable)
 			{
-				// health ratio
-				const DamagableTemplate &damagabletemplate = Database::damagabletemplate.Get(itor.GetKey());
-				float health = damagable->GetHealth() / damagabletemplate.mHealth;
-
-				glBegin(GL_QUADS);
-
-				// set color based on health
-				if (health < 0.5f)
-					glColor4f(1.0f, 0.1f + health * 0.9f / 0.5f, 0.1f, 1.0f - health * 0.9f);
-				else if (health < 100)
-					glColor4f(0.1f + (1.0f - health) * 0.9f / 0.5f, 1.0f, 0.1f, 1.0f - health * 0.9f);
-				else
-					glColor4f(0.1f, 1.0f, 0.1f, 0.1f);
-
-				// fill gauge
-				glVertex2f(8, 8);
-				glVertex2f(8 + 100 * health, 8);
-				glVertex2f(8 + 100 * health, 16);
-				glVertex2f(8, 16);
-
-				// background
-				glColor4f(0.0f, 0.0f, 0.0f, 0.1f);
-				glVertex2f(8 + 100 * health, 8);
-				glVertex2f(108, 8);
-				glVertex2f(108, 16);
-				glVertex2f(8 + 100 * health, 16);
-
-				glEnd();
+				// get health ratio
+				const DamagableTemplate &damagabletemplate = Database::damagabletemplate.Get(id);
+				health = damagable->GetHealth() / damagabletemplate.mHealth;
 			}
+
+			// fill gauge values
+			static const int MAX_PLAYERS = 8;
+			static float fill[MAX_PLAYERS] = { 0 };
+
+			// drain values
+			static const float DRAIN_DELAY = 1.0f;
+			static const float DRAIN_RATE = 0.5f;
+			static float drain[MAX_PLAYERS] = { 0 };
+			static float draindelay[MAX_PLAYERS] = { 0 };
+
+			// flash values
+			static const int MAX_FLASH = 16;
+			static const float FLASH_RATE = 2.0f;
+			struct Flash
+			{
+				float left;
+				float right;
+				float fade;
+			};
+			static Flash flash[MAX_PLAYERS][MAX_FLASH] = { 0 };
+			static int flashcount[MAX_PLAYERS] = { 0 };
+
+			// if health is greater than the gauge fill...
+			if (fill[playerindex] < health - FLT_EPSILON)
+			{
+				// raise the fill
+				fill[playerindex] = health;
+				if (drain[playerindex] < fill[playerindex])
+					drain[playerindex] = fill[playerindex];
+			}
+			// else if health is lower than the gauge fill...
+			else if (fill[playerindex] > health + FLT_EPSILON)
+			{
+				// add a flash
+				if (flashcount[playerindex] == MAX_FLASH)
+					--flashcount[playerindex];
+				for (int i = flashcount[playerindex]; i > 0; --i)
+					flash[playerindex][i] = flash[playerindex][i-1];
+				Flash &flashinfo = flash[playerindex][0];
+				flashinfo.left = health;
+				flashinfo.right = fill[playerindex];
+				flashinfo.fade = 1.0f;
+				++flashcount[playerindex];
+
+				DebugPrint("health %f -> %f\n", fill[playerindex], health);
+
+				// lower the fill
+				fill[playerindex] = health;
+
+				// reset the drain delay
+				draindelay[playerindex] = DRAIN_DELAY;
+			}
+
+			// update pulse
+			static float pulsetimer = 0.0f;
+			pulsetimer += delta_time * (1.0f + (1.0f - health) * (1.0f - health) * 4.0f);
+			while (pulsetimer >= 1.0f)
+				pulsetimer -= 1.0f;
+			float pulse = sinf(pulsetimer * float(M_PI));
+			pulse *= pulse;
+			pulse *= pulse;
+			pulse *= pulse;
+
+			// set color based on health and pulse
+			static const float healthcolor[3][4] =
+			{
+				{ 1.0f, 0.0f, 0.0f, 1.0f },
+				{ 1.0f, 1.0f, 0.0f, 0.75f },
+				{ 0.0f, 1.0f, 0.0f, 0.5f }
+			};
+			static const float pulsecolor[3][4] =
+			{
+				{ 1.0f, 1.0f, 1.0f, 1.0f },
+				{ 1.0f, 1.0f, 0.3f, 0.75f },
+				{ 0.2f, 1.0f, 0.2f, 0.5f },
+			};
+
+			int band = (health > 0.5f);
+			float ratio = health * 2.0f - band;
+
+			float fillcolor[4];
+			for (int i = 0; i < 4; i++)
+				fillcolor[i] = Lerp(Lerp(healthcolor[band][i], healthcolor[band+1][i], ratio), Lerp(pulsecolor[band][i], pulsecolor[band+1][i], ratio), pulse);
+
+			// begin drawing
+			glBegin(GL_QUADS);
+
+			// background
+			glColor4f(0.2f, 0.2f, 0.2f, 0.2f);
+			glVertex2f(8, 8);
+			glVertex2f(108, 8);
+			glVertex2f(108, 16);
+			glVertex2f(8, 16);
+
+			// drain
+			glColor4f(1.0f, 0.0f, 0.0f, 0.5f);
+			glVertex2f(8 + 100 * fill[playerindex], 8);
+			glVertex2f(8 + 100 * drain[playerindex], 8);
+			glVertex2f(8 + 100 * drain[playerindex], 16);
+			glVertex2f(8 + 100 * fill[playerindex], 16);
+
+			// flash
+			for (int i = 0; i < flashcount[playerindex]; ++i)
+			{
+				Flash &flashinfo = flash[playerindex][i];
+				glColor4f(1.0f, 1.0f, 1.0f, flashinfo.fade);
+				glVertex2f(8 + 100 * flashinfo.left, 8 - 2 * flashinfo.fade);
+				glVertex2f(8 + 100 * flashinfo.right, 8 - 2 * flashinfo.fade);
+				glVertex2f(8 + 100 * flashinfo.right, 16 + 2 * flashinfo.fade);
+				glVertex2f(8 + 100 * flashinfo.left, 16 + 2 * flashinfo.fade);
+			}
+
+			// fill gauge
+			glColor4fv(fillcolor);
+			glVertex2f(8, 8);
+			glVertex2f(8 + 100 * fill[playerindex], 8);
+			glVertex2f(8 + 100 * fill[playerindex], 16);
+			glVertex2f(8, 16);
+
+			glEnd();
+
+			// if the drain delay elapsed...
+			draindelay[playerindex] -= delta_time;
+			if (draindelay[playerindex] <= 0)
+			{
+				// update drain
+				drain[playerindex] -= DRAIN_RATE * delta_time;
+				if (drain[playerindex] < fill[playerindex])
+					drain[playerindex] = fill[playerindex];
+			}
+
+			// count down flash timers
+			for (int i = 0; i < flashcount[playerindex]; ++i)
+			{
+				Flash &flashinfo = flash[playerindex][i];
+				flashinfo.fade -= FLASH_RATE * delta_time;
+				if (flashinfo.fade <= 0.0f)
+				{
+					flashcount[playerindex] = i;
+					break;
+				}
+			}
+
+			// draw player score (HACK)
+			char score[9];
+			sprintf(score, "%08d", itor.GetValue()->mScore);
+			bool leading = true;
+
+			glEnable(GL_TEXTURE_2D);
+			glBindTexture(GL_TEXTURE_2D, OGLCONSOLE_glFontHandle);
+			glBegin(GL_QUADS);
+
+			float x = 8;
+			float y = 32;
+			float z = 0;
+			float w = 16;
+			float h = -16;
+			static const float textcolor[2][3] =
+			{
+				{ 0.4f, 0.5f, 1.0f },
+				{ 0.3f, 0.3f, 0.3f }
+			};
+
+			for (char *s = score; *s != '\0'; ++s)
+			{
+				char c = *s;
+				if (c != '0')
+					leading = false;
+				glColor3fv(textcolor[leading]);
+				OGLCONSOLE_DrawCharacter(c, x, y, w, h, z);
+				x += w;
+			}
+
+			glEnd();
+
+			++playerindex;
 		}
 
 		// reset camera transform

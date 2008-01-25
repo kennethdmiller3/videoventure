@@ -65,6 +65,12 @@ inline float InvSqrt(float x)
 	return x;
 }
 
+// linear interpolation
+inline float Lerp(float v0, float v1, float s)
+{
+	return v0 + (v1 - v0) * s;
+}
+
 // loader
 void ProcessTemplateItem(const TiXmlElement *element, unsigned int template_id);
 void ProcessTemplateItems(const TiXmlElement *element);
