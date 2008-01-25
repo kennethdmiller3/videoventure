@@ -63,6 +63,17 @@ namespace Database
 				const WeaponTemplate &weapontemplate = Database::weapontemplate.Get(aId);
 				Weapon *weapon = new Weapon(weapontemplate, aId);
 				Database::weapon.Put(aId, weapon);
+
+				// TO DO: check to make sure this does not have an order dependency
+				weapon->SetControl(aId);
+				for (unsigned int aControlId = aId; aControlId != 0; aControlId = Database::backlink.Get(aControlId))
+				{
+					if (Database::controller.Find(aControlId))
+					{
+						weapon->SetControl(aControlId);
+						break;
+					}
+				}
 				weapon->Activate();
 			}
 
@@ -153,6 +164,7 @@ bool WeaponTemplate::Configure(const TiXmlElement *element)
 
 Weapon::Weapon(void)
 : Updatable(0)
+, mControlId(0)
 , mTimer(0.0f)
 , mPhase(0)
 {
@@ -160,6 +172,7 @@ Weapon::Weapon(void)
 
 Weapon::Weapon(const WeaponTemplate &aTemplate, unsigned int aId)
 : Updatable(aId)
+, mControlId(0)
 , mTimer(0.0f)
 , mPhase(aTemplate.mPhase)
 {
@@ -182,13 +195,9 @@ bool Weapon::Configure(const TiXmlElement *element)
 void Weapon::Update(float aStep)
 {
 	// get controller
-	unsigned int aOwnerId = Database::owner.Get(id);
-	const Controller *controller = Database::controller.Get(aOwnerId);
+	const Controller *controller = Database::controller.Get(mControlId);
 	if (!controller)
-	{
-		Database::Delete(id);
 		return;
-	}
 
 	// advance fire timer
 	mTimer += aStep;
@@ -211,7 +220,7 @@ void Weapon::Update(float aStep)
 				// instantiate a bullet
 				Matrix2 transform(weapon.mOffset * entity->GetInterpolatedTransform(mTimer / aStep));
 				Vector2 velocity(transform.Rotate(weapon.mInherit * transform.Unrotate(entity->GetVelocity()) + weapon.mVelocity));
-				unsigned int ordId = Database::Instantiate(weapon.mOrdnance,
+				unsigned int ordId = Database::Instantiate(weapon.mOrdnance, Database::owner.Get(id), 
 					transform.Angle(), transform.p, velocity, 0);
 
 				// set fractional turn

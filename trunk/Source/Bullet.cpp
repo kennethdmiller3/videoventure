@@ -154,7 +154,7 @@ void Bullet::Simulate(float aStep)
 			if (entity)
 			{
 				// spawn template at entity location
-				Database::Instantiate(bullet.mSpawnOnExpire, entity->GetAngle(), entity->GetPosition(), entity->GetVelocity(), entity->GetOmega());
+				Database::Instantiate(bullet.mSpawnOnExpire, Database::owner.Get(id), entity->GetAngle(), entity->GetPosition(), entity->GetVelocity(), entity->GetOmega());
 			}
 #endif
 		}
@@ -187,7 +187,7 @@ void Bullet::Kill(void)
 			if (entity)
 			{
 				// spawn template at entity location
-				Database::Instantiate(bullet.mSpawnOnExpire, entity->GetAngle(), entity->GetPosition(), entity->GetVelocity(), entity->GetOmega());
+				Database::Instantiate(bullet.mSpawnOnExpire, Database::owner.Get(id), entity->GetAngle(), entity->GetPosition(), entity->GetVelocity(), entity->GetOmega());
 			}
 #endif
 		}
@@ -241,11 +241,12 @@ void BulletKillUpdate::operator delete(void *aPtr)
 #endif
 
 
-void Bullet::Collide(unsigned int aHitId, float aTime, const b2Manifold aManifold[], int aCount)
+void Bullet::Collide(unsigned int aId, unsigned int aHitId, float aTime, const b2Manifold aManifold[], int aCount)
 {
 	// do nothing if expired...
 	if (mLife <= 0)
 		return;
+	assert(id == aId);
 
 	const BulletTemplate &bullet = Database::bullettemplate.Get(id);
 
@@ -275,24 +276,22 @@ void Bullet::Collide(unsigned int aHitId, float aTime, const b2Manifold aManifol
 		// if not hitting an enemy...
 		if (!aTeam || !aHitTeam || aTeam == aHitTeam)
 		{
-			// if the recipient is damagable and needs health...
-			Damagable *damagable = Database::damagable.Get(aHitId);
-			if (damagable && (damagable->GetHealth() < Database::damagabletemplate.Get(aHitId).mHealth))
+			// for each candidate recipient...
+			for (unsigned int aRecipientId = aHitId; aRecipientId; aRecipientId = Database::backlink.Get(aRecipientId))
 			{
-				// apply healing value
-				damagable->Damage(id, bullet.mDamage);
-				destroy = true;
-			}
-			else
-			{
-				// if the recipient's owner is damagable and needs health...
-				unsigned int aHitOwnerId = Database::owner.Get(aHitId);
-				Damagable *damagable = Database::damagable.Get(aHitOwnerId);
-				if (damagable && (damagable->GetHealth() < Database::damagabletemplate.Get(aHitOwnerId).mHealth))
+				// if the recipient is damagable and needs health...
+				Damagable *damagable = Database::damagable.Get(aRecipientId);
+				if (damagable)
 				{
-					// apply healing value
-					damagable->Damage(id, std::max(bullet.mDamage, damagable->GetHealth() - Database::damagabletemplate.Get(aHitOwnerId).mHealth));
-					destroy = true;
+					float curhealth = damagable->GetHealth();
+					float maxhealth = Database::damagabletemplate.Get(aRecipientId).mHealth;
+					if (curhealth < maxhealth)
+					{
+						// apply healing value
+						damagable->Damage(id, std::max(bullet.mDamage, curhealth - maxhealth));
+						destroy = true;
+						break;
+					}
 				}
 			}
 		}
@@ -320,7 +319,7 @@ void Bullet::Collide(unsigned int aHitId, float aTime, const b2Manifold aManifol
 		b2Vec2 position(aManifold[0].points[0].position - aManifold[0].points[0].separation * aManifold[0].normal);
 
 		// spawn the template
-		unsigned int spawnId = Database::Instantiate(bullet.mSpawnOnImpact, 0, Vector2(position), Vector2(0, 0), 0);
+		unsigned int spawnId = Database::Instantiate(bullet.mSpawnOnImpact, Database::owner.Get(id), 0, Vector2(position), Vector2(0, 0), 0);
 
 		// set fractional turn
 		if (Renderable *renderable = Database::renderable.Get(spawnId))

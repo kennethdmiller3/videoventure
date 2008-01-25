@@ -23,7 +23,9 @@ protected:
 	float mHealth;
 
 public:
-	typedef fastdelegate::FastDelegate<void (unsigned int, float)> Listener;
+	typedef fastdelegate::FastDelegate<void (unsigned int, unsigned int, float)> DamageListener;
+	typedef fastdelegate::FastDelegate<void (unsigned int, unsigned int)> DeathListener;
+	typedef fastdelegate::FastDelegate<void (unsigned int, unsigned int)> KillListener;
 
 public:
 #ifdef USE_POOL_ALLOCATOR
@@ -55,5 +57,7 @@ namespace Database
 {
 	extern Typed<DamagableTemplate> damagabletemplate;
 	extern Typed<Damagable *> damagable;
-	extern Typed<Typed<Damagable::Listener> > damagablelistener;
+	extern Typed<Typed<Damagable::DamageListener> > damagelistener;
+	extern Typed<Typed<Damagable::DeathListener> > deathlistener;
+	extern Typed<Typed<Damagable::KillListener> > killlistener;
 }

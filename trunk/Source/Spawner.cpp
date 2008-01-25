@@ -206,7 +206,7 @@ void Spawner::Update(float aStep)
 			// instantiate the spawn entity
 			Matrix2 transform(spawner.mOffset * entity->GetInterpolatedTransform(mTimer / aStep));
 			Vector2 velocity(transform.Rotate(spawner.mInherit * transform.Unrotate(entity->GetVelocity()) + spawner.mVelocity));
-			mSpawn = Database::Instantiate(spawner.mSpawn, transform.Angle(), transform.p, velocity, entity->GetOmega());
+			mSpawn = Database::Instantiate(spawner.mSpawn, Database::owner.Get(id), transform.Angle(), transform.p, velocity, entity->GetOmega());
 
 			// if the spawner has a team...
 			unsigned int team = Database::team.Get(id);

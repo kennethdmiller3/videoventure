@@ -34,6 +34,9 @@ namespace Database
 	// team identifier database
 	Typed<unsigned int> team(0xa2fd7d0c /* "team" */);
 
+	// point value database
+	Typed<int> points(0xbc9567c6 /* "points" */);
+
 
 	//
 	// UNTYPED DATABASE
@@ -392,6 +395,23 @@ namespace Database
 		}
 		teamloader;
 
+
+		class PointsLoader
+		{
+		public:
+			PointsLoader()
+			{
+				AddConfigure(0xbc9567c6 /* "points" */, Entry(this, &PointsLoader::Configure));
+			}
+
+			void Configure(unsigned int aId, const TiXmlElement *element)
+			{
+				int &points = Database::points.Open(aId);
+				element->QueryIntAttribute("value", &points);
+				Database::points.Close(aId);
+			}
+		}
+		pointsloader;
 	}
 
 	//
@@ -433,16 +453,13 @@ namespace Database
 	std::deque<unsigned int> deletequeue;
 
 	// instantiate a template
-	void Instantiate(unsigned int aInstanceId, unsigned int aTemplateId, float aAngle, Vector2 aPosition, Vector2 aVelocity, float aOmega)
+	void Instantiate(unsigned int aInstanceId, unsigned int aTemplateId, unsigned int aOwnerId, float aAngle, Vector2 aPosition, Vector2 aVelocity, float aOmega)
 	{
-		// inherit components from template
-//		Inherit(aInstanceId, aTemplateId);
-
 		// set parent
 		parent.Put(aInstanceId, aTemplateId);
 
-		// objects default to owning themselves
-		owner.Put(aInstanceId, aInstanceId);
+		// set owner
+		owner.Put(aInstanceId, aOwnerId);
 
 		// create a new entity
 		Entity *entity = new Entity(aInstanceId);
@@ -457,14 +474,14 @@ namespace Database
 	}
 
 	// instantiate a template (automatically-generated identifier)
-	unsigned int Instantiate(unsigned int aTemplateId, float aAngle, Vector2 aPosition, Vector2 aVelocity, float aOmega)
+	unsigned int Instantiate(unsigned int aTemplateId, unsigned int aOwnerId, float aAngle, Vector2 aPosition, Vector2 aVelocity, float aOmega)
 	{
 		// generate an instance identifier
 		const unsigned int aInstanceTag = Entity::TakeId();
 		const unsigned int aInstanceId = Hash(&aInstanceTag, sizeof(aInstanceTag), aTemplateId);
 
 		// instantiate the template
-		Instantiate(aInstanceId, aTemplateId, aAngle, aPosition, aVelocity, aOmega);
+		Instantiate(aInstanceId, aTemplateId, aOwnerId, aAngle, aPosition, aVelocity, aOmega);
 
 		// return the instance identifier
 		return aInstanceId;

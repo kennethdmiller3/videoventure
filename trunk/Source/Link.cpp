@@ -74,7 +74,7 @@ namespace Database
 
 					// instantiate the linked template
 					Matrix2 transform(linktemplate.mOffset * entity->GetTransform());
-					unsigned int mSecondary = Database::Instantiate(linktemplate.mSecondary,
+					unsigned int mSecondary = Database::Instantiate(linktemplate.mSecondary, Database::owner.Get(aId), 
 						transform.Angle(), transform.p, entity->GetVelocity(), entity->GetOmega());
 					linktemplate.mSecondary = mSecondary;
 
@@ -84,10 +84,6 @@ namespace Database
 
 					// create a backlink
 					Database::backlink.Put(mSecondary, aId);
-
-					// propagate ownership
-					if (const unsigned int *aOwnerId = Database::owner.Find(aId))
-						Database::owner.Put(mSecondary, *aOwnerId);
 
 					// if linking two collidables...
 					if (Database::collidabletemplate.Find(aId) &&
@@ -109,9 +105,9 @@ namespace Database
 							joint.userData = &jointtemplate;
 							joint.localAnchor1.Set(linktemplate.mOffset.p.x, linktemplate.mOffset.p.y);
 							joint.localAnchor2.Set(0, 0);
+							joint.referenceAngle = linktemplate.mOffset.Angle();
 							if (linktemplate.mUpdateAngle)
 							{
-								joint.referenceAngle = linktemplate.mOffset.Angle();
 								joint.lowerAngle = 0.0f;
 								joint.upperAngle = 0.0f;
 								joint.enableLimit = true;
@@ -224,6 +220,14 @@ void Link::Update(float aStep)
 		// get entities
 		Entity *entity = Database::entity.Get(id);
 		Entity *secondary = Database::entity.Get(mSecondary);
+		if (!secondary)
+		{
+			Database::Typed<Link *> &links = Database::link.Open(id);
+			links.Delete(mSub);
+			Database::link.Close(id);
+			delete this;
+			return;
+		}
 
 		// get template data
 		const LinkTemplate &link = Database::linktemplate.Get(id).Get(mSub);

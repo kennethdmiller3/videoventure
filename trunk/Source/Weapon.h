@@ -30,6 +30,9 @@ class Weapon
 	: public Updatable
 {
 protected:
+	// controller
+	unsigned int mControlId;
+
 	// fire timer
 	float mTimer;
 	int mPhase;
@@ -44,6 +47,12 @@ public:
 	Weapon(void);
 	Weapon(const WeaponTemplate &aTemplate, unsigned int aId);
 	virtual ~Weapon(void);
+
+	// set control
+	void SetControl(unsigned int aControlId)
+	{
+		mControlId = aControlId;
+	}
 
 	// configure
 	bool Configure(const TiXmlElement *element);
