@@ -90,6 +90,9 @@ AimerTemplate::AimerTemplate(void)
 , mAngle(0.95f)
 , mFocus(1.0f)
 , mLeading(0.0f)
+, mEvade(0.0f)
+, mClose(0.0f)
+, mFar(FLT_MAX)
 {
 }
 
@@ -109,6 +112,9 @@ bool AimerTemplate::Configure(const TiXmlElement *element)
 		mAngle = cosf(mAngle * float(M_PI) / 180.0f);
 	element->QueryFloatAttribute("focus", &mFocus);
 	element->QueryFloatAttribute("leading", &mLeading);
+	element->QueryFloatAttribute("evade", &mEvade);
+	element->QueryFloatAttribute("close", &mClose);
+	element->QueryFloatAttribute("far", &mFar);
 	return true;
 }
 
@@ -261,10 +267,42 @@ void Aimer::Control(float aStep)
 	bool inRange = mAim.LengthSq() < aimer.mAttack * aimer.mAttack;
 
 	// normalize aim
-	mAim /= (mAim.Length() + FLT_EPSILON);
+	mAim *= InvSqrt(mAim.LengthSq());
 
 	// move in aim direction
 	mMove = mAim;
+
+	// if evading...
+	if (aimer.mEvade)
+	{
+		// evade target's front vector
+		Matrix2 transform(targetEntity->GetTransform());
+		Vector2 local(transform.Untransform(entity->GetPosition()));
+		if (local.y > 0)
+		{
+			local *= InvSqrt(local.LengthSq());
+			float dir = local.x > 0 ? 1.0f : -1.0f;
+			mMove += aimer.mEvade * dir * local.y * local.y * local.y * transform.Rotate(Vector2(local.y, -local.x));
+		}
+	}
+
+	// if checking range...
+	if (aimer.mClose > 0 || aimer.mFar > FLT_MAX)
+	{
+		Vector2 dir = targetEntity->GetPosition() - entity->GetPosition();
+		float dist = dir.Length();
+		dir /= dist;
+		if (dist < aimer.mClose)
+		{
+			mMove += (dist - aimer.mClose) / 16.0f * dir;
+		}
+		if (dist > aimer.mFar)
+		{
+			mMove += (dist - aimer.mFar) / 64.0f * dir;
+		}
+	}
+
+	mMove *= InvSqrt(mMove.LengthSq());
 
 	// fire if lined up and within attack range
 	mFire = inRange && (entity->GetTransform().y.Dot(mAim) > aimer.mAngle);
