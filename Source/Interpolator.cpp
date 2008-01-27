@@ -156,26 +156,69 @@ void ProcessInterpolatorItem(const TiXmlElement *element, std::vector<unsigned i
 
 bool InterpolatorTemplate::Apply(float aTarget[], float aTime, int &aIndex)
 {
-	// while the time is less than the start time for the current index...
-	while (aTime < mKeys[aIndex * mStride])
+	int i0, i1;
+	float t0, t1;
+
+	// get time of saved index key
+	float tt = mKeys[aIndex * mStride];
+
+	// if requested time is earlier...
+	if (aTime < tt)
 	{
-		// quit if out of range
-		if (aIndex <= 0)
+		// set lower bound to first key
+		i0 = 0;
+		t0 = mKeys[i0 * mStride];
+		if (aTime < t0)
 			return false;
 
-		// go to the previous index
-		--aIndex;
+		// set upper bound to index key
+		i1 = aIndex;
+		t1 = tt;
+	}
+	else
+	{
+		// set lower bound to index key
+		i0 = aIndex;
+		t0 = tt;
+
+		// set upper bound to last key
+		i1 = mCount-1;
+		t1 = mKeys[i1 * mStride];
+		if (aTime > t1)
+			return false;
 	}
 
-	// while the time is greater than the end time for the current index...
-	while (aTime > mKeys[(aIndex + 1) * mStride])
+	// while still checking a range of keys...
+	while (i0 <= i1)
 	{
-		// quit if out of range
-		if (aIndex >= mCount - 1)
-			return false;
+		// estimate index
+		float im = Lerp(float(i0), float(i1), (aTime - t0) / (t1 - t0));
 
-		// go to the next index
-		++aIndex;
+		// if time is before segment start
+		int iL = int(floorf(im));
+		float tL = mKeys[iL * mStride];
+		if (aTime < tL)
+		{
+			// set upper bound to segment start
+			i1 = iL;
+			t1 = tL;
+			continue;
+		}
+
+		// if time is after segment end...
+		int iH = int(ceilf(im));
+		float tH = mKeys[iH * mStride];
+		if (aTime > tH)
+		{
+			// set lower bound to segment end
+			i0 = iH;
+			t0 = tH;
+			continue;
+		}
+
+		// found!
+		aIndex = iL;
+		break;
 	}
 
 	// interpolate the value

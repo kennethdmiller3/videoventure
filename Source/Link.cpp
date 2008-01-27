@@ -78,6 +78,14 @@ namespace Database
 						transform.Angle(), transform.p, entity->GetVelocity(), entity->GetOmega());
 					linktemplate.mSecondary = mSecondary;
 
+					// if the owner has a team...
+					unsigned int team = Database::team.Get(aId);
+					if (team)
+					{
+						// propagate team to spawned item
+						Database::team.Put(mSecondary, team);
+					}
+
 					// create the link
 					Link *link = new Link(linktemplate, aId);
 					links.Put(itor.GetKey(), link);

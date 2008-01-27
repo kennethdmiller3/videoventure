@@ -173,21 +173,21 @@ bool init_GL()
 	glFogi( GL_FOG_MODE, GL_LINEAR );
 	glFogfv( GL_FOG_COLOR, fogColor );
 	glHint( GL_FOG_HINT, GL_DONT_CARE );
-	glFogf( GL_FOG_START, 2.0f );
-	glFogf( GL_FOG_END, 5.0f );
+	glFogf( GL_FOG_START, 256.0f*2.0f );
+	glFogf( GL_FOG_END, 256.0f*5.0f );
 #endif
 
 	// set projection
 	glMatrixMode( GL_PROJECTION );
 	glLoadIdentity();
 	glViewport( 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT );
-	glFrustum( -0.5, 0.5, 0.5f*SCREEN_HEIGHT/SCREEN_WIDTH, -0.5f*SCREEN_HEIGHT/SCREEN_WIDTH, 1, 5 );
+	glFrustum( -0.5*VIEW_SIZE, 0.5*VIEW_SIZE, 0.5f*VIEW_SIZE*SCREEN_HEIGHT/SCREEN_WIDTH, -0.5f*VIEW_SIZE*SCREEN_HEIGHT/SCREEN_WIDTH, 256.0f*1.0f, 256.0f*5.0f );
 
 	// set base modelview matrix
 	glMatrixMode( GL_MODELVIEW );
 	glLoadIdentity();
-	glScalef( -1.0f / VIEW_SIZE, -1.0f / VIEW_SIZE, -1.0f / 256.0f );
-	glTranslatef( 0.0f, 0.0f, 256.0f );
+	glTranslatef( 0.0f, 0.0f, -256.0f );
+	glScalef( -1.0f, -1.0f, -1.0f );
 
 	// return true if no errors
 	return glGetError() == GL_NO_ERROR;
@@ -1390,8 +1390,6 @@ int SDL_main( int argc, char *argv[] )
 				flashinfo.fade = 1.0f;
 				++flashcount[playerindex];
 
-				DebugPrint("health %f -> %f\n", fill[playerindex], health);
-
 				// lower the fill
 				fill[playerindex] = health;
 
@@ -1434,7 +1432,7 @@ int SDL_main( int argc, char *argv[] )
 			glBegin(GL_QUADS);
 
 			// background
-			glColor4f(0.2f, 0.2f, 0.2f, 0.2f);
+			glColor4f(0.3f, 0.3f, 0.3f, 0.5f);
 			glVertex2f(8, 8);
 			glVertex2f(108, 8);
 			glVertex2f(108, 16);

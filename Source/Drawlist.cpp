@@ -2,11 +2,44 @@
 #include "Interpolator.h"
 #include "Drawlist.h"
 
+
+// attribute names
+static const char * sPositionNames[] = { "x", "y", "z", "w" };
+static const float sPositionDefault[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+static const char * sRotationNames[] = { "angle", "x", "y", "z" };
+static const float sRotationDefault[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+static const char * sScaleNames[] = { "x", "y", "z" };
+static const float sScaleDefault[] = { 1.0f, 1.0f, 1.0f };
+static const char * sColorNames[] = { "r", "g", "b", "a" };
+static const float sColorDefault[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+static const char * sTexCoordNames[] = { "s", "t", "r", "q" };
+static const float sTexCoordDefault[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+static const char * sIndexNames[] = { "c" };
+static const float sIndexDefault[] = { 0.0f };
+static const char * sMatrixNames[] = { "m0", "m1", "m2", "m3", "m4", "m5", "m6", "m7", "m8", "m9", "m10", "m11", "m12", "m13", "m14", "m15" };
+static const float sMatrixDefault[] = { 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f };
+
+void GetTypeData(unsigned int type, int &width, const char **&names, const float *&data)
+{
+	switch (type)
+	{
+	default:
+	case 0x934f4e0a /* "position" */:	names = sPositionNames; data = sPositionDefault; width = 4; break;
+	case 0x21ac415f /* "rotation" */:	names = sRotationNames; data = sRotationDefault; width = 4; break;
+	case 0x82971c71 /* "scale" */:		names = sScaleNames; data = sScaleDefault; width = 3; break;
+	case 0x3d7e6258 /* "color" */:		names = sColorNames; data = sColorDefault; width = 4; break;
+	case 0xdd612dd3 /* "texcoord" */:	names = sTexCoordNames; data = sTexCoordDefault; width = 4; break;
+	case 0x090aa9ab /* "index" */:		names = sIndexNames; data = sIndexDefault; width = 1; break;
+	case 0x15c2f8ec /* "matrix" */:		names = sMatrixNames; data = sMatrixDefault; width = 16; break;
+	}
+}
+
 namespace Database
 {
 	Typed<std::vector<unsigned int> > dynamicdrawlist(0xdf3cf9c0 /* "dynamicdrawlist" */);
 	Typed<GLuint> drawlist(0xc98b019b /* "drawlist" */);
 	Typed<GLuint> texture(0x3c6468f4 /* "texture" */);
+	Typed<Typed<float> > variable(0x19385305 /* "variable" */);
 
 	namespace Loader
 	{
@@ -51,7 +84,7 @@ namespace Database
 				// process draw items
 				std::vector<unsigned int> drawlist;
 				ProcessDrawItems(element, drawlist);
-				ExecuteDrawItems(&drawlist[0], drawlist.size(), param);
+				ExecuteDrawItems(&drawlist[0], drawlist.size(), param, aId);
 
 				// finish the draw list
 				glEndList();
@@ -204,6 +237,36 @@ namespace Database
 			}
 		}
 		textureloader;
+
+		class VariableLoader
+		{
+		public:
+			VariableLoader()
+			{
+				AddConfigure(0x19385305 /* "variable" */, Entry(this, &VariableLoader::Configure));
+			}
+
+			void Configure(unsigned int aId, const TiXmlElement *element)
+			{
+				Typed<float> &variables = Database::variable.Open(aId);
+
+				unsigned int name = Hash(element->Attribute("name"));
+				unsigned int type = Hash(element->Attribute("type"));
+				int width;
+				const char **names;
+				const float *data;
+				GetTypeData(type, width, names, data);
+				for (int i = 0; i < width; i++)
+				{
+					float value = data[i];
+					element->QueryFloatAttribute(names[i], &value);
+					variables.Put(name+i, value);
+				}
+
+				Database::variable.Close(aId);
+			}
+		}
+		variableloader;
 	}
 
 }
@@ -234,17 +297,9 @@ static const unsigned int sHashToAttribMask[][2] =
 };
 #endif
 
-// attribute names
-static const char * sPositionNames[] = { "x", "y", "z", "w" };
-static const char * sRotationNames[] = { "angle", "x", "y", "z" };
-static const char * sColorNames[] = { "r", "g", "b", "a" };
-static const char * sTexCoordNames[] = { "s", "t", "r", "q" };
-static const char * sIndexNames[] = { "c" };
-static const char * sMatrixNames[] = { "m0", "m1", "m2", "m3", "m4", "m5", "m6", "m7", "m8", "m9", "m10", "m11", "m12", "m13", "m14", "m15" };
-
 void ProcessDrawData(const TiXmlElement *element, std::vector<unsigned int> &buffer, int width, const char *names[], const float data[])
 {
-	if (const char *name = element->Attribute("name"))
+	if (const char *name = element->Attribute("variable"))
 	{
 		// push a reference to a variable value
 		buffer.push_back(0x19385305 /* "variable" */);
@@ -272,6 +327,22 @@ void ProcessDrawData(const TiXmlElement *element, std::vector<unsigned int> &buf
 	}
 }
 
+void ProcessFloatData(const TiXmlElement *element, std::vector<unsigned int> &buffer)
+{
+	const char *text = element->GetText();
+	size_t len = strlen(text)+1;
+	char *buf = static_cast<char *>(_alloca(len));
+	memcpy(buf, text, len);
+
+	char *item = strtok(buf, " \t\n\r,;");
+	while (element)
+	{
+		float value = float(atof(item));
+		buffer.push_back(*reinterpret_cast<unsigned int *>(&value));
+		item = strtok(NULL, " \t\n\r,;");
+	}
+}
+
 void ProcessDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buffer)
 {
 	const char *label = element->Value();
@@ -290,129 +361,35 @@ void ProcessDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buf
 			GLuint mask = 0U;
 			for (const TiXmlAttribute *attrib = element->FirstAttribute(); attrib != NULL; attrib = attrib->Next())
 			{
+				GLuint bit = 0U;
 				switch (Hash(attrib->Name()))
 				{
-				case 0xd965bbda /* "current" */:
-					if (attrib->IntValue())
-						mask |= GL_CURRENT_BIT;
-					else
-						mask &= ~GL_CURRENT_BIT;
-					break;
-				case 0x18ae6c91 /* "point" */:
-					if (attrib->IntValue())
-						mask |= GL_POINT_BIT;
-					else
-						mask &= ~GL_POINT_BIT;
-					break;
-				case 0x17db1627 /* "line" */:
-					if (attrib->IntValue())
-						mask |= GL_LINE_BIT;
-					else
-						mask &= ~GL_LINE_BIT;
-					break;
-				case 0x051cb889 /* "polygon" */:
-					if (attrib->IntValue())
-						mask |= GL_POLYGON_BIT;
-					else
-						mask &= ~GL_POLYGON_BIT;
-					break;
-				case 0x67b14997 /* "polygon_stipple" */:
-					if (attrib->IntValue())
-						mask |= GL_POLYGON_STIPPLE_BIT;
-					else
-						mask &= ~GL_POLYGON_STIPPLE_BIT;
-					break;
-				case 0xccde91eb /* "pixel_mode" */:
-					if (attrib->IntValue())
-						mask |= GL_LIGHTING_BIT;
-					else
-						mask &= ~GL_LIGHTING_BIT;
-					break;
-				case 0x827eb1c9 /* "lighting" */:
-					if (attrib->IntValue())
-						mask |= GL_POINT_BIT;
-					else
-						mask &= ~GL_POINT_BIT;
-					break;
-				case 0xa1f3723f /* "fog" */:
-					if (attrib->IntValue())
-						mask |= GL_FOG_BIT;
-					else
-						mask &= ~GL_FOG_BIT;
-					break;
-				case 0x65e5b825 /* "depth_buffer" */:
-					if (attrib->IntValue())
-						mask |= GL_DEPTH_BUFFER_BIT;
-					else
-						mask &= ~GL_DEPTH_BUFFER_BIT;
-					break;
-				case 0x907f6213 /* "accum_buffer" */:
-					if (attrib->IntValue())
-						mask |= GL_ACCUM_BUFFER_BIT;
-					else
-						mask &= ~GL_ACCUM_BUFFER_BIT;
-					break;
-				case 0x632020be /* "stencil_buffer" */:
-					if (attrib->IntValue())
-						mask |= GL_STENCIL_BUFFER_BIT;
-					else
-						mask &= ~GL_STENCIL_BUFFER_BIT;
-					break;
-				case 0xe4abbac3 /* "viewport" */:
-					if (attrib->IntValue())
-						mask |= GL_VIEWPORT_BIT;
-					else
-						mask &= ~GL_VIEWPORT_BIT;
-					break;
-				case 0xe1ad931b /* "transform" */:
-					if (attrib->IntValue())
-						mask |= GL_TRANSFORM_BIT;
-					else
-						mask &= ~GL_TRANSFORM_BIT;
-					break;
-				case 0xaf8bb8ce /* "enable" */:
-					if (attrib->IntValue())
-						mask |= GL_ENABLE_BIT;
-					else
-						mask &= ~GL_ENABLE_BIT;
-					break;
-				case 0x0d759bbb /* "color_buffer" */:
-					if (attrib->IntValue())
-						mask |= GL_COLOR_BUFFER_BIT;
-					else
-						mask &= ~GL_COLOR_BUFFER_BIT;
-					break;
-				case 0x4bc809b8 /* "hint" */:
-					if (attrib->IntValue())
-						mask |= GL_HINT_BIT;
-					else
-						mask &= ~GL_HINT_BIT;
-					break;
-				case 0x08d22e0f /* "eval" */:
-					if (attrib->IntValue())
-						mask |= GL_EVAL_BIT;
-					else
-						mask &= ~GL_EVAL_BIT;
-					break;
-				case 0x0cfb5881 /* "list" */:
-					if (attrib->IntValue())
-						mask |= GL_LIST_BIT;
-					else
-						mask &= ~GL_LIST_BIT;
-					break;
-				case 0x3c6468f4 /* "texture" */:
-					if (attrib->IntValue())
-						mask |= GL_TEXTURE_BIT;
-					else
-						mask &= ~GL_TEXTURE_BIT;
-					break;
-				case 0x0adbc081 /* "scissor" */:
-					if (attrib->IntValue())
-						mask |= GL_SCISSOR_BIT;
-					else
-						mask &= ~GL_SCISSOR_BIT;
-					break;
+				case 0xd965bbda /* "current" */:			bit = GL_CURRENT_BIT; break;
+				case 0x18ae6c91 /* "point" */:				bit = GL_POINT_BIT; break;
+				case 0x17db1627 /* "line" */:				bit = GL_LINE_BIT; break;
+				case 0x051cb889 /* "polygon" */:			bit = GL_POLYGON_BIT; break;
+				case 0x67b14997 /* "polygon_stipple" */:	bit = GL_POLYGON_STIPPLE_BIT; break;
+				case 0xccde91eb /* "pixel_mode" */:			bit = GL_PIXEL_MODE_BIT; break;
+				case 0x827eb1c9 /* "lighting" */:			bit = GL_LIGHTING_BIT; break;
+				case 0xa1f3723f /* "fog" */:				bit = GL_FOG_BIT; break;
+				case 0x65e5b825 /* "depth_buffer" */:		bit = GL_DEPTH_BUFFER_BIT; break;
+				case 0x907f6213 /* "accum_buffer" */:		bit = GL_ACCUM_BUFFER_BIT; break;
+				case 0x632020be /* "stencil_buffer" */:		bit = GL_STENCIL_BUFFER_BIT; break;
+				case 0xe4abbac3 /* "viewport" */:			bit = GL_VIEWPORT_BIT; break;
+				case 0xe1ad931b /* "transform" */:			bit = GL_TRANSFORM_BIT; break;
+				case 0xaf8bb8ce /* "enable" */:				bit = GL_ENABLE_BIT; break;
+				case 0x0d759bbb /* "color_buffer" */:		bit = GL_COLOR_BUFFER_BIT; break;
+				case 0x4bc809b8 /* "hint" */:				bit = GL_HINT_BIT; break;
+				case 0x08d22e0f /* "eval" */:				bit = GL_EVAL_BIT; break;
+				case 0x0cfb5881 /* "list" */:				bit = GL_LIST_BIT; break;
+				case 0x3c6468f4 /* "texture" */:			bit = GL_TEXTURE_BIT; break;
+				case 0x0adbc081 /* "scissor" */:			bit = GL_SCISSOR_BIT; break;
+				case 0x13254bc4 /* "all" */:				bit = GL_ALL_ATTRIB_BITS; break;
 				}
+				if (attrib->IntValue())
+					mask |= bit;
+				else
+					mask &= ~bit;
 			}
 			buffer.push_back(0xa471ec02 /* "glPushAttrib" */);
 			buffer.push_back(mask);
@@ -426,21 +403,17 @@ void ProcessDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buf
 			GLuint mask = 0U;
 			for (const TiXmlAttribute *attrib = element->FirstAttribute(); attrib != NULL; attrib = attrib->Next())
 			{
+				GLuint bit = 0U;
 				switch (Hash(attrib->Name()))
 				{
-				case 0x959fee19 /* "pixel_store" */:
-					if (attrib->IntValue())
-						mask |= GL_CLIENT_PIXEL_STORE_BIT;
-					else
-						mask &= ~GL_CLIENT_PIXEL_STORE_BIT;
-					break;
-				case 0x20a16825 /* "vertex_array" */:
-					if (attrib->IntValue())
-						mask |= GL_CLIENT_VERTEX_ARRAY_BIT;
-					else
-						mask &= ~GL_CLIENT_VERTEX_ARRAY_BIT;
-					break;
+				case 0x959fee19 /* "pixel_store" */:	bit = GL_CLIENT_PIXEL_STORE_BIT; break;
+				case 0x20a16825 /* "vertex_array" */:	bit = GL_CLIENT_VERTEX_ARRAY_BIT; break;
+				case 0x13254bc4 /* "all" */:			bit = GL_CLIENT_ALL_ATTRIB_BITS; break;
 				}
+				if (attrib->IntValue())
+					mask |= bit;
+				else
+					mask &= ~bit;
 			}
 			buffer.push_back(0x485249b9 /* "glPushClientAttrib" */);
 			buffer.push_back(mask);
@@ -451,25 +424,22 @@ void ProcessDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buf
 
 	case 0xad0ecfd5 /* "translate" */:
 		{
-			float data[3] = { 0.0f, 0.0f, 0.0f };
 			buffer.push_back(0xafeef11e /* "glTranslatef" */);
-			ProcessDrawData(element, buffer, 3, sPositionNames, data);
+			ProcessDrawData(element, buffer, 3, sPositionNames, sPositionDefault);
 		}
 		break;
 
 	case 0xa5f4fd0a /* "rotate" */:
 		{
-			float data[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
 			buffer.push_back(0x29e02ba1 /* "glRotatef" */);
-			ProcessDrawData(element, buffer, 4, sRotationNames, data);
+			ProcessDrawData(element, buffer, 4, sRotationNames, sRotationDefault);
 		}
 		break;
 
 	case 0x82971c71 /* "scale" */:
 		{
-			float data[3] = { 1.0f, 1.0f, 1.0f };
 			buffer.push_back(0xff71cf6e /* "glScalef" */);
-			ProcessDrawData(element, buffer, 3, sPositionNames, data);
+			ProcessDrawData(element, buffer, 3, sScaleNames, sScaleDefault);
 		}
 		break;
 
@@ -481,78 +451,63 @@ void ProcessDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buf
 
 	case 0x7d22a710 /* "loadmatrix" */:
 		{
-			GLfloat m[16] = {
-				1, 0, 0, 0,
-				0, 1, 0, 0,
-				0, 0, 1, 0,
-				0, 0, 0, 1
-			};
 			buffer.push_back(0xca9090d7 /* "glLoadMatrixf" */);
 			for (int i = 0; i < 16; i++)
 			{
 				char name[16];
 				sprintf(name, "m%d", i);
-				element->QueryFloatAttribute(name, &m[i]);
-				buffer.push_back(*reinterpret_cast<unsigned int *>(&m[i]));
+				float m = sMatrixDefault[i];
+				element->QueryFloatAttribute(name, &m);
+				buffer.push_back(*reinterpret_cast<unsigned int *>(&m));
 			}
 		}
 		break;
 
 	case 0x3807cb92 /* "multmatrix" */:
 		{
-			GLfloat m[16] = {
-				1, 0, 0, 0,
-				0, 1, 0, 0,
-				0, 0, 1, 0,
-				0, 0, 0, 1
-			};
 			buffer.push_back(0x64500671 /* "glMultMatrixf" */);
 			for (int i = 0; i < 16; i++)
 			{
 				char name[16];
 				sprintf(name, "m%d", i);
-				element->QueryFloatAttribute(name, &m[i]);
-				buffer.push_back(*reinterpret_cast<unsigned int *>(&m[i]));
+				float m = sMatrixDefault[i];
+				element->QueryFloatAttribute(name, &m);
+				buffer.push_back(*reinterpret_cast<unsigned int *>(&m));
 			}
 		}
 		break;
 
 	case 0x945367a7 /* "vertex" */:
 		{
-			float data[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
 			buffer.push_back(0x94110c7a /* "glVertex4f" */);
-			ProcessDrawData(element, buffer, 4, sPositionNames, data);
+			ProcessDrawData(element, buffer, 4, sPositionNames, sPositionDefault);
 		}
 		break;
 	case 0xe68b9c52 /* "normal" */:
 		{
-			float data[3] = { 0.0f, 0.0f, 0.0f };
 			buffer.push_back(0xf2d58094 /* "glNormal3f" */);
-			ProcessDrawData(element, buffer, 4, sPositionNames, data);
+			ProcessDrawData(element, buffer, 3, sPositionNames, sPositionDefault);
 		}
 		break;
 
 	case 0x3d7e6258 /* "color" */:
 		{
-			float data[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
 			buffer.push_back(0x9d63d16b /* "glColor4f" */);
-			ProcessDrawData(element, buffer, 4, sColorNames, data);
+			ProcessDrawData(element, buffer, 4, sColorNames, sColorDefault);
 		}
 		break;
 
 	case 0x090aa9ab /* "index" */:
 		{
-			float data[1] = { 0.0f };
 			buffer.push_back(0xf3b3b82c /* "glIndexf" */);
-			ProcessDrawData(element, buffer, 1, sIndexNames, data);
+			ProcessDrawData(element, buffer, 1, sIndexNames, sIndexDefault);
 		}
 		break;
 
 	case 0xdd612dd3 /* "texcoord" */:
 		{
-			float data[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
 			buffer.push_back(0xb78bb2ae /* "glTexCoord4f" */);
-			ProcessDrawData(element, buffer, 4, sTexCoordNames, data);
+			ProcessDrawData(element, buffer, 4, sTexCoordNames, sTexCoordDefault);
 		}
 		break;
 
@@ -704,7 +659,7 @@ void ProcessDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buf
 			// process draw items
 			std::vector<unsigned int> drawlist;
 			ProcessDrawItems(element, drawlist);
-			ExecuteDrawItems(&drawlist[0], drawlist.size(), param);
+			ExecuteDrawItems(&drawlist[0], drawlist.size(), param, 0);
 
 			// finish the draw list
 			glEndList();
@@ -719,30 +674,31 @@ void ProcessDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buf
 		{
 			for (const TiXmlAttribute *attrib = element->FirstAttribute(); attrib != NULL; attrib = attrib->Next())
 			{
+				unsigned int action = attrib->IntValue() ? 0x9128677b /* "glEnableClientState" */ : 0x342d0316 /* "glDisableClientState" */;
 				switch (Hash(attrib->Name()))
 				{
 				case 0x945367a7 /* "vertex" */:
-					buffer.push_back(attrib->IntValue() ? 0x9128677b /* "glEnableClientState" */ : 0x342d0316 /* "glDisableClientState" */);
+					buffer.push_back(action);
 					buffer.push_back(GL_VERTEX_ARRAY);
 					break;
 				case 0xe68b9c52 /* "normal" */:
-					buffer.push_back(attrib->IntValue() ? 0x9128677b /* "glEnableClientState" */ : 0x342d0316 /* "glDisableClientState" */);
+					buffer.push_back(action);
 					buffer.push_back(GL_NORMAL_ARRAY);
 					break;
 				case 0x3d7e6258 /* "color" */:
-					buffer.push_back(attrib->IntValue() ? 0x9128677b /* "glEnableClientState" */ : 0x342d0316 /* "glDisableClientState" */);
+					buffer.push_back(action);
 					buffer.push_back(GL_COLOR_ARRAY);
 					break;
 				case 0x090aa9ab /* "index" */:
-					buffer.push_back(attrib->IntValue() ? 0x9128677b /* "glEnableClientState" */ : 0x342d0316 /* "glDisableClientState" */);
+					buffer.push_back(action);
 					buffer.push_back(GL_INDEX_ARRAY);
 					break;
 				case 0xdd612dd3 /* "texcoord" */:
-					buffer.push_back(attrib->IntValue() ? 0x9128677b /* "glEnableClientState" */ : 0x342d0316 /* "glDisableClientState" */);
+					buffer.push_back(action);
 					buffer.push_back(GL_TEXTURE_COORD_ARRAY);
 					break;
 				case 0x0135ab46 /* "edgeflag" */:
-					buffer.push_back(attrib->IntValue() ? 0x9128677b /* "glEnableClientState" */ : 0x342d0316 /* "glDisableClientState" */);
+					buffer.push_back(action);
 					buffer.push_back(GL_EDGE_FLAG_ARRAY);
 					break;
 				}
@@ -758,25 +714,14 @@ void ProcessDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buf
 			int stride = 0;
 			element->QueryIntAttribute("stride", &stride);
 
-			const char *text = element->GetText();
-			size_t len = strlen(text)+1;
-			char *buf = static_cast<char *>(_alloca(len));
-			memcpy(buf, text, len);
-			float *data = static_cast<float *>(_alloca(len*sizeof(float)/2));
-			int count = 0;
-			char *element = strtok(buf, " \t\n\r,;");
-			while (element)
-			{
-				data[count++] = float(atof(element));
-				element = strtok(NULL, " \t\n\r,;");
-			}
-
 			buffer.push_back(0x4e467465 /* "glVertexPointer" */);
 			buffer.push_back(size);
 			buffer.push_back(stride);
-			buffer.push_back(count);
-			for (int i = 0; i < count; i++)
-				buffer.push_back(*reinterpret_cast<unsigned int *>(&data[i]));
+
+			buffer.push_back(0);
+			int start = buffer.size();
+			ProcessFloatData(element, buffer);
+			buffer[start-1] = buffer.size() - start;
 		}
 		break;
 
@@ -785,24 +730,13 @@ void ProcessDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buf
 			int stride = 0;
 			element->QueryIntAttribute("stride", &stride);
 
-			const char *text = element->GetText();
-			size_t len = strlen(text)+1;
-			char *buf = static_cast<char *>(_alloca(len));
-			memcpy(buf, text, len);
-			float *data = static_cast<float *>(_alloca(len*sizeof(float)/2));
-			int count = 0;
-			char *element = strtok(buf, " \t\n\r,;");
-			while (element)
-			{
-				data[count++] = float(atof(element));
-				element = strtok(NULL, " \t\n\r,;");
-			}
-
 			buffer.push_back(0x46804012 /* "glNormalPointer" */);
 			buffer.push_back(stride);
-			buffer.push_back(count);
-			for (int i = 0; i < count; i++)
-				buffer.push_back(*reinterpret_cast<unsigned int *>(&data[i]));
+
+			buffer.push_back(0);
+			int start = buffer.size();
+			ProcessFloatData(element, buffer);
+			buffer[start-1] = buffer.size() - start;
 		}
 		break;
 
@@ -814,25 +748,14 @@ void ProcessDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buf
 			int stride = 0;
 			element->QueryIntAttribute("stride", &stride);
 
-			const char *text = element->GetText();
-			size_t len = strlen(text)+1;
-			char *buf = static_cast<char *>(_alloca(len));
-			memcpy(buf, text, len);
-			float *data = static_cast<float *>(_alloca(len*sizeof(float)/2));
-			int count = 0;
-			char *element = strtok(buf, " \t\n\r,;");
-			while (element)
-			{
-				data[count++] = float(atof(element));
-				element = strtok(NULL, " \t\n\r,;");
-			}
-
 			buffer.push_back(0x61e8560e /* "glColorPointer" */);
 			buffer.push_back(size);
 			buffer.push_back(stride);
-			buffer.push_back(count);
-			for (int i = 0; i < count; i++)
-				buffer.push_back(*reinterpret_cast<unsigned int *>(&data[i]));
+
+			buffer.push_back(0);
+			int start = buffer.size();
+			ProcessFloatData(element, buffer);
+			buffer[start-1] = buffer.size() - start;
 		}
 		break;
 
@@ -841,24 +764,13 @@ void ProcessDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buf
 			int stride = 0;
 			element->QueryIntAttribute("stride", &stride);
 
-			const char *text = element->GetText();
-			size_t len = strlen(text)+1;
-			char *buf = static_cast<char *>(_alloca(len));
-			memcpy(buf, text, len);
-			float *data = static_cast<float *>(_alloca(len*sizeof(float)/2));
-			int count = 0;
-			char *element = strtok(buf, " \t\n\r,;");
-			while (element)
-			{
-				data[count++] = float(atof(element));
-				element = strtok(NULL, " \t\n\r,;");
-			}
-
 			buffer.push_back(0x1e5cf423 /* "glIndexPointer" */);
 			buffer.push_back(stride);
-			buffer.push_back(count);
-			for (int i = 0; i < count; i++)
-				buffer.push_back(*reinterpret_cast<unsigned int *>(&data[i]));
+
+			buffer.push_back(0);
+			int start = buffer.size();
+			ProcessFloatData(element, buffer);
+			buffer[start-1] = buffer.size() - start;
 		}
 		break;
 
@@ -870,25 +782,14 @@ void ProcessDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buf
 			int stride = 0;
 			element->QueryIntAttribute("stride", &stride);
 
-			const char *text = element->GetText();
-			size_t len = strlen(text)+1;
-			char *buf = static_cast<char *>(_alloca(len));
-			memcpy(buf, text, len);
-			float *data = static_cast<float *>(_alloca(len*sizeof(float)/2));
-			int count = 0;
-			char *element = strtok(buf, " \t\n\r,;");
-			while (element)
-			{
-				data[count++] = float(atof(element));
-				element = strtok(NULL, " \t\n\r,;");
-			}
-
 			buffer.push_back(0x6d976421 /* "glTexCoordPointer" */);
 			buffer.push_back(size);
 			buffer.push_back(stride);
-			buffer.push_back(count);
-			for (int i = 0; i < count; i++)
-				buffer.push_back(*reinterpret_cast<unsigned int *>(&data[i]));
+
+			buffer.push_back(0);
+			int start = buffer.size();
+			ProcessFloatData(element, buffer);
+			buffer[start-1] = buffer.size() - start;
 		}
 		break;
 
@@ -1000,14 +901,117 @@ void ProcessDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buf
 		{
 			int count = 1;
 			element->QueryIntAttribute("count", &count);
+
 			buffer.push_back(0xd99ba82a /* "repeat" */);
 			buffer.push_back(count);
+
 			buffer.push_back(0);
 			int start = buffer.size();
 			ProcessDrawItems(element, buffer);
 			buffer[start-1] = buffer.size() - start;
 		}
 		break;
+
+	case 0xc6270703 /* "set" */:
+		{
+			unsigned int name = Hash(element->Attribute("name"));
+			unsigned int type = Hash(element->Attribute("type"));
+			int width;
+			const char **names;
+			const float *data;
+			GetTypeData(type, width, names, data);
+
+			buffer.push_back(0xc6270703 /* "set" */);
+			buffer.push_back(name);
+			buffer.push_back(width);
+			ProcessDrawData(element, buffer, width, names, data);
+		}
+		break;
+
+	case 0x3b391274 /* "add" */:
+		{
+			unsigned int name = Hash(element->Attribute("name"));
+			unsigned int type = Hash(element->Attribute("type"));
+			int width;
+			const char **names;
+			const float *temp;
+			GetTypeData(type, width, names, temp);
+			float *data = static_cast<float *>(_alloca(width*sizeof(float)));
+			memset(data, 0, width*sizeof(float));
+
+			buffer.push_back(0x3b391274 /* "add" */);
+			buffer.push_back(name);
+			buffer.push_back(width);
+			ProcessDrawData(element, buffer, width, names, data);
+		}
+		break;
+
+	case 0x5c6e1222 /* "clear" */:
+		{
+			unsigned int name = Hash(element->Attribute("name"));
+			unsigned int type = Hash(element->Attribute("type"));
+			int width;
+			const char **names;
+			const float *data;
+			GetTypeData(type, width, names, data);
+
+			buffer.push_back(0x5c6e1222 /* "clear" */);
+			buffer.push_back(name);
+			buffer.push_back(width);
+		}
+		break;
+
+#ifdef DRAWLIST_LOOP
+	case 0xddef486b /* "loop" */:
+		{
+			unsigned int name = Hash(element->Attribute("name"));
+			float from = 0.0f;
+			element->QueryFloatAttribute("from", &from);
+			float to = 0.0f;
+			element->QueryFloatAttribute("to", &to);
+			float by = 0.0f;
+			element->QueryFloatAttribute("by", &by);
+
+			buffer.push_back(0xddef486b /* "loop" */);
+			buffer.push_back(name);
+			buffer.push_back(*reinterpret_cast<unsigned int *>(&from));
+			buffer.push_back(*reinterpret_cast<unsigned int *>(&to));
+			buffer.push_back(*reinterpret_cast<unsigned int *>(&by));
+
+			buffer.push_back(0);
+			int start = buffer.size();
+			ProcessDrawItems(element, buffer);
+			buffer[start-1] = buffer.size() - start;
+		}
+		break;
+#endif
+
+#ifdef DRAWLIST_EMITTER
+	case 0x576b09cd /* "emitter" */:
+		{
+			int count = 1;
+			element->QueryIntAttribute("count", &count);
+			float period = 1.0f;
+			element->QueryFloatAttribute("period", &period);
+			float x = 0.0f, y = 0.0f, a = 0.0f;
+			element->QueryFloatAttribute("x", &x);
+			element->QueryFloatAttribute("y", &y);
+			element->QueryFloatAttribute("angle", &a);
+
+			buffer.push_back(0x576b09cd /* "emitter" */);
+			buffer.push_back(count);
+			buffer.push_back(*reinterpret_cast<unsigned int *>(&period));
+			buffer.push_back(*reinterpret_cast<unsigned int *>(&x));
+			buffer.push_back(*reinterpret_cast<unsigned int *>(&y));
+			buffer.push_back(*reinterpret_cast<unsigned int *>(&a));
+
+			buffer.push_back(0);
+			int start = buffer.size();
+			ProcessDrawItems(element, buffer);
+			buffer[start-1] = buffer.size() - start;
+		}
+		break;
+#endif
 
 	default:
 		break;
@@ -1023,7 +1027,7 @@ void ProcessDrawItems(const TiXmlElement *element, std::vector<unsigned int> &bu
 	}
 }
 
-size_t ExecuteDrawData(const unsigned int buffer[], size_t count, int width, float data[], float param)
+size_t ExecuteDrawData(const unsigned int buffer[], size_t count, int width, float data[], float param, int id)
 {
 	int index = 0;
 	switch(buffer[index++])
@@ -1032,6 +1036,9 @@ size_t ExecuteDrawData(const unsigned int buffer[], size_t count, int width, flo
 		{
 			// TO DO: get the global value
 			unsigned int name = buffer[index++];
+			const Database::Typed<float> &variables = Database::variable.Get(id);
+			for (int i = 0; i < width; i++)
+				data[i] = variables.Get(name+i);
 		}
 		break;
 
@@ -1067,7 +1074,82 @@ size_t ExecuteDrawData(const unsigned int buffer[], size_t count, int width, flo
 	return index;
 }
 
-void ExecuteDrawItems(const unsigned int buffer[], size_t count, float param)
+#ifdef DRAWLIST_EMITTER
+float Determinant4f(const float m[16])
+{
+	return
+		m[12]*m[9]*m[6]*m[3]-
+		m[8]*m[13]*m[6]*m[3]-
+		m[12]*m[5]*m[10]*m[3]+
+		m[4]*m[13]*m[10]*m[3]+
+		m[8]*m[5]*m[14]*m[3]-
+		m[4]*m[9]*m[14]*m[3]-
+		m[12]*m[9]*m[2]*m[7]+
+		m[8]*m[13]*m[2]*m[7]+
+		m[12]*m[1]*m[10]*m[7]-
+		m[0]*m[13]*m[10]*m[7]-
+		m[8]*m[1]*m[14]*m[7]+
+		m[0]*m[9]*m[14]*m[7]+
+		m[12]*m[5]*m[2]*m[11]-
+		m[4]*m[13]*m[2]*m[11]-
+		m[12]*m[1]*m[6]*m[11]+
+		m[0]*m[13]*m[6]*m[11]+
+		m[4]*m[1]*m[14]*m[11]-
+		m[0]*m[5]*m[14]*m[11]-
+		m[8]*m[5]*m[2]*m[15]+
+		m[4]*m[9]*m[2]*m[15]+
+		m[8]*m[1]*m[6]*m[15]-
+		m[0]*m[9]*m[6]*m[15]-
+		m[4]*m[1]*m[10]*m[15]+
+		m[0]*m[5]*m[10]*m[15];
+}
+
+bool InvertMatrix4f(float i[16], const float m[16])
+{
+	float x=Determinant4f(m);
+	if (x==0) return false;
+	x = 1.0f / x;
+	i[ 0]= (-m[13] * m[10] * m[ 7] + m[ 9] * m[14] * m[ 7] + m[13] * m[ 6] * m[11] - m[ 5] * m[14] * m[11] - m[ 9] * m[ 6] * m[15] + m[ 5] * m[10] * m[15]) * x;
+	i[ 4]= ( m[12] * m[10] * m[ 7] - m[ 8] * m[14] * m[ 7] - m[12] * m[ 6] * m[11] + m[ 4] * m[14] * m[11] + m[ 8] * m[ 6] * m[15] - m[ 4] * m[10] * m[15]) * x;
+	i[ 8]= (-m[12] * m[ 9] * m[ 7] + m[ 8] * m[13] * m[ 7] + m[12] * m[ 5] * m[11] - m[ 4] * m[13] * m[11] - m[ 8] * m[ 5] * m[15] + m[ 4] * m[ 9] * m[15]) * x;
+	i[12]= ( m[12] * m[ 9] * m[ 6] - m[ 8] * m[13] * m[ 6] - m[12] * m[ 5] * m[10] + m[ 4] * m[13] * m[10] + m[ 8] * m[ 5] * m[14] - m[ 4] * m[ 9] * m[14]) * x;
+	i[ 1]= ( m[13] * m[10] * m[ 3] - m[ 9] * m[14] * m[ 3] - m[13] * m[ 2] * m[11] + m[ 1] * m[14] * m[11] + m[ 9] * m[ 2] * m[15] - m[ 1] * m[10] * m[15]) * x;
+	i[ 5]= (-m[12] * m[10] * m[ 3] + m[ 8] * m[14] * m[ 3] + m[12] * m[ 2] * m[11] - m[ 0] * m[14] * m[11] - m[ 8] * m[ 2] * m[15] + m[ 0] * m[10] * m[15]) * x;
+	i[ 9]= ( m[12] * m[ 9] * m[ 3] - m[ 8] * m[13] * m[ 3] - m[12] * m[ 1] * m[11] + m[ 0] * m[13] * m[11] + m[ 8] * m[ 1] * m[15] - m[ 0] * m[ 9] * m[15]) * x;
+	i[13]= (-m[12] * m[ 9] * m[ 2] + m[ 8] * m[13] * m[ 2] + m[12] * m[ 1] * m[10] - m[ 0] * m[13] * m[10] - m[ 8] * m[ 1] * m[14] + m[ 0] * m[ 9] * m[14]) * x;
+	i[ 2]= (-m[13] * m[ 6] * m[ 3] + m[ 5] * m[14] * m[ 3] + m[13] * m[ 2] * m[ 7] - m[ 1] * m[14] * m[ 7] - m[ 5] * m[ 2] * m[15] + m[ 1] * m[ 6] * m[15]) * x;
+	i[ 6]= ( m[12] * m[ 6] * m[ 3] - m[ 4] * m[14] * m[ 3] - m[12] * m[ 2] * m[ 7] + m[ 0] * m[14] * m[ 7] + m[ 4] * m[ 2] * m[15] - m[ 0] * m[ 6] * m[15]) * x;
+	i[10]= (-m[12] * m[ 5] * m[ 3] + m[ 4] * m[13] * m[ 3] + m[12] * m[ 1] * m[ 7] - m[ 0] * m[13] * m[ 7] - m[ 4] * m[ 1] * m[15] + m[ 0] * m[ 5] * m[15]) * x;
+	i[14]= ( m[12] * m[ 5] * m[ 2] - m[ 4] * m[13] * m[ 2] - m[12] * m[ 1] * m[ 6] + m[ 0] * m[13] * m[ 6] + m[ 4] * m[ 1] * m[14] - m[ 0] * m[ 5] * m[14]) * x;
+	i[ 3]= ( m[ 9] * m[ 6] * m[ 3] - m[ 5] * m[10] * m[ 3] - m[ 9] * m[ 2] * m[ 7] + m[ 1] * m[10] * m[ 7] + m[ 5] * m[ 2] * m[11] - m[ 1] * m[ 6] * m[11]) * x;
+	i[ 7]= (-m[ 8] * m[ 6] * m[ 3] + m[ 4] * m[10] * m[ 3] + m[ 8] * m[ 2] * m[ 7] - m[ 0] * m[10] * m[ 7] - m[ 4] * m[ 2] * m[11] + m[ 0] * m[ 6] * m[11]) * x;
+	i[11]= ( m[ 8] * m[ 5] * m[ 3] - m[ 4] * m[ 9] * m[ 3] - m[ 8] * m[ 1] * m[ 7] + m[ 0] * m[ 9] * m[ 7] + m[ 4] * m[ 1] * m[11] - m[ 0] * m[ 5] * m[11]) * x;
+	i[15]= (-m[ 8] * m[ 5] * m[ 2] + m[ 4] * m[ 9] * m[ 2] + m[ 8] * m[ 1] * m[ 6] - m[ 0] * m[ 9] * m[ 6] - m[ 4] * m[ 1] * m[10] + m[ 0] * m[ 5] * m[10]) * x;
+	return true;
+}
+
+void MultiplyMatrix4f(float m[16], float a[16], float b[16])
+{
+	m[ 0] = a[ 0] * b[ 0] + a[ 1] * b[ 4] + a[ 2] * b[ 8] + a[ 3] * b[12];
+	m[ 1] = a[ 0] * b[ 1] + a[ 1] * b[ 5] + a[ 2] * b[ 9] + a[ 3] * b[13];
+	m[ 2] = a[ 0] * b[ 2] + a[ 1] * b[ 6] + a[ 2] * b[10] + a[ 3] * b[14];
+	m[ 3] = a[ 0] * b[ 3] + a[ 1] * b[ 7] + a[ 2] * b[11] + a[ 3] * b[15];
+	m[ 4] = a[ 4] * b[ 0] + a[ 5] * b[ 4] + a[ 6] * b[ 8] + a[ 7] * b[12];
+	m[ 5] = a[ 4] * b[ 1] + a[ 5] * b[ 5] + a[ 6] * b[ 9] + a[ 7] * b[13];
+	m[ 6] = a[ 4] * b[ 2] + a[ 5] * b[ 6] + a[ 6] * b[10] + a[ 7] * b[14];
+	m[ 7] = a[ 4] * b[ 3] + a[ 5] * b[ 7] + a[ 6] * b[11] + a[ 7] * b[15];
+	m[ 8] = a[ 8] * b[ 0] + a[ 9] * b[ 4] + a[10] * b[ 8] + a[11] * b[12];
+	m[ 9] = a[ 8] * b[ 1] + a[ 9] * b[ 5] + a[10] * b[ 9] + a[11] * b[13];
+	m[10] = a[ 8] * b[ 2] + a[ 9] * b[ 6] + a[10] * b[10] + a[11] * b[14];
+	m[11] = a[ 8] * b[ 3] + a[ 9] * b[ 7] + a[10] * b[11] + a[11] * b[15];
+	m[12] = a[12] * b[ 0] + a[13] * b[ 4] + a[14] * b[ 8] + a[15] * b[12];
+	m[13] = a[12] * b[ 1] + a[13] * b[ 5] + a[14] * b[ 9] + a[15] * b[13];
+	m[14] = a[12] * b[ 2] + a[13] * b[ 6] + a[14] * b[10] + a[15] * b[14];
+	m[15] = a[12] * b[ 3] + a[13] * b[ 7] + a[14] * b[11] + a[15] * b[15];
+}
+#endif
+
+void ExecuteDrawItems(const unsigned int buffer[], size_t count, float param, unsigned int id)
 {
 	GLfloat data[4];
 
@@ -1114,17 +1196,17 @@ void ExecuteDrawItems(const unsigned int buffer[], size_t count, float param)
 			break;
 
 		case 0xafeef11e /* "glTranslatef" */:
-			itor += ExecuteDrawData(itor, buffer + count - itor, 3, data, param);
+			itor += ExecuteDrawData(itor, buffer + count - itor, 3, data, param, id);
 			glTranslatef(data[0], data[1], data[2]);
 			break;
 
 		case 0x29e02ba1 /* "glRotatef" */:
-			itor += ExecuteDrawData(itor, buffer + count - itor, 4, data, param);
+			itor += ExecuteDrawData(itor, buffer + count - itor, 4, data, param, id);
 			glRotatef(data[0], data[1], data[2], data[3]);
 			break;
 
 		case 0xff71cf6e /* "glScalef" */:
-			itor += ExecuteDrawData(itor, buffer + count - itor, 3, data, param);
+			itor += ExecuteDrawData(itor, buffer + count - itor, 3, data, param, id);
 			glScalef(data[0], data[1], data[2]);
 			break;
 
@@ -1143,27 +1225,27 @@ void ExecuteDrawItems(const unsigned int buffer[], size_t count, float param)
 			break;
 
 		case 0x94110c7a /* "glVertex4f" */:
-			itor += ExecuteDrawData(itor, buffer + count - itor, 4, data, param);
+			itor += ExecuteDrawData(itor, buffer + count - itor, 4, data, param, id);
 			glVertex4fv(data);
 			break;
 
 		case 0xf2d58094 /* "glNormal3f" */:
-			itor += ExecuteDrawData(itor, buffer + count - itor, 3, data, param);
+			itor += ExecuteDrawData(itor, buffer + count - itor, 3, data, param, id);
 			glNormal3fv(data);
 			break;
 
 		case 0x9d63d16b /* "glColor4f" */:
-			itor += ExecuteDrawData(itor, buffer + count - itor, 4, data, param);
+			itor += ExecuteDrawData(itor, buffer + count - itor, 4, data, param, id);
 			glColor4fv(data);
 			break;
 
 		case 0xf3b3b82c /* "glIndexf" */:
-			itor += ExecuteDrawData(itor, buffer + count - itor, 1, data, param);
+			itor += ExecuteDrawData(itor, buffer + count - itor, 1, data, param, id);
 			glIndexf(data[0]);
 			break;
 
 		case 0xb78bb2ae /* "glTexCoord4f" */:
-			itor += ExecuteDrawData(itor, buffer + count - itor, 4, data, param);
+			itor += ExecuteDrawData(itor, buffer + count - itor, 4, data, param, id);
 			glTexCoord4fv(data);
 			break;
 
@@ -1273,12 +1355,185 @@ void ExecuteDrawItems(const unsigned int buffer[], size_t count, float param)
 		case 0xd99ba82a /* "repeat" */:
 			{
 				int repeat = *itor++;
-				int length = *itor++;
+				size_t length = *itor++;
 				for (int i = 0; i < repeat; i++)
-					ExecuteDrawItems(itor, length, param);
+					ExecuteDrawItems(itor, length, param, id);
 				itor += length;
 			}
 			break;
+
+		case 0xc6270703 /* "set" */:
+			{
+				unsigned int name = *itor++;
+				int width = *itor++;
+				float *data = static_cast<float *>(_alloca(width*sizeof(float)));
+				itor += ExecuteDrawData(itor, buffer + count - itor, width, data, param, id);
+				Database::Typed<float> &variables = Database::variable.Open(id);
+				for (int i = 0; i < width; i++)
+					variables.Put(name+i, data[i]);
+				Database::variable.Close(id);
+			}
+			break;
+
+		case 0x3b391274 /* "add" */:
+			{
+				unsigned int name = *itor++;
+				int width = *itor++;
+				float *data = static_cast<float *>(_alloca(width*sizeof(float)));
+				itor += ExecuteDrawData(itor, buffer + count - itor, width, data, param, id);
+				Database::Typed<float> &variables = Database::variable.Open(id);
+				for (int i = 0; i < width; i++)
+				{
+					float &v = variables.Open(name+i);
+					v += data[i];
+					variables.Close(name+i);
+				}
+				Database::variable.Close(id);
+			}
+			break;
+
+		case 0x5c6e1222 /* "clear" */:
+			{
+				unsigned int name = *itor++;
+				int width = *itor++;
+				Database::Typed<float> &variables = Database::variable.Open(id);
+				for (int i = 0; i < width; i++)
+					variables.Delete(name+i);
+				Database::variable.Close(id);
+			}
+			break;
+
+#ifdef DRAWLIST_LOOP
+		case 0xddef486b /* "loop" */:
+			{
+				unsigned int name = *itor++;
+				float from = *reinterpret_cast<const float *>(itor++);
+				float to   = *reinterpret_cast<const float *>(itor++);
+				float by   = *reinterpret_cast<const float *>(itor++);
+				size_t length = *itor++;
+
+				Database::Typed<float> &variables = Database::variable.Open(id);
+				if (by > 0)
+				{
+					for (float value = from; value <= to; value += by)
+					{
+						variables.Put(name, value);
+						ExecuteDrawItems(itor, length, param, id);
+					}
+				}
+				else
+				{
+					for (float value = from; value >= to; value += by)
+					{
+						variables.Put(name, value);
+						ExecuteDrawItems(itor, length, param, id);
+					}
+				}
+				variables.Delete(name);
+				Database::variable.Close(id);
+
+				itor += length;
+			}
+			break;
+#endif
+
+#ifdef DRAWLIST_EMITTER
+		case 0x576b09cd /* "emitter" */:
+			{
+				unsigned int name = Hash(&itor, sizeof(itor));
+				int repeat = *itor++;
+				float period = *reinterpret_cast<const float *>(itor++);
+				float offsetx = *reinterpret_cast<const float *>(itor++);
+				float offsety = *reinterpret_cast<const float *>(itor++);
+				float offseta = *reinterpret_cast<const float *>(itor++);
+				Matrix2 offset(offseta, Vector2(offsetx, offsety));
+				size_t length = *itor++;
+
+				// get the curent model matrix
+				float m1[16];
+				glGetFloatv(GL_MODELVIEW_MATRIX, m1);
+
+				// return to parent model space
+				glPopMatrix();
+
+				// get the parent model matrix
+				float m2[16];
+				glGetFloatv(GL_MODELVIEW_MATRIX, m2);
+
+				// compute local matrix
+				float mi[16];
+				InvertMatrix4f(mi, m2);
+				float m[16];
+				MultiplyMatrix4f(m, m1, mi);
+
+				// get local variables
+				Database::Typed<float> &variables = Database::variable.Open(id);
+
+				// open state
+				int state = -1;
+				unsigned int lastid = Hash(&state, sizeof(state), name);
+
+				// get previous state
+				float x0 = variables.Get(lastid+0);
+				float y0 = variables.Get(lastid+1);
+				float a0 = variables.Get(lastid+2);
+				float t0 = variables.Get(lastid+3);
+
+				// get current state
+				float x1 = m[12];
+				float y1 = m[13];
+				float a1 = atan2f(m[1], m[0]);
+				float t1 = param / period;
+
+				// save state
+				variables.Put(lastid+0, x1);
+				variables.Put(lastid+1, y1);
+				variables.Put(lastid+2, a1);
+				variables.Put(lastid+3, t1);
+
+				// emit particles
+				for (float t = ceilf(t0); t < t1; t += 1.0f)
+				{
+					// interpolate emitter position
+					float r = (t - t0) / (t1 - t0);
+					Matrix2 transform(offset * Matrix2(Lerp(a0, a1, r), Vector2(Lerp(x0, x1, r), Lerp(y0, y1, r))));
+
+					// set particle state
+					int i0 = int(t) % repeat;
+					unsigned int subid = Hash(&i0, sizeof(i0), name);
+					variables.Put(subid+0, transform.p.x);
+					variables.Put(subid+1, transform.p.y);
+					variables.Put(subid+2, transform.Angle());
+					variables.Put(subid+3, t);
+				}
+
+				// draw particles
+				for (int i = 0; i < repeat; i++)
+				{
+					unsigned int subid = Hash(&i, sizeof(i), name);
+					float t = param - variables.Get(subid+3) * period;
+					if (t >= 0.0f)
+					{
+						glPushMatrix();
+						glTranslatef(variables.Get(subid+0), variables.Get(subid+1), 0.0f);
+						glRotatef(variables.Get(subid+2)*180.0f/float(M_PI), 0, 0, 1);
+						ExecuteDrawItems(itor, length, t, id);
+						glPopMatrix();
+					}
+				}
+
+				// done with local variables
+				Database::variable.Close(id);
+
+				// restore model matrix
+				glPushMatrix();
+				glLoadMatrixf(m1);
+
+				// advance data pointer
+				itor += length;
+			}
+			break;
+#endif
 
 		default:
 			break;

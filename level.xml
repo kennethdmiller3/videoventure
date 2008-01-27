@@ -304,321 +304,55 @@
 				</line_loop>
 				<lines>
 					<!-- vertical lines -->
+					<set name="p0" type="position" x="-31" y="-32"/>
+					<set name="p1" type="position" x="-31" y="32"/>
+					<repeat count="15">
+						<color r="1.0" g="1.0" b="1.0" a="0.0625"/>
+						<repeat count="3">
+							<vertex variable="p0"/>
+							<vertex variable="p1"/>
+							<add name="p0" type="position" x="1" y="0"/>
+							<add name="p1" type="position" x="1" y="0"/>
+						</repeat>
+						<color r="1.0" g="1.0" b="1.0" a="0.25"/>
+						<vertex variable="p0"/>
+						<vertex variable="p1"/>
+						<add name="p0" type="position" x="1" y="0"/>
+						<add name="p1" type="position" x="1" y="0"/>
+					</repeat>
 					<color r="1.0" g="1.0" b="1.0" a="0.0625"/>
-					<vertex x="-31" y="-32"/>
-					<vertex x="-31" y="32"/>
-					<vertex x="-30" y="-32"/>
-					<vertex x="-30" y="32"/>
-					<vertex x="-29" y="-32"/>
-					<vertex x="-29" y="32"/>
-					<color r="1.0" g="1.0" b="1.0" a="0.25"/>
-					<vertex x="-28" y="-32"/>
-					<vertex x="-28" y="32"/>
-					<color r="1.0" g="1.0" b="1.0" a="0.0625"/>
-					<vertex x="-27" y="-32"/>
-					<vertex x="-27" y="32"/>
-					<vertex x="-26" y="-32"/>
-					<vertex x="-26" y="32"/>
-					<vertex x="-25" y="-32"/>
-					<vertex x="-25" y="32"/>
-					<color r="1.0" g="1.0" b="1.0" a="0.25"/>
-					<vertex x="-24" y="-32"/>
-					<vertex x="-24" y="32"/>
-					<color r="1.0" g="1.0" b="1.0" a="0.0625"/>
-					<vertex x="-23" y="-32"/>
-					<vertex x="-23" y="32"/>
-					<vertex x="-22" y="-32"/>
-					<vertex x="-22" y="32"/>
-					<vertex x="-21" y="-32"/>
-					<vertex x="-21" y="32"/>
-					<color r="1.0" g="1.0" b="1.0" a="0.25"/>
-					<vertex x="-20" y="-32"/>
-					<vertex x="-20" y="32"/>
-					<color r="1.0" g="1.0" b="1.0" a="0.0625"/>
-					<vertex x="-19" y="-32"/>
-					<vertex x="-19" y="32"/>
-					<vertex x="-18" y="-32"/>
-					<vertex x="-18" y="32"/>
-					<vertex x="-17" y="-32"/>
-					<vertex x="-17" y="32"/>
-					<color r="1.0" g="1.0" b="1.0" a="0.25"/>
-					<vertex x="-16" y="-32"/>
-					<vertex x="-16" y="32"/>
-					<color r="1.0" g="1.0" b="1.0" a="0.0625"/>
-					<vertex x="-15" y="-32"/>
-					<vertex x="-15" y="32"/>
-					<vertex x="-14" y="-32"/>
-					<vertex x="-14" y="32"/>
-					<vertex x="-13" y="-32"/>
-					<vertex x="-13" y="32"/>
-					<color r="1.0" g="1.0" b="1.0" a="0.25"/>
-					<vertex x="-12" y="-32"/>
-					<vertex x="-12" y="32"/>
-					<color r="1.0" g="1.0" b="1.0" a="0.0625"/>
-					<vertex x="-11" y="-32"/>
-					<vertex x="-11" y="32"/>
-					<vertex x="-10" y="-32"/>
-					<vertex x="-10" y="32"/>
-					<vertex x="-9" y="-32"/>
-					<vertex x="-9" y="32"/>
-					<color r="1.0" g="1.0" b="1.0" a="0.25"/>
-					<vertex x="-8" y="-32"/>
-					<vertex x="-8" y="32"/>
-					<color r="1.0" g="1.0" b="1.0" a="0.0625"/>
-					<vertex x="-7" y="-32"/>
-					<vertex x="-7" y="32"/>
-					<vertex x="-6" y="-32"/>
-					<vertex x="-6" y="32"/>
-					<vertex x="-5" y="-32"/>
-					<vertex x="-5" y="32"/>
-					<color r="1.0" g="1.0" b="1.0" a="0.25"/>
-					<vertex x="-4" y="-32"/>
-					<vertex x="-4" y="32"/>
-					<color r="1.0" g="1.0" b="1.0" a="0.0625"/>
-					<vertex x="-3" y="-32"/>
-					<vertex x="-3" y="32"/>
-					<vertex x="-2" y="-32"/>
-					<vertex x="-2" y="32"/>
-					<vertex x="-1" y="-32"/>
-					<vertex x="-1" y="32"/>
-					<color r="1.0" g="1.0" b="1.0" a="0.25"/>
-					<vertex x="-0" y="-32"/>
-					<vertex x="-0" y="32"/>
-					<color r="1.0" g="1.0" b="1.0" a="0.0625"/>
-					<vertex x="1" y="-32"/>
-					<vertex x="1" y="32"/>
-					<vertex x="2" y="-32"/>
-					<vertex x="2" y="32"/>
-					<vertex x="3" y="-32"/>
-					<vertex x="3" y="32"/>
-					<color r="1.0" g="1.0" b="1.0" a="0.25"/>
-					<vertex x="4" y="-32"/>
-					<vertex x="4" y="32"/>
-					<color r="1.0" g="1.0" b="1.0" a="0.0625"/>
-					<vertex x="5" y="-32"/>
-					<vertex x="5" y="32"/>
-					<vertex x="6" y="-32"/>
-					<vertex x="6" y="32"/>
-					<vertex x="7" y="-32"/>
-					<vertex x="7" y="32"/>
-					<color r="1.0" g="1.0" b="1.0" a="0.25"/>
-					<vertex x="8" y="-32"/>
-					<vertex x="8" y="32"/>
-					<color r="1.0" g="1.0" b="1.0" a="0.0625"/>
-					<vertex x="9" y="-32"/>
-					<vertex x="9" y="32"/>
-					<vertex x="10" y="-32"/>
-					<vertex x="10" y="32"/>
-					<vertex x="11" y="-32"/>
-					<vertex x="11" y="32"/>
-					<color r="1.0" g="1.0" b="1.0" a="0.25"/>
-					<vertex x="12" y="-32"/>
-					<vertex x="12" y="32"/>
-					<color r="1.0" g="1.0" b="1.0" a="0.0625"/>
-					<vertex x="13" y="-32"/>
-					<vertex x="13" y="32"/>
-					<vertex x="14" y="-32"/>
-					<vertex x="14" y="32"/>
-					<vertex x="15" y="-32"/>
-					<vertex x="15" y="32"/>
-					<color r="1.0" g="1.0" b="1.0" a="0.25"/>
-					<vertex x="16" y="-32"/>
-					<vertex x="16" y="32"/>
-					<color r="1.0" g="1.0" b="1.0" a="0.0625"/>
-					<vertex x="17" y="-32"/>
-					<vertex x="17" y="32"/>
-					<vertex x="18" y="-32"/>
-					<vertex x="18" y="32"/>
-					<vertex x="19" y="-32"/>
-					<vertex x="19" y="32"/>
-					<color r="1.0" g="1.0" b="1.0" a="0.25"/>
-					<vertex x="20" y="-32"/>
-					<vertex x="20" y="32"/>
-					<color r="1.0" g="1.0" b="1.0" a="0.0625"/>
-					<vertex x="21" y="-32"/>
-					<vertex x="21" y="32"/>
-					<vertex x="22" y="-32"/>
-					<vertex x="22" y="32"/>
-					<vertex x="23" y="-32"/>
-					<vertex x="23" y="32"/>
-					<color r="1.0" g="1.0" b="1.0" a="0.25"/>
-					<vertex x="24" y="-32"/>
-					<vertex x="24" y="32"/>
-					<color r="1.0" g="1.0" b="1.0" a="0.0625"/>
-					<vertex x="25" y="-32"/>
-					<vertex x="25" y="32"/>
-					<vertex x="26" y="-32"/>
-					<vertex x="26" y="32"/>
-					<vertex x="27" y="-32"/>
-					<vertex x="27" y="32"/>
-					<color r="1.0" g="1.0" b="1.0" a="0.25"/>
-					<vertex x="28" y="-32"/>
-					<vertex x="28" y="32"/>
-					<color r="1.0" g="1.0" b="1.0" a="0.0625"/>
-					<vertex x="29" y="-32"/>
-					<vertex x="29" y="32"/>
-					<vertex x="30" y="-32"/>
-					<vertex x="30" y="32"/>
-					<vertex x="31" y="-32"/>
-					<vertex x="31" y="32"/>
+					<repeat count="3">
+						<vertex variable="p0"/>
+						<vertex variable="p1"/>
+						<add name="p0" type="position" x="1" y="0"/>
+						<add name="p1" type="position" x="1" y="0"/>
+					</repeat>
 					<!-- horizontal lines -->
+					<set name="p0" type="position" x="-32" y="-31"/>
+					<set name="p1" type="position" x="32" y="-31"/>
+					<repeat count="15">
+						<color r="1.0" g="1.0" b="1.0" a="0.0625"/>
+						<repeat count="3">
+							<vertex variable="p0"/>
+							<vertex variable="p1"/>
+							<add name="p0" type="position" x="0" y="1"/>
+							<add name="p1" type="position" x="0" y="1"/>
+						</repeat>
+						<color r="1.0" g="1.0" b="1.0" a="0.25"/>
+						<vertex variable="p0"/>
+						<vertex variable="p1"/>
+						<add name="p0" type="position" x="0" y="1"/>
+						<add name="p1" type="position" x="0" y="1"/>
+					</repeat>
 					<color r="1.0" g="1.0" b="1.0" a="0.0625"/>
-					<vertex y="-31" x="-32"/>
-					<vertex y="-31" x="32"/>
-					<vertex y="-30" x="-32"/>
-					<vertex y="-30" x="32"/>
-					<vertex y="-29" x="-32"/>
-					<vertex y="-29" x="32"/>
-					<color r="1.0" g="1.0" b="1.0" a="0.25"/>
-					<vertex y="-28" x="-32"/>
-					<vertex y="-28" x="32"/>
-					<color r="1.0" g="1.0" b="1.0" a="0.0625"/>
-					<vertex y="-27" x="-32"/>
-					<vertex y="-27" x="32"/>
-					<vertex y="-26" x="-32"/>
-					<vertex y="-26" x="32"/>
-					<vertex y="-25" x="-32"/>
-					<vertex y="-25" x="32"/>
-					<color r="1.0" g="1.0" b="1.0" a="0.25"/>
-					<vertex y="-24" x="-32"/>
-					<vertex y="-24" x="32"/>
-					<color r="1.0" g="1.0" b="1.0" a="0.0625"/>
-					<vertex y="-23" x="-32"/>
-					<vertex y="-23" x="32"/>
-					<vertex y="-22" x="-32"/>
-					<vertex y="-22" x="32"/>
-					<vertex y="-21" x="-32"/>
-					<vertex y="-21" x="32"/>
-					<color r="1.0" g="1.0" b="1.0" a="0.25"/>
-					<vertex y="-20" x="-32"/>
-					<vertex y="-20" x="32"/>
-					<color r="1.0" g="1.0" b="1.0" a="0.0625"/>
-					<vertex y="-19" x="-32"/>
-					<vertex y="-19" x="32"/>
-					<vertex y="-18" x="-32"/>
-					<vertex y="-18" x="32"/>
-					<vertex y="-17" x="-32"/>
-					<vertex y="-17" x="32"/>
-					<color r="1.0" g="1.0" b="1.0" a="0.25"/>
-					<vertex y="-16" x="-32"/>
-					<vertex y="-16" x="32"/>
-					<color r="1.0" g="1.0" b="1.0" a="0.0625"/>
-					<vertex y="-15" x="-32"/>
-					<vertex y="-15" x="32"/>
-					<vertex y="-14" x="-32"/>
-					<vertex y="-14" x="32"/>
-					<vertex y="-13" x="-32"/>
-					<vertex y="-13" x="32"/>
-					<color r="1.0" g="1.0" b="1.0" a="0.25"/>
-					<vertex y="-12" x="-32"/>
-					<vertex y="-12" x="32"/>
-					<color r="1.0" g="1.0" b="1.0" a="0.0625"/>
-					<vertex y="-11" x="-32"/>
-					<vertex y="-11" x="32"/>
-					<vertex y="-10" x="-32"/>
-					<vertex y="-10" x="32"/>
-					<vertex y="-9" x="-32"/>
-					<vertex y="-9" x="32"/>
-					<color r="1.0" g="1.0" b="1.0" a="0.25"/>
-					<vertex y="-8" x="-32"/>
-					<vertex y="-8" x="32"/>
-					<color r="1.0" g="1.0" b="1.0" a="0.0625"/>
-					<vertex y="-7" x="-32"/>
-					<vertex y="-7" x="32"/>
-					<vertex y="-6" x="-32"/>
-					<vertex y="-6" x="32"/>
-					<vertex y="-5" x="-32"/>
-					<vertex y="-5" x="32"/>
-					<color r="1.0" g="1.0" b="1.0" a="0.25"/>
-					<vertex y="-4" x="-32"/>
-					<vertex y="-4" x="32"/>
-					<color r="1.0" g="1.0" b="1.0" a="0.0625"/>
-					<vertex y="-3" x="-32"/>
-					<vertex y="-3" x="32"/>
-					<vertex y="-2" x="-32"/>
-					<vertex y="-2" x="32"/>
-					<vertex y="-1" x="-32"/>
-					<vertex y="-1" x="32"/>
-					<color r="1.0" g="1.0" b="1.0" a="0.25"/>
-					<vertex y="-0" x="-32"/>
-					<vertex y="-0" x="32"/>
-					<color r="1.0" g="1.0" b="1.0" a="0.0625"/>
-					<vertex y="1" x="-32"/>
-					<vertex y="1" x="32"/>
-					<vertex y="2" x="-32"/>
-					<vertex y="2" x="32"/>
-					<vertex y="3" x="-32"/>
-					<vertex y="3" x="32"/>
-					<color r="1.0" g="1.0" b="1.0" a="0.25"/>
-					<vertex y="4" x="-32"/>
-					<vertex y="4" x="32"/>
-					<color r="1.0" g="1.0" b="1.0" a="0.0625"/>
-					<vertex y="5" x="-32"/>
-					<vertex y="5" x="32"/>
-					<vertex y="6" x="-32"/>
-					<vertex y="6" x="32"/>
-					<vertex y="7" x="-32"/>
-					<vertex y="7" x="32"/>
-					<color r="1.0" g="1.0" b="1.0" a="0.25"/>
-					<vertex y="8" x="-32"/>
-					<vertex y="8" x="32"/>
-					<color r="1.0" g="1.0" b="1.0" a="0.0625"/>
-					<vertex y="9" x="-32"/>
-					<vertex y="9" x="32"/>
-					<vertex y="10" x="-32"/>
-					<vertex y="10" x="32"/>
-					<vertex y="11" x="-32"/>
-					<vertex y="11" x="32"/>
-					<color r="1.0" g="1.0" b="1.0" a="0.25"/>
-					<vertex y="12" x="-32"/>
-					<vertex y="12" x="32"/>
-					<color r="1.0" g="1.0" b="1.0" a="0.0625"/>
-					<vertex y="13" x="-32"/>
-					<vertex y="13" x="32"/>
-					<vertex y="14" x="-32"/>
-					<vertex y="14" x="32"/>
-					<vertex y="15" x="-32"/>
-					<vertex y="15" x="32"/>
-					<color r="1.0" g="1.0" b="1.0" a="0.25"/>
-					<vertex y="16" x="-32"/>
-					<vertex y="16" x="32"/>
-					<color r="1.0" g="1.0" b="1.0" a="0.0625"/>
-					<vertex y="17" x="-32"/>
-					<vertex y="17" x="32"/>
-					<vertex y="18" x="-32"/>
-					<vertex y="18" x="32"/>
-					<vertex y="19" x="-32"/>
-					<vertex y="19" x="32"/>
-					<color r="1.0" g="1.0" b="1.0" a="0.25"/>
-					<vertex y="20" x="-32"/>
-					<vertex y="20" x="32"/>
-					<color r="1.0" g="1.0" b="1.0" a="0.0625"/>
-					<vertex y="21" x="-32"/>
-					<vertex y="21" x="32"/>
-					<vertex y="22" x="-32"/>
-					<vertex y="22" x="32"/>
-					<vertex y="23" x="-32"/>
-					<vertex y="23" x="32"/>
-					<color r="1.0" g="1.0" b="1.0" a="0.25"/>
-					<vertex y="24" x="-32"/>
-					<vertex y="24" x="32"/>
-					<color r="1.0" g="1.0" b="1.0" a="0.0625"/>
-					<vertex y="25" x="-32"/>
-					<vertex y="25" x="32"/>
-					<vertex y="26" x="-32"/>
-					<vertex y="26" x="32"/>
-					<vertex y="27" x="-32"/>
-					<vertex y="27" x="32"/>
-					<color r="1.0" g="1.0" b="1.0" a="0.25"/>
-					<vertex y="28" x="-32"/>
-					<vertex y="28" x="32"/>
-					<color r="1.0" g="1.0" b="1.0" a="0.0625"/>
-					<vertex y="29" x="-32"/>
-					<vertex y="29" x="32"/>
-					<vertex y="30" x="-32"/>
-					<vertex y="30" x="32"/>
-					<vertex y="31" x="-32"/>
-					<vertex y="31" x="32"/>
+					<repeat count="3">
+						<vertex variable="p0"/>
+						<vertex variable="p1"/>
+						<add name="p0" type="position" x="0" y="1"/>
+						<add name="p1" type="position" x="0" y="1"/>
+					</repeat>
+					<clear name="p0"/>
+					<clear name="p1"/>
 				</lines>
 			</drawlist>
 		</renderable>
@@ -1045,17 +779,15 @@
 	<template name="enemymissiletrail">
 		<explosion life="1.0"/>
 		<renderable radius="4">
-			<pushmatrix>
-				<scale>
-					<key time="0.0" x="2" y="2"/>
-					<key time="1.0" x="4" y="4"/>
-				</scale>
-				<color>
-					<key time="0.0" r="0.7" g="0.7" b="0.7" a="0.0625"/>
-					<key time="1.0" r="0.7" g="0.7" b="0.7" a="0.0"/>
-				</color>
-				<calllist name="circle12"/>
-			</pushmatrix>
+			<scale>
+				<key time="0.0" x="2" y="2"/>
+				<key time="1.0" x="4" y="4"/>
+			</scale>
+			<color>
+				<key time="0.0" r="0.7" g="0.7" b="0.7" a="0.0625"/>
+				<key time="1.0" r="0.7" g="0.7" b="0.7" a="0.0"/>
+			</color>
+			<calllist name="circle12"/>
 		</renderable>
 	</template>
 
@@ -1072,41 +804,52 @@
 				</box>
 			</body>
 		</collidable>
-		<renderable radius="11" period="0.4">
-			<color r="1.0" g="0.2" b="0.1" a="1.0"/>
-			<polygon>
-				<vertex x="0" y="5"/>
-				<vertex x="2" y="0"/>
-				<vertex x="2" y="-5"/>
-				<vertex x="-2" y="-5"/>
-				<vertex x="-2" y="0"/>
-			</polygon>
-			<color r="1.0" g="0.7" b="0.4" a="1.0"/>
-			<triangles>
-				<vertex x="1.0" y="-5"/>
-				<vertex x="0.0" y="-10"/>
-				<vertex x="-1.0" y="-5"/>
-			</triangles>
-			<color r="1.0" g="0.5" b="0.0" a="0.5"/>
-			<triangles>
-				<vertex x="1.5" y="-5"/>
-				<vertex x="0.0" y="-15"/>
-				<vertex x="-1.5" y="-5"/>
-			</triangles>
-			<color r="1.0" g="0.0" b="0.0" a="0.25"/>
-			<triangles>
-				<vertex x="2.0" y="-5"/>
-				<vertex x="0.0" y="-20"/>
-				<vertex x="-2.0" y="-5"/>
-			</triangles>
+		<renderable radius="11" period="0.066667">
+			<drawlist>
+				<color r="1.0" g="0.2" b="0.1" a="1.0"/>
+				<polygon>
+					<vertex x="0" y="5"/>
+					<vertex x="2" y="0"/>
+					<vertex x="2" y="-5"/>
+					<vertex x="-2" y="-5"/>
+					<vertex x="-2" y="0"/>
+				</polygon>
+			</drawlist>
+			<scale>
+				<key time="0.000000" x="1" y="1"/>
+				<key time="0.033333" x="0.75" y="0.5"/>
+				<key time="0.066667" x="1" y="1"/>
+			</scale>
+			<drawlist>
+				<color r="1.0" g="0.7" b="0.4" a="1.0"/>
+				<triangles>
+					<vertex x="1.0" y="-5"/>
+					<vertex x="0.0" y="-10"/>
+					<vertex x="-1.0" y="-5"/>
+				</triangles>
+				<color r="1.0" g="0.5" b="0.0" a="0.5"/>
+				<triangles>
+					<vertex x="1.5" y="-5"/>
+					<vertex x="0.0" y="-15"/>
+					<vertex x="-1.5" y="-5"/>
+				</triangles>
+				<color r="1.0" g="0.0" b="0.0" a="0.25"/>
+				<triangles>
+					<vertex x="2.0" y="-5"/>
+					<vertex x="0.0" y="-20"/>
+					<vertex x="-2.0" y="-5"/>
+				</triangles>
+			</drawlist>
 		</renderable>
 		<bullet life="6" damage="3" spawnondeath="enemyfireballexplosion" spawnonexpire="enemybulletexplosion"/>
+		<damagable health="1" spawnondeath="enemyfireballexplosion"/>
 		<aimer range="512" attack="128" leading="0"/>
 		<ship maxveloc="180" maxaccel="360" friction="10" maxomega="3"/>
 		<team name="red"/>
 		<sound volume="0.5">
 			<file name="stargate-playershot.wav"/>
 		</sound>
+		<points value="50"/>
 		<spawner>
 			<offset x="0" y="-5"/>
 			<spawn name="enemymissiletrail" start="0" cycle="0.016667" track="0"/>
@@ -1171,7 +914,7 @@
 					<repeat count="6">
 						<pushmatrix>
 							<translate>
-								<key time="0.8" x="0" y="0"/>
+								<key time="0.0" x="0" y="0"/>
 								<key time="0.8" x="320" y="0"/>
 							</translate>
 							<color>
@@ -1280,17 +1023,16 @@
 	<template name="enemyturret">
 		<collidable>
 			<body name="main">
-				<circle radius="6">
+				<circle radius="5">
 					<density value="1"/>
 					<friction value="0.5"/>
 					<restitution value="0.5"/>
 					<category value="3"/>
 				</circle>
-				<damping linear="10.0"/>
 				<allowsleep value="0"/>
 			</body>
 		</collidable>
-		<renderable radius="6">
+		<renderable radius="5">
 			<drawlist>
 				<color r="0.7" g="0.7" b="0.7" a="1.0"/>
 				<pushmatrix>
@@ -1302,24 +1044,17 @@
 					<scale x="5" y="5"/>
 					<calllist name="circle16"/>
 				</pushmatrix>
-				<color r="1.0" g="0.2" b="0.1" a="1.0"/>
-				<pushmatrix>
-					<scale x="6" y="6"/>
-					<calllist name="circle16"/>
-				</pushmatrix>
 			</drawlist>
 		</renderable>
 		<aimer range="512" attack="192" leading="240"/>
 		<team name="red"/>
 		<ship maxveloc="0" maxaccel="0" friction="0" maxomega="2"/>
-		<damagable health="10" spawnondeath="enemyexplosion"/>
 	</template>
 
 	<template name="enemyturret1" type="enemyturret">
 		<link name="gun" secondary="enemycannon">
 			<offset x="0" y="0" angle="0"/>
 		</link>
-		<points value="150"/>
 	</template>
 
 	<template name="enemyturret2" type="enemyturret">
@@ -1329,7 +1064,6 @@
 		<link name="rgun" secondary="enemycannon1">
 			<offset x="-2" y="0" angle="0"/>
 		</link>
-		<points value="250"/>
 	</template>
 
 	<template name="enemyturret3" type="enemyturret">
@@ -1342,38 +1076,102 @@
 		<link name="rgun" secondary="enemycannon1">
 			<offset x="-2.5" y="-1.5" angle="5"/>
 		</link>
-		<points value="400"/>
 	</template>
 
 	<template name="enemyturretmissile" type="enemyturret">
-		<aimer range="512" attack="192" leading="0"/>
+		<aimer range="512" attack="256" leading="0"/>
 		<link name="gun" secondary="enemycannonmissile">
 			<offset x="0" y="0" angle="0"/>
 		</link>
+	</template>
+
+	<template name="enemyturretmount1" type="enemyturret1">
+		<damagable health="10" spawnondeath="enemyexplosion"/>
+		<points value="150"/>
+	</template>
+
+	<template name="enemyturretmount2" type="enemyturret2">
+		<damagable health="10" spawnondeath="enemyexplosion"/>
+		<points value="250"/>
+	</template>
+
+	<template name="enemyturretmount3" type="enemyturret3">
+		<damagable health="10" spawnondeath="enemyexplosion"/>
+		<points value="400"/>
+	</template>
+
+	<template name="enemyturretmountmissile" type="enemyturretmissile">
+		<damagable health="10" spawnondeath="enemyexplosion"/>
+		<points value="250"/>
+	</template>
+
+
+	<template name="enemyturretpod">
+		<collidable>
+			<body name="main">
+				<circle radius="6">
+					<density value="1"/>
+					<friction value="0.5"/>
+					<restitution value="0.5"/>
+					<category value="3"/>
+				</circle>
+				<damping linear="10.0"/>
+			</body>
+		</collidable>
+		<renderable radius="6">
+			<drawlist>
+				<color r="1.0" g="0.2" b="0.1" a="1.0"/>
+				<pushmatrix>
+					<scale x="6" y="6"/>
+					<calllist name="circle16"/>
+				</pushmatrix>
+			</drawlist>
+		</renderable>
+		<team name="red"/>
+		<damagable health="10" spawnondeath="enemyexplosion"/>
+	</template>
+
+	<template name="enemyturretpod1" type="enemyturretpod">
+		<link name="gun" secondary="enemyturret1" updateangle="0"/>
+		<points value="150"/>
+	</template>
+
+	<template name="enemyturretpod2" type="enemyturretpod">
+		<link name="gun" secondary="enemyturret2" updateangle="0"/>
+		<points value="250"/>
+	</template>
+	
+	<template name="enemyturretpod3" type="enemyturretpod">
+		<link name="gun" secondary="enemyturret3" updateangle="0"/>
+		<points value="400"/>
+	</template>
+
+	<template name="enemyturretpodmissile" type="enemyturretpod">
+		<link name="gun" secondary="enemyturretmissile" updateangle="0"/>
 		<points value="250"/>
 	</template>
 	
 	<template name="enemyturret1spawn">
 		<spawner>
-			<spawn name="enemyturret1" start="0" cycle="5" track="1"/>
+			<spawn name="enemyturretpod1" start="0" cycle="5" track="1"/>
 		</spawner>
 	</template>
 
 	<template name="enemyturret2spawn">
 		<spawner>
-			<spawn name="enemyturret2" start="0" cycle="5" track="1"/>
+			<spawn name="enemyturretpod2" start="0" cycle="5" track="1"/>
 		</spawner>
 	</template>
 
 	<template name="enemyturret3spawn">
 		<spawner>
-			<spawn name="enemyturret3" start="0" cycle="5" track="1"/>
+			<spawn name="enemyturretpod3" start="0" cycle="5" track="1"/>
 		</spawner>
 	</template>
 
 	<template name="enemyturretlauncherspawn">
 		<spawner>
-			<spawn name="enemyturretmissile" start="0" cycle="5" track="1"/>
+			<spawn name="enemyturretpodmissile" start="0" cycle="5" track="1"/>
 		</spawner>
 	</template>
 
@@ -1659,8 +1457,8 @@
 				<calllist name="bowtie"/>
 			</pushmatrix>
 		</renderable>
-		<aimer range="512" attack="128" leading="210"/>
-		<ship maxveloc="120" maxaccel="240" friction="10" maxomega="2"/>
+		<aimer range="512" attack="128" leading="210" evade="2" close="64"/>
+		<ship maxveloc="120" maxaccel="480" friction="10" maxomega="2"/>
 		<damagable health="3" spawnondeath="enemyexplosion"/>
 		<weapon>
 			<velocity x="0" y="210"/>
@@ -1953,7 +1751,7 @@
 				<calllist name="diamond"/>
 			</pushmatrix>
 		</renderable>
-		<aimer range="512" attack="64" leading="60" angle="180"/>
+		<aimer range="512" attack="64" leading="60" angle="180" evade="1" close="128"/>
 		<ship maxveloc="60" maxaccel="120" friction="10" maxomega="3"/>
 		<damagable health="5" spawnondeath="enemyexplosion"/>
 		<weapon>
@@ -2112,7 +1910,7 @@
 				<rotate angle="180"/>
 			</repeat>
 		</renderable>
-		<aimer range="512" attack="192" leading="210"/>
+		<aimer range="512" attack="192" leading="210" evade="1" close="64"/>
 		<ship maxveloc="90" maxaccel="90" friction="10" maxomega="2"/>
 		<damagable health="3" spawnondeath="enemyexplosion"/>
 		<weapon>
@@ -2174,7 +1972,7 @@
 				</triangle_strip>
 			</drawlist>
 		</renderable>
-		<aimer range="512" attack="128" leading="180"/>
+		<aimer range="512" attack="128" leading="180" evade="1" close="64"/>
 		<ship maxveloc="120" maxaccel="240" friction="10" maxomega="2"/>
 		<damagable health="1" spawnondeath="enemyfireballexplosion"/>
 		<weapon>
@@ -2468,7 +2266,7 @@
 				</drawlist>
 			</pushmatrix>
 		</renderable>
-		<aimer range="512" attack="128" leading="240"/>
+		<aimer range="512" attack="128" leading="240" evade="1" close="64"/>
 		<ship maxveloc="60" maxaccel="120" friction="10" maxomega="2.0"/>
 		<damagable health="20" spawnondeath="enemyexplosion"/>
 		<link name="gun" secondary="enemyweapon">
@@ -2503,7 +2301,7 @@
 			<color r="1.0" g="0.2" b="0.1" a="1.0"/>
 			<calllist name="shiptiny"/>
 		</renderable>
-		<aimer range="512" attack="128" leading="240"/>
+		<aimer range="512" attack="128" leading="240" evade="1" close="64"/>
 		<ship maxveloc="180" maxaccel="120" friction="10" maxomega="2"/>
 		<damagable health="1" spawnondeath="enemyfireballexplosion"/>
 		<link name="gun" secondary="enemyweapon">
@@ -2532,7 +2330,7 @@
 			<color r="1.0" g="0.2" b="0.1" a="1.0"/>
 			<calllist name="shipsmall"/>
 		</renderable>
-		<aimer range="512" attack="128" leading="240"/>
+		<aimer range="512" attack="128" leading="240" evade="1" close="64"/>
 		<ship maxveloc="150" maxaccel="90" friction="10" maxomega="1.5"/>
 		<damagable health="3" spawnondeath="targetexplosion"/>
 		<link name="lgun" secondary="enemyweapon">
@@ -2593,7 +2391,7 @@
 				<calllist name="ship"/>
 			</drawlist>
 		</renderable>
-		<aimer range="512" attack="128" leading="240" angle="30"/>
+		<aimer range="512" attack="128" leading="240" angle="30" evade="1" close="64"/>
 		<ship maxveloc="120" maxaccel="60" friction="10" maxomega="1"/>
 		<damagable health="10" spawnondeath="enemyexplosion"/>
 		<link name="lgun" secondary="enemyshipweapon0">
@@ -2803,19 +2601,19 @@
 		<link name="rbbay" secondary="enemylaunchbay1">
 			<offset x="-16" y="-20" angle="90"/>
 		</link>
-		<link name="ffturret" secondary="enemyturret3" updateangle="0">
+		<link name="ffturret" secondary="enemyturretmount3" updateangle="0">
 			<offset x="0" y="32" angle="0"/>
 		</link>
-		<link name="lfturret" secondary="enemyturret1" updateangle="0">
+		<link name="lfturret" secondary="enemyturretmount1" updateangle="0">
 			<offset x="8" y="20" angle="-30"/>
 		</link>
-		<link name="rfturret" secondary="enemyturret1" updateangle="0">
+		<link name="rfturret" secondary="enemyturretmount1" updateangle="0">
 			<offset x="-8" y="20" angle="30"/>
 		</link>
-		<link name="mturret" secondary="enemyturret2" updateangle="0">
+		<link name="mturret" secondary="enemyturretmount2" updateangle="0">
 			<offset x="0" y="-8" angle="0"/>
 		</link>
-		<link name="bturret" secondary="enemyturret2" updateangle="0">
+		<link name="bturret" secondary="enemyturretmount2" updateangle="0">
 			<offset x="0" y="-36" angle="180"/>
 		</link>
 		<team name="red"/>
@@ -2826,7 +2624,7 @@
 	<!-- enemy spawners -->
 
 	<entity name="enemyshipsmallspawn1">
-		<position x="-192" y="2048" angle="180"/>
+		<position x="-192" y="1984" angle="180"/>
 		<velocity x="0" y="-180"/>
 		<spawner>
 			<spawn name="enemyshipsmall" start="0" cycle="3" track="0"/>
@@ -2834,7 +2632,7 @@
 	</entity>
 
 	<entity name="enemyshipsmallspawn2">
-		<position x="192" y="2048" angle="180"/>
+		<position x="192" y="1984" angle="180"/>
 		<velocity x="0" y="-180"/>
 		<spawner>
 			<spawn name="enemyshipsmall" start="0" cycle="3" track="0"/>
@@ -2842,7 +2640,7 @@
 	</entity>
 	
 	<entity name="enemyfirebomberspawn1">
-		<position x="-128" y="2048" angle="180"/>
+		<position x="-128" y="1984" angle="180"/>
 		<velocity x="0" y="-180"/>
 		<spawner>
 			<spawn name="enemyfirebomber" start="0" cycle="6" track="0"/>
@@ -2850,7 +2648,7 @@
 	</entity>
 
 	<entity name="enemyfirebomberspawn2">
-		<position x="128" y="2048" angle="180"/>
+		<position x="128" y="1984" angle="180"/>
 		<velocity x="0" y="-180"/>
 		<spawner>
 			<spawn name="enemyfirebomber" start="0" cycle="6" track="0"/>
@@ -2858,7 +2656,7 @@
 	</entity>
 
 	<entity name="enemybomberspawn1">
-		<position x="-96" y="2048" angle="180"/>
+		<position x="-96" y="1984" angle="180"/>
 		<velocity x="0" y="-180"/>
 		<spawner>
 			<spawn name="enemybomber" start="1" cycle="6" track="0"/>
@@ -2866,7 +2664,7 @@
 	</entity>
 
 	<entity name="enemybomberspawn2">
-		<position x="96" y="2048" angle="180"/>
+		<position x="96" y="1984" angle="180"/>
 		<velocity x="0" y="-180"/>
 		<spawner>
 			<spawn name="enemybomber" start="1" cycle="6" track="0"/>
@@ -2874,7 +2672,7 @@
 	</entity>
 
 	<entity name="enemydynamospawn1">
-		<position x="-160" y="2048" angle="180"/>
+		<position x="-160" y="1984" angle="180"/>
 		<velocity x="0" y="-180"/>
 		<spawner>
 			<spawn name="enemydynamo" start="2" cycle="6" track="0"/>
@@ -2882,7 +2680,7 @@
 	</entity>
 
 	<entity name="enemydynamospawn2">
-		<position x="160" y="2048" angle="180"/>
+		<position x="160" y="1984" angle="180"/>
 		<velocity x="0" y="-180"/>
 		<spawner>
 			<spawn name="enemydynamo" start="2" cycle="6" track="0"/>
@@ -2890,7 +2688,7 @@
 	</entity>
 	
 	<entity name="enemypodspawn1">
-		<position x="-128" y="2048" angle="180"/>
+		<position x="-128" y="1984" angle="180"/>
 		<velocity x="0" y="-180"/>
 		<spawner>
 			<spawn name="enemypod" start="3" cycle="6" track="0"/>
@@ -2898,7 +2696,7 @@
 	</entity>
 
 	<entity name="enemypodspawn2">
-		<position x="128" y="2048" angle="180"/>
+		<position x="128" y="1984" angle="180"/>
 		<velocity x="0" y="-180"/>
 		<spawner>
 			<spawn name="enemypod" start="3" cycle="6" track="0"/>
@@ -2906,7 +2704,7 @@
 	</entity>
 
 	<entity name="enemycommandshipspawn1">
-		<position x="-160" y="2048" angle="180"/>
+		<position x="-160" y="1984" angle="180"/>
 		<velocity x="0" y="-180"/>
 		<spawner>
 			<spawn name="enemycommandship" start="4" cycle="6" track="0"/>
@@ -2914,7 +2712,7 @@
 	</entity>
 
 	<entity name="enemycommandshipspawn2">
-		<position x="160" y="2048" angle="180"/>
+		<position x="160" y="1984" angle="180"/>
 		<velocity x="0" y="-180"/>
 		<spawner>
 			<spawn name="enemycommandship" start="4" cycle="6" track="0"/>
@@ -2922,7 +2720,7 @@
 	</entity>
 
 	<entity name="enemyshipspawn1">
-		<position x="-64" y="2048" angle="180"/>
+		<position x="-64" y="1984" angle="180"/>
 		<velocity x="0" y="-180"/>
 		<spawner>
 			<spawn name="enemyship" start="5" cycle="6" track="0"/>
@@ -2930,15 +2728,15 @@
 	</entity>
 
 	<entity name="enemyshipspawn2">
-		<position x="64" y="2048" angle="180"/>
+		<position x="64" y="1984" angle="180"/>
 		<velocity x="0" y="-180"/>
 		<spawner>
 			<spawn name="enemyship" start="5" cycle="6" track="0"/>
 		</spawner>
 	</entity>
-
+		
 	<entity name="enemycarrierspawn">
-		<position x="0" y="2048" angle="180"/>
+		<position x="0" y="1984" angle="180"/>
 		<velocity x="0" y="-120"/>
 		<spawner>
 			<spawn name="enemycarrier" start="0" cycle="30" track="0"/>
@@ -4360,10 +4158,9 @@
 					<category value="1"/>
 				</circle>
 				<allowsleep value="0"/>
-				<damping linear="10.0"/>
 			</body>
 		</collidable>
-		<renderable radius="6">
+		<renderable radius="5">
 			<drawlist>
 				<color r="0.7" g="0.7" b="0.7" a="1.0"/>
 				<pushmatrix>
@@ -4375,17 +4172,11 @@
 					<scale x="5" y="5"/>
 					<calllist name="circle16"/>
 				</pushmatrix>
-				<color r="0.1" g="0.2" b="1.0" a="1.0"/>
-				<pushmatrix>
-					<scale x="6" y="6"/>
-					<calllist name="circle16"/>
-				</pushmatrix>
 			</drawlist>
 		</renderable>
 		<aimer range="512" attack="192" leading="480"/>
 		<team name="blue"/>
 		<ship maxveloc="0" maxaccel="0" friction="0" maxomega="2"/>
-		<damagable health="10" spawnondeath="friendexplosion"/>
 	</template>
 
 	<template name="friendturret1" type="friendturret">
@@ -4421,27 +4212,68 @@
 		</link>
 	</template>
 
+	<template name="friendturretpod">
+		<collidable>
+			<body name="main">
+				<circle radius="6">
+					<density value="1"/>
+					<friction value="0.5"/>
+					<restitution value="0.5"/>
+					<category value="1"/>
+				</circle>
+				<damping linear="10.0"/>
+			</body>
+		</collidable>
+		<renderable radius="6">
+			<drawlist>
+				<color r="0.1" g="0.2" b="1.0" a="1.0"/>
+				<pushmatrix>
+					<scale x="6" y="6"/>
+					<calllist name="circle16"/>
+				</pushmatrix>
+			</drawlist>
+		</renderable>
+		<team name="blue"/>
+		<damagable health="10" spawnondeath="friendexplosion"/>
+	</template>
+
+	<template name="friendturretpod1" type="friendturretpod">
+		<link name="gun" secondary="friendturret1" updateangle="0"/>
+	</template>
+
+	<template name="friendturretpod2" type="friendturretpod">
+		<link name="gun" secondary="friendturret2" updateangle="0"/>
+	</template>
+
+	<template name="friendturretpod3" type="friendturretpod">
+		<link name="gun" secondary="friendturret3" updateangle="0"/>
+	</template>
+
+	<template name="friendturretpodforce" type="friendturretpod">
+		<link name="gun" secondary="friendturretforce" updateangle="0"/>
+	</template>
+
 	<template name="friendturret1spawn">
 		<spawner>
-			<spawn name="friendturret1" start="0" cycle="5" track="1"/>
+			<spawn name="friendturretpod1" start="0" cycle="5" track="1"/>
 		</spawner>
 	</template>
 
 	<template name="friendturret2spawn">
 		<spawner>
-			<spawn name="friendturret2" start="0" cycle="5" track="1"/>
+			<spawn name="friendturretpod2" start="0" cycle="5" track="1"/>
 		</spawner>
 	</template>
 
 	<template name="friendturret3spawn">
 		<spawner>
-			<spawn name="friendturret3" start="0" cycle="5" track="1"/>
+			<spawn name="friendturretpod3" start="0" cycle="5" track="1"/>
 		</spawner>
 	</template>
 
 	<template name="friendturretforcespawn">
 		<spawner>
-			<spawn name="friendturretforce" start="0" cycle="5" track="1"/>
+			<spawn name="friendturretpodforce" start="0" cycle="5" track="1"/>
 		</spawner>
 	</template>
 

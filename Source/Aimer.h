@@ -19,6 +19,13 @@ public:
 	// leading
 	float mLeading;
 
+	// evasion
+	float mEvade;
+
+	// range
+	float mClose;
+	float mFar;
+
 public:
 	AimerTemplate(void);
 	~AimerTemplate(void);

@@ -272,5 +272,5 @@ void Renderable::Render(float aStep)
 		return;
 
 	// execute the deferred draw list
-	ExecuteDrawItems(&renderable.mBuffer[0], renderable.mBuffer.size(), t);
+	ExecuteDrawItems(&renderable.mBuffer[0], renderable.mBuffer.size(), t, id);
 };
