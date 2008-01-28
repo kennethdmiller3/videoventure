@@ -96,6 +96,7 @@ WeaponTemplate::WeaponTemplate(void)
 , mInherit(1, 1)
 , mVelocity(0, 0)
 , mOrdnance(0)
+, mChannel(0)
 , mDelay(1.0f)
 , mPhase(0)
 , mCycle(1)
@@ -148,6 +149,14 @@ bool WeaponTemplate::Configure(const TiXmlElement *element)
 			}
 			break;
 
+		case 0x75413203 /* "trigger" */:
+			{
+				if (child->QueryIntAttribute("channel", &mChannel) == TIXML_SUCCESS)
+					--mChannel;
+				// TO DO: support single/automatic/charge
+			}
+			break;
+
 		case 0xac47e6f5 /* "shot" */:
 			{
 				child->QueryFloatAttribute("delay", &mDelay);
@@ -165,6 +174,7 @@ bool WeaponTemplate::Configure(const TiXmlElement *element)
 Weapon::Weapon(void)
 : Updatable(0)
 , mControlId(0)
+, mChannel(0)
 , mTimer(0.0f)
 , mPhase(0)
 {
@@ -173,6 +183,7 @@ Weapon::Weapon(void)
 Weapon::Weapon(const WeaponTemplate &aTemplate, unsigned int aId)
 : Updatable(aId)
 , mControlId(0)
+, mChannel(aTemplate.mChannel)
 , mTimer(0.0f)
 , mPhase(aTemplate.mPhase)
 {
@@ -203,7 +214,7 @@ void Weapon::Update(float aStep)
 	mTimer += aStep;
 
 	// if triggered...
-	if (controller->mFire)
+	if (controller->mFire[mChannel])
 	{
 		// get template data
 		const WeaponTemplate &weapon = Database::weapontemplate.Get(id);

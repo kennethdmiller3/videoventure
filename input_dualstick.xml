@@ -7,7 +7,8 @@
 	<bind name="move_y" type="joystick_axis" device="0" control="1" deadzone="0.1" scale="-1.125"/>
 	<bind name="aim_x" type="joystick_axis" device="0" control="2" deadzone="0.1"  scale="-1.125"/>
 	<bind name="aim_y" type="joystick_axis" device="0" control="3" deadzone="0.1" scale="-1.125"/>
-	<bind name="fire" type="joystick_axis" device="0" control="2" deadzone="0.75" scale="4"/>
-	<bind name="fire" type="joystick_axis" device="0" control="3" deadzone="0.75" scale="4"/>
+	<bind name="fire1" type="joystick_axis" device="0" control="2" deadzone="0.75" scale="4"/>
+	<bind name="fire1" type="joystick_axis" device="0" control="3" deadzone="0.75" scale="4"/>
+	<bind name="fire2" type="joystick_button" device="0" control="5" scale="1"/>
 
 </input>

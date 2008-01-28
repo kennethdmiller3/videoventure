@@ -23,6 +23,12 @@ public:
 	void Activate(void);
 	void Deactivate(void);
 
+	// is active?
+	bool IsActive(void)
+	{
+		return !entry.empty();
+	}
+
 	// configure
 	virtual bool Configure(const TiXmlElement *element) { return false; }
 

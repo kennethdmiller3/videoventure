@@ -102,6 +102,16 @@ bool ShipTemplate::Configure(const TiXmlElement *element)
 	element->QueryFloatAttribute("maxaccel", &mMaxAccel);
 	element->QueryFloatAttribute("friction", &mFriction);
 	element->QueryFloatAttribute("maxomega", &mMaxOmega);
+
+	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+	{
+		switch (Hash(child->Value()))
+		{
+		case 0x0e0d9594 /* "sound" */:
+			Database::Loader::GetConfigure(0x0e0d9594 /* "sound" */);
+		}
+	}
+
 	return true;
 }
 

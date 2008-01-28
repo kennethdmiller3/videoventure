@@ -20,7 +20,8 @@ void Sound::operator delete(void *aPtr)
 namespace Database
 {
 	Typed<SoundTemplate> soundtemplate(0x1b5ef1be /* "soundtemplate" */);
-	Typed<Sound *> sound(0x0e0d9594 /* "sound" */);
+	Typed<Typed<unsigned int> > soundcue(0xf23cbd5f /* "soundcue" */);
+	Typed<Typed<Sound *> > sound(0x0e0d9594 /* "sound" */);
 
 	namespace Loader
 	{
@@ -38,7 +39,14 @@ namespace Database
 				SoundTemplate &sound = Database::soundtemplate.Open(aId);
 
 				element->QueryFloatAttribute("volume", &sound.mVolume);
+				element->QueryIntAttribute("repeat", &sound.mRepeat);
 
+				// add a default cue (HACK)
+				Typed<unsigned int> &soundcue = Database::soundcue.Open(aId);
+				soundcue.Put(0, aId);
+				Database::soundcue.Close(aId);
+
+				// process sound configuration
 				for (const TiXmlElement *child = element->FirstChildElement(); child; child = child->NextSiblingElement())
 				{
 					switch (Hash(child->Value()))
@@ -92,7 +100,51 @@ namespace Database
 			}
 		}
 		soundloader;
+
+		class SoundCueLoader
+		{
+		public:
+			SoundCueLoader()
+			{
+				AddConfigure(0xf23cbd5f /* "soundcue" */, Entry(this, &SoundCueLoader::Configure));
+			}
+
+			void Configure(unsigned int aId, const TiXmlElement *element)
+			{
+				// open soundcue
+				Typed<unsigned int> &soundcue = Database::soundcue.Open(aId);
+
+				// if the object has an embedded sound...
+				if (Database::soundtemplate.Find(aId))
+				{
+					// add a default cue (HACK)
+					soundcue.Put(0, aId);
+				}
+
+				// process sound cue configuration
+				for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+				{
+					switch (Hash(child->Value()))
+					{
+					case 0xe5561300 /* "cue" */:
+						{
+							// assign cue
+							unsigned int subid = Hash(child->Attribute("name"));
+							unsigned int &cue = soundcue.Open(subid);
+							cue = Hash(child->Attribute("sound"));
+							soundcue.Close(subid);
+						}
+						break;
+					}
+				}
+
+				// close soundcue
+				Database::soundcue.Close(aId);
+			}
+		}
+		soundcueloader;
 	}
+
 	namespace Initializer
 	{
 		class SoundInitializer
@@ -106,20 +158,19 @@ namespace Database
 
 			void Activate(unsigned int aId)
 			{
-				SDL_LockAudio();
-				const SoundTemplate &soundtemplate = Database::soundtemplate.Get(aId);
-				Sound *sound = new Sound(soundtemplate, aId);
-				Database::sound.Put(aId, sound);
-				SDL_UnlockAudio();
-				sound->Activate();
+				PlaySound(aId, 0);
 			}
 
 			void Deactivate(unsigned int aId)
 			{
 				SDL_LockAudio();
-				if (const Sound *sound = Database::sound.Get(aId))
-					delete sound;
-				Database::sound.Delete(aId);
+				if (Database::sound.Find(aId))
+				{
+					const Typed<Sound *> &sounds = Database::sound.Get(aId);
+					for (Typed<Sound *>::Iterator itor(&sounds); itor.IsValid(); ++itor)
+						delete itor.GetValue();
+					Database::sound.Delete(aId);
+				}
 				SDL_UnlockAudio();
 			}
 		}
@@ -131,6 +182,7 @@ SoundTemplate::SoundTemplate(void)
 : mData(NULL)
 , mLength(0)
 , mVolume(1.0f)
+, mRepeat(0)
 {
 }
 
@@ -148,29 +200,84 @@ SoundTemplate::~SoundTemplate(void)
 }
 
 
+static Sound *sHead;
+static Sound *sTail;
+static Sound *sNext;
+
 Sound::Sound(void)
 : Updatable(0)
+, mNext(NULL)
+, mPrev(NULL)
 , mData(NULL)
 , mLength(0)
 , mOffset(0)
 , mVolume(0)
 , mRepeat(0)
+, mPosition(0, 0)
+, mPlaying(false)
 {
 }
 
 Sound::Sound(const SoundTemplate &aTemplate, unsigned int aId)
 : Updatable(aId)
+, mNext(NULL)
+, mPrev(NULL)
 , mData(aTemplate.mData)
 , mLength(aTemplate.mLength)
 , mOffset(0)
 , mVolume(aTemplate.mVolume)
-, mRepeat(0)
+, mRepeat(aTemplate.mRepeat)
 , mPosition(0, 0)
+, mPlaying(false)
 {
 }
 
 Sound::~Sound(void)
 {
+	Stop();
+}
+
+
+void Sound::Play(unsigned int aOffset)
+{
+	if (!mPlaying)
+	{
+		mPlaying = true;
+		mPrev = sTail;
+		if (sTail)
+			sTail->mNext = this;
+		sTail = this;
+		if (!sHead)
+			sHead = this;
+	}
+
+	mOffset = aOffset;
+
+	// also activate
+	Activate();
+}
+
+void Sound::Stop(void)
+{
+	if (mPlaying)
+	{
+		mPlaying = false;
+		if (sHead == this)
+			sHead = mNext;
+		if (sTail == this)
+			sTail = mPrev;
+		if (sNext == this)
+			sNext = mNext;
+		if (mNext)
+			mNext->mPrev = mPrev;
+		if (mPrev)
+			mPrev->mNext = mNext;
+		mNext = NULL;
+		mPrev = NULL;
+	}
+
+	// also deactivate
+	Deactivate();
 }
 
 // hack!
@@ -180,8 +287,7 @@ void Sound::Update(float aStep)
 	if (!mRepeat && mOffset >= mLength)
 	{
 		SDL_LockAudio();
-		Database::sound.Delete(id);
-		delete this;
+		Stop();
 		SDL_UnlockAudio();
 		return;
 	}
@@ -205,12 +311,12 @@ static float level = minlevel;
 static const float levelfilter = 1.0f * timestep;
 static const float postscale = 65534.0f / float(M_PI);
 
-void mixaudio(void *userdata, Uint8 *stream, int len)
+void Sound::Mix(void *userdata, Uint8 *stream, int len)
 {
 	int samples = len / sizeof(short);
 
-	// if no sounds playing
-	if (Database::sound.GetCount() == 0)
+	// if no sounds playing...
+	if (sHead == NULL)
 	{
 		// update filters
 		average0 -= average0 * 0.5f * samples * averagefilter;
@@ -238,11 +344,8 @@ void mixaudio(void *userdata, Uint8 *stream, int len)
 	int channel_count = 0;
 
 	// for each active sound...
-	for (Database::Typed<Sound *>::Iterator itor(&Database::sound); itor.IsValid(); ++itor)
+	for (Sound *sound = sHead; sound != NULL; sound = sound->mNext)
 	{
-		// get the sound
-		Sound *sound = const_cast<Sound *>(itor.GetValue());
-
 		// apply sound fall-off
 		float volume = sound->mVolume / (1.0f + listenerpos.DistSq(sound->mPosition) / 16384.0f);
 		if (volume < 1.0f/256.0f)
@@ -328,11 +431,8 @@ void mixaudio(void *userdata, Uint8 *stream, int len)
 	}
 
 	// for each active sound...
-	for (Database::Typed<Sound *>::Iterator itor(&Database::sound); itor.IsValid(); ++itor)
+	for (Sound *sound = sHead; sound != NULL; sound = sound->mNext)
 	{
-		// get the sound
-		Sound *sound = const_cast<Sound *>(itor.GetValue());
-
 		// update sound position
 		sound->mOffset += len;
 
@@ -373,15 +473,28 @@ void mixaudio(void *userdata, Uint8 *stream, int len)
 	}
 }
 
-void PlaySound(unsigned int aId)
+void PlaySound(unsigned int aId, unsigned int aCueId)
 {
-	const SoundTemplate &sound = Database::soundtemplate.Get(aId);
-	if (sound.mData)
+	const Database::Typed<unsigned int> &soundcues = Database::soundcue.Get(aId);
+	unsigned int aSoundId = soundcues.Get(aCueId);
+	const SoundTemplate &soundtemplate = Database::soundtemplate.Get(aSoundId);
+	if (soundtemplate.mData)
 	{
 		/* Put the sound data in the slot (it starts playing immediately) */
 		SDL_LockAudio();
-		Sound *s = new Sound(sound, aId);
-		Database::sound.Put(aId, s);
+		Database::Typed<Sound *> &sounds = Database::sound.Open(aId);
+		if (Sound *s = sounds.Get(aCueId))
+		{
+			// retrigger
+			s->Play(0);
+		}
+		else
+		{
+			// start new
+			s = new Sound(soundtemplate, aId);
+			sounds.Put(aCueId, s);
+			s->Play(0);
+		}
 		SDL_UnlockAudio();
 	}
 }

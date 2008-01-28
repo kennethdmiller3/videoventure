@@ -246,5 +246,6 @@ void PlayerController::Control(float aStep)
 	mMove.y = input[Input::MOVE_VERTICAL];
 	mAim.x = input[Input::AIM_HORIZONTAL];
 	mAim.y = input[Input::AIM_VERTICAL];
-	mFire = input[Input::FIRE_PRIMARY] > 0.0f;
+	mFire[0] = input[Input::FIRE_PRIMARY] > 0.0f;
+	mFire[1] = input[Input::FIRE_SECONDARY] > 0.0f;
 }
