@@ -18,8 +18,9 @@ Controller::Controller(unsigned int aId)
 , entry()
 , mMove(0, 0)
 , mAim(0, 0)
-, mFire(false)
 {
+	mFire[0] = false;
+	mFire[1] = false;
 }
 
 Controller::~Controller(void)

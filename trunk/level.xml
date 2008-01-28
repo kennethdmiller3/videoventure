@@ -15,7 +15,7 @@
 		<player lives="3"/>
 	</entity>
 
-	
+
 	<!-- draw lists -->
 
 	<drawlist name="square">
@@ -220,7 +220,7 @@
 		</renderable>
 	</entity>
 	-->
-	
+
 	<!-- starfield -->
 	<cloud name="starfield" count="128">
 		<x average="0" variance="512"/>
@@ -289,7 +289,7 @@
 
 
 	<!-- reference grid -->
-	
+
 	<entity name="playfield">
 		<renderable radius="2048">
 			<drawlist>
@@ -772,8 +772,8 @@
 			<shot delay="0.5"/>
 		</weapon>
 	</template>
-	
-	
+
+
 	<!-- enemy missile -->
 
 	<template name="enemymissiletrail">
@@ -855,7 +855,7 @@
 			<spawn name="enemymissiletrail" start="0" cycle="0.016667" track="0"/>
 		</spawner>
 	</template>
-	
+
 	<template name="enemyweaponmissile">
 		<weapon>
 			<offset x="0" y="10"/>
@@ -864,7 +864,7 @@
 			<shot delay="0.6"/>
 		</weapon>
 	</template>
-	
+
 
 	<!-- enemy explosion -->
 
@@ -1140,7 +1140,7 @@
 		<link name="gun" secondary="enemyturret2" updateangle="0"/>
 		<points value="250"/>
 	</template>
-	
+
 	<template name="enemyturretpod3" type="enemyturretpod">
 		<link name="gun" secondary="enemyturret3" updateangle="0"/>
 		<points value="400"/>
@@ -1150,7 +1150,7 @@
 		<link name="gun" secondary="enemyturretmissile" updateangle="0"/>
 		<points value="250"/>
 	</template>
-	
+
 	<template name="enemyturret1spawn">
 		<spawner>
 			<spawn name="enemyturretpod1" start="0" cycle="5" track="1"/>
@@ -1211,7 +1211,7 @@
 	<entity name="enemyturretcluster4" type="enemyturretcluster">
 		<position x="1024.0" y="-1024.0" angle="45"/>
 	</entity>
-	
+
 
 	<!-- enemy fireball explosion -->
 
@@ -1419,7 +1419,7 @@
 			<vertex x="0.000000" y="-1.00000"/>
 		</polygon>
 	</drawlist>
-	
+
 	<template name="enemyfirebomber">
 		<collidable>
 			<body name="main">
@@ -2118,7 +2118,7 @@
 		<points value="1000"/>
 	</template>
 
-	
+
 	<!-- enemy vapor mine -->
 
 	<template name="enemyvapormine">
@@ -2215,8 +2215,8 @@
 		<team name="red"/>
 		<points value="50"/>
 	</template>
-	
-	
+
+
 	<-- enemy command ship -->
 
 	<template name="enemycommandship">
@@ -2268,7 +2268,7 @@
 		</renderable>
 		<aimer range="512" attack="128" leading="240" evade="1" close="64"/>
 		<ship maxveloc="60" maxaccel="120" friction="10" maxomega="2.0"/>
-		<damagable health="20" spawnondeath="enemyexplosion"/>
+		<damagable health="15" spawnondeath="enemyexplosion"/>
 		<link name="gun" secondary="enemyweapon">
 			<offset x="0" y="4" angle="0"/>
 		</link>
@@ -2281,8 +2281,8 @@
 		<team name="red"/>
 		<points value="300"/>
 	</template>
-	
-	
+
+
 	<!-- enemy tiny ship -->
 
 	<template name="enemyshiptiny">
@@ -2351,12 +2351,12 @@
 			<file name="stargate-spaceguppyshot.wav"/>
 		</sound>
 	</template>
-		
+
 	<template name="enemyshipweapon">
 		<weapon>
 			<velocity x="0" y="240"/>
 			<ordnance name="enemyshipbullet"/>
-			<shot delay="0.2"/>
+			<shot delay="0.3"/>
 		</weapon>
 	</template>
 	<template name="enemyshipweapon0" type="enemyshipweapon">
@@ -2638,7 +2638,7 @@
 			<spawn name="enemyshipsmall" start="0" cycle="3" track="0"/>
 		</spawner>
 	</entity>
-	
+
 	<entity name="enemyfirebomberspawn1">
 		<position x="-128" y="1984" angle="180"/>
 		<velocity x="0" y="-180"/>
@@ -2686,7 +2686,7 @@
 			<spawn name="enemydynamo" start="2" cycle="6" track="0"/>
 		</spawner>
 	</entity>
-	
+
 	<entity name="enemypodspawn1">
 		<position x="-128" y="1984" angle="180"/>
 		<velocity x="0" y="-180"/>
@@ -2734,7 +2734,7 @@
 			<spawn name="enemyship" start="5" cycle="6" track="0"/>
 		</spawner>
 	</entity>
-		
+
 	<entity name="enemycarrierspawn">
 		<position x="0" y="1984" angle="180"/>
 		<velocity x="0" y="-120"/>
@@ -2742,7 +2742,7 @@
 			<spawn name="enemycarrier" start="0" cycle="30" track="0"/>
 		</spawner>
 	</entity>
-	
+
 
 	<!-- gunner bullet explosion -->
 
@@ -3151,8 +3151,8 @@
 			<shot phase="1"/>
 		</weapon>
 	</template>
-	
-	
+
+
 	<!-- force bullet explosion -->
 
 	<template name="forcebulletexplosion">
@@ -3440,17 +3440,17 @@
 		</renderable>
 		<team name="blue"/>
 	</template>
-	
-	
+
+
 	<!-- force option (level 2) -->
-	
+
 	<template name="force2" type="force">
 		<weapon>
 			<shot delay="0.5"/>
 		</weapon>
 	</template>
 
-	
+
 	<!-- force option (level 3) -->
 
 	<template name="force3" type="force">
@@ -3569,8 +3569,72 @@
 			<shot delay="0.1"/>
 		</weapon>
 	</template>
-	
-	
+
+
+	<!-- player smart bomb explosion -->
+
+	<template name="playersmartbombexplosion">
+		<renderable radius="384">
+			<color>
+				<key time="0.000000" r="1.0" g="1.0" b="1.0" a="1.0"/>
+				<key time="0.066667" r="1.0" g="1.0" b="1.0" a="0.0"/>
+			</color>
+			<scale x="384" y="384"/>
+			<calllist name="circle32"/>
+		</renderable>
+		<explosion life="0.066667" damage="3" radius="384"/>
+		<team name="blue"/>
+	</template>
+
+	<template name="playersmartbombexplosion6" type="playersmartbombexplosion"/>
+
+	<template name="playersmartbombexplosion5" type="playersmartbombexplosion">
+		<explosion spawnonexpire="playersmartbombexplosion6"/>
+	</template>
+
+	<template name="playersmartbombexplosion4" type="playersmartbombexplosion">
+		<explosion spawnonexpire="playersmartbombexplosion5"/>
+	</template>
+
+	<template name="playersmartbombexplosion3" type="playersmartbombexplosion">
+		<explosion spawnonexpire="playersmartbombexplosion4"/>
+	</template>
+
+	<template name="playersmartbombexplosion2" type="playersmartbombexplosion">
+		<explosion spawnonexpire="playersmartbombexplosion3"/>
+	</template>
+
+	<template name="playersmartbombexplosion1" type="playersmartbombexplosion">
+		<explosion spawnonexpire="playersmartbombexplosion2"/>
+	</template>
+
+
+	<!-- player smart bomb -->
+
+	<template name="playersmartbomb">
+		<explosion life="3.0"/>
+		<spawner>
+			<spawn name="playersmartbombexplosion1"/>
+		</spawner>
+		<sound>
+			<file name="stargate-smartbomb.wav"/>
+		</sound>
+		<team name="blue"/>
+	</template>
+
+
+	<!-- player smart bomb weapon -->
+
+	<template name="playersmartbombweapon">
+		<weapon>
+			<velocity x="0" y="0"/>
+			<ordnance name="playersmartbomb"/>
+			<trigger channel="2"/>
+			<shot delay="1.0"/>
+		</weapon>
+	</template>
+
+
 	<!-- player multiple -->
 
 	<template name="multiple" type="playershipweapon">
@@ -3762,7 +3826,7 @@
 		<playercontroller/>
 	</template>
 
-	
+
 	<!-- player ship -->
 
 	<template name="playership">
@@ -3793,11 +3857,17 @@
 		<playercontroller/>
 		<ship maxveloc="150" maxaccel="600" friction="30" maxomega="20"/>
 		<damagable health="10" spawnondeath="playershipdeath"/>
+		<sound volume="0.25" repeat="1">
+			<file name="stargate-idle.wav"/>
+		</sound>
 		<link name="lgun" secondary="playershipweapon">
 			<offset x="2" y="0" angle="0"/>
 		</link>
 		<link name="rgun" secondary="playershipweapon">
 			<offset x="-2" y="0" angle="0"/>
+		</link>
+		<link name="bomb" secondary="playersmartbombweapon">
+			<offset x="0" y="0" angle="0"/>
 		</link>
 		<!-- -->
 		<link name="gunnerA" secondary="gunner0">
@@ -3854,7 +3924,7 @@
 			<file name="stargate-warpin.wav"/>
 		</sound>
 	</template>
-	
+
 	<entity name="playerspawn">
 		<position x="0" y="0"/>
 		<spawner>

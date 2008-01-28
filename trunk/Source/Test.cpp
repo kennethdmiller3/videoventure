@@ -294,13 +294,12 @@ bool init()
 	}
 #endif
 
-	extern void mixaudio(void *unused, Uint8 *stream, int len);
 	SDL_AudioSpec fmt;
 	fmt.freq = AUDIO_FREQUENCY;
 	fmt.format = AUDIO_S16;
 	fmt.channels = 2;
 	fmt.samples = 1024;
-	fmt.callback = mixaudio;
+	fmt.callback = Sound::Mix;
 	fmt.userdata = &listenerpos;
 
 	/* Open the audio device and start playing sound! */
@@ -853,10 +852,10 @@ int ProcessCommand( unsigned int aCommand, char *aParam[], int aCount )
 		}
 
 	case 0x0e0d9594 /* "sound" */:
-		if (aCount >= 1)
+		if (aCount >= 2)
 		{
-			PlaySound(Hash(aParam[0]));
-			return 1;
+			PlaySound(Hash(aParam[0]), Hash(aParam[1]));
+			return 2;
 		}
 		else
 		{
@@ -936,10 +935,12 @@ int SDL_main( int argc, char *argv[] )
 						switch(Hash(name))
 						{
 						case 0x2f7d674b /* "move_x" */:	logical = Input::MOVE_HORIZONTAL; break;
-						case 0x2e7d65b8 /* "move_y" */: logical = Input::MOVE_VERTICAL; break;
+						case 0x2e7d65b8 /* "move_y" */:	logical = Input::MOVE_VERTICAL; break;
 						case 0x28e0ac09 /* "aim_x" */:	logical = Input::AIM_HORIZONTAL; break;
 						case 0x27e0aa76 /* "aim_y" */:	logical = Input::AIM_VERTICAL; break;
-						case 0x8eab16d9 /* "fire" */:	logical = Input::FIRE_PRIMARY; break;
+						case 0x8eab16d9 /* "fire" */:
+						case 0x7f550f38 /* "fire1" */:	logical = Input::FIRE_PRIMARY; break;
+						case 0x825513f1 /* "fire2" */:	logical = Input::FIRE_SECONDARY; break;
 						default:						logical = Input::NUM_LOGICAL; break;
 						}
 

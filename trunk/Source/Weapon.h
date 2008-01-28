@@ -13,6 +13,9 @@ public:
 	// ordnance
 	unsigned int mOrdnance;
 
+	// fire channel
+	int mChannel;
+
 	// fire delay
 	float mDelay;
 	int mPhase;
@@ -32,6 +35,9 @@ class Weapon
 protected:
 	// controller
 	unsigned int mControlId;
+
+	// fire channel
+	int mChannel;
 
 	// fire timer
 	float mTimer;

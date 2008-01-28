@@ -144,7 +144,8 @@ void Aimer::Control(float aStep)
 	mMove.y = 0;
 	mAim.x = 0;
 	mAim.y = 0;
-	mFire = 0;
+	mFire[0] = 0;
+	mFire[1] = 0;
 
 	// get parent entity
 	Entity *entity = Database::entity.Get(id);
@@ -305,5 +306,5 @@ void Aimer::Control(float aStep)
 	mMove *= InvSqrt(mMove.LengthSq());
 
 	// fire if lined up and within attack range
-	mFire = inRange && (entity->GetTransform().y.Dot(mAim) > aimer.mAngle);
+	mFire[0] = inRange && (entity->GetTransform().y.Dot(mAim) > aimer.mAngle);
 }

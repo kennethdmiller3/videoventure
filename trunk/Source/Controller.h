@@ -19,7 +19,7 @@ public:
 	// controls
 	Vector2 mMove;
 	Vector2 mAim;
-	bool mFire;
+	bool mFire[2];
 
 public:
 	Controller(unsigned int aId);
@@ -28,6 +28,12 @@ public:
 	// activate
 	void Activate(void);
 	void Deactivate(void);
+
+	// is active?
+	bool IsActive(void)
+	{
+		return !entry.empty();
+	}
 
 	// configure
 	virtual bool Configure(const TiXmlElement *element) { return false; }

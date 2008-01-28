@@ -54,6 +54,7 @@ void Input::Update(void)
 
 	// limit magnitude of fire control to 1
 	output[FIRE_PRIMARY] = std::min(std::max(value[FIRE_PRIMARY], -1.0f), 1.0f);
+	output[FIRE_SECONDARY] = std::min(std::max(value[FIRE_SECONDARY], -1.0f), 1.0f);
 }
 
 void Input::Step(void)
