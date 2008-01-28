@@ -163,15 +163,15 @@ namespace Database
 
 			void Deactivate(unsigned int aId)
 			{
-				SDL_LockAudio();
 				if (Database::sound.Find(aId))
 				{
+					SDL_LockAudio();
 					const Typed<Sound *> &sounds = Database::sound.Get(aId);
 					for (Typed<Sound *>::Iterator itor(&sounds); itor.IsValid(); ++itor)
 						delete itor.GetValue();
 					Database::sound.Delete(aId);
+					SDL_UnlockAudio();
 				}
-				SDL_UnlockAudio();
 			}
 		}
 		soundinitializer;
@@ -190,6 +190,7 @@ SoundTemplate::SoundTemplate(const SoundTemplate &aTemplate)
 : mData(static_cast<unsigned char *>(malloc(aTemplate.mLength)))
 , mLength(aTemplate.mLength)
 , mVolume(aTemplate.mVolume)
+, mRepeat(aTemplate.mRepeat)
 {
 	memcpy(mData, aTemplate.mData, mLength);
 }
@@ -242,6 +243,7 @@ void Sound::Play(unsigned int aOffset)
 {
 	if (!mPlaying)
 	{
+		SDL_LockAudio();
 		mPlaying = true;
 		mPrev = sTail;
 		if (sTail)
@@ -249,6 +251,7 @@ void Sound::Play(unsigned int aOffset)
 		sTail = this;
 		if (!sHead)
 			sHead = this;
+		SDL_UnlockAudio();
 	}
 
 	mOffset = aOffset;
@@ -261,6 +264,7 @@ void Sound::Stop(void)
 {
 	if (mPlaying)
 	{
+		SDL_LockAudio();
 		mPlaying = false;
 		if (sHead == this)
 			sHead = mNext;
@@ -274,6 +278,7 @@ void Sound::Stop(void)
 			mPrev->mNext = mNext;
 		mNext = NULL;
 		mPrev = NULL;
+		SDL_UnlockAudio();
 	}
 
 	// also deactivate
@@ -286,9 +291,7 @@ void Sound::Update(float aStep)
 {
 	if (!mRepeat && mOffset >= mLength)
 	{
-		SDL_LockAudio();
 		Stop();
-		SDL_UnlockAudio();
 		return;
 	}
 
@@ -481,7 +484,6 @@ void PlaySound(unsigned int aId, unsigned int aCueId)
 	if (soundtemplate.mData)
 	{
 		/* Put the sound data in the slot (it starts playing immediately) */
-		SDL_LockAudio();
 		Database::Typed<Sound *> &sounds = Database::sound.Open(aId);
 		if (Sound *s = sounds.Get(aCueId))
 		{
@@ -495,6 +497,5 @@ void PlaySound(unsigned int aId, unsigned int aCueId)
 			sounds.Put(aCueId, s);
 			s->Play(0);
 		}
-		SDL_UnlockAudio();
 	}
 }
