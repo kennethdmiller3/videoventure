@@ -3616,7 +3616,7 @@
 		<spawner>
 			<spawn name="playersmartbombexplosion1"/>
 		</spawner>
-		<sound>
+		<sound volume="4">
 			<file name="stargate-smartbomb.wav"/>
 		</sound>
 		<team name="blue"/>
