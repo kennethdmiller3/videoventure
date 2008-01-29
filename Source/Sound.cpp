@@ -330,20 +330,25 @@ void Sound::Mix(void *userdata, Uint8 *stream, int len)
 		return;
 	}
 
+#ifdef PROFILE_SOUND_MIXER
+	LARGE_INTEGER perf0;
+	QueryPerformanceCounter(&perf0);
+#endif
+
 	// custom mixer
-	static float mix[2048];
+	float *mix = static_cast<float *>(_alloca(samples * sizeof(float)));
 	memset(mix, 0, samples * sizeof(float));
 
 	// listener position
 	Vector2 &listenerpos = *static_cast<Vector2 *>(userdata);
 
 	// sound channels
-	unsigned char *channel_data[MAX_CHANNELS+1] = { 0 };
+	const short *channel_data[MAX_CHANNELS+1] = { 0 };
 	unsigned int channel_offset[MAX_CHANNELS+1] = { 0 };
 	unsigned int channel_length[MAX_CHANNELS+1] = { 0 };
 	unsigned int channel_repeat[MAX_CHANNELS+1] = { 0 };
 	float channel_volume[MAX_CHANNELS+1] = { 0 };
-	float channel_weight[MAX_CHANNELS+1] = { 0 };
+	float channel_weight[MAX_CHANNELS+1];
 	int channel_count = 0;
 
 	// for each active sound...
@@ -361,14 +366,34 @@ void Sound::Mix(void *userdata, Uint8 *stream, int len)
 		if (!sound->mRepeat)
 		{
 			// diminish weight over time
-			weight *= (1.0f - sound->mOffset / sound->mLength);
+			weight *= 1.0f - float(sound->mOffset) / float(sound->mLength);
 		}
 
-		// update channel data
+		// get sound data
+		const short *data = reinterpret_cast<const short *>(sound->mData);
+		unsigned int offset = sound->mOffset / sizeof(short);
+		unsigned int length = sound->mLength / sizeof(short);
+		unsigned int repeat = sound->mRepeat;
+
 		int j;
-		for (j = channel_count - 1; j >= 0; j--)
+
+		bool merge = false;
+		for (j = 0; j < channel_count; j++)
 		{
-			if (channel_weight[j] >= weight) break;
+			// if the sound is a duplicate...
+			if (channel_data[j] == data && channel_offset[j] == offset && channel_length[j] == length && channel_repeat[j] == repeat)
+			{
+				// merge with the existing sound
+				volume = (channel_volume[j] += volume);
+				weight = (channel_weight[j] += weight);
+				merge = true;
+				break;
+			}
+		}
+
+		// move lower-weight channels up
+		for (j--; j >= 0 && channel_weight[j] < weight; j--)
+		{
 			channel_data[j + 1] = channel_data[j];
 			channel_offset[j + 1] = channel_offset[j];
 			channel_length[j + 1] = channel_length[j];
@@ -376,16 +401,24 @@ void Sound::Mix(void *userdata, Uint8 *stream, int len)
 			channel_volume[j + 1] = channel_volume[j];
 			channel_weight[j + 1] = channel_weight[j];
 		}
+
+		// if room for the new sound...
 		if (j < MAX_CHANNELS - 1)
 		{
-			channel_data[j + 1] = sound->mData;
-			channel_offset[j + 1] = sound->mOffset;
-			channel_length[j + 1] = sound->mLength;
-			channel_repeat[j + 1] = sound->mRepeat;
+			// insert new sound
+			channel_data[j + 1] = data;
+			channel_offset[j + 1] = offset;
+			channel_length[j + 1] = length;
+			channel_repeat[j + 1] = repeat;
 			channel_volume[j + 1] = volume;
 			channel_weight[j + 1] = weight;
-			if (channel_count < MAX_CHANNELS)
+
+			// if not merging, and not out of channels...
+			if (!merge && channel_count < MAX_CHANNELS)
+			{
+				// bump the channel count
 				++channel_count;
+			}
 		}
 	}
 
@@ -393,33 +426,31 @@ void Sound::Mix(void *userdata, Uint8 *stream, int len)
 	for (int channel = 0; channel < channel_count; ++channel)
 	{
 		// get starting offset
-		unsigned char *data = channel_data[channel];
+		const short *data = channel_data[channel];
 		unsigned int length = channel_length[channel];
 		unsigned int offset = channel_offset[channel];
 		float volume = channel_volume[channel];
 
 		// while output to generate...
-		int output = 0;
-		while (output < samples)
+		const short *src = data + offset;
+		const short *srcend = data + length;
+		float *dst = mix;
+		float *dstend = mix + samples;
+		while (dst < dstend)
 		{
-			// calculate amount to output
-			int amount = std::min(size_t(length-offset)/sizeof(short), size_t(samples-output));
-
-			// add volume-scaled sample
-			for (int i = 0; i < amount; ++i)
-				mix[output+i] += ((short *)(data+offset))[i] * volume;
-
-			// advance offset
-			offset += amount * sizeof(short);
+			// add volume-scaled samples
+			// (lesser of remaining destination and remaining source)
+			for (int amount = std::min(dstend - dst, srcend - src); amount > 0; --amount)
+				*dst++ += float(*src++) * volume;
 
 			// if reaching the end...
-			if (offset >= length)
+			if (src >= srcend)
 			{
 				// if repeating...
 				if (channel_repeat[channel])
 				{
 					// loop around
-					offset -= length;
+					src -= length;
 				}
 				else
 				{
@@ -427,9 +458,6 @@ void Sound::Mix(void *userdata, Uint8 *stream, int len)
 					break;
 				}
 			}
-
-			// advance output position
-			output += amount;
 		}
 	}
 
@@ -459,9 +487,10 @@ void Sound::Mix(void *userdata, Uint8 *stream, int len)
 	// subract filtered average to remove DC term
 	// apply filtered scaling to compress dynamic range
 	// apply nonlinear curve to eliminate clipping
-	float *src = mix;
+	const float *src = mix;
+	const float *srcend = mix + samples;
 	short *dst = (short *)stream;
-	for (int i = 0; i < samples/2; ++i)
+	while (src < srcend)
 	{
 		float mix0 = *src++;
 		float mix1 = *src++;
@@ -471,9 +500,17 @@ void Sound::Mix(void *userdata, Uint8 *stream, int len)
 		if (level < minlevel)
 			level = minlevel;
 		float prescale = InvSqrt(level);
-		*dst++ = short(atanf(mix0 * prescale) * postscale);
-		*dst++ = short(atanf(mix1 * prescale) * postscale);
+		*dst++ = short(int(atanf(mix0 * prescale) * postscale));
+		*dst++ = short(int(atanf(mix1 * prescale) * postscale));
 	}
+
+#ifdef PROFILE_SOUND_MIXER
+	LARGE_INTEGER perf1;
+	QueryPerformanceCounter(&perf1);
+	LARGE_INTEGER freq;
+	QueryPerformanceFrequency(&freq);
+	DebugPrint("mix %d\n", 1000000*(perf1.QuadPart-perf0.QuadPart)/freq.QuadPart);
+#endif
 }
 
 void PlaySound(unsigned int aId, unsigned int aCueId)
