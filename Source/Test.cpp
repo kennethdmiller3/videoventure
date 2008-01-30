@@ -234,6 +234,9 @@ bool init()
 	if( SDL_SetVideoMode( SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_DEPTH, flags ) == NULL )
 		return false;
 
+	// hide the mouse cursor
+	SDL_ShowCursor(SDL_DISABLE);
+
 	// set window title
 	SDL_WM_SetCaption( "Shmup!", NULL );
 
@@ -1004,6 +1007,7 @@ int SDL_main( int argc, char *argv[] )
 
 	// pause state
 	bool paused = false;
+	bool singlestep = false;
 
 	PlaySound(0x94326baa /* "startup" */);
 
@@ -1069,7 +1073,15 @@ int SDL_main( int argc, char *argv[] )
 				}
 				else if (event.key.keysym.sym == SDLK_PAUSE)
 				{
-					paused = !paused;
+					if (event.key.keysym.mod & KMOD_SHIFT)
+					{
+						paused = true;
+						singlestep = true;
+					}
+					else
+					{
+						paused = !paused;
+					}
 					SDL_PauseAudio(paused);
 				}
 				break;
@@ -1113,7 +1125,17 @@ int SDL_main( int argc, char *argv[] )
 		// delta time
 		float delta_time, delta_turns;
 
-		if (paused)
+		if (singlestep)
+		{
+			singlestep = false;
+
+			// advance one frame
+			delta_time = TIME_SCALE / 60.0f / RENDER_MOTIONBLUR;
+
+			// turns to advance per step
+			delta_turns = delta_time * sim_rate;
+		}
+		else if (paused)
 		{
 			// freeze time
 			delta_time = 0.0f;
@@ -1519,6 +1541,74 @@ int SDL_main( int argc, char *argv[] )
 			}
 
 			glEnd();
+
+			glDisable(GL_TEXTURE_2D);
+
+			// draw reticule
+			Controller *controller = Database::controller.Get(id);
+			if (controller)
+			{
+				float x = 320 - 240 * controller->mAim.x;
+				float y = 240 - 240 * controller->mAim.y;
+
+				glBegin(GL_QUADS);
+
+				glColor4f(0.4f, 0.5f, 1.0f, 1.0f);
+
+				glVertex2f(x - 10, y - 8);
+				glVertex2f(x - 4, y - 8);
+				glVertex2f(x - 4, y - 10);
+				glVertex2f(x - 10, y - 10);
+
+				glVertex2f(x - 8, y - 10);
+				glVertex2f(x - 10, y - 10);
+				glVertex2f(x - 10, y - 4);
+				glVertex2f(x - 8, y - 4);
+
+				glVertex2f(x + 10, y - 8);
+				glVertex2f(x + 4, y - 8);
+				glVertex2f(x + 4, y - 10);
+				glVertex2f(x + 10, y - 10);
+
+				glVertex2f(x + 8, y - 10);
+				glVertex2f(x + 10, y - 10);
+				glVertex2f(x + 10, y - 4);
+				glVertex2f(x + 8, y - 4);
+
+				glVertex2f(x - 10, y + 8);
+				glVertex2f(x - 4, y + 8);
+				glVertex2f(x - 4, y + 10);
+				glVertex2f(x - 10, y + 10);
+
+				glVertex2f(x - 8, y + 10);
+				glVertex2f(x - 10, y + 10);
+				glVertex2f(x - 10, y + 4);
+				glVertex2f(x - 8, y + 4);
+
+				glVertex2f(x + 10, y + 8);
+				glVertex2f(x + 4, y + 8);
+				glVertex2f(x + 4, y + 10);
+				glVertex2f(x + 10, y + 10);
+
+				glVertex2f(x + 8, y + 10);
+				glVertex2f(x + 10, y + 10);
+				glVertex2f(x + 10, y + 4);
+				glVertex2f(x + 8, y + 4);
+
+				glColor4f(0.4f, 0.5f, 1.0f, 0.25f);
+
+				glVertex2f(x - 1, 0);
+				glVertex2f(x + 1, 0);
+				glVertex2f(x + 1, 480);
+				glVertex2f(x - 1, 480);
+
+				glVertex2f(0, y - 1);
+				glVertex2f(640, y - 1);
+				glVertex2f(640, y + 1);
+				glVertex2f(0, y + 1);
+
+				glEnd();
+			}
 
 			++playerindex;
 		}
