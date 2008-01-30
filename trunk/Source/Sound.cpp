@@ -343,12 +343,16 @@ void Sound::Mix(void *userdata, Uint8 *stream, int len)
 	Vector2 &listenerpos = *static_cast<Vector2 *>(userdata);
 
 	// sound channels
-	const short *channel_data[MAX_CHANNELS+1] = { 0 };
-	unsigned int channel_offset[MAX_CHANNELS+1] = { 0 };
-	unsigned int channel_length[MAX_CHANNELS+1] = { 0 };
-	unsigned int channel_repeat[MAX_CHANNELS+1] = { 0 };
-	float channel_volume[MAX_CHANNELS+1] = { 0 };
-	float channel_weight[MAX_CHANNELS+1];
+	struct ChannelInfo
+	{
+		float weight;
+		float volume;
+		const short *data;
+		unsigned int offset;
+		unsigned int length;
+		unsigned int repeat;
+	};
+	ChannelInfo channel_info[MAX_CHANNELS+1] = { 0 };
 	int channel_count = 0;
 
 	// for each active sound...
@@ -381,37 +385,32 @@ void Sound::Mix(void *userdata, Uint8 *stream, int len)
 		for (j = 0; j < channel_count; j++)
 		{
 			// if the sound is a duplicate...
-			if (channel_data[j] == data && channel_offset[j] == offset && channel_length[j] == length && channel_repeat[j] == repeat)
+			if (channel_info[j].data == data && channel_info[j].offset == offset && channel_info[j].length == length && channel_info[j].repeat == repeat)
 			{
 				// merge with the existing sound
-				volume = (channel_volume[j] += volume);
-				weight = (channel_weight[j] += weight);
+				channel_info[j].volume = volume = std::max(channel_info[j].volume, volume);
+				channel_info[j].weight = weight = (channel_info[j].weight + weight);
 				merge = true;
 				break;
 			}
 		}
 
 		// move lower-weight channels up
-		for (j--; j >= 0 && channel_weight[j] < weight; j--)
+		for (; j > 0 && channel_info[j - 1].weight < weight; j--)
 		{
-			channel_data[j + 1] = channel_data[j];
-			channel_offset[j + 1] = channel_offset[j];
-			channel_length[j + 1] = channel_length[j];
-			channel_repeat[j + 1] = channel_repeat[j];
-			channel_volume[j + 1] = channel_volume[j];
-			channel_weight[j + 1] = channel_weight[j];
+			channel_info[j] = channel_info[j - 1];
 		}
 
 		// if room for the new sound...
-		if (j < MAX_CHANNELS - 1)
+		if (j < MAX_CHANNELS)
 		{
 			// insert new sound
-			channel_data[j + 1] = data;
-			channel_offset[j + 1] = offset;
-			channel_length[j + 1] = length;
-			channel_repeat[j + 1] = repeat;
-			channel_volume[j + 1] = volume;
-			channel_weight[j + 1] = weight;
+			channel_info[j].weight = weight;
+			channel_info[j].volume = volume;
+			channel_info[j].data = data;
+			channel_info[j].offset = offset;
+			channel_info[j].length = length;
+			channel_info[j].repeat = repeat;
 
 			// if not merging, and not out of channels...
 			if (!merge && channel_count < MAX_CHANNELS)
@@ -426,10 +425,10 @@ void Sound::Mix(void *userdata, Uint8 *stream, int len)
 	for (int channel = 0; channel < channel_count; ++channel)
 	{
 		// get starting offset
-		const short *data = channel_data[channel];
-		unsigned int length = channel_length[channel];
-		unsigned int offset = channel_offset[channel];
-		float volume = channel_volume[channel];
+		float volume = channel_info[channel].volume;
+		const short *data = channel_info[channel].data;
+		unsigned int length = channel_info[channel].length;
+		unsigned int offset = channel_info[channel].offset;
 
 		// while output to generate...
 		const short *src = data + offset;
@@ -447,7 +446,7 @@ void Sound::Mix(void *userdata, Uint8 *stream, int len)
 			if (src >= srcend)
 			{
 				// if repeating...
-				if (channel_repeat[channel])
+				if (channel_info[channel].repeat)
 				{
 					// loop around
 					src -= length;

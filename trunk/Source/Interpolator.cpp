@@ -197,7 +197,7 @@ bool InterpolatorTemplate::Apply(float aTarget[], float aTime, int &aIndex)
 		// if time is before segment start
 		int iL = int(floorf(im));
 		float tL = mKeys[iL * mStride];
-		if (aTime < tL)
+		if (aTime < tL - FLT_EPSILON)
 		{
 			// set upper bound to segment start
 			i1 = iL;
@@ -208,7 +208,7 @@ bool InterpolatorTemplate::Apply(float aTarget[], float aTime, int &aIndex)
 		// if time is after segment end...
 		int iH = int(ceilf(im));
 		float tH = mKeys[iH * mStride];
-		if (aTime > tH)
+		if (aTime > tH + FLT_EPSILON)
 		{
 			// set lower bound to segment end
 			i0 = iH;

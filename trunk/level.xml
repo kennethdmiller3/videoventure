@@ -694,12 +694,12 @@
 				</pushmatrix>
 				<color r="1.0" g="0.7" b="0.4" a="0.5"/>
 				<pushmatrix>
-					<scale x="1.25" y="5"/>
+					<scale x="1.0" y="5"/>
 					<calllist name="circle8"/>
 				</pushmatrix>
 				<color r="1.0" g="0.5" b="0.0" a="0.25"/>
 				<pushmatrix>
-					<scale x="2" y="6"/>
+					<scale x="1.5" y="6"/>
 					<calllist name="circle8"/>
 				</pushmatrix>
 			</drawlist>
@@ -796,6 +796,7 @@
 			<body name="main">
 				<fast value="1"/>
 				<box w="2" h="5">
+					<position x="0" y="5"/>
 					<friction value="0"/>
 					<restitution value="1"/>
 					<density value="1.0"/>
@@ -808,36 +809,36 @@
 			<drawlist>
 				<color r="1.0" g="0.2" b="0.1" a="1.0"/>
 				<polygon>
-					<vertex x="0" y="5"/>
+					<vertex x="0" y="10"/>
+					<vertex x="2" y="5"/>
 					<vertex x="2" y="0"/>
-					<vertex x="2" y="-5"/>
-					<vertex x="-2" y="-5"/>
 					<vertex x="-2" y="0"/>
+					<vertex x="-2" y="5"/>
 				</polygon>
 			</drawlist>
 			<scale>
 				<key time="0.000000" x="1" y="1"/>
-				<key time="0.033333" x="0.75" y="0.5"/>
+				<key time="0.033333" x="0.5" y="0.25"/>
 				<key time="0.066667" x="1" y="1"/>
 			</scale>
 			<drawlist>
 				<color r="1.0" g="0.7" b="0.4" a="1.0"/>
 				<triangles>
-					<vertex x="1.0" y="-5"/>
-					<vertex x="0.0" y="-10"/>
-					<vertex x="-1.0" y="-5"/>
+					<vertex x="1.0" y="0"/>
+					<vertex x="0.0" y="-5"/>
+					<vertex x="-1.0" y="0"/>
 				</triangles>
 				<color r="1.0" g="0.5" b="0.0" a="0.5"/>
 				<triangles>
-					<vertex x="1.5" y="-5"/>
-					<vertex x="0.0" y="-15"/>
-					<vertex x="-1.5" y="-5"/>
+					<vertex x="1.5" y="0"/>
+					<vertex x="0.0" y="-10"/>
+					<vertex x="-1.5" y="0"/>
 				</triangles>
 				<color r="1.0" g="0.0" b="0.0" a="0.25"/>
 				<triangles>
-					<vertex x="2.0" y="-5"/>
-					<vertex x="0.0" y="-20"/>
-					<vertex x="-2.0" y="-5"/>
+					<vertex x="2.0" y="0"/>
+					<vertex x="0.0" y="-15"/>
+					<vertex x="-2.0" y="0"/>
 				</triangles>
 			</drawlist>
 		</renderable>
@@ -851,7 +852,7 @@
 		</sound>
 		<points value="50"/>
 		<spawner>
-			<offset x="0" y="-5"/>
+			<offset x="0" y="0"/>
 			<spawn name="enemymissiletrail" start="0" cycle="0.016667" track="0"/>
 		</spawner>
 	</template>
@@ -1811,20 +1812,20 @@
 			<pushmatrix>
 				<color r="0.2" g="0.2" b="0.2" a="1.0"/>
 				<scale>
-					<key time="0.000000" x="2.5" y="2.5"/>
-					<key time="0.033333" x="0.0" y="0.0"/>
-					<key time="0.066667" x="0.0" y="0.0"/>
-					<key time="0.100000" x="2.5" y="2.5"/>
+					<key time="0.000000" x="0.0" y="0.0"/>
+					<key time="0.033333" x="2.5" y="2.5"/>
+					<key time="0.066667" x="2.5" y="2.5"/>
+					<key time="0.100000" x="0.0" y="0.0"/>
 				</scale>
 				<calllist name="diamond"/>
 			</pushmatrix>
 			<pushmatrix>
 				<color r="1.0" g="1.0" b="1.0" a="1.0"/>
 				<scale>
-					<key time="0.000000" x="4.0" y="4.0"/>
-					<key time="0.033333" x="1.5" y="1.5"/>
-					<key time="0.066667" x="1.5" y="1.5"/>
-					<key time="0.100000" x="4.0" y="4.0"/>
+					<key time="0.000000" x="1.5" y="1.5"/>
+					<key time="0.033333" x="4.0" y="4.0"/>
+					<key time="0.066667" x="4.0" y="4.0"/>
+					<key time="0.100000" x="1.5" y="1.5"/>
 				</scale>
 				<calllist name="diamond"/>
 			</pushmatrix>
@@ -2821,17 +2822,20 @@
 				</pushmatrix>
 				<color r="0.4" g="0.7" b="1.0" a="0.5"/>
 				<pushmatrix>
-					<scale x="1.25" y="5"/>
+					<scale x="1.0" y="5"/>
 					<calllist name="circle8"/>
 				</pushmatrix>
 				<color r="0.0" g="0.5" b="1.0" a="0.25"/>
 				<pushmatrix>
-					<scale x="2" y="6"/>
+					<scale x="1.5" y="6"/>
 					<calllist name="circle8"/>
 				</pushmatrix>
 			</drawlist>
 		</renderable>
 		<bullet life="0.75" damage="1" spawnonimpact="gunnerbulletexplosion"/>
+		<sound volume="0.25">
+			<file name="robotron-playershot.wav"/>
+		</sound>
 	</template>
 
 
@@ -2869,6 +2873,7 @@
 					<restitution value="0.25"/>
 					<category value="1"/>
 					<mask bit2="0"/>
+					<group value="-1"/>
 				</circle>
 				<allowsleep value="0"/>
 			</body>
@@ -2902,6 +2907,9 @@
 		<link name="lgun">
 			<offset x="0" y="4" angle="5"/>
 		</link>
+		<link name="mgun">
+			<offset x="0" y="4" angle="0"/>
+		</link>
 		<link name="rgun">
 			<offset x="0" y="4" angle="-5"/>
 		</link>
@@ -2910,11 +2918,13 @@
 
 	<template name="gunner0" type="gunner">
 		<link name="lgun" secondary="gunnerweapon0"/>
+		<link name="mgun" secondary="gunnerweapon1"/>
 		<link name="rgun" secondary="gunnerweapon0"/>
 	</template>
 
 	<template name="gunner1" type="gunner">
 		<link name="lgun" secondary="gunnerweapon1"/>
+		<link name="mgun" secondary="gunnerweapon0"/>
 		<link name="rgun" secondary="gunnerweapon1"/>
 	</template>
 
@@ -3287,9 +3297,6 @@
 			</drawlist>
 		</renderable>
 		<bullet life="1.0" damage="5" spawnondeath="forcebulletexplosion"/>
-		<sound volume="0.5">
-			<file name="stargate-playershot.wav"/>
-		</sound>
 	</template>
 
 
@@ -3410,6 +3417,7 @@
 					<restitution value="0.25"/>
 					<category value="1"/>
 					<mask bit2="0"/>
+					<group value="-1"/>
 				</circle>
 				<allowsleep value="0"/>
 			</body>
@@ -3535,28 +3543,62 @@
 					<category value="2"/>
 					<mask bit1="0" bit2="0" bit4="0"/>
 				</circle>
+				<preventrotation value="1"/>
 			</body>
 		</collidable>
-		<renderable radius="6">
-			<drawlist>
+		<renderable radius="240">
+			<triangle_strip>
 				<color r="1.0" g="1.0" b="1.0" a="1.0"/>
-				<pushmatrix>
-					<scale x="0.5" y="4"/>
-					<calllist name="circle8"/>
-				</pushmatrix>
-				<color r="0.7" g="0.4" b="1.0" a="0.5"/>
-				<pushmatrix>
-					<scale x="1.25" y="5"/>
-					<calllist name="circle8"/>
-				</pushmatrix>
-				<color r="0.5" g="0.0" b="1.0" a="0.25"/>
-				<pushmatrix>
-					<scale x="2" y="6"/>
-					<calllist name="circle8"/>
-				</pushmatrix>
-			</drawlist>
+				<vertex x="0" y="3"/>
+				<vertex x="0.75" y="1"/>
+				<vertex x="-0.75" y="1"/>
+				<vertex x="0.75" y="-1"/>
+				<vertex x="-0.75" y="-1"/>
+				<color>
+					<key time="0.00" r="0.7" g="0.4" b="1.0" a="1.0"/>
+					<key time="0.05" r="0.4" g="0.7" b="1.0" a="0.95"/>
+					<key time="0.10" r="0.7" g="0.4" b="1.0" a="0.9"/>
+					<key time="0.15" r="0.4" g="0.7" b="1.0" a="0.85"/>
+					<key time="0.20" r="0.7" g="0.4" b="1.0" a="0.8"/>
+					<key time="0.25" r="0.4" g="0.7" b="1.0" a="0.75"/>
+					<key time="0.30" r="0.7" g="0.4" b="1.0" a="0.7"/>
+					<key time="0.35" r="0.4" g="0.7" b="1.0" a="0.65"/>
+					<key time="0.40" r="0.7" g="0.4" b="1.0" a="0.6"/>
+				</color>
+				<vertex x="0.75" y="-1"/>
+				<vertex x="-0.75" y="-1"/>
+				<color>
+					<key time="0.00" r="0.5" g="0.0" b="1.0" a="1.0"/>
+					<key time="0.05" r="0.0" g="0.5" b="1.0" a="0.9"/>
+					<key time="0.10" r="0.5" g="0.0" b="1.0" a="0.8"/>
+					<key time="0.15" r="0.0" g="0.5" b="1.0" a="0.5"/>
+					<key time="0.20" r="0.5" g="0.0" b="1.0" a="0.6"/>
+					<key time="0.25" r="0.0" g="0.5" b="1.0" a="0.5"/>
+					<key time="0.30" r="0.5" g="0.0" b="1.0" a="0.4"/>
+					<key time="0.35" r="0.0" g="0.5" b="1.0" a="0.3"/>
+					<key time="0.40" r="0.5" g="0.0" b="1.0" a="0.2"/>
+				</color>
+				<vertex>
+					<key time="0.00" x="0.5" y="0"/>
+					<key time="0.35" x="0.5" y="-60"/>
+					<key time="0.40" x="0.5" y="0"/>
+				</vertex>
+				<vertex>
+					<key time="0.00" x="-0.5" y="0"/>
+					<key time="0.35" x="-0.5" y="-60"/>
+					<key time="0.40" x="-0.5" y="0"/>
+				</vertex>
+				<vertex>
+					<key time="0.00" x="0" y="0"/>
+					<key time="0.35" x="0" y="-240"/>
+					<key time="0.40" x="0" y="0"/>
+				</vertex>
+			</triangle_strip>
 		</renderable>
-		<bullet life="0.75" damage="1" spawnonimpact="playerbulletexplosion"/>
+		<bullet life="0.4" damage="2" spawnonimpact="playerbulletexplosion"/>
+		<sound volume="0.25">
+			<file name="stargate-playershot.wav"/>
+		</sound>
 	</template>
 
 
@@ -3564,9 +3606,9 @@
 
 	<template name="playershipweapon">
 		<weapon>
-			<velocity x="0" y="480"/>
+			<velocity x="0" y="960"/>
 			<ordnance name="playerbullet"/>
-			<shot delay="0.1"/>
+			<shot delay="0.2"/>
 		</weapon>
 	</template>
 
@@ -3577,35 +3619,19 @@
 		<renderable radius="384">
 			<color>
 				<key time="0.000000" r="1.0" g="1.0" b="1.0" a="1.0"/>
+				<key time="0.033334" r="1.0" g="1.0" b="1.0" a="1.0"/>
+				<key time="0.033334" r="1.0" g="1.0" b="1.0" a="0.0"/>
 				<key time="0.066667" r="1.0" g="1.0" b="1.0" a="0.0"/>
 			</color>
 			<scale x="384" y="384"/>
 			<calllist name="circle32"/>
 		</renderable>
-		<explosion life="0.066667" damage="3" radius="384"/>
+		<explosion life="0.066667" damage="10" radius="384"/>
 		<team name="blue"/>
 	</template>
 
-	<template name="playersmartbombexplosion6" type="playersmartbombexplosion"/>
-
-	<template name="playersmartbombexplosion5" type="playersmartbombexplosion">
-		<explosion spawnonexpire="playersmartbombexplosion6"/>
-	</template>
-
-	<template name="playersmartbombexplosion4" type="playersmartbombexplosion">
-		<explosion spawnonexpire="playersmartbombexplosion5"/>
-	</template>
-
-	<template name="playersmartbombexplosion3" type="playersmartbombexplosion">
-		<explosion spawnonexpire="playersmartbombexplosion4"/>
-	</template>
-
 	<template name="playersmartbombexplosion2" type="playersmartbombexplosion">
-		<explosion spawnonexpire="playersmartbombexplosion3"/>
-	</template>
-
-	<template name="playersmartbombexplosion1" type="playersmartbombexplosion">
-		<explosion spawnonexpire="playersmartbombexplosion2"/>
+		<explosion spawnonexpire="playersmartbombexplosion"/>
 	</template>
 
 
@@ -3614,7 +3640,7 @@
 	<template name="playersmartbomb">
 		<explosion life="3.0"/>
 		<spawner>
-			<spawn name="playersmartbombexplosion1"/>
+			<spawn name="playersmartbombexplosion2"/>
 		</spawner>
 		<sound volume="4">
 			<file name="stargate-smartbomb.wav"/>
@@ -3627,6 +3653,7 @@
 
 	<template name="playersmartbombweapon">
 		<weapon>
+			<offset x="0" y="80"/>
 			<velocity x="0" y="0"/>
 			<ordnance name="playersmartbomb"/>
 			<trigger channel="2"/>
@@ -3838,6 +3865,7 @@
 					<restitution value="0.5"/>
 					<category value="1"/>
 					<mask bit2="0" bit4="0"/>
+					<group value="-1"/>
 				</circle>
 				<box w="3" h="5">
 					<position x="0" y="-4"/>
@@ -3846,6 +3874,7 @@
 					<restitution value="0.5"/>
 					<category value="1"/>
 					<mask bit2="0"/>
+					<group value="-1"/>
 				</box>
 				<allowsleep value="0"/>
 			</body>
@@ -4165,9 +4194,60 @@
 	</template>
 
 
+	<!-- friend bullet -->
+	<template name="friendbullet">
+		<collidable>
+			<body name="main">
+				<fast value="1"/>
+				<circle radius="1">
+					<friction value="0"/>
+					<restitution value="0"/>
+					<density value="1.0"/>
+					<category value="2"/>
+					<mask bit1="0" bit2="0" bit4="0"/>
+				</circle>
+			</body>
+		</collidable>
+		<renderable radius="6">
+			<drawlist>
+				<color r="1.0" g="1.0" b="1.0" a="1.0"/>
+				<pushmatrix>
+					<scale x="0.5" y="4"/>
+					<calllist name="circle8"/>
+				</pushmatrix>
+				<color r="0.7" g="0.4" b="1.0" a="0.5"/>
+				<pushmatrix>
+					<scale x="1.25" y="5"/>
+					<calllist name="circle8"/>
+				</pushmatrix>
+				<color r="0.5" g="0.0" b="1.0" a="0.25"/>
+				<pushmatrix>
+					<scale x="2" y="6"/>
+					<calllist name="circle8"/>
+				</pushmatrix>
+			</drawlist>
+		</renderable>
+		<bullet life="1.0" damage="1" spawnonimpact="playerbulletexplosion"/>
+		<sound volume="0.5">
+			<file name="robotron-playershot.wav"/>
+		</sound>
+	</template>
+
+
+	<!-- friend weapon -->
+
+	<template name="friendweapon">
+		<weapon>
+			<velocity x="0" y="360"/>
+			<ordnance name="friendbullet"/>
+			<shot delay="0.15"/>
+		</weapon>
+	</template>
+
+
 	<!-- friend turret -->
 
-	<template name="friendcannon" type="playershipweapon">
+	<template name="friendcannon" type="friendweapon">
 		<renderable radius="10">
 			<drawlist>
 				<color r="0.5" g="0.5" b="0.5" a="1.0"/>
@@ -4184,7 +4264,7 @@
 		</weapon>
 	</template>
 
-	<template name="friendcannon0" type="playershipweapon">
+	<template name="friendcannon0" type="friendweapon">
 		<renderable radius="10">
 			<drawlist>
 				<color r="0.5" g="0.5" b="0.5" a="1.0"/>
@@ -4201,7 +4281,7 @@
 		</weapon>
 	</template>
 
-	<template name="friendcannon1" type="playershipweapon">
+	<template name="friendcannon1" type="friendweapon">
 		<renderable radius="10">
 			<drawlist>
 				<color r="0.5" g="0.5" b="0.5" a="1.0"/>
