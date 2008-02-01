@@ -304,7 +304,7 @@ void Sound::Update(float aStep)
 
 // AUDIO MIXER
 
-static const int MAX_CHANNELS = 4;
+static const int MAX_CHANNELS = 8;
 
 static const float timestep = 1.0f / AUDIO_FREQUENCY;
 static float average0 = 0.0f, average1 = 0.0f;

@@ -912,6 +912,27 @@ void ProcessDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buf
 		}
 		break;
 
+	case 0xeb0cbd62 /* "block" */:
+		{
+			float start = 0.0f;
+			element->QueryFloatAttribute("start", &start);
+			float length = FLT_MAX;
+			element->QueryFloatAttribute("length", &length);
+			float scale = 1.0f;
+			element->QueryFloatAttribute("scale", &scale);
+
+			buffer.push_back(0xeb0cbd62 /* "block" */);
+			buffer.push_back(*reinterpret_cast<unsigned int *>(&start));
+			buffer.push_back(*reinterpret_cast<unsigned int *>(&length));
+			buffer.push_back(*reinterpret_cast<unsigned int *>(&scale));
+
+			buffer.push_back(0);
+			int size = buffer.size();
+			ProcessDrawItems(element, buffer);
+			buffer[size-1] = buffer.size() - size;
+		}
+		break;
+
 	case 0xc6270703 /* "set" */:
 		{
 			unsigned int name = Hash(element->Attribute("name"));
@@ -1355,10 +1376,22 @@ void ExecuteDrawItems(const unsigned int buffer[], size_t count, float param, un
 		case 0xd99ba82a /* "repeat" */:
 			{
 				int repeat = *itor++;
-				size_t length = *itor++;
+				size_t size = *itor++;
 				for (int i = 0; i < repeat; i++)
-					ExecuteDrawItems(itor, length, param, id);
-				itor += length;
+					ExecuteDrawItems(itor, size, param, id);
+				itor += size;
+			}
+			break;
+
+		case 0xeb0cbd62 /* "block" */:
+			{
+				float start = *reinterpret_cast<const float *>(itor++);
+				float length = *reinterpret_cast<const float *>(itor++);
+				float scale = *reinterpret_cast<const float *>(itor++);
+				unsigned int size = *itor++;
+				if (param >= start && param <= start + length)
+					ExecuteDrawItems(itor, size, (param - start) * scale, id);
+				itor += size;
 			}
 			break;
 
@@ -1410,7 +1443,7 @@ void ExecuteDrawItems(const unsigned int buffer[], size_t count, float param, un
 				float from = *reinterpret_cast<const float *>(itor++);
 				float to   = *reinterpret_cast<const float *>(itor++);
 				float by   = *reinterpret_cast<const float *>(itor++);
-				size_t length = *itor++;
+				size_t size = *itor++;
 
 				Database::Typed<float> &variables = Database::variable.Open(id);
 				if (by > 0)
@@ -1418,7 +1451,7 @@ void ExecuteDrawItems(const unsigned int buffer[], size_t count, float param, un
 					for (float value = from; value <= to; value += by)
 					{
 						variables.Put(name, value);
-						ExecuteDrawItems(itor, length, param, id);
+						ExecuteDrawItems(itor, size, param, id);
 					}
 				}
 				else
@@ -1426,13 +1459,13 @@ void ExecuteDrawItems(const unsigned int buffer[], size_t count, float param, un
 					for (float value = from; value >= to; value += by)
 					{
 						variables.Put(name, value);
-						ExecuteDrawItems(itor, length, param, id);
+						ExecuteDrawItems(itor, size, param, id);
 					}
 				}
 				variables.Delete(name);
 				Database::variable.Close(id);
 
-				itor += length;
+				itor += size;
 			}
 			break;
 #endif
@@ -1447,7 +1480,7 @@ void ExecuteDrawItems(const unsigned int buffer[], size_t count, float param, un
 				float offsety = *reinterpret_cast<const float *>(itor++);
 				float offseta = *reinterpret_cast<const float *>(itor++);
 				Matrix2 offset(offseta, Vector2(offsetx, offsety));
-				size_t length = *itor++;
+				size_t size = *itor++;
 
 				// get the curent model matrix
 				float m1[16];
@@ -1517,7 +1550,7 @@ void ExecuteDrawItems(const unsigned int buffer[], size_t count, float param, un
 						glPushMatrix();
 						glTranslatef(variables.Get(subid+0), variables.Get(subid+1), 0.0f);
 						glRotatef(variables.Get(subid+2)*180.0f/float(M_PI), 0, 0, 1);
-						ExecuteDrawItems(itor, length, t, id);
+						ExecuteDrawItems(itor, size, t, id);
 						glPopMatrix();
 					}
 				}
@@ -1530,7 +1563,7 @@ void ExecuteDrawItems(const unsigned int buffer[], size_t count, float param, un
 				glLoadMatrixf(m1);
 
 				// advance data pointer
-				itor += length;
+				itor += size;
 			}
 			break;
 #endif
