@@ -3659,7 +3659,7 @@
 					<category value="2"/>
 					<mask bit1="0" bit2="0" bit4="0"/>
 				</circle>
-				<preventrotation value="1"/>
+				<fixedrotation value="1"/>
 			</body>
 		</collidable>
 		<renderable radius="240">

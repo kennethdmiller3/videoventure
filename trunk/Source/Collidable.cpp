@@ -261,11 +261,11 @@ bool CollidableTemplate::ProcessBodyItem(const TiXmlElement *element, b2BodyDef 
 		}
 		return true;
 
-	case 0xd233241f /* "preventrotation" */:
+	case 0x7a04061b /* "fixedrotation" */:
 		{
-			int preventrotation = body.preventRotation;
-			element->QueryIntAttribute("value", &preventrotation);
-			body.preventRotation = preventrotation != 0;
+			int fixedrotation = body.fixedRotation;
+			element->QueryIntAttribute("value", &fixedrotation);
+			body.fixedRotation = fixedrotation != 0;
 		}
 		return true;
 
@@ -693,9 +693,9 @@ public:
 		Database::Key id1 = reinterpret_cast<Database::Key>(shape1->GetUserData());
 		Database::Key id2 = reinterpret_cast<Database::Key>(shape2->GetUserData());
 		for (Database::Typed<Collidable::Listener>::Iterator itor(Database::collidablelistener.Find(id1)); itor.IsValid(); ++itor)
-			itor.GetValue()(id1, id2, shape1->m_body->m_t, *point);
+			itor.GetValue()(id1, id2, 0.0f, *point);
 		for (Database::Typed<Collidable::Listener>::Iterator itor(Database::collidablelistener.Find(id2)); itor.IsValid(); ++itor)
-			itor.GetValue()(id2, id1, shape2->m_body->m_t, *point);
+			itor.GetValue()(id2, id1, 0.0f, *point);
 	};
 
 	/// Called when a contact point persists. This includes the geometry
@@ -917,7 +917,7 @@ void Collidable::AddToWorld(void)
 		}
 
 		// create the body
-		body = world->Create(&def);
+		body = world->CreateBody(&def);
 
 		// add shapes
 		const std::vector<b2CircleDef> &circles = Database::collidabletemplatecircle.Get(id);
@@ -925,14 +925,14 @@ void Collidable::AddToWorld(void)
 		{
 			b2CircleDef circle(*circleitor);
 			circle.userData = reinterpret_cast<void *>(id);
-			body->AddShape(world->Create(&circle));
+			body->CreateShape(&circle);
 		}
 		const std::vector<b2PolygonDef> &polygons = Database::collidabletemplatepolygon.Get(id);
 		for (std::vector<b2PolygonDef>::const_iterator polygonitor = polygons.begin(); polygonitor != polygons.end(); ++polygonitor)
 		{
 			b2PolygonDef polygon(*polygonitor);
 			polygon.userData = reinterpret_cast<void *>(id);
-			body->AddShape(world->Create(&polygon));
+			body->CreateShape(&polygon);
 		}
 
 		// compute mass
@@ -954,7 +954,7 @@ void Collidable::AddToWorld(void)
 		b2RevoluteJointDef joint(*itor);
 		if (SetupJointDef(joint))
 		{
-			world->Create(&joint);
+			world->CreateJoint(&joint);
 		}
 	}
 	for (std::list<b2PrismaticJointDef>::const_iterator itor = collidable.prismatics.begin(); itor != collidable.prismatics.end(); ++itor)
@@ -962,7 +962,7 @@ void Collidable::AddToWorld(void)
 		b2PrismaticJointDef joint(*itor);
 		if (SetupJointDef(joint))
 		{
-			world->Create(&joint);
+			world->CreateJoint(&joint);
 		}
 	}
 	for (std::list<b2DistanceJointDef>::const_iterator itor = collidable.distances.begin(); itor != collidable.distances.end(); ++itor)
@@ -970,7 +970,7 @@ void Collidable::AddToWorld(void)
 		b2DistanceJointDef joint(*itor);
 		if (SetupJointDef(joint))
 		{
-			world->Create(&joint);
+			world->CreateJoint(&joint);
 		}
 	}
 	for (std::list<b2PulleyJointDef>::const_iterator itor = collidable.pulleys.begin(); itor != collidable.pulleys.end(); ++itor)
@@ -978,7 +978,7 @@ void Collidable::AddToWorld(void)
 		b2PulleyJointDef joint(*itor);
 		if (SetupJointDef(joint))
 		{
-			world->Create(&joint);
+			world->CreateJoint(&joint);
 		}
 	}
 	for (std::list<b2MouseJointDef>::const_iterator itor = collidable.mouses.begin(); itor != collidable.mouses.end(); ++itor)
@@ -986,7 +986,7 @@ void Collidable::AddToWorld(void)
 		b2MouseJointDef joint(*itor);
 		if (SetupJointDef(joint))
 		{
-			world->Create(&joint);
+			world->CreateJoint(&joint);
 		}
 	}
 }
@@ -995,7 +995,7 @@ void Collidable::RemoveFromWorld(void)
 {
 	for (Database::Typed<b2Body *>::Iterator itor(Database::collidablebody.Find(id)); itor.IsValid(); ++itor)
 	{
-		world->Destroy(itor.GetValue());
+		world->DestroyBody(itor.GetValue());
 	}
 	Database::collidablebody.Delete(id);
 
@@ -1027,23 +1027,23 @@ void Collidable::WorldInit(void)
 
 	// create perimeter walls
 	b2BodyDef bodydef;
-	b2Body *body = world->Create(&bodydef);
+	b2Body *body = world->CreateBody(&bodydef);
 
 	b2PolygonDef top;
 	top.SetAsBox(0.5f * (ARENA_X_MAX - ARENA_X_MIN) + 32, 16, b2Vec2(0.5f * (ARENA_X_MAX + ARENA_X_MIN), ARENA_Y_MIN - 16), 0);
-	body->AddShape(world->Create(&top));
+	body->CreateShape(&top);
 
 	b2PolygonDef bottom;
 	bottom.SetAsBox(0.5f * (ARENA_X_MAX - ARENA_X_MIN) + 32, 16, b2Vec2(0.5f * (ARENA_X_MAX + ARENA_X_MIN), ARENA_Y_MAX + 16), 0);
-	body->AddShape(world->Create(&bottom));
+	body->CreateShape(&bottom);
 
 	b2PolygonDef left;
 	left.SetAsBox(16, 0.5f * (ARENA_Y_MAX - ARENA_Y_MIN) + 32, b2Vec2(ARENA_X_MIN - 16, 0.5f * (ARENA_Y_MAX + ARENA_Y_MIN)), 0);
-	body->AddShape(world->Create(&left));
+	body->CreateShape(&left);
 
 	b2PolygonDef right;
 	right.SetAsBox(16, 0.5f * (ARENA_Y_MAX - ARENA_Y_MIN) + 32, b2Vec2(ARENA_X_MAX + 16, 0.5f * (ARENA_Y_MAX + ARENA_Y_MIN)), 0);
-	body->AddShape(world->Create(&right));
+	body->CreateShape(&right);
 
 	body->SetMassFromShapes();
 }
@@ -1075,7 +1075,7 @@ void Collidable::CollideAll(float aStep)
 				if (entity)
 				{
 					entity->Step();
-					entity->SetTransform(body->GetAngle(), Vector2(body->GetOriginPosition()));
+					entity->SetTransform(body->GetAngle(), Vector2(body->GetPosition()));
 					entity->SetVelocity(Vector2(body->GetLinearVelocity()));
 					entity->SetOmega(body->GetAngularVelocity());
 				}

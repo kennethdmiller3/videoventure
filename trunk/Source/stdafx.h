@@ -87,4 +87,7 @@ void ProcessEntityItems(const TiXmlElement *element);
 #define USE_POOL_ALLOCATOR
 #define USE_CHANGE_DYNAMIC_TYPE
 
+//#define COLLECT_DEBUG_DRAW
+//#define COLLIDABLE_DEBUG_DRAW
+
 const int AUDIO_FREQUENCY = 44100;
