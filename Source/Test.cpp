@@ -299,9 +299,9 @@ bool init()
 
 	SDL_AudioSpec fmt;
 	fmt.freq = AUDIO_FREQUENCY;
-	fmt.format = AUDIO_S16;
+	fmt.format = AUDIO_S16SYS;
 	fmt.channels = 2;
-	fmt.samples = 1024;
+	fmt.samples = AUDIO_FREQUENCY / SIMULATION_RATE;
 	fmt.callback = Sound::Mix;
 	fmt.userdata = &listenerpos;
 

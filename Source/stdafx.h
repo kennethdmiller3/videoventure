@@ -90,4 +90,4 @@ void ProcessEntityItems(const TiXmlElement *element);
 //#define COLLECT_DEBUG_DRAW
 //#define COLLIDABLE_DEBUG_DRAW
 
-const int AUDIO_FREQUENCY = 44100;
+const int AUDIO_FREQUENCY = 48000;

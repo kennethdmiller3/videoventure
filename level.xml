@@ -2262,7 +2262,7 @@
 	</template>
 
 
-	<-- enemy command ship -->
+	<!-- enemy command ship -->
 
 	<template name="enemycommandship">
 		<collidable>
@@ -2327,6 +2327,163 @@
 		<points value="300"/>
 	</template>
 
+
+	<!-- enemy warrior -->
+
+	<template name="enemywarriorturret">
+		<collidable>
+			<body name="main">
+				<circle radius="3">
+					<density value="1"/>
+					<friction value="0.5"/>
+					<restitution value="0.5"/>
+					<category value="3"/>
+				</circle>
+				<allowsleep value="0"/>
+			</body>
+		</collidable>
+		<renderable radius="3">
+			<drawlist>
+				<color r="0.5" g="0.5" b="0.5" a="1.0"/>
+				<quads>
+					<vertex x="1" y="2"/>
+					<vertex x="-1" y="2"/>
+					<vertex x="-0.5" y="5.5"/>
+					<vertex x="0.5" y="5.5"/>
+				</quads>
+				<color r="1.0" g="0.2" b="0.1" a="1.0"/>
+				<pushmatrix>
+					<scale x="1.0" y="1.0"/>
+					<calllist name="circle16"/>
+				</pushmatrix>
+				<color r="0.8" g="0.8" b="0.8" a="1.0"/>
+				<pushmatrix>
+					<scale x="2.0" y="2.0"/>
+					<calllist name="circle16"/>
+				</pushmatrix>
+				<color r="0.7" g="0.7" b="0.7" a="1.0"/>
+				<pushmatrix>
+					<scale x="3.0" y="3.0"/>
+					<calllist name="circle16"/>
+				</pushmatrix>
+			</drawlist>
+		</renderable>
+		<aimer range="512" attack="192" leading="240"/>
+		<team name="red"/>
+		<ship maxveloc="0" maxaccel="0" friction="0" maxomega="2"/>
+		<weapon>
+			<offset x="0" y="5" angle="0"/>
+			<velocity x="0" y="240"/>
+			<ordnance name="enemybullet"/>
+			<shot delay="0.2"/>
+		</weapon>
+	</template>
+	
+	<template name="enemywarrior">
+		<collidable>
+			<body name="main">
+				<circle radius="8">
+					<density value="1"/>
+					<friction value="0.5"/>
+					<restitution value="0.5"/>
+					<category value="3"/>
+				</circle>
+				<allowsleep value="0"/>
+				<fixedrotation value="1"/>
+			</body>
+		</collidable>
+		<renderable radius="9">
+			<drawlist>
+				<pushmatrix>
+					<repeat count="4">
+						<color r="1.0" g="0.2" b="0.1" a="1.0"/>
+						<triangle_strip>
+							<vertex x="6.5" y="0.5"/>
+							<vertex x="6.5" y="-0.5"/>
+							<vertex x="5.5" y="0.5"/>
+							<vertex x="5.5" y="-0.5"/>
+						</triangle_strip>
+						<triangle_strip>
+							<vertex x="5.5" y="3.5"/>
+							<vertex x="5.5" y="4.5"/>
+							<vertex x="4.5" y="3.5"/>
+							<vertex x="4.5" y="4.5"/>
+							<vertex x="3.5" y="3.5"/>
+							<vertex x="4.5" y="4.5"/>
+							<vertex x="3.5" y="4.5"/>
+							<vertex x="3.5" y="5.5"/>
+							<vertex x="4.5" y="5.5"/>
+						</triangle_strip>
+						<color r="0.45" g="0.15" b="0.35" a="1.0"/>
+						<triangle_strip>
+							<vertex x="7.5" y="0.5"/>
+							<vertex x="7.5" y="-0.5"/>
+							<vertex x="6.5" y="1.5"/>
+							<vertex x="6.5" y="-1.5"/>
+							<vertex x="4.5" y="1.5"/>
+							<vertex x="4.5" y="-1.5"/>
+							<vertex x="4.5" y="0.5"/>
+							<vertex x="4.5" y="-0.5"/>
+							<vertex x="3.5" y="0.5"/>
+							<vertex x="3.5" y="-0.5"/>
+							<vertex x="3.5" y="1.5"/>
+							<vertex x="3.5" y="-1.5"/>
+							<vertex x="2.5" y="1.5"/>
+							<vertex x="2.5" y="-1.5"/>
+						</triangle_strip>
+						<triangle_strip>
+							<vertex x="5.5" y="5.5"/>
+							<vertex x="2.5" y="5.5"/>
+							<vertex x="5.5" y="2.5"/>
+							<vertex x="2.5" y="4.5"/>
+							<vertex x="4.5" y="2.5"/>
+						</triangle_strip>
+						<triangle_strip>
+							<vertex x="3.5" y="3.5"/>
+							<vertex x="2.5" y="3.5"/>
+							<vertex x="3.5" y="2.5"/>
+							<vertex x="2.5" y="2.5"/>
+						</triangle_strip>
+						<rotate angle="90"/>
+					</repeat>
+				</pushmatrix>
+				<color r="0.3" g="0.3" b="0.3" a="1.0"/>
+				<triangle_strip>
+					<vertex x="8.5" y="2.5"/>
+					<vertex x="2.5" y="8.5"/>
+					<vertex x="8.5" y="2"/>
+					<vertex x="2" y="8.5"/>
+					<vertex x="7.5" y="1.5"/>
+					<vertex x="1.5" y="7.5"/>
+					<vertex x="7.5" y="-2"/>
+					<vertex x="-1.5" y="7.5"/>
+					<vertex x="8.5" y="-1.5"/>
+					<vertex x="-2" y="8.5"/>
+					<vertex x="8.5" y="-2.5"/>
+					<vertex x="-2.5" y="8.5"/>
+					<vertex x="2.5" y="-8.5"/>
+					<vertex x="-8.5" y="2.5"/>
+					<vertex x="2" y="-8.5"/>
+					<vertex x="-8.5" y="2"/>
+					<vertex x="1.5" y="-7.5"/>
+					<vertex x="-7.5" y="1.5"/>
+					<vertex x="-1.5" y="-7.5"/>
+					<vertex x="-7.5" y="-1.5"/>
+					<vertex x="-2" y="-8.5"/>
+					<vertex x="-8.5" y="-2"/>
+					<vertex x="-2.5" y="-8.5"/>
+					<vertex x="-8.5" y="-2.5"/>
+				</triangle_strip>
+			</drawlist>
+		</renderable>
+		<link name="turret" secondary="enemywarriorturret" updateangle="0"/>
+		<aimer range="512" attack="0" leading="0" evade="1" close="64"/>
+		<ship maxveloc="120" maxaccel="240" friction="10" maxomega="0.0"/>
+		<damagable health="15" spawnondeath="enemyexplosion"/>
+		<team name="red"/>
+		<points value="500"/>
+	</template>
+	
 
 	<!-- enemy tiny ship -->
 
@@ -2686,7 +2843,7 @@
 		<position x="-192" y="1984" angle="180"/>
 		<velocity x="0" y="-180"/>
 		<spawner>
-			<spawn name="enemyshipsmall" start="0" cycle="3" track="0"/>
+			<spawn name="enemyshipsmall" start="0" cycle="4" track="0"/>
 		</spawner>
 	</entity>
 
@@ -2694,7 +2851,7 @@
 		<position x="192" y="1984" angle="180"/>
 		<velocity x="0" y="-180"/>
 		<spawner>
-			<spawn name="enemyshipsmall" start="0" cycle="3" track="0"/>
+			<spawn name="enemyshipsmall" start="0" cycle="4" track="0"/>
 		</spawner>
 	</entity>
 
@@ -2702,7 +2859,7 @@
 		<position x="-128" y="1984" angle="180"/>
 		<velocity x="0" y="-180"/>
 		<spawner>
-			<spawn name="enemyfirebomber" start="0" cycle="6" track="0"/>
+			<spawn name="enemyfirebomber" start="0" cycle="8" track="0"/>
 		</spawner>
 	</entity>
 
@@ -2710,7 +2867,7 @@
 		<position x="128" y="1984" angle="180"/>
 		<velocity x="0" y="-180"/>
 		<spawner>
-			<spawn name="enemyfirebomber" start="0" cycle="6" track="0"/>
+			<spawn name="enemyfirebomber" start="0" cycle="8" track="0"/>
 		</spawner>
 	</entity>
 
@@ -2718,7 +2875,7 @@
 		<position x="-96" y="1984" angle="180"/>
 		<velocity x="0" y="-180"/>
 		<spawner>
-			<spawn name="enemybomber" start="1" cycle="6" track="0"/>
+			<spawn name="enemybomber" start="1" cycle="8" track="0"/>
 		</spawner>
 	</entity>
 
@@ -2726,7 +2883,7 @@
 		<position x="96" y="1984" angle="180"/>
 		<velocity x="0" y="-180"/>
 		<spawner>
-			<spawn name="enemybomber" start="1" cycle="6" track="0"/>
+			<spawn name="enemybomber" start="1" cycle="8" track="0"/>
 		</spawner>
 	</entity>
 
@@ -2734,7 +2891,7 @@
 		<position x="-160" y="1984" angle="180"/>
 		<velocity x="0" y="-180"/>
 		<spawner>
-			<spawn name="enemydynamo" start="2" cycle="6" track="0"/>
+			<spawn name="enemydynamo" start="2" cycle="8" track="0"/>
 		</spawner>
 	</entity>
 
@@ -2742,7 +2899,7 @@
 		<position x="160" y="1984" angle="180"/>
 		<velocity x="0" y="-180"/>
 		<spawner>
-			<spawn name="enemydynamo" start="2" cycle="6" track="0"/>
+			<spawn name="enemydynamo" start="2" cycle="8" track="0"/>
 		</spawner>
 	</entity>
 
@@ -2750,7 +2907,7 @@
 		<position x="-128" y="1984" angle="180"/>
 		<velocity x="0" y="-180"/>
 		<spawner>
-			<spawn name="enemypod" start="3" cycle="6" track="0"/>
+			<spawn name="enemypod" start="3" cycle="8" track="0"/>
 		</spawner>
 	</entity>
 
@@ -2758,7 +2915,7 @@
 		<position x="128" y="1984" angle="180"/>
 		<velocity x="0" y="-180"/>
 		<spawner>
-			<spawn name="enemypod" start="3" cycle="6" track="0"/>
+			<spawn name="enemypod" start="3" cycle="8" track="0"/>
 		</spawner>
 	</entity>
 
@@ -2766,7 +2923,7 @@
 		<position x="-160" y="1984" angle="180"/>
 		<velocity x="0" y="-180"/>
 		<spawner>
-			<spawn name="enemycommandship" start="4" cycle="6" track="0"/>
+			<spawn name="enemycommandship" start="4" cycle="8" track="0"/>
 		</spawner>
 	</entity>
 
@@ -2774,15 +2931,31 @@
 		<position x="160" y="1984" angle="180"/>
 		<velocity x="0" y="-180"/>
 		<spawner>
-			<spawn name="enemycommandship" start="4" cycle="6" track="0"/>
+			<spawn name="enemycommandship" start="4" cycle="8" track="0"/>
 		</spawner>
 	</entity>
 
+	<entity name="enemywarriorspawn1">
+		<position x="-160" y="1984" angle="180"/>
+		<velocity x="0" y="-180"/>
+		<spawner>
+			<spawn name="enemywarrior" start="5" cycle="8" track="0"/>
+		</spawner>
+	</entity>
+
+	<entity name="enemywarriorspawn2">
+		<position x="160" y="1984" angle="180"/>
+		<velocity x="0" y="-180"/>
+		<spawner>
+			<spawn name="enemywarrior" start="5" cycle="8" track="0"/>
+		</spawner>
+	</entity>
+	
 	<entity name="enemyshipspawn1">
 		<position x="-64" y="1984" angle="180"/>
 		<velocity x="0" y="-180"/>
 		<spawner>
-			<spawn name="enemyship" start="5" cycle="6" track="0"/>
+			<spawn name="enemyship" start="6" cycle="8" track="0"/>
 		</spawner>
 	</entity>
 
@@ -2790,7 +2963,7 @@
 		<position x="64" y="1984" angle="180"/>
 		<velocity x="0" y="-180"/>
 		<spawner>
-			<spawn name="enemyship" start="5" cycle="6" track="0"/>
+			<spawn name="enemyship" start="6" cycle="8" track="0"/>
 		</spawner>
 	</entity>
 
@@ -2798,10 +2971,10 @@
 		<position x="0" y="1984" angle="180"/>
 		<velocity x="0" y="-120"/>
 		<spawner>
-			<spawn name="enemycarrier" start="0" cycle="30" track="0"/>
+			<spawn name="enemycarrier" start="0" cycle="32" track="0"/>
 		</spawner>
 	</entity>
-
+	
 	<!--
 	<entity name="enemyexplosionspawn1">
 		<position x="64" y="0" angle="0"/>
@@ -4016,7 +4189,7 @@
 		<playercontroller/>
 		<ship maxveloc="150" maxaccel="600" friction="30" maxomega="20"/>
 		<damagable health="10" spawnondeath="playershipdeath"/>
-		<sound volume="0.25" repeat="1">
+		<sound volume="0.125" repeat="1">
 			<file name="stargate-idle.wav"/>
 		</sound>
 		<link name="lgun" secondary="playershipweapon">
