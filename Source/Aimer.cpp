@@ -215,8 +215,8 @@ void Aimer::Control(float aStep)
 				continue;
 
 			// get range
-			Vector2 dir(transform.Transform(Vector2(body->GetOriginPosition())));
-			float range = dir.Length() - 0.5f * shapes[i]->GetMaxRadius();
+			Vector2 dir(transform.Transform(Vector2(body->GetPosition())));
+			float range = dir.Length() /*- 0.5f * shapes[i]->GetMaxRadius()*/;
 
 			// skip if out of range
 			if (range > aimer.mRange)
