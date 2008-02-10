@@ -5,8 +5,8 @@
 class SoundTemplate
 {
 public:
-	unsigned char *mData;
-	unsigned int mLength;
+	short *mData;
+	size_t mLength;
 	float mVolume;
 	int mRepeat;
 
@@ -25,9 +25,9 @@ private:
 	Sound *mPrev;
 
 public:
-    unsigned char *mData;
-	unsigned int mLength;
-    unsigned int mOffset;
+    short *mData;
+	size_t mLength;
+    size_t mOffset;
 	float mVolume;
 	int mRepeat;
 	Vector2 mPosition;

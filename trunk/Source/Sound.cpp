@@ -73,20 +73,20 @@ namespace Database
 
 #if 1
 								// replace sound data
-								sound.mData = static_cast<unsigned char *>(realloc(sound.mData, dlen * cvt.len_mult));
+								sound.mData = static_cast<short *>(realloc(sound.mData, dlen * cvt.len_mult));
 								sound.mLength = 0;
 #else
 								// append sound data
-								sound.mData = static_cast<unsigned char *>(realloc(sound.mData, sound.mLength + dlen * cvt.len_mult));
+								sound.mData = static_cast<unsigned char *>(realloc(sound.mData, sound.mLength * sizeof(short) + dlen * cvt.len_mult));
 #endif
 								memcpy(sound.mData + sound.mLength, data, dlen);
-								cvt.buf = sound.mData + sound.mLength;
+								cvt.buf = reinterpret_cast<unsigned char *>(sound.mData + sound.mLength);
 								cvt.len = dlen;
 
 								// convert to final format
 								SDL_ConvertAudio(&cvt);
-								sound.mLength += cvt.len_cvt;
-								sound.mData = static_cast<unsigned char *>(realloc(sound.mData, sound.mLength));
+								sound.mLength += cvt.len_cvt / sizeof(short);
+								sound.mData = static_cast<short *>(realloc(sound.mData, sound.mLength * sizeof(short)));
 
 								// release wave file data
 								SDL_FreeWAV(data);
@@ -187,7 +187,7 @@ SoundTemplate::SoundTemplate(void)
 }
 
 SoundTemplate::SoundTemplate(const SoundTemplate &aTemplate)
-: mData(static_cast<unsigned char *>(malloc(aTemplate.mLength)))
+: mData(static_cast<short *>(malloc(aTemplate.mLength)))
 , mLength(aTemplate.mLength)
 , mVolume(aTemplate.mVolume)
 , mRepeat(aTemplate.mRepeat)
@@ -255,7 +255,7 @@ void Sound::Play(unsigned int aOffset)
 	}
 
 	mOffset = aOffset;
-
+	
 	// also activate
 	Activate();
 }
@@ -366,18 +366,18 @@ void Sound::Mix(void *userdata, Uint8 *stream, int len)
 		// weight sound based on volume
 		float weight = volume;
 
+		// get sound data
+		const short *data = sound->mData;
+		unsigned int offset = sound->mOffset;
+		unsigned int length = sound->mLength;
+		unsigned int repeat = sound->mRepeat;
+
 		// if not repeating...
-		if (!sound->mRepeat)
+		if (!repeat)
 		{
 			// diminish weight over time
 			weight *= 1.0f - float(sound->mOffset) / float(sound->mLength);
 		}
-
-		// get sound data
-		const short *data = reinterpret_cast<const short *>(sound->mData);
-		unsigned int offset = sound->mOffset / sizeof(short);
-		unsigned int length = sound->mLength / sizeof(short);
-		unsigned int repeat = sound->mRepeat;
 
 		int j;
 
@@ -388,8 +388,8 @@ void Sound::Mix(void *userdata, Uint8 *stream, int len)
 			if (channel_info[j].data == data && channel_info[j].offset == offset && channel_info[j].length == length && channel_info[j].repeat == repeat)
 			{
 				// merge with the existing sound
-				channel_info[j].volume = volume = std::max(channel_info[j].volume, volume);
-				channel_info[j].weight = weight = (channel_info[j].weight + weight);
+				volume = std::max(channel_info[j].volume, volume);
+				weight = (channel_info[j].weight + weight);
 				merge = true;
 				break;
 			}
@@ -464,7 +464,7 @@ void Sound::Mix(void *userdata, Uint8 *stream, int len)
 	for (Sound *sound = sHead; sound != NULL; sound = sound->mNext)
 	{
 		// update sound position
-		sound->mOffset += len;
+		sound->mOffset += samples;
 
 		// if moving past the end...
 		if (sound->mOffset >= sound->mLength)
@@ -499,8 +499,8 @@ void Sound::Mix(void *userdata, Uint8 *stream, int len)
 		if (level < minlevel)
 			level = minlevel;
 		float prescale = InvSqrt(level);
-		*dst++ = short(int(atanf(mix0 * prescale) * postscale));
-		*dst++ = short(int(atanf(mix1 * prescale) * postscale));
+		*dst++ = short(atanf(mix0 * prescale) * postscale);
+		*dst++ = short(atanf(mix1 * prescale) * postscale);
 	}
 
 #ifdef PROFILE_SOUND_MIXER
