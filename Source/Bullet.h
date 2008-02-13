@@ -53,7 +53,7 @@ public:
 	void Collide(unsigned int aId, unsigned int aHitId, float aTime, const b2ContactPoint &aPoint);
 
 	// kill
-	void Kill(void);
+	void Kill(float aFraction = 0.0f);
 };
 
 namespace Database

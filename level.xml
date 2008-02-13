@@ -693,12 +693,13 @@
 			<body name="main">
 				<fast value="1"/>
 				<circle radius="1">
-					<friction value="0"/>
+					<friction value="1"/>
 					<restitution value="0"/>
 					<density value="1.0"/>
 					<category value="4"/>
 					<mask bit2="0" bit3="0" bit4="0"/>
 				</circle>
+				<fixedrotation value="1"/>
 			</body>
 		</collidable>
 		<renderable radius="6">
@@ -720,7 +721,7 @@
 				</pushmatrix>
 			</drawlist>
 		</renderable>
-		<bullet life="1" damage="1" spawnonimpact="enemybulletexplosion"/>
+		<bullet life="1" damage="1" spawnondeath="enemybulletexplosion"/>
 		<sound volume="0.5">
 			<file name="stargate-landerfire.wav"/>
 		</sound>
@@ -745,12 +746,13 @@
 			<body name="main">
 				<fast value="1"/>
 				<circle radius="1">
-					<friction value="0"/>
+					<friction value="1"/>
 					<restitution value="0"/>
 					<density value="1.0"/>
 					<category value="4"/>
 					<mask bit2="0" bit3="0" bit4="0"/>
 				</circle>
+				<fixedrotation value="1"/>
 			</body>
 		</collidable>
 		<renderable radius="2.5">
@@ -772,7 +774,7 @@
 				</pushmatrix>
 			</drawlist>
 		</renderable>
-		<bullet life="1" damage="1" spawnonimpact="enemybulletexplosion"/>
+		<bullet life="1" damage="1" spawnondeath="enemybulletexplosion"/>
 		<sound>
 			<file name="stargate-swarmerfire.wav"/>
 		</sound>
@@ -813,8 +815,8 @@
 				<fast value="1"/>
 				<box w="2" h="5">
 					<position x="0" y="5"/>
-					<friction value="0"/>
-					<restitution value="1"/>
+					<friction value="1"/>
+					<restitution value="0"/>
 					<density value="1.0"/>
 					<category value="3"/>
 					<mask bit3="0" bit4="0"/>
@@ -1352,12 +1354,13 @@
 			<body name="main">
 				<fast value="1"/>
 				<circle radius="3">
-					<friction value="0"/>
-					<restitution value="1"/>
+					<friction value="1"/>
+					<restitution value="0"/>
 					<density value="1.0"/>
 					<category value="3"/>
 					<mask bit3="0" bit4="0"/>
 				</circle>
+				<fixedrotation value="1"/>
 			</body>
 		</collidable>
 		<renderable radius="6" period="0.1">
@@ -1609,6 +1612,7 @@
 					<mask bit2="0" bit3="0" bit4="0"/>
 					<sensor value="1"/>
 				</circle>
+				<fixedrotation value="1"/>
 			</body>
 		</collidable>
 		<renderable radius="12" period="0.8">
@@ -1961,7 +1965,7 @@
 		<weapon>
 			<velocity x="0" y="210"/>
 			<ordnance name="enemyspacehum"/>
-			<shot delay="1.0"/>
+			<shot delay="0.6"/>
 		</weapon>
 		<team name="red"/>
 		<points value="200"/>
@@ -2170,8 +2174,8 @@
 		<collidable>
 			<body name="main">
 				<circle radius="4">
-					<friction value="0"/>
-					<restitution value="1"/>
+					<friction value="0.5"/>
+					<restitution value="0.5"/>
 					<density value="0"/>
 					<category value="3"/>
 					<mask bit3="0" bit4="0"/>
@@ -2184,6 +2188,7 @@
 					<mask bit3="0" bit4="0"/>
 					<sensor value="1"/>
 				</circle>
+				<fixedrotation value="1"/>
 			</body>
 		</collidable>
 		<renderable radius="4" period="0.066667">
@@ -2226,12 +2231,13 @@
 		<collidable>
 			<body name="main">
 				<circle radius="3.5">
-					<friction value="0"/>
-					<restitution value="1"/>
+					<friction value="0.5"/>
+					<restitution value="0.5"/>
 					<density value="0"/>
 					<category value="3"/>
 					<mask bit3="0" bit4="0"/>
 				</circle>
+				<fixedrotation value="1"/>
 			</body>
 		</collidable>
 		<renderable radius="3.5" period="0.066667">
@@ -2313,7 +2319,7 @@
 		</renderable>
 		<aimer range="512" attack="128" leading="240" evade="1" close="64"/>
 		<ship maxveloc="60" maxaccel="120" friction="10" maxomega="2.0"/>
-		<damagable health="15" spawnondeath="enemyexplosion"/>
+		<damagable health="10" spawnondeath="enemyexplosion"/>
 		<link name="gun" secondary="enemyweapon">
 			<offset x="0" y="4" angle="0"/>
 		</link>
@@ -2321,7 +2327,7 @@
 			<velocity x="0" y="0"/>
 			<inherit x="0" y="0"/>
 			<ordnance name="enemyphotonmine"/>
-			<shot delay="2"/>
+			<shot delay="1"/>
 		</weapon>
 		<team name="red"/>
 		<points value="300"/>
@@ -2344,13 +2350,6 @@
 		</collidable>
 		<renderable radius="3">
 			<drawlist>
-				<color r="0.5" g="0.5" b="0.5" a="1.0"/>
-				<quads>
-					<vertex x="1" y="2"/>
-					<vertex x="-1" y="2"/>
-					<vertex x="-0.5" y="5.5"/>
-					<vertex x="0.5" y="5.5"/>
-				</quads>
 				<color r="1.0" g="0.2" b="0.1" a="1.0"/>
 				<pushmatrix>
 					<scale x="1.0" y="1.0"/>
@@ -2362,6 +2361,12 @@
 					<calllist name="circle16"/>
 				</pushmatrix>
 				<color r="0.7" g="0.7" b="0.7" a="1.0"/>
+				<quads>
+					<vertex x="1" y="2"/>
+					<vertex x="-1" y="2"/>
+					<vertex x="-0.5" y="5.5"/>
+					<vertex x="0.5" y="5.5"/>
+				</quads>
 				<pushmatrix>
 					<scale x="3.0" y="3.0"/>
 					<calllist name="circle16"/>
@@ -2478,7 +2483,7 @@
 		</renderable>
 		<link name="turret" secondary="enemywarriorturret" updateangle="0"/>
 		<aimer range="512" attack="0" leading="0" evade="1" close="64"/>
-		<ship maxveloc="120" maxaccel="240" friction="10" maxomega="0.0"/>
+		<ship maxveloc="90" maxaccel="120" friction="10" maxomega="0.0"/>
 		<damagable health="15" spawnondeath="enemyexplosion"/>
 		<team name="red"/>
 		<points value="500"/>
@@ -3072,12 +3077,13 @@
 			<body name="main">
 				<fast value="1"/>
 				<circle radius="1">
-					<friction value="0"/>
+					<friction value="1"/>
 					<restitution value="0"/>
 					<density value="1.0"/>
 					<category value="2"/>
 					<mask bit1="0" bit2="0" bit4="0"/>
 				</circle>
+				<fixedrotation value="1"/>
 			</body>
 		</collidable>
 		<renderable radius="6">
@@ -3099,7 +3105,7 @@
 				</pushmatrix>
 			</drawlist>
 		</renderable>
-		<bullet life="1.0" damage="1" spawnonimpact="gunnerbulletexplosion"/>
+		<bullet life="1.0" damage="1" spawnondeath="gunnerbulletexplosion"/>
 		<sound volume="0.25">
 			<file name="robotron-playershot.wav"/>
 		</sound>
@@ -3289,7 +3295,7 @@
 			<body name="main">
 				<fast value="1"/>
 				<circle radius="1.5">
-					<friction value="0"/>
+					<friction value="1"/>
 					<restitution value="0"/>
 					<density value="1.0"/>
 					<category value="2"/>
@@ -3534,7 +3540,7 @@
 			<body name="main">
 				<fast value="1"/>
 				<circle radius="3">
-					<friction value="0"/>
+					<friction value="1"/>
 					<restitution value="0"/>
 					<density value="1.0"/>
 					<category value="2"/>
@@ -3826,7 +3832,7 @@
 			<body name="main">
 				<fast value="1"/>
 				<circle radius="1">
-					<friction value="0"/>
+					<friction value="1"/>
 					<restitution value="0"/>
 					<density value="1.0"/>
 					<category value="2"/>
@@ -3884,7 +3890,7 @@
 				</vertex>
 			</triangle_strip>
 		</renderable>
-		<bullet life="0.8" damage="2" spawnonimpact="playerbulletexplosion"/>
+		<bullet life="0.8" damage="2" spawnondeath="playerbulletexplosion"/>
 		<sound volume="0.25">
 			<file name="stargate-playershot.wav"/>
 		</sound>
@@ -4513,12 +4519,13 @@
 			<body name="main">
 				<fast value="1"/>
 				<circle radius="1">
-					<friction value="0"/>
+					<friction value="1"/>
 					<restitution value="0"/>
 					<density value="1.0"/>
 					<category value="2"/>
 					<mask bit1="0" bit2="0" bit4="0"/>
 				</circle>
+				<fixedrotation value="1"/>
 			</body>
 		</collidable>
 		<renderable radius="6">
@@ -4540,7 +4547,7 @@
 				</pushmatrix>
 			</drawlist>
 		</renderable>
-		<bullet life="1.0" damage="1" spawnonimpact="playerbulletexplosion"/>
+		<bullet life="1.0" damage="1" spawnondeath="playerbulletexplosion"/>
 		<sound volume="0.5">
 			<file name="robotron-playershot.wav"/>
 		</sound>

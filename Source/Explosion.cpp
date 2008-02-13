@@ -165,7 +165,7 @@ Explosion::Explosion(const ExplosionTemplate &aTemplate, unsigned int aId)
 
 			// get range
 			Vector2 dir(transform.Transform(Vector2(body->GetPosition())));
-			float range = dir.Length() /*- shapes[i]->GetMaxRadius() * 0.5f*/;
+			float range = dir.Length() - 0.5f * shapes[i]->GetSweepRadius();
 
 			// skip if out of range
 			if (range > aTemplate.mRadius)

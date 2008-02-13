@@ -1017,6 +1017,10 @@ int SDL_main( int argc, char *argv[] )
 	Vector2 trackpos(0, 0);
 	Vector2 trackaim(0, 0);
 
+	// aim track position
+	Vector2 aimpos_0(0, 0);
+	Vector2 aimpos_1(0, 0);
+
 #ifdef GET_PERFORMANCE_DETAILS
 	LARGE_INTEGER perf_freq;
 	QueryPerformanceFrequency(&perf_freq);
@@ -1224,6 +1228,15 @@ int SDL_main( int argc, char *argv[] )
 				QueryPerformanceCounter(&perf_count4);
 				update_time[profile_index] += perf_count4.QuadPart - perf_count3.QuadPart;
 #endif
+
+				// for each player...
+				for (Database::Typed<PlayerController *>::Iterator itor(&Database::playercontroller); itor.IsValid(); ++itor)
+				{
+					// update target aim position
+					// TO DO: support multiple players
+					aimpos_0 = aimpos_1;
+					aimpos_1 = itor.GetValue()->mAim;
+				}
 
 				// step inputs for next turn
 				input.Step();
@@ -1548,8 +1561,8 @@ int SDL_main( int argc, char *argv[] )
 			Controller *controller = Database::controller.Get(id);
 			if (controller)
 			{
-				float x = 320 - 240 * controller->mAim.x;
-				float y = 240 - 240 * controller->mAim.y;
+				float x = 320 - 240 * Lerp(aimpos_0.x, aimpos_1.x, sim_turns);
+				float y = 240 - 240 * Lerp(aimpos_0.y, aimpos_1.y, sim_turns);
 
 				glBegin(GL_QUADS);
 
@@ -1599,13 +1612,23 @@ int SDL_main( int argc, char *argv[] )
 
 				glVertex2f(x - 1, 0);
 				glVertex2f(x + 1, 0);
+				glVertex2f(x + 1, y - 8);
+				glVertex2f(x - 1, y - 8);
+
+				glVertex2f(x - 1, y + 8);
+				glVertex2f(x + 1, y + 8);
 				glVertex2f(x + 1, 480);
 				glVertex2f(x - 1, 480);
 
 				glVertex2f(0, y - 1);
+				glVertex2f(x - 8, y - 1);
+				glVertex2f(x - 8, y + 1);
+				glVertex2f(0, y + 1);
+
+				glVertex2f(x + 8, y - 1);
 				glVertex2f(640, y - 1);
 				glVertex2f(640, y + 1);
-				glVertex2f(0, y + 1);
+				glVertex2f(x + 8, y + 1);
 
 				glEnd();
 			}

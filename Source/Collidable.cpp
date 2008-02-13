@@ -693,15 +693,23 @@ public:
 		Database::Key id1 = reinterpret_cast<Database::Key>(shape1->GetUserData());
 		Database::Key id2 = reinterpret_cast<Database::Key>(shape2->GetUserData());
 		for (Database::Typed<Collidable::Listener>::Iterator itor(Database::collidablelistener.Find(id1)); itor.IsValid(); ++itor)
-			itor.GetValue()(id1, id2, 0.0f, *point);
+			itor.GetValue()(id1, id2, shape1->GetBody()->m_sweep.t0, *point);
 		for (Database::Typed<Collidable::Listener>::Iterator itor(Database::collidablelistener.Find(id2)); itor.IsValid(); ++itor)
-			itor.GetValue()(id2, id1, 0.0f, *point);
+			itor.GetValue()(id2, id1, shape2->GetBody()->m_sweep.t0, *point);
 	};
 
 	/// Called when a contact point persists. This includes the geometry
 	/// and the forces.
 	virtual void Persist(b2ContactPoint* point)
 	{
+		b2Shape *shape1 = point->shape1;
+		b2Shape *shape2 = point->shape2;
+		Database::Key id1 = reinterpret_cast<Database::Key>(shape1->GetUserData());
+		Database::Key id2 = reinterpret_cast<Database::Key>(shape2->GetUserData());
+		for (Database::Typed<Collidable::Listener>::Iterator itor(Database::collidablelistener.Find(id1)); itor.IsValid(); ++itor)
+			itor.GetValue()(id1, id2, shape1->GetBody()->m_sweep.t0, *point);
+		for (Database::Typed<Collidable::Listener>::Iterator itor(Database::collidablelistener.Find(id2)); itor.IsValid(); ++itor)
+			itor.GetValue()(id2, id1, shape2->GetBody()->m_sweep.t0, *point);
 	}
 
 	/// Called when a contact point is removed. This includes the last
