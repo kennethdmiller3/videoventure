@@ -7,6 +7,7 @@
 #ifdef USE_POOL_ALLOCATOR
 #include <boost/pool/pool.hpp>
 
+
 // bullet pool
 static boost::pool<boost::default_user_allocator_malloc_free> pool(sizeof(Bullet));
 void *Bullet::operator new(size_t aSize)
@@ -170,7 +171,7 @@ void Bullet::Simulate(float aStep)
 	}
 }
 
-void Bullet::Kill(void)
+void Bullet::Kill(float aFraction)
 {
 		// if spawning on expire...
 		const BulletTemplate &bullet = Database::bullettemplate.Get(id);
@@ -181,13 +182,17 @@ void Bullet::Kill(void)
 			Database::Deactivate(id);
 			Database::parent.Put(id, bullet.mSpawnOnDeath);
 			Database::Activate(id);
+			if (Renderable *renderable = Database::renderable.Get(id))
+				renderable->SetFraction(aFraction);
 #else
 			// get the entity
 			Entity *entity = Database::entity.Get(id);
 			if (entity)
 			{
 				// spawn template at entity location
-				Database::Instantiate(bullet.mSpawnOnExpire, Database::owner.Get(id), entity->GetAngle(), entity->GetPosition(), entity->GetVelocity(), entity->GetOmega());
+				unsigned int spawnId = Database::Instantiate(bullet.mSpawnOnDeath, Database::owner.Get(id), entity->GetAngle(), entity->GetPosition(), entity->GetVelocity(), entity->GetOmega());
+				if (Renderable *renderable = Database::renderable.Get(spawnId))
+					renderable->SetFraction(aFraction);
 			}
 #endif
 		}
@@ -205,22 +210,24 @@ void Bullet::Kill(void)
 
 class BulletKillUpdate : public Updatable
 {
+	float mTime;
+
 public:
 #ifdef USE_POOL_ALLOCATOR
 	void *operator new(size_t aSize);
 	void operator delete(void *aPtr);
 #endif
 
-	BulletKillUpdate(unsigned int aId)
-		: Updatable(aId)
+	BulletKillUpdate(unsigned int aId, float aFraction)
+		: Updatable(aId), mTime(aFraction)
 	{
 		Activate();
 	}
 
 	void Update(float aStep)
 	{
-		if (Bullet *bullet =Database::bullet.Get(id))
-			bullet->Kill();
+		if (Bullet *bullet = Database::bullet.Get(id))
+			bullet->Kill(mTime);
 		Deactivate();
 		delete this;
 	}
@@ -241,7 +248,7 @@ void BulletKillUpdate::operator delete(void *aPtr)
 #endif
 
 
-void Bullet::Collide(unsigned int aId, unsigned int aHitId, float aTime, const b2ContactPoint &aPoint)
+void Bullet::Collide(unsigned int aId, unsigned int aHitId, float aFraction, const b2ContactPoint &aPoint)
 {
 	// do nothing if expired...
 	if (mLife <= 0)
@@ -323,13 +330,13 @@ void Bullet::Collide(unsigned int aId, unsigned int aHitId, float aTime, const b
 
 		// set fractional turn
 		if (Renderable *renderable = Database::renderable.Get(spawnId))
-			renderable->SetFraction(aTime);
+			renderable->SetFraction(aFraction);
 	}
 #endif
 
 	if (destroy)
 	{
-		BulletKillUpdate *kill = new BulletKillUpdate(id);
+		BulletKillUpdate *kill = new BulletKillUpdate(id, aFraction);
 		mLife = 0.0f;
 	}
 }

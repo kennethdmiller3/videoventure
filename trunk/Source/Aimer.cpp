@@ -132,8 +132,24 @@ Aimer::~Aimer(void)
 
 Vector2 Aimer::LeadTarget(float bulletSpeed, const Vector2 &targetPosition, const Vector2 &targetVelocity)
 {
+#if 1
+	// compute quadratic formula coefficients
+	float a = targetVelocity.Dot(targetVelocity) - bulletSpeed * bulletSpeed;
+	float b = targetPosition.Dot(targetVelocity);		// divided by 2
+	float c = targetPosition.Dot(targetPosition);
+
+	// compute the discriminant
+	float d = b * b - a * c;
+
+	// compute the time to intersection
+	float t = std::max(c / -(d > 0.0f ? b - sqrtf(d) : b), 0.0f);
+
+	// return intersection position
+	return targetPosition + t * targetVelocity;
+#else
 	// extremely simple leading based on distance
 	return targetPosition + targetVelocity * targetPosition.Length() / bulletSpeed;
+#endif
 }
 
 // Aimer Control
@@ -216,7 +232,7 @@ void Aimer::Control(float aStep)
 
 			// get range
 			Vector2 dir(transform.Transform(Vector2(body->GetPosition())));
-			float range = dir.Length() /*- 0.5f * shapes[i]->GetMaxRadius()*/;
+			float range = dir.Length() - 0.5f * shapes[i]->GetSweepRadius();
 
 			// skip if out of range
 			if (range > aimer.mRange)
