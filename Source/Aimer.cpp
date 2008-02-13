@@ -142,7 +142,19 @@ Vector2 Aimer::LeadTarget(float bulletSpeed, const Vector2 &targetPosition, cons
 	float d = b * b - a * c;
 
 	// compute the time to intersection
-	float t = std::max(c / -(d > 0.0f ? b - sqrtf(d) : b), 0.0f);
+	if (d > 0.0f)
+		b += sqrtf(d);
+	float t;
+	if (fabsf(a) > FLT_EPSILON)
+		t = -b / a;
+	else if (fabsf(b) > FLT_EPSILON)
+		t = c / -b;
+	else
+		t = 0.0f;
+
+	// prevent negative time
+	if (t < 0.0f)
+		t = 0.0f;
 
 	// return intersection position
 	return targetPosition + t * targetVelocity;
