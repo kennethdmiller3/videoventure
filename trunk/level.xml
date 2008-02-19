@@ -1058,7 +1058,6 @@
 					<restitution value="0.5"/>
 					<category value="3"/>
 				</circle>
-				<allowsleep value="0"/>
 			</body>
 		</collidable>
 		<renderable radius="5">
@@ -1467,7 +1466,6 @@
 					<restitution value="0.5"/>
 					<category value="3"/>
 				</circle>
-				<allowsleep value="0"/>
 			</body>
 		</collidable>
 		<renderable radius="6" period="1.0">
@@ -1715,7 +1713,6 @@
 					<restitution value="0.5"/>
 					<category value="3"/>
 				</circle>
-				<allowsleep value="0"/>
 			</body>
 		</collidable>
 		<renderable radius="7" period="0.6">
@@ -1913,7 +1910,6 @@
 					<restitution value="0.5"/>
 					<category value="3"/>
 				</circle>
-				<allowsleep value="0"/>
 			</body>
 		</collidable>
 		<renderable radius="8" period="0.133333">
@@ -1983,7 +1979,6 @@
 					<restitution value="0.5"/>
 					<category value="3"/>
 				</circle>
-				<allowsleep value="0"/>
 			</body>
 		</collidable>
 		<renderable radius="3" period="1.0">
@@ -2085,7 +2080,6 @@
 					<restitution value="0.5"/>
 					<category value="3"/>
 				</circle>
-				<allowsleep value="0"/>
 			</body>
 		</collidable>
 		<renderable radius="6" period="0.3">
@@ -2279,7 +2273,6 @@
 					<restitution value="0.5"/>
 					<category value="3"/>
 				</circle>
-				<allowsleep value="0"/>
 			</body>
 		</collidable>
 		<renderable radius="6" period="0.4">
@@ -2345,7 +2338,6 @@
 					<restitution value="0.5"/>
 					<category value="3"/>
 				</circle>
-				<allowsleep value="0"/>
 			</body>
 		</collidable>
 		<renderable radius="3">
@@ -2393,7 +2385,6 @@
 					<restitution value="0.5"/>
 					<category value="3"/>
 				</circle>
-				<allowsleep value="0"/>
 				<fixedrotation value="1"/>
 			</body>
 		</collidable>
@@ -2501,7 +2492,6 @@
 					<restitution value="0.5"/>
 					<category value="3"/>
 				</circle>
-				<allowsleep value="0"/>
 			</body>
 		</collidable>
 		<renderable radius="4">
@@ -2530,7 +2520,6 @@
 					<restitution value="0.5"/>
 					<category value="3"/>
 				</circle>
-				<allowsleep value="0"/>
 			</body>
 		</collidable>
 		<renderable radius="6">
@@ -2589,7 +2578,6 @@
 					<restitution value="0.5"/>
 					<category value="3"/>
 				</circle>
-				<allowsleep value="0"/>
 			</body>
 		</collidable>
 		<renderable radius="8">
@@ -2765,7 +2753,6 @@
 					<restitution value="0.5"/>
 					<category value="3"/>
 				</poly>
-				<allowsleep value="0"/>
 			</body>
 		</collidable>
 		<renderable radius="50">
@@ -2844,142 +2831,151 @@
 
 	<!-- enemy spawners -->
 
-	<entity name="enemyshipsmallspawn1">
-		<position x="-192" y="1984" angle="180"/>
-		<velocity x="0" y="-180"/>
+	<template name="enemyshipsmallspawn">
 		<spawner>
-			<spawn name="enemyshipsmall" start="0" cycle="4" track="0"/>
+			<velocity x="0" y="180"/>
+			<spawn name="enemyshipsmall" start="0" cycle="8" track="0"/>
 		</spawner>
-	</entity>
+	</template>
 
-	<entity name="enemyshipsmallspawn2">
-		<position x="192" y="1984" angle="180"/>
-		<velocity x="0" y="-180"/>
+	<template name="enemyfirebomberspawn">
 		<spawner>
-			<spawn name="enemyshipsmall" start="0" cycle="4" track="0"/>
+			<velocity x="0" y="180"/>
+			<spawn name="enemyfirebomber" start="0" cycle="32" track="0"/>
 		</spawner>
-	</entity>
+	</template>
 
-	<entity name="enemyfirebomberspawn1">
-		<position x="-128" y="1984" angle="180"/>
-		<velocity x="0" y="-180"/>
+	<template name="enemybomberspawn">
 		<spawner>
-			<spawn name="enemyfirebomber" start="0" cycle="8" track="0"/>
+			<velocity x="0" y="180"/>
+			<spawn name="enemybomber" start="1" cycle="32" track="0"/>
 		</spawner>
-	</entity>
+	</template>
 
-	<entity name="enemyfirebomberspawn2">
-		<position x="128" y="1984" angle="180"/>
-		<velocity x="0" y="-180"/>
+	<template name="enemydynamospawn">
 		<spawner>
-			<spawn name="enemyfirebomber" start="0" cycle="8" track="0"/>
+			<velocity x="0" y="180"/>
+			<spawn name="enemydynamo" start="2" cycle="32" track="0"/>
 		</spawner>
-	</entity>
+	</template>
 
-	<entity name="enemybomberspawn1">
-		<position x="-96" y="1984" angle="180"/>
-		<velocity x="0" y="-180"/>
+	<template name="enemypodspawn">
 		<spawner>
-			<spawn name="enemybomber" start="1" cycle="8" track="0"/>
+			<velocity x="0" y="180"/>
+			<spawn name="enemypod" start="3" cycle="32" track="0"/>
 		</spawner>
-	</entity>
+	</template>
 
-	<entity name="enemybomberspawn2">
-		<position x="96" y="1984" angle="180"/>
-		<velocity x="0" y="-180"/>
+	<template name="enemycommandshipspawn">
 		<spawner>
-			<spawn name="enemybomber" start="1" cycle="8" track="0"/>
+			<velocity x="0" y="180"/>
+			<spawn name="enemycommandship" start="4" cycle="32" track="0"/>
 		</spawner>
-	</entity>
+	</template>
 
-	<entity name="enemydynamospawn1">
-		<position x="-160" y="1984" angle="180"/>
-		<velocity x="0" y="-180"/>
+	<template name="enemywarriorspawn">
 		<spawner>
-			<spawn name="enemydynamo" start="2" cycle="8" track="0"/>
+			<velocity x="0" y="180"/>
+			<spawn name="enemywarrior" start="5" cycle="32" track="0"/>
 		</spawner>
-	</entity>
-
-	<entity name="enemydynamospawn2">
-		<position x="160" y="1984" angle="180"/>
-		<velocity x="0" y="-180"/>
-		<spawner>
-			<spawn name="enemydynamo" start="2" cycle="8" track="0"/>
-		</spawner>
-	</entity>
-
-	<entity name="enemypodspawn1">
-		<position x="-128" y="1984" angle="180"/>
-		<velocity x="0" y="-180"/>
-		<spawner>
-			<spawn name="enemypod" start="3" cycle="8" track="0"/>
-		</spawner>
-	</entity>
-
-	<entity name="enemypodspawn2">
-		<position x="128" y="1984" angle="180"/>
-		<velocity x="0" y="-180"/>
-		<spawner>
-			<spawn name="enemypod" start="3" cycle="8" track="0"/>
-		</spawner>
-	</entity>
-
-	<entity name="enemycommandshipspawn1">
-		<position x="-160" y="1984" angle="180"/>
-		<velocity x="0" y="-180"/>
-		<spawner>
-			<spawn name="enemycommandship" start="4" cycle="8" track="0"/>
-		</spawner>
-	</entity>
-
-	<entity name="enemycommandshipspawn2">
-		<position x="160" y="1984" angle="180"/>
-		<velocity x="0" y="-180"/>
-		<spawner>
-			<spawn name="enemycommandship" start="4" cycle="8" track="0"/>
-		</spawner>
-	</entity>
-
-	<entity name="enemywarriorspawn1">
-		<position x="-160" y="1984" angle="180"/>
-		<velocity x="0" y="-180"/>
-		<spawner>
-			<spawn name="enemywarrior" start="5" cycle="8" track="0"/>
-		</spawner>
-	</entity>
-
-	<entity name="enemywarriorspawn2">
-		<position x="160" y="1984" angle="180"/>
-		<velocity x="0" y="-180"/>
-		<spawner>
-			<spawn name="enemywarrior" start="5" cycle="8" track="0"/>
-		</spawner>
-	</entity>
+	</template>
 	
-	<entity name="enemyshipspawn1">
-		<position x="-64" y="1984" angle="180"/>
-		<velocity x="0" y="-180"/>
+	<template name="enemyshipspawn">
 		<spawner>
-			<spawn name="enemyship" start="6" cycle="8" track="0"/>
+			<velocity x="0" y="180"/>
+			<spawn name="enemyship" start="6" cycle="32" track="0"/>
 		</spawner>
-	</entity>
+	</template>
 
-	<entity name="enemyshipspawn2">
-		<position x="64" y="1984" angle="180"/>
-		<velocity x="0" y="-180"/>
+	<template name="enemycarrierspawn">
 		<spawner>
-			<spawn name="enemyship" start="6" cycle="8" track="0"/>
+			<velocity x="0" y="120"/>
+			<spawn name="enemycarrier" start="32" cycle="32" track="1"/>
 		</spawner>
-	</entity>
+	</template>
 
-	<entity name="enemycarrierspawn">
+	<template name="enemyspawncluster">
+		<link name="enemyshipsmallspawn1" secondary="enemyshipsmallspawn">
+			<offset x="-192" y="0"/>
+		</link>
+		<link name="enemyshipsmallspawn2" secondary="enemyshipsmallspawn">
+			<offset x="192" y="0"/>
+		</link>
+		<link name="enemyfirebomberspawn1" secondary="enemyfirebomberspawn">
+			<offset x="-128" y="0"/>
+		</link>
+		<link name="enemyfirebomberspawn2" secondary="enemyfirebomberspawn">
+			<offset x="128" y="0"/>
+		</link>
+		<link name="enemybomberspawn1" secondary="enemybomberspawn">
+			<offset x="-96" y="0"/>
+		</link>
+		<link name="enemybomberspawn2" secondary="enemybomberspawn">
+			<offset x="96" y="0"/>
+		</link>
+		<link name="enemydynamospawn1" secondary="enemydynamospawn">
+			<offset x="-160" y="0"/>
+		</link>
+		<link name="enemydynamospawn2" secondary="enemydynamospawn">
+			<offset x="160" y="0"/>
+		</link>
+		<link name="enemypodspawn1" secondary="enemypodspawn">
+			<offset x="-128" y="0"/>
+		</link>
+		<link name="enemypodspawn2" secondary="enemypodspawn">
+			<offset x="128" y="0"/>
+		</link>
+		<link name="enemycommandshipspawn1" secondary="enemycommandshipspawn">
+			<offset x="-160" y="0"/>
+		</link>
+		<link name="enemycommandshipspawn2" secondary="enemycommandshipspawn">
+			<offset x="160" y="0"/>
+		</link>
+		<link name="enemywarriorspawn1" secondary="enemywarriorspawn">
+			<offset x="-160" y="0"/>
+		</link>
+		<link name="enemywarriorspawn2" secondary="enemywarriorspawn">
+			<offset x="160" y="0"/>
+		</link>
+		<link name="enemyshipspawn1" secondary="enemyshipspawn">
+			<offset x="-64" y="0"/>
+		</link>
+		<link name="enemyshipspawn2" secondary="enemyshipspawn">
+			<offset x="64" y="0"/>
+		</link>
+		<link name="enemycarrierspawn" secondary="enemycarrierspawn">
+			<offset x="0" y="0"/>
+		</link>
+	</template>
+
+	<entity name="enemyspawncluster1">
 		<position x="0" y="1984" angle="180"/>
-		<velocity x="0" y="-120"/>
 		<spawner>
-			<spawn name="enemycarrier" start="0" cycle="32" track="0"/>
+			<spawn name="enemyspawncluster" start="0"/>
 		</spawner>
 	</entity>
-	
+
+	<entity name="enemyspawncluster2">
+		<position x="1984" y="0" angle="90"/>
+		<spawner>
+			<spawn name="enemyspawncluster" start="8"/>
+		</spawner>
+	</entity>
+
+	<entity name="enemyspawncluster3">
+		<position x="0" y="-1984" angle="0"/>
+		<spawner>
+			<spawn name="enemyspawncluster" start="16"/>
+		</spawner>
+	</entity>
+
+	<entity name="enemyspawncluster4">
+		<position x="-1984" y="0" angle="270"/>
+		<spawner>
+			<spawn name="enemyspawncluster" start="24"/>
+		</spawner>
+	</entity>
+
 	<!--
 	<entity name="enemyexplosionspawn1">
 		<position x="64" y="0" angle="0"/>
@@ -3148,7 +3144,6 @@
 					<mask bit2="0"/>
 					<group value="-1"/>
 				</circle>
-				<allowsleep value="0"/>
 			</body>
 		</collidable>
 		<renderable radius="4">
@@ -3406,7 +3401,6 @@
 					<category value="1"/>
 					<mask bit2="0"/>
 				</circle>
-				<allowsleep value="0"/>
 			</body>
 		</collidable>
 		<weapon>
@@ -3708,7 +3702,6 @@
 					<mask bit2="0"/>
 					<group value="-1"/>
 				</circle>
-				<allowsleep value="0"/>
 			</body>
 		</collidable>
 		<renderable>
@@ -4143,7 +4136,6 @@
 					<mask bit2="0" bit4="0"/>
 				</circle>
 				<damping linear="5.0" angular="5.0"/>
-				<allowsleep value="0"/>
 			</body>
 		</collidable>
 		<renderable radius="8" period="0.05">
@@ -4185,7 +4177,6 @@
 					<mask bit2="0"/>
 					<group value="-1"/>
 				</box>
-				<allowsleep value="0"/>
 			</body>
 		</collidable>
 		<renderable radius="8">
@@ -4627,7 +4618,6 @@
 					<restitution value="0.5"/>
 					<category value="1"/>
 				</circle>
-				<allowsleep value="0"/>
 			</body>
 		</collidable>
 		<renderable radius="5">
