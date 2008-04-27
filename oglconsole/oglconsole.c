@@ -859,7 +859,7 @@ int OGLCONSOLE_SDLEvent(SDL_Event *e)
     if (e->type == SDL_KEYDOWN)
     {
         /* Reject most modifier keys TODO: Add some accelerator keys? */
-        if (e->key.keysym.mod & ~(KMOD_CAPITALIZE)) return 0;
+        //if (e->key.keysym.mod & ~(KMOD_CAPITALIZE)) return 0;
 
         /* Check for hide key */
         if (e->key.keysym.sym == '`')

@@ -112,7 +112,7 @@ bool CollidableTemplate::ProcessShapeItem(const TiXmlElement *element, b2ShapeDe
 		{
 			int category = 0;
 			element->QueryIntAttribute("value", &category);
-			shape.categoryBits = (category >= 0) ? (1<<category) : 0;
+			shape.filter.categoryBits = (category >= 0) ? (1<<category) : 0;
 		}
 		return true;
 
@@ -122,21 +122,21 @@ bool CollidableTemplate::ProcessShapeItem(const TiXmlElement *element, b2ShapeDe
 			for (int i = 0; i < 16; i++)
 			{
 				sprintf(buf, "bit%d", i);
-				int bit = (shape.maskBits & (1 << i)) != 0;
+				int bit = (shape.filter.maskBits & (1 << i)) != 0;
 				element->QueryIntAttribute(buf, &bit);
 				if (bit)
-					shape.maskBits |= (1 << i);
+					shape.filter.maskBits |= (1 << i);
 				else
-					shape.maskBits &= ~(1 << i);
+					shape.filter.maskBits &= ~(1 << i);
 			}
 		}
 		return true;
 
 	case 0x5fb91e8c /* "group" */:
 		{
-			int group = shape.groupIndex;
+			int group = shape.filter.groupIndex;
 			element->QueryIntAttribute("value", &group);
-			shape.groupIndex = short(group);
+			shape.filter.groupIndex = short(group);
 		}
 		return true;
 
@@ -314,11 +314,6 @@ bool CollidableTemplate::ProcessBodyItem(const TiXmlElement *element, b2BodyDef 
 
 bool CollidableTemplate::ConfigureBody(const TiXmlElement *element, b2BodyDef &body)
 {
-	// set static flag
-	int isstatic = body.type == b2BodyDef::e_staticBody;
-	element->QueryIntAttribute("static", &isstatic);
-	body.type = isstatic ? b2BodyDef::e_staticBody : b2BodyDef::e_dynamicBody;
-
 	// process child elements
 	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
@@ -605,7 +600,6 @@ bool CollidableTemplate::Configure(const TiXmlElement *element, unsigned int id)
 				unsigned int bodyid = Hash(child->Attribute("name"));
 				Database::Typed<b2BodyDef> &bodies = Database::collidabletemplatebody.Open(id);
 				b2BodyDef &body = bodies.Open(bodyid);
-				body.type = b2BodyDef::e_dynamicBody;
 				CollidableTemplate::ConfigureBody(child, body);
 				bodies.Close(bodyid);
 				Database::collidabletemplatebody.Close(id);
@@ -686,35 +680,35 @@ public:
 
 	/// Called when a contact point is added. This includes the geometry
 	/// and the forces.
-	virtual void Add(b2ContactPoint* point)
+	virtual void Add(const b2ContactPoint* point)
 	{
 		b2Shape *shape1 = point->shape1;
 		b2Shape *shape2 = point->shape2;
 		Database::Key id1 = reinterpret_cast<Database::Key>(shape1->GetUserData());
 		Database::Key id2 = reinterpret_cast<Database::Key>(shape2->GetUserData());
 		for (Database::Typed<Collidable::Listener>::Iterator itor(Database::collidablelistener.Find(id1)); itor.IsValid(); ++itor)
-			itor.GetValue()(id1, id2, shape1->GetBody()->m_sweep.t0, *point);
+			itor.GetValue()(id1, id2, 0.0f /*shape1->GetBody()->m_sweep.t0*/, *point);
 		for (Database::Typed<Collidable::Listener>::Iterator itor(Database::collidablelistener.Find(id2)); itor.IsValid(); ++itor)
-			itor.GetValue()(id2, id1, shape2->GetBody()->m_sweep.t0, *point);
+			itor.GetValue()(id2, id1, 0.0f /*shape2->GetBody()->m_sweep.t0*/, *point);
 	};
 
 	/// Called when a contact point persists. This includes the geometry
 	/// and the forces.
-	virtual void Persist(b2ContactPoint* point)
+	virtual void Persist(const b2ContactPoint* point)
 	{
 		b2Shape *shape1 = point->shape1;
 		b2Shape *shape2 = point->shape2;
 		Database::Key id1 = reinterpret_cast<Database::Key>(shape1->GetUserData());
 		Database::Key id2 = reinterpret_cast<Database::Key>(shape2->GetUserData());
 		for (Database::Typed<Collidable::Listener>::Iterator itor(Database::collidablelistener.Find(id1)); itor.IsValid(); ++itor)
-			itor.GetValue()(id1, id2, shape1->GetBody()->m_sweep.t0, *point);
+			itor.GetValue()(id1, id2, 0.0f /*shape1->GetBody()->m_sweep.t0*/, *point);
 		for (Database::Typed<Collidable::Listener>::Iterator itor(Database::collidablelistener.Find(id2)); itor.IsValid(); ++itor)
-			itor.GetValue()(id2, id1, shape2->GetBody()->m_sweep.t0, *point);
+			itor.GetValue()(id2, id1, 0.0f /*shape2->GetBody()->m_sweep.t0*/, *point);
 	}
 
 	/// Called when a contact point is removed. This includes the last
 	/// computed geometry and forces.
-	virtual void Remove(b2ContactPoint* point)
+	virtual void Remove(const b2ContactPoint* point)
 	{
 	}
 }
@@ -1025,7 +1019,7 @@ void Collidable::WorldInit(void)
 	world = new b2World(worldAABB, gravity, doSleep);
 
 	// set contact listener
-	world->SetListener(&contactListener);
+	world->SetContactListener(&contactListener);
 
 #ifdef COLLIDABLE_DEBUG_DRAW
 	// set debug render
@@ -1064,7 +1058,7 @@ void Collidable::WorldDone(void)
 void Collidable::CollideAll(float aStep)
 {
 	world->Step(aStep, 16);
-	world->m_broadPhase->Validate();
+	world->Validate();
 
 	// for each body...
 	for (b2Body* body = world->GetBodyList(); body; body = body->GetNext())
