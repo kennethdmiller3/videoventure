@@ -18,6 +18,9 @@
 #include <map>
 #include <deque>
 
+// Fast floating-point
+#include "xs_Float.h"
+
 // SDL includes
 #include "SDL.h"
 #include "SDL_opengl.h"
@@ -71,63 +74,6 @@ inline float Lerp(float v0, float v1, float s)
 	return v0 + (v1 - v0) * s;
 }
 
-
-inline int round_int (double x)
-{
-#ifdef _MSC_VER
-	const float round_to_nearest = 0.5f;
-	int i;
-	__asm
-	{
-		fld x
-		fadd st, st (0)
-		fadd round_to_nearest
-		fistp i
-		sar i, 1
-	}
-	return (i);
-#else
-	return (int)x;
-#endif
-}
-
-inline int floor_int (double x)
-{
-#ifdef _MSC_VER
-	const float round_towards_m_i = -0.5f;
-	int i;
-	__asm
-	{
-		fld x
-		fadd st, st (0)
-		fadd round_towards_m_i
-		fistp i
-		sar i, 1
-	}
-	return (i);
-#else
-	return (int)floor(x);
-#endif
-}
-
-inline int ceil_int (double x)
-{
-#ifdef _MSC_VER
-	const float round_towards_p_i = -0.5f;
-	int i;
-	__asm
-	{
-		fld x
-		fadd st, st (0)
-		fsubr round_towards_p_i
-		fistp i
-		sar i, 1
-	}
-	return (-i);
-#else
-	return (int)ceil(x);
-#endif
-}
 
 // loader
 void ProcessTemplateItem(const TiXmlElement *element, unsigned int template_id);

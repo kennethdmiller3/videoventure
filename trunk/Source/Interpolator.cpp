@@ -195,7 +195,7 @@ bool InterpolatorTemplate::Apply(float aTarget[], float aTime, int &aIndex)
 		float im = Lerp(float(i0), float(i1), (aTime - t0) / (t1 - t0));
 
 		// if time is before segment start
-		int iL = floor_int(im);
+		int iL = xs_FloorToInt(im);
 		float tL = mKeys[iL * mStride];
 		if (aTime < tL - FLT_EPSILON)
 		{
@@ -206,7 +206,7 @@ bool InterpolatorTemplate::Apply(float aTarget[], float aTime, int &aIndex)
 		}
 
 		// if time is after segment end...
-		int iH = ceil_int(im);
+		int iH = xs_CeilToInt(im);
 		float tH = mKeys[iH * mStride];
 		if (aTime > tH + FLT_EPSILON)
 		{
