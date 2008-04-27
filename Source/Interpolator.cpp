@@ -224,7 +224,7 @@ bool InterpolatorTemplate::Apply(float aTarget[], float aTime, int &aIndex)
 	// interpolate the value
 	float *key0 = mKeys + aIndex * mStride;
 	float *key1 = key0 + mStride;
-	float t = (aTime - key0[0]) / (key1[0] - key0[0]);
+	float t = (aTime - key0[0]) / (key1[0] - key0[0] + FLT_EPSILON);
 	for (int element = 0; element < mWidth; element++)
 	{
 		aTarget[element] = Lerp(key0[1 + element], key1[1 + element], t);
