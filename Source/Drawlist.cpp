@@ -1532,7 +1532,7 @@ void ExecuteDrawItems(const unsigned int buffer[], size_t count, float param, un
 					Matrix2 transform(offset * Matrix2(Lerp(a0, a1, r), Vector2(Lerp(x0, x1, r), Lerp(y0, y1, r))));
 
 					// set particle state
-					int i0 = int(t) % repeat;
+					int i0 = xs_FloorToInt(t) % repeat;
 					unsigned int subid = Hash(&i0, sizeof(i0), name);
 					variables.Put(subid+0, transform.p.x);
 					variables.Put(subid+1, transform.p.y);
