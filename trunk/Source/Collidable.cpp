@@ -27,7 +27,8 @@ namespace Database
 	Typed<std::vector<b2PolygonDef> > collidabletemplatepolygon(0x8ce45056 /* "collidabletemplatepolygon" */);
 	Typed<Collidable *> collidable(0x74e9dbae /* "collidable" */);
 	Typed<Typed<b2Body *> > collidablebody(0x6ccc2b62 /* "collidablebody" */);
-	Typed<Typed<Collidable::Listener> > collidablelistener(0xf4c15fb2 /* "collidablelistener" */);
+	Typed<Typed<Collidable::Listener> > collidablecontactadd(0x7cf2c45d /* "collidablecontactadd" */);
+	Typed<Typed<Collidable::Listener> > collidablecontactremove(0x95ed5aba /* "collidablecontactremove" */);
 
 	namespace Loader
 	{
@@ -75,7 +76,7 @@ namespace Database
 					collidable->RemoveFromWorld();
 					delete collidable;
 					Database::collidable.Delete(aId);
-					Database::collidablelistener.Delete(aId);
+					Database::collidablecontactadd.Delete(aId);
 				}
 			}
 		}
@@ -686,9 +687,9 @@ public:
 		b2Shape *shape2 = point->shape2;
 		Database::Key id1 = reinterpret_cast<Database::Key>(shape1->GetUserData());
 		Database::Key id2 = reinterpret_cast<Database::Key>(shape2->GetUserData());
-		for (Database::Typed<Collidable::Listener>::Iterator itor(Database::collidablelistener.Find(id1)); itor.IsValid(); ++itor)
+		for (Database::Typed<Collidable::Listener>::Iterator itor(Database::collidablecontactadd.Find(id1)); itor.IsValid(); ++itor)
 			itor.GetValue()(id1, id2, 0.0f /*shape1->GetBody()->m_sweep.t0*/, *point);
-		for (Database::Typed<Collidable::Listener>::Iterator itor(Database::collidablelistener.Find(id2)); itor.IsValid(); ++itor)
+		for (Database::Typed<Collidable::Listener>::Iterator itor(Database::collidablecontactadd.Find(id2)); itor.IsValid(); ++itor)
 			itor.GetValue()(id2, id1, 0.0f /*shape2->GetBody()->m_sweep.t0*/, *point);
 	};
 
@@ -696,20 +697,20 @@ public:
 	/// and the forces.
 	virtual void Persist(const b2ContactPoint* point)
 	{
-		b2Shape *shape1 = point->shape1;
-		b2Shape *shape2 = point->shape2;
-		Database::Key id1 = reinterpret_cast<Database::Key>(shape1->GetUserData());
-		Database::Key id2 = reinterpret_cast<Database::Key>(shape2->GetUserData());
-		for (Database::Typed<Collidable::Listener>::Iterator itor(Database::collidablelistener.Find(id1)); itor.IsValid(); ++itor)
-			itor.GetValue()(id1, id2, 0.0f /*shape1->GetBody()->m_sweep.t0*/, *point);
-		for (Database::Typed<Collidable::Listener>::Iterator itor(Database::collidablelistener.Find(id2)); itor.IsValid(); ++itor)
-			itor.GetValue()(id2, id1, 0.0f /*shape2->GetBody()->m_sweep.t0*/, *point);
 	}
 
 	/// Called when a contact point is removed. This includes the last
 	/// computed geometry and forces.
 	virtual void Remove(const b2ContactPoint* point)
 	{
+		b2Shape *shape1 = point->shape1;
+		b2Shape *shape2 = point->shape2;
+		Database::Key id1 = reinterpret_cast<Database::Key>(shape1->GetUserData());
+		Database::Key id2 = reinterpret_cast<Database::Key>(shape2->GetUserData());
+		for (Database::Typed<Collidable::Listener>::Iterator itor(Database::collidablecontactremove.Find(id1)); itor.IsValid(); ++itor)
+			itor.GetValue()(id1, id2, 0.0f /*shape1->GetBody()->m_sweep.t0*/, *point);
+		for (Database::Typed<Collidable::Listener>::Iterator itor(Database::collidablecontactremove.Find(id2)); itor.IsValid(); ++itor)
+			itor.GetValue()(id2, id1, 0.0f /*shape2->GetBody()->m_sweep.t0*/, *point);
 	}
 }
 contactListener;

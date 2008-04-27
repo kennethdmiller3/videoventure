@@ -118,18 +118,18 @@ Bullet::Bullet(const BulletTemplate &aTemplate, unsigned int aId)
 : Simulatable(aId)
 , mLife(aTemplate.mLife)
 {
-	Database::Typed<Collidable::Listener> &listeners = Database::collidablelistener.Open(id);
+	Database::Typed<Collidable::Listener> &listeners = Database::collidablecontactadd.Open(id);
 	Collidable::Listener &listener = listeners.Open(Database::Key(this));
 	listener.bind(this, &Bullet::Collide);
 	listeners.Close(Database::Key(this));
-	Database::collidablelistener.Close(id);
+	Database::collidablecontactadd.Close(id);
 }
 
 Bullet::~Bullet(void)
 {
-	Database::Typed<Collidable::Listener> &listeners = Database::collidablelistener.Open(id);
+	Database::Typed<Collidable::Listener> &listeners = Database::collidablecontactadd.Open(id);
 	listeners.Delete(Database::Key(this));
-	Database::collidablelistener.Close(id);
+	Database::collidablecontactadd.Close(id);
 }
 
 void Bullet::Simulate(float aStep)

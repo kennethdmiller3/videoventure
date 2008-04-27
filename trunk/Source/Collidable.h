@@ -108,5 +108,6 @@ namespace Database
 	extern Typed<Typed<b2BodyDef> > collidabletemplatebody;
 	extern Typed<Collidable *> collidable;
 	extern Typed<Typed<b2Body *> > collidablebody;
-	extern Typed<Typed<Collidable::Listener> > collidablelistener;
+	extern Typed<Typed<Collidable::Listener> > collidablecontactadd;
+	extern Typed<Typed<Collidable::Listener> > collidablecontactremove;
 }

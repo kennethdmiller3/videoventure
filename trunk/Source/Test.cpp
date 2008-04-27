@@ -697,6 +697,8 @@ int ProcessCommand( unsigned int aCommand, char *aParam[], int aCount )
 		if (aCount >= 1)
 		{
 			RENDER_MOTIONBLUR = atoi(aParam[0]);
+			if (RENDER_MOTIONBLUR < 1)
+				RENDER_MOTIONBLUR = 1;
 			return 1;
 		}
 		else
