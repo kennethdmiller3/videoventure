@@ -143,7 +143,7 @@ Explosion::Explosion(const ExplosionTemplate &aTemplate, unsigned int aId)
 		for (int32 i = 0; i < count; ++i)
 		{
 			// get the parent body
-			b2Body* body = shapes[i]->m_body;
+			b2Body* body = shapes[i]->GetBody();
 
 			// get the collidable id
 			unsigned int targetId = reinterpret_cast<unsigned int>(body->GetUserData());

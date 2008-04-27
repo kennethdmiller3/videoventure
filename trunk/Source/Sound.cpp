@@ -312,7 +312,7 @@ static const float averagefilter = 1.0f * timestep;
 static const float minlevel = 32768.0f*32768.0f;
 static float level = minlevel;
 static const float levelfilter = 1.0f * timestep;
-static const float postscale = 65534.0f / float(M_PI);
+static const float postscale = 32767.0f;
 
 void Sound::Mix(void *userdata, Uint8 *stream, int len)
 {
@@ -439,8 +439,24 @@ void Sound::Mix(void *userdata, Uint8 *stream, int len)
 		{
 			// add volume-scaled samples
 			// (lesser of remaining destination and remaining source)
+#if 1
 			for (int amount = std::min(dstend - dst, srcend - src); amount > 0; --amount)
 				*dst++ += float(*src++) * volume;
+#else
+			// Duff's device :)
+			register int count = std::min(dstend - dst, srcend - src);
+			register int n = (count + 7) / 8;
+			switch (count % 8)
+			case 0: do { *dst++ += float(*src++) * volume;
+			case 7:      *dst++ += float(*src++) * volume;
+			case 6:      *dst++ += float(*src++) * volume;
+			case 5:      *dst++ += float(*src++) * volume;
+			case 4:      *dst++ += float(*src++) * volume;
+			case 3:      *dst++ += float(*src++) * volume;
+			case 2:      *dst++ += float(*src++) * volume;
+			case 1:      *dst++ += float(*src++) * volume;
+					   } while (--n > 0);
+#endif
 
 			// if reaching the end...
 			if (src >= srcend)
@@ -493,14 +509,16 @@ void Sound::Mix(void *userdata, Uint8 *stream, int len)
 	{
 		float mix0 = *src++;
 		float mix1 = *src++;
-		average0 += (mix0 -= average0) * averagefilter;
-		average1 += (mix1 -= average1) * averagefilter;
+		mix0 -= average0;
+		mix1 -= average1;
+		average0 += mix0 * averagefilter;
+		average1 += mix1 * averagefilter;
 		level += (mix0 * mix0 + mix1 * mix1 - level) * levelfilter;
 		if (level < minlevel)
 			level = minlevel;
 		float prescale = InvSqrt(level);
-		*dst++ = short(atanf(mix0 * prescale) * postscale);
-		*dst++ = short(atanf(mix1 * prescale) * postscale);
+		*dst++ = short(tanhf(mix0 * prescale) * postscale);
+		*dst++ = short(tanhf(mix1 * prescale) * postscale);
 	}
 
 #ifdef PROFILE_SOUND_MIXER

@@ -57,6 +57,10 @@ const char *INPUT_CONFIG = "input.xml";
 // default level configuration
 const char *LEVEL_CONFIG = "level.xml";
 
+// default record configuration
+const char *RECORD_CONFIG = "record.xml";
+bool record = false;
+bool playback = false;
 
 // console
 OGLCONSOLE_Console console;
@@ -301,7 +305,7 @@ bool init()
 	fmt.freq = AUDIO_FREQUENCY;
 	fmt.format = AUDIO_S16SYS;
 	fmt.channels = 2;
-	fmt.samples = AUDIO_FREQUENCY / SIMULATION_RATE;
+	fmt.samples = Uint16(AUDIO_FREQUENCY / SIMULATION_RATE);
 	fmt.callback = Sound::Mix;
 	fmt.userdata = &listenerpos;
 
@@ -310,6 +314,12 @@ bool init()
 		DebugPrint("Unable to open audio: %s\n", SDL_GetError());
 	}
 	SDL_PauseAudio(0);
+
+#ifdef _MSC_VER
+	// turn on floating-point exceptions
+	unsigned int prev;
+	_controlfp_s(&prev, unsigned int(~(_EM_ZERODIVIDE|_EM_INVALID)), _MCW_EM);
+#endif
 
 	// success!
 	return true;    
@@ -630,6 +640,32 @@ int ProcessCommand( unsigned int aCommand, char *aParam[], int aCount )
 		else
 		{
 			OGLCONSOLE_Output(console, "level: %s\n", LEVEL_CONFIG);
+			return 0;
+		}
+
+	case 0x593058cc /* "record" */:
+		if (aCount >= 1)
+		{
+			RECORD_CONFIG = aParam[0];
+			record = true;
+			return 1;
+		}
+		else
+		{
+			OGLCONSOLE_Output(console, "record: %s\n", RECORD_CONFIG);
+			return 0;
+		}
+
+	case 0xcf8a43ec /* "playback" */:
+		if (aCount >= 1)
+		{
+			RECORD_CONFIG = aParam[0];
+			playback = true;
+			return 1;
+		}
+		else
+		{
+			OGLCONSOLE_Output(console, "playback: %s\n", RECORD_CONFIG);
 			return 0;
 		}
 
@@ -1009,9 +1045,28 @@ int SDL_main( int argc, char *argv[] )
 	bool paused = false;
 	bool singlestep = false;
 
-	PlaySound(0x94326baa /* "startup" */);
+	// input logging
+	TiXmlDocument inputlog(RECORD_CONFIG);
+	TiXmlElement *inputlogroot;
+	TiXmlElement *inputlognext;
+	if (playback)
+	{
+		inputlog.LoadFile();
+		inputlogroot = inputlog.RootElement();
+		inputlognext = inputlogroot->FirstChildElement();
+	}
+	else if (record)
+	{
+		inputlogroot = inputlog.LinkEndChild(new TiXmlElement("journal"))->ToElement();
+		inputlognext = NULL;
+	}
+	else
+	{
+		inputlogroot = NULL;
+		inputlognext = NULL;
+	}
 
-	DebugPrint("Simulating at %dHz (x%f)\n", SIMULATION_RATE, TIME_SCALE);
+	PlaySound(0x94326baa /* "startup" */);
 
 	// camera track position
 	Vector2 trackpos(0, 0);
@@ -1039,6 +1094,8 @@ int SDL_main( int argc, char *argv[] )
 	// create a new draw list
 	GLuint debugdraw = glGenLists(1);
 #endif
+
+	DebugPrint("Simulating at %dHz (x%f)\n", SIMULATION_RATE, TIME_SCALE);
 
 	// wait for user exit
 	do
@@ -1095,6 +1152,8 @@ int SDL_main( int argc, char *argv[] )
 			case SDL_MOUSEMOTION:
 				input.OnAxis( INPUT_TYPE_MOUSE_AXIS, event.motion.which, 0, float(event.motion.x * 2 - SCREEN_WIDTH) / float(SCREEN_HEIGHT) );
 				input.OnAxis( INPUT_TYPE_MOUSE_AXIS, event.motion.which, 1, float(event.motion.y * 2 - SCREEN_HEIGHT) / float(SCREEN_HEIGHT) );
+				input.OnAxis( INPUT_TYPE_MOUSE_AXIS, event.motion.which, 2, event.motion.xrel / 32.0f );
+				input.OnAxis( INPUT_TYPE_MOUSE_AXIS, event.motion.which, 3, event.motion.yrel / 32.0f );
 				break;
 			case SDL_MOUSEBUTTONDOWN:
 				input.OnPress( INPUT_TYPE_MOUSE_BUTTON, event.button.which, event.button.button );
@@ -1179,8 +1238,70 @@ int SDL_main( int argc, char *argv[] )
 				// update database
 				Database::Update();
 
-				// update input values
-				input.Update();
+				if (playback)
+				{
+					// get the next turn value
+					int turn = -1;
+					inputlognext->QueryIntAttribute("turn", &turn);
+
+					// if the turn matches the simulation turn...
+					if ((unsigned int)turn == sim_turn)
+					{
+						// update the control values
+						inputlognext->QueryIntAttribute("move_x", reinterpret_cast<int *>(&input.output[Input::MOVE_HORIZONTAL]));
+						inputlognext->QueryIntAttribute("move_y", reinterpret_cast<int *>(&input.output[Input::MOVE_VERTICAL]));
+						inputlognext->QueryIntAttribute("aim_x", reinterpret_cast<int *>(&input.output[Input::AIM_HORIZONTAL]));
+						inputlognext->QueryIntAttribute("aim_y", reinterpret_cast<int *>(&input.output[Input::AIM_VERTICAL]));
+						inputlognext->QueryIntAttribute("fire1", reinterpret_cast<int *>(&input.output[Input::FIRE_PRIMARY]));
+						inputlognext->QueryIntAttribute("fire2", reinterpret_cast<int *>(&input.output[Input::FIRE_SECONDARY]));
+
+						// go to the next entry
+						inputlognext = inputlognext->NextSiblingElement();
+
+						// quit if out of entries
+						if (!inputlognext)
+							quit = true;
+					}
+				}
+				else if (record)
+				{
+					// save original input values
+					float prev[Input::NUM_LOGICAL];
+					memcpy(prev, input.output, sizeof(prev));
+
+					// update input values
+					input.Update();
+
+					// if any controls have changed...
+					if (memcmp(prev, input.output, sizeof(prev)) != 0)
+					{
+						// create an input turn entry
+						TiXmlElement item( "input" );
+						item.SetAttribute( "turn", sim_turn );
+
+						// add changed control values
+						if (input.output[Input::MOVE_HORIZONTAL] != prev[Input::MOVE_HORIZONTAL])
+							item.SetAttribute( "move_x", *reinterpret_cast<int *>(&input.output[Input::MOVE_HORIZONTAL]));
+						if (input.output[Input::MOVE_VERTICAL] != prev[Input::MOVE_VERTICAL])
+							item.SetAttribute( "move_y", *reinterpret_cast<int *>(&input.output[Input::MOVE_VERTICAL]));
+						if (input.output[Input::AIM_HORIZONTAL] != prev[Input::AIM_HORIZONTAL])
+							item.SetAttribute( "aim_x", *reinterpret_cast<int *>(&input.output[Input::AIM_HORIZONTAL]));
+						if (input.output[Input::AIM_VERTICAL] != prev[Input::AIM_VERTICAL])
+							item.SetAttribute( "aim_y", *reinterpret_cast<int *>(&input.output[Input::AIM_VERTICAL]));
+						if (input.output[Input::FIRE_PRIMARY] != prev[Input::FIRE_PRIMARY])
+							item.SetAttribute( "fire1", *reinterpret_cast<int *>(&input.output[Input::FIRE_PRIMARY]));
+						if (input.output[Input::FIRE_SECONDARY] != prev[Input::FIRE_SECONDARY])
+							item.SetAttribute( "fire2", *reinterpret_cast<int *>(&input.output[Input::FIRE_SECONDARY]));
+
+						// add the new input entry
+						inputlogroot->InsertEndChild(item);
+					}
+				}
+				else
+				{
+					// update input values
+					input.Update();
+				}
 
 
 				// CONTROL PHASE
@@ -1761,6 +1882,12 @@ int SDL_main( int argc, char *argv[] )
 	while( !quit );
 
 	DebugPrint("Quitting...\n");
+
+	if (record)
+	{
+		// save input log
+		inputlog.SaveFile();
+	}
 
 	// stop audio
 	SDL_PauseAudio(1);

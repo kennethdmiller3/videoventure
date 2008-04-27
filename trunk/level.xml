@@ -3542,7 +3542,7 @@
 				</circle>
 			</body>
 		</collidable>
-		<renderable radius="16" period="0.4">
+		<renderable radius="16">
 			<drawlist>
 				<pushmatrix>
 					<color r="1.0" g="1.0" b="1.0" a="1.0"/>
@@ -3836,12 +3836,14 @@
 		</collidable>
 		<renderable radius="240">
 			<triangle_strip>
-				<color r="1.0" g="1.0" b="1.0" a="1.0"/>
-				<vertex x="0" y="3"/>
-				<vertex x="0.75" y="1"/>
-				<vertex x="-0.75" y="1"/>
-				<vertex x="0.75" y="-1"/>
-				<vertex x="-0.75" y="-1"/>
+				<drawlist>
+					<color r="1.0" g="1.0" b="1.0" a="1.0"/>
+					<vertex x="0" y="3"/>
+					<vertex x="0.75" y="1"/>
+					<vertex x="-0.75" y="1"/>
+					<vertex x="0.75" y="-1"/>
+					<vertex x="-0.75" y="-1"/>
+				</drawlist>
 				<color>
 					<key time="0.0" r="1.0" g="0.0" b="1.0" a="1.0"/>
 					<key time="0.1" r="0.0" g="1.0" b="1.0" a="1.0"/>

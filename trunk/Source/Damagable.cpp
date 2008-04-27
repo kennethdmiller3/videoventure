@@ -174,7 +174,7 @@ void Damagable::Damage(unsigned int aSourceId, float aDamage)
 	if (mHealth <= 0)
 	{
 		// register a kill update
-		DamagableKillUpdate *kill = new DamagableKillUpdate(id);
+		new DamagableKillUpdate(id);
 
 		// notify all source kill listeners
 		for (Database::Typed<KillListener>::Iterator itor(Database::killlistener.Find(aSourceId)); itor.IsValid(); ++itor)

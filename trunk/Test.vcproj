@@ -21,7 +21,7 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(SolutionDir)$(ConfigurationName)\$(ProjectName)"
 			ConfigurationType="1"
-			UseOfATL="1"
+			UseOfATL="0"
 			CharacterSet="1"
 			>
 			<Tool
@@ -43,7 +43,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="&quot;..\SDL-1.2.13\include&quot;,&quot;tinyxml&quot;,&quot;oglconsole&quot;,&quot;..\Box2D\Include&quot;,&quot;FastDelegate&quot;"
-				PreprocessorDefinitions="WIN32;_DEBUG;_CRT_SECURE_NO_WARNINGS;OGLCONSOLE_USE_SDL"
+				PreprocessorDefinitions="WIN32;_DEBUG;_CRT_SECURE_NO_WARNINGS;OGLCONSOLE_USE_SDL;_HAS_EXCEPTIONS=0"
 				StringPooling="true"
 				MinimalRebuild="true"
 				ExceptionHandling="0"
@@ -53,9 +53,9 @@
 				FloatingPointModel="2"
 				UsePrecompiledHeader="2"
 				BrowseInformation="1"
-				WarningLevel="3"
+				WarningLevel="4"
 				DebugInformationFormat="4"
-				DisableSpecificWarnings="4100"
+				DisableSpecificWarnings="4100;4127"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -124,16 +124,16 @@
 				Optimization="1"
 				EnableIntrinsicFunctions="true"
 				AdditionalIncludeDirectories="&quot;..\SDL-1.2.13\include&quot;,&quot;tinyxml&quot;,&quot;oglconsole&quot;,&quot;..\Box2D\Include&quot;,&quot;FastDelegate&quot;"
-				PreprocessorDefinitions="WIN32;NDEBUG;_CRT_SECURE_NO_WARNINGS;OGLCONSOLE_USE_SDL"
+				PreprocessorDefinitions="WIN32;NDEBUG;_CRT_SECURE_NO_WARNINGS;OGLCONSOLE_USE_SDL;_HAS_EXCEPTIONS=0"
 				StringPooling="true"
 				ExceptionHandling="0"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
 				FloatingPointModel="2"
 				UsePrecompiledHeader="2"
-				WarningLevel="3"
+				WarningLevel="4"
 				DebugInformationFormat="3"
-				DisableSpecificWarnings="4100"
+				DisableSpecificWarnings="4100;4127"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"

@@ -336,7 +336,7 @@ void Bullet::Collide(unsigned int aId, unsigned int aHitId, float aFraction, con
 
 	if (destroy)
 	{
-		BulletKillUpdate *kill = new BulletKillUpdate(id, aFraction);
+		new BulletKillUpdate(id, aFraction);
 		mLife = 0.0f;
 	}
 }
