@@ -148,7 +148,7 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="SDL.lib SDLmain.lib OpenGL32.lib glu32.lib box2d.lib"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="&quot;..\SDL-1.2.13\lib&quot;,&quot;..\Box2D\Library&quot;"
+				AdditionalLibraryDirectories="&quot;..\SDL-1.2.13\VisualC\SDLmain\Release_NoSTDIO&quot;,&quot;..\SDL-1.2.13\VisualC\SDL\Release&quot;,&quot;..\Box2D\Library&quot;"
 				GenerateDebugInformation="true"
 				GenerateMapFile="true"
 				SubSystem="2"
@@ -418,6 +418,14 @@
 			</File>
 			<File
 				RelativePath=".\Source\Weapon.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\xs_Config.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\xs_Float.h"
 				>
 			</File>
 		</Filter>

@@ -31,8 +31,8 @@ float VIEW_AIM_FILTER = 2.0f;
 
 // opengl attributes
 bool OPENGL_SWAPCONTROL = true;
-bool OPENGL_ANTIALIAS = false;
-int OPENGL_MULTISAMPLE = 16;
+bool OPENGL_ANTIALIAS = true;
+int OPENGL_MULTISAMPLE = 1;
 
 // debug output
 bool DEBUGPRINT_OUTPUTCONSOLE = false;
@@ -50,6 +50,9 @@ float TIME_SCALE = 1.0f;
 // rendering attributes
 int RENDER_MOTIONBLUR = 1;
 
+// sound attributes
+int SOUND_CHANNELS = 8;
+float SOUND_VOLUME = 1.0f;
 
 // default input configuration
 const char *INPUT_CONFIG = "input.xml";
@@ -143,15 +146,15 @@ bool init_GL()
 	{
 		// enable point smoothing
 		glEnable( GL_POINT_SMOOTH );
-		glHint( GL_POINT_SMOOTH_HINT, GL_DONT_CARE );
+		glHint( GL_POINT_SMOOTH_HINT, GL_NICEST );
 
 		// enable line smoothing
  		glEnable( GL_LINE_SMOOTH );
-		glHint( GL_LINE_SMOOTH_HINT, GL_DONT_CARE );
+		glHint( GL_LINE_SMOOTH_HINT, GL_NICEST );
 
 		// enable polygon smoothing
 		glEnable( GL_POLYGON_SMOOTH );
-		glHint( GL_POLYGON_SMOOTH_HINT, GL_DONT_CARE );
+		glHint( GL_POLYGON_SMOOTH_HINT, GL_NICEST );
 	}
 
 	// enable blending
@@ -719,6 +722,30 @@ int ProcessCommand( unsigned int aCommand, char *aParam[], int aCount )
 			return 0;
 		}
 
+	case 0x61e734dc /* "soundchannels" */:
+		if (aCount >= 1)
+		{
+			SOUND_CHANNELS = atoi(aParam[0]);
+			return 1;
+		}
+		else
+		{
+			OGLCONSOLE_Output(console, "soundchannels: %d\n", SOUND_CHANNELS);
+			return 0;
+		}
+
+	case 0x2ac3f7e6 /* "soundvolume" */:
+		if (aCount >= 1)
+		{
+			SOUND_VOLUME = float(atof(aParam[0]));
+			return 1;
+		}
+		else
+		{
+			OGLCONSOLE_Output(console, "soundvolume: %f\n", SOUND_VOLUME);
+			return 0;
+		}
+		
 	case 0x54822903 /* "outputdebug" */:
 		if (aCount >= 1)
 		{
@@ -1033,6 +1060,89 @@ int SDL_main( int argc, char *argv[] )
 			ProcessWorldItems(element);
 		}
 	}
+
+	//
+	// generate reticule drawlist (HACK)
+
+	// create a new draw list
+	GLuint reticule_handle = glGenLists(1);
+	glNewList(reticule_handle, GL_COMPILE);
+
+	glBegin(GL_QUADS);
+
+	glColor4f(0.4f, 0.5f, 1.0f, 1.0f);
+
+	glVertex2f(-10, -8);
+	glVertex2f(-4, -8);
+	glVertex2f(-4, -10);
+	glVertex2f(-10, -10);
+
+	glVertex2f(-8, -10);
+	glVertex2f(-10, -10);
+	glVertex2f(-10, -4);
+	glVertex2f(-8, -4);
+
+	glVertex2f(+10, -8);
+	glVertex2f(+4, -8);
+	glVertex2f(+4, -10);
+	glVertex2f(+10, -10);
+
+	glVertex2f(+8, -10);
+	glVertex2f(+10, -10);
+	glVertex2f(+10, -4);
+	glVertex2f(+8, -4);
+
+	glVertex2f(-10, +8);
+	glVertex2f(-4, +8);
+	glVertex2f(-4, +10);
+	glVertex2f(-10, +10);
+
+	glVertex2f(-8, +10);
+	glVertex2f(-10, +10);
+	glVertex2f(-10, +4);
+	glVertex2f(-8, +4);
+
+	glVertex2f(+10, +8);
+	glVertex2f(+4, +8);
+	glVertex2f(+4, +10);
+	glVertex2f(+10, +10);
+
+	glVertex2f(+8, +10);
+	glVertex2f(+10, +10);
+	glVertex2f(+10, +4);
+	glVertex2f(+8, +4);
+
+	glColor4f(0.4f, 0.5f, 1.0f, 0.25f);
+
+	glVertex2f(-1, -480);
+	glVertex2f(+1, -480);
+	glVertex2f(+1, -8);
+	glVertex2f(-1, -8);
+
+	glVertex2f(-1, +8);
+	glVertex2f(+1, +8);
+	glVertex2f(+1, 480);
+	glVertex2f(-1, 480);
+
+	glVertex2f(-640, -1);
+	glVertex2f(-8, -1);
+	glVertex2f(-8, +1);
+	glVertex2f(-640, +1);
+
+	glVertex2f(+8, -1);
+	glVertex2f(640, -1);
+	glVertex2f(640, +1);
+	glVertex2f(+8, +1);
+
+	glEnd();
+
+	// finish the draw list
+	glEndList();
+
+	//
+
+	// allocate score draw list
+	GLuint score_handle = glGenLists(1);
 
 	// last ticks
 	unsigned int ticks = SDL_GetTicks();
@@ -1417,14 +1527,6 @@ int SDL_main( int argc, char *argv[] )
 			// set camera to track position
 			glTranslatef( -trackpos.x, -trackpos.y, 0 );
 
-			// clear the screen
-			glClear(
-				GL_COLOR_BUFFER_BIT
-#ifdef ENABLE_DEPTH_BUFFER
-				| GL_DEPTH_BUFFER_BIT
-#endif
-				);
-
 			// view area
 			AlignedBox2 view;
 			view.min.x = trackpos.x - VIEW_SIZE * 0.5f;
@@ -1449,6 +1551,14 @@ int SDL_main( int argc, char *argv[] )
 			{
 				// accumulate the image
 				glAccum(blur ? GL_ACCUM : GL_LOAD, 1.0f / float(RENDER_MOTIONBLUR));
+
+				// clear the screen
+				glClear(
+					GL_COLOR_BUFFER_BIT
+#ifdef ENABLE_DEPTH_BUFFER
+					| GL_DEPTH_BUFFER_BIT
+#endif
+					);
 			}
 
 #ifdef GET_PERFORMANCE_DETAILS
@@ -1646,39 +1756,60 @@ int SDL_main( int argc, char *argv[] )
 				}
 			}
 
-			// draw player score (HACK)
-			char score[9];
-			sprintf(score, "%08d", itor.GetValue()->mScore);
-			bool leading = true;
+			// get player score
+			static int cur_score = -1;
+			int new_score = itor.GetValue()->mScore;
 
-			glEnable(GL_TEXTURE_2D);
-			glBindTexture(GL_TEXTURE_2D, OGLCONSOLE_glFontHandle);
-			glBegin(GL_QUADS);
-
-			float x = 8;
-			float y = 32;
-			float z = 0;
-			float w = 16;
-			float h = -16;
-			static const float textcolor[2][3] =
+			// if the score has not changed...
+			if (new_score == cur_score)
 			{
-				{ 0.4f, 0.5f, 1.0f },
-				{ 0.3f, 0.3f, 0.3f }
-			};
-
-			for (char *s = score; *s != '\0'; ++s)
-			{
-				char c = *s;
-				if (c != '0')
-					leading = false;
-				glColor3fv(textcolor[leading]);
-				OGLCONSOLE_DrawCharacter(c, x, y, w, h, z);
-				x += w;
+				// call the existing draw list
+				glCallList(score_handle);
 			}
+			else
+			{
+				// update score
+				cur_score = new_score;
 
-			glEnd();
+				// start a new draw list list
+				glNewList(score_handle, GL_COMPILE_AND_EXECUTE);
 
-			glDisable(GL_TEXTURE_2D);
+				// draw player score (HACK)
+				char score[9];
+				sprintf(score, "%08d", new_score);
+				bool leading = true;
+
+				glEnable(GL_TEXTURE_2D);
+				glBindTexture(GL_TEXTURE_2D, OGLCONSOLE_glFontHandle);
+				glBegin(GL_QUADS);
+
+				float x = 8;
+				float y = 32;
+				float z = 0;
+				float w = 16;
+				float h = -16;
+				static const float textcolor[2][3] =
+				{
+					{ 0.4f, 0.5f, 1.0f },
+					{ 0.3f, 0.3f, 0.3f }
+				};
+
+				for (char *s = score; *s != '\0'; ++s)
+				{
+					char c = *s;
+					if (c != '0')
+						leading = false;
+					glColor3fv(textcolor[leading]);
+					OGLCONSOLE_DrawCharacter(c, x, y, w, h, z);
+					x += w;
+				}
+
+				glEnd();
+
+				glDisable(GL_TEXTURE_2D);
+
+				glEndList();
+			}
 
 			// draw reticule
 			Controller *controller = Database::controller.Get(id);
@@ -1687,73 +1818,10 @@ int SDL_main( int argc, char *argv[] )
 				float x = 320 - 240 * Lerp(aimpos_0.x, aimpos_1.x, sim_turns);
 				float y = 240 - 240 * Lerp(aimpos_0.y, aimpos_1.y, sim_turns);
 
-				glBegin(GL_QUADS);
-
-				glColor4f(0.4f, 0.5f, 1.0f, 1.0f);
-
-				glVertex2f(x - 10, y - 8);
-				glVertex2f(x - 4, y - 8);
-				glVertex2f(x - 4, y - 10);
-				glVertex2f(x - 10, y - 10);
-
-				glVertex2f(x - 8, y - 10);
-				glVertex2f(x - 10, y - 10);
-				glVertex2f(x - 10, y - 4);
-				glVertex2f(x - 8, y - 4);
-
-				glVertex2f(x + 10, y - 8);
-				glVertex2f(x + 4, y - 8);
-				glVertex2f(x + 4, y - 10);
-				glVertex2f(x + 10, y - 10);
-
-				glVertex2f(x + 8, y - 10);
-				glVertex2f(x + 10, y - 10);
-				glVertex2f(x + 10, y - 4);
-				glVertex2f(x + 8, y - 4);
-
-				glVertex2f(x - 10, y + 8);
-				glVertex2f(x - 4, y + 8);
-				glVertex2f(x - 4, y + 10);
-				glVertex2f(x - 10, y + 10);
-
-				glVertex2f(x - 8, y + 10);
-				glVertex2f(x - 10, y + 10);
-				glVertex2f(x - 10, y + 4);
-				glVertex2f(x - 8, y + 4);
-
-				glVertex2f(x + 10, y + 8);
-				glVertex2f(x + 4, y + 8);
-				glVertex2f(x + 4, y + 10);
-				glVertex2f(x + 10, y + 10);
-
-				glVertex2f(x + 8, y + 10);
-				glVertex2f(x + 10, y + 10);
-				glVertex2f(x + 10, y + 4);
-				glVertex2f(x + 8, y + 4);
-
-				glColor4f(0.4f, 0.5f, 1.0f, 0.25f);
-
-				glVertex2f(x - 1, 0);
-				glVertex2f(x + 1, 0);
-				glVertex2f(x + 1, y - 8);
-				glVertex2f(x - 1, y - 8);
-
-				glVertex2f(x - 1, y + 8);
-				glVertex2f(x + 1, y + 8);
-				glVertex2f(x + 1, 480);
-				glVertex2f(x - 1, 480);
-
-				glVertex2f(0, y - 1);
-				glVertex2f(x - 8, y - 1);
-				glVertex2f(x - 8, y + 1);
-				glVertex2f(0, y + 1);
-
-				glVertex2f(x + 8, y - 1);
-				glVertex2f(640, y - 1);
-				glVertex2f(640, y + 1);
-				glVertex2f(x + 8, y + 1);
-
-				glEnd();
+				glPushMatrix();
+				glTranslatef(x, y, 0.0f);
+				glCallList(reticule_handle);
+				glPopMatrix();
 			}
 
 			++playerindex;
@@ -1806,7 +1874,7 @@ int SDL_main( int argc, char *argv[] )
 				collide_time,
 				update_time,
 				render_time,
-				render_time,
+				display_time,
 			};
 			const float band_color[6][4] =
 			{
@@ -1880,6 +1948,15 @@ int SDL_main( int argc, char *argv[] )
 
 		// show the screen
 		SDL_GL_SwapBuffers();
+
+		// clear the screen
+		glClear(
+			GL_COLOR_BUFFER_BIT
+#ifdef ENABLE_DEPTH_BUFFER
+			| GL_DEPTH_BUFFER_BIT
+#endif
+			);
+
 	}
 	while( !quit );
 

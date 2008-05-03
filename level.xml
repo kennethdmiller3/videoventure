@@ -2164,6 +2164,102 @@
 
 	<!-- enemy vapor mine -->
 
+	<template name="enemymineshrapnel">
+		<collidable>
+			<body name="main">
+				<fast value="1"/>
+				<circle radius="1">
+					<friction value="1"/>
+					<restitution value="0"/>
+					<density value="1.0"/>
+					<category value="4"/>
+					<mask bit2="0" bit3="0" bit4="0"/>
+				</circle>
+				<fixedrotation value="1"/>
+				<damping linear="1.0"/>
+			</body>
+		</collidable>
+		<renderable radius="2.5">
+			<drawlist>
+				<color r="1.0" g="1.0" b="1.0" a="1.0"/>
+				<pushmatrix>
+					<scale x="1.5" y="1.5"/>
+					<calllist name="diamond"/>
+				</pushmatrix>
+				<color r="1.0" g="1.0" b="1.0" a="0.5"/>
+				<pushmatrix>
+					<scale x="2.0" y="2.0"/>
+					<calllist name="diamond"/>
+				</pushmatrix>
+				<color r="1.0" g="1.0" b="1.0" a="0.25"/>
+				<pushmatrix>
+					<scale x="2.5" y="2.5"/>
+					<calllist name="diamond"/>
+				</pushmatrix>
+			</drawlist>
+		</renderable>
+		<bullet life="1" damage="1" spawnondeath="enemybulletexplosion"/>
+	</template>
+
+	<template name="enemymineshrapnelspawn">
+		<spawner>
+			<offset x="0" y="6"/>
+			<velocity x="0" y="180"/>
+			<spawn name="enemymineshrapnel"/>
+		</spawner>
+	</template>
+
+	<template name="enemyvapormineexplosion" type="enemymineexplosion">
+		<link name="spawn0" secondary="enemymineshrapnelspawn">
+			<offset x="0" y="0" angle="0"/>
+		</link>
+		<link name="spawn1" secondary="enemymineshrapnelspawn">
+			<offset x="0" y="0" angle="22.5"/>
+		</link>
+		<link name="spawn2" secondary="enemymineshrapnelspawn">
+			<offset x="0" y="0" angle="45"/>
+		</link>
+		<link name="spawn3" secondary="enemymineshrapnelspawn">
+			<offset x="0" y="0" angle="67.5"/>
+		</link>
+		<link name="spawn4" secondary="enemymineshrapnelspawn">
+			<offset x="0" y="0" angle="90"/>
+		</link>
+		<link name="spawn5" secondary="enemymineshrapnelspawn">
+			<offset x="0" y="0" angle="112.5"/>
+		</link>
+		<link name="spawn6" secondary="enemymineshrapnelspawn">
+			<offset x="0" y="0" angle="135"/>
+		</link>
+		<link name="spawn7" secondary="enemymineshrapnelspawn">
+			<offset x="0" y="0" angle="157.5"/>
+		</link>
+		<link name="spawn8" secondary="enemymineshrapnelspawn">
+			<offset x="0" y="0" angle="180"/>
+		</link>
+		<link name="spawn9" secondary="enemymineshrapnelspawn">
+			<offset x="0" y="0" angle="202.5"/>
+		</link>
+		<link name="spawn10" secondary="enemymineshrapnelspawn">
+			<offset x="0" y="0" angle="225"/>
+		</link>
+		<link name="spawn11" secondary="enemymineshrapnelspawn">
+			<offset x="0" y="0" angle="247.5"/>
+		</link>
+		<link name="spawn12" secondary="enemymineshrapnelspawn">
+			<offset x="0" y="0" angle="270"/>
+		</link>
+		<link name="spawn13" secondary="enemymineshrapnelspawn">
+			<offset x="0" y="0" angle="292.5"/>
+		</link>
+		<link name="spawn14" secondary="enemymineshrapnelspawn">
+			<offset x="0" y="0" angle="315"/>
+		</link>
+		<link name="spawn15" secondary="enemymineshrapnelspawn">
+			<offset x="0" y="0" angle="337.5"/>
+		</link>
+	</template>
+	
 	<template name="enemyvapormine">
 		<collidable>
 			<body name="main">
@@ -2212,8 +2308,8 @@
 				</triangles>
 			</drawlist>
 		</renderable>
-		<bullet damage="3" spawnondeath="enemymineexplosion"/>
-		<damagable health="5" spawnondeath="enemymineexplosion"/>
+		<bullet damage="3" spawnondeath="enemyvapormineexplosion"/>
+		<damagable health="5" spawnondeath="enemyvapormineexplosion"/>
 		<team name="red"/>
 		<points value="100"/>
 	</template>
@@ -2255,8 +2351,8 @@
 				</triangles>
 			</drawlist>
 		</renderable>
-		<bullet life="5" damage="1" spawnondeath="targetexplosion" spawnonexpire="enemyvapormine"/>
-		<damagable health="3" spawnondeath="targetexplosion"/>
+		<bullet life="5" damage="1" spawnondeath="enemymineexplosion" spawnonexpire="enemyvapormine"/>
+		<damagable health="3" spawnondeath="enemymineexplosion"/>
 		<team name="red"/>
 		<points value="50"/>
 	</template>
@@ -4357,7 +4453,7 @@
 				<color r="0.2" g="1.0" b="0.1" a="1.0"/>
 				<pushmatrix>
 					<scale x="4" y="4"/>
-					<calllist name="circle8"/>
+					<calllist name="circle16"/>
 				</pushmatrix>
 			</drawlist>
 		</renderable>

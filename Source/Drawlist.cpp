@@ -88,9 +88,6 @@ namespace Database
 
 				// finish the draw list
 				glEndList();
-
-				// finish the draw list
-				glEndList();
 			}
 		}
 		drawlistloader;
