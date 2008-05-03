@@ -304,7 +304,8 @@ void Sound::Update(float aStep)
 
 // AUDIO MIXER
 
-static const int MAX_CHANNELS = 8;
+extern int SOUND_CHANNELS;
+extern float SOUND_VOLUME;
 
 static const float timestep = 1.0f / AUDIO_FREQUENCY;
 static float average0 = 0.0f, average1 = 0.0f;
@@ -352,7 +353,8 @@ void Sound::Mix(void *userdata, Uint8 *stream, int len)
 		unsigned int length;
 		unsigned int repeat;
 	};
-	ChannelInfo channel_info[MAX_CHANNELS+1] = { 0 };
+	ChannelInfo *channel_info = static_cast<ChannelInfo *>(_alloca((SOUND_CHANNELS+1) * sizeof(ChannelInfo)));
+	memset(channel_info, 0, (SOUND_CHANNELS+1) * sizeof(ChannelInfo));
 	int channel_count = 0;
 
 	// for each active sound...
@@ -402,7 +404,7 @@ void Sound::Mix(void *userdata, Uint8 *stream, int len)
 		}
 
 		// if room for the new sound...
-		if (j < MAX_CHANNELS)
+		if (j < SOUND_CHANNELS)
 		{
 			// insert new sound
 			channel_info[j].weight = weight;
@@ -413,7 +415,7 @@ void Sound::Mix(void *userdata, Uint8 *stream, int len)
 			channel_info[j].repeat = repeat;
 
 			// if not merging, and not out of channels...
-			if (!merge && channel_count < MAX_CHANNELS)
+			if (!merge && channel_count < SOUND_CHANNELS)
 			{
 				// bump the channel count
 				++channel_count;
@@ -425,7 +427,7 @@ void Sound::Mix(void *userdata, Uint8 *stream, int len)
 	for (int channel = 0; channel < channel_count; ++channel)
 	{
 		// get starting offset
-		float volume = channel_info[channel].volume;
+		float volume = channel_info[channel].volume * SOUND_VOLUME;
 		const short *data = channel_info[channel].data;
 		unsigned int length = channel_info[channel].length;
 		unsigned int offset = channel_info[channel].offset;

@@ -228,18 +228,8 @@ void Renderable::RenderAll(float aRatio, float aStep, const AlignedBox2 &aView)
 			position.x - itor->mRadius <= aView.max.x &&
 			position.y - itor->mRadius <= aView.max.y)
 		{
-			// push a transform
-			glPushMatrix();
-
-			// load matrix
-			glTranslatef(position.x, position.y, 0);
-			glRotatef(angle*180/float(M_PI), 0.0f, 0.0f, 1.0f);
-
 			// render
-			itor->Render(aStep);
-
-			// reset the transform
-			glPopMatrix();
+			itor->Render(aStep, position.x, position.y, angle);
 
 #ifdef RENDER_STATS
 			++drawn;
@@ -261,7 +251,7 @@ void Renderable::RenderAll(float aRatio, float aStep, const AlignedBox2 &aView)
 #endif
 }
 
-void Renderable::Render(float aStep)
+void Renderable::Render(float aStep, float aPosX, float aPosY, float aAngle)
 {
 	// get the renderable template
 	const RenderableTemplate &renderable = Database::renderabletemplate.Get(id);
@@ -271,6 +261,16 @@ void Renderable::Render(float aStep)
 	if (t < 0)
 		return;
 
+	// push a transform
+	glPushMatrix();
+
+	// load matrix
+	glTranslatef(aPosX, aPosY, 0);
+	glRotatef(aAngle*180/float(M_PI), 0.0f, 0.0f, 1.0f);
+
 	// execute the deferred draw list
 	ExecuteDrawItems(&renderable.mBuffer[0], renderable.mBuffer.size(), t, id);
+
+	// reset the transform
+	glPopMatrix();
 };

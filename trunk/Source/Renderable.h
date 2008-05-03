@@ -76,7 +76,7 @@ public:
 
 	// render
 	static void RenderAll(float aRatio, float aStep, const AlignedBox2 &aView);
-	void Render(float aStep);
+	void Render(float aStep, float aPosX, float aPosY, float angle);
 };
 
 namespace Database
