@@ -44,7 +44,7 @@ namespace Database
 
 	// constructor
 	Untyped::Untyped(unsigned int aId, size_t aStride, size_t aBits)
-		: mId(aId), mStride(aStride), mShift(0), mBits(aBits), mLimit(1<<mBits), mCount(0)
+		: mId(aId), mStride(aStride), mShift(0), mBits(aBits), mLimit(1 << mBits), mCount(0), mMask((2 << mBits) - 1)
 	{
 		// adjust block shift
 		for (mShift = 0; mShift < mBits; ++mShift)
@@ -95,7 +95,8 @@ namespace Database
 	{
 		// resize
 		++mBits;
-		mLimit = 1<<mBits;
+		mMask = (2 << mBits) - 1;
+		mLimit = 1 << mBits;
 
 		DebugPrint("Grow database %08x stride=%d shift=%d limit=%d count=%d\n", mId, mStride, mShift, mLimit, mCount);
 
@@ -135,6 +136,7 @@ namespace Database
 
 		// copy counts
 		mBits = aSource.mBits;
+		mMask = aSource.mMask;
 		mLimit = aSource.mLimit;
 		mCount = aSource.mCount;
 

@@ -74,6 +74,28 @@ inline float Lerp(float v0, float v1, float s)
 	return v0 + (v1 - v0) * s;
 }
 
+// random unsigned long
+// TO DO: allow multiple random number generators
+inline unsigned long RandLong()
+{
+	static unsigned long idum;
+	idum = 1664525L * idum + 1013904223L;
+	return idum;
+}
+
+// random uniform float
+inline float RandFloat()
+{
+	unsigned long itemp = 0x3f800000 | (0x007fffff & RandLong());
+	return (*(float *)&itemp)-1.0f;
+}
+
+// random range value
+inline float RandValue(float aAverage, float aVariance)
+{
+	return (2.0f * RandFloat() - 1.0f) * aVariance + aAverage;
+}
+
 
 // loader
 void ProcessTemplateItem(const TiXmlElement *element, unsigned int template_id);

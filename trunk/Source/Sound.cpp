@@ -436,7 +436,7 @@ void Sound::Mix(void *userdata, Uint8 *stream, int len)
 		const short *src = data + offset;
 		const short *srcend = data + length;
 		float *dst = mix;
-		float *dstend = mix + samples;
+		const float *dstend = mix + samples;
 		while (dst < dstend)
 		{
 			// add volume-scaled samples

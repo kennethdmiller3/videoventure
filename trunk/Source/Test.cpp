@@ -1841,8 +1841,11 @@ int SDL_main( int argc, char *argv[] )
 		QueryPerformanceCounter(&perf_count1);
 		render_time[profile_index] += perf_count1.QuadPart - perf_count0.QuadPart;
 
-		// force a render flush
-		glFinish();
+		if (!OPENGL_SWAPCONTROL)
+		{
+			// force a render flush
+			glFinish();
+		}
 
 		LARGE_INTEGER perf_count2;
 		QueryPerformanceCounter(&perf_count2);

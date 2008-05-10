@@ -199,28 +199,20 @@ void Renderable::RenderAll(float aRatio, float aStep, const AlignedBox2 &aView)
 
 		// get the entity (HACK)
 		const Entity *entity = Database::entity.Get(id);
-		if (entity)
-		{
+		if (!entity)
+			continue;
+
 #ifdef RENDER_SIMULATION_POSITIONS
-			// draw line between last and current simulated position
-			glBegin(GL_LINES);
-			glColor4f(0.0f, 0.0f, 1.0f, 1.0f);
-			glVertex2f(entity->GetPrevPosition().x, entity->GetPrevPosition().y);
-			glColor4f(1.0f, 0.0f, 0.0f, 1.0f);
-			glVertex2f(entity->GetPosition().x, entity->GetPosition().y);
-			glEnd();
+		// draw line between last and current simulated position
+		glBegin(GL_LINES);
+		glColor4f(0.0f, 0.0f, 1.0f, 1.0f);
+		glVertex2f(entity->GetPrevPosition().x, entity->GetPrevPosition().y);
+		glColor4f(1.0f, 0.0f, 0.0f, 1.0f);
+		glVertex2f(entity->GetPosition().x, entity->GetPosition().y);
+		glEnd();
 #endif
-			// get interpolated transform
-			angle = entity->GetInterpolatedAngle(aRatio);
-			position = entity->GetInterpolatedPosition(aRatio);
-		}
-		else
-		{
-			// use identity matrix
-			angle = 0;
-			position.x = 0;
-			position.y = 0;
-		}
+		// get interpolated position
+		position = entity->GetInterpolatedPosition(aRatio);
 
 		// if within the view area...
 		if (position.x + itor->mRadius >= aView.min.x &&
@@ -228,6 +220,9 @@ void Renderable::RenderAll(float aRatio, float aStep, const AlignedBox2 &aView)
 			position.x - itor->mRadius <= aView.max.x &&
 			position.y - itor->mRadius <= aView.max.y)
 		{
+			// get interpolated angle
+			angle = entity->GetInterpolatedAngle(aRatio);
+
 			// render
 			itor->Render(aStep, position.x, position.y, angle);
 
