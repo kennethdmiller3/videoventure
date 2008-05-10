@@ -31,11 +31,9 @@ static boost::pool<boost::default_user_allocator_malloc_free> jointpool(jointsiz
 namespace Database
 {
 	Typed<CollidableTemplate> collidabletemplate(0xa7380c00 /* "collidabletemplate" */);
-	Typed<Typed<b2BodyDef> > collidabletemplatebody(0x66727d0c /* "collidabletemplatebody" */);
 	Typed<Typed<b2CircleDef> > collidabletemplatecircle(0xa72cf124 /* "collidabletemplatecircle" */);
 	Typed<Typed<b2PolygonDef> > collidabletemplatepolygon(0x8ce45056 /* "collidabletemplatepolygon" */);
 	Typed<Collidable *> collidable(0x74e9dbae /* "collidable" */);
-	Typed<Typed<b2Body *> > collidablebody(0x6ccc2b62 /* "collidablebody" */);
 	Typed<Typed<Collidable::Listener> > collidablecontactadd(0x7cf2c45d /* "collidablecontactadd" */);
 	Typed<Typed<Collidable::Listener> > collidablecontactremove(0x95ed5aba /* "collidablecontactremove" */);
 
@@ -369,18 +367,14 @@ bool CollidableTemplate::ProcessJointItem(const TiXmlElement *element, JointTemp
 	case 0x115ce60c /* "body1" */:
 		{
 			const char *name = element->Attribute("name");
-			const char *body = element->Attribute("body");
 			jointtemplate.name1 = name ? Hash(name) : 0;
-			jointtemplate.body1 = body ? Hash(body) : 0;
 		}
 		return true;
 
 	case 0x145ceac5 /* "body2" */:
 		{
 			const char *name = element->Attribute("name");
-			const char *body = element->Attribute("body");
 			jointtemplate.name2 = name ? Hash(name) : 0;
-			jointtemplate.body2 = body ? Hash(body) : 0;
 		}
 		return true;
 
@@ -633,13 +627,8 @@ bool CollidableTemplate::Configure(const TiXmlElement *element, unsigned int id)
 		{
 		case 0xdbaa7975 /* "body" */:
 			{
-				// add a body
-				unsigned int bodyid = Hash(child->Attribute("name"));
-				Database::Typed<b2BodyDef> &bodies = Database::collidabletemplatebody.Open(id);
-				b2BodyDef &body = bodies.Open(bodyid);
-				CollidableTemplate::ConfigureBody(child, body);
-				bodies.Close(bodyid);
-				Database::collidabletemplatebody.Close(id);
+				// set up the collidable body
+				CollidableTemplate::ConfigureBody(child, bodydef);
 			}
 			break;
 
@@ -712,9 +701,7 @@ bool CollidableTemplate::SetupLinkJoint(const LinkTemplate &linktemplate, unsign
 	
 	// configure the joint template
 	jointtemplate.name1 = aId;
-	jointtemplate.body1 = 0xea90e208 /* "main" */;
 	jointtemplate.name2 = aSecondary;
-	jointtemplate.body2 = 0xea90e208 /* "main" */;
 
 	// configure the joint definition
 	joint.userData = &jointtemplate;
@@ -734,11 +721,17 @@ bool CollidableTemplate::SetupJointDef(b2JointDef &joint, const JointTemplate &j
 {
 	unsigned int id1 = jointtemplate.name1 == 0xe3736e9a /* "backlink" */ ? Database::backlink.Get(id) : jointtemplate.name1;
 	joint.userData = NULL;
-	joint.body1 = Database::collidablebody.Get(id1 ? id1 : id).Get(jointtemplate.body1);
+	Collidable *coll1 = Database::collidable.Get(id1 ? id1 : id);
+	if (!coll1)
+		return false;
+	joint.body1 = coll1->GetBody();
 	if (!joint.body1)
 		return false;
 	unsigned int id2 = jointtemplate.name2 == 0xe3736e9a /* "backlink" */ ? Database::backlink.Get(id) : jointtemplate.name2;
-	joint.body2 = Database::collidablebody.Get(id2 ? id2 : id).Get(jointtemplate.body2);
+	Collidable *coll2 = Database::collidable.Get(id2 ? id2 : id);
+	if (!coll2)
+		return false;
+	joint.body2 = coll2->GetBody();
 	if (!joint.body2)
 		return false;
 	return true;
@@ -964,54 +957,46 @@ void Collidable::AddToWorld(void)
 {
 	const CollidableTemplate &collidable = Database::collidabletemplate.Get(id);
 
-	// for each body...
-	Database::Typed<b2Body *> &bodies = Database::collidablebody.Open(id);
-	for (Database::Typed<b2BodyDef>::Iterator itor(Database::collidabletemplatebody.Find(id)); itor.IsValid(); ++itor)
+	// copy the body definition
+	b2BodyDef def(collidable.bodydef);
+
+	// set userdata identifier and body position to entity (HACK)
+	def.userData = reinterpret_cast<void *>(id);
+	const Entity *entity = Database::entity.Get(id);
+	if (entity)
 	{
-		// copy the body definition
-		b2BodyDef def(itor.GetValue());
-
-		// set userdata identifier and body position to entity (HACK)
-		def.userData = reinterpret_cast<void *>(id);
-		const Entity *entity = Database::entity.Get(id);
-		if (entity)
-		{
-			const Matrix2 &transform = entity->GetTransform();
-			def.angle = transform.Angle();
-			def.position = transform.p;
-		}
-
-		// create the body
-		body = world->CreateBody(&def);
-
-		// add shapes
-		const Database::Typed<b2CircleDef> &circles = Database::collidabletemplatecircle.Get(id);
-		for (Database::Typed<b2CircleDef>::Iterator circleitor(&circles); circleitor.IsValid(); ++circleitor)
-		{
-			b2CircleDef circle(circleitor.GetValue());
-			circle.userData = reinterpret_cast<void *>(id);
-			body->CreateShape(&circle);
-		}
-		const Database::Typed<b2PolygonDef> &polygons = Database::collidabletemplatepolygon.Get(id);
-		for (Database::Typed<b2PolygonDef>::Iterator polygonitor(&polygons); polygonitor.IsValid(); ++polygonitor)
-		{
-			b2PolygonDef polygon(polygonitor.GetValue());
-			polygon.userData = reinterpret_cast<void *>(id);
-			body->CreateShape(&polygon);
-		}
-
-		// compute mass
-		body->SetMassFromShapes();
-
-		if (entity)
-		{
-			body->SetLinearVelocity(entity->GetVelocity());
-			body->SetAngularVelocity(entity->GetOmega());
-		}
-
-		bodies.Put(itor.GetKey(), body);
+		const Matrix2 &transform = entity->GetTransform();
+		def.angle = transform.Angle();
+		def.position = transform.p;
 	}
-	Database::collidablebody.Close(id);
+
+	// create the body
+	body = world->CreateBody(&def);
+
+	// add shapes
+	const Database::Typed<b2CircleDef> &circles = Database::collidabletemplatecircle.Get(id);
+	for (Database::Typed<b2CircleDef>::Iterator circleitor(&circles); circleitor.IsValid(); ++circleitor)
+	{
+		b2CircleDef circle(circleitor.GetValue());
+		circle.userData = reinterpret_cast<void *>(id);
+		body->CreateShape(&circle);
+	}
+	const Database::Typed<b2PolygonDef> &polygons = Database::collidabletemplatepolygon.Get(id);
+	for (Database::Typed<b2PolygonDef>::Iterator polygonitor(&polygons); polygonitor.IsValid(); ++polygonitor)
+	{
+		b2PolygonDef polygon(polygonitor.GetValue());
+		polygon.userData = reinterpret_cast<void *>(id);
+		body->CreateShape(&polygon);
+	}
+
+	// compute mass
+	body->SetMassFromShapes();
+
+	if (entity)
+	{
+		body->SetLinearVelocity(entity->GetVelocity());
+		body->SetAngularVelocity(entity->GetOmega());
+	}
 
 	// for each joint
 	for (std::list<CollidableTemplate::JointTemplate>::const_iterator itor = collidable.joints.begin(); itor != collidable.joints.end(); ++itor)
@@ -1026,12 +1011,7 @@ void Collidable::AddToWorld(void)
 
 void Collidable::RemoveFromWorld(void)
 {
-	for (Database::Typed<b2Body *>::Iterator itor(Database::collidablebody.Find(id)); itor.IsValid(); ++itor)
-	{
-		world->DestroyBody(itor.GetValue());
-	}
-	Database::collidablebody.Delete(id);
-
+	world->DestroyBody(body);
 	body = NULL;
 }
 
