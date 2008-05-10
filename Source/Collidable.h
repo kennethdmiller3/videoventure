@@ -14,13 +14,14 @@ public:
 	// collision layer
 	int layer;
 
+	// body definition
+	b2BodyDef bodydef;
+
 	// collision joints
 	struct JointTemplate
 	{
 		unsigned int name1;
-		unsigned int body1;
 		unsigned int name2;
-		unsigned int body2;
 		b2JointDef *def;
 		JointTemplate(b2JointDef * const def = NULL)
 			: def(def)
@@ -113,9 +114,7 @@ public:
 namespace Database
 {
 	extern Typed<CollidableTemplate> collidabletemplate;
-	extern Typed<Typed<b2BodyDef> > collidabletemplatebody;
 	extern Typed<Collidable *> collidable;
-	extern Typed<Typed<b2Body *> > collidablebody;
 	extern Typed<Typed<Collidable::Listener> > collidablecontactadd;
 	extern Typed<Typed<Collidable::Listener> > collidablecontactremove;
 }
