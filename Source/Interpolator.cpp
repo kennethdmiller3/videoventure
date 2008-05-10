@@ -154,20 +154,23 @@ void ProcessInterpolatorItem(const TiXmlElement *element, std::vector<unsigned i
 		buffer.push_back(*reinterpret_cast<unsigned int *>(&interpolator.mKeys[i]));
 }
 
-bool InterpolatorTemplate::Apply(float aTarget[], float aTime, int &aIndex)
+bool ApplyInterpolator(float aTarget[], int aWidth, int aCount, const float aKeys[], float aTime, int &aIndex)
 {
 	int i0, i1;
 	float t0, t1;
 
+	// get stride
+	const int aStride = aWidth + 1;
+
 	// get time of saved index key
-	float tt = mKeys[aIndex * mStride];
+	float tt = aKeys[aIndex * aStride];
 
 	// if requested time is earlier...
 	if (aTime < tt)
 	{
 		// set lower bound to first key
 		i0 = 0;
-		t0 = mKeys[i0 * mStride];
+		t0 = aKeys[i0 * aStride];
 		if (aTime < t0)
 			return false;
 
@@ -182,8 +185,8 @@ bool InterpolatorTemplate::Apply(float aTarget[], float aTime, int &aIndex)
 		t0 = tt;
 
 		// set upper bound to last key
-		i1 = mCount-1;
-		t1 = mKeys[i1 * mStride];
+		i1 = aCount-1;
+		t1 = aKeys[i1 * aStride];
 		if (aTime > t1)
 			return false;
 	}
@@ -196,7 +199,7 @@ bool InterpolatorTemplate::Apply(float aTarget[], float aTime, int &aIndex)
 
 		// if time is before segment start
 		int iL = xs_FloorToInt(im);
-		float tL = mKeys[iL * mStride];
+		float tL = aKeys[iL * aStride];
 		if (aTime < tL - FLT_EPSILON)
 		{
 			// set upper bound to segment start
@@ -207,7 +210,7 @@ bool InterpolatorTemplate::Apply(float aTarget[], float aTime, int &aIndex)
 
 		// if time is after segment end...
 		int iH = xs_CeilToInt(im);
-		float tH = mKeys[iH * mStride];
+		float tH = aKeys[iH * aStride];
 		if (aTime > tH + FLT_EPSILON)
 		{
 			// set lower bound to segment end
@@ -222,10 +225,10 @@ bool InterpolatorTemplate::Apply(float aTarget[], float aTime, int &aIndex)
 	}
 
 	// interpolate the value
-	float *key0 = mKeys + aIndex * mStride;
-	float *key1 = key0 + mStride;
+	const float *key0 = aKeys + aIndex * aStride;
+	const float *key1 = key0 + aStride;
 	float t = (aTime - key0[0]) / (key1[0] - key0[0] + FLT_EPSILON);
-	for (int element = 0; element < mWidth; element++)
+	for (int element = 0; element < aWidth; element++)
 	{
 		aTarget[element] = Lerp(key0[1 + element], key1[1 + element], t);
 	}

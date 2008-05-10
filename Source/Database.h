@@ -17,6 +17,7 @@ namespace Database
 		size_t mBits;		// bit count
 		size_t mLimit;		// maximum number of database records (1 << bit count)
 		size_t mCount;		// current number of database records
+		size_t mMask;		// map index mask
 		size_t *mMap;		// map key to database records (2x maximum)
 		Key *mKey;			// database record key pool
 		void **mPool;		// database record data pool
@@ -29,16 +30,12 @@ namespace Database
 		{
 			// convert key to a hash map index
 			// (HACK: assume key is already a hash)
-			size_t shift = mBits + 1;
-			size_t mask = (1 << shift) - 1;
-			return ((aKey >> shift) ^ aKey) & mask;
+			return ((aKey >> (mBits + 1)) ^ aKey) & mMask;
 		}
 
 		inline size_t Next(size_t aIndex) const
 		{
-			size_t shift = mBits + 1;
-			size_t mask = (1 << shift) - 1;
-			return (aIndex + 1) & mask;
+			return (aIndex + 1) & mMask;
 		}
 
 		inline size_t Probe(Key aKey) const

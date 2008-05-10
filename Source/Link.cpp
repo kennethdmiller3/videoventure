@@ -102,24 +102,7 @@ namespace Database
 						{
 							// add a revolute joint to the linked template (HACK)
 							CollidableTemplate &collidable = Database::collidabletemplate.Open(mSecondary);
-							collidable.joints.push_back(CollidableTemplate::JointTemplate());
-							CollidableTemplate::JointTemplate &jointtemplate = collidable.joints.back();
-							jointtemplate.name1 = aId;
-							jointtemplate.body1 = 0xea90e208 /* "main" */;
-							jointtemplate.name2 = mSecondary;
-							jointtemplate.body2 = 0xea90e208 /* "main" */;
-							collidable.revolutes.push_back(b2RevoluteJointDef());
-							b2RevoluteJointDef &joint = collidable.revolutes.back();
-							joint.userData = &jointtemplate;
-							joint.localAnchor1.Set(linktemplate.mOffset.p.x, linktemplate.mOffset.p.y);
-							joint.localAnchor2.Set(0, 0);
-							joint.referenceAngle = linktemplate.mOffset.Angle();
-							if (linktemplate.mUpdateAngle)
-							{
-								joint.lowerAngle = 0.0f;
-								joint.upperAngle = 0.0f;
-								joint.enableLimit = true;
-							}
+							collidable.SetupLinkJoint(linktemplate, aId, mSecondary);
 							Database::collidabletemplate.Close(mSecondary);
 						}
 					}

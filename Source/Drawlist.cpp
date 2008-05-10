@@ -2,6 +2,171 @@
 #include "Interpolator.h"
 #include "Drawlist.h"
 
+enum DrawlistOp
+{
+	DO_glAccum, //(GLenum op, GLfloat value)
+	DO_glAlphaFunc, //(GLenum func, GLclampf ref)
+	DO_glArrayElement, //(GLint i)
+	DO_glBegin, //(GLenum mode)
+	DO_glBindTexture, //(GLenum target, GLuint texture)
+	DO_glBitmap, //(GLsizei width, GLsizei height, GLfloat xorig, GLfloat yorig, GLfloat xmove, GLfloat ymove, const GLubyte *bitmap)
+	DO_glBlendFunc, //(GLenum sfactor, GLenum dfactor)
+	DO_glCallList, //(GLuint list)
+	DO_glCallLists, //(GLsizei n, GLenum type, const GLvoid *lists)
+	DO_glClear, //(GLbitfield mask)
+	DO_glClearAccum, //(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha)
+	DO_glClearColor, //(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha)
+	DO_glClearDepth, //(GLclampd depth)
+	DO_glClearIndex, //(GLfloat c)
+	DO_glClearStencil, //(GLint s)
+	DO_glClipPlane, //(GLenum plane, const GLdouble *equation)
+	DO_glColor4f, //(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha)
+	DO_glColor4fv, //(const GLfloat *v)
+	DO_glColorMask, //(GLboolean red, GLboolean green, GLboolean blue, GLboolean alpha)
+	DO_glColorMaterial, //(GLenum face, GLenum mode)
+	DO_glColorPointer, //(GLint size, GLenum type, GLsizei stride, const GLvoid *pointer)
+	DO_glCopyPixels, //(GLint x, GLint y, GLsizei width, GLsizei height, GLenum type)
+	DO_glCopyTexImage1D, //(GLenum target, GLint level, GLenum internalFormat, GLint x, GLint y, GLsizei width, GLint border)
+	DO_glCopyTexImage2D, //(GLenum target, GLint level, GLenum internalFormat, GLint x, GLint y, GLsizei width, GLsizei height, GLint border)
+	DO_glCopyTexSubImage1D, //(GLenum target, GLint level, GLint xoffset, GLint x, GLint y, GLsizei width)
+	DO_glCopyTexSubImage2D, //(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint x, GLint y, GLsizei width, GLsizei height)
+	DO_glCullFace, //(GLenum mode)
+	DO_glDeleteLists, //(GLuint list, GLsizei range)
+	DO_glDeleteTextures, //(GLsizei n, const GLuint *textures)
+	DO_glDepthFunc, //(GLenum func)
+	DO_glDepthMask, //(GLboolean flag)
+	DO_glDepthRange, //(GLclampd zNear, GLclampd zFar)
+	DO_glDisable, //(GLenum cap)
+	DO_glDisableClientState, //(GLenum array)
+	DO_glDrawArrays, //(GLenum mode, GLint first, GLsizei count)
+	DO_glDrawBuffer, //(GLenum mode)
+	DO_glDrawElements, //(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices)
+	DO_glDrawPixels, //(GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid *pixels)
+	DO_glEdgeFlag, //(GLboolean flag)
+	DO_glEdgeFlagPointer, //(GLsizei stride, const GLvoid *pointer)
+	DO_glEdgeFlagv, //(const GLboolean *flag)
+	DO_glEnable, //(GLenum cap)
+	DO_glEnableClientState, //(GLenum array)
+	DO_glEnd, //(void)
+	DO_glEndList, //(void)
+	DO_glEvalCoord1f, //(GLfloat u)
+	DO_glEvalCoord1fv, //(const GLfloat *u)
+	DO_glEvalCoord2f, //(GLfloat u, GLfloat v)
+	DO_glEvalCoord2fv, //(const GLfloat *u)
+	DO_glEvalMesh1, //(GLenum mode, GLint i1, GLint i2)
+	DO_glEvalMesh2, //(GLenum mode, GLint i1, GLint i2, GLint j1, GLint j2)
+	DO_glEvalPoint1, //(GLint i)
+	DO_glEvalPoint2, //(GLint i, GLint j)
+	DO_glFeedbackBuffer, //(GLsizei size, GLenum type, GLfloat *buffer)
+	DO_glFinish, //(void)
+	DO_glFlush, //(void)
+	DO_glFogf, //(GLenum pname, GLfloat param)
+	DO_glFogfv, //(GLenum pname, const GLfloat *params)
+	DO_glFrontFace, //(GLenum mode)
+	DO_glFrustum, //(GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLdouble zNear, GLdouble zFar)
+	DO_glGenLists, //(GLsizei range)
+	DO_glGenTextures, //(GLsizei n, GLuint *textures)
+	DO_glHint, //(GLenum target, GLenum mode)
+	DO_glIndexMask, //(GLuint mask)
+	DO_glIndexPointer, //(GLenum type, GLsizei stride, const GLvoid *pointer)
+	DO_glIndexf, //(GLfloat c)
+	DO_glIndexfv, //(const GLfloat *c)
+	DO_glInitNames, //(void)
+	DO_glInterleavedArrays, //(GLenum format, GLsizei stride, const GLvoid *pointer)
+	DO_glLightModelf, //(GLenum pname, GLfloat param)
+	DO_glLightModelfv, //(GLenum pname, const GLfloat *params)
+	DO_glLightf, //(GLenum light, GLenum pname, GLfloat param)
+	DO_glLightfv, //(GLenum light, GLenum pname, const GLfloat *params)
+	DO_glLineStipple, //(GLint factor, GLushort pattern)
+	DO_glLineWidth, //(GLfloat width)
+	DO_glListBase, //(GLuint base)
+	DO_glLoadIdentity, //(void)
+	DO_glLoadMatrixf, //(const GLfloat *m)
+	DO_glLoadName, //(GLuint name)
+	DO_glLogicOp, //(GLenum opcode)
+	DO_glMap1f, //(GLenum target, GLfloat u1, GLfloat u2, GLint stride, GLint order, const GLfloat *points)
+	DO_glMap2f, //(GLenum target, GLfloat u1, GLfloat u2, GLint ustride, GLint uorder, GLfloat v1, GLfloat v2, GLint vstride, GLint vorder, const GLfloat *points)
+	DO_glMapGrid1f, //(GLint un, GLfloat u1, GLfloat u2)
+	DO_glMapGrid2f, //(GLint un, GLfloat u1, GLfloat u2, GLint vn, GLfloat v1, GLfloat v2)
+	DO_glMaterialf, //(GLenum face, GLenum pname, GLfloat param)
+	DO_glMaterialfv, //(GLenum face, GLenum pname, const GLfloat *params)
+	DO_glMatrixMode, //(GLenum mode)
+	DO_glMultMatrixf, //(const GLfloat *m)
+	DO_glNewList, //(GLuint list, GLenum mode)
+	DO_glNormal3f, //(GLfloat nx, GLfloat ny, GLfloat nz)
+	DO_glNormal3fv, //(const GLfloat *v)
+	DO_glNormalPointer, //(GLenum type, GLsizei stride, const GLvoid *pointer)
+	DO_glOrtho, //(GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLdouble zNear, GLdouble zFar)
+	DO_glPassThrough, //(GLfloat token)
+	DO_glPixelMapfv, //(GLenum map, GLsizei mapsize, const GLfloat *values)
+	DO_glPixelStoref, //(GLenum pname, GLfloat param)
+	DO_glPixelTransferf, //(GLenum pname, GLfloat param)
+	DO_glPixelZoom, //(GLfloat xfactor, GLfloat yfactor)
+	DO_glPointSize, //(GLfloat size)
+	DO_glPolygonMode, //(GLenum face, GLenum mode)
+	DO_glPolygonOffset, //(GLfloat factor, GLfloat units)
+	DO_glPolygonStipple, //(const GLubyte *mask)
+	DO_glPopAttrib, //(void)
+	DO_glPopClientAttrib, //(void)
+	DO_glPopMatrix, //(void)
+	DO_glPopName, //(void)
+	DO_glPrioritizeTextures, //(GLsizei n, const GLuint *textures, const GLclampf *priorities)
+	DO_glPushAttrib, //(GLbitfield mask)
+	DO_glPushClientAttrib, //(GLbitfield mask)
+	DO_glPushMatrix, //(void)
+	DO_glPushName, //(GLuint name)
+	DO_glRasterPos4f, //(GLfloat x, GLfloat y, GLfloat z, GLfloat w)
+	DO_glRasterPos4fv, //(const GLfloat *v)
+	DO_glReadBuffer, //(GLenum mode)
+	DO_glReadPixels, //(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid *pixels)
+	DO_glRectf, //(GLfloat x1, GLfloat y1, GLfloat x2, GLfloat y2)
+	DO_glRectfv, //(const GLfloat *v1, const GLfloat *v2)
+	DO_glRotatef, //(GLfloat anDO_gle, GLfloat x, GLfloat y, GLfloat z)
+	DO_glScalef, //(GLfloat x, GLfloat y, GLfloat z)
+	DO_glScissor, //(GLint x, GLint y, GLsizei width, GLsizei height)
+	DO_glSelectBuffer, //(GLsizei size, GLuint *buffer)
+	DO_glShadeModel, //(GLenum mode)
+	DO_glStencilFunc, //(GLenum func, GLint ref, GLuint mask)
+	DO_glStencilMask, //(GLuint mask)
+	DO_glStencilOp, //(GLenum fail, GLenum zfail, GLenum zpass)
+	DO_glTexCoord4f, //(GLfloat s, GLfloat t, GLfloat r, GLfloat q)
+	DO_glTexCoord4fv, //(const GLfloat *v)
+	DO_glTexCoordPointer, //(GLint size, GLenum type, GLsizei stride, const GLvoid *pointer)
+	DO_glTexEnvf, //(GLenum target, GLenum pname, GLfloat param)
+	DO_glTexEnvfv, //(GLenum target, GLenum pname, const GLfloat *params)
+	DO_glTexGenf, //(GLenum coord, GLenum pname, GLfloat param)
+	DO_glTexGenfv, //(GLenum coord, GLenum pname, const GLfloat *params)
+	DO_glTexImage1D, //(GLenum target, GLint level, GLint internalformat, GLsizei width, GLint border, GLenum format, GLenum type, const GLvoid *pixels)
+	DO_glTexImage2D, //(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid *pixels)
+	DO_glTexParameterf, //(GLenum target, GLenum pname, GLfloat param)
+	DO_glTexParameterfv, //(GLenum target, GLenum pname, const GLfloat *params)
+	DO_glTexSubImage1D, //(GLenum target, GLint level, GLint xoffset, GLsizei width, GLenum format, GLenum type, const GLvoid *pixels)
+	DO_glTexSubImage2D, //(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid *pixels)
+	DO_glTranslatef, //(GLfloat x, GLfloat y, GLfloat z)
+	DO_glVertex4f, //(GLfloat x, GLfloat y, GLfloat z, GLfloat w)
+	DO_glVertex4fv, //(const GLfloat *v)
+	DO_glVertexPointer, //(GLint size, GLenum type, GLsizei stride, const GLvoid *pointer)
+	DO_glViewport, //(GLint x, GLint y, GLsizei width, GLsizei height)
+
+	DO_Repeat,
+	DO_Block,
+	DO_Set,
+	DO_Add,
+	DO_Clear,
+#ifdef DRAWLIST_LOOP
+	DO_Loop,
+#endif
+#ifdef DRAWLIST_EMITTER
+	DO_Emitter,
+#endif
+};
+
+enum DrawlistDatatype
+{
+	DD_Literal,
+	DD_Variable,
+	DD_Interpolator,
+};
 
 // attribute names
 static const char * sPositionNames[] = { "x", "y", "z", "w" };
@@ -299,13 +464,13 @@ void ProcessDrawData(const TiXmlElement *element, std::vector<unsigned int> &buf
 	if (const char *name = element->Attribute("variable"))
 	{
 		// push a reference to a variable value
-		buffer.push_back(0x19385305 /* "variable" */);
+		buffer.push_back(DD_Variable);
 		buffer.push_back(Hash(name));
 	}
 	else if (element->FirstChildElement())
 	{
 		// push an interpolator
-		buffer.push_back(0x83588fd4 /* "interpolator" */);
+		buffer.push_back(DD_Interpolator);
 		buffer.push_back(0);
 		int start = buffer.size();
 		ProcessInterpolatorItem(element, buffer, width, names, data);
@@ -314,7 +479,7 @@ void ProcessDrawData(const TiXmlElement *element, std::vector<unsigned int> &buf
 	else
 	{
 		// push literal data
-		buffer.push_back(0xecb9d8e4 /* "literal" */);
+		buffer.push_back(DD_Literal);
 		for (int i = 0; i < width; i++)
 		{
 			float value = data[i];
@@ -347,9 +512,9 @@ void ProcessDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buf
 	{
 	case 0x974c9474 /* "pushmatrix" */:
 		{
-			buffer.push_back(0xf6604733 /* "glPushMatrix" */);
+			buffer.push_back(DO_glPushMatrix);
 			ProcessDrawItems(element, buffer);
-			buffer.push_back(0xfc8a1d94 /* "glPopMatrix" */);
+			buffer.push_back(DO_glPopMatrix);
 		}
 		break;
 
@@ -388,10 +553,10 @@ void ProcessDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buf
 				else
 					mask &= ~bit;
 			}
-			buffer.push_back(0xa471ec02 /* "glPushAttrib" */);
+			buffer.push_back(DO_glPushAttrib);
 			buffer.push_back(mask);
 			ProcessDrawItems(element, buffer);
-			buffer.push_back(0x73c4cda1 /* "glPopAttrib" */);
+			buffer.push_back(DO_glPopAttrib);
 		}
 		break;
 
@@ -412,43 +577,43 @@ void ProcessDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buf
 				else
 					mask &= ~bit;
 			}
-			buffer.push_back(0x485249b9 /* "glPushClientAttrib" */);
+			buffer.push_back(DO_glPushClientAttrib);
 			buffer.push_back(mask);
 			ProcessDrawItems(element, buffer);
-			buffer.push_back(0xbfd4add2 /* "glPopClientAttrib" */);
+			buffer.push_back(DO_glPopClientAttrib);
 		}
 		break;
 
 	case 0xad0ecfd5 /* "translate" */:
 		{
-			buffer.push_back(0xafeef11e /* "glTranslatef" */);
+			buffer.push_back(DO_glTranslatef);
 			ProcessDrawData(element, buffer, 3, sPositionNames, sPositionDefault);
 		}
 		break;
 
 	case 0xa5f4fd0a /* "rotate" */:
 		{
-			buffer.push_back(0x29e02ba1 /* "glRotatef" */);
+			buffer.push_back(DO_glRotatef);
 			ProcessDrawData(element, buffer, 4, sRotationNames, sRotationDefault);
 		}
 		break;
 
 	case 0x82971c71 /* "scale" */:
 		{
-			buffer.push_back(0xff71cf6e /* "glScalef" */);
+			buffer.push_back(DO_glScalef);
 			ProcessDrawData(element, buffer, 3, sScaleNames, sScaleDefault);
 		}
 		break;
 
 	case 0x938fc4f7 /* "loadidentity" */:
 		{
-			buffer.push_back(0xcbd6bd5c /* "glLoadIdentity" */);
+			buffer.push_back(DO_glLoadIdentity);
 		}
 		break;
 
 	case 0x7d22a710 /* "loadmatrix" */:
 		{
-			buffer.push_back(0xca9090d7 /* "glLoadMatrixf" */);
+			buffer.push_back(DO_glLoadMatrixf);
 			for (int i = 0; i < 16; i++)
 			{
 				char name[16];
@@ -462,7 +627,7 @@ void ProcessDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buf
 
 	case 0x3807cb92 /* "multmatrix" */:
 		{
-			buffer.push_back(0x64500671 /* "glMultMatrixf" */);
+			buffer.push_back(DO_glMultMatrixf);
 			for (int i = 0; i < 16; i++)
 			{
 				char name[16];
@@ -476,34 +641,34 @@ void ProcessDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buf
 
 	case 0x945367a7 /* "vertex" */:
 		{
-			buffer.push_back(0x94110c7a /* "glVertex4f" */);
+			buffer.push_back(DO_glVertex4fv);
 			ProcessDrawData(element, buffer, 4, sPositionNames, sPositionDefault);
 		}
 		break;
 	case 0xe68b9c52 /* "normal" */:
 		{
-			buffer.push_back(0xf2d58094 /* "glNormal3f" */);
+			buffer.push_back(DO_glNormal3fv);
 			ProcessDrawData(element, buffer, 3, sPositionNames, sPositionDefault);
 		}
 		break;
 
 	case 0x3d7e6258 /* "color" */:
 		{
-			buffer.push_back(0x9d63d16b /* "glColor4f" */);
+			buffer.push_back(DO_glColor4fv);
 			ProcessDrawData(element, buffer, 4, sColorNames, sColorDefault);
 		}
 		break;
 
 	case 0x090aa9ab /* "index" */:
 		{
-			buffer.push_back(0xf3b3b82c /* "glIndexf" */);
+			buffer.push_back(DO_glIndexf);
 			ProcessDrawData(element, buffer, 1, sIndexNames, sIndexDefault);
 		}
 		break;
 
 	case 0xdd612dd3 /* "texcoord" */:
 		{
-			buffer.push_back(0xb78bb2ae /* "glTexCoord4f" */);
+			buffer.push_back(DO_glTexCoord4f);
 			ProcessDrawData(element, buffer, 4, sTexCoordNames, sTexCoordDefault);
 		}
 		break;
@@ -513,7 +678,7 @@ void ProcessDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buf
 			int flag;
 			if (element->QueryIntAttribute("flag", &flag) == TIXML_SUCCESS)
 			{
-				buffer.push_back(0x7f5dcd49 /* "glEdgeFlag" */);
+				buffer.push_back(DO_glEdgeFlag);
 				buffer.push_back(flag ? GL_TRUE : GL_FALSE);
 			}
 		}
@@ -528,9 +693,9 @@ void ProcessDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buf
 				if (texture)
 				{
 					// bind the texture object
-					buffer.push_back(0x2ed38a3d /* "glEnable" */);
+					buffer.push_back(DO_glEnable);
 					buffer.push_back(GL_TEXTURE_2D);
-					buffer.push_back(0x51956b0c /* "glBindTexture" */);
+					buffer.push_back(DO_glBindTexture);
 					buffer.push_back(GL_TEXTURE_2D);
 					buffer.push_back(texture);
 				}
@@ -540,91 +705,91 @@ void ProcessDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buf
 
 	case 0xbc9567c6 /* "points" */:
 		{
-			buffer.push_back(0xb70e76e3 /* "glBegin" */);
+			buffer.push_back(DO_glBegin);
 			buffer.push_back(GL_POINTS);
 			ProcessDrawItems(element, buffer);
-			buffer.push_back(0x50257afb /* "glEnd" */);
+			buffer.push_back(DO_glEnd);
 		}
 		break;
 
 	case 0xe1e4263c /* "lines" */:
 		{
-			buffer.push_back(0xb70e76e3 /* "glBegin" */);
+			buffer.push_back(DO_glBegin);
 			buffer.push_back(GL_LINES);
 			ProcessDrawItems(element, buffer);
-			buffer.push_back(0x50257afb /* "glEnd" */);
+			buffer.push_back(DO_glEnd);
 		}
 		break;
 
 	case 0xc2106ab6 /* "line_loop" */:
 		{
-			buffer.push_back(0xb70e76e3 /* "glBegin" */);
+			buffer.push_back(DO_glBegin);
 			buffer.push_back(GL_LINE_LOOP);
 			ProcessDrawItems(element, buffer);
-			buffer.push_back(0x50257afb /* "glEnd" */);
+			buffer.push_back(DO_glEnd);
 		}
 		break;
 
 	case 0xc6f2fa0e /* "line_strip" */:
 		{
-			buffer.push_back(0xb70e76e3 /* "glBegin" */);
+			buffer.push_back(DO_glBegin);
 			buffer.push_back(GL_LINE_STRIP);
 			ProcessDrawItems(element, buffer);
-			buffer.push_back(0x50257afb /* "glEnd" */);
+			buffer.push_back(DO_glEnd);
 		}
 		break;
 
 	case 0xd8a57342 /* "triangles" */:
 		{
-			buffer.push_back(0xb70e76e3 /* "glBegin" */);
+			buffer.push_back(DO_glBegin);
 			buffer.push_back(GL_TRIANGLES);
 			ProcessDrawItems(element, buffer);
-			buffer.push_back(0x50257afb /* "glEnd" */);
+			buffer.push_back(DO_glEnd);
 		}
 		break;
 
 	case 0x668b2dd8 /* "triangle_strip" */:
 		{
-			buffer.push_back(0xb70e76e3 /* "glBegin" */);
+			buffer.push_back(DO_glBegin);
 			buffer.push_back(GL_TRIANGLE_STRIP);
 			ProcessDrawItems(element, buffer);
-			buffer.push_back(0x50257afb /* "glEnd" */);
+			buffer.push_back(DO_glEnd);
 		}
 		break;
 
 	case 0xcfa6904f /* "triangle_fan" */:
 		{
-			buffer.push_back(0xb70e76e3 /* "glBegin" */);
+			buffer.push_back(DO_glBegin);
 			buffer.push_back(GL_TRIANGLE_FAN);
 			ProcessDrawItems(element, buffer);
-			buffer.push_back(0x50257afb /* "glEnd" */);
+			buffer.push_back(DO_glEnd);
 		}
 		break;
 
 	case 0x5667b307 /* "quads" */:
 		{
-			buffer.push_back(0xb70e76e3 /* "glBegin" */);
+			buffer.push_back(DO_glBegin);
 			buffer.push_back(GL_QUADS);
 			ProcessDrawItems(element, buffer);
-			buffer.push_back(0x50257afb /* "glEnd" */);
+			buffer.push_back(DO_glEnd);
 		}
 		break;
 
 	case 0xb47cad9b /* "quad_strip" */:
 		{
-			buffer.push_back(0xb70e76e3 /* "glBegin" */);
+			buffer.push_back(DO_glBegin);
 			buffer.push_back(GL_QUAD_STRIP);
 			ProcessDrawItems(element, buffer);
-			buffer.push_back(0x50257afb /* "glEnd" */);
+			buffer.push_back(DO_glEnd);
 		}
 		break;
 
 	case 0x051cb889 /* "polygon" */:
 		{
-			buffer.push_back(0xb70e76e3 /* "glBegin" */);
+			buffer.push_back(DO_glBegin);
 			buffer.push_back(GL_POLYGON);
 			ProcessDrawItems(element, buffer);
-			buffer.push_back(0x50257afb /* "glEnd" */);
+			buffer.push_back(DO_glEnd);
 		}
 		break;
 
@@ -636,7 +801,7 @@ void ProcessDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buf
 				GLuint drawlist = Database::drawlist.Get(Hash(name));
 				if (drawlist)
 				{
-					buffer.push_back(0x9525d6fe /* "glCallList" */);
+					buffer.push_back(DO_glCallList);
 					buffer.push_back(drawlist);
 				}
 			}
@@ -662,7 +827,7 @@ void ProcessDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buf
 			glEndList();
 
 			// use the anonymous drawlist
-			buffer.push_back(0x9525d6fe /* "glCallList" */);
+			buffer.push_back(DO_glCallList);
 			buffer.push_back(handle);
 		}
 		break;
@@ -671,33 +836,22 @@ void ProcessDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buf
 		{
 			for (const TiXmlAttribute *attrib = element->FirstAttribute(); attrib != NULL; attrib = attrib->Next())
 			{
-				unsigned int action = attrib->IntValue() ? 0x9128677b /* "glEnableClientState" */ : 0x342d0316 /* "glDisableClientState" */;
+				unsigned int action = attrib->IntValue() ? DO_glEnableClientState : DO_glDisableClientState;
+				GLenum clientstate;
 				switch (Hash(attrib->Name()))
 				{
-				case 0x945367a7 /* "vertex" */:
+				case 0x945367a7 /* "vertex" */:		clientstate = GL_VERTEX_ARRAY; break;
+				case 0xe68b9c52 /* "normal" */:		clientstate = GL_NORMAL_ARRAY; break;
+				case 0x3d7e6258 /* "color" */:		clientstate = GL_COLOR_ARRAY; break;
+				case 0x090aa9ab /* "index" */:		clientstate = GL_INDEX_ARRAY; break;
+				case 0xdd612dd3 /* "texcoord" */:	clientstate = GL_TEXTURE_COORD_ARRAY; break;
+				case 0x0135ab46 /* "edgeflag" */:	clientstate = GL_EDGE_FLAG_ARRAY; break;
+				default:							clientstate = 0; break;
+				}
+				if (clientstate)
+				{
 					buffer.push_back(action);
-					buffer.push_back(GL_VERTEX_ARRAY);
-					break;
-				case 0xe68b9c52 /* "normal" */:
-					buffer.push_back(action);
-					buffer.push_back(GL_NORMAL_ARRAY);
-					break;
-				case 0x3d7e6258 /* "color" */:
-					buffer.push_back(action);
-					buffer.push_back(GL_COLOR_ARRAY);
-					break;
-				case 0x090aa9ab /* "index" */:
-					buffer.push_back(action);
-					buffer.push_back(GL_INDEX_ARRAY);
-					break;
-				case 0xdd612dd3 /* "texcoord" */:
-					buffer.push_back(action);
-					buffer.push_back(GL_TEXTURE_COORD_ARRAY);
-					break;
-				case 0x0135ab46 /* "edgeflag" */:
-					buffer.push_back(action);
-					buffer.push_back(GL_EDGE_FLAG_ARRAY);
-					break;
+					buffer.push_back(clientstate);
 				}
 			}
 		}
@@ -711,7 +865,7 @@ void ProcessDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buf
 			int stride = 0;
 			element->QueryIntAttribute("stride", &stride);
 
-			buffer.push_back(0x4e467465 /* "glVertexPointer" */);
+			buffer.push_back(DO_glVertexPointer);
 			buffer.push_back(size);
 			buffer.push_back(stride);
 
@@ -727,7 +881,7 @@ void ProcessDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buf
 			int stride = 0;
 			element->QueryIntAttribute("stride", &stride);
 
-			buffer.push_back(0x46804012 /* "glNormalPointer" */);
+			buffer.push_back(DO_glNormalPointer);
 			buffer.push_back(stride);
 
 			buffer.push_back(0);
@@ -745,7 +899,7 @@ void ProcessDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buf
 			int stride = 0;
 			element->QueryIntAttribute("stride", &stride);
 
-			buffer.push_back(0x61e8560e /* "glColorPointer" */);
+			buffer.push_back(DO_glColorPointer);
 			buffer.push_back(size);
 			buffer.push_back(stride);
 
@@ -761,7 +915,7 @@ void ProcessDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buf
 			int stride = 0;
 			element->QueryIntAttribute("stride", &stride);
 
-			buffer.push_back(0x1e5cf423 /* "glIndexPointer" */);
+			buffer.push_back(DO_glIndexPointer);
 			buffer.push_back(stride);
 
 			buffer.push_back(0);
@@ -779,7 +933,7 @@ void ProcessDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buf
 			int stride = 0;
 			element->QueryIntAttribute("stride", &stride);
 
-			buffer.push_back(0x6d976421 /* "glTexCoordPointer" */);
+			buffer.push_back(DO_glTexCoordPointer);
 			buffer.push_back(size);
 			buffer.push_back(stride);
 
@@ -808,7 +962,7 @@ void ProcessDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buf
 				element = strtok(NULL, " \t\n\r,;");
 			}
 
-			buffer.push_back(0x9cfbc596 /* "glEdgeFlagPointer" */);
+			buffer.push_back(DO_glEdgeFlagPointer);
 			buffer.push_back(stride);
 			buffer.push_back(count);
 			for (size_t i = 0; i < (count+sizeof(unsigned int)/sizeof(bool)-1)/(sizeof(unsigned int)/sizeof(bool)); i++)
@@ -821,7 +975,7 @@ void ProcessDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buf
 			int index;
 			if (element->QueryIntAttribute("index", &index) == TIXML_SUCCESS)
 			{
-				buffer.push_back(0x8cfc8329 /* "glArrayElement" */);
+				buffer.push_back(DO_glArrayElement);
 				buffer.push_back(index);
 			}
 		}
@@ -848,7 +1002,7 @@ void ProcessDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buf
 			int first = 0, count = 0;
 			element->QueryIntAttribute("first", &first);
 			element->QueryIntAttribute("count", &count);
-			buffer.push_back(0x806f1b62 /* "glDrawArrays" */);
+			buffer.push_back(DO_glDrawArrays);
 			buffer.push_back(mode);
 			buffer.push_back(first);
 			buffer.push_back(count);
@@ -886,7 +1040,7 @@ void ProcessDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buf
 				element = strtok(NULL, " \t\n\r,;");
 			}
 
-			buffer.push_back(0xf6e885d9 /* "glDrawElements" */);
+			buffer.push_back(DO_glDrawElements);
 			buffer.push_back(mode);
 			buffer.push_back(count);
 			for (size_t i = 0; i < (count+sizeof(unsigned int)/sizeof(unsigned short)-1)/(sizeof(unsigned int)/sizeof(unsigned short)); i++)
@@ -899,7 +1053,7 @@ void ProcessDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buf
 			int count = 1;
 			element->QueryIntAttribute("count", &count);
 
-			buffer.push_back(0xd99ba82a /* "repeat" */);
+			buffer.push_back(DO_Repeat);
 			buffer.push_back(count);
 
 			buffer.push_back(0);
@@ -918,7 +1072,7 @@ void ProcessDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buf
 			float scale = 1.0f;
 			element->QueryFloatAttribute("scale", &scale);
 
-			buffer.push_back(0xeb0cbd62 /* "block" */);
+			buffer.push_back(DO_Block);
 			buffer.push_back(*reinterpret_cast<unsigned int *>(&start));
 			buffer.push_back(*reinterpret_cast<unsigned int *>(&length));
 			buffer.push_back(*reinterpret_cast<unsigned int *>(&scale));
@@ -939,7 +1093,7 @@ void ProcessDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buf
 			const float *data;
 			GetTypeData(type, width, names, data);
 
-			buffer.push_back(0xc6270703 /* "set" */);
+			buffer.push_back(DO_Set);
 			buffer.push_back(name);
 			buffer.push_back(width);
 			ProcessDrawData(element, buffer, width, names, data);
@@ -957,7 +1111,7 @@ void ProcessDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buf
 			float *data = static_cast<float *>(_alloca(width*sizeof(float)));
 			memset(data, 0, width*sizeof(float));
 
-			buffer.push_back(0x3b391274 /* "add" */);
+			buffer.push_back(DO_Add);
 			buffer.push_back(name);
 			buffer.push_back(width);
 			ProcessDrawData(element, buffer, width, names, data);
@@ -973,7 +1127,7 @@ void ProcessDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buf
 			const float *data;
 			GetTypeData(type, width, names, data);
 
-			buffer.push_back(0x5c6e1222 /* "clear" */);
+			buffer.push_back(DO_Clear);
 			buffer.push_back(name);
 			buffer.push_back(width);
 		}
@@ -990,7 +1144,7 @@ void ProcessDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buf
 			float by = 0.0f;
 			element->QueryFloatAttribute("by", &by);
 
-			buffer.push_back(0xddef486b /* "loop" */);
+			buffer.push_back(DO_Loop);
 			buffer.push_back(name);
 			buffer.push_back(*reinterpret_cast<unsigned int *>(&from));
 			buffer.push_back(*reinterpret_cast<unsigned int *>(&to));
@@ -1016,7 +1170,7 @@ void ProcessDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buf
 			element->QueryFloatAttribute("y", &y);
 			element->QueryFloatAttribute("angle", &a);
 
-			buffer.push_back(0x576b09cd /* "emitter" */);
+			buffer.push_back(DO_Emitter);
 			buffer.push_back(count);
 			buffer.push_back(*reinterpret_cast<unsigned int *>(&period));
 			buffer.push_back(*reinterpret_cast<unsigned int *>(&x));
@@ -1045,52 +1199,54 @@ void ProcessDrawItems(const TiXmlElement *element, std::vector<unsigned int> &bu
 	}
 }
 
+#pragma optimize( "t", on )
 size_t ExecuteDrawData(const unsigned int buffer[], size_t count, int width, float data[], float param, int id)
 {
-	int index = 0;
-	switch(buffer[index++])
+	const unsigned int * __restrict itor = buffer;
+	switch(*itor++)
 	{
-	case 0x19385305 /* "variable" */:
+	case DD_Literal:
+		{
+			// get literal value
+			for (int i = 0; i < width; i++)
+				reinterpret_cast<unsigned int * __restrict>(data)[i] = *itor++;
+		}
+		break;
+
+	case DD_Variable:
 		{
 			// TO DO: get the global value
-			unsigned int name = buffer[index++];
+			unsigned int name = *itor++;
 			const Database::Typed<float> &variables = Database::variable.Get(id);
 			for (int i = 0; i < width; i++)
 				data[i] = variables.Get(name+i);
 		}
 		break;
 
-	case 0x83588fd4 /* "interpolator" */:
+	case DD_Interpolator:
 		{
-			unsigned int size = buffer[index++];
+			unsigned int size = *itor++;
 
 			// get interpolator value
-			InterpolatorTemplate interpolator(width);
-			interpolator.mCount = buffer[index];
-			interpolator.mKeys = (float *)&buffer[index+1];
+			const int count = *itor;
+			const float *keys = reinterpret_cast<const float * __restrict>(itor+1);
 			int dummy = 0;
-			if (!interpolator.Apply(data, param, dummy))
+			if (!ApplyInterpolator(data, width, count, keys, param, dummy))
 				memset(data, 0, width*sizeof(float));
-			interpolator.mKeys = NULL;
 
-			index += size;
-		}
-		break;
-
-	case 0xecb9d8e4 /* "literal" */:
-		{
-			// get literal value
-			for (int i = 0; i < width; i++)
-				data[i] = *reinterpret_cast<const float *>(&buffer[index++]);
+			itor += size;
 		}
 		break;
 
 	default:
+		DebugPrint("Unrecognized drawlist datatype 0x%08x at index %d", *(itor-1), itor-buffer);
 		break;
 	}
 
-	return index;
+	return itor - buffer;
 }
+#pragma optimize("", on)
+
 
 #ifdef DRAWLIST_EMITTER
 float Determinant4f(const float m[16])
@@ -1167,150 +1323,39 @@ void MultiplyMatrix4f(float m[16], float a[16], float b[16])
 }
 #endif
 
+#pragma optimize( "t", on )
 void ExecuteDrawItems(const unsigned int buffer[], size_t count, float param, unsigned int id)
 {
 	GLfloat data[4];
 
-	const unsigned int *itor = buffer;
+	const unsigned int * __restrict itor = buffer;
 	while (itor < buffer + count)
 	{
 		switch (*itor++)
 		{
-		case 0x2ed38a3d /* "glEnable" */:
-			glEnable(*itor++);
+		case DO_glArrayElement:
+			glArrayElement(*itor++);
 			break;
 
-		case 0xbc4dc976 /* "glDisable" */:
-			glDisable(*itor++);
+		case DO_glBegin:
+			glBegin(GLenum(*itor++));
 			break;
 
-		case 0x51956b0c /* "glBindTexture" */:
+		case DO_glBindTexture:
 			glBindTexture(itor[0], itor[1]);
 			itor += 2;
 			break;
 
-		case 0xf6604733 /* "glPushMatrix" */:
-			glPushMatrix();
+		case DO_glCallList:
+			glCallList(GLuint(*itor++));
 			break;
 
-		case 0xfc8a1d94 /* "glPopMatrix" */:
-			glPopMatrix();
-			break;
-
-		case 0xa471ec02 /* "glPushAttrib" */:
-			glPushAttrib(GLbitfield(*itor++));
-			break;
-
-		case 0x73c4cda1 /* "glPopAttrib" */:
-			glPopAttrib();
-			break;
-
-		case 0x485249b9 /* "glPushClientAttrib" */:
-			glPushClientAttrib(GLbitfield(*itor++));
-			break;
-
-		case 0xbfd4add2 /* "glPopClientAttrib" */:
-			glPopClientAttrib();
-			break;
-
-		case 0xafeef11e /* "glTranslatef" */:
-			itor += ExecuteDrawData(itor, buffer + count - itor, 3, data, param, id);
-			glTranslatef(data[0], data[1], data[2]);
-			break;
-
-		case 0x29e02ba1 /* "glRotatef" */:
-			itor += ExecuteDrawData(itor, buffer + count - itor, 4, data, param, id);
-			glRotatef(data[0], data[1], data[2], data[3]);
-			break;
-
-		case 0xff71cf6e /* "glScalef" */:
-			itor += ExecuteDrawData(itor, buffer + count - itor, 3, data, param, id);
-			glScalef(data[0], data[1], data[2]);
-			break;
-
-		case 0xcbd6bd5c /* "glLoadIdentity" */:
-			glLoadIdentity();
-			break;
-
-		case 0xca9090d7 /* "glLoadMatrixf" */:
-			glLoadMatrixf(reinterpret_cast<const GLfloat *>(&*itor));
-			itor+=16;
-			break;
-
-		case 0x64500671 /* "glMultMatrixf" */:
-			glMultMatrixf(reinterpret_cast<const GLfloat *>(&*itor));
-			itor+=16;
-			break;
-
-		case 0x94110c7a /* "glVertex4f" */:
-			itor += ExecuteDrawData(itor, buffer + count - itor, 4, data, param, id);
-			glVertex4fv(data);
-			break;
-
-		case 0xf2d58094 /* "glNormal3f" */:
-			itor += ExecuteDrawData(itor, buffer + count - itor, 3, data, param, id);
-			glNormal3fv(data);
-			break;
-
-		case 0x9d63d16b /* "glColor4f" */:
+		case DO_glColor4fv:
 			itor += ExecuteDrawData(itor, buffer + count - itor, 4, data, param, id);
 			glColor4fv(data);
 			break;
 
-		case 0xf3b3b82c /* "glIndexf" */:
-			itor += ExecuteDrawData(itor, buffer + count - itor, 1, data, param, id);
-			glIndexf(data[0]);
-			break;
-
-		case 0xb78bb2ae /* "glTexCoord4f" */:
-			itor += ExecuteDrawData(itor, buffer + count - itor, 4, data, param, id);
-			glTexCoord4fv(data);
-			break;
-
-		case 0x7f5dcd49 /* "glEdgeFlag" */:
-			glEdgeFlag(*itor++ != 0);
-			break;
-
-		case 0xb70e76e3 /* "glBegin" */:
-			glBegin(GLenum(*itor++));
-			break;
-
-		case 0x50257afb /* "glEnd" */:
-			glEnd();
-			break;
-
-		case 0x9525d6fe /* "glCallList" */:
-			glCallList(GLuint(*itor++));
-			break;
-
-		case 0x9128677b /* "glEnableClientState" */:
-			glEnableClientState(GLenum(*itor++));
-			break;
-
-		case 0x342d0316 /* "glDisableClientState" */:
-			glDisableClientState(GLenum(*itor++));
-			break;
-
-		case 0x4e467465 /* "glVertexPointer" */:
-			{
-				GLint size = *itor++;
-				GLsizei stride = *itor++;
-				size_t count = *itor++;
-				glVertexPointer(size, GL_FLOAT, stride, &*itor);
-				itor += count;
-			}
-			break;
-
-		case 0x46804012 /* "glNormalPointer" */:
-			{
-				GLsizei stride = *itor++;
-				size_t count = *itor++;
-				glNormalPointer(GL_FLOAT, stride, &*itor);
-				itor += count;
-			}
-			break;
-
-		case 0x61e8560e /* "glColorPointer" */:
+		case DO_glColorPointer:
 			{
 				GLint size = *itor++;
 				GLsizei stride = *itor++;
@@ -1320,7 +1365,63 @@ void ExecuteDrawItems(const unsigned int buffer[], size_t count, float param, un
 			}
 			break;
 
-		case 0x1e5cf423 /* "glIndexPointer" */:
+		case DO_glDisable:
+			glDisable(*itor++);
+			break;
+
+		case DO_glDisableClientState:
+			glDisableClientState(GLenum(*itor++));
+			break;
+
+		case DO_glDrawArrays:
+			{
+				GLenum mode = *itor++;
+				GLint first = *itor++;
+				size_t count = *itor++;
+				glDrawArrays(mode, first, count);
+			}
+			break;
+
+		case DO_glDrawElements:
+			{
+				GLenum mode = *itor++;
+				GLsizei count = *itor++;
+				glDrawElements(mode, count, GL_UNSIGNED_SHORT, &*itor);
+				itor += count*sizeof(unsigned short)/sizeof(unsigned int);
+			}
+			break;
+
+		case DO_glEdgeFlag:
+			glEdgeFlag(*itor++ != 0);
+			break;
+
+		case DO_glEdgeFlagPointer:
+			{
+				GLsizei stride = *itor++;
+				size_t count = *itor++;
+				glEdgeFlagPointer(stride, &*itor);
+				itor += count*sizeof(bool)/sizeof(unsigned int);
+			}
+			break;
+
+		case DO_glEnable:
+			glEnable(*itor++);
+			break;
+
+		case DO_glEnableClientState:
+			glEnableClientState(GLenum(*itor++));
+			break;
+
+		case DO_glEnd:
+			glEnd();
+			break;
+
+		case DO_glIndexf:
+			itor += ExecuteDrawData(itor, buffer + count - itor, 1, data, param, id);
+			glIndexf(data[0]);
+			break;
+
+		case DO_glIndexPointer:
 			{
 				GLsizei stride = *itor++;
 				size_t count = *itor++;
@@ -1329,7 +1430,74 @@ void ExecuteDrawItems(const unsigned int buffer[], size_t count, float param, un
 			}
 			break;
 
-		case 0x6d976421 /* "glTexCoordPointer" */:
+		case DO_glLoadIdentity:
+			glLoadIdentity();
+			break;
+
+		case DO_glLoadMatrixf:
+			glLoadMatrixf(reinterpret_cast<const GLfloat *>(&*itor));
+			itor+=16;
+			break;
+
+		case DO_glMultMatrixf:
+			glMultMatrixf(reinterpret_cast<const GLfloat *>(&*itor));
+			itor+=16;
+			break;
+
+		case DO_glNormal3fv:
+			itor += ExecuteDrawData(itor, buffer + count - itor, 3, data, param, id);
+			glNormal3fv(data);
+			break;
+
+		case DO_glNormalPointer:
+			{
+				GLsizei stride = *itor++;
+				size_t count = *itor++;
+				glNormalPointer(GL_FLOAT, stride, &*itor);
+				itor += count;
+			}
+			break;
+
+		case DO_glPopAttrib:
+			glPopAttrib();
+			break;
+
+		case DO_glPopClientAttrib:
+			glPopClientAttrib();
+			break;
+
+		case DO_glPopMatrix:
+			glPopMatrix();
+			break;
+
+		case DO_glPushAttrib:
+			glPushAttrib(GLbitfield(*itor++));
+			break;
+
+		case DO_glPushClientAttrib:
+			glPushClientAttrib(GLbitfield(*itor++));
+			break;
+
+		case DO_glPushMatrix:
+			glPushMatrix();
+			break;
+
+		case DO_glRotatef:
+			itor += ExecuteDrawData(itor, buffer + count - itor, 4, data, param, id);
+			glRotatef(data[0], data[1], data[2], data[3]);
+			break;
+
+		case DO_glScalef:
+			itor += ExecuteDrawData(itor, buffer + count - itor, 3, data, param, id);
+			glScalef(data[0], data[1], data[2]);
+			break;
+
+		case DO_glTexCoord4fv:
+			itor += ExecuteDrawData(itor, buffer + count - itor, 4, data, param, id);
+			glTexCoord4fv(data);
+			break;
+
+		case DO_glTexCoordPointer:
 			{
 				GLint size = *itor++;
 				GLsizei stride = *itor++;
@@ -1339,38 +1507,27 @@ void ExecuteDrawItems(const unsigned int buffer[], size_t count, float param, un
 			}
 			break;
 
-		case 0x9cfbc596 /* "glEdgeFlagPointer" */:
+		case DO_glTranslatef:
+			itor += ExecuteDrawData(itor, buffer + count - itor, 3, data, param, id);
+			glTranslatef(data[0], data[1], data[2]);
+			break;
+
+		case DO_glVertex4fv:
+			itor += ExecuteDrawData(itor, buffer + count - itor, 4, data, param, id);
+			glVertex4fv(data);
+			break;
+
+		case DO_glVertexPointer:
 			{
+				GLint size = *itor++;
 				GLsizei stride = *itor++;
 				size_t count = *itor++;
-				glEdgeFlagPointer(stride, &*itor);
-				itor += count*sizeof(bool)/sizeof(unsigned int);
+				glVertexPointer(size, GL_FLOAT, stride, &*itor);
+				itor += count;
 			}
 			break;
 
-		case 0x8cfc8329 /* "glArrayElement" */:
-			glArrayElement(*itor++);
-			break;
-
-		case 0x806f1b62 /* "glDrawArrays" */:
-			{
-				GLenum mode = *itor++;
-				GLint first = *itor++;
-				size_t count = *itor++;
-				glDrawArrays(mode, first, count);
-			}
-			break;
-
-		case 0xf6e885d9 /* "glDrawElements" */:
-			{
-				GLenum mode = *itor++;
-				GLsizei count = *itor++;
-				glDrawElements(mode, count, GL_UNSIGNED_SHORT, &*itor);
-				itor += count*sizeof(unsigned short)/sizeof(unsigned int);
-			}
-			break;
-
-		case 0xd99ba82a /* "repeat" */:
+		case DO_Repeat:
 			{
 				int repeat = *itor++;
 				size_t size = *itor++;
@@ -1380,7 +1537,7 @@ void ExecuteDrawItems(const unsigned int buffer[], size_t count, float param, un
 			}
 			break;
 
-		case 0xeb0cbd62 /* "block" */:
+		case DO_Block:
 			{
 				float start = *reinterpret_cast<const float *>(itor++);
 				float length = *reinterpret_cast<const float *>(itor++);
@@ -1392,7 +1549,7 @@ void ExecuteDrawItems(const unsigned int buffer[], size_t count, float param, un
 			}
 			break;
 
-		case 0xc6270703 /* "set" */:
+		case DO_Set:
 			{
 				unsigned int name = *itor++;
 				int width = *itor++;
@@ -1405,7 +1562,7 @@ void ExecuteDrawItems(const unsigned int buffer[], size_t count, float param, un
 			}
 			break;
 
-		case 0x3b391274 /* "add" */:
+		case DO_Add:
 			{
 				unsigned int name = *itor++;
 				int width = *itor++;
@@ -1422,7 +1579,7 @@ void ExecuteDrawItems(const unsigned int buffer[], size_t count, float param, un
 			}
 			break;
 
-		case 0x5c6e1222 /* "clear" */:
+		case DO_Clear:
 			{
 				unsigned int name = *itor++;
 				int width = *itor++;
@@ -1434,7 +1591,7 @@ void ExecuteDrawItems(const unsigned int buffer[], size_t count, float param, un
 			break;
 
 #ifdef DRAWLIST_LOOP
-		case 0xddef486b /* "loop" */:
+		case DO_Loop:
 			{
 				unsigned int name = *itor++;
 				float from = *reinterpret_cast<const float *>(itor++);
@@ -1468,7 +1625,7 @@ void ExecuteDrawItems(const unsigned int buffer[], size_t count, float param, un
 #endif
 
 #ifdef DRAWLIST_EMITTER
-		case 0x576b09cd /* "emitter" */:
+		case DO_Emitter:
 			{
 				unsigned int name = Hash(&itor, sizeof(itor));
 				int repeat = *itor++;
@@ -1566,7 +1723,9 @@ void ExecuteDrawItems(const unsigned int buffer[], size_t count, float param, un
 #endif
 
 		default:
+			DebugPrint("Unrecognized drawlist operation 0x%08x at index %d", *(itor-1), itor-buffer);
 			break;
 		}
 	}
 }
+#pragma optimize( "", on )

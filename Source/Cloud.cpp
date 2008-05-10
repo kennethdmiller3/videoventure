@@ -22,16 +22,6 @@ namespace Database
 		}
 		cloudloader;
 	}
-
-}
-
-inline float rand_float()
-{
-	return (float)rand() * (1.0f / (float)RAND_MAX);
-}
-inline float rand_value(float aAverage, float aVariance)
-{
-	return (2.0f * rand_float() - 1.0f) * aVariance + aAverage;
 }
 
 GLuint CreateCloudDrawList(int aCount,
@@ -51,8 +41,8 @@ GLuint CreateCloudDrawList(int aCount,
 	for (int i = 0; i < aCount; i++)
 	{
 		// randomize position
-		float x = rand_value(aPosAverage[0], aPosVariance[0]);
-		float y = rand_value(aPosAverage[1], aPosVariance[1]);
+		float x = RandValue(aPosAverage[0], aPosVariance[0]);
+		float y = RandValue(aPosAverage[1], aPosVariance[1]);
 #ifdef DRAW_FRONT_TO_BACK
 		float z = aPosAverage[2] + (2 * i - aCount) * aPosVariance[2] / aCount;
 #else
@@ -60,15 +50,15 @@ GLuint CreateCloudDrawList(int aCount,
 #endif
 
 		// randomize size
-		float w = rand_value(aWidthAverage, aWidthVariance);
-		float h = rand_value(aHeightAverage, aHeightVariance);
+		float w = RandValue(aWidthAverage, aWidthVariance);
+		float h = RandValue(aHeightAverage, aHeightVariance);
 
 		// randomize color
 		glColor4f(
-			rand_value(aColorAverage[0], aColorVariance[0]),
-			rand_value(aColorAverage[1], aColorVariance[1]),
-			rand_value(aColorAverage[2], aColorVariance[2]),
-			rand_value(aColorAverage[3], aColorVariance[3])
+			RandValue(aColorAverage[0], aColorVariance[0]),
+			RandValue(aColorAverage[1], aColorVariance[1]),
+			RandValue(aColorAverage[2], aColorVariance[2]),
+			RandValue(aColorAverage[3], aColorVariance[3])
 			);
 
 		// submit vertices

@@ -16,6 +16,15 @@ void Collidable::operator delete(void *aPtr)
 {
 	pool.free(aPtr);
 }
+
+// joint pool
+static const size_t jointsize = 
+	std::max(sizeof(b2RevoluteJointDef),
+	std::max(sizeof(b2PrismaticJointDef),
+	std::max(sizeof(b2DistanceJointDef),
+	std::max(sizeof(b2PulleyJointDef),
+	sizeof(b2MouseJointDef)))));
+static boost::pool<boost::default_user_allocator_malloc_free> jointpool(jointsize);
 #endif
 
 
@@ -23,8 +32,8 @@ namespace Database
 {
 	Typed<CollidableTemplate> collidabletemplate(0xa7380c00 /* "collidabletemplate" */);
 	Typed<Typed<b2BodyDef> > collidabletemplatebody(0x66727d0c /* "collidabletemplatebody" */);
-	Typed<std::vector<b2CircleDef> > collidabletemplatecircle(0xa72cf124 /* "collidabletemplatecircle" */);
-	Typed<std::vector<b2PolygonDef> > collidabletemplatepolygon(0x8ce45056 /* "collidabletemplatepolygon" */);
+	Typed<Typed<b2CircleDef> > collidabletemplatecircle(0xa72cf124 /* "collidabletemplatecircle" */);
+	Typed<Typed<b2PolygonDef> > collidabletemplatepolygon(0x8ce45056 /* "collidabletemplatepolygon" */);
 	Typed<Collidable *> collidable(0x74e9dbae /* "collidable" */);
 	Typed<Typed<b2Body *> > collidablebody(0x6ccc2b62 /* "collidablebody" */);
 	Typed<Typed<Collidable::Listener> > collidablecontactadd(0x7cf2c45d /* "collidablecontactadd" */);
@@ -88,8 +97,36 @@ CollidableTemplate::CollidableTemplate(void)
 {
 }
 
+CollidableTemplate::CollidableTemplate(const CollidableTemplate &aTemplate)
+{
+	// deep-copy the joint list
+	for (std::list<CollidableTemplate::JointTemplate>::const_iterator itor = aTemplate.joints.begin(); itor != aTemplate.joints.end(); ++itor)
+	{
+		const CollidableTemplate::JointTemplate &jointsource = *itor;
+		joints.push_back(jointsource);
+		JointTemplate &joint = joints.back();
+		switch (jointsource.def->type)
+		{
+		case e_revoluteJoint:	joint.def = new(jointpool.malloc()) b2RevoluteJointDef(*static_cast<const b2RevoluteJointDef *>(jointsource.def)); break;
+		case e_prismaticJoint:	joint.def = new(jointpool.malloc()) b2PrismaticJointDef(*static_cast<const b2PrismaticJointDef *>(jointsource.def)); break;
+		case e_distanceJoint:	joint.def = new(jointpool.malloc()) b2DistanceJointDef(*static_cast<const b2DistanceJointDef *>(jointsource.def)); break;
+		case e_pulleyJoint:		joint.def = new(jointpool.malloc()) b2PulleyJointDef(*static_cast<const b2PulleyJointDef *>(jointsource.def)); break;
+		case e_mouseJoint:		joint.def = new(jointpool.malloc()) b2MouseJointDef(*static_cast<const b2MouseJointDef *>(jointsource.def)); break;
+		default:				assert(false);
+		}
+		if (jointsource.def)
+			jointsource.def->userData = &joint;
+	}
+}
+
 CollidableTemplate::~CollidableTemplate(void)
 {
+	// free the joint list
+	for (std::list<CollidableTemplate::JointTemplate>::const_iterator itor = joints.begin(); itor != joints.end(); ++itor)
+	{
+		const CollidableTemplate::JointTemplate &joint = *itor;
+		jointpool.free(joint.def);
+	}
 }
 
 bool CollidableTemplate::ProcessShapeItem(const TiXmlElement *element, b2ShapeDef &shape)
@@ -280,19 +317,20 @@ bool CollidableTemplate::ProcessBodyItem(const TiXmlElement *element, b2BodyDef 
 
 	case 0x28217089 /* "circle" */:
 		{
-			std::vector<b2CircleDef> &shapes = Database::collidabletemplatecircle.Open(id);
-			shapes.push_back(b2CircleDef());
-			b2CircleDef &shape = shapes.back();
+			Database::Typed<b2CircleDef> &shapes = Database::collidabletemplatecircle.Open(id);
+			int shapeid = shapes.GetCount()+1;
+			b2CircleDef &shape = shapes.Open(shapeid);
 			ConfigureCircle(element, shape);
+			shapes.Close(shapeid);
 			Database::collidabletemplatecircle.Close(id);
 		}
 		return true;
 
 	case 0x70c67e32 /* "box" */:
 		{
-			std::vector<b2PolygonDef> &shapes = Database::collidabletemplatepolygon.Open(id);
-			shapes.push_back(b2PolygonDef());
-			b2PolygonDef &shape = shapes.back();
+			Database::Typed<b2PolygonDef> &shapes = Database::collidabletemplatepolygon.Open(id);
+			int shapeid = shapes.GetCount()+1;
+			b2PolygonDef &shape = shapes.Open(shapeid);
 			ConfigureBox(element, shape);
 			Database::collidabletemplatepolygon.Close(id);
 		}
@@ -300,9 +338,9 @@ bool CollidableTemplate::ProcessBodyItem(const TiXmlElement *element, b2BodyDef 
 
 	case 0x84d6a947 /* "poly" */:
 		{
-			std::vector<b2PolygonDef> &shapes = Database::collidabletemplatepolygon.Open(id);
-			shapes.push_back(b2PolygonDef());
-			b2PolygonDef &shape = shapes.back();
+			Database::Typed<b2PolygonDef> &shapes = Database::collidabletemplatepolygon.Open(id);
+			int shapeid = shapes.GetCount()+1;
+			b2PolygonDef &shape = shapes.Open(shapeid);
 			ConfigurePoly(element, shape);
 			Database::collidabletemplatepolygon.Close(id);
 		}
@@ -323,7 +361,7 @@ bool CollidableTemplate::ConfigureBody(const TiXmlElement *element, b2BodyDef &b
 	return true;
 }
 
-bool CollidableTemplate::ProcessJointItem(const TiXmlElement *element, b2JointDef &joint)
+bool CollidableTemplate::ProcessJointItem(const TiXmlElement *element, JointTemplate &jointtemplate, b2JointDef &joint)
 {
 	const char *name = element->Value();
 	switch (Hash(name))
@@ -332,9 +370,8 @@ bool CollidableTemplate::ProcessJointItem(const TiXmlElement *element, b2JointDe
 		{
 			const char *name = element->Attribute("name");
 			const char *body = element->Attribute("body");
-			JointTemplate *data = static_cast<JointTemplate *>(joint.userData);
-			data->name1 = name ? Hash(name) : 0;
-			data->body1 = body ? Hash(body) : 0;
+			jointtemplate.name1 = name ? Hash(name) : 0;
+			jointtemplate.body1 = body ? Hash(body) : 0;
 		}
 		return true;
 
@@ -342,9 +379,8 @@ bool CollidableTemplate::ProcessJointItem(const TiXmlElement *element, b2JointDe
 		{
 			const char *name = element->Attribute("name");
 			const char *body = element->Attribute("body");
-			JointTemplate *data = static_cast<JointTemplate *>(joint.userData);
-			data->name2 = name ? Hash(name) : 0;
-			data->body2 = body ? Hash(body) : 0;
+			jointtemplate.name2 = name ? Hash(name) : 0;
+			jointtemplate.body2 = body ? Hash(body) : 0;
 		}
 		return true;
 
@@ -361,7 +397,7 @@ bool CollidableTemplate::ProcessJointItem(const TiXmlElement *element, b2JointDe
 	}
 }
 
-bool CollidableTemplate::ProcessRevoluteJointItem(const TiXmlElement *element, b2RevoluteJointDef &joint)
+bool CollidableTemplate::ProcessRevoluteJointItem(const TiXmlElement *element, JointTemplate &jointtemplate, b2RevoluteJointDef &joint)
 {
 	const char *name = element->Value();
 	switch (Hash(name))
@@ -397,21 +433,21 @@ bool CollidableTemplate::ProcessRevoluteJointItem(const TiXmlElement *element, b
 		return true;
 
 	default:
-		return ProcessJointItem(element, joint);
+		return ProcessJointItem(element, jointtemplate, joint);
 	}
 }
 
-bool CollidableTemplate::ConfigureRevoluteJoint(const TiXmlElement *element, b2RevoluteJointDef &joint)
+bool CollidableTemplate::ConfigureRevoluteJoint(const TiXmlElement *element, JointTemplate &jointtemplate, b2RevoluteJointDef &joint)
 {
 	// process child elements
 	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
-		ProcessRevoluteJointItem(child, joint);
+		ProcessRevoluteJointItem(child, jointtemplate, joint);
 	}
 	return true;
 }
 
-bool CollidableTemplate::ProcessPrismaticJointItem(const TiXmlElement *element, b2PrismaticJointDef &joint)
+bool CollidableTemplate::ProcessPrismaticJointItem(const TiXmlElement *element, JointTemplate &jointtemplate, b2PrismaticJointDef &joint)
 {
 	const char *name = element->Value();
 	switch (Hash(name))
@@ -449,21 +485,21 @@ bool CollidableTemplate::ProcessPrismaticJointItem(const TiXmlElement *element, 
 		return true;
 
 	default:
-		return ProcessJointItem(element, joint);
+		return ProcessJointItem(element, jointtemplate, joint);
 	}
 }
 
-bool CollidableTemplate::ConfigurePrismaticJoint(const TiXmlElement *element, b2PrismaticJointDef &joint)
+bool CollidableTemplate::ConfigurePrismaticJoint(const TiXmlElement *element, JointTemplate &jointtemplate, b2PrismaticJointDef &joint)
 {
 	// process child elements
 	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
-		ProcessPrismaticJointItem(child, joint);
+		ProcessPrismaticJointItem(child, jointtemplate, joint);
 	}
 	return true;
 }
 
-bool CollidableTemplate::ProcessDistanceJointItem(const TiXmlElement *element, b2DistanceJointDef &joint)
+bool CollidableTemplate::ProcessDistanceJointItem(const TiXmlElement *element, JointTemplate &jointtemplate, b2DistanceJointDef &joint)
 {
 	const char *name = element->Value();
 	switch (Hash(name))
@@ -479,21 +515,21 @@ bool CollidableTemplate::ProcessDistanceJointItem(const TiXmlElement *element, b
 		return true;
 
 	default:
-		return ProcessJointItem(element, joint);
+		return ProcessJointItem(element, jointtemplate, joint);
 	}
 }
 
-bool CollidableTemplate::ConfigureDistanceJoint(const TiXmlElement *element, b2DistanceJointDef &joint)
+bool CollidableTemplate::ConfigureDistanceJoint(const TiXmlElement *element, JointTemplate &jointtemplate, b2DistanceJointDef &joint)
 {
 	// process child elements
 	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
-		ProcessDistanceJointItem(child, joint);
+		ProcessDistanceJointItem(child, jointtemplate, joint);
 	}
 	return true;
 }
 
-bool CollidableTemplate::ProcessPulleyJointItem(const TiXmlElement *element, b2PulleyJointDef &joint)
+bool CollidableTemplate::ProcessPulleyJointItem(const TiXmlElement *element, JointTemplate &jointtemplate, b2PulleyJointDef &joint)
 {
 	const char *name = element->Value();
 	switch (Hash(name))
@@ -531,21 +567,21 @@ bool CollidableTemplate::ProcessPulleyJointItem(const TiXmlElement *element, b2P
 		return true;
 
 	default:
-		return ProcessJointItem(element, joint);
+		return ProcessJointItem(element, jointtemplate, joint);
 	}
 }
 
-bool CollidableTemplate::ConfigurePulleyJoint(const TiXmlElement *element, b2PulleyJointDef &joint)
+bool CollidableTemplate::ConfigurePulleyJoint(const TiXmlElement *element, JointTemplate &jointtemplate, b2PulleyJointDef &joint)
 {
 	// process child elements
 	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
-		ProcessPulleyJointItem(child, joint);
+		ProcessPulleyJointItem(child, jointtemplate, joint);
 	}
 	return true;
 }
 
-bool CollidableTemplate::ProcessMouseJointItem(const TiXmlElement *element, b2MouseJointDef &joint)
+bool CollidableTemplate::ProcessMouseJointItem(const TiXmlElement *element, JointTemplate &jointtemplate, b2MouseJointDef &joint)
 {
 	const char *name = element->Value();
 	switch (Hash(name))
@@ -566,16 +602,16 @@ bool CollidableTemplate::ProcessMouseJointItem(const TiXmlElement *element, b2Mo
 		return true;
 
 	default:
-		return ProcessJointItem(element, joint);
+		return ProcessJointItem(element, jointtemplate, joint);
 	}
 }
 
-bool CollidableTemplate::ConfigureMouseJoint(const TiXmlElement *element, b2MouseJointDef &joint)
+bool CollidableTemplate::ConfigureMouseJoint(const TiXmlElement *element, JointTemplate &jointtemplate, b2MouseJointDef &joint)
 {
 	// process child elements
 	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
-		ProcessMouseJointItem(child, joint);
+		ProcessMouseJointItem(child, jointtemplate, joint);
 	}
 	return true;
 }
@@ -609,51 +645,51 @@ bool CollidableTemplate::Configure(const TiXmlElement *element, unsigned int id)
 
 		case 0xef2f9539 /* "revolutejoint" */:
 			{
-				revolutes.push_back(b2RevoluteJointDef());
-				b2RevoluteJointDef &joint = revolutes.back();
-				joints.push_back(JointTemplate());
-				joint.userData = &joints.back();
-				CollidableTemplate::ConfigureRevoluteJoint(child, joint);
+				b2RevoluteJointDef &joint = *new(jointpool.malloc()) b2RevoluteJointDef();
+				joints.push_back(JointTemplate(&joint));
+				CollidableTemplate::JointTemplate &jointtemplate = joints.back();
+				joint.userData = &jointtemplate;
+				CollidableTemplate::ConfigureRevoluteJoint(child, jointtemplate, joint);
 			}
 			break;
 
 		case 0x4954853d /* "prismaticjoint" */:
 			{
-				prismatics.push_back(b2PrismaticJointDef());
-				b2PrismaticJointDef &joint = prismatics.back();
-				joints.push_back(JointTemplate());
-				joint.userData = &joints.back();
-				CollidableTemplate::ConfigurePrismaticJoint(child, joint);
+				b2PrismaticJointDef &joint = *new(jointpool.malloc()) b2PrismaticJointDef();
+				joints.push_back(JointTemplate(&joint));
+				CollidableTemplate::JointTemplate &jointtemplate = joints.back();
+				joint.userData = &jointtemplate;
+				CollidableTemplate::ConfigurePrismaticJoint(child, jointtemplate, joint);
 			}
 			break;
 
 		case 0x6932d1ee /* "distancejoint" */:
 			{
-				distances.push_back(b2DistanceJointDef());
-				b2DistanceJointDef &joint = distances.back();
-				joints.push_back(JointTemplate());
-				joint.userData = &joints.back();
-				CollidableTemplate::ConfigureDistanceJoint(child, joint);
+				b2DistanceJointDef &joint = *new(jointpool.malloc()) b2DistanceJointDef();
+				joints.push_back(JointTemplate(&joint));
+				CollidableTemplate::JointTemplate &jointtemplate = joints.back();
+				joint.userData = &jointtemplate;
+				CollidableTemplate::ConfigureDistanceJoint(child, jointtemplate, joint);
 			}
 			break;
 
 		case 0xdd003dc4 /* "pulleyjoint" */:
 			{
-				pulleys.push_back(b2PulleyJointDef());
-				b2PulleyJointDef &joint = pulleys.back();
-				joints.push_back(JointTemplate());
-				joint.userData = &joints.back();
-				CollidableTemplate::ConfigurePulleyJoint(child, joint);
+				b2PulleyJointDef &joint = *new(jointpool.malloc()) b2PulleyJointDef();
+				joints.push_back(JointTemplate(&joint));
+				CollidableTemplate::JointTemplate &jointtemplate = joints.back();
+				joint.userData = &jointtemplate;
+				CollidableTemplate::ConfigurePulleyJoint(child, jointtemplate, joint);
 			}
 			break;
 
 		case 0xc3b5cf50 /* "mousejoint" */:
 			{
-				mouses.push_back(b2MouseJointDef());
-				b2MouseJointDef &joint = mouses.back();
-				joints.push_back(JointTemplate());
-				joint.userData = &joints.back();
-				CollidableTemplate::ConfigureMouseJoint(child, joint);
+				b2MouseJointDef &joint = *new(jointpool.malloc()) b2MouseJointDef();
+				joints.push_back(JointTemplate(&joint));
+				CollidableTemplate::JointTemplate &jointtemplate = joints.back();
+				joint.userData = &jointtemplate;
+				CollidableTemplate::ConfigureMouseJoint(child, jointtemplate, joint);
 			}
 			break;
 
@@ -664,6 +700,47 @@ bool CollidableTemplate::Configure(const TiXmlElement *element, unsigned int id)
 		}
 	}
 
+	return true;
+}
+
+bool CollidableTemplate::SetupLinkJoint(const LinkTemplate &linktemplate, unsigned int aId, unsigned int aSecondary)
+{
+	// add a revolute joint to the linked template (HACK)
+	b2RevoluteJointDef &joint = *new(jointpool.malloc()) b2RevoluteJointDef();
+	joints.push_back(JointTemplate(&joint));
+	JointTemplate &jointtemplate = joints.back();
+	
+	// configure the joint template
+	jointtemplate.name1 = aId;
+	jointtemplate.body1 = 0xea90e208 /* "main" */;
+	jointtemplate.name2 = aSecondary;
+	jointtemplate.body2 = 0xea90e208 /* "main" */;
+
+	// configure the joint definition
+	joint.userData = &jointtemplate;
+	joint.localAnchor1.Set(linktemplate.mOffset.p.x, linktemplate.mOffset.p.y);
+	joint.localAnchor2.Set(0, 0);
+	joint.referenceAngle = linktemplate.mOffset.Angle();
+	if (linktemplate.mUpdateAngle)
+	{
+		joint.lowerAngle = 0.0f;
+		joint.upperAngle = 0.0f;
+		joint.enableLimit = true;
+	}
+	return true;
+}
+
+bool CollidableTemplate::SetupJointDef(b2JointDef &joint, const JointTemplate &jointtemplate, unsigned int id) const
+{
+	unsigned int id1 = jointtemplate.name1 == 0xe3736e9a /* "backlink" */ ? Database::backlink.Get(id) : jointtemplate.name1;
+	joint.userData = NULL;
+	joint.body1 = Database::collidablebody.Get(id1 ? id1 : id).Get(jointtemplate.body1);
+	if (!joint.body1)
+		return false;
+	unsigned int id2 = jointtemplate.name2 == 0xe3736e9a /* "backlink" */ ? Database::backlink.Get(id) : jointtemplate.name2;
+	joint.body2 = Database::collidablebody.Get(id2 ? id2 : id).Get(jointtemplate.body2);
+	if (!joint.body2)
+		return false;
 	return true;
 }
 
@@ -883,21 +960,6 @@ Collidable::~Collidable(void)
 {
 }
 
-bool Collidable::SetupJointDef(b2JointDef &joint)
-{
-	CollidableTemplate::JointTemplate *data = static_cast<CollidableTemplate::JointTemplate *>(joint.userData);
-	unsigned int id1 = data->name1 == 0xe3736e9a /* "backlink" */ ? Database::backlink.Get(id) : data->name1;
-	joint.userData = NULL;
-	joint.body1 = Database::collidablebody.Get(id1 ? id1 : id).Get(data->body1);
-	if (!joint.body1)
-		return false;
-	unsigned int id2 = data->name2 == 0xe3736e9a /* "backlink" */ ? Database::backlink.Get(id) : data->name2;
-	joint.body2 = Database::collidablebody.Get(id2 ? id2 : id).Get(data->body2);
-	if (!joint.body2)
-		return false;
-	return true;
-}
-
 void Collidable::AddToWorld(void)
 {
 	const CollidableTemplate &collidable = Database::collidabletemplate.Get(id);
@@ -923,17 +985,17 @@ void Collidable::AddToWorld(void)
 		body = world->CreateBody(&def);
 
 		// add shapes
-		const std::vector<b2CircleDef> &circles = Database::collidabletemplatecircle.Get(id);
-		for (std::vector<b2CircleDef>::const_iterator circleitor = circles.begin(); circleitor != circles.end(); ++circleitor)
+		const Database::Typed<b2CircleDef> &circles = Database::collidabletemplatecircle.Get(id);
+		for (Database::Typed<b2CircleDef>::Iterator circleitor(&circles); circleitor.IsValid(); ++circleitor)
 		{
-			b2CircleDef circle(*circleitor);
+			b2CircleDef circle(circleitor.GetValue());
 			circle.userData = reinterpret_cast<void *>(id);
 			body->CreateShape(&circle);
 		}
-		const std::vector<b2PolygonDef> &polygons = Database::collidabletemplatepolygon.Get(id);
-		for (std::vector<b2PolygonDef>::const_iterator polygonitor = polygons.begin(); polygonitor != polygons.end(); ++polygonitor)
+		const Database::Typed<b2PolygonDef> &polygons = Database::collidabletemplatepolygon.Get(id);
+		for (Database::Typed<b2PolygonDef>::Iterator polygonitor(&polygons); polygonitor.IsValid(); ++polygonitor)
 		{
-			b2PolygonDef polygon(*polygonitor);
+			b2PolygonDef polygon(polygonitor.GetValue());
 			polygon.userData = reinterpret_cast<void *>(id);
 			body->CreateShape(&polygon);
 		}
@@ -952,44 +1014,12 @@ void Collidable::AddToWorld(void)
 	Database::collidablebody.Close(id);
 
 	// for each joint
-	for (std::list<b2RevoluteJointDef>::const_iterator itor = collidable.revolutes.begin(); itor != collidable.revolutes.end(); ++itor)
+	for (std::list<CollidableTemplate::JointTemplate>::const_iterator itor = collidable.joints.begin(); itor != collidable.joints.end(); ++itor)
 	{
-		b2RevoluteJointDef joint(*itor);
-		if (SetupJointDef(joint))
+		const CollidableTemplate::JointTemplate &joint = *itor;
+		if (collidable.SetupJointDef(*joint.def, joint, id))
 		{
-			world->CreateJoint(&joint);
-		}
-	}
-	for (std::list<b2PrismaticJointDef>::const_iterator itor = collidable.prismatics.begin(); itor != collidable.prismatics.end(); ++itor)
-	{
-		b2PrismaticJointDef joint(*itor);
-		if (SetupJointDef(joint))
-		{
-			world->CreateJoint(&joint);
-		}
-	}
-	for (std::list<b2DistanceJointDef>::const_iterator itor = collidable.distances.begin(); itor != collidable.distances.end(); ++itor)
-	{
-		b2DistanceJointDef joint(*itor);
-		if (SetupJointDef(joint))
-		{
-			world->CreateJoint(&joint);
-		}
-	}
-	for (std::list<b2PulleyJointDef>::const_iterator itor = collidable.pulleys.begin(); itor != collidable.pulleys.end(); ++itor)
-	{
-		b2PulleyJointDef joint(*itor);
-		if (SetupJointDef(joint))
-		{
-			world->CreateJoint(&joint);
-		}
-	}
-	for (std::list<b2MouseJointDef>::const_iterator itor = collidable.mouses.begin(); itor != collidable.mouses.end(); ++itor)
-	{
-		b2MouseJointDef joint(*itor);
-		if (SetupJointDef(joint))
-		{
-			world->CreateJoint(&joint);
+			world->CreateJoint(joint.def);
 		}
 	}
 }

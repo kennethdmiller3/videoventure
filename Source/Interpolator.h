@@ -1,5 +1,9 @@
 #pragma once
 
+void ProcessInterpolatorItem(const TiXmlElement *element, std::vector<unsigned int> &buffer, int width, const char *names[], const float data[]);
+
+bool ApplyInterpolator(float target[], int width, int count, const float keys[], float aTime, int &aIndex);
+
 class InterpolatorTemplate
 {
 public:
@@ -22,7 +26,8 @@ public:
 	}
 	float *AddKey(float aTime);
 
-	bool Apply(float aTarget[], float aTime, int &aIndex);
+	bool Apply(float aTarget[], float aTime, int &aIndex)
+	{
+		ApplyInterpolator(aTarget, mWidth, mCount, mKeys, aTime, aIndex);
+	}
 };
-
-void ProcessInterpolatorItem(const TiXmlElement *element, std::vector<unsigned int> &buffer, int width, const char *names[], const float data[]);

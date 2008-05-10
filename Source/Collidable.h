@@ -4,6 +4,8 @@
 
 const int COLLISION_LAYERS = 32;
 
+class LinkTemplate;
+
 class CollidableTemplate
 {
 public:
@@ -12,18 +14,24 @@ public:
 	// collision layer
 	int layer;
 
-
 	// collision joints
-	struct JointTemplate { unsigned int name1; unsigned int body1; unsigned int name2; unsigned int body2; };
+	struct JointTemplate
+	{
+		unsigned int name1;
+		unsigned int body1;
+		unsigned int name2;
+		unsigned int body2;
+		b2JointDef *def;
+		JointTemplate(b2JointDef * const def = NULL)
+			: def(def)
+		{
+		}
+	};
 	std::list<JointTemplate> joints;
-	std::list<b2RevoluteJointDef> revolutes;
-	std::list<b2PrismaticJointDef> prismatics;
-	std::list<b2DistanceJointDef> distances;
-	std::list<b2PulleyJointDef> pulleys;
-	std::list<b2MouseJointDef> mouses;
 
 public:
 	CollidableTemplate(void);
+	CollidableTemplate(const CollidableTemplate &aTemplate);
 	~CollidableTemplate(void);
 
 	// configure
@@ -35,18 +43,21 @@ public:
 	bool ConfigurePoly(const TiXmlElement *element, b2PolygonDef &shape);
 	bool ProcessBodyItem(const TiXmlElement *element, b2BodyDef &body);
 	bool ConfigureBody(const TiXmlElement *element, b2BodyDef &body);
-	bool ProcessJointItem(const TiXmlElement *element, b2JointDef &joint);
-	bool ProcessRevoluteJointItem(const TiXmlElement *element, b2RevoluteJointDef &joint);
-	bool ConfigureRevoluteJoint(const TiXmlElement *element, b2RevoluteJointDef &joint);
-	bool ProcessPrismaticJointItem(const TiXmlElement *element, b2PrismaticJointDef &joint);
-	bool ConfigurePrismaticJoint(const TiXmlElement *element, b2PrismaticJointDef &joint);
-	bool ProcessDistanceJointItem(const TiXmlElement *element, b2DistanceJointDef &joint);
-	bool ConfigureDistanceJoint(const TiXmlElement *element, b2DistanceJointDef &joint);
-	bool ProcessPulleyJointItem(const TiXmlElement *element, b2PulleyJointDef &joint);
-	bool ConfigurePulleyJoint(const TiXmlElement *element, b2PulleyJointDef &joint);
-	bool ProcessMouseJointItem(const TiXmlElement *element, b2MouseJointDef &joint);
-	bool ConfigureMouseJoint(const TiXmlElement *element, b2MouseJointDef &joint);
+	bool ProcessJointItem(const TiXmlElement *element, JointTemplate &jointtemplate, b2JointDef &joint);
+	bool ProcessRevoluteJointItem(const TiXmlElement *element, JointTemplate &jointtemplate, b2RevoluteJointDef &joint);
+	bool ConfigureRevoluteJoint(const TiXmlElement *element, JointTemplate &jointtemplate, b2RevoluteJointDef &joint);
+	bool ProcessPrismaticJointItem(const TiXmlElement *element, JointTemplate &jointtemplate, b2PrismaticJointDef &joint);
+	bool ConfigurePrismaticJoint(const TiXmlElement *element, JointTemplate &jointtemplate, b2PrismaticJointDef &joint);
+	bool ProcessDistanceJointItem(const TiXmlElement *element, JointTemplate &jointtemplate, b2DistanceJointDef &joint);
+	bool ConfigureDistanceJoint(const TiXmlElement *element, JointTemplate &jointtemplate, b2DistanceJointDef &joint);
+	bool ProcessPulleyJointItem(const TiXmlElement *element, JointTemplate &jointtemplate, b2PulleyJointDef &joint);
+	bool ConfigurePulleyJoint(const TiXmlElement *element, JointTemplate &jointtemplate, b2PulleyJointDef &joint);
+	bool ProcessMouseJointItem(const TiXmlElement *element, JointTemplate &jointtemplate, b2MouseJointDef &joint);
+	bool ConfigureMouseJoint(const TiXmlElement *element, JointTemplate &jointtemplate, b2MouseJointDef &joint);
 	bool Configure(const TiXmlElement *element, unsigned int id);
+
+	bool SetupLinkJoint(const LinkTemplate &linktemplate, unsigned int id, unsigned int secondary);
+	bool SetupJointDef(b2JointDef &joint, const JointTemplate &jointtemplate, unsigned int id) const;
 };
 
 class Collidable
@@ -59,9 +70,6 @@ protected:
 
 	// primary body
 	b2Body *body;
-
-protected:
-	bool SetupJointDef(b2JointDef &joint);
 
 public:
 	typedef fastdelegate::FastDelegate<void (unsigned int, unsigned int, float, const b2ContactPoint &)> Listener;
