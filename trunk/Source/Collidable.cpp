@@ -96,34 +96,36 @@ CollidableTemplate::CollidableTemplate(void)
 }
 
 CollidableTemplate::CollidableTemplate(const CollidableTemplate &aTemplate)
+: id(aTemplate.id)
+, bodydef(aTemplate.bodydef)
 {
 	// deep-copy the joint list
-	for (std::list<CollidableTemplate::JointTemplate>::const_iterator itor = aTemplate.joints.begin(); itor != aTemplate.joints.end(); ++itor)
+	// TO DO: update collidable id in each descriptor
+	for (std::vector<b2JointDef *>::const_iterator itor = aTemplate.joints.begin(); itor != aTemplate.joints.end(); ++itor)
 	{
-		const CollidableTemplate::JointTemplate &jointsource = *itor;
-		joints.push_back(jointsource);
-		JointTemplate &joint = joints.back();
-		switch (jointsource.def->type)
+		const b2JointDef *jointsource = *itor;
+		b2JointDef *jointdef;
+		switch (jointsource->type)
 		{
-		case e_revoluteJoint:	joint.def = new(jointpool.malloc()) b2RevoluteJointDef(*static_cast<const b2RevoluteJointDef *>(jointsource.def)); break;
-		case e_prismaticJoint:	joint.def = new(jointpool.malloc()) b2PrismaticJointDef(*static_cast<const b2PrismaticJointDef *>(jointsource.def)); break;
-		case e_distanceJoint:	joint.def = new(jointpool.malloc()) b2DistanceJointDef(*static_cast<const b2DistanceJointDef *>(jointsource.def)); break;
-		case e_pulleyJoint:		joint.def = new(jointpool.malloc()) b2PulleyJointDef(*static_cast<const b2PulleyJointDef *>(jointsource.def)); break;
-		case e_mouseJoint:		joint.def = new(jointpool.malloc()) b2MouseJointDef(*static_cast<const b2MouseJointDef *>(jointsource.def)); break;
-		default:				assert(false);
+		case e_revoluteJoint:	jointdef = new(jointpool.malloc()) b2RevoluteJointDef(*static_cast<const b2RevoluteJointDef *>(jointsource)); break;
+		case e_prismaticJoint:	jointdef = new(jointpool.malloc()) b2PrismaticJointDef(*static_cast<const b2PrismaticJointDef *>(jointsource)); break;
+		case e_distanceJoint:	jointdef = new(jointpool.malloc()) b2DistanceJointDef(*static_cast<const b2DistanceJointDef *>(jointsource)); break;
+		case e_pulleyJoint:		jointdef = new(jointpool.malloc()) b2PulleyJointDef(*static_cast<const b2PulleyJointDef *>(jointsource)); break;
+		case e_mouseJoint:		jointdef = new(jointpool.malloc()) b2MouseJointDef(*static_cast<const b2MouseJointDef *>(jointsource)); break;
+		default:				jointdef = NULL; assert(false); break;
 		}
-		if (jointsource.def)
-			jointsource.def->userData = &joint;
+		if (jointdef)
+			joints.push_back(jointdef);
 	}
 }
 
 CollidableTemplate::~CollidableTemplate(void)
 {
 	// free the joint list
-	for (std::list<CollidableTemplate::JointTemplate>::const_iterator itor = joints.begin(); itor != joints.end(); ++itor)
+	for (std::vector<b2JointDef *>::const_iterator itor = joints.begin(); itor != joints.end(); ++itor)
 	{
-		const CollidableTemplate::JointTemplate &joint = *itor;
-		jointpool.free(joint.def);
+		b2JointDef *jointdef = *itor;
+		jointpool.free(jointdef);
 	}
 }
 
@@ -359,7 +361,7 @@ bool CollidableTemplate::ConfigureBody(const TiXmlElement *element, b2BodyDef &b
 	return true;
 }
 
-bool CollidableTemplate::ProcessJointItem(const TiXmlElement *element, JointTemplate &jointtemplate, b2JointDef &joint)
+bool CollidableTemplate::ProcessJointItem(const TiXmlElement *element, b2JointDef &joint)
 {
 	const char *name = element->Value();
 	switch (Hash(name))
@@ -367,14 +369,14 @@ bool CollidableTemplate::ProcessJointItem(const TiXmlElement *element, JointTemp
 	case 0x115ce60c /* "body1" */:
 		{
 			const char *name = element->Attribute("name");
-			jointtemplate.name1 = name ? Hash(name) : 0;
+			joint.body1 = reinterpret_cast<b2Body *>(name ? Hash(name) : 0);
 		}
 		return true;
 
 	case 0x145ceac5 /* "body2" */:
 		{
 			const char *name = element->Attribute("name");
-			jointtemplate.name2 = name ? Hash(name) : 0;
+			joint.body2 = reinterpret_cast<b2Body *>(name ? Hash(name) : 0);
 		}
 		return true;
 
@@ -391,7 +393,7 @@ bool CollidableTemplate::ProcessJointItem(const TiXmlElement *element, JointTemp
 	}
 }
 
-bool CollidableTemplate::ProcessRevoluteJointItem(const TiXmlElement *element, JointTemplate &jointtemplate, b2RevoluteJointDef &joint)
+bool CollidableTemplate::ProcessRevoluteJointItem(const TiXmlElement *element, b2RevoluteJointDef &joint)
 {
 	const char *name = element->Value();
 	switch (Hash(name))
@@ -427,21 +429,21 @@ bool CollidableTemplate::ProcessRevoluteJointItem(const TiXmlElement *element, J
 		return true;
 
 	default:
-		return ProcessJointItem(element, jointtemplate, joint);
+		return ProcessJointItem(element, joint);
 	}
 }
 
-bool CollidableTemplate::ConfigureRevoluteJoint(const TiXmlElement *element, JointTemplate &jointtemplate, b2RevoluteJointDef &joint)
+bool CollidableTemplate::ConfigureRevoluteJoint(const TiXmlElement *element, b2RevoluteJointDef &joint)
 {
 	// process child elements
 	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
-		ProcessRevoluteJointItem(child, jointtemplate, joint);
+		ProcessRevoluteJointItem(child, joint);
 	}
 	return true;
 }
 
-bool CollidableTemplate::ProcessPrismaticJointItem(const TiXmlElement *element, JointTemplate &jointtemplate, b2PrismaticJointDef &joint)
+bool CollidableTemplate::ProcessPrismaticJointItem(const TiXmlElement *element, b2PrismaticJointDef &joint)
 {
 	const char *name = element->Value();
 	switch (Hash(name))
@@ -479,21 +481,21 @@ bool CollidableTemplate::ProcessPrismaticJointItem(const TiXmlElement *element, 
 		return true;
 
 	default:
-		return ProcessJointItem(element, jointtemplate, joint);
+		return ProcessJointItem(element, joint);
 	}
 }
 
-bool CollidableTemplate::ConfigurePrismaticJoint(const TiXmlElement *element, JointTemplate &jointtemplate, b2PrismaticJointDef &joint)
+bool CollidableTemplate::ConfigurePrismaticJoint(const TiXmlElement *element, b2PrismaticJointDef &joint)
 {
 	// process child elements
 	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
-		ProcessPrismaticJointItem(child, jointtemplate, joint);
+		ProcessPrismaticJointItem(child, joint);
 	}
 	return true;
 }
 
-bool CollidableTemplate::ProcessDistanceJointItem(const TiXmlElement *element, JointTemplate &jointtemplate, b2DistanceJointDef &joint)
+bool CollidableTemplate::ProcessDistanceJointItem(const TiXmlElement *element, b2DistanceJointDef &joint)
 {
 	const char *name = element->Value();
 	switch (Hash(name))
@@ -509,21 +511,21 @@ bool CollidableTemplate::ProcessDistanceJointItem(const TiXmlElement *element, J
 		return true;
 
 	default:
-		return ProcessJointItem(element, jointtemplate, joint);
+		return ProcessJointItem(element, joint);
 	}
 }
 
-bool CollidableTemplate::ConfigureDistanceJoint(const TiXmlElement *element, JointTemplate &jointtemplate, b2DistanceJointDef &joint)
+bool CollidableTemplate::ConfigureDistanceJoint(const TiXmlElement *element, b2DistanceJointDef &joint)
 {
 	// process child elements
 	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
-		ProcessDistanceJointItem(child, jointtemplate, joint);
+		ProcessDistanceJointItem(child, joint);
 	}
 	return true;
 }
 
-bool CollidableTemplate::ProcessPulleyJointItem(const TiXmlElement *element, JointTemplate &jointtemplate, b2PulleyJointDef &joint)
+bool CollidableTemplate::ProcessPulleyJointItem(const TiXmlElement *element, b2PulleyJointDef &joint)
 {
 	const char *name = element->Value();
 	switch (Hash(name))
@@ -561,21 +563,21 @@ bool CollidableTemplate::ProcessPulleyJointItem(const TiXmlElement *element, Joi
 		return true;
 
 	default:
-		return ProcessJointItem(element, jointtemplate, joint);
+		return ProcessJointItem(element, joint);
 	}
 }
 
-bool CollidableTemplate::ConfigurePulleyJoint(const TiXmlElement *element, JointTemplate &jointtemplate, b2PulleyJointDef &joint)
+bool CollidableTemplate::ConfigurePulleyJoint(const TiXmlElement *element, b2PulleyJointDef &joint)
 {
 	// process child elements
 	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
-		ProcessPulleyJointItem(child, jointtemplate, joint);
+		ProcessPulleyJointItem(child, joint);
 	}
 	return true;
 }
 
-bool CollidableTemplate::ProcessMouseJointItem(const TiXmlElement *element, JointTemplate &jointtemplate, b2MouseJointDef &joint)
+bool CollidableTemplate::ProcessMouseJointItem(const TiXmlElement *element, b2MouseJointDef &joint)
 {
 	const char *name = element->Value();
 	switch (Hash(name))
@@ -596,16 +598,16 @@ bool CollidableTemplate::ProcessMouseJointItem(const TiXmlElement *element, Join
 		return true;
 
 	default:
-		return ProcessJointItem(element, jointtemplate, joint);
+		return ProcessJointItem(element, joint);
 	}
 }
 
-bool CollidableTemplate::ConfigureMouseJoint(const TiXmlElement *element, JointTemplate &jointtemplate, b2MouseJointDef &joint)
+bool CollidableTemplate::ConfigureMouseJoint(const TiXmlElement *element, b2MouseJointDef &joint)
 {
 	// process child elements
 	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
-		ProcessMouseJointItem(child, jointtemplate, joint);
+		ProcessMouseJointItem(child, joint);
 	}
 	return true;
 }
@@ -634,51 +636,41 @@ bool CollidableTemplate::Configure(const TiXmlElement *element, unsigned int id)
 
 		case 0xef2f9539 /* "revolutejoint" */:
 			{
-				b2RevoluteJointDef &joint = *new(jointpool.malloc()) b2RevoluteJointDef();
-				joints.push_back(JointTemplate(&joint));
-				CollidableTemplate::JointTemplate &jointtemplate = joints.back();
-				joint.userData = &jointtemplate;
-				CollidableTemplate::ConfigureRevoluteJoint(child, jointtemplate, joint);
+				b2RevoluteJointDef *joint = new(jointpool.malloc()) b2RevoluteJointDef();
+				joints.push_back(joint);
+				CollidableTemplate::ConfigureRevoluteJoint(child, *joint);
 			}
 			break;
 
 		case 0x4954853d /* "prismaticjoint" */:
 			{
-				b2PrismaticJointDef &joint = *new(jointpool.malloc()) b2PrismaticJointDef();
-				joints.push_back(JointTemplate(&joint));
-				CollidableTemplate::JointTemplate &jointtemplate = joints.back();
-				joint.userData = &jointtemplate;
-				CollidableTemplate::ConfigurePrismaticJoint(child, jointtemplate, joint);
+				b2PrismaticJointDef *joint = new(jointpool.malloc()) b2PrismaticJointDef();
+				joints.push_back(joint);
+				CollidableTemplate::ConfigurePrismaticJoint(child, *joint);
 			}
 			break;
 
 		case 0x6932d1ee /* "distancejoint" */:
 			{
-				b2DistanceJointDef &joint = *new(jointpool.malloc()) b2DistanceJointDef();
-				joints.push_back(JointTemplate(&joint));
-				CollidableTemplate::JointTemplate &jointtemplate = joints.back();
-				joint.userData = &jointtemplate;
-				CollidableTemplate::ConfigureDistanceJoint(child, jointtemplate, joint);
+				b2DistanceJointDef *joint = new(jointpool.malloc()) b2DistanceJointDef();
+				joints.push_back(joint);
+				CollidableTemplate::ConfigureDistanceJoint(child, *joint);
 			}
 			break;
 
 		case 0xdd003dc4 /* "pulleyjoint" */:
 			{
-				b2PulleyJointDef &joint = *new(jointpool.malloc()) b2PulleyJointDef();
-				joints.push_back(JointTemplate(&joint));
-				CollidableTemplate::JointTemplate &jointtemplate = joints.back();
-				joint.userData = &jointtemplate;
-				CollidableTemplate::ConfigurePulleyJoint(child, jointtemplate, joint);
+				b2PulleyJointDef *joint = new(jointpool.malloc()) b2PulleyJointDef();
+				joints.push_back(joint);
+				CollidableTemplate::ConfigurePulleyJoint(child, *joint);
 			}
 			break;
 
 		case 0xc3b5cf50 /* "mousejoint" */:
 			{
-				b2MouseJointDef &joint = *new(jointpool.malloc()) b2MouseJointDef();
-				joints.push_back(JointTemplate(&joint));
-				CollidableTemplate::JointTemplate &jointtemplate = joints.back();
-				joint.userData = &jointtemplate;
-				CollidableTemplate::ConfigureMouseJoint(child, jointtemplate, joint);
+				b2MouseJointDef *joint = new(jointpool.malloc()) b2MouseJointDef();
+				joints.push_back(joint);
+				CollidableTemplate::ConfigureMouseJoint(child, *joint);
 			}
 			break;
 
@@ -695,45 +687,21 @@ bool CollidableTemplate::Configure(const TiXmlElement *element, unsigned int id)
 bool CollidableTemplate::SetupLinkJoint(const LinkTemplate &linktemplate, unsigned int aId, unsigned int aSecondary)
 {
 	// add a revolute joint to the linked template (HACK)
-	b2RevoluteJointDef &joint = *new(jointpool.malloc()) b2RevoluteJointDef();
-	joints.push_back(JointTemplate(&joint));
-	JointTemplate &jointtemplate = joints.back();
+	b2RevoluteJointDef *joint = new(jointpool.malloc()) b2RevoluteJointDef();
+	joints.push_back(joint);
 	
-	// configure the joint template
-	jointtemplate.name1 = aId;
-	jointtemplate.name2 = aSecondary;
-
 	// configure the joint definition
-	joint.userData = &jointtemplate;
-	joint.localAnchor1.Set(linktemplate.mOffset.p.x, linktemplate.mOffset.p.y);
-	joint.localAnchor2.Set(0, 0);
-	joint.referenceAngle = linktemplate.mOffset.Angle();
+	joint->body1 = reinterpret_cast<b2Body *>(aId);
+	joint->body2 = reinterpret_cast<b2Body *>(aSecondary);
+	joint->localAnchor1.Set(linktemplate.mOffset.p.x, linktemplate.mOffset.p.y);
+	joint->localAnchor2.Set(0, 0);
+	joint->referenceAngle = linktemplate.mOffset.Angle();
 	if (linktemplate.mUpdateAngle)
 	{
-		joint.lowerAngle = 0.0f;
-		joint.upperAngle = 0.0f;
-		joint.enableLimit = true;
+		joint->lowerAngle = 0.0f;
+		joint->upperAngle = 0.0f;
+		joint->enableLimit = true;
 	}
-	return true;
-}
-
-bool CollidableTemplate::SetupJointDef(b2JointDef &joint, const JointTemplate &jointtemplate, unsigned int id) const
-{
-	unsigned int id1 = jointtemplate.name1 == 0xe3736e9a /* "backlink" */ ? Database::backlink.Get(id) : jointtemplate.name1;
-	joint.userData = NULL;
-	Collidable *coll1 = Database::collidable.Get(id1 ? id1 : id);
-	if (!coll1)
-		return false;
-	joint.body1 = coll1->GetBody();
-	if (!joint.body1)
-		return false;
-	unsigned int id2 = jointtemplate.name2 == 0xe3736e9a /* "backlink" */ ? Database::backlink.Get(id) : jointtemplate.name2;
-	Collidable *coll2 = Database::collidable.Get(id2 ? id2 : id);
-	if (!coll2)
-		return false;
-	joint.body2 = coll2->GetBody();
-	if (!joint.body2)
-		return false;
 	return true;
 }
 
@@ -953,6 +921,27 @@ Collidable::~Collidable(void)
 {
 }
 
+bool Collidable::CreateJoint(b2JointDef &joint) const
+{
+	unsigned int id1 = reinterpret_cast<unsigned int>(joint.body1);
+	joint.userData = NULL;
+	Collidable *coll1 = Database::collidable.Get(id1 ? id1 : id);
+	if (!coll1)
+		return false;
+	joint.body1 = coll1->GetBody();
+	if (!joint.body1)
+		return false;
+	unsigned int id2 = reinterpret_cast<unsigned int>(joint.body2);
+	Collidable *coll2 = Database::collidable.Get(id2 ? id2 : id);
+	if (!coll2)
+		return false;
+	joint.body2 = coll2->GetBody();
+	if (!joint.body2)
+		return false;
+	world->CreateJoint(&joint);
+	return true;
+}
+
 void Collidable::AddToWorld(void)
 {
 	const CollidableTemplate &collidable = Database::collidabletemplate.Get(id);
@@ -998,13 +987,45 @@ void Collidable::AddToWorld(void)
 		body->SetAngularVelocity(entity->GetOmega());
 	}
 
-	// for each joint
-	for (std::list<CollidableTemplate::JointTemplate>::const_iterator itor = collidable.joints.begin(); itor != collidable.joints.end(); ++itor)
+	// for each joint...
+	for (std::vector<b2JointDef *>::const_iterator itor = collidable.joints.begin(); itor != collidable.joints.end(); ++itor)
 	{
-		const CollidableTemplate::JointTemplate &joint = *itor;
-		if (collidable.SetupJointDef(*joint.def, joint, id))
+		// duplicate the joint definition because CreateJoint modifies it
+		const b2JointDef *jointsource = *itor;
+		switch (jointsource->type)
 		{
-			world->CreateJoint(joint.def);
+		case e_revoluteJoint:
+			{
+				b2RevoluteJointDef joint(*static_cast<const b2RevoluteJointDef *>(jointsource));
+				CreateJoint(joint);
+			}
+			break;
+		case e_prismaticJoint:
+			{
+				b2PrismaticJointDef joint(*static_cast<const b2PrismaticJointDef *>(jointsource));
+				CreateJoint(joint);
+			}
+			break;
+		case e_distanceJoint:
+			{
+				b2DistanceJointDef joint(*static_cast<const b2DistanceJointDef *>(jointsource));
+				CreateJoint(joint);
+			}
+			break;
+		case e_pulleyJoint:
+			{
+				b2PulleyJointDef joint(*static_cast<const b2PulleyJointDef *>(jointsource));
+				CreateJoint(joint);
+			}
+			break;
+		case e_mouseJoint:
+			{
+				b2MouseJointDef joint(*static_cast<const b2MouseJointDef *>(jointsource));
+				CreateJoint(joint);
+			}
+			break;
+		default:
+			break;
 		}
 	}
 }
