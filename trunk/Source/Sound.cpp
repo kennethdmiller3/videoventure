@@ -360,6 +360,31 @@ void Sound::Mix(void *userdata, Uint8 *stream, int len)
 	// for each active sound...
 	for (Sound *sound = sHead; sound != NULL; sound = sound->mNext)
 	{
+		// get sound data
+		const short *data = sound->mData;
+		unsigned int offset = sound->mOffset;
+		unsigned int length = sound->mLength;
+		unsigned int repeat = sound->mRepeat;
+
+		// update sound position
+		sound->mOffset += samples;
+
+		// if moving past the end...
+		if (sound->mOffset >= length)
+		{
+			// if repeating
+			if (repeat)
+			{
+				// loop the sound
+				sound->mOffset %= length;
+			}
+			else
+			{
+				// clamp to the end
+				sound->mOffset = length;
+			}
+		}
+
 		// apply sound fall-off
 		float volume = sound->mVolume / (1.0f + listenerpos.DistSq(sound->mPosition) / 16384.0f);
 		if (volume < 1.0f/256.0f)
@@ -368,17 +393,11 @@ void Sound::Mix(void *userdata, Uint8 *stream, int len)
 		// weight sound based on volume
 		float weight = volume;
 
-		// get sound data
-		const short *data = sound->mData;
-		unsigned int offset = sound->mOffset;
-		unsigned int length = sound->mLength;
-		unsigned int repeat = sound->mRepeat;
-
 		// if not repeating...
 		if (!repeat)
 		{
 			// diminish weight over time
-			weight *= 1.0f - float(sound->mOffset) / float(sound->mLength);
+			weight *= 1.0f - float(offset) / float(length);
 		}
 
 		int j;
@@ -442,7 +461,7 @@ void Sound::Mix(void *userdata, Uint8 *stream, int len)
 			// add volume-scaled samples
 			// (lesser of remaining destination and remaining source)
 #if 1
-			for (int amount = std::min(dstend - dst, srcend - src); amount > 0; --amount)
+			while (dst < dstend && src < srcend)
 				*dst++ += float(*src++) * volume;
 #else
 			// Duff's device :)
@@ -474,29 +493,6 @@ void Sound::Mix(void *userdata, Uint8 *stream, int len)
 					// stop
 					break;
 				}
-			}
-		}
-	}
-
-	// for each active sound...
-	for (Sound *sound = sHead; sound != NULL; sound = sound->mNext)
-	{
-		// update sound position
-		sound->mOffset += samples;
-
-		// if moving past the end...
-		if (sound->mOffset >= sound->mLength)
-		{
-			// if repeating
-			if (sound->mRepeat)
-			{
-				// loop the sound
-				sound->mOffset %= sound->mLength;
-			}
-			else
-			{
-				// clamp to the end
-				sound->mOffset = sound->mLength;
 			}
 		}
 	}

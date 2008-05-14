@@ -38,7 +38,7 @@ namespace Database
 			return (aIndex + 1) & mMask;
 		}
 
-		inline size_t Probe(Key aKey) const
+		inline size_t FindIndex(Key aKey) const
 		{
 			size_t index = Index(aKey);
 
@@ -53,7 +53,33 @@ namespace Database
 			return index;
 		}
 
-		void *GetRecord(size_t aSlot) const
+		inline size_t FindSlot(Key aKey) const
+		{
+			size_t index = Index(aKey);
+
+			// while the slot is not empty...
+			size_t slot = mMap[index];
+			while (slot != EMPTY && mKey[slot] != aKey)
+			{
+				index = Next(index);
+				slot = mMap[index];
+			}
+
+			return slot;
+		}
+
+		inline void *AllocRecord(Key aKey)
+		{
+			size_t slot = mCount++;
+			size_t index = FindIndex(aKey);
+			mMap[index] = slot;
+			mKey[slot] = aKey;
+			if (mPool[slot >> mShift] == NULL)
+				mPool[slot >> mShift] = malloc(mStride << mShift);
+			return GetRecord(slot);
+		}
+
+		inline void *GetRecord(size_t aSlot) const
 		{
 			return static_cast<char *>(mPool[aSlot >> mShift]) + (aSlot & ((1 << mShift) - 1)) * mStride;
 		}

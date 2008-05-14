@@ -376,6 +376,10 @@ OGLCONSOLE_Console OGLCONSOLE_Create()
  * programmer, end-user refers to the real end-user) */
 void OGLCONSOLE_DestroyReal(OGLCONSOLE_Console console, int warn)
 {
+	if (C)
+	{
+		free(C->lines);
+	}
     free(C);
 
     if (warn)

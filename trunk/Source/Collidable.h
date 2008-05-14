@@ -15,8 +15,15 @@ public:
 	// body definition
 	b2BodyDef bodydef;
 
+#ifndef COLLIDABLE_SHAPE_DATABASE
+	// shape definitions
+	std::vector<b2ShapeDef *> shapes;
+#endif
+
+#ifndef COLLIDABLE_JOINT_DATABASE
 	// joint definitions
 	std::vector<b2JointDef *> joints;
+#endif
 
 public:
 	CollidableTemplate(void);

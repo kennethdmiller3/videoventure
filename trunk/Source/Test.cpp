@@ -18,6 +18,8 @@
 #include "Drawlist.h"
 #include "Sound.h"
 
+#include <malloc.h>
+
 // screen attributes
 int SCREEN_WIDTH = 640;
 int SCREEN_HEIGHT = 480;
@@ -46,6 +48,7 @@ bool PROFILER_OUTPUTPRINT = false;
 // simulation attributes
 int SIMULATION_RATE = 60;
 float TIME_SCALE = 1.0f;
+bool FIXED_STEP = false;
 
 // rendering attributes
 int RENDER_MOTIONBLUR = 1;
@@ -64,6 +67,9 @@ const char *LEVEL_CONFIG = "level.xml";
 const char *RECORD_CONFIG = "record.xml";
 bool record = false;
 bool playback = false;
+
+// runtime
+bool runtime = false;
 
 // console
 OGLCONSOLE_Console console;
@@ -184,40 +190,12 @@ bool init_GL()
 	glFogf( GL_FOG_END, 256.0f*5.0f );
 #endif
 
-	// set projection
-	glMatrixMode( GL_PROJECTION );
-	glLoadIdentity();
-	glViewport( 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT );
-	glFrustum( -0.5*VIEW_SIZE, 0.5*VIEW_SIZE, 0.5f*VIEW_SIZE*SCREEN_HEIGHT/SCREEN_WIDTH, -0.5f*VIEW_SIZE*SCREEN_HEIGHT/SCREEN_WIDTH, 256.0f*1.0f, 256.0f*5.0f );
-
-	// set base modelview matrix
-	glMatrixMode( GL_MODELVIEW );
-	glLoadIdentity();
-	glTranslatef( 0.0f, 0.0f, -256.0f );
-	glScalef( -1.0f, -1.0f, -1.0f );
-
 	// return true if no errors
 	return glGetError() == GL_NO_ERROR;
 }
 
-bool init()
+bool init_Window()
 {
-	// initialize SDL
-	if( SDL_Init( SDL_INIT_EVERYTHING ) < 0 )
-		return false;    
-
-	// Check for joystick
-	if (SDL_NumJoysticks() > 0)
-	{
-		// Open joystick
-		SDL_Joystick *joy = SDL_JoystickOpen(0);
-		if(joy)
-		{
-			DebugPrint("Opened Joystick 0\n");
-			DebugPrint("Name: %s\n", SDL_JoystickName(0));
-		}
-	}
-
 	// set OpenGL attributes
     SDL_GL_SetAttribute( SDL_GL_RED_SIZE, 8 );
     SDL_GL_SetAttribute( SDL_GL_GREEN_SIZE, 8 );
@@ -240,6 +218,29 @@ bool init()
 		flags |= SDL_FULLSCREEN;
 	if( SDL_SetVideoMode( SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_DEPTH, flags ) == NULL )
 		return false;
+	return true;
+}
+
+bool init()
+{
+	// initialize SDL
+	if( SDL_Init( SDL_INIT_EVERYTHING ) < 0 )
+		return false;    
+
+	// Check for joystick
+	if (SDL_NumJoysticks() > 0)
+	{
+		// Open joystick
+		SDL_Joystick *joy = SDL_JoystickOpen(0);
+		if(joy)
+		{
+			DebugPrint("Opened Joystick 0\n");
+			DebugPrint("Name: %s\n", SDL_JoystickName(0));
+		}
+	}
+
+	// initialize the window
+	init_Window();
 
 	// hide the mouse cursor
 	SDL_ShowCursor(SDL_DISABLE);
@@ -518,6 +519,8 @@ int ProcessCommand( unsigned int aCommand, char *aParam[], int aCount )
 		{
 			SCREEN_WIDTH = atoi(aParam[0]);
 			SCREEN_HEIGHT = atoi(aParam[1]);
+			if (runtime)
+				init_Window();
 			return 2;
 		}
 		else
@@ -530,6 +533,8 @@ int ProcessCommand( unsigned int aCommand, char *aParam[], int aCount )
 		if (aCount >= 1)
 		{
 			SCREEN_DEPTH = atoi(aParam[0]);
+			if (runtime)
+				init_Window();
 			return 1;
 		}
 		else
@@ -542,6 +547,8 @@ int ProcessCommand( unsigned int aCommand, char *aParam[], int aCount )
 		if (aCount >= 1)
 		{
 			SCREEN_FULLSCREEN = atoi(aParam[0]) != 0;
+			if (runtime)
+				init_Window();
 			return 1;
 		}
 		else
@@ -554,6 +561,8 @@ int ProcessCommand( unsigned int aCommand, char *aParam[], int aCount )
 		if (aCount >= 1)
 		{
 			OPENGL_SWAPCONTROL = atoi(aParam[0]) != 0;
+			if (runtime)
+				init_Window();
 			return 1;
 		}
 		else
@@ -566,6 +575,11 @@ int ProcessCommand( unsigned int aCommand, char *aParam[], int aCount )
 		if (aCount >= 1)
 		{
 			OPENGL_ANTIALIAS = atoi(aParam[0]) != 0;
+			if (runtime)
+			{
+				init_Window();
+				init_GL();
+			}
 			return 1;
 		}
 		else
@@ -578,6 +592,8 @@ int ProcessCommand( unsigned int aCommand, char *aParam[], int aCount )
 		if (aCount >= 1)
 		{
 			OPENGL_MULTISAMPLE = atoi(aParam[0]);
+			if (runtime)
+				init_Window();
 			return 1;
 		}
 		else
@@ -693,6 +709,18 @@ int ProcessCommand( unsigned int aCommand, char *aParam[], int aCount )
 		else
 		{
 			OGLCONSOLE_Output(console, "timescale: %f\n", TIME_SCALE);
+			return 0;
+		}
+
+	case 0xe065cb63 /* "fixedstep" */:
+		if (aCount >= 1)
+		{
+			FIXED_STEP = atoi(aParam[0]) != 0;
+			return 1;
+		}
+		else
+		{
+			OGLCONSOLE_Output(console, "fixedstep: %d\n", FIXED_STEP);
 			return 0;
 		}
 
@@ -938,6 +966,10 @@ int ProcessCommand( unsigned int aCommand, char *aParam[], int aCount )
 // main
 int SDL_main( int argc, char *argv[] )
 {
+	_CrtSetDbgFlag( _CRTDBG_ALLOC_MEM_DF|_CRTDBG_CHECK_EVERY_1024_DF|_CRTDBG_CHECK_CRT_DF|_CRTDBG_LEAK_CHECK_DF );
+	_CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_FILE | _CRTDBG_MODE_DEBUG);
+	_CrtSetReportFile(_CRT_WARN, _CRTDBG_FILE_STDOUT);
+
 	// process command-line arguments
 	for (int i = 1; i < argc; ++i)
 	{
@@ -977,6 +1009,7 @@ int SDL_main( int argc, char *argv[] )
 		| GL_DEPTH_BUFFER_BIT
 #endif
 		);
+
 	// show the screen
 	SDL_GL_SwapBuffers();
 
@@ -1209,12 +1242,15 @@ int SDL_main( int argc, char *argv[] )
 
 	DebugPrint("Simulating at %dHz (x%f)\n", SIMULATION_RATE, TIME_SCALE);
 
+	// set to runtime mode
+	runtime = true;
+
 	// wait for user exit
 	do
 	{
 
 #ifdef GET_PERFORMANCE_DETAILS
-		if (!paused)
+//		if (!paused)
 			profile_index = (profile_index + 1) % NUM_SAMPLES;
 		control_time[profile_index] = 0;
 		simulate_time[profile_index] = 0;
@@ -1319,7 +1355,16 @@ int SDL_main( int argc, char *argv[] )
 			delta_turns = TIME_SCALE / 60.0f / RENDER_MOTIONBLUR * sim_rate;
 
 			// set turn counter to almost reach a new turn
-			sim_turns = 1.0f - FLT_EPSILON - delta_turns * RENDER_MOTIONBLUR;
+			sim_turns = 0.99609375f - delta_turns * RENDER_MOTIONBLUR;
+		}
+		else if (FIXED_STEP)
+		{
+			// turns to advance per step
+			delta_turns = TIME_SCALE / RENDER_MOTIONBLUR;
+
+			// time to advance per step
+			delta_time = delta_turns * sim_step;
+
 		}
 		else
 		{
@@ -1333,6 +1378,25 @@ int SDL_main( int argc, char *argv[] )
 		// for each motion-blur step
 		for (int blur = 0; blur < RENDER_MOTIONBLUR; ++blur)
 		{
+			// clear the screen
+			glClear(
+				GL_COLOR_BUFFER_BIT
+#ifdef ENABLE_DEPTH_BUFFER
+				| GL_DEPTH_BUFFER_BIT
+#endif
+				);
+
+			// set projection
+			glMatrixMode( GL_PROJECTION );
+			glLoadIdentity();
+			glFrustum( -0.5*VIEW_SIZE, 0.5*VIEW_SIZE, 0.5f*VIEW_SIZE*SCREEN_HEIGHT/SCREEN_WIDTH, -0.5f*VIEW_SIZE*SCREEN_HEIGHT/SCREEN_WIDTH, 256.0f*1.0f, 256.0f*5.0f );
+
+			// set base modelview matrix
+			glMatrixMode( GL_MODELVIEW );
+			glLoadIdentity();
+			glTranslatef( 0.0f, 0.0f, -256.0f );
+			glScalef( -1.0f, -1.0f, -1.0f );
+
 			// advance the sim timer
 			sim_turns += delta_turns;
 
@@ -1352,6 +1416,13 @@ int SDL_main( int argc, char *argv[] )
 
 				if (playback)
 				{
+					// quit if out of turns
+					if (!inputlognext)
+					{
+						quit = true;
+						break;
+					}
+
 					// get the next turn value
 					int turn = -1;
 					inputlognext->QueryIntAttribute("turn", &turn);
@@ -1369,10 +1440,6 @@ int SDL_main( int argc, char *argv[] )
 
 						// go to the next entry
 						inputlognext = inputlognext->NextSiblingElement();
-
-						// quit if out of entries
-						if (!inputlognext)
-							quit = true;
 					}
 				}
 				else if (record)
@@ -1552,13 +1619,9 @@ int SDL_main( int argc, char *argv[] )
 				// accumulate the image
 				glAccum(blur ? GL_ACCUM : GL_LOAD, 1.0f / float(RENDER_MOTIONBLUR));
 
-				// clear the screen
-				glClear(
-					GL_COLOR_BUFFER_BIT
-#ifdef ENABLE_DEPTH_BUFFER
-					| GL_DEPTH_BUFFER_BIT
-#endif
-					);
+				if (blur < RENDER_MOTIONBLUR - 1)
+				{
+				}
 			}
 
 #ifdef GET_PERFORMANCE_DETAILS
@@ -1850,6 +1913,12 @@ int SDL_main( int argc, char *argv[] )
 		LARGE_INTEGER perf_count2;
 		QueryPerformanceCounter(&perf_count2);
 		display_time[profile_index] += perf_count2.QuadPart - perf_count1.QuadPart;
+
+		if (OPENGL_SWAPCONTROL)
+		{
+			// force a render flush
+			glFinish();
+		}
 #endif
 
 #ifdef DRAW_PERFORMANCE_DETAILS
@@ -1951,15 +2020,6 @@ int SDL_main( int argc, char *argv[] )
 
 		// show the screen
 		SDL_GL_SwapBuffers();
-
-		// clear the screen
-		glClear(
-			GL_COLOR_BUFFER_BIT
-#ifdef ENABLE_DEPTH_BUFFER
-			| GL_DEPTH_BUFFER_BIT
-#endif
-			);
-
 	}
 	while( !quit );
 
@@ -1970,6 +2030,9 @@ int SDL_main( int argc, char *argv[] )
 		// save input log
 		inputlog.SaveFile();
 	}
+
+	// clear the input log
+	inputlog.Clear();
 
 	// stop audio
 	SDL_PauseAudio(1);
