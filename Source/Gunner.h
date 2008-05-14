@@ -2,6 +2,8 @@
 
 #include "Simulatable.h"
 
+//#define GUNNER_TRACK_DEQUE
+
 // gunner template
 class GunnerTemplate
 {
@@ -21,7 +23,14 @@ class Gunner :
 	public Simulatable
 {
 protected:
+#ifdef GUNNER_TRACK_DEQUE
 	std::deque<Vector2> mTrackPos;
+#else
+	Vector2 *mTrackPos;
+	size_t mTrackCount;
+	size_t mTrackFirst;
+	size_t mTrackLast;
+#endif
 	float mTrackLength;
 
 public:

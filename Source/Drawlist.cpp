@@ -1229,7 +1229,7 @@ size_t ExecuteDrawData(const unsigned int buffer[], size_t count, int width, flo
 
 			// get interpolator value
 			const int count = *itor;
-			const float *keys = reinterpret_cast<const float * __restrict>(itor+1);
+			const float * __restrict keys = reinterpret_cast<const float * __restrict>(itor+1);
 			int dummy = 0;
 			if (!ApplyInterpolator(data, width, count, keys, param, dummy))
 				memset(data, 0, width*sizeof(float));

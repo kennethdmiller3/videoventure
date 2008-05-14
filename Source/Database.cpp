@@ -86,6 +86,9 @@ namespace Database
 		memset(mKey, 0, mLimit * sizeof(Key));
 		for (size_t slot = 0; slot < mCount; ++slot)
 			DeleteRecord(GetRecord(slot));
+		for (size_t slot = 0; slot < mLimit >> mShift; ++slot)
+			free(mPool[slot]);
+		memset(mPool, 0, (mLimit >> mShift) * sizeof(void *));
 		mCount = 0;
 	}
 
@@ -121,7 +124,7 @@ namespace Database
 
 			// convert key to a hash map index
 			// (HACK: assume key is already a hash)
-			size_t index = Probe(key);
+			size_t index = FindIndex(key);
 
 			// insert the record key
 			mMap[index] = record;
@@ -158,7 +161,7 @@ namespace Database
 		{
 			if ((slot & ((1 << mShift) - 1)) == 0)
 			{
-				mPool[slot >> mShift] = malloc((1 << mShift) * mStride);
+				mPool[slot >> mShift] = malloc(mStride << mShift);
 			}
 			CreateRecord(GetRecord(slot), aSource.GetRecord(slot));
 		}
@@ -167,12 +170,11 @@ namespace Database
 	// find the record for a specified key
 	const void *Untyped::Find(Key aKey) const
 	{
-		// convert key to a hash map index
+		// convert key to a slot
 		// (HACK: assume key is already a hash)
-		size_t index = Probe(aKey);
+		size_t slot = FindSlot(aKey);
 
 		// if the slot is not empty...
-		size_t slot = mMap[index];
 		if (slot != EMPTY)
 		{
 			// return the record
@@ -191,12 +193,11 @@ namespace Database
 	// create or update a record for a specified key
 	void Untyped::Put(Key aKey, const void *aValue)
 	{
-		// convert key to a hash map index
+		// convert key to a slot
 		// (HACK: assume key is already a hash)
-		size_t index = Probe(aKey);
+		size_t slot = FindSlot(aKey);
 
 		// if the slot is not empty...
-		size_t slot = mMap[index];
 		if (slot != EMPTY)
 		{
 			// update the record
@@ -209,24 +210,18 @@ namespace Database
 			Grow();
 
 		// add a new record
-		slot = mCount++;
-		index = Probe(aKey);
-		mMap[index] = slot;
-		mKey[slot] = aKey;
-		if (mPool[slot >> mShift] == NULL)
-			mPool[slot >> mShift] = malloc(mStride << mShift);
-		CreateRecord(GetRecord(slot), aValue);
+		void *record = AllocRecord(aKey);
+		CreateRecord(record, aValue);
 	}
 
 	// get or create the record for a specified key
 	void *Untyped::Open(Key aKey)
 	{
-		// convert key to a hash map index
+		// convert key to a slot
 		// (HACK: assume key is already a hash)
-		size_t index = Probe(aKey);
+		size_t slot = FindSlot(aKey);
 
 		// if the slot is not empty...
-		size_t slot = mMap[index];
 		if (slot != EMPTY)
 		{
 			// return the record
@@ -238,21 +233,17 @@ namespace Database
 			Grow();
 
 		// add a new record
-		slot = mCount++;
-		index = Probe(aKey);
-		mMap[index] = slot;
-		mKey[slot] = aKey;
-		if (mPool[slot >> mShift] == NULL)
-			mPool[slot >> mShift] = malloc(mStride << mShift);
+		void *record = AllocRecord(aKey);
+
 		// check parent
 		const void *source = NULL;
 		if (this != &parent)
 			if (Key aParentKey = parent.Get(aKey))
 				source = Find(aParentKey);
-		CreateRecord(GetRecord(slot), source);
+		CreateRecord(record, source);
 
 		// return the record
-		return GetRecord(slot);
+		return record;
 	}
 
 	// close a record once done
@@ -263,12 +254,11 @@ namespace Database
 	// allocate the record for a specified key
 	void *Untyped::Alloc(Key aKey)
 	{
-		// convert key to a hash map index
+		// convert key to a slot
 		// (HACK: assume key is already a hash)
-		size_t index = Probe(aKey);
+		size_t slot = FindSlot(aKey);
 
 		// if the slot is not empty...
-		size_t slot = mMap[index];
 		if (slot != EMPTY)
 		{
 			// return the record
@@ -281,15 +271,10 @@ namespace Database
 			Grow();
 
 		// add a new record
-		slot = mCount++;
-		index = Probe(aKey);
-		mMap[index] = slot;
-		mKey[slot] = aKey;
-		if (mPool[slot >> mShift] == NULL)
-			mPool[slot >> mShift] = malloc(mStride << mShift);
+		void *record = AllocRecord(aKey);
 
 		// return the record
-		return GetRecord(slot);
+		return record;
 	}
 
 	// delete a record for a specified key
@@ -297,7 +282,7 @@ namespace Database
 	{
 		// convert key to a hash map index
 		// (HACK: assume key is already a hash)
-		size_t index = Probe(aKey);
+		size_t index = FindIndex(aKey);
 
 		// if the slot is empty...
 		size_t slot = mMap[index];
@@ -315,6 +300,7 @@ namespace Database
 		{
 			// move the last record into the slot
 			Key key = mKey[slot] = mKey[mCount];
+			DeleteRecord(GetRecord(slot));
 			CreateRecord(GetRecord(slot), GetRecord(mCount));
 
 			// update the entry
@@ -621,6 +607,11 @@ namespace Database
 	// clean up all databases
 	void Cleanup(void)
 	{
+		// clear queues
+		activatequeue.clear();
+		deactivatequeue.clear();
+		deletequeue.clear();
+
 		// deactivate all instances
 		for (Typed<Entity *>::Iterator itor(&entity); itor.IsValid(); ++itor)
 		{

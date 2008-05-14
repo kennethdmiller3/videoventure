@@ -154,83 +154,79 @@ void ProcessInterpolatorItem(const TiXmlElement *element, std::vector<unsigned i
 		buffer.push_back(*reinterpret_cast<unsigned int *>(&interpolator.mKeys[i]));
 }
 
-bool ApplyInterpolator(float aTarget[], int aWidth, int aCount, const float aKeys[], float aTime, int &aIndex)
+#pragma optimize( "t", on )
+bool ApplyInterpolator(float aTarget[], int aWidth, int aCount, const float aKeys[], float aTime, int &aHint)
 {
 	int i0, i1;
-	float t0, t1;
 
 	// get stride
 	const int aStride = aWidth + 1;
 
-	// get time of saved index key
-	float tt = aKeys[aIndex * aStride];
+	// get time of hint key
+	const float tt = aKeys[aHint * aStride];
 
 	// if requested time is earlier...
 	if (aTime < tt)
 	{
 		// set lower bound to first key
 		i0 = 0;
-		t0 = aKeys[i0 * aStride];
-		if (aTime < t0)
+		if (aTime < aKeys[i0 * aStride])
 			return false;
 
-		// set upper bound to index key
-		i1 = aIndex;
-		t1 = tt;
+		// set upper bound to hint key
+		i1 = aHint;
 	}
 	else
 	{
-		// set lower bound to index key
-		i0 = aIndex;
-		t0 = tt;
+		// set lower bound to hint key
+		i0 = aHint;
 
 		// set upper bound to last key
 		i1 = aCount-1;
-		t1 = aKeys[i1 * aStride];
-		if (aTime > t1)
+		if (aTime > aKeys[i1 * aStride])
 			return false;
 	}
 
 	// while still checking a range of keys...
 	while (i0 <= i1)
 	{
-		// estimate index
-		float im = Lerp(float(i0), float(i1), (aTime - t0) / (t1 - t0));
+		// get midpoint
+		const int im = (i0 + i1) >> 1;
 
-		// if time is before segment start
-		int iL = xs_FloorToInt(im);
-		float tL = aKeys[iL * aStride];
+		// if time is before segment start...
+		const int iL = im;
+		const float tL = aKeys[iL * aStride];
 		if (aTime < tL - FLT_EPSILON)
 		{
 			// set upper bound to segment start
 			i1 = iL;
-			t1 = tL;
 			continue;
 		}
 
 		// if time is after segment end...
-		int iH = xs_CeilToInt(im);
-		float tH = aKeys[iH * aStride];
+		const int iH = im + 1;
+		const float tH = aKeys[iH * aStride];
 		if (aTime > tH + FLT_EPSILON)
 		{
 			// set lower bound to segment end
 			i0 = iH;
-			t0 = tH;
 			continue;
 		}
 
 		// found!
-		aIndex = iL;
-		break;
+		// interpolate the value
+		const float *key0 = &aKeys[iL * aStride + 1];
+		const float *key1 = &aKeys[iH * aStride + 1];
+		const float t = (aTime - tL) / (tH - tL + FLT_EPSILON);
+		for (int element = 0; element < aWidth; element++)
+		{
+			aTarget[element] = Lerp(key0[element], key1[element], t);
+		}
+		aHint = iL;
+		return true;
 	}
 
-	// interpolate the value
-	const float *key0 = aKeys + aIndex * aStride;
-	const float *key1 = key0 + aStride;
-	float t = (aTime - key0[0]) / (key1[0] - key0[0] + FLT_EPSILON);
-	for (int element = 0; element < aWidth; element++)
-	{
-		aTarget[element] = Lerp(key0[1 + element], key1[1 + element], t);
-	}
-	return true;
+	// not found...
+	return false;
 }
+#pragma optimize( "", on )
