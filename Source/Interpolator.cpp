@@ -1,11 +1,6 @@
 #include "StdAfx.h"
 #include "Interpolator.h"
 
-namespace Database
-{
-	Typed<Typed<InterpolatorTemplate> > interpolatortemplate(0x9074abfe /* "interpolatortemplate" */);
-}
-
 InterpolatorTemplate::InterpolatorTemplate(int aWidth)
 	: mWidth(aWidth), mStride(1 + aWidth), mCount(0), mKeys(NULL)
 {
