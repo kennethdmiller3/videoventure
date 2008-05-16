@@ -253,7 +253,13 @@ void Renderable::Render(float aStep, float aPosX, float aPosY, float aAngle)
 
 	// elapsed time
 	float t = fmodf((sTurn - mStart + sOffset - mFraction) * aStep, renderable.mPeriod);
+
+	// skip if not visible
 	if (t < 0)
+		return;
+
+	// skip if empty
+	if (renderable.mBuffer.empty())
 		return;
 
 	// push a transform

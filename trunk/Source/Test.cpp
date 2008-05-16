@@ -3,7 +3,6 @@
 
 // includes
 #include "oglconsole.h"                                                                              
-#include "Cloud.h"
 #include "Player.h"
 #include "Aimer.h"
 #include "Ship.h"
@@ -71,6 +70,9 @@ bool playback = false;
 // runtime
 bool runtime = false;
 
+// device was reset
+bool wasreset = true;
+
 // console
 OGLCONSOLE_Console console;
 
@@ -78,7 +80,7 @@ OGLCONSOLE_Console console;
 extern "C" GLuint OGLCONSOLE_glFontHandle;
 extern "C" void OGLCONSOLE_DrawString(char *s, double x, double y, double w, double h, double z);
 extern "C" void OGLCONSOLE_DrawCharacter(int c, double x, double y, double w, double h, double z);
-
+extern "C" void OGLCONSOLE_CreateFont();
 
 #define GET_PERFORMANCE_DETAILS
 #define PRINT_PERFORMANCE_DETAILS
@@ -218,6 +220,23 @@ bool init_Window()
 		flags |= SDL_FULLSCREEN;
 	if( SDL_SetVideoMode( SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_DEPTH, flags ) == NULL )
 		return false;
+
+	// device was reset
+	wasreset = true;
+
+	// initialize OpenGL
+	if( !init_GL() )
+		return false;    
+
+	if (runtime)
+	{
+		// rebuild draw lists
+		RebuildDrawlists();
+
+		// TO DO: rebuild textures
+		OGLCONSOLE_CreateFont();
+	}
+
 	return true;
 }
 
@@ -251,10 +270,6 @@ bool init()
     /* Initialize OGLCONSOLE */                                                                      
     console = OGLCONSOLE_Create();                                                                             
     OGLCONSOLE_EnterKey(cmdCB);                                                                      
-
-	// initialize OpenGL
-	if( !init_GL() )
-		return false;    
 
 #ifdef TRACE_OPENGL_ATTRIBUTES
 	int value;
@@ -481,12 +496,6 @@ static void ProcessWorldItems(const TiXmlElement *element)
 			}
 			break;
 
-		case 0x1ac6a97e /* "cloud" */:
-			{
-				ProcessCloudItems(child);
-			}
-			break;
-
 		default:
 			{
 				const Database::Loader::Entry &configure = Database::Loader::GetConfigure(Hash(value));
@@ -576,10 +585,7 @@ int ProcessCommand( unsigned int aCommand, char *aParam[], int aCount )
 		{
 			OPENGL_ANTIALIAS = atoi(aParam[0]) != 0;
 			if (runtime)
-			{
 				init_Window();
-				init_GL();
-			}
 			return 1;
 		}
 		else
@@ -1094,83 +1100,8 @@ int SDL_main( int argc, char *argv[] )
 		}
 	}
 
-	//
-	// generate reticule drawlist (HACK)
-
-	// create a new draw list
-	GLuint reticule_handle = glGenLists(1);
-	glNewList(reticule_handle, GL_COMPILE);
-
-	glBegin(GL_QUADS);
-
-	glColor4f(0.4f, 0.5f, 1.0f, 1.0f);
-
-	glVertex2f(-10, -8);
-	glVertex2f(-4, -8);
-	glVertex2f(-4, -10);
-	glVertex2f(-10, -10);
-
-	glVertex2f(-8, -10);
-	glVertex2f(-10, -10);
-	glVertex2f(-10, -4);
-	glVertex2f(-8, -4);
-
-	glVertex2f(+10, -8);
-	glVertex2f(+4, -8);
-	glVertex2f(+4, -10);
-	glVertex2f(+10, -10);
-
-	glVertex2f(+8, -10);
-	glVertex2f(+10, -10);
-	glVertex2f(+10, -4);
-	glVertex2f(+8, -4);
-
-	glVertex2f(-10, +8);
-	glVertex2f(-4, +8);
-	glVertex2f(-4, +10);
-	glVertex2f(-10, +10);
-
-	glVertex2f(-8, +10);
-	glVertex2f(-10, +10);
-	glVertex2f(-10, +4);
-	glVertex2f(-8, +4);
-
-	glVertex2f(+10, +8);
-	glVertex2f(+4, +8);
-	glVertex2f(+4, +10);
-	glVertex2f(+10, +10);
-
-	glVertex2f(+8, +10);
-	glVertex2f(+10, +10);
-	glVertex2f(+10, +4);
-	glVertex2f(+8, +4);
-
-	glColor4f(0.4f, 0.5f, 1.0f, 0.25f);
-
-	glVertex2f(-1, -480);
-	glVertex2f(+1, -480);
-	glVertex2f(+1, -8);
-	glVertex2f(-1, -8);
-
-	glVertex2f(-1, +8);
-	glVertex2f(+1, +8);
-	glVertex2f(+1, 480);
-	glVertex2f(-1, 480);
-
-	glVertex2f(-640, -1);
-	glVertex2f(-8, -1);
-	glVertex2f(-8, +1);
-	glVertex2f(-640, +1);
-
-	glVertex2f(+8, -1);
-	glVertex2f(640, -1);
-	glVertex2f(640, +1);
-	glVertex2f(+8, +1);
-
-	glEnd();
-
-	// finish the draw list
-	glEndList();
+	// get the reticule draw list
+	GLuint reticule_handle = Database::drawlist.Get(0x170e4c58 /* "reticule" */);
 
 	//
 
@@ -1824,7 +1755,7 @@ int SDL_main( int argc, char *argv[] )
 			int new_score = itor.GetValue()->mScore;
 
 			// if the score has not changed...
-			if (new_score == cur_score)
+			if (new_score == cur_score && !wasreset)
 			{
 				// call the existing draw list
 				glCallList(score_handle);
@@ -2020,6 +1951,9 @@ int SDL_main( int argc, char *argv[] )
 
 		// show the screen
 		SDL_GL_SwapBuffers();
+
+		// clear device reset flag
+		wasreset = false;
 	}
 	while( !quit );
 
