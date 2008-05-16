@@ -200,6 +200,76 @@
 		</triangle_strip>
 	</drawlist>
 
+	<!-- reticule -->
+
+	<drawlist name="reticule">
+		<quads>
+			<color r="0.4" g="0.5" b="1.0" a="1.0"/>
+
+			<vertex x="-10" y="-8"/>
+			<vertex x="-4" y="-8"/>
+			<vertex x="-4" y="-10"/>
+			<vertex x="-10" y="-10"/>
+
+			<vertex x="-8" y="-10"/>
+			<vertex x="-10" y="-10"/>
+			<vertex x="-10" y="-4"/>
+			<vertex x="-8" y="-4"/>
+
+			<vertex x="+10" y="-8"/>
+			<vertex x="+4" y="-8"/>
+			<vertex x="+4" y="-10"/>
+			<vertex x="+10" y="-10"/>
+
+			<vertex x="+8" y="-10"/>
+			<vertex x="+10" y="-10"/>
+			<vertex x="+10" y="-4"/>
+			<vertex x="+8" y="-4"/>
+
+			<vertex x="-10" y="+8"/>
+			<vertex x="-4" y="+8"/>
+			<vertex x="-4" y="+10"/>
+			<vertex x="-10" y="+10"/>
+
+			<vertex x="-8" y="+10"/>
+			<vertex x="-10" y="+10"/>
+			<vertex x="-10" y="+4"/>
+			<vertex x="-8" y="+4"/>
+
+			<vertex x="+10" y="+8"/>
+			<vertex x="+4" y="+8"/>
+			<vertex x="+4" y="+10"/>
+			<vertex x="+10" y="+10"/>
+
+			<vertex x="+8" y="+10"/>
+			<vertex x="+10" y="+10"/>
+			<vertex x="+10" y="+4"/>
+			<vertex x="+8" y="+4"/>
+
+			<color r="0.4" g="0.5" b="1.0" a="0.25"/>
+
+			<vertex x="-1" y="-480"/>
+			<vertex x="+1" y="-480"/>
+			<vertex x="+1" y="-8"/>
+			<vertex x="-1" y="-8"/>
+
+			<vertex x="-1" y="+8"/>
+			<vertex x="+1" y="+8"/>
+			<vertex x="+1" y="480"/>
+			<vertex x="-1" y="480"/>
+
+			<vertex x="-640" y="-1"/>
+			<vertex x="-8" y="-1"/>
+			<vertex x="-8" y="+1"/>
+			<vertex x="-640" y="+1"/>
+
+			<vertex x="+8" y="-1"/>
+			<vertex x="640" y="-1"/>
+			<vertex x="640" y="+1"/>
+			<vertex x="+8" y="+1"/>
+		</quads>
+	</drawlist>
+
 	<!-- background shapes -->
 
 	<!-- clouds
@@ -222,20 +292,17 @@
 	-->
 
 	<!-- starfield -->
-	<cloud name="starfield" count="128">
-		<x average="0" variance="512"/>
-		<y average="0" variance="512"/>
-		<z average="640" variance="384"/>
-		<width average="1" variance="0"/>
-		<height average="1" variance="0"/>
-		<red average="0.75" variance="0.25"/>
-		<green average="0.75" variance="0.25"/>
-		<blue average="0.75" variance="0.25"/>
-		<alpha average="1" variance="0"/>
-	</cloud>
 	<template name="starfield">
 		<renderable radius="1536">
-			<calllist name="starfield"/>
+			<drawlist>
+				<repeat count="128">
+					<pushmatrix>
+						<color rand="1" r_avg="0.75" r_var="0.25" g_avg="0.75" g_var="0.25" b_avg="0.75" b_var="0.25" a_avg="1" a_var="0"/>
+						<translate rand="1" x_avg="0" x_var="512" y_avg="0" y_var="512" z_avg="640" z_var="384"/>
+						<calllist name="square"/>
+					</pushmatrix>
+				</repeat>
+			</drawlist>
 		</renderable>
 	</template>
 	<entity name="starfield11" type="starfield">

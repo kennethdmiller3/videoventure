@@ -166,6 +166,7 @@ enum DrawlistDatatype
 	DD_Literal,
 	DD_Variable,
 	DD_Interpolator,
+	DD_Random,
 };
 
 // attribute names
@@ -247,9 +248,10 @@ namespace Database
 				element->QueryFloatAttribute("param", &param);
 
 				// process draw items
-				std::vector<unsigned int> drawlist;
+				std::vector<unsigned int> &drawlist = Database::dynamicdrawlist.Open(handle);
 				ProcessDrawItems(element, drawlist);
 				ExecuteDrawItems(&drawlist[0], drawlist.size(), param, aId);
+				Database::dynamicdrawlist.Close(handle);
 
 				// finish the draw list
 				glEndList();
@@ -475,6 +477,22 @@ void ProcessDrawData(const TiXmlElement *element, std::vector<unsigned int> &buf
 		int start = buffer.size();
 		ProcessInterpolatorItem(element, buffer, width, names, data);
 		buffer[start - 1] = buffer.size() - start;
+	}
+	else if (element->Attribute("rand"))
+	{
+		buffer.push_back(DD_Random);
+		for (int i = 0; i < width; i++)
+		{
+			char label[64];
+			sprintf(label, "%s_avg", names[i]);
+			float average = data[i];
+			element->QueryFloatAttribute(label, &average);
+			buffer.push_back(*reinterpret_cast<unsigned int *>(&average));
+			sprintf(label, "%s_var", names[i]);
+			float variance = data[i];
+			element->QueryFloatAttribute(label, &variance);
+			buffer.push_back(*reinterpret_cast<unsigned int *>(&variance));
+		}
 	}
 	else
 	{
@@ -814,14 +832,18 @@ void ProcessDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buf
 			GLuint handle = glGenLists(1);
 			glNewList(handle, GL_COMPILE);
 
+			// register the draw list
+			Database::drawlist.Put(handle, handle);
+
 			// get (optional) parameter value
 			float param = 0.0f;
 			element->QueryFloatAttribute("param", &param);
 
 			// process draw items
-			std::vector<unsigned int> drawlist;
+			std::vector<unsigned int> &drawlist = Database::dynamicdrawlist.Open(handle);
 			ProcessDrawItems(element, drawlist);
 			ExecuteDrawItems(&drawlist[0], drawlist.size(), param, 0);
+			Database::dynamicdrawlist.Close(handle);
 
 			// finish the draw list
 			glEndList();
@@ -1235,6 +1257,18 @@ size_t ExecuteDrawData(const unsigned int buffer[], size_t count, int width, flo
 				memset(data, 0, width*sizeof(float));
 
 			itor += size;
+		}
+		break;
+
+	case DD_Random:
+		{
+			// generate random value
+			for (int i = 0; i < width; i++)
+			{
+				float average = *reinterpret_cast<const float * __restrict>(itor++);
+				float variance = *reinterpret_cast<const float * __restrict>(itor++);
+				data[i] = RandValue(average, variance);
+			}
 		}
 		break;
 
@@ -1729,3 +1763,27 @@ void ExecuteDrawItems(const unsigned int buffer[], size_t count, float param, un
 	}
 }
 #pragma optimize( "", on )
+
+void RebuildDrawlists(void)
+{
+	for (Database::Typed<unsigned int>::Iterator itor(&Database::drawlist); itor.IsValid(); ++itor)
+	{
+		// recreate the draw list
+		GLuint handle = itor.GetValue();
+		glNewList(handle, GL_COMPILE);
+
+		// TO DO: recover parameter value
+		float param = 0.0f;
+
+		// process draw items
+		// TO DO: recover id value
+		const std::vector<unsigned int> &drawlist = Database::dynamicdrawlist.Get(handle);
+		if (drawlist.size() > 0)
+		{
+			ExecuteDrawItems(&drawlist[0], drawlist.size(), param, 0);
+		}
+
+		// finish the draw list
+		glEndList();
+	}
+}

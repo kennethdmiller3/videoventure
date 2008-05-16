@@ -195,10 +195,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\Source\Cloud.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\Source\Collidable.cpp"
 				>
 			</File>
@@ -314,10 +310,6 @@
 			</File>
 			<File
 				RelativePath=".\Source\Bullet.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Source\Cloud.h"
 				>
 			</File>
 			<File
