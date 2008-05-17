@@ -92,6 +92,7 @@ Gunner::Gunner(const GunnerTemplate &aTemplate, unsigned int aId)
 	Entity *entity = Database::entity.Get(id);
 #ifdef GUNNER_TRACK_DEQUE
 	mTrackPos.push_back(entity->GetPosition());
+	mTrackPos.push_back(entity->GetPosition());
 #else
 	mTrackCount = xs_CeilToInt(aTemplate.mFollowLength/GUNNER_TRACK_GRANULARITY);
 	mTrackPos = new Vector2[mTrackCount];
@@ -130,15 +131,56 @@ void Gunner::Simulate(float aStep)
 	const GunnerTemplate &gunner = Database::gunnertemplate.Get(id);
 
 	// get owner movement
+	const Vector2 &posP = owner->GetPosition();
 #ifdef GUNNER_TRACK_DEQUE
-	float lastsegment = owner->GetPosition().Dist(mTrackPos.back());
+	const Vector2 &posL0 = mTrackPos.back();
 #else
-	float lastsegment = owner->GetPosition().Dist(mTrackPos[mTrackLast]);
+	const Vector2 &posL0 = mTrackPos[mTrackLast];
 #endif
-	if (lastsegment > 0)
+	float movement = posP.DistSq(posL0);
+
+	// if the owner has moved...
+	if (movement > FLT_EPSILON)
 	{
-		// accumulate movement distance
-		mTrackLength += lastsegment;
+#ifdef GUNNER_TRACK_DEQUE
+		// get the last segment
+		const Vector2 &posL1 = mTrackPos[mTrackPos.size()-2];
+		float lastsegment = posL0.Dist(posL1);
+
+		// if the last segment isn't long enough...
+		if (lastsegment < GUNNER_TRACK_GRANULARITY)
+		{
+			// replace the last segment
+			mTrackPos.pop_back();
+			mTrackLength -= lastsegment;
+		}
+
+		// add new position
+		mTrackPos.push_back(posP);
+		mTrackLength += posP.Dist(mTrackPos[mTrackPos.size()-2]);
+#else
+		// get the last segment
+		int mTrackPrev = (mTrackLast > 0) ? (mTrackLast - 1) : (mTrackCount - 1);
+		const Vector2 &posL1 = mTrackPos[mTrackPrev];
+		float lastsegment = posL0.Dist(posL1);
+
+		// if the last segment is long enough...
+		if (lastsegment >= GUNNER_TRACK_GRANULARITY)
+		{
+			// start a new segment
+			mTrackPrev = mTrackLast;
+			mTrackLast = (mTrackLast < mTrackCount - 1) ? (mTrackLast + 1) : 0;
+		}
+		else
+		{
+			// replace the last segment
+			mTrackLength -= lastsegment;
+		}
+
+		// add new position
+		mTrackPos[mTrackLast] = posP;
+		mTrackLength += posP.Dist(mTrackPos[mTrackPrev]);
+#endif
 
 		// while there is excess track length...
 		while (mTrackLength > gunner.mFollowLength)
@@ -176,22 +218,6 @@ void Gunner::Simulate(float aStep)
 #endif
 			}
 		}
-
-#ifdef GUNNER_TRACK_DEQUE
-		// replace last segment if shorter than the granularity
-		if (mTrackPos.back().Dist(mTrackPos[mTrackPos.size()-2]) < GUNNER_TRACK_GRANULARITY)
-			mTrackPos.pop_back();
-
-		// add new position
-		mTrackPos.push_back(owner->GetPosition());
-#else
-		// add a new segment if longer than the granularity
-		if (mTrackPos[mTrackLast].Dist(mTrackPos[(mTrackLast > 0) ? (mTrackLast - 1) : (mTrackCount - 1)]) >= GUNNER_TRACK_GRANULARITY)
-			mTrackLast = (mTrackLast < mTrackCount - 1) ? (mTrackLast + 1) : 0;
-
-		// add new position
-		mTrackPos[mTrackLast] = owner->GetPosition();
-#endif
 	}
 
 	// move to new position
