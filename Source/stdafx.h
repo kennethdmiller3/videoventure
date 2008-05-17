@@ -86,7 +86,7 @@ inline unsigned long RandLong()
 // random uniform float
 inline float RandFloat()
 {
-	unsigned long itemp = 0x3f800000 | (0x007fffff & RandLong());
+	unsigned long itemp = 0x3f800000 | (RandLong() >> 9);
 	return (*(float *)&itemp)-1.0f;
 }
 
