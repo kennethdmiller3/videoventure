@@ -97,11 +97,6 @@ inline float RandValue(float aAverage, float aVariance)
 }
 
 
-// loader
-void ProcessTemplateItem(const TiXmlElement *element, unsigned int template_id);
-void ProcessTemplateItems(const TiXmlElement *element);
-void ProcessEntityItems(const TiXmlElement *element);
-
 // configuration
 //#define ENABLE_DEPTH_TEST
 #define ENABLE_FOG

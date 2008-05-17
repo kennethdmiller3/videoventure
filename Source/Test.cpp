@@ -3,6 +3,7 @@
 
 // includes
 #include "oglconsole.h"                                                                              
+#include "World.h"
 #include "Player.h"
 #include "Aimer.h"
 #include "Ship.h"
@@ -94,6 +95,10 @@ Input input;
 // listener position (HACK)
 Vector2 listenerpos;
 
+// reticule handle (HACK)
+GLuint reticule_handle;
+GLuint score_handle;
+
 // forward declaration
 int ProcessCommand( unsigned int aCommand, char *aParam[], int aCount );
 
@@ -163,6 +168,17 @@ bool init_GL()
 		// enable polygon smoothing
 		glEnable( GL_POLYGON_SMOOTH );
 		glHint( GL_POLYGON_SMOOTH_HINT, GL_NICEST );
+	}
+	else
+	{
+		// disable point smoothing
+		glDisable( GL_POINT_SMOOTH );
+
+		// disable line smoothing
+ 		glDisable( GL_LINE_SMOOTH );
+
+		// disable polygon smoothing
+		glDisable( GL_POLYGON_SMOOTH );
 	}
 
 	// enable blending
@@ -355,167 +371,47 @@ void clean_up()
 	SDL_Quit();
 }
 
-#if 0
-class Loader : public TiXmlVisitor
+
+void init_Input(const char *config)
 {
-	// visit a document
-	virtual bool VisitEnter( const TiXmlDocument& doc );
-	virtual bool VisitExit( const TiXmlDocument& doc )
+	// clear existing bindings
+	input.Clear();
 
-	// visit an element
-	virtual bool VisitEnter( const TiXmlElement& element, const TiXmlAttribute* firstAttribute );
-	virtual bool VisitExit( const TiXmlElement& element );
+	// input binding
+	DebugPrint("Input %s\n", config);
+	TiXmlDocument document(config);
+	document.LoadFile();
 
-	// visit a text node
-	virtual bool Visit( const TiXmlText& text );
-};
-
-bool Loader::VisitEnter( const TiXmlDocument& doc )
-{
-	return true;
-}
-
-bool Loader::VisitExit( const TiXmlDocument& doc )
-{
-	return true;
-}
-
-bool Loader::VisitEnter( const TiXmlElement& element, const TiXmlAttribute* firstAttribute )
-{
-	return true;
-}
-
-bool Loader::VisitExit( const TiXmlElement& element )
-{
-	return true;
-}
-#endif
-
-
-void ProcessTemplateItem(const TiXmlElement *element, unsigned int template_id)
-{
-	const char *value = element->Value();
-	const Database::Loader::Entry &configure = Database::Loader::GetConfigure(Hash(value));
-	if (configure)
-		configure(template_id, element);
-	else
-		DebugPrint("Unrecognized tag \"%s\"\n", value);
-}
-
-void ProcessTemplateItems(const TiXmlElement *element)
-{
-	// get template identifier
-	const char *name = element->Attribute("name");
-	unsigned int template_id = Hash(name);
-
-	// get parent identifier
-	const char *type = element->Attribute("type");
-	unsigned int parent_id = Hash(type);
-
-	// inherit parent components
-	Database::Inherit(template_id, parent_id);
-
-	// set name
-	std::string &namebuf = Database::name.Open(template_id);
-	namebuf = name;
-	Database::name.Close(template_id);
-
-	// for each child element...
-	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+	TiXmlHandle handle( &document );
+	TiXmlElement *element = handle.FirstChildElement("input").ToElement();
+	if (element)
 	{
-		// process the template item
-		ProcessTemplateItem(child, template_id);
-	}
-
-	// set parent
-//	Database::parent.Put(template_id, parent_id);
-}
-
-void ProcessEntityItems(const TiXmlElement *element)
-{
-	// get entity identifier
-	const char *name = element->Attribute("name");
-	unsigned int entity_id = Hash(name);
-
-	// get parent identifier
-	const char *type = element->Attribute("type");
-	unsigned int parent_id = Hash(type);
-
-	// inherit components from template
-//	Database::Inherit(entity_id, parent_id);
-
-	// set name
-	std::string &namebuf = Database::name.Open(entity_id);
-	namebuf = name;
-	Database::name.Close(entity_id);
-	
-	// set parent
-	Database::parent.Put(entity_id, parent_id);
-
-	// objects default to owning themselves
-	Database::owner.Put(entity_id, entity_id);
-
-	// create an entity
-	Entity *entity = new Entity(entity_id);
-	Database::entity.Put(entity_id, entity);
-
-	// process child elements
-	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
-	{
-		if (entity->Configure(child))
-			continue;
-
-		// process the template item
-		ProcessTemplateItem(child, entity_id);
-	}
-
-	// activate the instance
-	// (create runtime components)
-	Database::Activate(entity_id);
-}
-
-static void ProcessWorldItems(const TiXmlElement *element)
-{
-	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
-	{
-		const char *value = child->Value();
-		DebugPrint("Processing %s (%s)\n", child->Value(), child->Attribute("name"));
-		switch (Hash(value))
-		{
-		case 0x694aaa0b /* "template" */:
-			{
-				// process template items
-				ProcessTemplateItems(child);
-			}
-			break;
-
-		case 0xd33ff5da /* "entity" */:
-			{
-				// process entity items
-				ProcessEntityItems(child);
-			}
-			break;
-
-		default:
-			{
-				const Database::Loader::Entry &configure = Database::Loader::GetConfigure(Hash(value));
-				if (configure)
-					configure(Hash(child->Attribute("name")), child);
-			}
-			break;
-		}
+		input.Configure(element);
 	}
 }
 
-enum InputType
+void init_Level(const char *config)
 {
-	INPUT_TYPE_KEYBOARD,
-	INPUT_TYPE_MOUSE_AXIS,
-	INPUT_TYPE_MOUSE_BUTTON,
-	INPUT_TYPE_JOYSTICK_AXIS,
-	INPUT_TYPE_JOYSTICK_BUTTON,
-	NUM_INPUT_TYPES
-};
+	// clear existing level
+	Database::Cleanup();
+
+	// level configuration
+	DebugPrint("Level %s\n", config);
+	TiXmlDocument document(config);
+	document.LoadFile();
+
+	// process child elements of world
+	TiXmlHandle handle( &document );
+	TiXmlElement *element = handle.FirstChildElement("world").ToElement();
+	if (element)
+	{
+		ProcessWorldItems(element);
+	}
+
+	// get the reticule draw list
+	reticule_handle = Database::drawlist.Get(0x170e4c58 /* "reticule" */);
+}
+
 
 
 // commands
@@ -648,6 +544,8 @@ int ProcessCommand( unsigned int aCommand, char *aParam[], int aCount )
 		if (aCount >= 1)
 		{
 			INPUT_CONFIG = aParam[0];
+			if (runtime)
+				init_Input(INPUT_CONFIG);
 			return 1;
 		}
 		else
@@ -660,6 +558,8 @@ int ProcessCommand( unsigned int aCommand, char *aParam[], int aCount )
 		if (aCount >= 1)
 		{
 			LEVEL_CONFIG = aParam[0];
+			if (runtime)
+				init_Level(LEVEL_CONFIG);
 			return 1;
 		}
 		else
@@ -1019,94 +919,20 @@ int SDL_main( int argc, char *argv[] )
 	// show the screen
 	SDL_GL_SwapBuffers();
 
-	{
-		// input binding
-		DebugPrint("Input %s\n", INPUT_CONFIG);
-		TiXmlDocument document(INPUT_CONFIG);
-		document.LoadFile();
-
-		TiXmlHandle handle( &document );
-		TiXmlElement *element = handle.FirstChildElement("input").ToElement();
-		if (element)
-		{
-			for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
-			{
-				const char *value = child->Value();
-				switch (Hash(value))
-				{
-				case 0xc7535f2e /* "bind" */:
-					{
-						// map logical name
-						const char *name = child->Attribute("name");
-						Input::LOGICAL logical;
-						switch(Hash(name))
-						{
-						case 0x2f7d674b /* "move_x" */:	logical = Input::MOVE_HORIZONTAL; break;
-						case 0x2e7d65b8 /* "move_y" */:	logical = Input::MOVE_VERTICAL; break;
-						case 0x28e0ac09 /* "aim_x" */:	logical = Input::AIM_HORIZONTAL; break;
-						case 0x27e0aa76 /* "aim_y" */:	logical = Input::AIM_VERTICAL; break;
-						case 0x8eab16d9 /* "fire" */:
-						case 0x7f550f38 /* "fire1" */:	logical = Input::FIRE_PRIMARY; break;
-						case 0x825513f1 /* "fire2" */:	logical = Input::FIRE_SECONDARY; break;
-						default:						logical = Input::NUM_LOGICAL; break;
-						}
-
-						// map input type
-						const char *type = child->Attribute("type");
-						InputType inputtype;
-						switch(Hash(type))
-						{
-						case 0x4aa845f4 /* "keyboard" */:			inputtype = INPUT_TYPE_KEYBOARD; break;
-						case 0xd76afdc0 /* "mouse_axis" */:			inputtype = INPUT_TYPE_MOUSE_AXIS; break;
-						case 0xbe730575 /* "mouse_button" */:		inputtype = INPUT_TYPE_MOUSE_BUTTON; break;
-						case 0x4b1fb051 /* "joystick_axis" */:		inputtype = INPUT_TYPE_JOYSTICK_AXIS; break;
-						case 0xb084d264 /* "joystick_button" */:	inputtype = INPUT_TYPE_JOYSTICK_BUTTON; break;
-						default:									inputtype = NUM_INPUT_TYPES; break;
-						}
-
-						// get properties
-						int device = 0;
-						child->QueryIntAttribute("device", &device);
-						int control = 0;
-						child->QueryIntAttribute("control", &control);
-						float deadzone = 0.0f;
-						child->QueryFloatAttribute("deadzone", &deadzone);
-						float scale = 1.0f;
-						child->QueryFloatAttribute("scale", &scale);
-
-						input.Bind(logical, inputtype, device, control, deadzone, scale);
-					}
-					break;
-				}
-			}
-		}
-	}
-
 	// collidable initialization
 	Collidable::WorldInit();
 
-	{
-		// level configuration
-		DebugPrint("Level %s\n", LEVEL_CONFIG);
-		TiXmlDocument document(LEVEL_CONFIG);
-		document.LoadFile();
+	// input binding
+	init_Input(INPUT_CONFIG);
 
-		// process child elements of world
-		TiXmlHandle handle( &document );
-		TiXmlElement *element = handle.FirstChildElement("world").ToElement();
-		if (element)
-		{
-			ProcessWorldItems(element);
-		}
-	}
+	// level configuration
+	init_Level(LEVEL_CONFIG);
 
-	// get the reticule draw list
-	GLuint reticule_handle = Database::drawlist.Get(0x170e4c58 /* "reticule" */);
 
 	//
 
 	// allocate score draw list
-	GLuint score_handle = glGenLists(1);
+	score_handle = glGenLists(1);
 
 	// last ticks
 	unsigned int ticks = SDL_GetTicks();
@@ -1206,10 +1032,15 @@ int SDL_main( int argc, char *argv[] )
 			switch (event.type)
 			{
 			case SDL_KEYDOWN:
-				input.OnPress( INPUT_TYPE_KEYBOARD, event.key.which, event.key.keysym.sym );
+				input.OnPress( Input::TYPE_KEYBOARD, event.key.which, event.key.keysym.sym );
 				if ((event.key.keysym.sym == SDLK_F4) && (event.key.keysym.mod & KMOD_ALT))
 				{
 					quit = true;
+				}
+				if ((event.key.keysym.sym == SDLK_RETURN) && (event.key.keysym.mod & KMOD_ALT))
+				{
+					SCREEN_FULLSCREEN = !SCREEN_FULLSCREEN;
+					init_Window();
 				}
 				else if (event.key.keysym.sym == SDLK_PAUSE)
 				{
@@ -1226,28 +1057,28 @@ int SDL_main( int argc, char *argv[] )
 				}
 				break;
 			case SDL_KEYUP:
-				input.OnRelease( INPUT_TYPE_KEYBOARD, event.key.which, event.key.keysym.sym );
+				input.OnRelease( Input::TYPE_KEYBOARD, event.key.which, event.key.keysym.sym );
 				break;
 			case SDL_MOUSEMOTION:
-				input.OnAxis( INPUT_TYPE_MOUSE_AXIS, event.motion.which, 0, float(event.motion.x * 2 - SCREEN_WIDTH) / float(SCREEN_HEIGHT) );
-				input.OnAxis( INPUT_TYPE_MOUSE_AXIS, event.motion.which, 1, float(event.motion.y * 2 - SCREEN_HEIGHT) / float(SCREEN_HEIGHT) );
-				input.OnAxis( INPUT_TYPE_MOUSE_AXIS, event.motion.which, 2, event.motion.xrel / 32.0f );
-				input.OnAxis( INPUT_TYPE_MOUSE_AXIS, event.motion.which, 3, event.motion.yrel / 32.0f );
+				input.OnAxis( Input::TYPE_MOUSE_AXIS, event.motion.which, 0, float(event.motion.x * 2 - SCREEN_WIDTH) / float(SCREEN_HEIGHT) );
+				input.OnAxis( Input::TYPE_MOUSE_AXIS, event.motion.which, 1, float(event.motion.y * 2 - SCREEN_HEIGHT) / float(SCREEN_HEIGHT) );
+				input.OnAxis( Input::TYPE_MOUSE_AXIS, event.motion.which, 2, event.motion.xrel / 32.0f );
+				input.OnAxis( Input::TYPE_MOUSE_AXIS, event.motion.which, 3, event.motion.yrel / 32.0f );
 				break;
 			case SDL_MOUSEBUTTONDOWN:
-				input.OnPress( INPUT_TYPE_MOUSE_BUTTON, event.button.which, event.button.button );
+				input.OnPress( Input::TYPE_MOUSE_BUTTON, event.button.which, event.button.button );
 				break;
 			case SDL_MOUSEBUTTONUP:
-				input.OnRelease( INPUT_TYPE_MOUSE_BUTTON, event.button.which, event.button.button );
+				input.OnRelease( Input::TYPE_MOUSE_BUTTON, event.button.which, event.button.button );
 				break;
 			case SDL_JOYAXISMOTION:
-				input.OnAxis( INPUT_TYPE_JOYSTICK_AXIS, event.jaxis.which, event.jaxis.axis, event.jaxis.value / 32767.0f );
+				input.OnAxis( Input::TYPE_JOYSTICK_AXIS, event.jaxis.which, event.jaxis.axis, event.jaxis.value / 32767.0f );
 				break;
 			case SDL_JOYBUTTONDOWN:
-				input.OnPress( INPUT_TYPE_JOYSTICK_BUTTON, event.jaxis.which, event.jbutton.button );
+				input.OnPress( Input::TYPE_JOYSTICK_BUTTON, event.jaxis.which, event.jbutton.button );
 				break;
 			case SDL_JOYBUTTONUP:
-				input.OnRelease( INPUT_TYPE_JOYSTICK_BUTTON, event.jbutton.which, event.jbutton.button );
+				input.OnRelease( Input::TYPE_JOYSTICK_BUTTON, event.jbutton.which, event.jbutton.button );
 				break;
 			case SDL_QUIT:
 				quit = true;
@@ -1964,9 +1795,6 @@ int SDL_main( int argc, char *argv[] )
 		// save input log
 		inputlog.SaveFile();
 	}
-
-	// clear the input log
-	inputlog.Clear();
 
 	// stop audio
 	SDL_PauseAudio(1);

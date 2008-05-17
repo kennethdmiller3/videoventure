@@ -3,6 +3,8 @@
 #include "Explosion.h"
 #include "Damagable.h"
 #include "Link.h"
+#include "Team.h"
+
 
 #ifdef USE_POOL_ALLOCATOR
 #include <boost/pool/pool.hpp>

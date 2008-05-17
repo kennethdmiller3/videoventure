@@ -2,6 +2,7 @@
 #include "Player.h"
 #include "Bullet.h"
 #include "Damagable.h"
+#include "Points.h"
 
 namespace Database
 {

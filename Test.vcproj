@@ -243,6 +243,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Source\Points.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\Source\Renderable.cpp"
 				>
 			</File>
@@ -283,6 +287,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\Source\Team.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\Source\Test.cpp"
 				>
 			</File>
@@ -292,6 +300,10 @@
 			</File>
 			<File
 				RelativePath=".\Source\Weapon.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\World.cpp"
 				>
 			</File>
 		</Filter>
@@ -369,6 +381,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Source\Points.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Source\Renderable.h"
 				>
 			</File>
@@ -401,6 +417,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Source\Team.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Source\Updatable.h"
 				>
 			</File>
@@ -410,6 +430,10 @@
 			</File>
 			<File
 				RelativePath=".\Source\Weapon.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\World.h"
 				>
 			</File>
 			<File
