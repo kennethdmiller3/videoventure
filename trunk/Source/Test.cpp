@@ -1363,11 +1363,6 @@ int SDL_main( int argc, char *argv[] )
 			view.min.y = trackpos.y - VIEW_SIZE * 0.5f * SCREEN_HEIGHT / SCREEN_WIDTH;
 			view.max.y = trackpos.y + VIEW_SIZE * 0.5f * SCREEN_HEIGHT / SCREEN_WIDTH;
 
-#ifdef COLLECT_DEBUG_DRAW
-			// debug draw
-			glCallList(debugdraw);
-#endif
-
 			// render all entities
 			// (send interpolation ratio and offset from simulation time)
 			Renderable::RenderAll(sim_turns, sim_step, view);
@@ -1411,6 +1406,20 @@ int SDL_main( int argc, char *argv[] )
 		// switch blend mode
 		glPushAttrib(GL_COLOR_BUFFER_BIT | GL_TEXTURE_BIT);
 		glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
+
+#ifdef COLLECT_DEBUG_DRAW
+		// push camera transform
+		glPushMatrix();
+
+		// set camera to track position
+		glTranslatef( -trackpos.x, -trackpos.y, 0 );
+
+		// debug draw
+		glCallList(debugdraw);
+
+		// pop camera transform
+		glPopMatrix();
+#endif
 
 		// push projection transform
 		glMatrixMode(GL_PROJECTION);

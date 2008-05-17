@@ -897,11 +897,12 @@ public:
 	void DrawSolidPolygon(const b2Vec2* vertices, int32 vertexCount, const b2Color& color);
 	void DrawCircle(const b2Vec2& center, float32 radius, const b2Color& color);
 	void DrawSolidCircle(const b2Vec2& center, float32 radius, const b2Vec2& axis, const b2Color& color);
-	void DrawPoint(const b2Vec2& p, const b2Color& color);
+	void DrawPoint(const b2Vec2& p, float32 size, const b2Color& color);
 	void DrawSegment(const b2Vec2& p1, const b2Vec2& p2, const b2Color& color);
 	void DrawAxis(const b2Vec2& point, const b2Vec2& axis, const b2Color& color);
 	void DrawXForm(const b2XForm& xf);
 	void DrawForce(const b2Vec2& point, const b2Vec2& force, const b2Color& color);
+	void DrawAABB(b2AABB* aabb, const b2Color& c);
 }
 debugDraw;
 
@@ -984,16 +985,6 @@ void DebugDraw::DrawSolidCircle(const b2Vec2& center, float32 radius, const b2Ve
 	glEnd();
 }
 
-void DebugDraw::DrawPoint(const b2Vec2& p, const b2Color& color)
-{
-	glColor3f(color.r, color.g, color.b);
-	glPointSize(4.0f);
-	glBegin(GL_POINTS);
-	glVertex2f(p.x, p.y);
-	glEnd();
-	glPointSize(1.0f);
-}
-
 void DebugDraw::DrawSegment(const b2Vec2& p1, const b2Vec2& p2, const b2Color& color)
 {
 	glColor3f(color.r, color.g, color.b);
@@ -1001,14 +992,6 @@ void DebugDraw::DrawSegment(const b2Vec2& p1, const b2Vec2& p2, const b2Color& c
 	glVertex2f(p1.x, p1.y);
 	glVertex2f(p2.x, p2.y);
 	glEnd();
-}
-
-void DebugDraw::DrawAxis(const b2Vec2& point, const b2Vec2& axis, const b2Color& color)
-{
-	const float32 k_axisScale = 0.3f;
-	b2Vec2 p1 = point;
-	b2Vec2 p2 = point + k_axisScale	* axis;
-	DrawSegment(p1, p2, color);
 }
 
 void DebugDraw::DrawXForm(const b2XForm& xf)
@@ -1027,6 +1010,27 @@ void DebugDraw::DrawXForm(const b2XForm& xf)
 	p2 = p1 + k_axisScale * xf.R.col2;
 	glVertex2f(p2.x, p2.y);
 
+	glEnd();
+}
+
+void DebugDraw::DrawPoint(const b2Vec2& p, float32 size, const b2Color& color)
+{
+	glPointSize(size);
+	glBegin(GL_POINTS);
+	glColor3f(color.r, color.g, color.b);
+	glVertex2f(p.x, p.y);
+	glEnd();
+	glPointSize(1.0f);
+}
+
+void DebugDraw::DrawAABB(b2AABB* aabb, const b2Color& c)
+{
+	glColor3f(c.r, c.g, c.b);
+	glBegin(GL_LINE_LOOP);
+	glVertex2f(aabb->lowerBound.x, aabb->lowerBound.y);
+	glVertex2f(aabb->upperBound.x, aabb->lowerBound.y);
+	glVertex2f(aabb->upperBound.x, aabb->upperBound.y);
+	glVertex2f(aabb->lowerBound.x, aabb->upperBound.y);
 	glEnd();
 }
 
@@ -1247,7 +1251,7 @@ void Collidable::WorldInit(void)
 #ifdef COLLIDABLE_DEBUG_DRAW
 	// set debug render
 	world->SetDebugDraw(&debugDraw);
-	debugDraw.SetFlags(-1);
+	debugDraw.SetFlags(~0U);
 #endif
 
 	// create perimeter walls
