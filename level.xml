@@ -295,13 +295,21 @@
 	<template name="starfield">
 		<renderable radius="1536">
 			<drawlist>
-				<repeat count="128">
-					<pushmatrix>
+				<quads>
+					<repeat count="128">
 						<color rand="1" r_avg="0.75" r_var="0.25" g_avg="0.75" g_var="0.25" b_avg="0.75" b_var="0.25" a_avg="1" a_var="0"/>
-						<translate rand="1" x_avg="0" x_var="512" y_avg="0" y_var="512" z_avg="640" z_var="384"/>
-						<calllist name="square"/>
-					</pushmatrix>
-				</repeat>
+						<set name="p0" type="position" rand="1" x_avg="0" x_var="512" y_avg="0" y_var="512" z_avg="640" z_var="384"/>
+						<add name="p0" type="position" x="-1" y="-1"/>
+						<vertex variable="p0"/>
+						<add name="p0" type="position" x="2" y="0"/>
+						<vertex variable="p0"/>
+						<add name="p0" type="position" x="0" y="2"/>
+						<vertex variable="p0"/>
+						<add name="p0" type="position" x="-2" y="0"/>
+						<vertex variable="p0"/>
+					</repeat>
+				</quads>
+				<clear name="p0"/>
 			</drawlist>
 		</renderable>
 	</template>
