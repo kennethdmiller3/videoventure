@@ -385,6 +385,10 @@ void Sound::Mix(void *userdata, Uint8 *stream, int len)
 			}
 		}
 
+		// done if producing no output
+		if (SOUND_CHANNELS <= 0)
+			continue;
+
 		// apply sound fall-off
 		float volume = sound->mVolume / (1.0f + listenerpos.DistSq(sound->mPosition) / 16384.0f);
 		if (volume < 1.0f/256.0f)
@@ -497,26 +501,35 @@ void Sound::Mix(void *userdata, Uint8 *stream, int len)
 		}
 	}
 
-	// subract filtered average to remove DC term
-	// apply filtered scaling to compress dynamic range
-	// apply nonlinear curve to eliminate clipping
-	const float *src = mix;
-	const float *srcend = mix + samples;
-	short *dst = (short *)stream;
-	while (src < srcend)
+	// if generating output...
+	if (SOUND_CHANNELS > 0)
 	{
-		float mix0 = *src++;
-		float mix1 = *src++;
-		mix0 -= average0;
-		mix1 -= average1;
-		average0 += mix0 * averagefilter;
-		average1 += mix1 * averagefilter;
-		level += (mix0 * mix0 + mix1 * mix1 - level) * levelfilter;
-		if (level < minlevel)
-			level = minlevel;
-		float prescale = InvSqrt(level);
-		*dst++ = short(tanhf(mix0 * prescale) * postscale);
-		*dst++ = short(tanhf(mix1 * prescale) * postscale);
+		// subract filtered average to remove DC term
+		// apply filtered scaling to compress dynamic range
+		// apply nonlinear curve to eliminate clipping
+		const float *src = mix;
+		const float *srcend = mix + samples;
+		short *dst = (short *)stream;
+		while (src < srcend)
+		{
+			float mix0 = *src++;
+			float mix1 = *src++;
+			mix0 -= average0;
+			mix1 -= average1;
+			average0 += mix0 * averagefilter;
+			average1 += mix1 * averagefilter;
+			level += (mix0 * mix0 + mix1 * mix1 - level) * levelfilter;
+			if (level < minlevel)
+				level = minlevel;
+			float prescale = InvSqrt(level);
+			*dst++ = short(tanhf(mix0 * prescale) * postscale);
+			*dst++ = short(tanhf(mix1 * prescale) * postscale);
+		}
+	}
+	else
+	{
+		// clear the output
+		memset(stream, 0, len);
 	}
 
 #ifdef PROFILE_SOUND_MIXER
