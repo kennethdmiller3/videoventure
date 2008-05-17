@@ -21,6 +21,97 @@ void Entity::operator delete(void *aPtr)
 namespace Database
 {
 	Typed<Entity *> entity(0xd33ff5da /* "entity" */);
+
+	namespace Loader
+	{
+		static void ProcessTemplateItem(const TiXmlElement *element, unsigned int aId)
+		{
+			const char *value = element->Value();
+			const Database::Loader::Entry &configure = Database::Loader::GetConfigure(Hash(value));
+			if (configure)
+				configure(aId, element);
+			else
+				DebugPrint("Unrecognized tag \"%s\"\n", value);
+		}
+
+		class TemplateLoader
+		{
+		public:
+			TemplateLoader()
+			{
+				AddConfigure(0x694aaa0b /* "template" */, Entry(this, &TemplateLoader::Configure));
+			}
+
+			void Configure(unsigned int aId, const TiXmlElement *element)
+			{
+				// get parent identifier
+				const char *type = element->Attribute("type");
+				unsigned int aParentId = Hash(type);
+
+				// inherit parent components
+				Database::Inherit(aId, aParentId);
+
+				// set name
+				std::string &namebuf = Database::name.Open(aId);
+				namebuf = element->Attribute("name");
+				Database::name.Close(aId);
+
+				// for each child element...
+				for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+				{
+					// process the template item
+					ProcessTemplateItem(child, aId);
+				}
+			}
+		}
+		templateloader;
+
+		class EntityLoader
+		{
+		public:
+			EntityLoader()
+			{
+				AddConfigure(0xd33ff5da /* "entity" */, Entry(this, &EntityLoader::Configure));
+			}
+
+			void Configure(unsigned int aId, const TiXmlElement *element)
+			{
+				// get parent identifier
+				const char *type = element->Attribute("type");
+				unsigned int aParentId = Hash(type);
+
+				// set name
+				std::string &namebuf = Database::name.Open(aId);
+				namebuf = element->Attribute("name");
+				Database::name.Close(aId);
+				
+				// set parent
+				Database::parent.Put(aId, aParentId);
+
+				// objects default to owning themselves
+				Database::owner.Put(aId, aId);
+
+				// create an entity
+				Entity *entity = new Entity(aId);
+				Database::entity.Put(aId, entity);
+
+				// process child elements
+				for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+				{
+					if (entity->Configure(child))
+						continue;
+
+					// process the template item
+					ProcessTemplateItem(child, aId);
+				}
+
+				// activate the instance
+				// (create runtime components)
+				Database::Activate(aId);
+			}
+		}
+		entityloader;
+	}
 }
 
 

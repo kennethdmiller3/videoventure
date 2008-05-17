@@ -31,12 +31,6 @@ namespace Database
 	// owner identifier database
 	Typed<Key> owner(0xf5674cd4 /* "owner" */);
 
-	// team identifier database
-	Typed<unsigned int> team(0xa2fd7d0c /* "team" */);
-
-	// point value database
-	Typed<int> points(0xbc9567c6 /* "points" */);
-
 
 	//
 	// UNTYPED DATABASE
@@ -365,41 +359,6 @@ namespace Database
 		{
 			return GetConfigureDB().Get(aTagId);
 		}
-
-		class TeamLoader
-		{
-		public:
-			TeamLoader()
-			{
-				AddConfigure(0xa2fd7d0c /* "team" */, Entry(this, &TeamLoader::Configure));
-			}
-
-			void Configure(unsigned int aId, const TiXmlElement *element)
-			{
-				unsigned int &team = Database::team.Open(aId);
-				team = Hash(element->Attribute("name"));
-				Database::team.Close(aId);
-			}
-		}
-		teamloader;
-
-
-		class PointsLoader
-		{
-		public:
-			PointsLoader()
-			{
-				AddConfigure(0xbc9567c6 /* "points" */, Entry(this, &PointsLoader::Configure));
-			}
-
-			void Configure(unsigned int aId, const TiXmlElement *element)
-			{
-				int &points = Database::points.Open(aId);
-				element->QueryIntAttribute("value", &points);
-				Database::points.Close(aId);
-			}
-		}
-		pointsloader;
 	}
 
 	//

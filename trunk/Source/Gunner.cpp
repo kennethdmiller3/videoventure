@@ -94,7 +94,7 @@ Gunner::Gunner(const GunnerTemplate &aTemplate, unsigned int aId)
 	mTrackPos.push_back(entity->GetPosition());
 	mTrackPos.push_back(entity->GetPosition());
 #else
-	mTrackCount = xs_CeilToInt(aTemplate.mFollowLength/GUNNER_TRACK_GRANULARITY);
+	mTrackCount = xs_CeilToInt(aTemplate.mFollowLength/GUNNER_TRACK_GRANULARITY) + 1;
 	mTrackPos = new Vector2[mTrackCount];
 	mTrackFirst = mTrackLast = 0;
 	mTrackPos[0] = entity->GetPosition();

@@ -2,6 +2,8 @@
 #include "Link.h"
 #include "Entity.h"
 #include "Collidable.h"
+#include "Team.h"
+
 
 #ifdef USE_POOL_ALLOCATOR
 #include <boost/pool/pool.hpp>

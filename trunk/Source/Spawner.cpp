@@ -2,6 +2,8 @@
 #include "Spawner.h"
 #include "Entity.h"
 #include "Renderable.h"
+#include "Team.h"
+
 
 #ifdef USE_POOL_ALLOCATOR
 #include <boost/pool/pool.hpp>

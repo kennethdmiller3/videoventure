@@ -1,24 +1,27 @@
 #include "StdAfx.h"
 #include "Input.h"
 
-namespace Database
-{
-	Typed<Typed<Input::Binding> > inputbinding;
-}
-
 Input::Input(void)
 {
-	memset(value, 0, sizeof(value));
+	Clear();
 }
 
 Input::~Input(void)
 {
 }
 
+// clear input bindings
+void Input::Clear(void)
+{
+	bindingmap.Clear();
+	memset(value, 0, sizeof(value));
+}
+
+// add an input binding
 void Input::Bind(LOGICAL aLogical, int aType, int aDevice, int aControl, float aDeadzone, float aScale)
 {
 	int aPhysical = (aType << 24) | (aDevice << 16) | aControl;
-	Database::Typed<Input::Binding> &bindings = Database::inputbinding.Open(aPhysical);
+	Bindings &bindings = bindingmap.Open(aPhysical);
 	Binding &binding = bindings.Open(aLogical);
 	binding.target = aLogical;
 	binding.deadzone = aDeadzone;
@@ -27,9 +30,10 @@ void Input::Bind(LOGICAL aLogical, int aType, int aDevice, int aControl, float a
 	binding.pressed = false;
 	binding.released = false;
 	bindings.Close(aLogical);
-	Database::inputbinding.Close(aPhysical);
+	bindingmap.Close(aPhysical);
 }
 
+// update inputs
 void Input::Update(void)
 {
 	float scale;
@@ -57,11 +61,12 @@ void Input::Update(void)
 	output[FIRE_SECONDARY] = std::min(std::max(value[FIRE_SECONDARY], -1.0f), 1.0f);
 }
 
+// step inputs
 void Input::Step(void)
 {
-	for (Database::Typed<Database::Typed<Input::Binding> >::Iterator inputitor(&Database::inputbinding); inputitor.IsValid(); ++inputitor)
+	for (Database::Typed<Bindings >::Iterator inputitor(&bindingmap); inputitor.IsValid(); ++inputitor)
 	{
-		for (Database::Typed<Input::Binding>::Iterator bindingitor(&inputitor.GetValue()); bindingitor.IsValid(); ++bindingitor)
+		for (Bindings::Iterator bindingitor(&inputitor.GetValue()); bindingitor.IsValid(); ++bindingitor)
 		{
 			Binding &binding = const_cast<Binding &>(bindingitor.GetValue());
 			if (binding.released)
@@ -77,10 +82,11 @@ void Input::Step(void)
 	}
 }
 
+// on axis movement
 void Input::OnAxis(int aType, int aDevice, int aControl, float aValue)
 {
 	int aPhysical = (aType << 24) | (aDevice << 16) | aControl;
-	for (Database::Typed<Input::Binding>::Iterator bindingitor(Database::inputbinding.Find(aPhysical)); bindingitor.IsValid(); ++bindingitor)
+	for (Bindings::Iterator bindingitor(bindingmap.Find(aPhysical)); bindingitor.IsValid(); ++bindingitor)
 	{
 		Binding &binding = const_cast<Binding &>(bindingitor.GetValue());
 		float scaled = aValue;
@@ -98,10 +104,11 @@ void Input::OnAxis(int aType, int aDevice, int aControl, float aValue)
 	}
 }
 
+// on button press
 void Input::OnPress(int aType, int aDevice, int aControl)
 {
 	int aPhysical = (aType << 24) | (aDevice << 16) | aControl;
-	for (Database::Typed<Input::Binding>::Iterator bindingitor(Database::inputbinding.Find(aPhysical)); bindingitor.IsValid(); ++bindingitor)
+	for (Bindings::Iterator bindingitor(bindingmap.Find(aPhysical)); bindingitor.IsValid(); ++bindingitor)
 	{
 		Binding &binding = const_cast<Binding &>(bindingitor.GetValue());
 		if (!binding.pressed)
@@ -112,12 +119,74 @@ void Input::OnPress(int aType, int aDevice, int aControl)
 	}
 }
 
+// on button release
 void Input::OnRelease(int aType, int aDevice, int aControl)
 {
 	int aPhysical = (aType << 24) | (aDevice << 16) | aControl;
-	for (Database::Typed<Input::Binding>::Iterator bindingitor(Database::inputbinding.Find(aPhysical)); bindingitor.IsValid(); ++bindingitor)
+	for (Bindings::Iterator bindingitor(bindingmap.Find(aPhysical)); bindingitor.IsValid(); ++bindingitor)
 	{
 		Binding &binding = const_cast<Binding &>(bindingitor.GetValue());
 		binding.released = true;
+	}
+}
+
+// process a configuration item
+void Input::ProcessItem(const TiXmlElement *element)
+{
+	const char *value = element->Value();
+	switch (Hash(value))
+	{
+	case 0xc7535f2e /* "bind" */:
+		{
+			// map logical name
+			const char *name = element->Attribute("name");
+			LOGICAL logical;
+			switch(Hash(name))
+			{
+			case 0x2f7d674b /* "move_x" */:	logical = MOVE_HORIZONTAL; break;
+			case 0x2e7d65b8 /* "move_y" */:	logical = MOVE_VERTICAL; break;
+			case 0x28e0ac09 /* "aim_x" */:	logical = AIM_HORIZONTAL; break;
+			case 0x27e0aa76 /* "aim_y" */:	logical = AIM_VERTICAL; break;
+			case 0x8eab16d9 /* "fire" */:
+			case 0x7f550f38 /* "fire1" */:	logical = FIRE_PRIMARY; break;
+			case 0x825513f1 /* "fire2" */:	logical = FIRE_SECONDARY; break;
+			default:						logical = NUM_LOGICAL; break;
+			}
+
+			// map input type
+			const char *type = element->Attribute("type");
+			TYPE inputtype;
+			switch(Hash(type))
+			{
+			case 0x4aa845f4 /* "keyboard" */:			inputtype = TYPE_KEYBOARD; break;
+			case 0xd76afdc0 /* "mouse_axis" */:			inputtype = TYPE_MOUSE_AXIS; break;
+			case 0xbe730575 /* "mouse_button" */:		inputtype = TYPE_MOUSE_BUTTON; break;
+			case 0x4b1fb051 /* "joystick_axis" */:		inputtype = TYPE_JOYSTICK_AXIS; break;
+			case 0xb084d264 /* "joystick_button" */:	inputtype = TYPE_JOYSTICK_BUTTON; break;
+			default:									inputtype = NUM_TYPES; break;
+			}
+
+			// get properties
+			int device = 0;
+			element->QueryIntAttribute("device", &device);
+			int control = 0;
+			element->QueryIntAttribute("control", &control);
+			float deadzone = 0.0f;
+			element->QueryFloatAttribute("deadzone", &deadzone);
+			float scale = 1.0f;
+			element->QueryFloatAttribute("scale", &scale);
+
+			input.Bind(logical, inputtype, device, control, deadzone, scale);
+		}
+		break;
+	}
+}
+
+// configure
+void Input::Configure(const TiXmlElement *element)
+{
+	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+	{
+		ProcessItem(child);
 	}
 }

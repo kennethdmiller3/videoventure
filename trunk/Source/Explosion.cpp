@@ -2,6 +2,7 @@
 #include "Explosion.h"
 #include "Collidable.h"
 #include "Damagable.h"
+#include "Team.h"
 
 
 #ifdef USE_POOL_ALLOCATOR
