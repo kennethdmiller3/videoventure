@@ -489,7 +489,7 @@ void ProcessDrawData(const TiXmlElement *element, std::vector<unsigned int> &buf
 			element->QueryFloatAttribute(label, &average);
 			buffer.push_back(*reinterpret_cast<unsigned int *>(&average));
 			sprintf(label, "%s_var", names[i]);
-			float variance = data[i];
+			float variance = 0.0f;
 			element->QueryFloatAttribute(label, &variance);
 			buffer.push_back(*reinterpret_cast<unsigned int *>(&variance));
 		}
