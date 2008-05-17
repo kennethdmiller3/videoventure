@@ -888,14 +888,18 @@
 		<collidable>
 			<body name="main">
 				<fast value="1"/>
-				<box w="2" h="5">
-					<position x="0" y="5"/>
+				<poly>
+					<vertex x="0" y="10"/>
+					<vertex x="-2" y="5"/>
+					<vertex x="-2" y="0"/>
+					<vertex x="2" y="0"/>
+					<vertex x="2" y="5"/>
 					<friction value="1"/>
 					<restitution value="0"/>
 					<density value="1.0"/>
 					<category value="3"/>
 					<mask bit3="0" bit4="0"/>
-				</box>
+				</poly>
 			</body>
 		</collidable>
 		<renderable radius="11" period="0.066667">
@@ -1218,7 +1222,7 @@
 					<restitution value="0.5"/>
 					<category value="3"/>
 				</circle>
-				<damping linear="10.0"/>
+				<damping linear="10.0" angular="10.0"/>
 			</body>
 		</collidable>
 		<renderable radius="6">
@@ -4904,7 +4908,7 @@
 					<restitution value="0.5"/>
 					<category value="1"/>
 				</circle>
-				<damping linear="10.0"/>
+				<damping linear="10.0" angular="10.0"/>
 			</body>
 		</collidable>
 		<renderable radius="6">
