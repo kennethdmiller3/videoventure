@@ -23,7 +23,7 @@ namespace Database
 				document.LoadFile();
 
 				// process child elements
-				if (const TiXmlElement *root = document.FirstChildElement());
+				if (const TiXmlElement *root = document.FirstChildElement())
 					ProcessWorldItems(root);
 			}
 		}

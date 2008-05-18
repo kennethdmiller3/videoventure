@@ -637,18 +637,6 @@ int ProcessCommand( unsigned int aCommand, char *aParam[], int aCount )
 			return 0;
 		}
 
-	case 0x94c716fd /* "outputconsole" */:
-		if (aCount >= 1)
-		{
-			DEBUGPRINT_OUTPUTCONSOLE = atoi(aParam[0]) != 0;
-			return 1;
-		}
-		else
-		{
-			OGLCONSOLE_Output(console, "outputconsole: %d\n", DEBUGPRINT_OUTPUTCONSOLE);
-			return 0;
-		}
-
 	case 0x61e734dc /* "soundchannels" */:
 		if (aCount >= 1)
 		{
@@ -673,6 +661,18 @@ int ProcessCommand( unsigned int aCommand, char *aParam[], int aCount )
 			return 0;
 		}
 		
+	case 0x94c716fd /* "outputconsole" */:
+		if (aCount >= 1)
+		{
+			DEBUGPRINT_OUTPUTCONSOLE = atoi(aParam[0]) != 0;
+			return 1;
+		}
+		else
+		{
+			OGLCONSOLE_Output(console, "outputconsole: %d\n", DEBUGPRINT_OUTPUTCONSOLE);
+			return 0;
+		}
+
 	case 0x54822903 /* "outputdebug" */:
 		if (aCount >= 1)
 		{
