@@ -33,8 +33,8 @@ float VIEW_AIM_FILTER = 2.0f;
 
 // opengl attributes
 bool OPENGL_SWAPCONTROL = true;
-bool OPENGL_ANTIALIAS = true;
-int OPENGL_MULTISAMPLE = 1;
+bool OPENGL_ANTIALIAS = false;
+int OPENGL_MULTISAMPLE = 4;
 
 // debug output
 bool DEBUGPRINT_OUTPUTCONSOLE = false;
@@ -82,6 +82,7 @@ extern "C" GLuint OGLCONSOLE_glFontHandle;
 extern "C" void OGLCONSOLE_DrawString(char *s, double x, double y, double w, double h, double z);
 extern "C" void OGLCONSOLE_DrawCharacter(int c, double x, double y, double w, double h, double z);
 extern "C" void OGLCONSOLE_CreateFont();
+extern "C" void OGLCONSOLE_Resize(OGLCONSOLE_Console console);
 
 #define GET_PERFORMANCE_DETAILS
 #define PRINT_PERFORMANCE_DETAILS
@@ -226,7 +227,7 @@ bool init_Window()
 #ifndef ENABLE_DEPTH_TEST
 	SDL_GL_SetAttribute( SDL_GL_DEPTH_SIZE, 0 );
 #endif
-	SDL_GL_SetAttribute( SDL_GL_MULTISAMPLEBUFFERS, OPENGL_MULTISAMPLE > 1 );
+	SDL_GL_SetAttribute( SDL_GL_MULTISAMPLEBUFFERS, OPENGL_MULTISAMPLE > 0 );
 	SDL_GL_SetAttribute( SDL_GL_MULTISAMPLESAMPLES, OPENGL_MULTISAMPLE );
 	SDL_GL_SetAttribute( SDL_GL_SWAP_CONTROL, OPENGL_SWAPCONTROL );
 
@@ -251,6 +252,7 @@ bool init_Window()
 
 		// TO DO: rebuild textures
 		OGLCONSOLE_CreateFont();
+		OGLCONSOLE_Resize(console);
 	}
 
 	return true;
@@ -389,6 +391,9 @@ void init_Input(const char *config)
 
 void init_Level(const char *config)
 {
+	// stop any startup sound (HACK)
+	StopSound(0x94326baa /* "startup" */);
+
 	// clear existing level
 	Database::Cleanup();
 
@@ -403,6 +408,9 @@ void init_Level(const char *config)
 
 	// get the reticule draw list
 	reticule_handle = Database::drawlist.Get(0x170e4c58 /* "reticule" */);
+
+	// play the startup sound (HACK)
+	PlaySound(0x94326baa /* "startup" */);
 }
 
 
@@ -960,8 +968,6 @@ int SDL_main( int argc, char *argv[] )
 		inputlogroot = NULL;
 		inputlognext = NULL;
 	}
-
-	PlaySound(0x94326baa /* "startup" */);
 
 	// camera track position
 	Vector2 trackpos(0, 0);

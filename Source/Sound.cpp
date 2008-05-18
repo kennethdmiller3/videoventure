@@ -564,3 +564,13 @@ void PlaySound(unsigned int aId, unsigned int aCueId)
 		}
 	}
 }
+
+void StopSound(unsigned int aId, unsigned int aCueId)
+{
+	const Database::Typed<Sound *> &sounds = Database::sound.Get(aId);
+	if (Sound *s = sounds.Get(aCueId))
+	{
+		// stop
+		s->Stop();
+	}
+}

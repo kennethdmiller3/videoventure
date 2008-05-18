@@ -74,3 +74,4 @@ namespace Database
 }
 
 void PlaySound(unsigned int aId, unsigned int aCueId = 0);
+void StopSound(unsigned int aId, unsigned int aCueId = 0);
