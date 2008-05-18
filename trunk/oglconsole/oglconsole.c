@@ -196,13 +196,13 @@ int OGLCONSOLE_CreateFont()
 /* This is the number of command line entries that the console will remember (so
  * that the user can use the up/down keys to see and easily re-execute his past
  * commands) */
-#define MAX_HISTORY_COUNT 25
+#define MAX_HISTORY_COUNT 32
 
 /* This is the default number of lines for the console to remember (that is to
  * say, the user can scroll up and down to see what has been printed to the
  * console in the past, and this is the number of those lines, plus the number
  * of lines shown on the screen at all times) */
-#define DEFAULT_MAX_LINES 100
+#define DEFAULT_MAX_LINES 256
 
 /* OGLCONSOLE console structure */
 typedef struct
@@ -261,18 +261,10 @@ void OGLCONSOLE_DefaultEnterKeyCallback(OGLCONSOLE_Console console, char *cmd)
             "No enter key callback is registered for this console!\n");
 }
 
-OGLCONSOLE_Console OGLCONSOLE_Create()
+OGLCONSOLE_Resize(_OGLCONSOLE_Console *console)
 {
-    _OGLCONSOLE_Console *console;
     GLint viewport[4];
 
-    /* If font hasn't been created, we create it */
-    if (!glIsTexture(OGLCONSOLE_glFontHandle))
-        OGLCONSOLE_CreateFont();
-
-    /* Allocate memory for our console */
-    console = (void*)malloc(sizeof(_OGLCONSOLE_Console));
- 
     /* Textual dimensions */
     glGetIntegerv(GL_VIEWPORT, viewport);
     console->textWidth = viewport[2] / CHAR_PIXEL_W;
@@ -315,6 +307,8 @@ OGLCONSOLE_Console OGLCONSOLE_Create()
     /* This is the total number of screen lines in memory (start blank) */
     console->maxLines = DEFAULT_MAX_LINES;
     /* Allocate space for text */
+	if (console->lines)
+		free(console->lines);
     console->lines = (char*)malloc(console->maxLines*(console->textWidth+1));
     /* Initialize to empty strings */
     memset(console->lines, 0, console->maxLines*(console->textWidth+1));
@@ -326,6 +320,22 @@ OGLCONSOLE_Console OGLCONSOLE_Create()
     console->lineQueueIndex = 0;
     /* This cursor points to what line the console view is scrolled to */
     console->lineScrollIndex = console->maxLines - console->textHeight + 1;
+}
+
+OGLCONSOLE_Console OGLCONSOLE_Create()
+{
+    _OGLCONSOLE_Console *console;
+
+    /* If font hasn't been created, we create it */
+    if (!glIsTexture(OGLCONSOLE_glFontHandle))
+        OGLCONSOLE_CreateFont();
+
+    /* Allocate memory for our console */
+    console = (void*)malloc(sizeof(_OGLCONSOLE_Console));
+
+	/* Size the console */
+	console->lines = NULL;
+	OGLCONSOLE_Resize(console);
 
     /* Initialize the user's input (command line) */
     console->inputLineLength = 0;
