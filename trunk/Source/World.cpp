@@ -2,6 +2,34 @@
 #include "World.h"
 #include "Entity.h"
 
+namespace Database
+{
+	namespace Loader
+	{
+		class ImportLoader
+		{
+		public:
+			ImportLoader()
+			{
+				AddConfigure(0x112a90d4 /* "import" */, Entry(this, &ImportLoader::Configure));
+			}
+
+			void Configure(unsigned int aId, const TiXmlElement *element)
+			{
+				// level configuration
+				const char *name = element->Attribute("name");
+				DebugPrint("Import %s\n", name);
+				TiXmlDocument document(name);
+				document.LoadFile();
+
+				// process child elements
+				if (const TiXmlElement *root = document.FirstChildElement());
+					ProcessWorldItems(root);
+			}
+		}
+		importloader;
+	}
+}
 
 void ProcessWorldItem(const TiXmlElement *element)
 {

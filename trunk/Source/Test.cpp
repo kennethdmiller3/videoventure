@@ -377,17 +377,14 @@ void init_Input(const char *config)
 	// clear existing bindings
 	input.Clear();
 
-	// input binding
+	// load input binding file
 	DebugPrint("Input %s\n", config);
 	TiXmlDocument document(config);
 	document.LoadFile();
 
-	TiXmlHandle handle( &document );
-	TiXmlElement *element = handle.FirstChildElement("input").ToElement();
-	if (element)
-	{
-		input.Configure(element);
-	}
+	// process child elements of the root
+	if (const TiXmlElement *root = document.FirstChildElement("input"))
+		input.Configure(root);
 }
 
 void init_Level(const char *config)
@@ -395,18 +392,14 @@ void init_Level(const char *config)
 	// clear existing level
 	Database::Cleanup();
 
-	// level configuration
+	// load level data file
 	DebugPrint("Level %s\n", config);
 	TiXmlDocument document(config);
 	document.LoadFile();
 
 	// process child elements of world
-	TiXmlHandle handle( &document );
-	TiXmlElement *element = handle.FirstChildElement("world").ToElement();
-	if (element)
-	{
-		ProcessWorldItems(element);
-	}
+	if (const TiXmlElement *root = document.FirstChildElement("world"))
+		ProcessWorldItems(root);
 
 	// get the reticule draw list
 	reticule_handle = Database::drawlist.Get(0x170e4c58 /* "reticule" */);
