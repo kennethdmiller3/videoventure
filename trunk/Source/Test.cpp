@@ -1670,24 +1670,23 @@ int SDL_main( int argc, char *argv[] )
 		glPopAttrib();
 
 #ifdef GET_PERFORMANCE_DETAILS
-		LARGE_INTEGER perf_count1;
-		QueryPerformanceCounter(&perf_count1);
-		render_time[profile_index] += perf_count1.QuadPart - perf_count0.QuadPart;
-
 		if (!OPENGL_SWAPCONTROL)
 		{
+			LARGE_INTEGER perf_count1;
+			QueryPerformanceCounter(&perf_count1);
+			render_time[profile_index] += perf_count1.QuadPart - perf_count0.QuadPart;
+
 			// force a render flush
 			glFinish();
+
+			LARGE_INTEGER perf_count2;
+			QueryPerformanceCounter(&perf_count2);
+			display_time[profile_index] += perf_count2.QuadPart - perf_count1.QuadPart;
 		}
-
-		LARGE_INTEGER perf_count2;
-		QueryPerformanceCounter(&perf_count2);
-		display_time[profile_index] += perf_count2.QuadPart - perf_count1.QuadPart;
-
-		if (OPENGL_SWAPCONTROL)
+		else
 		{
-			// force a render flush
-			glFinish();
+			// don't count display time
+			display_time[profile_index] = 0;
 		}
 #endif
 

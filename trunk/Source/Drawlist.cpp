@@ -152,6 +152,9 @@ enum DrawlistOp
 	DO_Block,
 	DO_Set,
 	DO_Add,
+	DO_Sub,
+	DO_Mul,
+	DO_Div,
 	DO_Clear,
 #ifdef DRAWLIST_LOOP
 	DO_Loop,
@@ -1140,6 +1143,60 @@ void ProcessDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buf
 		}
 		break;
 
+	case 0xdc4e3915 /* "sub" */:
+		{
+			unsigned int name = Hash(element->Attribute("name"));
+			unsigned int type = Hash(element->Attribute("type"));
+			int width;
+			const char **names;
+			const float *temp;
+			GetTypeData(type, width, names, temp);
+			float *data = static_cast<float *>(_alloca(width*sizeof(float)));
+			memset(data, 0, width*sizeof(float));
+
+			buffer.push_back(DO_Sub);
+			buffer.push_back(name);
+			buffer.push_back(width);
+			ProcessDrawData(element, buffer, width, names, data);
+		}
+		break;
+
+	case 0xeb84ed81 /* "mul" */:
+		{
+			unsigned int name = Hash(element->Attribute("name"));
+			unsigned int type = Hash(element->Attribute("type"));
+			int width;
+			const char **names;
+			const float *temp;
+			GetTypeData(type, width, names, temp);
+			float *data = static_cast<float *>(_alloca(width*sizeof(float)));
+			memset(data, 0, width*sizeof(float));
+
+			buffer.push_back(DO_Mul);
+			buffer.push_back(name);
+			buffer.push_back(width);
+			ProcessDrawData(element, buffer, width, names, data);
+		}
+		break;
+
+	case 0xe562ab48 /* "div" */:
+		{
+			unsigned int name = Hash(element->Attribute("name"));
+			unsigned int type = Hash(element->Attribute("type"));
+			int width;
+			const char **names;
+			const float *temp;
+			GetTypeData(type, width, names, temp);
+			float *data = static_cast<float *>(_alloca(width*sizeof(float)));
+			memset(data, 0, width*sizeof(float));
+
+			buffer.push_back(DO_Div);
+			buffer.push_back(name);
+			buffer.push_back(width);
+			ProcessDrawData(element, buffer, width, names, data);
+		}
+		break;
+
 	case 0x5c6e1222 /* "clear" */:
 		{
 			unsigned int name = Hash(element->Attribute("name"));
@@ -1607,6 +1664,57 @@ void ExecuteDrawItems(const unsigned int buffer[], size_t count, float param, un
 				{
 					float &v = variables.Open(name+i);
 					v += data[i];
+					variables.Close(name+i);
+				}
+				Database::variable.Close(id);
+			}
+			break;
+
+		case DO_Sub:
+			{
+				unsigned int name = *itor++;
+				int width = *itor++;
+				float *data = static_cast<float *>(_alloca(width*sizeof(float)));
+				itor += ExecuteDrawData(itor, buffer + count - itor, width, data, param, id);
+				Database::Typed<float> &variables = Database::variable.Open(id);
+				for (int i = 0; i < width; i++)
+				{
+					float &v = variables.Open(name+i);
+					v -= data[i];
+					variables.Close(name+i);
+				}
+				Database::variable.Close(id);
+			}
+			break;
+
+		case DO_Mul:
+			{
+				unsigned int name = *itor++;
+				int width = *itor++;
+				float *data = static_cast<float *>(_alloca(width*sizeof(float)));
+				itor += ExecuteDrawData(itor, buffer + count - itor, width, data, param, id);
+				Database::Typed<float> &variables = Database::variable.Open(id);
+				for (int i = 0; i < width; i++)
+				{
+					float &v = variables.Open(name+i);
+					v *= data[i];
+					variables.Close(name+i);
+				}
+				Database::variable.Close(id);
+			}
+			break;
+
+		case DO_Div:
+			{
+				unsigned int name = *itor++;
+				int width = *itor++;
+				float *data = static_cast<float *>(_alloca(width*sizeof(float)));
+				itor += ExecuteDrawData(itor, buffer + count - itor, width, data, param, id);
+				Database::Typed<float> &variables = Database::variable.Open(id);
+				for (int i = 0; i < width; i++)
+				{
+					float &v = variables.Open(name+i);
+					v /= data[i];
 					variables.Close(name+i);
 				}
 				Database::variable.Close(id);
