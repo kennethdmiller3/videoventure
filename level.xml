@@ -200,6 +200,7 @@
 		</triangle_strip>
 	</drawlist>
 
+
 	<!-- reticule -->
 
 	<drawlist name="reticule">
@@ -270,23 +271,41 @@
 		</quads>
 	</drawlist>
 
+
 	<!-- background shapes -->
 
-	<!-- clouds
-	<cloud name="clouds" count="1024">
-		<x average="0" variance="2048"/>
-		<y average="0" variance="2048"/>
-		<z average="640" variance="384"/>
-		<width average="128" variance="96"/>
-		<height average="128" variance="96"/>
-		<red average="0.375" variance="0.125"/>
-		<green average="0.375" variance="0.125"/>
-		<blue average="0.375" variance="0.125"/>
-		<alpha average="0.75" variance="0"/>
-	</cloud>
+	<!-- clouds -->
+	<!--
 	<entity name="clouds">
-		<renderable radius="2048">
-			<calllist name="clouds"/>
+		<renderable radius="16384">
+			<drawlist>
+				<set name="d" type="position" x="0" y="0" z="640" w="0"/>
+				<quads>
+					<repeat count="1024">
+						<color rand="1" r_avg="0.375" r_var="0.125" g_avg="0.375" g_var="0.125" b_avg="0.375" b_var="0.125" a_avg="0.75" a_var="0"/>
+						<set name="p0" type="position" rand="1" x_avg="0" x_var="2048" y_avg="0" y_var="2048" z_avg="0" z_var="0"/>
+						<set name="w" type="position" rand="1" x_avg="128" x_var="96" y_avg="0" y_var="0" z_avg="0" z_var="0" w_avg="0" w_var="0"/>
+						<set name="h" type="position" rand="1" x_avg="0" x_var="0" y_avg="128" y_var="96" z_avg="0" z_var="0" w_avg="0" w_var="0"/>
+						<add name="p0" variable="d"/>
+						<sub name="p0" variable="w"/>
+						<sub name="p0" variable="h"/>
+						<add name="w" variable="w"/>
+						<add name="h" variable="h"/>
+						<vertex variable="p0"/>
+						<add name="p0" variable="w"/>
+						<vertex variable="p0"/>
+						<add name="p0" variable="h"/>
+						<vertex variable="p0"/>
+						<sub name="p0" variable="w"/>
+						<vertex variable="p0"/>
+						<add name="d" type="position" x="0" y="0" z="0.375" w="0"/>
+					</repeat>
+				</quads>
+				<clear name="p0"/>
+				<clear name="w"/>
+				<clear name="h"/>
+				<clear name="d"/>
+			</drawlist>
 		</renderable>
 	</entity>
 	-->
@@ -432,7 +451,7 @@
 			</drawlist>
 		</renderable>
 	</entity>
-
+	
 
 	<!-- test walls -->
 
