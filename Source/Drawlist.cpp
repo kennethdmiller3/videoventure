@@ -195,6 +195,7 @@ void GetTypeData(unsigned int type, int &width, const char **&names, const float
 	default:
 	case 0x934f4e0a /* "position" */:	names = sPositionNames; data = sPositionDefault; width = 4; break;
 	case 0x21ac415f /* "rotation" */:	names = sRotationNames; data = sRotationDefault; width = 4; break;
+	case 0xad0ecfd5 /* "translate" */:	names = sPositionNames, data = sPositionDefault; width = 3; break;
 	case 0x82971c71 /* "scale" */:		names = sScaleNames; data = sScaleDefault; width = 3; break;
 	case 0x3d7e6258 /* "color" */:		names = sColorNames; data = sColorDefault; width = 4; break;
 	case 0xdd612dd3 /* "texcoord" */:	names = sTexCoordNames; data = sTexCoordDefault; width = 4; break;
@@ -526,6 +527,61 @@ void ProcessFloatData(const TiXmlElement *element, std::vector<unsigned int> &bu
 	}
 }
 
+void ProcessVariableOperator(const TiXmlElement *element, std::vector<unsigned int> &buffer, DrawlistOp op, bool drawdata)
+{
+	unsigned int name = Hash(element->Attribute("name"));
+	unsigned int type = Hash(element->Attribute("type"));
+	int width;
+	const char **names;
+	const float *data;
+	GetTypeData(type, width, names, data);
+
+	buffer.push_back(op);
+	buffer.push_back(name);
+	buffer.push_back(width);
+	if (drawdata)
+		ProcessDrawData(element, buffer, width, names, data);
+}
+
+void ProcessPrimitive(const TiXmlElement *element, std::vector<unsigned int> &buffer, GLenum mode)
+{
+	buffer.push_back(DO_glBegin);
+	buffer.push_back(mode);
+	ProcessDrawItems(element, buffer);
+	buffer.push_back(DO_glEnd);
+}
+
+void ProcessArray(const TiXmlElement *element, std::vector<unsigned int> &buffer, DrawlistOp op, size_t size, size_t stride)
+{
+	buffer.push_back(op);
+	if (size)
+		buffer.push_back(size);
+	buffer.push_back(stride);
+
+	buffer.push_back(0);
+	int start = buffer.size();
+	ProcessFloatData(element, buffer);
+	buffer[start-1] = buffer.size() - start;
+}
+
+GLenum GetPrimitiveMode(const char *mode)
+{
+	switch (Hash(mode))
+	{
+	case 0xbc9567c6 /* "points" */:			return GL_POINTS; break;
+	case 0xe1e4263c /* "lines" */:			return GL_LINES; break;
+	case 0xc2106ab6 /* "line_loop" */:		return GL_LINE_LOOP; break;
+	case 0xc6f2fa0e /* "line_strip" */:		return GL_LINE_STRIP; break;
+	case 0xd8a57342 /* "triangles" */:		return GL_TRIANGLES; break;
+	case 0x668b2dd8 /* "triangle_strip" */:	return GL_TRIANGLE_STRIP; break;
+	case 0xcfa6904f /* "triangle_fan" */:	return GL_TRIANGLE_FAN; break;
+	case 0x5667b307 /* "quads" */:			return GL_QUADS; break;
+	case 0xb47cad9b /* "quad_strip" */:		return GL_QUAD_STRIP; break;
+	case 0x051cb889 /* "polygon" */:		return GL_POLYGON; break;
+	default:								return 0; break;
+	}
+}
+
 void ProcessDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buffer)
 {
 	const char *label = element->Value();
@@ -726,91 +782,61 @@ void ProcessDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buf
 
 	case 0xbc9567c6 /* "points" */:
 		{
-			buffer.push_back(DO_glBegin);
-			buffer.push_back(GL_POINTS);
-			ProcessDrawItems(element, buffer);
-			buffer.push_back(DO_glEnd);
+			ProcessPrimitive(element, buffer, GL_POINTS);
 		}
 		break;
 
 	case 0xe1e4263c /* "lines" */:
 		{
-			buffer.push_back(DO_glBegin);
-			buffer.push_back(GL_LINES);
-			ProcessDrawItems(element, buffer);
-			buffer.push_back(DO_glEnd);
+			ProcessPrimitive(element, buffer, GL_LINES);
 		}
 		break;
 
 	case 0xc2106ab6 /* "line_loop" */:
 		{
-			buffer.push_back(DO_glBegin);
-			buffer.push_back(GL_LINE_LOOP);
-			ProcessDrawItems(element, buffer);
-			buffer.push_back(DO_glEnd);
+			ProcessPrimitive(element, buffer, GL_LINE_LOOP);
 		}
 		break;
 
 	case 0xc6f2fa0e /* "line_strip" */:
 		{
-			buffer.push_back(DO_glBegin);
-			buffer.push_back(GL_LINE_STRIP);
-			ProcessDrawItems(element, buffer);
-			buffer.push_back(DO_glEnd);
+			ProcessPrimitive(element, buffer, GL_LINE_STRIP);
 		}
 		break;
 
 	case 0xd8a57342 /* "triangles" */:
 		{
-			buffer.push_back(DO_glBegin);
-			buffer.push_back(GL_TRIANGLES);
-			ProcessDrawItems(element, buffer);
-			buffer.push_back(DO_glEnd);
+			ProcessPrimitive(element, buffer, GL_TRIANGLES);
 		}
 		break;
 
 	case 0x668b2dd8 /* "triangle_strip" */:
 		{
-			buffer.push_back(DO_glBegin);
-			buffer.push_back(GL_TRIANGLE_STRIP);
-			ProcessDrawItems(element, buffer);
-			buffer.push_back(DO_glEnd);
+			ProcessPrimitive(element, buffer, GL_TRIANGLE_STRIP);
 		}
 		break;
 
 	case 0xcfa6904f /* "triangle_fan" */:
 		{
-			buffer.push_back(DO_glBegin);
-			buffer.push_back(GL_TRIANGLE_FAN);
-			ProcessDrawItems(element, buffer);
-			buffer.push_back(DO_glEnd);
+			ProcessPrimitive(element, buffer, GL_TRIANGLE_FAN);
 		}
 		break;
 
 	case 0x5667b307 /* "quads" */:
 		{
-			buffer.push_back(DO_glBegin);
-			buffer.push_back(GL_QUADS);
-			ProcessDrawItems(element, buffer);
-			buffer.push_back(DO_glEnd);
+			ProcessPrimitive(element, buffer, GL_QUADS);
 		}
 		break;
 
 	case 0xb47cad9b /* "quad_strip" */:
 		{
-			buffer.push_back(DO_glBegin);
-			buffer.push_back(GL_QUAD_STRIP);
-			ProcessDrawItems(element, buffer);
-			buffer.push_back(DO_glEnd);
+			ProcessPrimitive(element, buffer, GL_QUAD_STRIP);
 		}
 		break;
 
 	case 0x051cb889 /* "polygon" */:
 		{
-			buffer.push_back(DO_glBegin);
-			buffer.push_back(GL_POLYGON);
-			ProcessDrawItems(element, buffer);
-			buffer.push_back(DO_glEnd);
+			ProcessPrimitive(element, buffer, GL_POLYGON);
 		}
 		break;
 
@@ -890,14 +916,7 @@ void ProcessDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buf
 			int stride = 0;
 			element->QueryIntAttribute("stride", &stride);
 
-			buffer.push_back(DO_glVertexPointer);
-			buffer.push_back(size);
-			buffer.push_back(stride);
-
-			buffer.push_back(0);
-			int start = buffer.size();
-			ProcessFloatData(element, buffer);
-			buffer[start-1] = buffer.size() - start;
+			ProcessArray(element, buffer, DO_glVertexPointer, size, stride);
 		}
 		break;
 
@@ -906,13 +925,7 @@ void ProcessDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buf
 			int stride = 0;
 			element->QueryIntAttribute("stride", &stride);
 
-			buffer.push_back(DO_glNormalPointer);
-			buffer.push_back(stride);
-
-			buffer.push_back(0);
-			int start = buffer.size();
-			ProcessFloatData(element, buffer);
-			buffer[start-1] = buffer.size() - start;
+			ProcessArray(element, buffer, DO_glNormalPointer, 0, stride);
 		}
 		break;
 
@@ -924,14 +937,7 @@ void ProcessDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buf
 			int stride = 0;
 			element->QueryIntAttribute("stride", &stride);
 
-			buffer.push_back(DO_glColorPointer);
-			buffer.push_back(size);
-			buffer.push_back(stride);
-
-			buffer.push_back(0);
-			int start = buffer.size();
-			ProcessFloatData(element, buffer);
-			buffer[start-1] = buffer.size() - start;
+			ProcessArray(element, buffer, DO_glColorPointer, size, stride);
 		}
 		break;
 
@@ -940,13 +946,7 @@ void ProcessDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buf
 			int stride = 0;
 			element->QueryIntAttribute("stride", &stride);
 
-			buffer.push_back(DO_glIndexPointer);
-			buffer.push_back(stride);
-
-			buffer.push_back(0);
-			int start = buffer.size();
-			ProcessFloatData(element, buffer);
-			buffer[start-1] = buffer.size() - start;
+			ProcessArray(element, buffer, DO_glIndexPointer, 0, stride);
 		}
 		break;
 
@@ -958,14 +958,7 @@ void ProcessDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buf
 			int stride = 0;
 			element->QueryIntAttribute("stride", &stride);
 
-			buffer.push_back(DO_glTexCoordPointer);
-			buffer.push_back(size);
-			buffer.push_back(stride);
-
-			buffer.push_back(0);
-			int start = buffer.size();
-			ProcessFloatData(element, buffer);
-			buffer[start-1] = buffer.size() - start;
+			ProcessArray(element, buffer, DO_glTexCoordPointer, size, stride);
 		}
 		break;
 
@@ -1008,21 +1001,7 @@ void ProcessDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buf
 
 	case 0xf4de4a21 /* "drawarrays" */:
 		{
-			GLenum mode;
-			switch (Hash(element->Attribute("mode")))
-			{
-			case 0xbc9567c6 /* "points" */:			mode = GL_POINTS; break;
-			case 0xe1e4263c /* "lines" */:			mode = GL_LINES; break;
-			case 0xc2106ab6 /* "line_loop" */:		mode = GL_LINE_LOOP; break;
-			case 0xc6f2fa0e /* "line_strip" */:		mode = GL_LINE_STRIP; break;
-			case 0xd8a57342 /* "triangles" */:		mode = GL_TRIANGLES; break;
-			case 0x668b2dd8 /* "triangle_strip" */:	mode = GL_TRIANGLE_STRIP; break;
-			case 0xcfa6904f /* "triangle_fan" */:	mode = GL_TRIANGLE_FAN; break;
-			case 0x5667b307 /* "quads" */:			mode = GL_QUADS; break;
-			case 0xb47cad9b /* "quad_strip" */:		mode = GL_QUAD_STRIP; break;
-			case 0x051cb889 /* "polygon" */:		mode = GL_POLYGON; break;
-			default: break;
-			}
+			GLenum mode(GetPrimitiveMode(element->Attribute("mode")));
 
 			int first = 0, count = 0;
 			element->QueryIntAttribute("first", &first);
@@ -1036,21 +1015,7 @@ void ProcessDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buf
 
 	case 0x757eeee2 /* "drawelements" */:
 		{
-			GLenum mode;
-			switch (Hash(element->Attribute("mode")))
-			{
-			case 0xbc9567c6 /* "points" */:			mode = GL_POINTS; break;
-			case 0xe1e4263c /* "lines" */:			mode = GL_LINES; break;
-			case 0xc2106ab6 /* "line_loop" */:		mode = GL_LINE_LOOP; break;
-			case 0xc6f2fa0e /* "line_strip" */:		mode = GL_LINE_STRIP; break;
-			case 0xd8a57342 /* "triangles" */:		mode = GL_TRIANGLES; break;
-			case 0x668b2dd8 /* "triangle_strip" */:	mode = GL_TRIANGLE_STRIP; break;
-			case 0xcfa6904f /* "triangle_fan" */:	mode = GL_TRIANGLE_FAN; break;
-			case 0x5667b307 /* "quads" */:			mode = GL_QUADS; break;
-			case 0xb47cad9b /* "quad_strip" */:		mode = GL_QUAD_STRIP; break;
-			case 0x051cb889 /* "polygon" */:		mode = GL_POLYGON; break;
-			default: break;
-			}
+			GLenum mode(GetPrimitiveMode(element->Attribute("mode")));
 
 			const char *text = element->GetText();
 			size_t len = strlen(text)+1;
@@ -1111,104 +1076,37 @@ void ProcessDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buf
 
 	case 0xc6270703 /* "set" */:
 		{
-			unsigned int name = Hash(element->Attribute("name"));
-			unsigned int type = Hash(element->Attribute("type"));
-			int width;
-			const char **names;
-			const float *data;
-			GetTypeData(type, width, names, data);
-
-			buffer.push_back(DO_Set);
-			buffer.push_back(name);
-			buffer.push_back(width);
-			ProcessDrawData(element, buffer, width, names, data);
+			ProcessVariableOperator(element, buffer, DO_Set, true);
 		}
 		break;
 
 	case 0x3b391274 /* "add" */:
 		{
-			unsigned int name = Hash(element->Attribute("name"));
-			unsigned int type = Hash(element->Attribute("type"));
-			int width;
-			const char **names;
-			const float *temp;
-			GetTypeData(type, width, names, temp);
-			float *data = static_cast<float *>(_alloca(width*sizeof(float)));
-			memset(data, 0, width*sizeof(float));
-
-			buffer.push_back(DO_Add);
-			buffer.push_back(name);
-			buffer.push_back(width);
-			ProcessDrawData(element, buffer, width, names, data);
+			ProcessVariableOperator(element, buffer, DO_Add, true);
 		}
 		break;
 
 	case 0xdc4e3915 /* "sub" */:
 		{
-			unsigned int name = Hash(element->Attribute("name"));
-			unsigned int type = Hash(element->Attribute("type"));
-			int width;
-			const char **names;
-			const float *temp;
-			GetTypeData(type, width, names, temp);
-			float *data = static_cast<float *>(_alloca(width*sizeof(float)));
-			memset(data, 0, width*sizeof(float));
-
-			buffer.push_back(DO_Sub);
-			buffer.push_back(name);
-			buffer.push_back(width);
-			ProcessDrawData(element, buffer, width, names, data);
+			ProcessVariableOperator(element, buffer, DO_Sub, true);
 		}
 		break;
 
 	case 0xeb84ed81 /* "mul" */:
 		{
-			unsigned int name = Hash(element->Attribute("name"));
-			unsigned int type = Hash(element->Attribute("type"));
-			int width;
-			const char **names;
-			const float *temp;
-			GetTypeData(type, width, names, temp);
-			float *data = static_cast<float *>(_alloca(width*sizeof(float)));
-			memset(data, 0, width*sizeof(float));
-
-			buffer.push_back(DO_Mul);
-			buffer.push_back(name);
-			buffer.push_back(width);
-			ProcessDrawData(element, buffer, width, names, data);
+			ProcessVariableOperator(element, buffer, DO_Mul, true);
 		}
 		break;
 
 	case 0xe562ab48 /* "div" */:
 		{
-			unsigned int name = Hash(element->Attribute("name"));
-			unsigned int type = Hash(element->Attribute("type"));
-			int width;
-			const char **names;
-			const float *temp;
-			GetTypeData(type, width, names, temp);
-			float *data = static_cast<float *>(_alloca(width*sizeof(float)));
-			memset(data, 0, width*sizeof(float));
-
-			buffer.push_back(DO_Div);
-			buffer.push_back(name);
-			buffer.push_back(width);
-			ProcessDrawData(element, buffer, width, names, data);
+			ProcessVariableOperator(element, buffer, DO_Div, true);
 		}
 		break;
 
 	case 0x5c6e1222 /* "clear" */:
 		{
-			unsigned int name = Hash(element->Attribute("name"));
-			unsigned int type = Hash(element->Attribute("type"));
-			int width;
-			const char **names;
-			const float *data;
-			GetTypeData(type, width, names, data);
-
-			buffer.push_back(DO_Clear);
-			buffer.push_back(name);
-			buffer.push_back(width);
+			ProcessVariableOperator(element, buffer, DO_Clear, true);
 		}
 		break;
 
@@ -1413,6 +1311,56 @@ void MultiplyMatrix4f(float m[16], float a[16], float b[16])
 	m[15] = a[12] * b[ 3] + a[13] * b[ 7] + a[14] * b[11] + a[15] * b[15];
 }
 #endif
+
+typedef void (* VariableOperator)(Database::Typed<float> &, unsigned int, float);
+
+size_t ExecuteVariableOperator(const unsigned int buffer[], size_t count, float param, unsigned int id, VariableOperator op)
+{
+	const unsigned int * __restrict itor = buffer;
+	unsigned int name = *itor++;
+	int width = *itor++;
+	float *data = static_cast<float *>(_alloca(width*sizeof(float)));
+	itor += ExecuteDrawData(itor, buffer + count - itor, width, data, param, id);
+	Database::Typed<float> &variables = Database::variable.Open(id);
+	for (int i = 0; i < width; i++)
+		op(variables, name+i, data[i]);
+	Database::variable.Close(id);
+	return itor - buffer;
+}
+
+void VariableOperatorSet(Database::Typed<float> &variables, unsigned int name, float data)
+{
+	variables.Put(name, data);
+}
+
+void VariableOperatorAdd(Database::Typed<float> &variables, unsigned int name, float data)
+{
+	float &v = variables.Open(name);
+	v += data;
+	variables.Close(name);
+}
+
+void VariableOperatorSub(Database::Typed<float> &variables, unsigned int name, float data)
+{
+	float &v = variables.Open(name);
+	v -= data;
+	variables.Close(name);
+}
+
+void VariableOperatorMul(Database::Typed<float> &variables, unsigned int name, float data)
+{
+	float &v = variables.Open(name);
+	v *= data;
+	variables.Close(name);
+}
+
+void VariableOperatorDiv(Database::Typed<float> &variables, unsigned int name, float data)
+{
+	float &v = variables.Open(name);
+	v /= data;
+	variables.Close(name);
+}
+
 
 #pragma optimize( "t", on )
 void ExecuteDrawItems(const unsigned int buffer[], size_t count, float param, unsigned int id)
@@ -1641,84 +1589,23 @@ void ExecuteDrawItems(const unsigned int buffer[], size_t count, float param, un
 			break;
 
 		case DO_Set:
-			{
-				unsigned int name = *itor++;
-				int width = *itor++;
-				float *data = static_cast<float *>(_alloca(width*sizeof(float)));
-				itor += ExecuteDrawData(itor, buffer + count - itor, width, data, param, id);
-				Database::Typed<float> &variables = Database::variable.Open(id);
-				for (int i = 0; i < width; i++)
-					variables.Put(name+i, data[i]);
-				Database::variable.Close(id);
-			}
+			itor += ExecuteVariableOperator(itor, buffer + count - itor, param, id, VariableOperatorSet);
 			break;
 
 		case DO_Add:
-			{
-				unsigned int name = *itor++;
-				int width = *itor++;
-				float *data = static_cast<float *>(_alloca(width*sizeof(float)));
-				itor += ExecuteDrawData(itor, buffer + count - itor, width, data, param, id);
-				Database::Typed<float> &variables = Database::variable.Open(id);
-				for (int i = 0; i < width; i++)
-				{
-					float &v = variables.Open(name+i);
-					v += data[i];
-					variables.Close(name+i);
-				}
-				Database::variable.Close(id);
-			}
+			itor += ExecuteVariableOperator(itor, buffer + count - itor, param, id, VariableOperatorAdd);
 			break;
 
 		case DO_Sub:
-			{
-				unsigned int name = *itor++;
-				int width = *itor++;
-				float *data = static_cast<float *>(_alloca(width*sizeof(float)));
-				itor += ExecuteDrawData(itor, buffer + count - itor, width, data, param, id);
-				Database::Typed<float> &variables = Database::variable.Open(id);
-				for (int i = 0; i < width; i++)
-				{
-					float &v = variables.Open(name+i);
-					v -= data[i];
-					variables.Close(name+i);
-				}
-				Database::variable.Close(id);
-			}
+			itor += ExecuteVariableOperator(itor, buffer + count - itor, param, id, VariableOperatorSub);
 			break;
 
 		case DO_Mul:
-			{
-				unsigned int name = *itor++;
-				int width = *itor++;
-				float *data = static_cast<float *>(_alloca(width*sizeof(float)));
-				itor += ExecuteDrawData(itor, buffer + count - itor, width, data, param, id);
-				Database::Typed<float> &variables = Database::variable.Open(id);
-				for (int i = 0; i < width; i++)
-				{
-					float &v = variables.Open(name+i);
-					v *= data[i];
-					variables.Close(name+i);
-				}
-				Database::variable.Close(id);
-			}
+			itor += ExecuteVariableOperator(itor, buffer + count - itor, param, id, VariableOperatorMul);
 			break;
 
 		case DO_Div:
-			{
-				unsigned int name = *itor++;
-				int width = *itor++;
-				float *data = static_cast<float *>(_alloca(width*sizeof(float)));
-				itor += ExecuteDrawData(itor, buffer + count - itor, width, data, param, id);
-				Database::Typed<float> &variables = Database::variable.Open(id);
-				for (int i = 0; i < width; i++)
-				{
-					float &v = variables.Open(name+i);
-					v /= data[i];
-					variables.Close(name+i);
-				}
-				Database::variable.Close(id);
-			}
+			itor += ExecuteVariableOperator(itor, buffer + count - itor, param, id, VariableOperatorDiv);
 			break;
 
 		case DO_Clear:

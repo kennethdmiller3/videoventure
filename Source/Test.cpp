@@ -58,13 +58,13 @@ int SOUND_CHANNELS = 8;
 float SOUND_VOLUME = 1.0f;
 
 // default input configuration
-const char *INPUT_CONFIG = "input.xml";
+std::string INPUT_CONFIG = "input.xml";
 
 // default level configuration
-const char *LEVEL_CONFIG = "level.xml";
+std::string LEVEL_CONFIG = "level.xml";
 
 // default record configuration
-const char *RECORD_CONFIG = "record.xml";
+std::string RECORD_CONFIG = "record.xml";
 bool record = false;
 bool playback = false;
 
@@ -282,6 +282,9 @@ bool init()
 	// hide the mouse cursor
 	SDL_ShowCursor(SDL_DISABLE);
 
+	// grab the cursor
+	SDL_WM_GrabInput(SDL_GRAB_ON);
+
 	// set window title
 	SDL_WM_SetCaption( "Shmup!", NULL );
 
@@ -352,12 +355,6 @@ bool init()
 	}
 	SDL_PauseAudio(0);
 
-#ifdef _MSC_VER
-	// turn on floating-point exceptions
-	unsigned int prev;
-	_controlfp_s(&prev, unsigned int(~(_EM_ZERODIVIDE|_EM_INVALID)), _MCW_EM);
-#endif
-
 	// success!
 	return true;    
 }
@@ -406,7 +403,7 @@ void init_Level(const char *config)
 	if (const TiXmlElement *root = document.FirstChildElement("world"))
 		ProcessWorldItems(root);
 
-	// get the reticule draw list
+	// get the reticule draw list (HACK)
 	reticule_handle = Database::drawlist.Get(0x170e4c58 /* "reticule" */);
 
 	// play the startup sound (HACK)
@@ -414,6 +411,123 @@ void init_Level(const char *config)
 }
 
 
+// post-command function
+typedef void (*ProcessCommandPostFunc)(void);
+
+// process a string command
+static int ProcessCommandString(std::string &aValue, char *aParam[], int aCount, ProcessCommandPostFunc aAction, const char *aFormat)
+{
+	if (aCount >= 1)
+	{
+		aValue = aParam[0];
+		if (aAction)
+			aAction();
+		return 1;
+	}
+	else
+	{
+		OGLCONSOLE_Output(console, aFormat, aValue.c_str());
+		return 0;
+	}
+}
+
+// process a boolean command
+static int ProcessCommandBool(bool &aValue, char *aParam[], int aCount, ProcessCommandPostFunc aAction, const char *aFormat)
+{
+	if (aCount >= 1)
+	{
+		aValue = atoi(aParam[0]) != 0;
+		if (aAction)
+			aAction();
+		return 1;
+	}
+	else
+	{
+		OGLCONSOLE_Output(console, aFormat, aValue);
+		return 0;
+	}
+}
+
+// process an integer command
+static int ProcessCommandInt(int &aValue, char *aParam[], int aCount, ProcessCommandPostFunc aAction, const char *aFormat)
+{
+	if (aCount >= 1)
+	{
+		aValue = atoi(aParam[0]);
+		if (aAction)
+			aAction();
+		return 1;
+	}
+	else
+	{
+		OGLCONSOLE_Output(console, aFormat, aValue);
+		return 0;
+	}
+}
+
+// process a two-integer command
+static int ProcessCommandInt2(int &aValue1, int &aValue2, char *aParam[], int aCount, ProcessCommandPostFunc aAction, const char *aFormat)
+{
+	if (aCount >= 2)
+	{
+		aValue1 = atoi(aParam[0]);
+		aValue2 = atoi(aParam[1]);
+		if (aAction)
+			aAction();
+		return 2;
+	}
+	else
+	{
+		OGLCONSOLE_Output(console, aFormat, aValue1, aValue2);
+		return 0;
+	}
+}
+
+// process a float command
+static int ProcessCommandFloat(float &aValue, char *aParam[], int aCount, ProcessCommandPostFunc aAction, const char *aFormat)
+{
+	if (aCount >= 1)
+	{
+		aValue = float(atof(aParam[0]));
+		if (aAction)
+			aAction();
+		return 1;
+	}
+	else
+	{
+		OGLCONSOLE_Output(console, aFormat, aValue);
+		return 0;
+	}
+}
+
+void InitWindowAction()
+{
+	if (runtime)
+		init_Window();
+}
+void InitInputAction()
+{
+	if (runtime)
+		init_Input(INPUT_CONFIG.c_str());
+}
+void InitLevelAction()
+{
+	if (runtime)
+		init_Level(LEVEL_CONFIG.c_str());
+}
+void InitRecordAction()
+{
+	record = 1;
+}
+void InitPlaybackAction()
+{
+	playback = 1;
+}
+void ClampMotionBlurAction()
+{
+	if (RENDER_MOTIONBLUR < 1)
+		RENDER_MOTIONBLUR = 1;
+}
 
 // commands
 int ProcessCommand( unsigned int aCommand, char *aParam[], int aCount )
@@ -421,313 +535,76 @@ int ProcessCommand( unsigned int aCommand, char *aParam[], int aCount )
 	switch (aCommand)
 	{
 	case 0x1d215c8f /* "resolution" */:
-		if (aCount >= 2)
-		{
-			SCREEN_WIDTH = atoi(aParam[0]);
-			SCREEN_HEIGHT = atoi(aParam[1]);
-			if (runtime)
-				init_Window();
-			return 2;
-		}
-		else
-		{
-			OGLCONSOLE_Output(console, "resoution: %dx%d\n", SCREEN_WIDTH, SCREEN_HEIGHT);
-			return 0;
-		}
+		return ProcessCommandInt2(SCREEN_WIDTH, SCREEN_HEIGHT, aParam, aCount, InitWindowAction, "resolution: %dx%d\n"); 
 
 	case 0xfe759eea /* "depth" */:
-		if (aCount >= 1)
-		{
-			SCREEN_DEPTH = atoi(aParam[0]);
-			if (runtime)
-				init_Window();
-			return 1;
-		}
-		else
-		{
-			OGLCONSOLE_Output(console, "depth: %dbpp\n", SCREEN_DEPTH);
-			return 0;
-		}
+		return ProcessCommandInt(SCREEN_DEPTH, aParam, aCount, InitWindowAction, "depth: %dbpp");
 
 	case 0x5032fb58 /* "fullscreen" */:
-		if (aCount >= 1)
-		{
-			SCREEN_FULLSCREEN = atoi(aParam[0]) != 0;
-			if (runtime)
-				init_Window();
-			return 1;
-		}
-		else
-		{
-			OGLCONSOLE_Output(console, "fullscreen: %d\n", SCREEN_FULLSCREEN);
-			return 0;
-		}
+		return ProcessCommandBool(SCREEN_FULLSCREEN, aParam, aCount, InitWindowAction, "fullscreen: %d\n");
 
 	case 0x06f8f066 /* "vsync" */:
-		if (aCount >= 1)
-		{
-			OPENGL_SWAPCONTROL = atoi(aParam[0]) != 0;
-			if (runtime)
-				init_Window();
-			return 1;
-		}
-		else
-		{
-			OGLCONSOLE_Output(console, "vsync: %d\n", OPENGL_SWAPCONTROL);
-			return 0;
-		}
+		return ProcessCommandBool(OPENGL_SWAPCONTROL, aParam, aCount, InitWindowAction, "vsync: %d\n");
 
 	case 0x35c8978f /* "antialias" */:
-		if (aCount >= 1)
-		{
-			OPENGL_ANTIALIAS = atoi(aParam[0]) != 0;
-			if (runtime)
-				init_Window();
-			return 1;
-		}
-		else
-		{
-			OGLCONSOLE_Output(console, "antialias: %d\n", OPENGL_ANTIALIAS);
-			return 0;
-		}
+		return ProcessCommandBool(OPENGL_ANTIALIAS, aParam, aCount, InitWindowAction, "antialias: %d\n");
 
 	case 0x47d0f228 /* "multisample" */:
-		if (aCount >= 1)
-		{
-			OPENGL_MULTISAMPLE = atoi(aParam[0]);
-			if (runtime)
-				init_Window();
-			return 1;
-		}
-		else
-		{
-			OGLCONSOLE_Output(console, "multisample: %d\n", OPENGL_MULTISAMPLE);
-			return 0;
-		}
+		return ProcessCommandInt(OPENGL_MULTISAMPLE, aParam, aCount, InitWindowAction, "multisample: %d\n");
 
 	case 0x1ae79789 /* "viewsize" */:
-		if (aCount >= 1)
-		{
-			VIEW_SIZE = float(atof(aParam[0]));
-			return 1;
-		}
-		else
-		{
-			OGLCONSOLE_Output(console, "viewsize: %d\n", VIEW_SIZE);
-			return 0;
-		}
+		return ProcessCommandFloat(VIEW_SIZE, aParam, aCount, InitWindowAction, "viewsize: %f\n");
 
 	case 0x8e6b4341 /* "viewaim" */:
-		if (aCount >= 1)
-		{
-			VIEW_AIM = float(atof(aParam[0]));
-			return 1;
-		}
-		else
-		{
-			OGLCONSOLE_Output(console, "viewaim: %d\n", VIEW_AIM);
-			return 0;
-		}
+		return ProcessCommandFloat(VIEW_AIM, aParam, aCount, InitWindowAction, "viewaim: %f\n");
 
 	case 0xd49cb7d3 /* "viewaimfilter" */:
-		if (aCount >= 1)
-		{
-			VIEW_AIM_FILTER = float(atof(aParam[0]));
-			return 1;
-		}
-		else
-		{
-			OGLCONSOLE_Output(console, "viewaimfilter: %f\n", VIEW_AIM_FILTER);
-			return 0;
-		}
+		return ProcessCommandFloat(VIEW_AIM_FILTER, aParam, aCount, InitWindowAction, "viewaimfilter: %f\n");
 
 	case 0xf9d86f7b /* "input" */:
-		if (aCount >= 1)
-		{
-			INPUT_CONFIG = aParam[0];
-			if (runtime)
-				init_Input(INPUT_CONFIG);
-			return 1;
-		}
-		else
-		{
-			OGLCONSOLE_Output(console, "input: %s\n", INPUT_CONFIG);
-			return 0;
-		}
+		return ProcessCommandString(INPUT_CONFIG, aParam, aCount, InitInputAction, "input: %s\n");
 
 	case 0x9b99e7dd /* "level" */:
-		if (aCount >= 1)
-		{
-			LEVEL_CONFIG = aParam[0];
-			if (runtime)
-				init_Level(LEVEL_CONFIG);
-			return 1;
-		}
-		else
-		{
-			OGLCONSOLE_Output(console, "level: %s\n", LEVEL_CONFIG);
-			return 0;
-		}
+		return ProcessCommandString(LEVEL_CONFIG, aParam, aCount, InitLevelAction, "level: %s\n");
 
 	case 0x593058cc /* "record" */:
-		if (aCount >= 1)
-		{
-			RECORD_CONFIG = aParam[0];
-			record = true;
-			return 1;
-		}
-		else
-		{
-			OGLCONSOLE_Output(console, "record: %s\n", RECORD_CONFIG);
-			return 0;
-		}
+		return ProcessCommandString(RECORD_CONFIG, aParam, aCount, InitRecordAction, "record: %s\n");
 
 	case 0xcf8a43ec /* "playback" */:
-		if (aCount >= 1)
-		{
-			RECORD_CONFIG = aParam[0];
-			playback = true;
-			return 1;
-		}
-		else
-		{
-			OGLCONSOLE_Output(console, "playback: %s\n", RECORD_CONFIG);
-			return 0;
-		}
+		return ProcessCommandString(RECORD_CONFIG, aParam, aCount, InitPlaybackAction, "playback: %s\n");
 
 	case 0xd6974b06 /* "simrate" */:
-		if (aCount >= 1)
-		{
-			SIMULATION_RATE = atoi(aParam[0]);
-			return 1;
-		}
-		else
-		{
-			OGLCONSOLE_Output(console, "simrate: %d\n", SIMULATION_RATE);
-			return 0;
-		}
+		return ProcessCommandInt(SIMULATION_RATE, aParam, aCount, NULL, "simrate: %d\n");
 
 	case 0x9f2f269e /* "timescale" */:
-		if (aCount >= 1)
-		{
-			TIME_SCALE = float(atof(aParam[0]));
-			return 1;
-		}
-		else
-		{
-			OGLCONSOLE_Output(console, "timescale: %f\n", TIME_SCALE);
-			return 0;
-		}
+		return ProcessCommandFloat(TIME_SCALE, aParam, aCount, NULL, "timescale: %f\n");
 
 	case 0xe065cb63 /* "fixedstep" */:
-		if (aCount >= 1)
-		{
-			FIXED_STEP = atoi(aParam[0]) != 0;
-			return 1;
-		}
-		else
-		{
-			OGLCONSOLE_Output(console, "fixedstep: %d\n", FIXED_STEP);
-			return 0;
-		}
+		return ProcessCommandBool(FIXED_STEP, aParam, aCount, NULL, "fixedstep: %d\n");
 
 	case 0xf744f3b2 /* "motionblur" */:
-		if (aCount >= 1)
-		{
-			RENDER_MOTIONBLUR = atoi(aParam[0]);
-			if (RENDER_MOTIONBLUR < 1)
-				RENDER_MOTIONBLUR = 1;
-			return 1;
-		}
-		else
-		{
-			OGLCONSOLE_Output(console, "motionblur: %d\n", RENDER_MOTIONBLUR);
-			return 0;
-		}
+		return ProcessCommandInt(RENDER_MOTIONBLUR, aParam, aCount, ClampMotionBlurAction, "motionblur: %d\n");
 
 	case 0x61e734dc /* "soundchannels" */:
-		if (aCount >= 1)
-		{
-			SOUND_CHANNELS = atoi(aParam[0]);
-			return 1;
-		}
-		else
-		{
-			OGLCONSOLE_Output(console, "soundchannels: %d\n", SOUND_CHANNELS);
-			return 0;
-		}
+		return ProcessCommandInt(SOUND_CHANNELS, aParam, aCount, NULL, "soundchannels: %d\n");
 
 	case 0x2ac3f7e6 /* "soundvolume" */:
-		if (aCount >= 1)
-		{
-			SOUND_VOLUME = float(atof(aParam[0]));
-			return 1;
-		}
-		else
-		{
-			OGLCONSOLE_Output(console, "soundvolume: %f\n", SOUND_VOLUME);
-			return 0;
-		}
+		return ProcessCommandFloat(SOUND_VOLUME, aParam, aCount, NULL, "soundvolume: %f\n");
 		
 	case 0x94c716fd /* "outputconsole" */:
-		if (aCount >= 1)
-		{
-			DEBUGPRINT_OUTPUTCONSOLE = atoi(aParam[0]) != 0;
-			return 1;
-		}
-		else
-		{
-			OGLCONSOLE_Output(console, "outputconsole: %d\n", DEBUGPRINT_OUTPUTCONSOLE);
-			return 0;
-		}
+		return ProcessCommandBool(DEBUGPRINT_OUTPUTCONSOLE, aParam, aCount, NULL, "outputconsole: %d\n");
 
 	case 0x54822903 /* "outputdebug" */:
-		if (aCount >= 1)
-		{
-			DEBUGPRINT_OUTPUTDEBUG = atoi(aParam[0]) != 0;
-			return 1;
-		}
-		else
-		{
-			OGLCONSOLE_Output(console, "outputdebug: %d\n", DEBUGPRINT_OUTPUTDEBUG);
-			return 0;
-		}
+		return ProcessCommandBool(DEBUGPRINT_OUTPUTDEBUG, aParam, aCount, NULL, "outputdebug: %d\n");
 
 	case 0x8940763c /* "outputstderr" */:
-		if (aCount >= 1)
-		{
-			DEBUGPRINT_OUTPUTSTDERR = atoi(aParam[0]) != 0;
-			return 1;
-		}
-		else
-		{
-			OGLCONSOLE_Output(console, "outputstderr: %d\n", DEBUGPRINT_OUTPUTSTDERR);
-			return 0;
-		}
+		return ProcessCommandBool(DEBUGPRINT_OUTPUTSTDERR, aParam, aCount, NULL, "outputstderr: %d\n");
 
 	case 0xfbcc8f02 /* "profilescreen" */:
-		if (aCount >= 1)
-		{
-			PROFILER_OUTPUTSCREEN = atoi(aParam[0]) != 0;
-			return 1;
-		}
-		else
-		{
-			OGLCONSOLE_Output(console, "profilescreen: %d\n", PROFILER_OUTPUTSCREEN);
-			return 0;
-		}
+		return ProcessCommandBool(PROFILER_OUTPUTSCREEN, aParam, aCount, NULL, "profilescreen: %d\n");
 
 	case 0x85e872f9 /* "profileprint" */:
-		if (aCount >= 1)
-		{
-			PROFILER_OUTPUTPRINT = atoi(aParam[0]) != 0;
-			return 1;
-		}
-		else
-		{
-			OGLCONSOLE_Output(console, "profileprint: %d\n", PROFILER_OUTPUTPRINT);
-			return 0;
-		}
+		return ProcessCommandBool(PROFILER_OUTPUTPRINT, aParam, aCount, NULL, "profileprint: %d\n");
 
 	case 0xa165ddb8 /* "database" */:
 		if (aCount >= 1)
@@ -873,9 +750,16 @@ int ProcessCommand( unsigned int aCommand, char *aParam[], int aCount )
 // main
 int SDL_main( int argc, char *argv[] )
 {
+#ifdef _MSC_VER
+	// turn on floating-point exceptions
+	unsigned int prev;
+	_controlfp_s(&prev, unsigned int(~(_EM_ZERODIVIDE|_EM_INVALID)), _MCW_EM);
+
+	// enable debug heap in a debug build
 	_CrtSetDbgFlag( _CRTDBG_ALLOC_MEM_DF|_CRTDBG_CHECK_EVERY_1024_DF|_CRTDBG_CHECK_CRT_DF|_CRTDBG_LEAK_CHECK_DF );
 	_CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_FILE | _CRTDBG_MODE_DEBUG);
 	_CrtSetReportFile(_CRT_WARN, _CRTDBG_FILE_STDOUT);
+#endif
 
 	// process command-line arguments
 	for (int i = 1; i < argc; ++i)
@@ -924,10 +808,10 @@ int SDL_main( int argc, char *argv[] )
 	Collidable::WorldInit();
 
 	// input binding
-	init_Input(INPUT_CONFIG);
+	init_Input(INPUT_CONFIG.c_str());
 
 	// level configuration
-	init_Level(LEVEL_CONFIG);
+	init_Level(LEVEL_CONFIG.c_str());
 
 
 	//
@@ -949,7 +833,7 @@ int SDL_main( int argc, char *argv[] )
 	bool singlestep = false;
 
 	// input logging
-	TiXmlDocument inputlog(RECORD_CONFIG);
+	TiXmlDocument inputlog(RECORD_CONFIG.c_str());
 	TiXmlElement *inputlogroot;
 	TiXmlElement *inputlognext;
 	if (playback)
@@ -1007,7 +891,8 @@ int SDL_main( int argc, char *argv[] )
 
 #ifdef GET_PERFORMANCE_DETAILS
 //		if (!paused)
-			profile_index = (profile_index + 1) % NUM_SAMPLES;
+		if (++profile_index >= NUM_SAMPLES)
+			profile_index = 0;
 		control_time[profile_index] = 0;
 		simulate_time[profile_index] = 0;
 		collide_time[profile_index] = 0;
@@ -1052,6 +937,8 @@ int SDL_main( int argc, char *argv[] )
 					{
 						paused = !paused;
 					}
+					SDL_ShowCursor(paused ? SDL_ENABLE : SDL_DISABLE);
+					SDL_WM_GrabInput(paused ? SDL_GRAB_OFF : SDL_GRAB_ON);
 					SDL_PauseAudio(paused);
 				}
 				break;
@@ -1317,9 +1204,6 @@ int SDL_main( int argc, char *argv[] )
 #endif
 
 #ifdef GET_PERFORMANCE_DETAILS
-			LARGE_INTEGER perf_freq;
-			QueryPerformanceFrequency(&perf_freq);
-
 			LARGE_INTEGER perf_count0;
 			QueryPerformanceCounter(&perf_count0);
 #endif
@@ -1676,7 +1560,7 @@ int SDL_main( int argc, char *argv[] )
 			QueryPerformanceCounter(&perf_count1);
 			render_time[profile_index] += perf_count1.QuadPart - perf_count0.QuadPart;
 
-			// force a render flush
+			// wait for rendering to finish
 			glFinish();
 
 			LARGE_INTEGER perf_count2;
@@ -1688,7 +1572,6 @@ int SDL_main( int argc, char *argv[] )
 			// don't count display time
 			display_time[profile_index] = 0;
 		}
-#endif
 
 #ifdef DRAW_PERFORMANCE_DETAILS
 		if (PROFILER_OUTPUTSCREEN)
@@ -1708,47 +1591,46 @@ int SDL_main( int argc, char *argv[] )
 			glPushMatrix();
 			glLoadIdentity();
 
-			const LONGLONG * const band_time[6] =
+			struct BandInfo
 			{
-				control_time,
-				simulate_time,
-				collide_time,
-				update_time,
-				render_time,
-				display_time,
+				const LONGLONG * time;
+				float r;
+				float g;
+				float b;
+				float a;
 			};
-			const float band_color[6][4] =
+			static BandInfo band_info[6] =
 			{
-				{1.0f, 0.0f, 0.0f, 0.5f},
-				{1.0f, 1.0f, 0.0f, 0.5f},
-				{0.0f, 1.0f, 0.0f, 0.5f},
-				{0.0f, 0.5f, 1.0f, 0.5f},
-				{1.0f, 0.0f, 1.0f, 0.5f},
-				{0.5f, 0.5f, 0.5f, 0.5f}
+				{ control_time,		1.0f,	0.0f,	0.0f,	0.5f },
+				{ simulate_time,	1.0f,	1.0f,	0.0f,	0.5f },
+				{ collide_time,		0.0f,	1.0f,	0.0f,	0.5f },
+				{ update_time,		0.0f,	0.5f,	1.0f,	0.5f },
+				{ render_time,		1.0f,	0.0f,	1.0f,	0.5f },
+				{ display_time,		0.5f,	0.5f,	0.5f,	0.5f },
 			};
-
 
 			// generate y samples
 			float sample_y[7][NUM_SAMPLES];
+			int index = profile_index;
 			for (int i = 0; i < NUM_SAMPLES; ++i)
 			{
-				int index = (profile_index + i) % NUM_SAMPLES;
-
-				float y = 1.0f;
-				sample_y[0][i] = 480.0f * y;
+				float y = 480.0f;
+				sample_y[0][i] = y;
 				for (int band = 0; band < 6; ++band)
 				{
-					y -= 60.0f * band_time[band][index] / perf_freq.QuadPart;
-					sample_y[band+1][i] = 480.0f * y;
+					y -= 60.0f * 480.0f * band_info[band].time[index] / perf_freq.QuadPart;
+					sample_y[band+1][i] = y;
 				}
+				if (++index >= NUM_SAMPLES)
+					index = 0;
 			}
 
+			glBegin(GL_QUADS);
 			for (int band = 0; band < 6; ++band)
 			{
-				glColor4fv(band_color[band]);
+				glColor4fv(&band_info[band].r);
 				float x = 0;
 				float dx = 640.0f / NUM_SAMPLES;
-				glBegin(GL_QUADS);
 				for (int i = 0; i < NUM_SAMPLES; i++)
 				{
 					glVertex3f(x, sample_y[band][i], 0);
@@ -1757,8 +1639,8 @@ int SDL_main( int argc, char *argv[] )
 					glVertex3f(x, sample_y[band+1][i], 0);
 					x += dx;
 				}
-				glEnd();
 			}
+			glEnd();
 
 			// reset camera transform
 			glMatrixMode(GL_PROJECTION);
@@ -1783,9 +1665,16 @@ int SDL_main( int argc, char *argv[] )
 				1000000 * display_time[profile_index] / perf_freq.QuadPart);
 		}
 #endif
+#endif
 
 		/* Render our console */
 		OGLCONSOLE_Draw();
+
+#ifdef GET_PERFORMANCE_DETAILS
+		if (OPENGL_SWAPCONTROL)
+#endif
+		// wait for rendering to finish
+		glFinish();
 
 		// show the screen
 		SDL_GL_SwapBuffers();

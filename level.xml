@@ -279,13 +279,13 @@
 	<entity name="clouds">
 		<renderable radius="16384">
 			<drawlist>
-				<set name="d" type="position" x="0" y="0" z="640" w="0"/>
+				<set name="d" type="translate" x="0" y="0" z="640"/>
 				<quads>
 					<repeat count="1024">
 						<color rand="1" r_avg="0.375" r_var="0.125" g_avg="0.375" g_var="0.125" b_avg="0.375" b_var="0.125" a_avg="0.75" a_var="0"/>
 						<set name="p0" type="position" rand="1" x_avg="0" x_var="2048" y_avg="0" y_var="2048" z_avg="0" z_var="0"/>
-						<set name="w" type="position" rand="1" x_avg="128" x_var="96" y_avg="0" y_var="0" z_avg="0" z_var="0" w_avg="0" w_var="0"/>
-						<set name="h" type="position" rand="1" x_avg="0" x_var="0" y_avg="128" y_var="96" z_avg="0" z_var="0" w_avg="0" w_var="0"/>
+						<set name="w" type="translate" rand="1" x_avg="128" x_var="96" y_avg="0" y_var="0" z_avg="0" z_var="0"/>
+						<set name="h" type="translate" rand="1" x_avg="0" x_var="0" y_avg="128" y_var="96" z_avg="0" z_var="0"/>
 						<add name="p0" variable="d"/>
 						<sub name="p0" variable="w"/>
 						<sub name="p0" variable="h"/>
@@ -318,13 +318,13 @@
 					<repeat count="128">
 						<color rand="1" r_avg="0.75" r_var="0.25" g_avg="0.75" g_var="0.25" b_avg="0.75" b_var="0.25" a_avg="1" a_var="0"/>
 						<set name="p0" type="position" rand="1" x_avg="0" x_var="512" y_avg="0" y_var="512" z_avg="640" z_var="384"/>
-						<add name="p0" type="position" x="-1" y="-1"/>
+						<add name="p0" type="translate" x="-1" y="-1"/>
 						<vertex variable="p0"/>
-						<add name="p0" type="position" x="2" y="0"/>
+						<add name="p0" type="translate" x="2" y="0"/>
 						<vertex variable="p0"/>
-						<add name="p0" type="position" x="0" y="2"/>
+						<add name="p0" type="translate" x="0" y="2"/>
 						<vertex variable="p0"/>
-						<add name="p0" type="position" x="-2" y="0"/>
+						<add name="p0" type="translate" x="-2" y="0"/>
 						<vertex variable="p0"/>
 					</repeat>
 				</quads>
@@ -405,45 +405,45 @@
 						<repeat count="3">
 							<vertex variable="p0"/>
 							<vertex variable="p1"/>
-							<add name="p0" type="position" x="1" y="0"/>
-							<add name="p1" type="position" x="1" y="0"/>
+							<add name="p0" type="translate" x="1" y="0"/>
+							<add name="p1" type="translate" x="1" y="0"/>
 						</repeat>
 						<color r="1.0" g="1.0" b="1.0" a="0.25"/>
 						<vertex variable="p0"/>
 						<vertex variable="p1"/>
-						<add name="p0" type="position" x="1" y="0"/>
-						<add name="p1" type="position" x="1" y="0"/>
+						<add name="p0" type="translate" x="1" y="0"/>
+						<add name="p1" type="translate" x="1" y="0"/>
 					</repeat>
 					<color r="1.0" g="1.0" b="1.0" a="0.0625"/>
 					<repeat count="3">
 						<vertex variable="p0"/>
 						<vertex variable="p1"/>
-						<add name="p0" type="position" x="1" y="0"/>
-						<add name="p1" type="position" x="1" y="0"/>
+						<add name="p0" type="translate" x="1" y="0"/>
+						<add name="p1" type="translate" x="1" y="0"/>
 					</repeat>
 					<!-- horizontal lines -->
-					<set name="p0" type="position" x="-32" y="-31"/>
-					<set name="p1" type="position" x="32" y="-31"/>
+					<set name="p0" type="translate" x="-32" y="-31"/>
+					<set name="p1" type="translate" x="32" y="-31"/>
 					<repeat count="15">
 						<color r="1.0" g="1.0" b="1.0" a="0.0625"/>
 						<repeat count="3">
 							<vertex variable="p0"/>
 							<vertex variable="p1"/>
-							<add name="p0" type="position" x="0" y="1"/>
-							<add name="p1" type="position" x="0" y="1"/>
+							<add name="p0" type="translate" x="0" y="1"/>
+							<add name="p1" type="translate" x="0" y="1"/>
 						</repeat>
 						<color r="1.0" g="1.0" b="1.0" a="0.25"/>
 						<vertex variable="p0"/>
 						<vertex variable="p1"/>
-						<add name="p0" type="position" x="0" y="1"/>
-						<add name="p1" type="position" x="0" y="1"/>
+						<add name="p0" type="translate" x="0" y="1"/>
+						<add name="p1" type="translate" x="0" y="1"/>
 					</repeat>
 					<color r="1.0" g="1.0" b="1.0" a="0.0625"/>
 					<repeat count="3">
 						<vertex variable="p0"/>
 						<vertex variable="p1"/>
-						<add name="p0" type="position" x="0" y="1"/>
-						<add name="p1" type="position" x="0" y="1"/>
+						<add name="p0" type="translate" x="0" y="1"/>
+						<add name="p1" type="translate" x="0" y="1"/>
 					</repeat>
 					<clear name="p0"/>
 					<clear name="p1"/>

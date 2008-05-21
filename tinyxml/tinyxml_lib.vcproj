@@ -49,6 +49,7 @@
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
 				FloatingPointModel="2"
+				RuntimeTypeInfo="false"
 				WarningLevel="3"
 				SuppressStartupBanner="true"
 			/>
