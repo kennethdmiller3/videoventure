@@ -13,9 +13,7 @@
 #include <math.h>
 
 // STL includes
-#include <list>
 #include <vector>
-#include <map>
 #include <deque>
 
 // Fast floating-point
