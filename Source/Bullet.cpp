@@ -92,9 +92,6 @@ BulletTemplate::~BulletTemplate(void)
 
 bool BulletTemplate::Configure(const TiXmlElement *element)
 {
-	if (Hash(element->Value()) != 0xe894a379 /* "bullet" */)
-		return false;
-
 	element->QueryFloatAttribute("life", &mLife);
 	element->QueryFloatAttribute("damage", &mDamage);
 	int ricochet = mRicochet;

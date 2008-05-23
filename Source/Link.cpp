@@ -69,33 +69,14 @@ namespace Database
 				for (Typed<LinkTemplate>::Iterator itor(Database::linktemplate.Find(aId)); itor.IsValid(); ++itor)
 				{
 					// create the link
-					LinkTemplate linktemplate(itor.GetValue());
-
-					// get the source entity
-					Entity *entity = Database::entity.Get(aId);
-
-					// instantiate the linked template
-					Matrix2 transform(linktemplate.mOffset * entity->GetTransform());
-					unsigned int mSecondary = Database::Instantiate(linktemplate.mSecondary, Database::owner.Get(aId), 
-						transform.Angle(), transform.p, entity->GetVelocity(), entity->GetOmega());
-					linktemplate.mSecondary = mSecondary;
-
-					// if the owner has a team...
-					unsigned int team = Database::team.Get(aId);
-					if (team)
-					{
-						// propagate team to spawned item
-						Database::team.Put(mSecondary, team);
-					}
+					const LinkTemplate &linktemplate = itor.GetValue();
 
 					// create the link
 					Link *link = new Link(linktemplate, aId);
 					links.Put(itor.GetKey(), link);
 
-					// create a backlink
-					Database::backlink.Put(mSecondary, aId);
-
 					// if linking two collidables...
+					unsigned int mSecondary = link->GetSecondary();
 					if (Database::collidabletemplate.Find(aId) &&
 						Database::collidabletemplate.Find(mSecondary))
 					{
@@ -148,9 +129,6 @@ LinkTemplate::~LinkTemplate(void)
 
 bool LinkTemplate::Configure(const TiXmlElement *element)
 {
-	if (Hash(element->Value()) != 0x0ddb0669 /* "link" */)
-		return false;
-
 	if (const char *name = element->Attribute("name"))
 		mSub = Hash(name);
 	if (const char *secondary = element->Attribute("secondary"))
@@ -194,8 +172,27 @@ Link::Link(void)
 Link::Link(const LinkTemplate &aTemplate, unsigned int aId)
 : Updatable(aId)
 , mSub(aTemplate.mSub)
-, mSecondary(aTemplate.mSecondary)
+, mSecondary(0)
 {
+	// get the source entity
+	Entity *entity = Database::entity.Get(aId);
+
+	// instantiate the linked template
+	Matrix2 transform(aTemplate.mOffset * entity->GetTransform());
+	mSecondary = Database::Instantiate(aTemplate.mSecondary, Database::owner.Get(aId), 
+		transform.Angle(), transform.p, entity->GetVelocity(), entity->GetOmega());
+
+	// if the owner has a team...
+	unsigned int team = Database::team.Get(aId);
+	if (team)
+	{
+		// propagate team to spawned item
+		Database::team.Put(mSecondary, team);
+	}
+
+	// create a backlink
+	Database::backlink.Put(mSecondary, aId);
+
 }
 
 Link::~Link(void)

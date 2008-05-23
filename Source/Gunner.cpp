@@ -77,9 +77,6 @@ GunnerTemplate::~GunnerTemplate(void)
 // Gunner Template Configure
 bool GunnerTemplate::Configure(const TiXmlElement *element)
 {
-	if (Hash(element->Value()) != 0xe063cbaa /* "gunner" */)
-		return false;
-
 	element->QueryFloatAttribute("follow", &mFollowLength);
 	return true;
 }
