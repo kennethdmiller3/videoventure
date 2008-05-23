@@ -73,6 +73,7 @@ namespace Database
 					Database::damagable.Delete(aId);
 					Database::damagelistener.Delete(aId);
 					Database::deathlistener.Delete(aId);
+					Database::killlistener.Delete(aId);
 				}
 			}
 		}
@@ -92,9 +93,6 @@ DamagableTemplate::~DamagableTemplate(void)
 
 bool DamagableTemplate::Configure(const TiXmlElement *element)
 {
-	if (Hash(element->Value()) != 0x1b715375 /* "damagable" */)
-		return false;
-
 	element->QueryFloatAttribute("health", &mHealth);
 	if (const char *spawn = element->Attribute("spawnondeath"))
 		mSpawnOnDeath = Hash(spawn);
@@ -114,8 +112,6 @@ Damagable::Damagable(const DamagableTemplate &aTemplate, unsigned int aId)
 
 Damagable::~Damagable(void)
 {
-	Database::damagelistener.Delete(id);
-	Database::deathlistener.Delete(id);
 }
 
 class DamagableKillUpdate : public Updatable

@@ -103,9 +103,6 @@ AimerTemplate::~AimerTemplate(void)
 
 bool AimerTemplate::Configure(const TiXmlElement *element)
 {
-	if (Hash(element->Value()) != 0x2ea90881 /* "aimer" */)
-		return false;
-
 	element->QueryFloatAttribute("period", &mPeriod);
 	element->QueryFloatAttribute("range", &mRange);
 	element->QueryFloatAttribute("attack", &mAttack);

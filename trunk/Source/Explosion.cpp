@@ -94,9 +94,6 @@ ExplosionTemplate::~ExplosionTemplate(void)
 
 bool ExplosionTemplate::Configure(const TiXmlElement *element, unsigned int id)
 {
-	if (Hash(element->Value()) != 0x02bb1fe0 /* "explosion" */)
-		return false;
-
 	element->QueryFloatAttribute("life", &mLifeSpan);
 	element->QueryFloatAttribute("damage", &mDamage);
 	element->QueryFloatAttribute("radius", &mRadius);

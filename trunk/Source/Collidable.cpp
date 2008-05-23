@@ -679,9 +679,6 @@ bool CollidableTemplate::ConfigureMouseJoint(const TiXmlElement *element, b2Mous
 
 bool CollidableTemplate::Configure(const TiXmlElement *element, unsigned int id)
 {
-	if (Hash(element->Value()) != 0x74e9dbae /* "collidable" */)
-		return false;
-
 	// save identifier
 	this->id = id;
 
