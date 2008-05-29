@@ -1,7 +1,9 @@
 #include "StdAfx.h"
 #include "Player.h"
+#include "Entity.h"
 #include "Bullet.h"
 #include "Damagable.h"
+#include "Capturable.h"
 #include "Points.h"
 
 namespace Database
@@ -64,6 +66,7 @@ namespace Database
 				const PlayerTemplate &playertemplate = Database::playertemplate.Get(aId);
 				Player *player = new Player(playertemplate, aId);
 				Database::player.Put(aId, player);
+				player->Activate();
 			}
 
 			void Deactivate(unsigned int aId)
@@ -91,6 +94,7 @@ namespace Database
 				PlayerController *playercontroller = new PlayerController(aId);
 				Database::playercontroller.Put(aId, playercontroller);
 				Database::controller.Put(aId, playercontroller);
+
 				playercontroller->Activate();
 			}
 
@@ -114,14 +118,19 @@ namespace Database
 
 // player template constructor
 PlayerTemplate::PlayerTemplate(void)
-: mLives(3)
+: mSpawn(0)
+, mLives(INT_MAX)
+, mExtra(INT_MAX)
 {
 }
 
 // player template configure
 bool PlayerTemplate::Configure(const TiXmlElement *element, unsigned int aId)
 {
+	if (const char *spawn = element->Attribute("name"))
+		mSpawn = Hash(spawn);
 	element->QueryIntAttribute("lives", &mLives);
+	element->QueryIntAttribute("extra", &mExtra);
 	return true;
 }
 
@@ -132,7 +141,7 @@ bool PlayerTemplate::Configure(const TiXmlElement *element, unsigned int aId)
 
 // player default constructor
 Player::Player(void)
-: mId(0)
+: Updatable(0)
 , mAttach(0)
 , mLives(0)
 , mScore(0)
@@ -141,48 +150,83 @@ Player::Player(void)
 
 // player constructor
 Player::Player(const PlayerTemplate &aTemplate, unsigned int aId)
-: mId(aId)
+: Updatable(aId)
 , mAttach(0)
 , mLives(aTemplate.mLives)
 , mScore(0)
 {
-	// add a kill listener
-	Database::Typed<Damagable::KillListener> &listeners = Database::killlistener.Open(mId);
-	Damagable::KillListener &listener = listeners.Open(Database::Key(this));
-	listener.bind(this, &Player::GotKill);
-	listeners.Close(Database::Key(this));
-	Database::killlistener.Close(mId);
+	{
+		// add a kill listener
+		Database::Typed<Damagable::KillListener> &listeners = Database::killlistener.Open(mId);
+		Damagable::KillListener &listener = listeners.Open(Database::Key(this));
+		listener.bind(this, &Player::GotKill);
+		listeners.Close(Database::Key(this));
+		Database::killlistener.Close(mId);
+	}
+
+	{
+		// add a capture listener
+		Database::Typed<Capturable::CaptureListener> &listeners = Database::capturelistener.Open(mId);
+		Capturable::CaptureListener &listener = listeners.Open(Database::Key(this));
+		listener.bind(this, &Player::GotKill);
+		listeners.Close(Database::Key(this));
+		Database::capturelistener.Close(mId);
+	}
 }
 
 // player destructor
 Player::~Player(void)
 {
-	// remove any kill listener
-	Database::Typed<Damagable::KillListener> &listeners = Database::killlistener.Open(mId);
-	listeners.Delete(Database::Key(this));
-	Database::killlistener.Close(mId);
+	{
+		// remove any capture listener
+		Database::Typed<Capturable::CaptureListener> &listeners = Database::capturelistener.Open(mId);
+		listeners.Delete(Database::Key(this));
+		Database::capturelistener.Close(mId);
+	}
+
+	{
+		// remove any kill listener
+		Database::Typed<Damagable::KillListener> &listeners = Database::killlistener.Open(mId);
+		listeners.Delete(Database::Key(this));
+		Database::killlistener.Close(mId);
+	}
+}
+
+// player update
+void Player::Update(float aStep)
+{
+	// if attached to an entity...
+	if (mAttach)
+	{
+		// if the entity is still alive...
+		if (Database::entity.Get(mAttach))
+		{
+			// wait
+			return;
+		}
+		else
+		{
+			// detach
+			Detach();
+		}
+	}
+
+	// spawn a new entity
+	Spawn();
 }
 
 // player attach
 void Player::Attach(unsigned int aAttach)
 {
-	// if attached...
-	if (mAttach)
-	{
-		// detach from existing entity
-		Detach();
-	}
-
 	// attach to entity
 	mAttach = aAttach;
 
-	// set player as owner
-	Database::owner.Put(mAttach, mId);
-
-	// add a player controller
-	PlayerController *controller = new PlayerController(mAttach);
-	Database::playercontroller.Put(mAttach, controller);
-	Database::controller.Put(mAttach, controller);
+	// add a death listener
+	Database::Typed<Damagable::DeathListener> &listeners = Database::deathlistener.Open(mAttach);
+	Damagable::DeathListener &listener = listeners.Open(Database::Key(this));
+	listener.bind(this, &Player::OnDeath);
+	listeners.Close(Database::Key(this));
+	Database::deathlistener.Close(mAttach);
 }
 
 // player detach
@@ -192,24 +236,67 @@ void Player::Detach(void)
 	if (!mAttach)
 		return;
 
-	// remove controller
-	PlayerController *controller = Database::playercontroller.Get(mAttach);
-	delete controller;
-	Database::playercontroller.Delete(mAttach);
-	Database::controller.Delete(mAttach);
-
-	// set entity as owner
-	Database::owner.Put(mAttach, mAttach);
+	// remove any death listener
+	Database::Typed<Damagable::DeathListener> &listeners = Database::deathlistener.Open(mAttach);
+	listeners.Delete(Database::Key(this));
+	Database::deathlistener.Close(mAttach);
 
 	// detach from enemy
 	mAttach = 0;
 }
 
+// player spawn
+void Player::Spawn(void)
+{
+	// get the spawner entity
+	Entity *entity = Database::entity.Get(mId);
+	if (entity)
+	{
+		// use a life
+		if (mLives < INT_MAX)
+			--mLives;
+
+		// get the player template
+		const PlayerTemplate &playertemplate = Database::playertemplate.Get(mId);
+
+		// instantiate the spawn entity
+		// TO DO: use a named spawn point
+		Database::Instantiate(playertemplate.mSpawn, mId, entity->GetAngle(), entity->GetPosition(), entity->GetVelocity(), entity->GetOmega());
+
+		// done for now
+		Deactivate();
+	}
+}
+
+// player death notification
+void Player::OnDeath(unsigned int aId, unsigned int aSourceId)
+{
+	// if there are lives left...
+	if (mLives > 0)
+	{
+		Activate();
+	}
+}
+
 // player kill notification
 void Player::GotKill(unsigned int aId, unsigned int aKillId)
 {
-	// add points to score
-	mScore += Database::points.Get(aKillId);
+	// get point value
+	int aValue = Database::points.Get(aKillId);
+
+	// get the player template
+	const PlayerTemplate &playertemplate = Database::playertemplate.Get(mId);
+
+	// if extra lives enabled...
+	if (playertemplate.mExtra > 0)
+	{
+		// add any extra lives
+		mLives += ((mScore + aValue) / playertemplate.mExtra) - (mScore / playertemplate.mExtra);
+	}
+
+	// add value to score
+	mScore += aValue;
+
 }
 
 
@@ -221,21 +308,22 @@ void Player::GotKill(unsigned int aId, unsigned int aKillId)
 PlayerController::PlayerController(unsigned int aId)
 : Controller(aId)
 {
-	unsigned int aOwnerId = Database::owner.Get(id);
+	unsigned int aOwnerId = Database::owner.Get(mId);
 	if (Player *player = Database::player.Get(aOwnerId))
 	{
-		player->mAttach = id;
+		player->Attach(mId);
 	}
 }
 
 // player controller destructor
 PlayerController::~PlayerController(void)
 {
-	unsigned int aOwnerId = Database::owner.Get(id);
+	unsigned int aOwnerId = Database::owner.Get(mId);
 	if (Player *player = Database::player.Get(aOwnerId))
 	{
-		player->mAttach = 0;
+		player->Detach();
 	}
+
 }
 
 // player controller ontrol

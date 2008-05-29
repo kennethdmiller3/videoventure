@@ -6,7 +6,7 @@ static Updatable *sTail;
 static Updatable *sNext;
 
 Updatable::Updatable(unsigned int aId)
-: id(aId), mNext(NULL), mPrev(NULL), entry()
+: mId(aId), mNext(NULL), mPrev(NULL), entry()
 {
 }
 

@@ -208,19 +208,19 @@ void Link::Update(float aStep)
 	if (mSecondary)
 	{
 		// get entities
-		Entity *entity = Database::entity.Get(id);
+		Entity *entity = Database::entity.Get(mId);
 		Entity *secondary = Database::entity.Get(mSecondary);
 		if (!secondary)
 		{
-			Database::Typed<Link *> &links = Database::link.Open(id);
+			Database::Typed<Link *> &links = Database::link.Open(mId);
 			links.Delete(mSub);
-			Database::link.Close(id);
+			Database::link.Close(mId);
 			delete this;
 			return;
 		}
 
 		// get template data
-		const LinkTemplate &link = Database::linktemplate.Get(id).Get(mSub);
+		const LinkTemplate &link = Database::linktemplate.Get(mId).Get(mSub);
 
 		// update secondary transform
 		Matrix2 transform(link.mOffset * entity->GetTransform());

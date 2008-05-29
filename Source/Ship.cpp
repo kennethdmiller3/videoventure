@@ -143,13 +143,13 @@ bool Ship::Configure(const TiXmlElement *element)
 void Ship::Simulate(float aStep)
 {
 	// get entity
-	Entity *entity = Database::entity.Get(id);
+	Entity *entity = Database::entity.Get(mId);
 
 	// get ship template
-	const ShipTemplate &ship = Database::shiptemplate.Get(id);
+	const ShipTemplate &ship = Database::shiptemplate.Get(mId);
 
 	// get ship collidable
-	const Collidable *collidable = Database::collidable.Get(id);
+	const Collidable *collidable = Database::collidable.Get(mId);
 	if (!collidable)
 		return;
 	b2Body *body = collidable->GetBody();
@@ -157,7 +157,7 @@ void Ship::Simulate(float aStep)
 		return;
 
 	// get ship controller
-	const Controller *controller = Database::controller.Get(id);
+	const Controller *controller = Database::controller.Get(mId);
 	if (!controller)
 		return;
 

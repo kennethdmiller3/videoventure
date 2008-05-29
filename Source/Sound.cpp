@@ -295,7 +295,7 @@ void Sound::Update(float aStep)
 		return;
 	}
 
-	if (Entity *entity = Database::entity.Get(id))
+	if (Entity *entity = Database::entity.Get(mId))
 		mPosition = entity->GetPosition();
 	else
 		mPosition = listenerpos;

@@ -99,6 +99,7 @@ Vector2 listenerpos;
 // reticule handle (HACK)
 GLuint reticule_handle;
 GLuint score_handle;
+GLuint lives_handle;
 
 // forward declaration
 int ProcessCommand( unsigned int aCommand, char *aParam[], int aCount );
@@ -819,6 +820,10 @@ int SDL_main( int argc, char *argv[] )
 	// allocate score draw list
 	score_handle = glGenLists(1);
 
+	// allocate lives draw list
+	lives_handle = glGenLists(1);
+
+
 	// last ticks
 	unsigned int ticks = SDL_GetTicks();
 
@@ -1528,6 +1533,50 @@ int SDL_main( int argc, char *argv[] )
 				glEndList();
 			}
 
+			int cur_lives = -1;
+			int new_lives = itor.GetValue()->mLives;
+			if (new_lives < INT_MAX)
+			{
+				// if the lives has not changed...
+				if (new_lives == cur_lives && !wasreset)
+				{
+					// call the existing draw list
+					glCallList(lives_handle);
+				}
+				else
+				{
+					// update lives
+					cur_lives = new_lives;
+
+					// start a new draw list list
+					glNewList(lives_handle, GL_COMPILE_AND_EXECUTE);
+
+					// draw remaining lives
+					char lives[16];
+					sprintf(lives, "x%d", cur_lives);
+
+					glEnable(GL_TEXTURE_2D);
+					glBindTexture(GL_TEXTURE_2D, OGLCONSOLE_glFontHandle);
+
+					glColor4f(0.4f, 0.5f, 1.0f, 1.0f);
+
+					glBegin(GL_QUADS);
+
+					float x = 116;
+					float y = 16;
+					float z = 0;
+					float w = 8;
+					float h = -8;
+					OGLCONSOLE_DrawString(lives, x, y, w, h, z);
+
+					glEnd();
+
+					glDisable(GL_TEXTURE_2D);
+
+					glEndList();
+				}
+			}
+
 			// draw reticule
 			Controller *controller = Database::controller.Get(id);
 			if (controller)
@@ -1539,6 +1588,26 @@ int SDL_main( int argc, char *argv[] )
 				glTranslatef(x, y, 0.0f);
 				glCallList(reticule_handle);
 				glPopMatrix();
+			}
+			else if (cur_lives <= 0)
+			{
+				glEnable(GL_TEXTURE_2D);
+				glBindTexture(GL_TEXTURE_2D, OGLCONSOLE_glFontHandle);
+
+				glColor4f(1.0f, 0.9f, 0.1f, 1.0f);
+
+				glBegin(GL_QUADS);
+
+				float x = 320 - 32 * 4 - 16;
+				float y = 240 - 16;
+				float z = 0;
+				float w = 32;
+				float h = -32;
+				OGLCONSOLE_DrawString("GAME OVER", x, y, w, h, z);
+
+				glEnd();
+
+				glDisable(GL_TEXTURE_2D);
 			}
 
 			++playerindex;

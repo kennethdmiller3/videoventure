@@ -117,7 +117,7 @@ Explosion::Explosion(const ExplosionTemplate &aTemplate, unsigned int aId)
 	if (aTemplate.mRadius > 0.0f)
 	{
 		// get parent entity
-		Entity *entity = Database::entity.Get(id);
+		Entity *entity = Database::entity.Get(mId);
 
 		// get the collision world
 		b2World *world = Collidable::GetWorld();
@@ -132,7 +132,7 @@ Explosion::Explosion(const ExplosionTemplate &aTemplate, unsigned int aId)
 		int32 count = world->Query(aabb, shapes, maxCount);
 
 		// get team affiliation
-		unsigned int aTeam = Database::team.Get(id);
+		unsigned int aTeam = Database::team.Get(mId);
 
 		// world-to-local transform
 		Matrix2 transform(entity->GetTransform().Inverse());
@@ -143,7 +143,7 @@ Explosion::Explosion(const ExplosionTemplate &aTemplate, unsigned int aId)
 			// get the parent body
 			b2Body* body = shapes[i]->GetBody();
 
-			// get the collidable id
+			// get the collidable identifier
 			unsigned int targetId = reinterpret_cast<unsigned int>(body->GetUserData());
 
 			// skip non-entity
@@ -151,7 +151,7 @@ Explosion::Explosion(const ExplosionTemplate &aTemplate, unsigned int aId)
 				continue;
 
 			// skip self
-			if (targetId == id)
+			if (targetId == mId)
 				continue;
 
 			// get team affiliation
@@ -190,7 +190,7 @@ Explosion::Explosion(const ExplosionTemplate &aTemplate, unsigned int aId)
 				}
 
 				// apply damage
-				damagable->Damage(id, damage);
+				damagable->Damage(mId, damage);
 			}
 		}
 	}
@@ -209,21 +209,21 @@ void Explosion::Simulate(float aStep)
 	if (mLife <= 0)
 	{
 		// if spawning on expire...
-		const ExplosionTemplate &explosion = Database::explosiontemplate.Get(id);
+		const ExplosionTemplate &explosion = Database::explosiontemplate.Get(mId);
 		if (explosion.mSpawnOnExpire)
 		{
 #ifdef USE_CHANGE_DYNAMIC_TYPE
 			// change dynamic type
-			Database::Deactivate(id);
-			Database::parent.Put(id, explosion.mSpawnOnExpire);
-			Database::Activate(id);
+			Database::Deactivate(mId);
+			Database::parent.Put(mId, explosion.mSpawnOnExpire);
+			Database::Activate(mId);
 #else
 			// get the entity
-			Entity *entity = Database::entity.Get(id);
+			Entity *entity = Database::entity.Get(mId);
 			if (entity)
 			{
 				// spawn template at the entity location
-				Database::Instantiate(explosion.mSpawnOnExpire, Database::owner.Get(id), entity->GetAngle(), entity->GetPosition(), entity->GetVelocity(), entity->GetOmega());
+				Database::Instantiate(explosion.mSpawnOnExpire, Database::owner.Get(mId), entity->GetAngle(), entity->GetPosition(), entity->GetVelocity(), entity->GetOmega());
 			}
 #endif
 		}
@@ -232,7 +232,7 @@ void Explosion::Simulate(float aStep)
 #endif
 		{
 			// delete the entity
-			Database::Delete(id);
+			Database::Delete(mId);
 		}
 
 		return;

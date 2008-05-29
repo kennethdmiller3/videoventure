@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Controller.h"
+#include "Updatable.h"
 
 // player
 
@@ -8,7 +9,9 @@
 class PlayerTemplate
 {
 public:
+	unsigned int mSpawn;
 	int mLives;
+	int mExtra;
 
 public:
 	// constructor
@@ -19,10 +22,9 @@ public:
 };
 
 // player
-class Player
+class Player : public Updatable
 {
 public:
-	unsigned int mId;
 	unsigned int mAttach;
 	int mLives;
 	int mScore;
@@ -37,11 +39,20 @@ public:
 	// destructor
 	~Player(void);
 
+	// update
+	void Update(float aStep);
+
+	// spawn
+	void Spawn(void);
+
 	// attach to an object
 	void Attach(unsigned int aAttach);
 
 	// detach from an object
-	void Detach();
+	void Detach(void);
+
+	// died
+	void OnDeath(unsigned int aId, unsigned int aSourceId);
 
 	// got a kill
 	void GotKill(unsigned int aId, unsigned int aKillId);

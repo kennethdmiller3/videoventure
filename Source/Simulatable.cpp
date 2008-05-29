@@ -7,7 +7,7 @@ static Simulatable *sTail;
 static Simulatable *sNext;
 
 Simulatable::Simulatable(unsigned int aId)
-: id(aId), mNext(NULL), mPrev(NULL), entry()
+: mId(aId), mNext(NULL), mPrev(NULL), entry()
 {
 }
 

@@ -109,9 +109,6 @@ WeaponTemplate::~WeaponTemplate(void)
 
 bool WeaponTemplate::Configure(const TiXmlElement *element)
 {
-	if (Hash(element->Value()) != 0x6f332041 /* "weapon" */)
-		return false;
-
 	// process child elements
 	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
@@ -196,9 +193,6 @@ Weapon::~Weapon(void)
 // Weapon Configure
 bool Weapon::Configure(const TiXmlElement *element)
 {
-	if (Hash(element->Value()) != 0x6f332041 /* "weapon" */)
-		return false;
-
 	return true;
 }
 
@@ -217,7 +211,7 @@ void Weapon::Update(float aStep)
 	if (controller->mFire[mChannel])
 	{
 		// get template data
-		const WeaponTemplate &weapon = Database::weapontemplate.Get(id);
+		const WeaponTemplate &weapon = Database::weapontemplate.Get(mId);
 
 		// if ready to fire...
 		while (mTimer > 0.0f)
@@ -226,12 +220,12 @@ void Weapon::Update(float aStep)
 			if (mPhase == 0)
 			{
 				// get the entity
-				Entity *entity = Database::entity.Get(id);
+				Entity *entity = Database::entity.Get(mId);
 
 				// instantiate a bullet
 				Matrix2 transform(weapon.mOffset * entity->GetInterpolatedTransform(mTimer / aStep));
 				Vector2 velocity(transform.Rotate(weapon.mInherit * transform.Unrotate(entity->GetVelocity()) + weapon.mVelocity));
-				unsigned int ordId = Database::Instantiate(weapon.mOrdnance, Database::owner.Get(id), 
+				unsigned int ordId = Database::Instantiate(weapon.mOrdnance, Database::owner.Get(mId), 
 					transform.Angle(), transform.p, velocity, 0);
 
 				// set fractional turn

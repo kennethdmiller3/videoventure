@@ -117,18 +117,18 @@ Bullet::Bullet(const BulletTemplate &aTemplate, unsigned int aId)
 : Simulatable(aId)
 , mLife(aTemplate.mLife)
 {
-	Database::Typed<Collidable::Listener> &listeners = Database::collidablecontactadd.Open(id);
+	Database::Typed<Collidable::Listener> &listeners = Database::collidablecontactadd.Open(mId);
 	Collidable::Listener &listener = listeners.Open(Database::Key(this));
 	listener.bind(this, &Bullet::Collide);
 	listeners.Close(Database::Key(this));
-	Database::collidablecontactadd.Close(id);
+	Database::collidablecontactadd.Close(mId);
 }
 
 Bullet::~Bullet(void)
 {
-	Database::Typed<Collidable::Listener> &listeners = Database::collidablecontactadd.Open(id);
+	Database::Typed<Collidable::Listener> &listeners = Database::collidablecontactadd.Open(mId);
 	listeners.Delete(Database::Key(this));
-	Database::collidablecontactadd.Close(id);
+	Database::collidablecontactadd.Close(mId);
 }
 
 void Bullet::Simulate(float aStep)
@@ -140,21 +140,21 @@ void Bullet::Simulate(float aStep)
 	if (mLife <= 0)
 	{
 		// if spawning on expire...
-		const BulletTemplate &bullet = Database::bullettemplate.Get(id);
+		const BulletTemplate &bullet = Database::bullettemplate.Get(mId);
 		if (bullet.mSpawnOnExpire)
 		{
 #ifdef USE_CHANGE_DYNAMIC_TYPE
 			// change dynamic type
-			Database::Deactivate(id);
-			Database::parent.Put(id, bullet.mSpawnOnExpire);
-			Database::Activate(id);
+			Database::Deactivate(mId);
+			Database::parent.Put(mId, bullet.mSpawnOnExpire);
+			Database::Activate(mId);
 #else
 			// get the entity
-			Entity *entity = Database::entity.Get(id);
+			Entity *entity = Database::entity.Get(mId);
 			if (entity)
 			{
 				// spawn template at entity location
-				Database::Instantiate(bullet.mSpawnOnExpire, Database::owner.Get(id), entity->GetAngle(), entity->GetPosition(), entity->GetVelocity(), entity->GetOmega());
+				Database::Instantiate(bullet.mSpawnOnExpire, Database::owner.Get(mId), entity->GetAngle(), entity->GetPosition(), entity->GetVelocity(), entity->GetOmega());
 			}
 #endif
 		}
@@ -163,7 +163,7 @@ void Bullet::Simulate(float aStep)
 #endif
 		{
 			// delete the entity
-			Database::Delete(id);
+			Database::Delete(mId);
 		}
 
 		return;
@@ -173,23 +173,23 @@ void Bullet::Simulate(float aStep)
 void Bullet::Kill(float aFraction)
 {
 		// if spawning on expire...
-		const BulletTemplate &bullet = Database::bullettemplate.Get(id);
+		const BulletTemplate &bullet = Database::bullettemplate.Get(mId);
 		if (bullet.mSpawnOnDeath)
 		{
 #ifdef USE_CHANGE_DYNAMIC_TYPE
 			// change dynamic type
-			Database::Deactivate(id);
-			Database::parent.Put(id, bullet.mSpawnOnDeath);
-			Database::Activate(id);
-			if (Renderable *renderable = Database::renderable.Get(id))
+			Database::Deactivate(mId);
+			Database::parent.Put(mId, bullet.mSpawnOnDeath);
+			Database::Activate(mId);
+			if (Renderable *renderable = Database::renderable.Get(mId))
 				renderable->SetFraction(aFraction);
 #else
 			// get the entity
-			Entity *entity = Database::entity.Get(id);
+			Entity *entity = Database::entity.Get(mId);
 			if (entity)
 			{
 				// spawn template at entity location
-				unsigned int spawnId = Database::Instantiate(bullet.mSpawnOnDeath, Database::owner.Get(id), entity->GetAngle(), entity->GetPosition(), entity->GetVelocity(), entity->GetOmega());
+				unsigned int spawnId = Database::Instantiate(bullet.mSpawnOnDeath, Database::owner.Get(mId), entity->GetAngle(), entity->GetPosition(), entity->GetVelocity(), entity->GetOmega());
 				if (Renderable *renderable = Database::renderable.Get(spawnId))
 					renderable->SetFraction(aFraction);
 			}
@@ -200,7 +200,7 @@ void Bullet::Kill(float aFraction)
 #endif
 		{
 			// delete the entity
-			Database::Delete(id);
+			Database::Delete(mId);
 		}
 
 		return;
@@ -225,7 +225,7 @@ public:
 
 	void Update(float aStep)
 	{
-		if (Bullet *bullet = Database::bullet.Get(id))
+		if (Bullet *bullet = Database::bullet.Get(mId))
 			bullet->Kill(mTime);
 		Deactivate();
 		delete this;
@@ -252,12 +252,12 @@ void Bullet::Collide(unsigned int aId, unsigned int aHitId, float aFraction, con
 	// do nothing if expired...
 	if (mLife <= 0)
 		return;
-	assert(id == aId);
+	assert(mId == aId);
 
-	const BulletTemplate &bullet = Database::bullettemplate.Get(id);
+	const BulletTemplate &bullet = Database::bullettemplate.Get(mId);
 
 	// get team affiliation
-	unsigned int aTeam = Database::team.Get(id);
+	unsigned int aTeam = Database::team.Get(mId);
 	unsigned int aHitTeam = Database::team.Get(aHitId);
 
 	// if the bullet applies damage...
@@ -272,7 +272,7 @@ void Bullet::Collide(unsigned int aId, unsigned int aHitId, float aFraction, con
 			if (damagable)
 			{
 				// apply damage value
-				damagable->Damage(id, bullet.mDamage);
+				damagable->Damage(mId, bullet.mDamage);
 				destroy = true;
 			}
 		}
@@ -294,7 +294,7 @@ void Bullet::Collide(unsigned int aId, unsigned int aHitId, float aFraction, con
 					if (curhealth < maxhealth)
 					{
 						// apply healing value
-						damagable->Damage(id, std::max(bullet.mDamage, curhealth - maxhealth));
+						damagable->Damage(mId, std::max(bullet.mDamage, curhealth - maxhealth));
 						destroy = true;
 						break;
 					}
@@ -305,14 +305,14 @@ void Bullet::Collide(unsigned int aId, unsigned int aHitId, float aFraction, con
 
 #ifdef BULLET_COLLISION_BOUNCE
 	// reorient to new direction
-	Collidable *collidable = Database::collidable.Get(id);
+	Collidable *collidable = Database::collidable.Get(mId);
 	if (collidable)
 	{
 		b2Body *body = collidable->GetBody();
 		const b2Vec2 velocity = body->GetLinearVelocity();
 		float angle = -atan2f(velocity.x, velocity.y);
 		body->SetOriginPosition(body->GetOriginPosition(), angle);
-		Entity *entity = Database::entity.Get(id);
+		Entity *entity = Database::entity.Get(mId);
 		entity->Step();
 		entity->SetTransform(Matrix2(body->GetRotationMatrix(), body->GetOriginPosition()));
 		entity->SetVelocity(Vector2(body->GetLinearVelocity()));
@@ -325,7 +325,7 @@ void Bullet::Collide(unsigned int aId, unsigned int aHitId, float aFraction, con
 		b2Vec2 position(aPoint.position - aPoint.separation * aPoint.normal);
 
 		// spawn the template
-		unsigned int spawnId = Database::Instantiate(bullet.mSpawnOnImpact, Database::owner.Get(id), 0, Vector2(position), Vector2(0, 0), 0);
+		unsigned int spawnId = Database::Instantiate(bullet.mSpawnOnImpact, Database::owner.Get(mId), 0, Vector2(position), Vector2(0, 0), 0);
 
 		// set fractional turn
 		if (Renderable *renderable = Database::renderable.Get(spawnId))
@@ -335,7 +335,7 @@ void Bullet::Collide(unsigned int aId, unsigned int aHitId, float aFraction, con
 
 	if (destroy)
 	{
-		new BulletKillUpdate(id, aFraction);
+		new BulletKillUpdate(mId, aFraction);
 		mLife = 0.0f;
 	}
 }

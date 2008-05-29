@@ -130,7 +130,7 @@ public:
 
 	void Update(float aStep)
 	{
-		if (Damagable *damagable =Database::damagable.Get(id))
+		if (Damagable *damagable =Database::damagable.Get(mId))
 			damagable->Kill();
 		Deactivate();
 		delete this;

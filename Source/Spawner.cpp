@@ -175,7 +175,7 @@ Spawner::~Spawner(void)
 void Spawner::Update(float aStep)
 {
 	// get the spawner template
-	const SpawnerTemplate &spawner = Database::spawnertemplate.Get(id);
+	const SpawnerTemplate &spawner = Database::spawnertemplate.Get(mId);
 
 	// if tracking the spawned item...
 	if (spawner.mTrack)
@@ -202,16 +202,16 @@ void Spawner::Update(float aStep)
 	while (mTimer > 0.0f)
 	{
 		// get the spawner entity
-		Entity *entity = Database::entity.Get(id);
+		Entity *entity = Database::entity.Get(mId);
 		if (entity)
 		{
 			// instantiate the spawn entity
 			Matrix2 transform(spawner.mOffset * entity->GetInterpolatedTransform(mTimer / aStep));
 			Vector2 velocity(transform.Rotate(spawner.mInherit * transform.Unrotate(entity->GetVelocity()) + spawner.mVelocity));
-			mSpawn = Database::Instantiate(spawner.mSpawn, Database::owner.Get(id), transform.Angle(), transform.p, velocity, entity->GetOmega());
+			mSpawn = Database::Instantiate(spawner.mSpawn, Database::owner.Get(mId), transform.Angle(), transform.p, velocity, entity->GetOmega());
 
 			// if the spawner has a team...
-			unsigned int team = Database::team.Get(id);
+			unsigned int team = Database::team.Get(mId);
 			if (team)
 			{
 				// propagate team to spawned item

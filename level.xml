@@ -11,8 +11,14 @@
 
 	<!-- players -->
 
-	<entity name="1P">
-		<player lives="3"/>
+	<template name="1P">
+		<player name="playershipwarp" lives="3" extra="10000"/>
+	</template>
+	<entity name="playerspawn">
+		<position x="0" y="0"/>
+		<spawner>
+			<spawn name="1P" start="1.5" cycle="1" track="1"/>
+		</spawner>
 	</entity>
 
 
@@ -4591,6 +4597,7 @@
 		</sound>
 	</template>
 
+	<!--
 	<entity name="playerspawn">
 		<position x="0" y="0"/>
 		<spawner>
@@ -4598,7 +4605,7 @@
 		</spawner>
 		<owner name="1P"/>
 	</entity>
-
+	-->
 
 	<!-- health powerup -->
 

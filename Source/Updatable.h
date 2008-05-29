@@ -4,7 +4,7 @@ class Updatable
 {
 protected:
 	// identifier
-	unsigned int id;
+	unsigned int mId;
 
 private:
 	// linked list
