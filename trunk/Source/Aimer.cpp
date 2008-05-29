@@ -174,10 +174,10 @@ void Aimer::Control(float aStep)
 	mFire[1] = 0;
 
 	// get parent entity
-	Entity *entity = Database::entity.Get(id);
+	Entity *entity = Database::entity.Get(mId);
 
 	// get aimer template
-	const AimerTemplate &aimer = Database::aimertemplate.Get(id);
+	const AimerTemplate &aimer = Database::aimertemplate.Get(mId);
 
 	// if ready to search...
 	mDelay -= aStep;
@@ -199,7 +199,7 @@ void Aimer::Control(float aStep)
 		int32 count = world->Query(aabb, shapes, maxCount);
 
 		// get team affiliation
-		unsigned int aTeam = Database::team.Get(id);
+		unsigned int aTeam = Database::team.Get(mId);
 
 		// no target yet
 		unsigned int bestTargetId = 0;
@@ -214,7 +214,7 @@ void Aimer::Control(float aStep)
 			// get the parent body
 			b2Body* body = shapes[i]->GetBody();
 
-			// get the collidable id
+			// get the collidable identifier
 			unsigned int targetId = reinterpret_cast<unsigned int>(body->GetUserData());
 
 			// skip non-entity
@@ -222,7 +222,7 @@ void Aimer::Control(float aStep)
 				continue;
 
 			// skip self
-			if (targetId == id)
+			if (targetId == mId)
 				continue;
 
 			// get team affiliation

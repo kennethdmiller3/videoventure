@@ -4,7 +4,7 @@ class Controller
 {
 protected:
 	// identifier
-	unsigned int id;
+	unsigned int mId;
 
 private:
 	// linked list

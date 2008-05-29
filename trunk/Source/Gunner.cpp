@@ -86,7 +86,7 @@ bool GunnerTemplate::Configure(const TiXmlElement *element)
 Gunner::Gunner(const GunnerTemplate &aTemplate, unsigned int aId)
 : Simulatable(aId)
 {
-	Entity *entity = Database::entity.Get(id);
+	Entity *entity = Database::entity.Get(mId);
 #ifdef GUNNER_TRACK_DEQUE
 	mTrackPos.push_back(entity->GetPosition());
 	mTrackPos.push_back(entity->GetPosition());
@@ -111,7 +111,7 @@ Gunner::~Gunner(void)
 void Gunner::Simulate(float aStep)
 {
 	// get the owner
-	unsigned int aOwnerId = Database::backlink.Get(id);
+	unsigned int aOwnerId = Database::backlink.Get(mId);
 
 	// get the owner entity
 	Entity *owner = Database::entity.Get(aOwnerId);
@@ -120,12 +120,12 @@ void Gunner::Simulate(float aStep)
 	if (!owner)
 	{
 		// self-destruct
-		Database::Delete(id);
+		Database::Delete(mId);
 		return;
 	}
 
 	// gunner template
-	const GunnerTemplate &gunner = Database::gunnertemplate.Get(id);
+	const GunnerTemplate &gunner = Database::gunnertemplate.Get(mId);
 
 	// get owner movement
 	const Vector2 &posP = owner->GetPosition();
@@ -218,7 +218,7 @@ void Gunner::Simulate(float aStep)
 	}
 
 	// move to new position
-	Entity *entity = Database::entity.Get(id);
+	Entity *entity = Database::entity.Get(mId);
 	entity->Step();
 #ifdef GUNNER_TRACK_DEQUE
 	entity->SetPosition(mTrackPos.front());

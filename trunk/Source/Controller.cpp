@@ -12,7 +12,7 @@ static Controller *sTail;
 static Controller *sNext;
 
 Controller::Controller(unsigned int aId)
-: id(aId)
+: mId(aId)
 , mNext(NULL)
 , mPrev(NULL)
 , entry()
