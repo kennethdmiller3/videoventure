@@ -41,10 +41,14 @@ namespace Database
 				element->QueryFloatAttribute("volume", &sound.mVolume);
 				element->QueryIntAttribute("repeat", &sound.mRepeat);
 
-				// add a default cue (HACK)
-				Typed<unsigned int> &soundcue = Database::soundcue.Open(aId);
-				soundcue.Put(0, aId);
-				Database::soundcue.Close(aId);
+				// if there are no sound cues...
+				if (!Database::soundcue.Find(aId))
+				{
+					// add a default cue (HACK)
+					Typed<unsigned int> &soundcue = Database::soundcue.Open(aId);
+					soundcue.Put(0, aId);
+					Database::soundcue.Close(aId);
+				}
 
 				// process sound configuration
 				for (const TiXmlElement *child = element->FirstChildElement(); child; child = child->NextSiblingElement())
@@ -117,8 +121,8 @@ namespace Database
 				// if the object has an embedded sound...
 				if (Database::soundtemplate.Find(aId))
 				{
-					// add a default cue (HACK)
-					soundcue.Put(0, aId);
+					// remove the default cue (HACK)
+					soundcue.Delete(0);
 				}
 
 				// process sound cue configuration
@@ -389,10 +393,17 @@ void Sound::Mix(void *userdata, Uint8 *stream, int len)
 		if (SOUND_CHANNELS <= 0)
 			continue;
 
-		// apply sound fall-off
-		float volume = sound->mVolume / (1.0f + listenerpos.DistSq(sound->mPosition) / 16384.0f);
-		if (volume < 1.0f/256.0f)
-			continue;
+		// get intrinsic volume
+		float volume = sound->mVolume;
+
+		// if associated with an identifier
+		if (sound->mId)
+		{
+			// apply sound fall-off
+			volume /= (1.0f + listenerpos.DistSq(sound->mPosition) / 16384.0f);
+			if (volume < 1.0f/256.0f)
+				continue;
+		}
 
 		// weight sound based on volume
 		float weight = volume;
@@ -401,7 +412,7 @@ void Sound::Mix(void *userdata, Uint8 *stream, int len)
 		if (!repeat)
 		{
 			// diminish weight over time
-			weight *= 1.0f - float(offset) / float(length);
+			weight *= 1.0f - 0.5f * float(offset) / float(length);
 		}
 
 		int j;

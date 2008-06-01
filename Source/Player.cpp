@@ -5,6 +5,7 @@
 #include "Damagable.h"
 #include "Capturable.h"
 #include "Points.h"
+#include "Sound.h"
 
 namespace Database
 {
@@ -290,8 +291,16 @@ void Player::GotKill(unsigned int aId, unsigned int aKillId)
 	// if extra lives enabled...
 	if (playertemplate.mExtra > 0)
 	{
-		// add any extra lives
-		mLives += ((mScore + aValue) / playertemplate.mExtra) - (mScore / playertemplate.mExtra);
+		// extra lives
+		int extra = ((mScore + aValue) / playertemplate.mExtra) - (mScore / playertemplate.mExtra);
+		if (extra)
+		{
+			// add any extra lives
+			mLives += extra;
+
+			// trigger sound cue
+			PlaySound(mAttach, 0x62b13a2b /* "extralife" */);
+		}
 	}
 
 	// add value to score

@@ -37,7 +37,7 @@ namespace Database
 			void Configure(unsigned int aId, const TiXmlElement *element)
 			{
 				RenderableTemplate &renderable = Database::renderabletemplate.Open(aId);
-				renderable.Configure(element);
+				renderable.Configure(element, aId);
 				Database::renderabletemplate.Close(aId);
 			}
 		}
@@ -88,7 +88,7 @@ RenderableTemplate::~RenderableTemplate(void)
 }
 
 // configure
-bool RenderableTemplate::Configure(const TiXmlElement *element)
+bool RenderableTemplate::Configure(const TiXmlElement *element, unsigned int aId)
 {
 	if (Hash(element->Value()) != 0x109dd1ad /* "renderable" */)
 		return false;
@@ -102,7 +102,10 @@ bool RenderableTemplate::Configure(const TiXmlElement *element)
 	element->QueryFloatAttribute("radius", &mRadius);
 
 	// process child elements
-	ProcessDrawItems(element, mBuffer);
+//	ProcessDrawItems(element, mBuffer);
+	std::vector<unsigned int> &buffer = Database::dynamicdrawlist.Open(aId);
+	ProcessDrawItems(element, buffer);
+	Database::dynamicdrawlist.Close(aId);
 
 	return true;
 }
@@ -115,12 +118,12 @@ unsigned int Renderable::sTurn;
 float Renderable::sOffset;
 
 Renderable::Renderable(void)
-: id(0), mNext(NULL), mPrev(NULL), show(false), mRadius(0), mStart(sTurn), mFraction(0.0f)
+: mId(0), mNext(NULL), mPrev(NULL), show(false), mRadius(0), mStart(sTurn), mFraction(0.0f)
 {
 }
 
 Renderable::Renderable(const RenderableTemplate &aTemplate, unsigned int aId)
-: id(aId), mNext(NULL), mPrev(NULL), show(false), mRadius(aTemplate.mRadius), mStart(sTurn), mFraction(0.0f)
+: mId(aId), mNext(NULL), mPrev(NULL), show(false), mRadius(aTemplate.mRadius), mStart(sTurn), mFraction(0.0f)
 {
 }
 
@@ -194,11 +197,8 @@ void Renderable::RenderAll(float aRatio, float aStep, const AlignedBox2 &aView)
 		// (in case the entry gets deleted)
 		Renderable *next = itor->mNext;
 
-		// get the identifier
-		unsigned int id = itor->id;
-
 		// get the entity (HACK)
-		const Entity *entity = Database::entity.Get(id);
+		const Entity *entity = Database::entity.Get(itor->mId);
 		if (!entity)
 			continue;
 
@@ -249,7 +249,7 @@ void Renderable::RenderAll(float aRatio, float aStep, const AlignedBox2 &aView)
 void Renderable::Render(float aStep, float aPosX, float aPosY, float aAngle)
 {
 	// get the renderable template
-	const RenderableTemplate &renderable = Database::renderabletemplate.Get(id);
+	const RenderableTemplate &renderable = Database::renderabletemplate.Get(mId);
 
 	// elapsed time
 	float t = fmodf((sTurn - mStart + sOffset - mFraction) * aStep, renderable.mPeriod);
@@ -258,8 +258,11 @@ void Renderable::Render(float aStep, float aPosX, float aPosY, float aAngle)
 	if (t < 0)
 		return;
 
+	// get the dynamic draw list
+	const std::vector<unsigned int> &buffer = Database::dynamicdrawlist.Get(mId);
+
 	// skip if empty
-	if (renderable.mBuffer.empty())
+	if (buffer.empty())
 		return;
 
 	// push a transform
@@ -270,7 +273,7 @@ void Renderable::Render(float aStep, float aPosX, float aPosY, float aAngle)
 	glRotatef(aAngle*180/float(M_PI), 0.0f, 0.0f, 1.0f);
 
 	// execute the deferred draw list
-	ExecuteDrawItems(&renderable.mBuffer[0], renderable.mBuffer.size(), t, id);
+	ExecuteDrawItems(&buffer[0], buffer.size(), t, mId);
 
 	// reset the transform
 	glPopMatrix();

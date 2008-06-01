@@ -4,7 +4,7 @@ class RenderableTemplate
 {
 public:
 	// drawlist buffer
-	std::vector<unsigned int> mBuffer;
+//	std::vector<unsigned int> mBuffer;
 
 	// bounding radius
 	float mRadius;
@@ -17,7 +17,7 @@ public:
 	~RenderableTemplate();
 
 	// configure
-	bool Configure(const TiXmlElement *element);
+	bool Configure(const TiXmlElement *element, unsigned int aId);
 };
 
 class Renderable
@@ -28,7 +28,7 @@ private:
 	static Renderable *sTail;
 
 	// identifier
-	unsigned int id;
+	unsigned int mId;
 
 	// linked list
 	Renderable *mNext;

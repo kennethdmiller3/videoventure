@@ -5,6 +5,8 @@
 #include "Controller.h"
 #include "Link.h"
 #include "Renderable.h"
+#include "Sound.h"
+
 
 #ifdef USE_POOL_ALLOCATOR
 #include <boost/pool/pool.hpp>
@@ -227,6 +229,9 @@ void Weapon::Update(float aStep)
 				Vector2 velocity(transform.Rotate(weapon.mInherit * transform.Unrotate(entity->GetVelocity()) + weapon.mVelocity));
 				unsigned int ordId = Database::Instantiate(weapon.mOrdnance, Database::owner.Get(mId), 
 					transform.Angle(), transform.p, velocity, 0);
+
+				// start the sound cue
+				PlaySound(mId, 0x8eab16d9 /* "fire" */);
 
 				// set fractional turn
 				if (Renderable *renderable = Database::renderable.Get(ordId))
