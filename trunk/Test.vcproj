@@ -70,7 +70,7 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="SDL.lib SDLmain.lib OpenGL32.lib glu32.lib Box2D_d.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="&quot;..\SDL-1.2.13\lib&quot;,&quot;..\Box2D\Library&quot;"
+				AdditionalLibraryDirectories="&quot;..\SDL-1.2.13\VisualC\SDLmain\Debug&quot;,&quot;..\SDL-1.2.13\VisualC\SDL\Debug&quot;,&quot;..\Box2D\Library&quot;"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 			/>
@@ -193,6 +193,14 @@
 			</File>
 			<File
 				RelativePath=".\Source\Bullet.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Capturable.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Capture.cpp"
 				>
 			</File>
 			<File
@@ -323,6 +331,14 @@
 			</File>
 			<File
 				RelativePath=".\Source\Bullet.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Capturable.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Capture.h"
 				>
 			</File>
 			<File
