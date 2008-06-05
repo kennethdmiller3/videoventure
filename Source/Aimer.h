@@ -8,13 +8,11 @@ public:
 	// target scan
 	float mPeriod;
 	float mRange;
+	float mFocus;
 
 	// attack cone
-	float mAttack;
-	float mAngle;
-
-	// direction focus
-	float mFocus;
+	float mAttack[2];
+	float mAngle[2];
 
 	// leading
 	float mLeading;

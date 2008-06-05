@@ -3,6 +3,7 @@
 #include "Entity.h"
 #include "Collidable.h"
 #include "Controller.h"
+#include "Sound.h"
 
 
 #ifdef USE_POOL_ALLOCATOR
@@ -80,9 +81,12 @@ namespace Database
 
 // Ship Template Constructor
 ShipTemplate::ShipTemplate(void)
-: mMaxVeloc(200)
+: mReverseVeloc(-200)
+, mNeutralVeloc(0)
+, mForwardVeloc(200)
+, mStrafeVeloc(200)
+, mMinAccel(50)
 , mMaxAccel(1000)
-, mFriction(50)
 , mMaxOmega(10)
 {
 }
@@ -98,9 +102,20 @@ bool ShipTemplate::Configure(const TiXmlElement *element)
 	if (Hash(element->Value()) != 0xac56f17f /* "ship" */)
 		return false;
 
-	element->QueryFloatAttribute("maxveloc", &mMaxVeloc);
+	float mMaxVeloc;
+	if (element->QueryFloatAttribute("maxveloc", &mMaxVeloc) == TIXML_SUCCESS)
+	{
+		mReverseVeloc = -mMaxVeloc;
+		mNeutralVeloc = 0.0f;
+		mForwardVeloc = mMaxVeloc;
+		mStrafeVeloc = mMaxVeloc;
+	}
+	element->QueryFloatAttribute("forwardveloc", &mForwardVeloc);
+	element->QueryFloatAttribute("neutralveloc", &mNeutralVeloc);
+	element->QueryFloatAttribute("reverseveloc", &mReverseVeloc);
+	element->QueryFloatAttribute("strafeveloc", &mStrafeVeloc);
 	element->QueryFloatAttribute("maxaccel", &mMaxAccel);
-	element->QueryFloatAttribute("friction", &mFriction);
+	element->QueryFloatAttribute("minaccel", &mMinAccel);
 	element->QueryFloatAttribute("maxomega", &mMaxOmega);
 
 	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
@@ -126,6 +141,11 @@ Ship::Ship(void)
 Ship::Ship(const ShipTemplate &aTemplate, unsigned int aId)
 : Simulatable(aId)
 {
+	// start the idle sound
+	PlaySound(aId, 0xc301cf93 /* "idle" */);
+
+	// also start a thrust sound
+	PlaySound(aId, 0xd0624e33 /* "thrust" */);
 }
 
 // Ship Destructor
@@ -165,11 +185,27 @@ void Ship::Simulate(float aStep)
 	{
 		const Vector2 &mMove = controller->mMove;
 		float control = std::min(mMove.LengthSq(), 1.0f);
-		float acc = Lerp(ship.mFriction, ship.mMaxAccel, control);
-		Vector2 dv(mMove * ship.mMaxVeloc - entity->GetVelocity());
+		float acc = Lerp(ship.mMinAccel, ship.mMaxAccel, control);
+		Matrix2 transform(entity->GetTransform());
+		Vector2 localmove(transform.Unrotate(mMove));
+		Vector2 localvel(
+			localmove.x * ship.mStrafeVeloc,
+			(localmove.y >= 0.0f)
+			? Lerp(ship.mNeutralVeloc, ship.mForwardVeloc, localmove.y)
+			: Lerp(ship.mNeutralVeloc, ship.mReverseVeloc, -localmove.y));
+		Vector2 dv(transform.Rotate(localvel) - entity->GetVelocity());
 		float it = std::min(acc * InvSqrt(dv.LengthSq() + 0.0001f), 1.0f / aStep);
 		Vector2 new_thrust(dv * it * body->GetMass());
 		body->ApplyForce(b2Vec2(new_thrust.x, new_thrust.y), body->GetXForm().position);
+
+		// update thrust sound (if any)
+		Database::Typed<Sound *> &sounds = Database::sound.Open(mId);
+		if (Sound *s = sounds.Get(0xd0624e33 /* "thrust" */))
+		{
+			const unsigned int &soundid = Database::soundcue.Get(mId).Get(0xd0624e33 /* "thrust" */);
+			const SoundTemplate &soundtemplate = Database::soundtemplate.Get(soundid);
+			s->mVolume = control * soundtemplate.mVolume;
+		}
 	}
 
 	// apply steering

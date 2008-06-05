@@ -86,15 +86,18 @@ namespace Database
 
 AimerTemplate::AimerTemplate(void)
 : mPeriod(1.0f)
-, mRange(256.0f)
-, mAttack(256.0f)
-, mAngle(0.95f)
+, mRange(0.0f)
 , mFocus(1.0f)
 , mLeading(0.0f)
 , mEvade(0.0f)
 , mClose(0.0f)
 , mFar(FLT_MAX)
 {
+	for (int i = 0; i < Controller::FIRE_CHANNELS; ++i)
+	{
+		mAttack[i] = 0.0f;
+		mAngle[i] = 0.95f;
+	}
 }
 
 AimerTemplate::~AimerTemplate(void)
@@ -103,12 +106,28 @@ AimerTemplate::~AimerTemplate(void)
 
 bool AimerTemplate::Configure(const TiXmlElement *element)
 {
+	// targeting
 	element->QueryFloatAttribute("period", &mPeriod);
 	element->QueryFloatAttribute("range", &mRange);
-	element->QueryFloatAttribute("attack", &mAttack);
-	if (element->QueryFloatAttribute("angle", &mAngle) == TIXML_SUCCESS)
-		mAngle = cosf(mAngle * float(M_PI) / 180.0f);
 	element->QueryFloatAttribute("focus", &mFocus);
+
+	// attack
+	for (int i = 0; i < Controller::FIRE_CHANNELS; ++i)
+	{
+		char label[16];
+
+		element->QueryFloatAttribute("attack", &mAttack[i]);
+		sprintf(label, "attack%d", i+1);
+		element->QueryFloatAttribute(label, &mAttack[i]);
+
+		if (element->QueryFloatAttribute("angle", &mAngle[i]) == TIXML_SUCCESS)
+			mAngle[i] = cosf(mAngle[i] * float(M_PI) / 180.0f);
+		sprintf(label, "angle%d", i+1);
+		if (element->QueryFloatAttribute(label, &mAngle[i]) == TIXML_SUCCESS)
+			mAngle[i] = cosf(mAngle[i] * float(M_PI) / 180.0f);
+	}
+
+	// aiming
 	element->QueryFloatAttribute("leading", &mLeading);
 	element->QueryFloatAttribute("evade", &mEvade);
 	element->QueryFloatAttribute("close", &mClose);
@@ -170,8 +189,7 @@ void Aimer::Control(float aStep)
 	mMove.y = 0;
 	mAim.x = 0;
 	mAim.y = 0;
-	mFire[0] = 0;
-	mFire[1] = 0;
+	memset(mFire, 0, sizeof(mFire));
 
 	// get parent entity
 	Entity *entity = Database::entity.Get(mId);
@@ -203,6 +221,7 @@ void Aimer::Control(float aStep)
 
 		// no target yet
 		unsigned int bestTargetId = 0;
+		Vector2 bestTargetPos(0, 0);
 		float bestRange = FLT_MAX;
 
 		// world-to-local transform
@@ -213,6 +232,16 @@ void Aimer::Control(float aStep)
 		{
 			// get the parent body
 			b2Body* body = shapes[i]->GetBody();
+
+			// get local position
+			b2Vec2 localPos;
+			switch (shapes[i]->GetType())
+			{
+			case e_circleShape:		localPos = static_cast<b2CircleShape *>(shapes[i])->GetLocalPosition();
+			case e_polygonShape:	localPos = static_cast<b2PolygonShape *>(shapes[i])->GetCentroid();
+			default:				localPos = Vector2(0, 0);
+			}
+			Vector2 shapePos(body->GetWorldPoint(localPos));
 
 			// get the collidable identifier
 			unsigned int targetId = reinterpret_cast<unsigned int>(body->GetUserData());
@@ -241,7 +270,7 @@ void Aimer::Control(float aStep)
 				continue;
 
 			// get range
-			Vector2 dir(transform.Transform(Vector2(body->GetPosition())));
+			Vector2 dir(transform.Transform(shapePos));
 			float range = dir.Length() - 0.5f * shapes[i]->GetSweepRadius();
 
 			// skip if out of range
@@ -261,6 +290,7 @@ void Aimer::Control(float aStep)
 				// use the new target
 				bestRange = range;
 				bestTargetId = targetId;
+				bestTargetPos = shapePos;
 			}
 		}
 
@@ -290,11 +320,11 @@ void Aimer::Control(float aStep)
 		mAim = targetEntity->GetPosition() - entity->GetPosition();
 	}
 
-	// in attack range?
-	bool inRange = mAim.LengthSq() < aimer.mAttack * aimer.mAttack;
+	// save range
+	float distSq = mAim.LengthSq();
 
 	// normalize aim
-	mAim *= InvSqrt(mAim.LengthSq());
+	mAim *= InvSqrt(distSq);
 
 	// move in aim direction
 	mMove = mAim;
@@ -331,6 +361,15 @@ void Aimer::Control(float aStep)
 
 	mMove *= InvSqrt(mMove.LengthSq());
 
-	// fire if lined up and within attack range
-	mFire[0] = inRange && (entity->GetTransform().y.Dot(mAim) > aimer.mAngle);
+	// get front vector
+	Vector2 front(entity->GetTransform().y);
+
+	// for each fire channel
+	for (int i = 0; i < Controller::FIRE_CHANNELS; ++i)
+	{
+		// fire if lined up and within attack range
+		mFire[i] = 
+			(distSq < aimer.mAttack[i] * aimer.mAttack[i]) &&
+			(front.Dot(mAim) > aimer.mAngle[i]);
+	}
 }

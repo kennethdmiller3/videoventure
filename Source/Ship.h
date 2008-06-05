@@ -7,9 +7,12 @@ class ShipTemplate
 {
 public:
 	// physics parameters
-	float mMaxVeloc;
+	float mReverseVeloc;
+	float mNeutralVeloc;
+	float mForwardVeloc;
+	float mStrafeVeloc;
+	float mMinAccel;
 	float mMaxAccel;
-	float mFriction;
 	float mMaxOmega;
 
 public:

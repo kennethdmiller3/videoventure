@@ -554,13 +554,13 @@ int ProcessCommand( unsigned int aCommand, char *aParam[], int aCount )
 		return ProcessCommandInt(OPENGL_MULTISAMPLE, aParam, aCount, InitWindowAction, "multisample: %d\n");
 
 	case 0x1ae79789 /* "viewsize" */:
-		return ProcessCommandFloat(VIEW_SIZE, aParam, aCount, InitWindowAction, "viewsize: %f\n");
+		return ProcessCommandFloat(VIEW_SIZE, aParam, aCount, NULL, "viewsize: %f\n");
 
 	case 0x8e6b4341 /* "viewaim" */:
-		return ProcessCommandFloat(VIEW_AIM, aParam, aCount, InitWindowAction, "viewaim: %f\n");
+		return ProcessCommandFloat(VIEW_AIM, aParam, aCount, NULL, "viewaim: %f\n");
 
 	case 0xd49cb7d3 /* "viewaimfilter" */:
-		return ProcessCommandFloat(VIEW_AIM_FILTER, aParam, aCount, InitWindowAction, "viewaimfilter: %f\n");
+		return ProcessCommandFloat(VIEW_AIM_FILTER, aParam, aCount, NULL, "viewaimfilter: %f\n");
 
 	case 0xf9d86f7b /* "input" */:
 		return ProcessCommandString(INPUT_CONFIG, aParam, aCount, InitInputAction, "input: %s\n");

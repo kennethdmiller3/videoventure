@@ -16,10 +16,12 @@ private:
 	Entry entry;
 
 public:
+	static const int FIRE_CHANNELS = 2;
+
 	// controls
 	Vector2 mMove;
 	Vector2 mAim;
-	bool mFire[2];
+	bool mFire[FIRE_CHANNELS];
 
 public:
 	Controller(unsigned int aId);
