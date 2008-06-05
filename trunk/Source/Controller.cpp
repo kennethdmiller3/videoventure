@@ -19,8 +19,7 @@ Controller::Controller(unsigned int aId)
 , mMove(0, 0)
 , mAim(0, 0)
 {
-	mFire[0] = false;
-	mFire[1] = false;
+	memset(mFire, 0, sizeof(mFire));
 }
 
 Controller::~Controller(void)
