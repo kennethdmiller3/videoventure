@@ -457,7 +457,7 @@
 			</drawlist>
 		</renderable>
 	</entity>
-	
+
 
 	<!-- test walls -->
 
@@ -953,7 +953,7 @@
 		</renderable>
 		<bullet life="6" damage="3" spawnondeath="enemyfireballexplosion" spawnonexpire="enemybulletexplosion"/>
 		<damagable health="1" spawnondeath="enemyfireballexplosion"/>
-		<aimer range="512" leading="0"/>
+		<aimer range="512" leading="0" category="3" bit3="0" bit4="0"/>
 		<ship forwardveloc="180" neutralveloc="180" reverseveloc="180" strafeveloc="0" maxaccel="360" minaccel="360" maxomega="6"/>
 		<team name="red"/>
 		<sound volume="0.5">
@@ -1154,7 +1154,6 @@
 				</pushmatrix>
 			</drawlist>
 		</renderable>
-		<aimer range="512" attack="192" leading="240"/>
 		<ship maxveloc="0" maxaccel="0" minaccel="0" maxomega="2"/>
 	</template>
 
@@ -1185,6 +1184,7 @@
 		<link name="gun" secondary="enemycannon">
 			<offset x="0" y="0" angle="0"/>
 		</link>
+		<aimer range="512" attack="192" leading="240" category="4" bit2="0" bit3="0" bit4="0"/>
 	</template>
 
 	<template name="enemyturret2" type="enemyturret">
@@ -1194,6 +1194,7 @@
 		<link name="rgun" secondary="enemycannon1">
 			<offset x="-2" y="0" angle="0"/>
 		</link>
+		<aimer range="512" attack="192" leading="240" category="4" bit2="0" bit3="0" bit4="0"/>
 	</template>
 
 	<template name="enemyturret3" type="enemyturret">
@@ -1206,13 +1207,14 @@
 		<link name="rgun" secondary="enemycannon1">
 			<offset x="-2.5" y="-1.5" angle="5"/>
 		</link>
+		<aimer range="512" attack="192" leading="240" category="4" bit2="0" bit3="0" bit4="0"/>
 	</template>
 
 	<template name="enemyturretmissile" type="enemyturret">
-		<aimer range="512" attack="256" leading="0"/>
 		<link name="gun" secondary="enemycannonmissile">
 			<offset x="0" y="0" angle="0"/>
 		</link>
+		<aimer range="512" attack="256" leading="0" category="3" bit3="0" bit4="0"/>
 	</template>
 
 	<template name="enemyturretmount1" type="enemyturret1">
@@ -1587,7 +1589,7 @@
 				<calllist name="bowtie"/>
 			</pushmatrix>
 		</renderable>
-		<aimer range="512" attack="128" leading="210" evade="2" close="64"/>
+		<aimer range="512" attack="128" leading="210" evade="2" close="64" category="3" bit3="0" bit4="0"/>
 		<ship maxveloc="120" maxaccel="480" minaccel="10" maxomega="2"/>
 		<damagable health="3" spawnondeath="enemyexplosion"/>
 		<weapon>
@@ -1897,7 +1899,7 @@
 				<calllist name="diamond"/>
 			</pushmatrix>
 		</renderable>
-		<aimer range="512" attack="64" leading="60" angle="180" evade="1" close="128"/>
+		<aimer range="512" attack="64" leading="60" angle="180" evade="1" close="128" category="4" bit2="0" bit3="0" bit4="0"/>
 		<ship maxveloc="60" maxaccel="120" minaccel="10" maxomega="3"/>
 		<damagable health="5" spawnondeath="enemyexplosion"/>
 		<weapon>
@@ -1986,7 +1988,7 @@
 		</renderable>
 		<bullet life="30" damage="3" ricochet="1" spawnondeath="enemyfireballexplosion" spawnonexpire="enemybulletexplosion"/>
 		<damagable health="1" spawnondeath="enemyfireballexplosion"/>
-		<aimer range="512" attack="0" leading="0"/>
+		<aimer range="512" attack="0" leading="0" category="3" bit3="0" bit4="0"/>
 		<ship maxveloc="120" maxaccel="360" minaccel="10" maxomega="1"/>
 		<team name="red"/>
 		<points value="100"/>
@@ -2052,7 +2054,7 @@
 				<rotate angle="180"/>
 			</repeat>
 		</renderable>
-		<aimer range="512" attack="192" leading="210" evade="1" close="64"/>
+		<aimer range="512" attack="192" leading="210" evade="1" close="64" category="3" bit3="0" bit4="0"/>
 		<ship maxveloc="90" maxaccel="90" minaccel="10" maxomega="2"/>
 		<damagable health="3" spawnondeath="enemyexplosion"/>
 		<weapon>
@@ -2119,7 +2121,7 @@
 				</triangle_strip>
 			</drawlist>
 		</renderable>
-		<aimer range="512" attack="128" leading="180" evade="1" close="64"/>
+		<aimer range="512" attack="128" leading="180" evade="1" close="64" category="4" bit2="0" bit3="0" bit4="0"/>
 		<ship maxveloc="120" maxaccel="240" minaccel="10" maxomega="2"/>
 		<damagable health="1" spawnondeath="enemyfireballexplosion"/>
 		<weapon>
@@ -2222,8 +2224,8 @@
 			</block>
 		</renderable>
 	</template>
-	
-	
+
+
 	<!-- enemy pod -->
 
 	<template name="enemyswarmerspawn">
@@ -2348,7 +2350,7 @@
 				<rotate angle="90"/>
 			</repeat>
 		</renderable>
-		<aimer range="512" attack="0" leading="90"/>
+		<aimer range="512" attack="0" leading="90" category="3" bit3="0" bit4="0"/>
 		<ship maxveloc="90" maxaccel="30" minaccel="10" maxomega="0.5"/>
 		<damagable health="5" spawnondeath="enemypodexplosion"/>
 		<team name="red"/>
@@ -2453,7 +2455,7 @@
 			<offset x="0" y="0" angle="337.5"/>
 		</link>
 	</template>
-	
+
 	<template name="enemyvapormine">
 		<collidable>
 			<body name="main">
@@ -2600,7 +2602,7 @@
 				</drawlist>
 			</pushmatrix>
 		</renderable>
-		<aimer range="512" attack="128" leading="240" evade="1" close="64"/>
+		<aimer range="512" attack1="128" attack2="128" angle2="180" leading="240" evade="1" close="64"/>
 		<ship maxveloc="60" maxaccel="120" minaccel="10" maxomega="2.0"/>
 		<damagable health="10" spawnondeath="enemyexplosion"/>
 		<link name="gun" secondary="enemyweapon">
@@ -2610,6 +2612,7 @@
 			<velocity x="0" y="0"/>
 			<inherit x="0" y="0"/>
 			<ordnance name="enemyphotonmine"/>
+			<trigger channel="2"/>
 			<shot delay="1"/>
 		</weapon>
 		<team name="red"/>
@@ -2655,7 +2658,7 @@
 				</pushmatrix>
 			</drawlist>
 		</renderable>
-		<aimer range="512" attack="192" leading="240"/>
+		<aimer range="512" attack="192" leading="240" category="4" bit2="0" bit3="0" bit4="0"/>
 		<team name="red"/>
 		<ship maxveloc="0" maxaccel="0" minaccel="0" maxomega="2"/>
 		<weapon>
@@ -2665,7 +2668,7 @@
 			<shot delay="0.2"/>
 		</weapon>
 	</template>
-	
+
 	<template name="enemywarrior">
 		<collidable>
 			<body name="main">
@@ -2763,13 +2766,13 @@
 			</drawlist>
 		</renderable>
 		<link name="turret" secondary="enemywarriorturret" updateangle="0"/>
-		<aimer range="512" attack="0" leading="0" evade="1" close="64"/>
+		<aimer range="512" attack="0" leading="0" evade="1" close="64" category="4" bit2="0" bit3="0" bit4="0"/>
 		<ship maxveloc="90" maxaccel="120" minaccel="10" maxomega="0.0"/>
 		<damagable health="15" spawnondeath="enemyexplosion"/>
 		<team name="red"/>
 		<points value="500"/>
 	</template>
-	
+
 
 	<!-- enemy tiny ship -->
 
@@ -2788,7 +2791,7 @@
 			<color r="1.0" g="0.2" b="0.1" a="1.0"/>
 			<calllist name="shiptiny"/>
 		</renderable>
-		<aimer range="512" attack="128" leading="240" evade="1" close="64"/>
+		<aimer range="512" attack="128" leading="240" evade="1" close="64" category="4" bit2="0" bit3="0" bit4="0"/>
 		<ship maxveloc="180" maxaccel="120" minaccel="10" maxomega="2"/>
 		<damagable health="1" spawnondeath="enemyfireballexplosion"/>
 		<link name="gun" secondary="enemyweapon">
@@ -2816,7 +2819,7 @@
 			<color r="1.0" g="0.2" b="0.1" a="1.0"/>
 			<calllist name="shipsmall"/>
 		</renderable>
-		<aimer range="512" attack="128" leading="240" evade="1" close="64"/>
+		<aimer range="512" attack="128" leading="240" evade="1" close="64" category="4" bit2="0" bit3="0" bit4="0"/>
 		<ship maxveloc="150" maxaccel="90" minaccel="10" maxomega="1.5"/>
 		<damagable health="3" spawnondeath="enemyexplosionsmall"/>
 		<link name="lgun" secondary="enemyweapon">
@@ -2876,7 +2879,7 @@
 				<calllist name="ship"/>
 			</drawlist>
 		</renderable>
-		<aimer range="512" attack="128" leading="240" angle="30" evade="1" close="64"/>
+		<aimer range="512" attack="128" leading="240" angle="30" evade="1" close="64" category="4" bit2="0" bit3="0" bit4="0"/>
 		<ship maxveloc="120" maxaccel="60" minaccel="10" maxomega="1"/>
 		<damagable health="10" spawnondeath="enemyexplosion"/>
 		<link name="lgun" secondary="enemyshipweapon0">
@@ -3196,7 +3199,7 @@
 			<spawn name="enemywarrior" start="5" cycle="32" track="0"/>
 		</spawner>
 	</template>
-	
+
 	<template name="enemyshipspawn">
 		<spawner>
 			<velocity x="0" y="180"/>
@@ -4853,8 +4856,8 @@
 			<cue name="fire" sound="friendpulseweapon"/>
 		</soundcue>
 	</template>
-	
-	
+
+
 	<!-- friend missile -->
 
 	<template name="friendmissile">
@@ -4912,9 +4915,9 @@
 				</triangles>
 			</drawlist>
 		</renderable>
-		<bullet life="6" damage="3" spawnondeath="friendfireballexplosion" spawnonexpire="friendbulletexplosion"/>
+		<bullet life="6" damage="3" spawnondeath="friendfireballexplosion" spawnonexpire="gunnerbulletexplosion"/>
 		<damagable health="1" spawnondeath="friendfireballexplosion"/>
-		<aimer range="512" leading="0"/>
+		<aimer range="512" leading="0" category="1" bit1="0" bit2="0"/>
 		<ship forwardveloc="180" neutralveloc="180" reverseveloc="180" strafeveloc="0" maxaccel="360" minaccel="360" maxomega="6"/>
 		<team name="blue"/>
 		<sound volume="0.5">
@@ -5028,7 +5031,67 @@
 	</template>
 
 
+	<!-- friend bullet explosion -->
+
+	<template name="friendbulletexplosion">
+		<explosion life="0.5"/>
+		<renderable radius="8">
+			<block length="0.1">
+				<pushmatrix>
+					<color>
+						<key time="0.0" r="1.0" g="1.0" b="1.0" a="1.0"/>
+						<key time="0.1" r="1.0" g="1.0" b="1.0" a="0.0"/>
+					</color>
+					<scale>
+						<key time="0.0" x="4.0" y="4.0"/>
+						<key time="0.1" x="0.0" y="0.0"/>
+					</scale>
+					<calllist name="circle16"/>
+				</pushmatrix>
+				<pushmatrix>
+					<color>
+						<key time="0.0" r="1.0" g="1.0" b="1.0" a="0.1"/>
+						<key time="0.1" r="1.0" g="1.0" b="1.0" a="0.0"/>
+					</color>
+					<scale>
+						<key time="0.0" x="4.0" y="4.0"/>
+						<key time="0.1" x="16.0" y="16.0"/>
+					</scale>
+					<calllist name="circle16"/>
+				</pushmatrix>
+			</block>
+			<block length="0.5">
+				<pushmatrix>
+					<color>
+						<key time="0.0" r="0.9" g="0.8" b="1.0" a="1.0"/>
+						<key time="0.5" r="0.5" g="0.0" b="1.0" a="0.0"/>
+					</color>
+					<scale>
+						<key time="0.0" x="3.0" y="3.0"/>
+						<key time="0.5" x="0.0" y="0.0"/>
+					</scale>
+					<calllist name="circle16"/>
+				</pushmatrix>
+			</block>
+			<block length="0.3">
+				<pushmatrix>
+					<color>
+						<key time="0.0" r="0.7" g="0.4" b="1.0" a="0.5"/>
+						<key time="0.3" r="0.0" g="0.0" b="1.0" a="0.0"/>
+					</color>
+					<scale>
+						<key time="0.0" x="4.0" y="4.0"/>
+						<key time="0.3" x="8.0" y="8.0"/>
+					</scale>
+					<calllist name="circle16"/>
+				</pushmatrix>
+			</block>
+		</renderable>
+	</template>
+
+
 	<!-- friend bullet -->
+
 	<template name="friendbullet">
 		<collidable>
 			<body name="main">
@@ -5062,7 +5125,7 @@
 				</pushmatrix>
 			</drawlist>
 		</renderable>
-		<bullet life="1.0" damage="1" spawnondeath="playerbulletexplosion"/>
+		<bullet life="1.0" damage="1" spawnondeath="friendbulletexplosion"/>
 	</template>
 
 
@@ -5182,6 +5245,7 @@
 		<link name="gun" secondary="friendcannon">
 			<offset x="0" y="0" angle="0"/>
 		</link>
+		<aimer range="512" attack="192" leading="360" category="2" bit1="0" bit2="0" bit4="0"/>
 	</template>
 
 	<template name="friendturret2" type="friendturret">
@@ -5191,6 +5255,7 @@
 		<link name="rgun" secondary="friendcannon1">
 			<offset x="-2" y="0" angle="0"/>
 		</link>
+		<aimer range="512" attack="192" leading="360" category="2" bit1="0" bit2="0" bit4="0"/>
 	</template>
 
 	<template name="friendturret3" type="friendturret">
@@ -5203,18 +5268,21 @@
 		<link name="rgun" secondary="friendcannon1">
 			<offset x="-2.5" y="-1.5" angle="5"/>
 		</link>
+		<aimer range="512" attack="192" leading="360" category="2" bit1="0" bit2="0" bit4="0"/>
 	</template>
 
 	<template name="friendturretmissile" type="friendturret">
 		<link name="gun" secondary="friendcannonmissile">
 			<offset x="0" y="0" angle="0"/>
 		</link>
+		<aimer range="512" attack="256" leading="0" category="1" bit1="0" bit2="0"/>
 	</template>
 
 	<template name="friendturretforce" type="friendturret">
 		<link name="gun" secondary="forcecannon">
 			<offset x="0" y="0" angle="0"/>
 		</link>
+		<aimer range="512" attack="192" leading="360" category="2" bit1="0" bit2="0" bit4="0"/>
 	</template>
 
 	<template name="friendturretmount1" type="friendturret1">
@@ -5301,14 +5369,14 @@
 		</spawner>
 	</template>
 
-	<template name="friendturretforcespawn">
+	<template name="friendturretmissilespawn">
 		<spawner>
-			<spawn name="friendturretpodforce" start="0" cycle="5" track="1"/>
+			<spawn name="friendturretpodmissile" start="0" cycle="5" track="1"/>
 		</spawner>
 	</template>
 
 	<template name="friendturretcluster">
-		<link name="friendturretforce" secondary="friendturretforcespawn">
+		<link name="friendturretmissile" secondary="friendturretmissilespawn">
 			<offset x="0" y="0"/>
 		</link>
 		<link name="friendturret3" secondary="friendturret3spawn">
@@ -5577,7 +5645,7 @@
 				<calllist name="bowtie"/>
 			</pushmatrix>
 		</renderable>
-		<aimer range="512" attack="128" leading="210" evade="2" close="64"/>
+		<aimer range="512" attack="128" leading="210" evade="2" close="64" category="1" bit1="0" bit2="0"/>
 		<ship maxveloc="120" maxaccel="480" minaccel="10" maxomega="2"/>
 		<damagable health="3" spawnondeath="friendexplosion"/>
 		<weapon>
@@ -5880,7 +5948,7 @@
 				<calllist name="diamond"/>
 			</pushmatrix>
 		</renderable>
-		<aimer range="512" attack="64" leading="60" angle="180" evade="1" close="128"/>
+		<aimer range="512" attack="64" leading="60" angle="180" evade="1" close="128" category="2" bit1="0" bit2="0" bit4="0"/>
 		<ship maxveloc="60" maxaccel="120" minaccel="10" maxomega="3"/>
 		<damagable health="5" spawnondeath="friendexplosion"/>
 		<weapon>
@@ -5972,7 +6040,7 @@
 		</sound>
 		<damagable health="1" spawnondeath="friendfireballexplosion"/>
 		<aimer range="512" attack="0" leading="0"/>
-		<ship maxveloc="120" maxaccel="360" minaccel="10" maxomega="1"/>
+		<ship maxveloc="120" maxaccel="360" minaccel="10" maxomega="1" category="1" bit1="0" bit2="0"/>
 		<team name="blue"/>
 		<points value="100"/>
 		<spawner>
@@ -6037,7 +6105,7 @@
 				<rotate angle="180"/>
 			</repeat>
 		</renderable>
-		<aimer range="512" attack="192" leading="210" evade="1" close="64"/>
+		<aimer range="512" attack="192" leading="210" evade="1" close="64" category="1" bit1="0" bit2="0"/>
 		<ship maxveloc="90" maxaccel="90" minaccel="10" maxomega="2"/>
 		<damagable health="3" spawnondeath="friendexplosion"/>
 		<weapon>
@@ -6098,7 +6166,7 @@
 				</triangle_strip>
 			</drawlist>
 		</renderable>
-		<aimer range="512" attack="128" leading="180" evade="1" close="64"/>
+		<aimer range="512" attack="128" leading="180" evade="1" close="64" category="2" bit1="0" bit2="0" bit4="0"/>
 		<ship maxveloc="120" maxaccel="240" minaccel="10" maxomega="2"/>
 		<damagable health="1" spawnondeath="friendfireballexplosion"/>
 		<weapon>
@@ -6577,7 +6645,7 @@
 				</drawlist>
 			</pushmatrix>
 		</renderable>
-		<aimer range="512" attack="128" leading="240" evade="1" close="64"/>
+		<aimer range="512" attack1="128" attack2="128" angle2="180" leading="240" evade="1" close="64"/>
 		<ship maxveloc="60" maxaccel="120" minaccel="10" maxomega="2.0"/>
 		<damagable health="10" spawnondeath="friendexplosion"/>
 		<link name="gun" secondary="friendweapon">
@@ -6632,7 +6700,7 @@
 				</pushmatrix>
 			</drawlist>
 		</renderable>
-		<aimer range="512" attack="192" leading="240"/>
+		<aimer range="512" attack="192" leading="240" category="2" bit1="0" bit2="0" bit4="0"/>
 		<team name="blue"/>
 		<ship maxveloc="0" maxaccel="0" minaccel="0" maxomega="2"/>
 		<weapon>
@@ -6740,7 +6808,7 @@
 			</drawlist>
 		</renderable>
 		<link name="turret" secondary="friendwarriorturret" updateangle="0"/>
-		<aimer range="512" attack="0" leading="0" evade="1" close="64"/>
+		<aimer range="512" attack="0" leading="0" evade="1" close="64" category="2" bit1="0" bit2="0" bit4="0"/>
 		<ship maxveloc="90" maxaccel="120" minaccel="10" maxomega="0.0"/>
 		<damagable health="15" spawnondeath="friendexplosion"/>
 		<team name="blue"/>
@@ -6765,7 +6833,7 @@
 			<color r="0.1" g="0.2" b="1.0" a="1.0"/>
 			<calllist name="shiptiny"/>
 		</renderable>
-		<aimer range="512" attack="128" leading="240" evade="1" close="64"/>
+		<aimer range="512" attack="128" leading="240" evade="1" close="64" category="2" bit1="0" bit2="0" bit4="0"/>
 		<ship maxveloc="180" maxaccel="120" minaccel="10" maxomega="2"/>
 		<damagable health="1" spawnondeath="friendfireballexplosion"/>
 		<link name="gun" secondary="friendweapon">
@@ -6793,7 +6861,7 @@
 			<color r="0.1" g="0.2" b="1.0" a="1.0"/>
 			<calllist name="shipsmall"/>
 		</renderable>
-		<aimer range="512" attack="128" leading="240" evade="1" close="64"/>
+		<aimer range="512" attack="128" leading="240" evade="1" close="64" category="2" bit1="0" bit2="0" bit4="0"/>
 		<ship maxveloc="150" maxaccel="90" minaccel="10" maxomega="1.5"/>
 		<damagable health="3" spawnondeath="friendexplosionsmall"/>
 		<link name="lgun" secondary="friendweapon">
@@ -6853,7 +6921,7 @@
 				<calllist name="ship"/>
 			</drawlist>
 		</renderable>
-		<aimer range="512" attack="128" leading="240" angle="30" evade="1" close="64"/>
+		<aimer range="512" attack="128" leading="240" angle="30" evade="1" close="64" category="2" bit1="0" bit2="0" bit4="0"/>
 		<ship maxveloc="120" maxaccel="60" minaccel="10" maxomega="1"/>
 		<damagable health="10" spawnondeath="friendexplosion"/>
 		<link name="lgun" secondary="friendshipweapon0">
@@ -7121,5 +7189,5 @@
 		<team name="blue"/>
 		<points value="2500"/>
 	</template>
-	
+
 </world>

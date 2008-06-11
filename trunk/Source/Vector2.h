@@ -20,7 +20,7 @@ public:
 	{
 	}
 
-	explicit Vector2(const b2Vec2 &v)
+	Vector2(const b2Vec2 &v)
 		: x(v.x), y(v.y)
 	{
 	}

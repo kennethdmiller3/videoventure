@@ -88,6 +88,8 @@ AimerTemplate::AimerTemplate(void)
 : mPeriod(1.0f)
 , mRange(0.0f)
 , mFocus(1.0f)
+, mCategoryBits(0xFFFF)
+, mMaskBits(0xFFFF)
 , mLeading(0.0f)
 , mEvade(0.0f)
 , mClose(0.0f)
@@ -110,6 +112,24 @@ bool AimerTemplate::Configure(const TiXmlElement *element)
 	element->QueryFloatAttribute("period", &mPeriod);
 	element->QueryFloatAttribute("range", &mRange);
 	element->QueryFloatAttribute("focus", &mFocus);
+
+	int category = 0;
+	if (element->QueryIntAttribute("category", &category) == TIXML_SUCCESS)
+		mCategoryBits = (category >= 0) ? (1<<category) : 0;
+
+	char buf[16];
+	for (int i = 0; i < 16; i++)
+	{
+		sprintf(buf, "bit%d", i);
+		int bit = 0;
+		if (element->QueryIntAttribute(buf, &bit) == TIXML_SUCCESS)
+		{
+			if (bit)
+				mMaskBits |= (1 << i);
+			else
+				mMaskBits &= ~(1 << i);
+		}
+	}
 
 	// attack
 	for (int i = 0; i < Controller::FIRE_CHANNELS; ++i)
@@ -139,6 +159,7 @@ bool AimerTemplate::Configure(const TiXmlElement *element)
 Aimer::Aimer(const AimerTemplate &aTemplate, unsigned int aId)
 : Controller(aId)
 , mTarget(0)
+, mOffset(0, 0)
 , mDelay(aTemplate.mPeriod * aId / UINT_MAX)
 {
 }
@@ -230,6 +251,14 @@ void Aimer::Control(float aStep)
 		// for each shape...
 		for (int32 i = 0; i < count; ++i)
 		{
+			// skip unhittable shapes
+			if (shapes[i]->IsSensor())
+				continue;
+			if ((shapes[i]->GetFilterData().maskBits & aimer.mCategoryBits) == 0)
+				continue;
+			if ((shapes[i]->GetFilterData().categoryBits & aimer.mMaskBits) == 0)
+				continue;
+
 			// get the parent body
 			b2Body* body = shapes[i]->GetBody();
 
@@ -237,9 +266,9 @@ void Aimer::Control(float aStep)
 			b2Vec2 localPos;
 			switch (shapes[i]->GetType())
 			{
-			case e_circleShape:		localPos = static_cast<b2CircleShape *>(shapes[i])->GetLocalPosition();
-			case e_polygonShape:	localPos = static_cast<b2PolygonShape *>(shapes[i])->GetCentroid();
-			default:				localPos = Vector2(0, 0);
+			case e_circleShape:		localPos = static_cast<b2CircleShape *>(shapes[i])->GetLocalPosition();	break;
+			case e_polygonShape:	localPos = static_cast<b2PolygonShape *>(shapes[i])->GetCentroid(); break;
+			default:				localPos = Vector2(0, 0); break;
 			}
 			Vector2 shapePos(body->GetWorldPoint(localPos));
 
@@ -290,12 +319,13 @@ void Aimer::Control(float aStep)
 				// use the new target
 				bestRange = range;
 				bestTargetId = targetId;
-				bestTargetPos = shapePos;
+				bestTargetPos = localPos;
 			}
 		}
 
 		// use the new target
 		mTarget = bestTargetId;
+		mOffset = bestTargetPos;
 	}
 
 	// do nothing if no target
@@ -307,17 +337,21 @@ void Aimer::Control(float aStep)
 	if (!targetEntity)
 		return;
 
+	// target entity transform
+	Matrix2 targetTransform(targetEntity->GetTransform());
+
 	// aim at target lead position
+	Vector2 targetPos = targetTransform.Transform(mOffset);
 	if (aimer.mLeading != 0.0f)
 	{
 		mAim = LeadTarget(aimer.mLeading,
-			targetEntity->GetPosition() - entity->GetPosition(),
+			targetPos - entity->GetPosition(),
 			targetEntity->GetVelocity() - entity->GetVelocity()
 			);
 	}
 	else
 	{
-		mAim = targetEntity->GetPosition() - entity->GetPosition();
+		mAim = targetPos - entity->GetPosition();
 	}
 
 	// save range
@@ -333,13 +367,12 @@ void Aimer::Control(float aStep)
 	if (aimer.mEvade)
 	{
 		// evade target's front vector
-		Matrix2 transform(targetEntity->GetTransform());
-		Vector2 local(transform.Untransform(entity->GetPosition()));
+		Vector2 local(targetTransform.Untransform(entity->GetPosition()));
 		if (local.y > 0)
 		{
 			local *= InvSqrt(local.LengthSq());
 			float dir = local.x > 0 ? 1.0f : -1.0f;
-			mMove += aimer.mEvade * dir * local.y * local.y * local.y * transform.Rotate(Vector2(local.y, -local.x));
+			mMove += aimer.mEvade * dir * local.y * local.y * local.y * targetTransform.Rotate(Vector2(local.y, -local.x));
 		}
 	}
 
