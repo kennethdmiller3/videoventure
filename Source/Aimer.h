@@ -9,6 +9,8 @@ public:
 	float mPeriod;
 	float mRange;
 	float mFocus;
+	unsigned short mCategoryBits;
+	unsigned short mMaskBits;
 
 	// attack cone
 	float mAttack[2];
@@ -38,6 +40,7 @@ class Aimer :
 {
 protected:
 	unsigned int mTarget;
+	Vector2 mOffset;
 	float mDelay;
 
 
