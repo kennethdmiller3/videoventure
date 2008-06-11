@@ -5312,6 +5312,7 @@
 				<damping linear="10.0" angular="10.0"/>
 			</body>
 		</collidable>
+		<damagable health="10" spawnondeath="friendexplosion"/>
 		<points value="150"/>
 	</template>
 
@@ -5321,6 +5322,7 @@
 				<damping linear="10.0" angular="10.0"/>
 			</body>
 		</collidable>
+		<damagable health="10" spawnondeath="friendexplosion"/>
 		<points value="250"/>
 	</template>
 
@@ -5330,6 +5332,7 @@
 				<damping linear="10.0" angular="10.0"/>
 			</body>
 		</collidable>
+		<damagable health="10" spawnondeath="friendexplosion"/>
 		<points value="400"/>
 	</template>
 
@@ -5339,6 +5342,7 @@
 				<damping linear="10.0" angular="10.0"/>
 			</body>
 		</collidable>
+		<damagable health="10" spawnondeath="friendexplosion"/>
 		<points value="250"/>
 	</template>
 
@@ -5348,6 +5352,7 @@
 				<damping linear="10.0" angular="10.0"/>
 			</body>
 		</collidable>
+		<damagable health="10" spawnondeath="friendexplosion"/>
 		<points value="250"/>
 	</template>
 
