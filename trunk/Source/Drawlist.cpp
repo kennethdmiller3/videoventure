@@ -840,6 +840,45 @@ void ProcessDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buf
 		}
 		break;
 
+	case 0xe3e74f7e /* "blendfunc" */:
+		{
+			const char *src = element->Attribute("src");
+			GLenum srcfactor;
+			switch(Hash(src))
+			{
+			case 0x8b6fe763 /* "zero" */:					srcfactor = GL_ZERO; break;
+			default:
+			case 0xba2719ef /* "one" */:					srcfactor = GL_ONE; break;
+			case 0x7fe1449a /* "src_alpha" */:				srcfactor = GL_SRC_ALPHA; break;
+			case 0x1d491ada /* "one_minus_src_alpha" */:	srcfactor = GL_ONE_MINUS_SRC_ALPHA; break;
+			case 0x201e0c0f /* "dst_alpha" */:				srcfactor = GL_DST_ALPHA; break;
+			case 0x1ad7d24f /* "one_minus_dst_alpha" */:	srcfactor = GL_ONE_MINUS_DST_ALPHA; break;
+			case 0xc913d33c /* "dst_color" */:				srcfactor = GL_DST_COLOR; break;
+			case 0xc3cc067c /* "one_minus_dst_color" */:	srcfactor = GL_ONE_MINUS_DST_COLOR; break;
+			case 0xe03d4f7e /* "src_alpha_saturate" */:		srcfactor = GL_SRC_ALPHA_SATURATE; break;
+			}
+
+			const char *dst = element->Attribute("dst");
+			GLenum dstfactor;
+			switch(Hash(dst))
+			{
+			default:
+			case 0x8b6fe763 /* "zero" */:					dstfactor = GL_ZERO; break;
+			case 0xba2719ef /* "one" */:					dstfactor = GL_ONE; break;
+			case 0x4dba79b5 /* "src_color" */:				dstfactor = GL_SRC_COLOR; break;
+			case 0xd1d59af5 /* "one_minus_src_color" */:	dstfactor = GL_ONE_MINUS_SRC_COLOR; break;
+			case 0x7fe1449a /* "src_alpha" */:				dstfactor = GL_SRC_ALPHA; break;
+			case 0x1d491ada /* "one_minus_src_alpha" */:	dstfactor = GL_ONE_MINUS_SRC_ALPHA; break;
+			case 0x201e0c0f /* "dst_alpha" */:				dstfactor = GL_DST_ALPHA; break;
+			case 0x1ad7d24f /* "one_minus_dst_alpha" */:	dstfactor = GL_ONE_MINUS_DST_ALPHA; break;
+			}
+
+			buffer.push_back(DO_glBlendFunc);
+			buffer.push_back(srcfactor);
+			buffer.push_back(dstfactor);
+		}
+		break;
+
 	case 0xd2cf6b75 /* "calllist" */:
 		{
 			const char *name = element->Attribute("name");
@@ -1382,6 +1421,11 @@ void ExecuteDrawItems(const unsigned int buffer[], size_t count, float param, un
 
 		case DO_glBindTexture:
 			glBindTexture(itor[0], itor[1]);
+			itor += 2;
+			break;
+
+		case DO_glBlendFunc:
+			glBlendFunc(itor[0], itor[1]);
 			itor += 2;
 			break;
 

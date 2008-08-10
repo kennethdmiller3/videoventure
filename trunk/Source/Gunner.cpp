@@ -84,7 +84,7 @@ bool GunnerTemplate::Configure(const TiXmlElement *element)
 
 // Gunner Constructor
 Gunner::Gunner(const GunnerTemplate &aTemplate, unsigned int aId)
-: Simulatable(aId)
+: Updatable(aId)
 {
 	Entity *entity = Database::entity.Get(mId);
 #ifdef GUNNER_TRACK_DEQUE
@@ -107,8 +107,8 @@ Gunner::~Gunner(void)
 #endif
 }
 
-// Gunner Simulate
-void Gunner::Simulate(float aStep)
+// Gunner Update
+void Gunner::Update(float aStep)
 {
 	// get the owner
 	unsigned int aOwnerId = Database::backlink.Get(mId);

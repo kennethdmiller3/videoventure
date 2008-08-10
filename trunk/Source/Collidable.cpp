@@ -658,7 +658,6 @@ bool CollidableTemplate::ProcessMouseJointItem(const TiXmlElement *element, b2Mo
 	case 0x78e63274 /* "tuning" */:
 		element->QueryFloatAttribute("frequency", &joint.frequencyHz);
 		element->QueryFloatAttribute("damping", &joint.dampingRatio);
-		element->QueryFloatAttribute("timestep", &joint.timeStep);
 		return true;
 
 	default:
@@ -1281,7 +1280,7 @@ void Collidable::WorldDone(void)
 
 void Collidable::CollideAll(float aStep)
 {
-	world->Step(aStep, 16);
+	world->Step(aStep, 16, 16);
 	world->Validate();
 
 	// for each body...
@@ -1308,4 +1307,49 @@ void Collidable::CollideAll(float aStep)
 			}
 		}
 	}
+}
+
+unsigned int Collidable::TestSegment(const b2Segment &aSegment, float aRadius,
+									 unsigned int aCategoryBits, unsigned int aMaskBits, 
+									 float &aLambda, b2Vec2 &aNormal, b2Shape *&aShape)
+{
+	// get nearby shapes
+	b2AABB aabb;
+	aabb.lowerBound.Set(std::min(aSegment.p1.x, aSegment.p2.x) - aRadius, std::min(aSegment.p1.y, aSegment.p2.y) - aRadius);
+	aabb.upperBound.Set(std::max(aSegment.p1.x, aSegment.p2.x) + aRadius, std::max(aSegment.p1.y, aSegment.p2.y) + aRadius);
+	b2Shape* shapes[b2_maxProxies];
+	int32 count = world->Query(aabb, shapes, b2_maxProxies);
+
+	// hit anything?
+	unsigned hitId = 0;
+
+	// for each shape...
+	for (int32 i = 0; i < count; ++i)
+	{
+		// get the shape
+		b2Shape *shape = shapes[i];
+
+		// skip unhittable shapes
+		if (shape->IsSensor())
+			continue;
+		if ((shape->GetFilterData().maskBits & aCategoryBits) == 0)
+			continue;
+		if ((shape->GetFilterData().categoryBits & aMaskBits) == 0)
+			continue;
+
+		// get the parent body
+		b2Body* body = shape->GetBody();
+
+		// if the segment intersects the shape...
+		if (shape->TestSegment(body->GetXForm(), &aLambda, &aNormal, aSegment, aLambda, aRadius))
+		{
+			// update hit shape
+			aShape = shape;
+
+			// update hit entity identifier
+			hitId = reinterpret_cast<unsigned int>(body->GetUserData());
+		}
+	}
+
+	return hitId;
 }

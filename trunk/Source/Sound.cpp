@@ -156,8 +156,8 @@ namespace Database
 		public:
 			SoundInitializer()
 			{
-				AddActivate(0x1b5ef1be /* "soundtemplate" */, Entry(this, &SoundInitializer::Activate));
-				AddDeactivate(0x1b5ef1be /* "soundtemplate" */, Entry(this, &SoundInitializer::Deactivate));
+				AddActivate(0xf23cbd5f /* "soundcue" */, Entry(this, &SoundInitializer::Activate));
+				AddDeactivate(0xf23cbd5f /* "soundcue" */, Entry(this, &SoundInitializer::Deactivate));
 			}
 
 			void Activate(unsigned int aId)

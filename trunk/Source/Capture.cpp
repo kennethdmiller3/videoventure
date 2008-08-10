@@ -181,9 +181,8 @@ void Capture::Update(float aStep)
 		const float lookRadius = capture.mRadius;
 		aabb.lowerBound.Set(entity->GetPosition().x - lookRadius, entity->GetPosition().y - lookRadius);
 		aabb.upperBound.Set(entity->GetPosition().x + lookRadius, entity->GetPosition().y + lookRadius);
-		const int32 maxCount = 256;
-		b2Shape* shapes[maxCount];
-		int32 count = world->Query(aabb, shapes, maxCount);
+		b2Shape* shapes[b2_maxProxies];
+		int32 count = world->Query(aabb, shapes, b2_maxProxies);
 
 		// get team affiliation
 		unsigned int aTeam = Database::team.Get(mId);

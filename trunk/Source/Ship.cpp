@@ -186,13 +186,12 @@ void Ship::Simulate(float aStep)
 		const Vector2 &mMove = controller->mMove;
 		float control = std::min(mMove.LengthSq(), 1.0f);
 		float acc = Lerp(ship.mMinAccel, ship.mMaxAccel, control);
-		Matrix2 transform(entity->GetTransform());
-		Vector2 localmove(transform.Unrotate(mMove));
 		Vector2 localvel(
-			localmove.x * ship.mStrafeVeloc,
-			(localmove.y >= 0.0f)
-			? Lerp(ship.mNeutralVeloc, ship.mForwardVeloc, localmove.y)
-			: Lerp(ship.mNeutralVeloc, ship.mReverseVeloc, -localmove.y));
+			mMove.x * ship.mStrafeVeloc,
+			(mMove.y >= 0.0f)
+			? Lerp(ship.mNeutralVeloc, ship.mForwardVeloc, mMove.y)
+			: Lerp(ship.mNeutralVeloc, ship.mReverseVeloc, -mMove.y));
+		Matrix2 transform(entity->GetTransform());
 		Vector2 dv(transform.Rotate(localvel) - entity->GetVelocity());
 		float it = std::min(acc * InvSqrt(dv.LengthSq() + 0.0001f), 1.0f / aStep);
 		Vector2 new_thrust(dv * it * body->GetMass());
@@ -210,14 +209,7 @@ void Ship::Simulate(float aStep)
 
 	// apply steering
 	{
-		const Vector2 &mAim = controller->mAim;
-		float control = std::min(16.0f * mAim.LengthSq(), 1.0f);
-		float aim_angle = -atan2f(mAim.x, mAim.y) - entity->GetAngle();
-		if (aim_angle > float(M_PI))
-			aim_angle -= 2.0f*float(M_PI);
-		else if (aim_angle < -float(M_PI))
-			aim_angle += 2.0f*float(M_PI);
-		float new_omega = std::min(std::max(aim_angle / aStep, -ship.mMaxOmega * control), ship.mMaxOmega * control);
-		body->SetAngularVelocity(new_omega);
+		const float mTurn = controller->mTurn;
+		body->SetAngularVelocity(mTurn * ship.mMaxOmega);
 	}
 }

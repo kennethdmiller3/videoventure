@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Simulatable.h"
+#include "Updatable.h"
 
 //#define GUNNER_TRACK_DEQUE
 
@@ -20,7 +20,7 @@ public:
 
 // gunner actor
 class Gunner : 
-	public Simulatable
+	public Updatable
 {
 protected:
 #ifdef GUNNER_TRACK_DEQUE
@@ -40,8 +40,8 @@ public:
 	// destructor
 	~Gunner(void);
 
-	// simulate
-	virtual void Simulate(float aStep);
+	// update
+	virtual void Update(float aStep);
 };
 
 namespace Database

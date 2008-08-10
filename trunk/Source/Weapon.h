@@ -12,6 +12,9 @@ public:
 
 	// ordnance
 	unsigned int mOrdnance;
+	
+	// flash (tethered)
+	unsigned int mFlash;
 
 	// fire channel
 	int mChannel;

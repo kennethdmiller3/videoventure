@@ -45,6 +45,11 @@ public:
 		return *this;
 	}
 
+	friend const Vector2 operator-(const Vector2 &v)
+	{
+		return Vector2(-v.x, -v.y);
+	}
+
 	friend const Vector2 operator-(const Vector2 &v1, const Vector2 &v2)
 	{
 		return Vector2(v1.x - v2.x, v1.y - v2.y);
@@ -108,6 +113,11 @@ public:
 	float Dot(const Vector2 &v) const
 	{
 		return x * v.x + y * v.y;
+	}
+
+	float Cross(const Vector2 &v) const
+	{
+		return x * v.y - y * v.x;
 	}
 
 	float LengthSq(void) const

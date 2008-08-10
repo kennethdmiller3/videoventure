@@ -148,6 +148,13 @@ bool WeaponTemplate::Configure(const TiXmlElement *element)
 			}
 			break;
 
+		case 0xaf85ad29 /* "flash" */:
+			{
+				if (const char *flash = child->Attribute("name"))
+					mFlash = Hash(flash);
+			}
+			break;
+
 		case 0x75413203 /* "trigger" */:
 			{
 				if (child->QueryIntAttribute("channel", &mChannel) == TIXML_SUCCESS)
@@ -224,18 +231,45 @@ void Weapon::Update(float aStep)
 				// get the entity
 				Entity *entity = Database::entity.Get(mId);
 
-				// instantiate a bullet
-				Matrix2 transform(weapon.mOffset * entity->GetInterpolatedTransform(mTimer / aStep));
-				Vector2 velocity(transform.Rotate(weapon.mInherit * transform.Unrotate(entity->GetVelocity()) + weapon.mVelocity));
-				unsigned int ordId = Database::Instantiate(weapon.mOrdnance, Database::owner.Get(mId), 
-					transform.Angle(), transform.p, velocity, 0);
-
 				// start the sound cue
 				PlaySound(mId, 0x8eab16d9 /* "fire" */);
 
-				// set fractional turn
-				if (Renderable *renderable = Database::renderable.Get(ordId))
-					renderable->SetFraction(mTimer / aStep);
+				// interpolated offset
+				Matrix2 transform(weapon.mOffset * entity->GetInterpolatedTransform(mTimer / aStep));
+
+				if (weapon.mFlash)
+				{
+					// instantiate a flash
+					unsigned int flashId = Database::Instantiate(weapon.mFlash, Database::owner.Get(mId),
+						transform.Angle(), transform.p, entity->GetVelocity(), entity->GetOmega());
+
+					// set fractional turn
+					if (Renderable *renderable = Database::renderable.Get(flashId))
+						renderable->SetFraction(mTimer / aStep);
+
+					// link it (HACK)
+					LinkTemplate linktemplate;
+					linktemplate.mOffset = weapon.mOffset;
+					linktemplate.mSub = flashId;
+					linktemplate.mSecondary = flashId;
+					Link *link = new Link(linktemplate, mId);
+					Database::Typed<Link *> &links = Database::link.Open(mId);
+					links.Put(flashId, link);
+					Database::link.Close(mId);
+					link->Activate();
+				}
+
+				if (weapon.mOrdnance)
+				{
+					// instantiate a bullet
+					Vector2 velocity(transform.Rotate(weapon.mInherit * transform.Unrotate(entity->GetVelocity()) + weapon.mVelocity));
+					unsigned int ordId = Database::Instantiate(weapon.mOrdnance, Database::owner.Get(mId), 
+						transform.Angle(), transform.p, velocity, 0);
+
+					// set fractional turn
+					if (Renderable *renderable = Database::renderable.Get(ordId))
+						renderable->SetFraction(mTimer / aStep);
+				}
 
 				// wrap around
 				mPhase = weapon.mCycle - 1;

@@ -10,4 +10,5 @@ namespace Database
 	extern Typed<std::vector<unsigned int> > dynamicdrawlist;
 	extern Typed<GLuint> drawlist;
 	extern Typed<GLuint> texture;
+	extern Typed<Typed<float> > variable;
 }
