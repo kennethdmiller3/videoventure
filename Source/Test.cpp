@@ -1084,47 +1084,46 @@ void RunPlayState()
 		if (delta > 100)
 			delta = 100;
 
-		// delta time
-		float delta_time, delta_turns;
+		// frame time and turns
+		float frame_time;
+		float frame_turns;
 
 		if (singlestep)
 		{
 			singlestep = false;
 
-			// advance one frame
-			delta_time = TIME_SCALE / 60.0f / MOTIONBLUR_STEPS;
-
-			// turns to advance per step
-			delta_turns = delta_time * sim_rate;
+			// advance 1/60th of a second
+			frame_time = TIME_SCALE / 60.0f;
+			frame_turns = frame_time * sim_rate;
 		}
 		else if (paused)
 		{
 			// freeze time
-			delta_time = 0.0f;
-
-			// turns to advance per step
-			delta_turns = TIME_SCALE / 60.0f / MOTIONBLUR_STEPS * sim_rate;
+			frame_time = 0.0f;
+			frame_turns = 0.0f;
 
 			// set turn counter to almost reach a new turn
-			sim_turns = 0.99609375f - delta_turns * MOTIONBLUR_STEPS;
+			sim_turns = 0.99609375f;
 		}
 		else if (FIXED_STEP)
 		{
-			// turns to advance per step
-			delta_turns = TIME_SCALE / MOTIONBLUR_STEPS;
-
-			// time to advance per step
-			delta_time = delta_turns * sim_step;
-
+			// advance one simulation step
+			frame_time = TIME_SCALE * sim_step;
+			frame_turns = TIME_SCALE;
 		}
 		else
 		{
-			// time to advance per step
-			delta_time = delta * TIME_SCALE / 1000.0f / MOTIONBLUR_STEPS;
-
-			// turns to advance per step
-			delta_turns = delta_time * sim_rate;
+			// advance by frame time
+			frame_time = delta * TIME_SCALE / 1000.0f;
+			frame_turns = frame_time * sim_rate;
 		}
+
+		// turns per motion-blur step
+		float step_turns = std::min(TIME_SCALE * MOTIONBLUR_TIME, sim_step) / MOTIONBLUR_STEPS * sim_rate;
+
+		// advance to beginning of motion blur steps
+		sim_turns += frame_turns;
+		sim_turns -= MOTIONBLUR_STEPS * step_turns;
 
 		// for each motion-blur step
 		for (int blur = 0; blur < MOTIONBLUR_STEPS; ++blur)
@@ -1149,7 +1148,7 @@ void RunPlayState()
 			glScalef( -1.0f, -1.0f, -1.0f );
 
 			// advance the sim timer
-			sim_turns += delta_turns;
+			sim_turns += step_turns;
 
 			// while simulation turns to run...
 			while (sim_turns >= 1.0f)
@@ -1388,9 +1387,6 @@ void RunPlayState()
 		{
 			// return the accumulated image
 			glAccum(GL_RETURN, 1);
-
-			// return time to real time
-			delta_time *= MOTIONBLUR_STEPS;
 		}
 
 		// switch blend mode
@@ -1495,7 +1491,7 @@ void RunPlayState()
 
 			// update pulse
 			static float pulsetimer = 0.0f;
-			pulsetimer += delta_time * (1.0f + (1.0f - health) * (1.0f - health) * 4.0f);
+			pulsetimer += frame_time * (1.0f + (1.0f - health) * (1.0f - health) * 4.0f);
 			while (pulsetimer >= 1.0f)
 				pulsetimer -= 1.0f;
 			float pulse = sinf(pulsetimer * float(M_PI));
@@ -1562,11 +1558,11 @@ void RunPlayState()
 			glEnd();
 
 			// if the drain delay elapsed...
-			draindelay[playerindex] -= delta_time;
+			draindelay[playerindex] -= frame_time;
 			if (draindelay[playerindex] <= 0)
 			{
 				// update drain
-				drain[playerindex] -= DRAIN_RATE * delta_time;
+				drain[playerindex] -= DRAIN_RATE * frame_time;
 				if (drain[playerindex] < fill[playerindex])
 					drain[playerindex] = fill[playerindex];
 			}
@@ -1575,7 +1571,7 @@ void RunPlayState()
 			for (int i = 0; i < flashcount[playerindex]; ++i)
 			{
 				Flash &flashinfo = flash[playerindex][i];
-				flashinfo.fade -= FLASH_RATE * delta_time;
+				flashinfo.fade -= FLASH_RATE * frame_time;
 				if (flashinfo.fade <= 0.0f)
 				{
 					flashcount[playerindex] = i;
