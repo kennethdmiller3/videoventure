@@ -53,6 +53,10 @@ bool DEBUGPRINT_OUTPUTSTDERR = false;
 bool PROFILER_OUTPUTSCREEN = false;
 bool PROFILER_OUTPUTPRINT = false;
 
+// frame rate indicator
+bool FRAMERATE_OUTPUTSCREEN = false;
+bool FRAMERATE_OUTPUTPRINT = false;
+
 // simulation attributes
 int SIMULATION_RATE = 60;
 float TIME_SCALE = 1.0f;
@@ -96,6 +100,8 @@ extern "C" void OGLCONSOLE_Resize(OGLCONSOLE_Console console);
 #define GET_PERFORMANCE_DETAILS
 #define PRINT_PERFORMANCE_DETAILS
 #define DRAW_PERFORMANCE_DETAILS
+#define PRINT_PERFORMANCE_FRAMERATE
+#define DRAW_PERFORMANCE_FRAMERATE
 //#define PRINT_SIMULATION_TIMER
 #define TRACE_OPENGL_ATTRIBUTES
 
@@ -634,6 +640,12 @@ int ProcessCommand( unsigned int aCommand, char *aParam[], int aCount )
 	case 0x85e872f9 /* "profileprint" */:
 		return ProcessCommandBool(PROFILER_OUTPUTPRINT, aParam, aCount, NULL, "profileprint: %d\n");
 
+	case 0x24ce5450 /* "frameratescreen" */:
+		return ProcessCommandBool(FRAMERATE_OUTPUTSCREEN, aParam, aCount, NULL, "frameratescreen: %d\n");
+
+	case 0x55cfbc33 /* "framerateprint" */:
+		return ProcessCommandBool(FRAMERATE_OUTPUTPRINT, aParam, aCount, NULL, "framerateprint: %d\n");
+
 	case 0xa165ddb8 /* "database" */:
 		if (aCount >= 1)
 		{
@@ -972,7 +984,11 @@ void RunPlayState()
 	LONGLONG update_time[NUM_SAMPLES] = { 0 };
 	LONGLONG render_time[NUM_SAMPLES] = { 0 };
 	LONGLONG display_time[NUM_SAMPLES] = { 0 };
+	LONGLONG total_time[NUM_SAMPLES] = { 0 };
 	int profile_index = -1;
+
+	LARGE_INTEGER perf_lastframe;
+	QueryPerformanceCounter(&perf_lastframe);
 #endif
 
 #ifdef COLLECT_DEBUG_DRAW
@@ -988,6 +1004,7 @@ void RunPlayState()
 	// quit flag
 	bool quit = false;
 
+
 	// wait for user exit
 	do
 	{
@@ -1002,6 +1019,7 @@ void RunPlayState()
 		update_time[profile_index] = 0;
 		render_time[profile_index] = 0;
 		display_time[profile_index] = 0;
+		total_time[profile_index] = 0;
 #endif
 
 		// INPUT PHASE
@@ -1721,15 +1739,6 @@ void RunPlayState()
 			++playerindex;
 		}
 
-		// reset camera transform
-		glMatrixMode(GL_PROJECTION);
-		glPopMatrix();
-		glMatrixMode(GL_MODELVIEW);
-		glPopMatrix();
-
-		// restore blend mode
-		glPopAttrib();
-
 #ifdef GET_PERFORMANCE_DETAILS
 		if (!OPENGL_SWAPCONTROL)
 		{
@@ -1753,21 +1762,6 @@ void RunPlayState()
 #ifdef DRAW_PERFORMANCE_DETAILS
 		if (PROFILER_OUTPUTSCREEN)
 		{
-			// switch blend mode
-			glPushAttrib(GL_COLOR_BUFFER_BIT);
-			glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
-
-			// push projection transform
-			glMatrixMode(GL_PROJECTION);
-			glPushMatrix();
-			glLoadIdentity();
-			glOrtho(0, 640, 480, 0, -1, 1);
-
-			// use 640x480 screen coordinates
-			glMatrixMode(GL_MODELVIEW);
-			glPushMatrix();
-			glLoadIdentity();
-
 			struct BandInfo
 			{
 				const LONGLONG * time;
@@ -1818,15 +1812,6 @@ void RunPlayState()
 				}
 			}
 			glEnd();
-
-			// reset camera transform
-			glMatrixMode(GL_PROJECTION);
-			glPopMatrix();
-			glMatrixMode(GL_MODELVIEW);
-			glPopMatrix();
-
-			// restore blend mode
-			glPopAttrib();
 		}
 #endif
 
@@ -1842,7 +1827,82 @@ void RunPlayState()
 				1000000 * display_time[profile_index] / perf_freq.QuadPart);
 		}
 #endif
+
+		// update frame timer
+		LARGE_INTEGER perf_thisframe;
+		QueryPerformanceCounter(&perf_thisframe);
+		total_time[profile_index] = perf_thisframe.QuadPart - perf_lastframe.QuadPart;
+		perf_lastframe = perf_thisframe;
+
+#if defined(PRINT_PERFORMANCE_FRAMERATE) || defined(DRAW_PERFORMANCE_FRAMERATE)
+		if (FRAMERATE_OUTPUTSCREEN || FRAMERATE_OUTPUTPRINT)
+		{
+			// compute minimum, maximum, and average frame times over the past second
+			LONGLONG total_min = LLONG_MAX;
+			LONGLONG total_max = LLONG_MIN;
+			LONGLONG total_sum = 0;
+			LONGLONG total_samples = 0;
+			int i = profile_index;
+			do
+			{
+				total_min = std::min(total_min, total_time[i]);
+				total_max = std::max(total_max, total_time[i]);
+				total_sum += total_time[i];
+				++total_samples;
+				i = (i > 0) ? i - 1 : NUM_SAMPLES - 1;
+			}
+			while (total_sum <= perf_freq.QuadPart && i != profile_index);
+			total_sum /= total_samples;
+
+			// compute frame rates
+			double rate_max = (double)perf_freq.QuadPart / total_min;
+			double rate_avg = (double)perf_freq.QuadPart / total_sum;
+			double rate_min = (double)perf_freq.QuadPart / total_max;
+
+#if defined(DRAW_PERFORMANCE_FRAMERATE)
+			if (FRAMERATE_OUTPUTSCREEN)
+			{
+				// draw frame rate indicator
+				glEnable(GL_TEXTURE_2D);
+				glBindTexture(GL_TEXTURE_2D, OGLCONSOLE_glFontHandle);
+
+				glBegin(GL_QUADS);
+
+				char fps[16];
+				sprintf(fps, "%.2f max", rate_max);
+				glColor4f(0.5f, 0.5f, 0.5f, 1.0f);
+				OGLCONSOLE_DrawString(fps, 640 - 16 - 8 * strlen(fps), 16, 8, -8, 0);
+				sprintf(fps, "%.2f avg", rate_avg);
+				glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+				OGLCONSOLE_DrawString(fps, 640 - 16 - 8 * strlen(fps), 24, 8, -8, 0);
+				sprintf(fps, "%.2f min", rate_min);
+				glColor4f(0.5f, 0.5f, 0.5f, 1.0f);
+				OGLCONSOLE_DrawString(fps, 640 - 16 - 8 * strlen(fps), 32, 8, -8, 0);
+
+				glEnd();
+
+				glDisable(GL_TEXTURE_2D);
+			}
 #endif
+
+#if defined(PRINT_PERFORMANCE_FRAMERATE)
+			if (FRAMERATE_OUTPUTPRINT)
+			{
+				DebugPrint("%.2f<%.2f<%.2f\n", rate_min, rate_avg, rate_max);
+			}
+#endif
+		}
+#endif
+#endif
+
+		// reset camera transform
+		glMatrixMode(GL_PROJECTION);
+		glPopMatrix();
+		glMatrixMode(GL_MODELVIEW);
+		glPopMatrix();
+
+		// restore blend mode
+		glPopAttrib();
 
 		/* Render our console */
 		OGLCONSOLE_Draw();
