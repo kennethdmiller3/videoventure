@@ -1267,7 +1267,7 @@ size_t ExecuteDrawData(const unsigned int buffer[], size_t count, int width, flo
 		break;
 
 	default:
-		DebugPrint("Unrecognized drawlist datatype 0x%08x at index %d", *(itor-1), itor-buffer);
+		DebugPrint("Unrecognized drawlist datatype 0x%08x at index %d\n", *(itor-1), itor-buffer);
 		break;
 	}
 
@@ -1796,7 +1796,7 @@ void ExecuteDrawItems(const unsigned int buffer[], size_t count, float param, un
 #endif
 
 		default:
-			DebugPrint("Unrecognized drawlist operation 0x%08x at index %d", *(itor-1), itor-buffer);
+			DebugPrint("Unrecognized drawlist operation 0x%08x at index %d\n", *(itor-1), itor-buffer);
 			break;
 		}
 	}

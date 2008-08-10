@@ -1,0 +1,167 @@
+Index: Source/Collision/b2BroadPhase.cpp
+===================================================================
+--- Source/Collision/b2BroadPhase.cpp	(revision 170)
++++ Source/Collision/b2BroadPhase.cpp	(working copy)
+@@ -141,8 +141,8 @@
+ 
+ void b2BroadPhase::ComputeBounds(uint16* lowerValues, uint16* upperValues, const b2AABB& aabb)
+ {
+-	b2Assert(aabb.upperBound.x > aabb.lowerBound.x);
+-	b2Assert(aabb.upperBound.y > aabb.lowerBound.y);
++	b2Assert(aabb.upperBound.x >= aabb.lowerBound.x);
++	b2Assert(aabb.upperBound.y >= aabb.lowerBound.y);
+ 
+ 	b2Vec2 minVertex = b2Clamp(aabb.lowerBound, m_worldAABB.lowerBound, m_worldAABB.upperBound);
+ 	b2Vec2 maxVertex = b2Clamp(aabb.upperBound, m_worldAABB.lowerBound, m_worldAABB.upperBound);
+Index: Source/Collision/Shapes/b2CircleShape.cpp
+===================================================================
+--- Source/Collision/Shapes/b2CircleShape.cpp	(revision 170)
++++ Source/Collision/Shapes/b2CircleShape.cpp	(working copy)
+@@ -37,11 +37,11 @@
+ 	m_sweepRadius = d.Length() + m_radius - b2_toiSlop;
+ }
+ 
+-bool b2CircleShape::TestPoint(const b2XForm& transform, const b2Vec2& p) const
++bool b2CircleShape::TestPoint(const b2XForm& transform, const b2Vec2& p, float expand) const
+ {
+ 	b2Vec2 center = transform.position + b2Mul(transform.R, m_localPosition);
+ 	b2Vec2 d = p - center;
+-	return b2Dot(d, d) <= m_radius * m_radius;
++	return b2Dot(d, d) <= (m_radius + expand) * (m_radius + expand);
+ }
+ 
+ // Collision Detection in Interactive 3D Environments by Gino van den Bergen
+@@ -52,11 +52,12 @@
+ 								float32* lambda,
+ 								b2Vec2* normal,
+ 								const b2Segment& segment,
+-								float32 maxLambda) const
++								float32 maxLambda,
++								float expand) const
+ {
+ 	b2Vec2 position = transform.position + b2Mul(transform.R, m_localPosition);
+ 	b2Vec2 s = segment.p1 - position;
+-	float32 b = b2Dot(s, s) - m_radius * m_radius;
++	float32 b = b2Dot(s, s) - (m_radius + expand) * (m_radius + expand);
+ 
+ 	// Does the segment start inside the circle?
+ 	if (b < 0.0f)
+Index: Source/Collision/Shapes/b2CircleShape.h
+===================================================================
+--- Source/Collision/Shapes/b2CircleShape.h	(revision 170)
++++ Source/Collision/Shapes/b2CircleShape.h	(working copy)
+@@ -40,14 +40,15 @@
+ {
+ public:
+ 	/// @see b2Shape::TestPoint
+-	bool TestPoint(const b2XForm& transform, const b2Vec2& p) const;
++	bool TestPoint(const b2XForm& transform, const b2Vec2& p, float expand = 0.0f) const;
+ 
+ 	/// @see b2Shape::TestSegment
+ 	bool TestSegment(	const b2XForm& transform,
+ 						float32* lambda,
+ 						b2Vec2* normal,
+ 						const b2Segment& segment,
+-						float32 maxLambda) const;
++						float32 maxLambda,
++						float expand = 0.0f) const;
+ 
+ 	/// @see b2Shape::ComputeAABB
+ 	void ComputeAABB(b2AABB* aabb, const b2XForm& transform) const;
+Index: Source/Collision/Shapes/b2PolygonShape.cpp
+===================================================================
+--- Source/Collision/Shapes/b2PolygonShape.cpp	(revision 170)
++++ Source/Collision/Shapes/b2PolygonShape.cpp	(working copy)
+@@ -242,14 +242,14 @@
+ 	}
+ }
+ 
+-bool b2PolygonShape::TestPoint(const b2XForm& xf, const b2Vec2& p) const
++bool b2PolygonShape::TestPoint(const b2XForm& xf, const b2Vec2& p, float expand) const
+ {
+ 	b2Vec2 pLocal = b2MulT(xf.R, p - xf.position);
+ 
+ 	for (int32 i = 0; i < m_vertexCount; ++i)
+ 	{
+ 		float32 dot = b2Dot(m_normals[i], pLocal - m_vertices[i]);
+-		if (dot > 0.0f)
++		if (dot > expand)
+ 		{
+ 			return false;
+ 		}
+@@ -263,7 +263,8 @@
+ 	float32* lambda,
+ 	b2Vec2* normal,
+ 	const b2Segment& segment,
+-	float32 maxLambda) const
++	float32 maxLambda,
++	float32 expand) const
+ {
+ 	float32 lower = 0.0f, upper = maxLambda;
+ 
+@@ -277,7 +278,7 @@
+ 		// p = p1 + a * d
+ 		// dot(normal, p - v) = 0
+ 		// dot(normal, p1 - v) + a * dot(normal, d) = 0
+-		float32 numerator = b2Dot(m_normals[i], m_vertices[i] - p1);
++		float32 numerator = b2Dot(m_normals[i], m_vertices[i] - p1) + expand;
+ 		float32 denominator = b2Dot(m_normals[i], d);
+ 
+ 		// Note: we want this predicate without division:
+@@ -285,6 +286,11 @@
+ 		// Since denominator < 0, we have to flip the inequality:
+ 		// lower < numerator / denominator <==> denominator * lower > numerator.
+ 
++		if (denominator == 0.0f && numerator < 0.0f)
++		{
++			return false;
++		}
++
+ 		if (denominator < 0.0f && numerator < lower * denominator)
+ 		{
+ 			// Increase lower.
+Index: Source/Collision/Shapes/b2PolygonShape.h
+===================================================================
+--- Source/Collision/Shapes/b2PolygonShape.h	(revision 170)
++++ Source/Collision/Shapes/b2PolygonShape.h	(working copy)
+@@ -56,14 +56,15 @@
+ {
+ public:
+ 	/// @see b2Shape::TestPoint
+-	bool TestPoint(const b2XForm& transform, const b2Vec2& p) const;
++	bool TestPoint(const b2XForm& transform, const b2Vec2& p, float expand = 0.0f) const;
+ 
+ 	/// @see b2Shape::TestSegment
+ 	bool TestSegment(	const b2XForm& transform,
+ 		float32* lambda,
+ 		b2Vec2* normal,
+ 		const b2Segment& segment,
+-		float32 maxLambda) const;
++		float32 maxLambda,
++		float expand = 0.0f) const;
+ 
+ 	/// @see b2Shape::ComputeAABB
+ 	void ComputeAABB(b2AABB* aabb, const b2XForm& transform) const;
+Index: Source/Collision/Shapes/b2Shape.h
+===================================================================
+--- Source/Collision/Shapes/b2Shape.h	(revision 170)
++++ Source/Collision/Shapes/b2Shape.h	(working copy)
+@@ -146,7 +146,7 @@
+ 	/// Test a point for containment in this shape. This only works for convex shapes.
+ 	/// @param xf the shape world transform.
+ 	/// @param p a point in world coordinates.
+-	virtual bool TestPoint(const b2XForm& xf, const b2Vec2& p) const = 0;
++	virtual bool TestPoint(const b2XForm& xf, const b2Vec2& p, float expand = 0.0f) const = 0;
+ 
+ 	/// Perform a ray cast against this shape.
+ 	/// @param xf the shape world transform.
+@@ -161,7 +161,8 @@
+ 								float32* lambda,
+ 								b2Vec2* normal,
+ 								const b2Segment& segment,
+-								float32 maxLambda) const = 0;
++								float32 maxLambda,
++								float expand = 0.0f) const = 0;
+ 
+ 	/// Given a transform, compute the associated axis aligned bounding box for this shape.
+ 	/// @param aabb returns the axis aligned box.
