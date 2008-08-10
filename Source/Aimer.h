@@ -22,9 +22,15 @@ public:
 	// evasion
 	float mEvade;
 
-	// range
+	// close range
 	float mClose;
+	float mCloseDistScale;
+	float mCloseSpeedScale;
+
+	// far range
 	float mFar;
+	float mFarDistScale;
+	float mFarSpeedScale;
 
 public:
 	AimerTemplate(void);
@@ -42,7 +48,10 @@ protected:
 	unsigned int mTarget;
 	Vector2 mOffset;
 	float mDelay;
-
+	float mAvoidDelay;
+	float mAvoidPriority;
+	float mAvoidTurn;
+	Vector2 mAvoidMove;
 
 public:
 #ifdef USE_POOL_ALLOCATOR

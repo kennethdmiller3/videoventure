@@ -7,6 +7,8 @@
 #include "Points.h"
 #include "Sound.h"
 
+#include "Ship.h"
+
 namespace Database
 {
 	Typed<PlayerTemplate> playertemplate(0x4893610a /* "playertemplate" */);
@@ -338,12 +340,34 @@ PlayerController::~PlayerController(void)
 // player controller ontrol
 void PlayerController::Control(float aStep)
 {
-	// set inputs
+	// get parent entity
+	Entity *entity = Database::entity.Get(mId);
+
+	// get transform
+	const Matrix2 transform(entity->GetTransform());
+
 	// TO DO: support multiple players
+
+	// set move input
 	mMove.x = input[Input::MOVE_HORIZONTAL];
 	mMove.y = input[Input::MOVE_VERTICAL];
+	mMove = transform.Unrotate(mMove);
+
+	// set turn input
+	Vector2 mAim;
 	mAim.x = input[Input::AIM_HORIZONTAL];
 	mAim.y = input[Input::AIM_VERTICAL];
-	mFire[0] = input[Input::FIRE_PRIMARY] > 0.0f;
-	mFire[1] = input[Input::FIRE_SECONDARY] > 0.0f;
+	mAim = transform.Unrotate(mAim);
+
+	// turn towards target direction
+	const ShipTemplate &ship = Database::shiptemplate.Get(mId);	// <-- hack!
+	if (ship.mMaxOmega != 0.0f)
+	{
+		float aim_angle = -atan2f(mAim.x, mAim.y);
+		mTurn = std::min(std::max(aim_angle / (ship.mMaxOmega * aStep), -1.0f), 1.0f);
+	}
+
+	// set fire input
+	mFire[0] = input[Input::FIRE_PRIMARY] != 0.0f;
+	mFire[1] = input[Input::FIRE_SECONDARY] != 0.0f;
 }

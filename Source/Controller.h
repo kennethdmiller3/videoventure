@@ -20,7 +20,7 @@ public:
 
 	// controls
 	Vector2 mMove;
-	Vector2 mAim;
+	float mTurn;
 	bool mFire[FIRE_CHANNELS];
 
 public:

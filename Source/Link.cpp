@@ -172,15 +172,19 @@ Link::Link(void)
 Link::Link(const LinkTemplate &aTemplate, unsigned int aId)
 : Updatable(aId)
 , mSub(aTemplate.mSub)
-, mSecondary(0)
+, mSecondary(aTemplate.mSecondary)
 {
 	// get the source entity
 	Entity *entity = Database::entity.Get(aId);
 
-	// instantiate the linked template
-	Matrix2 transform(aTemplate.mOffset * entity->GetTransform());
-	mSecondary = Database::Instantiate(aTemplate.mSecondary, Database::owner.Get(aId), 
-		transform.Angle(), transform.p, entity->GetVelocity(), entity->GetOmega());
+	// if not already instantiated...
+	if (!Database::entity.Get(aTemplate.mSecondary))
+	{
+		// instantiate the linked template
+		Matrix2 transform(aTemplate.mOffset * entity->GetTransform());
+		mSecondary = Database::Instantiate(mSecondary, Database::owner.Get(aId), 
+			transform.Angle(), transform.p, entity->GetVelocity(), entity->GetOmega());
+	}
 
 	// if the owner has a team...
 	unsigned int team = Database::team.Get(aId);
@@ -210,7 +214,7 @@ void Link::Update(float aStep)
 		// get entities
 		Entity *entity = Database::entity.Get(mId);
 		Entity *secondary = Database::entity.Get(mSecondary);
-		if (!secondary)
+		if (!entity || !secondary)
 		{
 			Database::Typed<Link *> &links = Database::link.Open(mId);
 			links.Delete(mSub);

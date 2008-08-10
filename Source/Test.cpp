@@ -18,6 +18,14 @@
 #include "Drawlist.h"
 #include "Sound.h"
 
+#ifdef USE_VARIABLE
+#include "Variable.h"
+#endif
+
+#ifdef USE_PATHING
+#include "Pathing.h"
+#endif
+
 #include <malloc.h>
 
 // screen attributes
@@ -51,7 +59,8 @@ float TIME_SCALE = 1.0f;
 bool FIXED_STEP = false;
 
 // rendering attributes
-int RENDER_MOTIONBLUR = 1;
+int MOTIONBLUR_STEPS = 1;
+float MOTIONBLUR_TIME = 1.0f/60.0f;
 
 // sound attributes
 int SOUND_CHANNELS = 8;
@@ -103,6 +112,7 @@ GLuint lives_handle;
 
 // forward declaration
 int ProcessCommand( unsigned int aCommand, char *aParam[], int aCount );
+void RunPlayState();
 
 // debug output
 int DebugPrint(const char *format, ...)
@@ -225,6 +235,14 @@ bool init_Window()
 #else
     SDL_GL_SetAttribute( SDL_GL_ALPHA_SIZE, 0 );
 #endif
+    SDL_GL_SetAttribute( SDL_GL_ACCUM_RED_SIZE, 16 );
+    SDL_GL_SetAttribute( SDL_GL_ACCUM_GREEN_SIZE, 16 );
+    SDL_GL_SetAttribute( SDL_GL_ACCUM_BLUE_SIZE, 16 );
+#ifdef ENABLE_SRC_ALPHA_SATURATE
+    SDL_GL_SetAttribute( SDL_GL_ACCUM_ALPHA_SIZE, 16 );
+#else
+    SDL_GL_SetAttribute( SDL_GL_ACCUM_ALPHA_SIZE, 0 );
+#endif
 #ifndef ENABLE_DEPTH_TEST
 	SDL_GL_SetAttribute( SDL_GL_DEPTH_SIZE, 0 );
 #endif
@@ -340,6 +358,12 @@ bool init()
 		SDL_GL_GetAttribute( SDL_GLattr(i), &value );
 		DebugPrint( "%s: %d\n", attrib[i], value);
 	}
+
+	// get fullscreen resolutions
+	DebugPrint("\nResolutions:\n");
+	SDL_Rect **modes = SDL_ListModes(NULL, SDL_OPENGL | SDL_FULLSCREEN);
+	for (SDL_Rect **mode = modes; *mode != NULL; ++mode)
+		DebugPrint("%dx%d\n", (*mode)->w, (*mode)->h);
 #endif
 
 	SDL_AudioSpec fmt;
@@ -526,8 +550,8 @@ void InitPlaybackAction()
 }
 void ClampMotionBlurAction()
 {
-	if (RENDER_MOTIONBLUR < 1)
-		RENDER_MOTIONBLUR = 1;
+	if (MOTIONBLUR_STEPS < 1)
+		MOTIONBLUR_STEPS = 1;
 }
 
 // commands
@@ -584,7 +608,10 @@ int ProcessCommand( unsigned int aCommand, char *aParam[], int aCount )
 		return ProcessCommandBool(FIXED_STEP, aParam, aCount, NULL, "fixedstep: %d\n");
 
 	case 0xf744f3b2 /* "motionblur" */:
-		return ProcessCommandInt(RENDER_MOTIONBLUR, aParam, aCount, ClampMotionBlurAction, "motionblur: %d\n");
+		return ProcessCommandInt(MOTIONBLUR_STEPS, aParam, aCount, ClampMotionBlurAction, "motionblur: %d\n");
+
+	case 0xfb585f73 /* "motionblurtime" */:
+		return ProcessCommandFloat(MOTIONBLUR_TIME, aParam, aCount, NULL, "motionblurtime: %f\n");
 
 	case 0x61e734dc /* "soundchannels" */:
 		return ProcessCommandInt(SOUND_CHANNELS, aParam, aCount, NULL, "soundchannels: %d\n");
@@ -744,22 +771,84 @@ int ProcessCommand( unsigned int aCommand, char *aParam[], int aCount )
 		}
 		
 	default:
+#ifdef USE_VARIABLE
+		// check variable system
+		if (VarItem *item = Database::varitem.Get(aCommand))
+		{
+			if (item->mType == VarItem::COMMAND)
+			{
+				// trigger the command
+				item->Notify();
+				return 0;
+			}
+			else
+			{
+				if (aCount >= 1)
+				{
+					// set value
+					item->SetString(aParam[0]);
+					return 1;
+				}
+				else
+				{
+					// get value
+					OGLCONSOLE_Output(console, "%s\n", item->GetString().c_str());
+					return 0;
+				}
+			}
+		}
+		else
+		{
+			return 0;
+		}
+#else
 		return 0;
+#endif
 	}
 }
+
+#ifdef _MSC_VER
+// Is a debugger attached?
+// Created by Tim Chew
+// http://www.codeproject.com/KB/debug/debugger.aspx
+BOOL IsDebuggerAttached()
+{
+    DWORD dw;
+
+    __asm
+    {
+        push eax    // Preserve the registers
+        push ecx
+        mov eax, fs:[0x18]  // Get the TIB's linear address
+        mov eax, dword ptr [eax + 0x30]
+        mov ecx, dword ptr [eax]    // Get the whole DWORD
+        mov dw, ecx // Save it
+        pop ecx // Restore the registers
+        pop eax
+    }
+
+    // The 3rd byte is the byte we really need to check for the
+    // presence of a debugger.
+    // Check the 3rd byte
+    return (BOOL)(dw & 0x00010000 ? TRUE : FALSE);
+}
+#endif
 
 // main
 int SDL_main( int argc, char *argv[] )
 {
 #ifdef _MSC_VER
-	// turn on floating-point exceptions
-	unsigned int prev;
-	_controlfp_s(&prev, unsigned int(~(_EM_ZERODIVIDE|_EM_INVALID)), _MCW_EM);
+	if (IsDebuggerAttached())
+	{
+		// turn on floating-point exceptions
+		unsigned int prev;
+		_controlfp_s(&prev, unsigned int(~(_EM_ZERODIVIDE|_EM_INVALID)), _MCW_EM);
 
-	// enable debug heap in a debug build
-	_CrtSetDbgFlag( _CRTDBG_ALLOC_MEM_DF|_CRTDBG_CHECK_EVERY_1024_DF|_CRTDBG_CHECK_CRT_DF|_CRTDBG_LEAK_CHECK_DF );
-	_CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_FILE | _CRTDBG_MODE_DEBUG);
-	_CrtSetReportFile(_CRT_WARN, _CRTDBG_FILE_STDOUT);
+		// enable debug heap in a debug build
+		_CrtSetDbgFlag( _CRTDBG_ALLOC_MEM_DF|_CRTDBG_CHECK_EVERY_1024_DF|_CRTDBG_CHECK_CRT_DF|_CRTDBG_LEAK_CHECK_DF );
+		_CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_FILE | _CRTDBG_MODE_DEBUG);
+		_CrtSetReportFile(_CRT_WARN, _CRTDBG_FILE_STDOUT);
+	}
 #endif
 
 	// process command-line arguments
@@ -787,13 +876,21 @@ int SDL_main( int argc, char *argv[] )
 		}
 	}
 
-	// quit flag
-	bool quit = false;
-
 	// initialize
 	if( !init() )
 		return 1;    
+	
+	RunPlayState();
 
+	// clean up
+	clean_up();
+
+	// done
+	return 0;
+}
+
+void RunPlayState()
+{
 	// clear the screen
 	glClear(
 		GL_COLOR_BUFFER_BIT
@@ -822,7 +919,6 @@ int SDL_main( int argc, char *argv[] )
 
 	// allocate lives draw list
 	lives_handle = glGenLists(1);
-
 
 	// last ticks
 	unsigned int ticks = SDL_GetTicks();
@@ -859,12 +955,11 @@ int SDL_main( int argc, char *argv[] )
 	}
 
 	// camera track position
-	Vector2 trackpos(0, 0);
-	Vector2 trackaim(0, 0);
+	Vector2 trackpos[2] = { Vector2(0.0f, 0.0f), Vector2(0.0f, 0.0f) };
+	Vector2 trackaim(0.0f, 0.0f);
 
 	// aim track position
-	Vector2 aimpos_0(0, 0);
-	Vector2 aimpos_1(0, 0);
+	Vector2 aimpos[2] = { Vector2(0.0f, 0.0f), Vector2(0.0f, 0.0f)  };
 
 #ifdef GET_PERFORMANCE_DETAILS
 	LARGE_INTEGER perf_freq;
@@ -889,6 +984,9 @@ int SDL_main( int argc, char *argv[] )
 
 	// set to runtime mode
 	runtime = true;
+
+	// quit flag
+	bool quit = false;
 
 	// wait for user exit
 	do
@@ -994,7 +1092,7 @@ int SDL_main( int argc, char *argv[] )
 			singlestep = false;
 
 			// advance one frame
-			delta_time = TIME_SCALE / 60.0f / RENDER_MOTIONBLUR;
+			delta_time = TIME_SCALE / 60.0f / MOTIONBLUR_STEPS;
 
 			// turns to advance per step
 			delta_turns = delta_time * sim_rate;
@@ -1005,15 +1103,15 @@ int SDL_main( int argc, char *argv[] )
 			delta_time = 0.0f;
 
 			// turns to advance per step
-			delta_turns = TIME_SCALE / 60.0f / RENDER_MOTIONBLUR * sim_rate;
+			delta_turns = TIME_SCALE / 60.0f / MOTIONBLUR_STEPS * sim_rate;
 
 			// set turn counter to almost reach a new turn
-			sim_turns = 0.99609375f - delta_turns * RENDER_MOTIONBLUR;
+			sim_turns = 0.99609375f - delta_turns * MOTIONBLUR_STEPS;
 		}
 		else if (FIXED_STEP)
 		{
 			// turns to advance per step
-			delta_turns = TIME_SCALE / RENDER_MOTIONBLUR;
+			delta_turns = TIME_SCALE / MOTIONBLUR_STEPS;
 
 			// time to advance per step
 			delta_time = delta_turns * sim_step;
@@ -1022,14 +1120,14 @@ int SDL_main( int argc, char *argv[] )
 		else
 		{
 			// time to advance per step
-			delta_time = delta * TIME_SCALE / 1000.0f / RENDER_MOTIONBLUR;
+			delta_time = delta * TIME_SCALE / 1000.0f / MOTIONBLUR_STEPS;
 
 			// turns to advance per step
 			delta_turns = delta_time * sim_rate;
 		}
 
 		// for each motion-blur step
-		for (int blur = 0; blur < RENDER_MOTIONBLUR; ++blur)
+		for (int blur = 0; blur < MOTIONBLUR_STEPS; ++blur)
 		{
 			// clear the screen
 			glClear(
@@ -1185,10 +1283,38 @@ int SDL_main( int argc, char *argv[] )
 				// for each player...
 				for (Database::Typed<PlayerController *>::Iterator itor(&Database::playercontroller); itor.IsValid(); ++itor)
 				{
-					// update target aim position
 					// TO DO: support multiple players
-					aimpos_0 = aimpos_1;
-					aimpos_1 = itor.GetValue()->mAim;
+
+					// get the entity
+					Entity *entity = Database::entity.Get(itor.GetKey());
+
+					// track player position
+					trackpos[0] = trackpos[1];
+					trackpos[1] = entity->GetPosition();
+
+					// update target aim position
+					aimpos[0] = aimpos[1];
+					aimpos[1] = Vector2(input[Input::AIM_HORIZONTAL], input[Input::AIM_VERTICAL]);
+
+					// set listener position
+					listenerpos = trackpos[1];
+
+					// if applying view aim
+					if (VIEW_AIM)
+					{
+						Vector2 trackdelta;
+						if (Database::ship.Get(itor.GetKey()))
+							trackdelta = aimpos[1] - trackaim;
+						else
+							trackdelta = -trackaim;
+						if (trackdelta.LengthSq() > FLT_EPSILON)
+							trackaim += VIEW_AIM_FILTER * sim_step * trackdelta;
+						trackpos[1] += trackaim * VIEW_AIM;
+					}
+
+#ifdef TEST_PATHING
+					Pathing(entity->GetPosition(), trackpos[1] + aimpos[1] * 240 * VIEW_SIZE / 640, 4.0f);
+#endif
 				}
 
 				// step inputs for next turn
@@ -1215,41 +1341,21 @@ int SDL_main( int argc, char *argv[] )
 
 			// RENDERING PHASE
 
-			// for each player...
-			for (Database::Typed<PlayerController *>::Iterator itor(&Database::playercontroller); itor.IsValid(); ++itor)
-			{
-				// get the entity
-				Entity *entity = Database::entity.Get(itor.GetKey());
-
-				// track player position
-				trackpos = entity->GetInterpolatedPosition(sim_turns);
-
-				// set listener position
-				listenerpos = trackpos;
-
-				// if applying view aim
-				if (VIEW_AIM)
-				{
-					if (Database::ship.Get(itor.GetKey()))
-						trackaim += VIEW_AIM_FILTER * delta_time * (itor.GetValue()->mAim - trackaim);
-					else
-						trackaim -= VIEW_AIM_FILTER * delta_time * trackaim;
-					trackpos += trackaim * VIEW_AIM;
-				}
-			}
-
 			// push camera transform
 			glPushMatrix();
 
-			// set camera to track position
-			glTranslatef( -trackpos.x, -trackpos.y, 0 );
+			// get interpolated track position
+			Vector2 viewpos(Lerp(trackpos[0].x, trackpos[1].x, sim_turns), Lerp(trackpos[0].y, trackpos[1].y, sim_turns));
 
-			// view area
+			// set view position
+			glTranslatef( -viewpos.x, -viewpos.y, 0 );
+
+			// calculate view area
 			AlignedBox2 view;
-			view.min.x = trackpos.x - VIEW_SIZE * 0.5f;
-			view.max.x = trackpos.x + VIEW_SIZE * 0.5f;
-			view.min.y = trackpos.y - VIEW_SIZE * 0.5f * SCREEN_HEIGHT / SCREEN_WIDTH;
-			view.max.y = trackpos.y + VIEW_SIZE * 0.5f * SCREEN_HEIGHT / SCREEN_WIDTH;
+			view.min.x = viewpos.x - VIEW_SIZE * 0.5f;
+			view.max.x = viewpos.x + VIEW_SIZE * 0.5f;
+			view.min.y = viewpos.y - VIEW_SIZE * 0.5f * SCREEN_HEIGHT / SCREEN_WIDTH;
+			view.max.y = viewpos.y + VIEW_SIZE * 0.5f * SCREEN_HEIGHT / SCREEN_WIDTH;
 
 			// render all entities
 			// (send interpolation ratio and offset from simulation time)
@@ -1259,14 +1365,10 @@ int SDL_main( int argc, char *argv[] )
 			glPopMatrix();
 
 			// if performing motion blur...
-			if (RENDER_MOTIONBLUR > 1)
+			if (MOTIONBLUR_STEPS > 1)
 			{
 				// accumulate the image
-				glAccum(blur ? GL_ACCUM : GL_LOAD, 1.0f / float(RENDER_MOTIONBLUR));
-
-				if (blur < RENDER_MOTIONBLUR - 1)
-				{
-				}
+				glAccum(blur ? GL_ACCUM : GL_LOAD, 1.0f / float(MOTIONBLUR_STEPS));
 			}
 
 #ifdef GET_PERFORMANCE_DETAILS
@@ -1282,13 +1384,13 @@ int SDL_main( int argc, char *argv[] )
 #endif
 
 		// if performing motion blur...
-		if (RENDER_MOTIONBLUR > 1)
+		if (MOTIONBLUR_STEPS > 1)
 		{
 			// return the accumulated image
 			glAccum(GL_RETURN, 1);
 
 			// return time to real time
-			delta_time *= RENDER_MOTIONBLUR;
+			delta_time *= MOTIONBLUR_STEPS;
 		}
 
 		// switch blend mode
@@ -1299,8 +1401,11 @@ int SDL_main( int argc, char *argv[] )
 		// push camera transform
 		glPushMatrix();
 
+		// get interpolated track position
+		Vector2 viewpos(Lerp(trackpos[0].x, trackpos[1].x, sim_turns), Lerp(trackpos[0].y, trackpos[1].y, sim_turns));
+
 		// set camera to track position
-		glTranslatef( -trackpos.x, -trackpos.y, 0 );
+		glTranslatef( -viewpos.x, -viewpos.y, 0 );
 
 		// debug draw
 		glCallList(debugdraw);
@@ -1581,8 +1686,8 @@ int SDL_main( int argc, char *argv[] )
 			Controller *controller = Database::controller.Get(id);
 			if (controller)
 			{
-				float x = 320 - 240 * Lerp(aimpos_0.x, aimpos_1.x, sim_turns);
-				float y = 240 - 240 * Lerp(aimpos_0.y, aimpos_1.y, sim_turns);
+				float x = 320 - 240 * Lerp(aimpos[0].x, aimpos[1].x, sim_turns);
+				float y = 240 - 240 * Lerp(aimpos[0].y, aimpos[1].y, sim_turns);
 
 				glPushMatrix();
 				glTranslatef(x, y, 0.0f);
@@ -1594,7 +1699,6 @@ int SDL_main( int argc, char *argv[] )
 				glEnable(GL_TEXTURE_2D);
 				glBindTexture(GL_TEXTURE_2D, OGLCONSOLE_glFontHandle);
 
-				glColor4f(1.0f, 0.9f, 0.1f, 1.0f);
 
 				glBegin(GL_QUADS);
 
@@ -1603,6 +1707,14 @@ int SDL_main( int argc, char *argv[] )
 				float z = 0;
 				float w = 32;
 				float h = -32;
+
+				glColor4f(0.0f, 0.0f, 0.0f, 1.0f);
+				OGLCONSOLE_DrawString("GAME OVER", x - 4, y, w, h, z);
+				OGLCONSOLE_DrawString("GAME OVER", x + 4, y, w, h, z);
+				OGLCONSOLE_DrawString("GAME OVER", x, y - 4, w, h, z);
+				OGLCONSOLE_DrawString("GAME OVER", x, y + 4, w, h, z);
+
+				glColor4f(1.0f, 0.9f, 0.1f, 1.0f);
 				OGLCONSOLE_DrawString("GAME OVER", x, y, w, h, z);
 
 				glEnd();
@@ -1769,10 +1881,4 @@ int SDL_main( int argc, char *argv[] )
 
 	// collidable done
 	Collidable::WorldDone();
-
-	// clean up
-	clean_up();
-
-	// done
-	return 0;
 }

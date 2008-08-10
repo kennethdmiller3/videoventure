@@ -192,6 +192,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Source\Beam.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\Source\Bullet.cpp"
 				>
 			</File>
@@ -245,6 +249,10 @@
 			</File>
 			<File
 				RelativePath=".\Source\Link.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Pathing.cpp"
 				>
 			</File>
 			<File
@@ -308,6 +316,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Source\Variable.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\Source\Weapon.cpp"
 				>
 			</File>
@@ -327,6 +339,10 @@
 			</File>
 			<File
 				RelativePath=".\Source\AlignedBox2.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Beam.h"
 				>
 			</File>
 			<File

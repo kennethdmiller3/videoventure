@@ -7,6 +7,7 @@
 #include "Damagable.h"
 #include "Team.h"
 
+#include "Ship.h"
 
 #ifdef USE_POOL_ALLOCATOR
 #include <boost/pool/pool.hpp>
@@ -93,7 +94,11 @@ AimerTemplate::AimerTemplate(void)
 , mLeading(0.0f)
 , mEvade(0.0f)
 , mClose(0.0f)
+, mCloseDistScale(1.0f/16.0f)
+, mCloseSpeedScale(0.0f)
 , mFar(FLT_MAX)
+, mFarDistScale(1.0f/64.0f)
+, mFarSpeedScale(0.0f)
 {
 	for (int i = 0; i < Controller::FIRE_CHANNELS; ++i)
 	{
@@ -151,7 +156,11 @@ bool AimerTemplate::Configure(const TiXmlElement *element)
 	element->QueryFloatAttribute("leading", &mLeading);
 	element->QueryFloatAttribute("evade", &mEvade);
 	element->QueryFloatAttribute("close", &mClose);
+	element->QueryFloatAttribute("closedistscale", &mCloseDistScale);
+	element->QueryFloatAttribute("closespeedscale", &mCloseSpeedScale);
 	element->QueryFloatAttribute("far", &mFar);
+	element->QueryFloatAttribute("fardistscale", &mFarDistScale);
+	element->QueryFloatAttribute("farspeedscale", &mFarSpeedScale);
 	return true;
 }
 
@@ -205,15 +214,18 @@ Vector2 Aimer::LeadTarget(float bulletSpeed, const Vector2 &targetPosition, cons
 // Aimer Control
 void Aimer::Control(float aStep)
 {
-	// clear controls
-	mMove.x = 0;
-	mMove.y = 0;
-	mAim.x = 0;
-	mAim.y = 0;
-	memset(mFire, 0, sizeof(mFire));
-
 	// get parent entity
 	Entity *entity = Database::entity.Get(mId);
+
+	// get front vector
+	const Matrix2 transform(entity->GetTransform());
+	const Vector2 &front = transform.y;
+
+	// set default controls
+	mMove.x = 0;
+	mMove.y = 0;
+	mTurn = 0;
+	memset(mFire, 0, sizeof(mFire));
 
 	// get aimer template
 	const AimerTemplate &aimer = Database::aimertemplate.Get(mId);
@@ -233,9 +245,8 @@ void Aimer::Control(float aStep)
 		const float lookRadius = aimer.mRange;
 		aabb.lowerBound.Set(entity->GetPosition().x - lookRadius, entity->GetPosition().y - lookRadius);
 		aabb.upperBound.Set(entity->GetPosition().x + lookRadius, entity->GetPosition().y + lookRadius);
-		const int32 maxCount = 256;
-		b2Shape* shapes[maxCount];
-		int32 count = world->Query(aabb, shapes, maxCount);
+		b2Shape* shapes[b2_maxProxies];
+		int32 count = world->Query(aabb, shapes, b2_maxProxies);
 
 		// get team affiliation
 		unsigned int aTeam = Database::team.Get(mId);
@@ -244,9 +255,6 @@ void Aimer::Control(float aStep)
 		unsigned int bestTargetId = 0;
 		Vector2 bestTargetPos(0, 0);
 		float bestRange = FLT_MAX;
-
-		// world-to-local transform
-		Matrix2 transform(entity->GetTransform().Inverse());
 
 		// for each shape...
 		for (int32 i = 0; i < count; ++i)
@@ -299,7 +307,7 @@ void Aimer::Control(float aStep)
 				continue;
 
 			// get range
-			Vector2 dir(transform.Transform(shapePos));
+			Vector2 dir(transform.Untransform(shapePos));
 			float range = dir.Length() - 0.5f * shapes[i]->GetSweepRadius();
 
 			// skip if out of range
@@ -328,81 +336,112 @@ void Aimer::Control(float aStep)
 		mOffset = bestTargetPos;
 	}
 
-	// do nothing if no target
-	if (!mTarget)
-		return;
-
-	// get the target entity
-	Entity *targetEntity = Database::entity.Get(mTarget);
-	if (!targetEntity)
-		return;
-
-	// target entity transform
-	Matrix2 targetTransform(targetEntity->GetTransform());
-
-	// aim at target lead position
-	Vector2 targetPos = targetTransform.Transform(mOffset);
-	if (aimer.mLeading != 0.0f)
+	// if tracking a target...
+	if (mTarget)
 	{
-		mAim = LeadTarget(aimer.mLeading,
-			targetPos - entity->GetPosition(),
-			targetEntity->GetVelocity() - entity->GetVelocity()
-			);
-	}
-	else
-	{
-		mAim = targetPos - entity->GetPosition();
-	}
-
-	// save range
-	float distSq = mAim.LengthSq();
-
-	// normalize aim
-	mAim *= InvSqrt(distSq);
-
-	// move in aim direction
-	mMove = mAim;
-
-	// if evading...
-	if (aimer.mEvade)
-	{
-		// evade target's front vector
-		Vector2 local(targetTransform.Untransform(entity->GetPosition()));
-		if (local.y > 0)
+		// get the target entity
+		Entity *targetEntity = Database::entity.Get(mTarget);
+		if (targetEntity)
 		{
-			local *= InvSqrt(local.LengthSq());
-			float dir = local.x > 0 ? 1.0f : -1.0f;
-			mMove += aimer.mEvade * dir * local.y * local.y * local.y * targetTransform.Rotate(Vector2(local.y, -local.x));
+			// target entity transform
+			Matrix2 targetTransform(targetEntity->GetTransform());
+
+			// direction to target
+			Vector2 targetDir;
+
+			// get target lead position
+			Vector2 targetPos = targetTransform.Transform(mOffset);
+			if (aimer.mLeading != 0.0f)
+			{
+				targetDir = LeadTarget(aimer.mLeading,
+					targetPos - entity->GetPosition(),
+					targetEntity->GetVelocity() - entity->GetVelocity()
+					);
+			}
+			else
+			{
+				targetDir = targetPos - entity->GetPosition();
+			}
+
+			// save range
+			float distSq = targetDir.LengthSq();
+
+			// normalize direction
+			targetDir *= InvSqrt(distSq);
+
+			// move towards target
+			mMove += targetDir;
+
+			// local target direction
+			Vector2 localDir = transform.Unrotate(targetDir);
+
+			// turn towards target direction
+			const ShipTemplate &ship = Database::shiptemplate.Get(mId);	// <-- hack!
+			if (ship.mMaxOmega != 0.0f)
+			{
+				float aim_angle = -atan2f(localDir.x, localDir.y);
+				mTurn = std::min(std::max(aim_angle / (ship.mMaxOmega * aStep), -1.0f), 1.0f);
+			}
+
+			// if evading...
+			if (aimer.mEvade)
+			{
+				// evade target's front vector
+				Vector2 local(targetTransform.Untransform(entity->GetPosition()));
+				if (local.y > 0)
+				{
+					local *= InvSqrt(local.LengthSq());
+					float dir = local.x > 0 ? 1.0f : -1.0f;
+					mMove += aimer.mEvade * dir * local.y * local.y * local.y * targetTransform.Rotate(Vector2(local.y, -local.x));
+				}
+			}
+
+			// if checking range...
+			if (aimer.mClose > 0 || aimer.mFar > FLT_MAX)
+			{
+				// get direction and distance to target
+				Vector2 dir = targetEntity->GetPosition() - entity->GetPosition();
+				float dist = dir.Length();
+				dir /= dist;
+
+				// get target relative speed
+				Vector2 vel = targetEntity->GetVelocity() - entity->GetVelocity();
+				float speed = vel.Dot(dir);
+
+				// apply close-repel force
+				float repel = (dist - aimer.mClose) * aimer.mCloseDistScale + speed * aimer.mCloseSpeedScale;
+				if (repel < 0.0f)
+				{
+					mMove += dir * repel;
+				}
+
+				// apply far-attract force
+				float attract = (dist - aimer.mFar) * aimer.mFarDistScale + speed * aimer.mFarSpeedScale;
+				if (attract > 0.0f)
+				{
+					mMove += dir * attract;
+				}
+			}
+
+			// for each fire channel
+			for (int i = 0; i < Controller::FIRE_CHANNELS; ++i)
+			{
+				// fire if lined up and within attack range
+				mFire[i] = 
+					(distSq < aimer.mAttack[i] * aimer.mAttack[i]) &&
+					(front.Dot(targetDir) > aimer.mAngle[i]);
+			}
 		}
 	}
 
-	// if checking range...
-	if (aimer.mClose > 0 || aimer.mFar > FLT_MAX)
-	{
-		Vector2 dir = targetEntity->GetPosition() - entity->GetPosition();
-		float dist = dir.Length();
-		dir /= dist;
-		if (dist < aimer.mClose)
-		{
-			mMove += (dist - aimer.mClose) / 16.0f * dir;
-		}
-		if (dist > aimer.mFar)
-		{
-			mMove += (dist - aimer.mFar) / 64.0f * dir;
-		}
-	}
+	// limit move to 100%
+	float moveLengthSq = mMove.LengthSq();
+	if (moveLengthSq > 1.0f)
+		mMove *= InvSqrt(moveLengthSq);
 
-	mMove *= InvSqrt(mMove.LengthSq());
+	// convert to local coordinates
+	mMove = transform.Unrotate(mMove);
 
-	// get front vector
-	Vector2 front(entity->GetTransform().y);
-
-	// for each fire channel
-	for (int i = 0; i < Controller::FIRE_CHANNELS; ++i)
-	{
-		// fire if lined up and within attack range
-		mFire[i] = 
-			(distSq < aimer.mAttack[i] * aimer.mAttack[i]) &&
-			(front.Dot(mAim) > aimer.mAngle[i]);
-	}
+	// limit turn to 100%
+	mTurn = std::min(std::max(mTurn, -1.0f), 1.0f);
 }

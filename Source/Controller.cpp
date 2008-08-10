@@ -17,7 +17,7 @@ Controller::Controller(unsigned int aId)
 , mPrev(NULL)
 , entry()
 , mMove(0, 0)
-, mAim(0, 0)
+, mTurn(0)
 {
 	memset(mFire, 0, sizeof(mFire));
 }

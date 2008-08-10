@@ -81,6 +81,8 @@ namespace Database
 
 ExplosionTemplate::ExplosionTemplate(void)
 : mLifeSpan(0.25f)
+, mCategoryBits(0xFFFF)
+, mMaskBits(0xFFFF)
 , mDamage(0.0f)
 , mRadius(0.0f)
 , mSpawnOnExpire(0)
@@ -100,18 +102,36 @@ bool ExplosionTemplate::Configure(const TiXmlElement *element, unsigned int id)
 	if (const char *spawn = element->Attribute("spawnonexpire"))
 		mSpawnOnExpire = Hash(spawn);
 
+	int category = 0;
+	if (element->QueryIntAttribute("category", &category) == TIXML_SUCCESS)
+		mCategoryBits = (category >= 0) ? (1<<category) : 0;
+
+	char buf[16];
+	for (int i = 0; i < 16; i++)
+	{
+		sprintf(buf, "bit%d", i);
+		int bit = 0;
+		if (element->QueryIntAttribute(buf, &bit) == TIXML_SUCCESS)
+		{
+			if (bit)
+				mMaskBits |= (1 << i);
+			else
+				mMaskBits &= ~(1 << i);
+		}
+	}
+
 	return true;
 }
 
 
 Explosion::Explosion(void)
-: Simulatable(0)
+: Updatable(0)
 , mLife(0)
 {
 }
 
 Explosion::Explosion(const ExplosionTemplate &aTemplate, unsigned int aId)
-: Simulatable(aId)
+: Updatable(aId)
 , mLife(aTemplate.mLifeSpan)
 {
 	if (aTemplate.mRadius > 0.0f)
@@ -127,12 +147,8 @@ Explosion::Explosion(const ExplosionTemplate &aTemplate, unsigned int aId)
 		const float lookRadius = aTemplate.mRadius;
 		aabb.lowerBound.Set(entity->GetPosition().x - lookRadius, entity->GetPosition().y - lookRadius);
 		aabb.upperBound.Set(entity->GetPosition().x + lookRadius, entity->GetPosition().y + lookRadius);
-		const int32 maxCount = 256;
-		b2Shape* shapes[maxCount];
-		int32 count = world->Query(aabb, shapes, maxCount);
-
-		// get team affiliation
-		unsigned int aTeam = Database::team.Get(mId);
+		b2Shape* shapes[b2_maxProxies];
+		int32 count = world->Query(aabb, shapes, b2_maxProxies);
 
 		// world-to-local transform
 		Matrix2 transform(entity->GetTransform().Inverse());
@@ -140,6 +156,17 @@ Explosion::Explosion(const ExplosionTemplate &aTemplate, unsigned int aId)
 		// for each shape...
 		for (int32 i = 0; i < count; ++i)
 		{
+			// get the shape
+			b2Shape* shape = shapes[i];
+
+			// skip unhittable shapes
+			if (shape->IsSensor())
+				continue;
+			if ((shape->GetFilterData().maskBits & aTemplate.mCategoryBits) == 0)
+				continue;
+			if ((shape->GetFilterData().categoryBits & aTemplate.mMaskBits) == 0)
+				continue;
+
 			// get the parent body
 			b2Body* body = shapes[i]->GetBody();
 
@@ -152,13 +179,6 @@ Explosion::Explosion(const ExplosionTemplate &aTemplate, unsigned int aId)
 
 			// skip self
 			if (targetId == mId)
-				continue;
-
-			// get team affiliation
-			unsigned int targetTeam = Database::team.Get(targetId);
-
-			// skip teammate
-			if (targetTeam == aTeam)
 				continue;
 
 			// get range
@@ -200,7 +220,7 @@ Explosion::~Explosion(void)
 {
 }
 
-void Explosion::Simulate(float aStep)
+void Explosion::Update(float aStep)
 {
 	// advance life timer
 	mLife -= aStep;

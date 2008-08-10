@@ -338,54 +338,14 @@
 			</drawlist>
 		</renderable>
 	</template>
-	<entity name="starfield11" type="starfield">
-		<position x="1536" y="1536"/>
-	</entity>
-	<entity name="starfield12" type="starfield">
-		<position x="512" y="1536"/>
-	</entity>
-	<entity name="starfield13" type="starfield">
-		<position x="-512" y="1536"/>
-	</entity>
-	<entity name="starfield14" type="starfield">
-		<position x="-1536" y="1536"/>
-	</entity>
-	<entity name="starfield21" type="starfield">
-		<position x="1536" y="512"/>
-	</entity>
-	<entity name="starfield22" type="starfield">
-		<position x="512" y="512"/>
-	</entity>
-	<entity name="starfield23" type="starfield">
-		<position x="-512" y="512"/>
-	</entity>
-	<entity name="starfield24" type="starfield">
-		<position x="-1536" y="512"/>
-	</entity>
-	<entity name="starfield31" type="starfield">
-		<position x="1536" y="-512"/>
-	</entity>
-	<entity name="starfield32" type="starfield">
-		<position x="512" y="-512"/>
-	</entity>
-	<entity name="starfield33" type="starfield">
-		<position x="-512" y="-512"/>
-	</entity>
-	<entity name="starfield34" type="starfield">
-		<position x="-1536" y="-512"/>
-	</entity>
-	<entity name="starfield41" type="starfield">
-		<position x="1536" y="-1536"/>
-	</entity>
-	<entity name="starfield42" type="starfield">
-		<position x="512" y="-1536"/>
-	</entity>
-	<entity name="starfield43" type="starfield">
-		<position x="-512" y="-1536"/>
-	</entity>
-	<entity name="starfield44" type="starfield">
-		<position x="-1536" y="-1536"/>
-	</entity>
+
+	<tilemap x="-1536" y="-1536" dx="1024" dy="1024">
+		<tile name="*" spawn="starfield"/>
+		<row data="****"/>
+		<row data="****"/>
+		<row data="****"/>
+		<row data="****"/>
+	</tilemap>
 
 
 	<!-- reference grid -->
@@ -2892,7 +2852,200 @@
 		<points value="500"/>
 	</template>
 
+	
+	<!-- enemy laser ship beam -->
 
+	<template name="enemylasershipbeam">
+		<beam life="0.5" damage="10" range="256" category="4" bit2="0" bit3="0" bit4="0" spawnonimpact="enemyfireballexplosion"/>
+		<renderable radius="256">
+			<quads>
+				<block length="0.1">
+					<color>
+						<key time="0.0" r="1.0" g="1.0" b="1.0" a="1.0"/>
+						<key time="0.1" r="1.0" g="1.0" b="1.0" a="0.0"/>
+					</color>
+					<set name="p" type="position">
+						<key time="0.0" x="2.0"/>
+						<key time="0.1" x="0.0"/>
+					</set>
+					<vertex variable="p"/>
+					<mul name="p" type="scale" x="-1"/>
+					<vertex variable="p"/>
+					<add name="p" type="translate" variable="beamend"/>
+					<vertex variable="p"/>
+					<mul name="p" type="scale" x="-1"/>
+					<vertex variable="p"/>
+					<color>
+						<key time="0.0" r="1.0" g="1.0" b="1.0" a="0.2"/>
+						<key time="0.1" r="1.0" g="1.0" b="1.0" a="0.0"/>
+					</color>
+					<set name="p" type="position">
+						<key time="0.0" x="2.0"/>
+						<key time="0.1" x="8.0"/>
+					</set>
+					<vertex variable="p"/>
+					<mul name="p" type="scale" x="-1"/>
+					<vertex variable="p"/>
+					<add name="p" type="translate" variable="beamend"/>
+					<vertex variable="p"/>
+					<mul name="p" type="scale" x="-1"/>
+					<vertex variable="p"/>
+				</block>
+				<block length="0.3">
+					<color>
+						<key time="0.0" r="1.0" g="0.8" b="0.1" a="1.0"/>
+						<key time="0.3" r="1.0" g="0.5" b="0.0" a="0.0"/>
+					</color>
+					<set name="p" type="position">
+						<key time="0.0" x="1.00"/>
+						<key time="0.3" x="0.25"/>
+					</set>
+					<vertex variable="p"/>
+					<mul name="p" type="scale" x="-1"/>
+					<vertex variable="p"/>
+					<add name="p" type="translate" variable="beamend"/>
+					<vertex variable="p"/>
+					<mul name="p" type="scale" x="-1"/>
+					<vertex variable="p"/>
+				</block>
+				<block length="0.2">
+					<color>
+						<key time="0.0" r="1.0" g="0.5" b="0.0" a="0.5"/>
+						<key time="0.2" r="1.0" g="0.0" b="0.0" a="0.0"/>
+					</color>
+					<set name="p" type="position">
+						<key time="0.0" x="2.0"/>
+						<key time="0.2" x="4.0"/>
+					</set>
+					<vertex variable="p"/>
+					<mul name="p" type="scale" x="-1"/>
+					<vertex variable="p"/>
+					<add name="p" type="translate" variable="beamend"/>
+					<vertex variable="p"/>
+					<mul name="p" type="scale" x="-1"/>
+					<vertex variable="p"/>
+				</block>
+			</quads>
+		</renderable>
+		<sound volume="4.0">
+			<file name="stargate-anotherenemykill.wav"/>
+		</sound>
+	</template>
+
+	
+	<!-- enemy laser ship tracer -->
+
+	<template name="enemylasershiptracer">
+		<beam life="4.0" damage="0" range="256" category="4" bit2="0" bit3="0" bit4="0" spawnonexpire="enemylasershipbeam"/>
+		<renderable radius="256">
+			<quads>
+				<color>
+					<key time="0.0" r="1.0" g="0.0" b="0.0" a="0.0"/>
+					<key time="4.0" r="1.0" g="0.0" b="0.0" a="1.0"/>
+				</color>
+				<set name="p" type="position">
+					<key time="0.0" x="0.25"/>
+					<key time="4.0" x="0.50"/>
+				</set>
+				<vertex variable="p"/>
+				<mul name="p" type="scale" x="-1"/>
+				<vertex variable="p"/>
+				<add name="p" type="translate" variable="beamend"/>
+				<vertex variable="p"/>
+				<mul name="p" type="scale" x="-1"/>
+				<vertex variable="p"/>
+			</quads>
+		</renderable>
+	</template>
+
+
+	<!-- enemy laser ship weapon -->
+
+	<template name="enemylasershipweapon">
+		<weapon>
+			<flash name="enemylasershiptracer"/>
+			<shot delay="3.0"/>
+		</weapon>
+	</template>
+	
+
+	<!-- enemy laser ship -->
+
+	<template name="enemylasership">
+		<collidable>
+			<body name="main">
+				<circle radius="6">
+					<density value="1"/>
+					<friction value="0.5"/>
+					<restitution value="0.5"/>
+					<category value="3"/>
+				</circle>
+			</body>
+		</collidable>
+		<renderable radius="6">
+			<drawlist>
+				<color r="1.0" g="0.8" b="0.1" a="1.0"/>
+				<quads>
+					<vertex x="0.75" y="2"/>
+					<vertex x="-0.75" y="2"/>
+					<vertex x="-0.5" y="6"/>
+					<vertex x="0.5" y="6"/>
+				</quads>
+				<color r="0.5" g="0.6" b="0.7" a="1.0"/>
+				<triangle_strip>
+					<vertex x="1.5" y="-5"/>
+					<vertex x="-1.5" y="-5"/>
+					<vertex x="1.5" y="-3.5"/>
+					<vertex x="-1.5" y="-3.5"/>
+					<vertex x="0.5" y="-2.5"/>
+					<vertex x="-0.5" y="-2.5"/>
+					<vertex x="0.75" y="-1"/>
+					<vertex x="-0.75" y="-1"/>
+					<vertex x="3.5" y="-1"/>
+					<vertex x="-3.5" y="-1"/>
+					<vertex x="3.5" y="1"/>
+					<vertex x="-3.5" y="1"/>
+					<vertex x="1.5" y="2"/>
+					<vertex x="-1.5" y="2"/>
+					<vertex x="1.0" y="3"/>
+					<vertex x="-1.0" y="3"/>
+				</triangle_strip>
+				<color r="1.0" g="0.2" b="0.1" a="1.0"/>
+				<triangle_strip>
+					<vertex x="2.5" y="-3"/>
+					<vertex x="5.5" y="-3"/>
+					<vertex x="2.5" y="-2.5"/>
+					<vertex x="5.5" y="-2.5"/>
+					<vertex x="3.5" y="-1.5"/>
+					<vertex x="4.5" y="-1.5"/>
+					<vertex x="3.5" y="3"/>
+					<vertex x="4.5" y="3"/>
+					<vertex x="4" y="3.5"/>
+				</triangle_strip>
+				<triangle_strip>
+					<vertex x="-2.5" y="-3"/>
+					<vertex x="-5.5" y="-3"/>
+					<vertex x="-2.5" y="-2.5"/>
+					<vertex x="-5.5" y="-2.5"/>
+					<vertex x="-3.5" y="-1.5"/>
+					<vertex x="-4.5" y="-1.5"/>
+					<vertex x="-3.5" y="3"/>
+					<vertex x="-4.5" y="3"/>
+					<vertex x="-4" y="3.5"/>
+				</triangle_strip>
+			</drawlist>
+		</renderable>
+		<aimer range="512" focus="3" attack="128" leading="0" angle="30" evade="1" close="64" closedistscale="0.0625" closespeedscale="0.015625" category="4" bit2="0" bit3="0" bit4="0"/>
+		<ship maxveloc="60" maxaccel="120" minaccel="10" maxomega="1"/>
+		<damagable health="6" spawnondeath="enemyexplosion"/>
+		<link name="gun" secondary="enemylasershipweapon">
+			<offset x="0" y="5" angle="0"/>
+		</link>
+		<team name="red"/>
+		<points value="300"/>
+	</template>
+
+	
 	<!-- enemy carrier -->
 
 	<template name="enemycarrierexplosion">
@@ -3207,6 +3360,13 @@
 		</spawner>
 	</template>
 
+	<template name="enemylasershipspawn">
+		<spawner>
+			<velocity x="0" y="180"/>
+			<spawn name="enemylasership" start="7" cycle="8" track="0"/>
+		</spawner>
+	</template>
+
 	<template name="enemycarrierspawn">
 		<spawner>
 			<velocity x="0" y="120"/>
@@ -3262,6 +3422,12 @@
 		</link>
 		<link name="enemyshipspawn2" secondary="enemyshipspawn">
 			<offset x="64" y="0"/>
+		</link>
+		<link name="enemylasershipspawn1" secondary="enemylasershipspawn">
+			<offset x="-256" y="0"/>
+		</link>
+		<link name="enemylasershipspawn2" secondary="enemylasershipspawn">
+			<offset x="256" y="0"/>
 		</link>
 		<link name="enemycarrierspawn" secondary="enemycarrierspawn">
 			<offset x="0" y="0"/>

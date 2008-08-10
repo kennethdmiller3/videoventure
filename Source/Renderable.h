@@ -69,9 +69,17 @@ public:
 	{
 		sTurn = aTurn;
 	}
+	static unsigned int GetTurn(void)
+	{
+		return sTurn;
+	}
 	void SetFraction(float aFraction)
 	{
 		mFraction = aFraction;
+	}
+	float GetFraction(void) const
+	{
+		return mFraction;
 	}
 
 	// render

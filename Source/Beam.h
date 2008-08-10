@@ -4,7 +4,7 @@
 #include "Updatable.h"
 #include "Renderable.h"
 
-class ExplosionTemplate
+class BeamTemplate
 {
 public:
 	// life span
@@ -12,24 +12,26 @@ public:
 
 	// damage
 	float mDamage;
-	float mRadius;
+	float mDamageRate;
+	float mRange;
 
 	// collision
 	unsigned short mCategoryBits;
 	unsigned short mMaskBits;
 
-	// spawn on expire
+	// spawn
 	unsigned int mSpawnOnExpire;
+	unsigned int mSpawnOnImpact;
 
 public:
-	ExplosionTemplate(void);
-	~ExplosionTemplate(void);
+	BeamTemplate(void);
+	~BeamTemplate(void);
 
 	// configure
 	bool Configure(const TiXmlElement *element, unsigned int id);
 };
 
-class Explosion :
+class Beam :
 	public Updatable
 {
 public:
@@ -43,9 +45,9 @@ public:
 	float mLife;
 
 public:
-	Explosion(void);
-	Explosion(const ExplosionTemplate &aTemplate, unsigned int aId);
-	~Explosion(void);
+	Beam(void);
+	Beam(const BeamTemplate &aTemplate, unsigned int aId);
+	~Beam(void);
 
 	// update
 	virtual void Update(float aStep);
@@ -53,6 +55,6 @@ public:
 
 namespace Database
 {
-	extern Typed<ExplosionTemplate> explosiontemplate;
-	extern Typed<Explosion *> explosion;
+	extern Typed<BeamTemplate> beamtemplate;
+	extern Typed<Beam *> beam;
 }

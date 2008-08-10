@@ -101,6 +101,11 @@ public:
 		return world;
 	}
 
+	// test segment for intersection with world shapes
+	static unsigned int TestSegment(const b2Segment &aSegment, float aRadius,
+									unsigned int aCategoryBits, unsigned int aMaskBits, 
+									float &aLambda, b2Vec2 &aNormal, b2Shape *&aShape);
+
 	// control
 	static void CollideAll(float aStep);
 
