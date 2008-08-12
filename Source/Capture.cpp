@@ -135,6 +135,7 @@ Capture::Capture(void)
 , mEnergy(0)
 , mActive(false)
 {
+	SetAction(Action(this, &Capture::Update));
 }
 
 Capture::Capture(const CaptureTemplate &aTemplate, unsigned int aId)
@@ -144,6 +145,7 @@ Capture::Capture(const CaptureTemplate &aTemplate, unsigned int aId)
 , mEnergy(aTemplate.mEnergy)
 , mActive(true)
 {
+	SetAction(Action(this, &Capture::Update));
 }
 
 Capture::~Capture(void)

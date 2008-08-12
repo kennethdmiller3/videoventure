@@ -7,7 +7,11 @@ static Simulatable *sTail;
 static Simulatable *sNext;
 
 Simulatable::Simulatable(unsigned int aId)
-: mId(aId), mNext(NULL), mPrev(NULL), entry()
+: mId(aId)
+, mNext(NULL)
+, mPrev(NULL)
+, mActive(false)
+, mAction()
 {
 }
 
@@ -18,23 +22,22 @@ Simulatable::~Simulatable(void)
 
 void Simulatable::Activate(void)
 {
-	if (entry.empty())
+	if (!mActive)
 	{
-		entry.bind(this, &Simulatable::Simulate);
 		mPrev = sTail;
 		if (sTail)
 			sTail->mNext = this;
 		sTail = this;
 		if (!sHead)
 			sHead = this;
+		mActive = true;
 	}
 }
 
 void Simulatable::Deactivate(void)
 {
-	if (!entry.empty())
+	if (mActive)
 	{
-		entry.clear();
 		if (sHead == this)
 			sHead = mNext;
 		if (sTail == this)
@@ -47,6 +50,7 @@ void Simulatable::Deactivate(void)
 			mPrev->mNext = mNext;
 		mNext = NULL;
 		mPrev = NULL;
+		mActive = false;
 	}
 }
 
@@ -61,7 +65,7 @@ void Simulatable::SimulateAll(float aStep)
 		sNext = itor->mNext;
 
 		// perform simulation
-		(itor->entry)(aStep);
+		(itor->mAction)(aStep);
 
 		// go to the next iterator
 		itor = sNext;

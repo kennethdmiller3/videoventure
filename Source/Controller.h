@@ -2,6 +2,9 @@
 
 class Controller
 {
+public:
+	typedef fastdelegate::FastDelegate<void (float)> Action;
+
 protected:
 	// identifier
 	unsigned int mId;
@@ -10,10 +13,10 @@ private:
 	// linked list
 	Controller *mNext;
 	Controller *mPrev;
+	bool mActive;
 
-	// list entry
-	typedef fastdelegate::FastDelegate<void (float)> Entry;
-	Entry entry;
+	// action
+	Action mAction;
 
 public:
 	static const int FIRE_CHANNELS = 2;
@@ -27,6 +30,12 @@ public:
 	Controller(unsigned int aId);
 	virtual ~Controller(void);
 
+	// set action
+	void SetAction(Action aAction)
+	{
+		mAction = aAction;
+	}
+
 	// activate
 	void Activate(void);
 	void Deactivate(void);
@@ -34,7 +43,7 @@ public:
 	// is active?
 	bool IsActive(void)
 	{
-		return !entry.empty();
+		return mActive;
 	}
 
 	// configure
@@ -42,7 +51,6 @@ public:
 
 	// control
 	static void ControlAll(float aStep);
-	virtual void Control(float aStep) = 0;
 };
 
 namespace Database

@@ -128,12 +128,15 @@ Explosion::Explosion(void)
 : Updatable(0)
 , mLife(0)
 {
+	SetAction(Action(this, &Explosion::Update));
 }
 
 Explosion::Explosion(const ExplosionTemplate &aTemplate, unsigned int aId)
 : Updatable(aId)
 , mLife(aTemplate.mLifeSpan)
 {
+	SetAction(Action(this, &Explosion::Update));
+
 	if (aTemplate.mRadius > 0.0f)
 	{
 		// get parent entity

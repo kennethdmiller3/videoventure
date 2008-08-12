@@ -62,7 +62,7 @@ public:
 	}
 
 	// simulate
-	virtual void Update(float aStep);
+	void Update(float aStep);
 
 protected:
 	// start

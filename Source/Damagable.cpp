@@ -125,6 +125,7 @@ public:
 	DamagableKillUpdate(unsigned int aId)
 		: Updatable(aId)
 	{
+		SetAction(Action(this, &DamagableKillUpdate::Update));
 		Activate();
 	}
 

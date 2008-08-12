@@ -184,6 +184,7 @@ Weapon::Weapon(void)
 , mTimer(0.0f)
 , mPhase(0)
 {
+	SetAction(Action(this, &Weapon::Update));
 }
 
 Weapon::Weapon(const WeaponTemplate &aTemplate, unsigned int aId)
@@ -193,6 +194,7 @@ Weapon::Weapon(const WeaponTemplate &aTemplate, unsigned int aId)
 , mTimer(0.0f)
 , mPhase(aTemplate.mPhase)
 {
+	SetAction(Action(this, &Weapon::Update));
 }
 
 Weapon::~Weapon(void)

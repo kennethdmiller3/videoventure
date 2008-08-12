@@ -15,7 +15,8 @@ Controller::Controller(unsigned int aId)
 : mId(aId)
 , mNext(NULL)
 , mPrev(NULL)
-, entry()
+, mActive(false)
+, mAction()
 , mMove(0, 0)
 , mTurn(0)
 {
@@ -29,23 +30,22 @@ Controller::~Controller(void)
 
 void Controller::Activate(void)
 {
-	if (entry.empty())
+	if (!mActive)
 	{
-		entry.bind(this, &Controller::Control);
 		mPrev = sTail;
 		if (sTail)
 			sTail->mNext = this;
 		sTail = this;
 		if (!sHead)
 			sHead = this;
+		mActive = true;
 	}
 }
 
 void Controller::Deactivate(void)
 {
-	if (!entry.empty())
+	if (mActive)
 	{
-		entry.clear();
 		if (sHead == this)
 			sHead = mNext;
 		if (sTail == this)
@@ -58,6 +58,7 @@ void Controller::Deactivate(void)
 			mPrev->mNext = mNext;
 		mNext = NULL;
 		mPrev = NULL;
+		mActive = false;
 	}
 }
 
@@ -72,7 +73,7 @@ void Controller::ControlAll(float aStep)
 		sNext = itor->mNext;
 
 		// perform simulation
-		(itor->entry)(aStep);
+		(itor->mAction)(aStep);
 
 		// go to the next iterator
 		itor = sNext;

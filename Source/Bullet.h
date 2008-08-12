@@ -47,7 +47,7 @@ public:
 	~Bullet(void);
 
 	// simulate
-	virtual void Simulate(float aStep);
+	void Simulate(float aStep);
 
 	// collide
 	void Collide(unsigned int aId, unsigned int aHitId, float aTime, const b2ContactPoint &aPoint);

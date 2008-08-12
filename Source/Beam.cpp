@@ -133,12 +133,14 @@ Beam::Beam(void)
 : Updatable(0)
 , mLife(0)
 {
+	SetAction(Action(this, &Beam::Update));
 }
 
 Beam::Beam(const BeamTemplate &aTemplate, unsigned int aId)
 : Updatable(aId)
 , mLife(aTemplate.mLifeSpan)
 {
+	SetAction(Action(this, &Beam::Update));
 }
 
 Beam::~Beam(void)

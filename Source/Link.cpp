@@ -167,6 +167,7 @@ Link::Link(void)
 : Updatable(0)
 , mSecondary(0)
 {
+	SetAction(Action(this, &Link::Update));
 }
 
 Link::Link(const LinkTemplate &aTemplate, unsigned int aId)
@@ -174,6 +175,8 @@ Link::Link(const LinkTemplate &aTemplate, unsigned int aId)
 , mSub(aTemplate.mSub)
 , mSecondary(aTemplate.mSecondary)
 {
+	SetAction(Action(this, &Link::Update));
+
 	// get the source entity
 	Entity *entity = Database::entity.Get(aId);
 

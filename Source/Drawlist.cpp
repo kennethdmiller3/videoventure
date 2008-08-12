@@ -1826,3 +1826,30 @@ void RebuildDrawlists(void)
 		glEndList();
 	}
 }
+
+void RenderDrawlist(unsigned int aId, float aTime, float aPosX, float aPosY, float aAngle)
+{
+	// skip if not visible
+	if (aTime < 0)
+		return;
+
+	// get the dynamic draw list
+	const std::vector<unsigned int> &buffer = Database::dynamicdrawlist.Get(aId);
+
+	// skip if empty
+	if (buffer.empty())
+		return;
+
+	// push a transform
+	glPushMatrix();
+
+	// load matrix
+	glTranslatef(aPosX, aPosY, 0);
+	glRotatef(aAngle*180/float(M_PI), 0.0f, 0.0f, 1.0f);
+
+	// execute the deferred draw list
+	ExecuteDrawItems(&buffer[0], buffer.size(), aTime, aId);
+
+	// reset the transform
+	glPopMatrix();
+};

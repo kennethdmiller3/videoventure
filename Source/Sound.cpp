@@ -221,6 +221,7 @@ Sound::Sound(void)
 , mPosition(0, 0)
 , mPlaying(false)
 {
+	SetAction(Action(this, &Sound::Update));
 }
 
 Sound::Sound(const SoundTemplate &aTemplate, unsigned int aId)
@@ -235,6 +236,7 @@ Sound::Sound(const SoundTemplate &aTemplate, unsigned int aId)
 , mPosition(0, 0)
 , mPlaying(false)
 {
+	SetAction(Action(this, &Sound::Update));
 }
 
 Sound::~Sound(void)

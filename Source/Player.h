@@ -70,11 +70,13 @@ public:
 	~PlayerController(void);
 
 	// control
-	virtual void Control(float aStep);
+	void Control(float aStep);
 };
 
 namespace Database
 {
+	extern Typed<fastdelegate::FastDelegate<void (unsigned int)> > playerjoin;
+	extern Typed<fastdelegate::FastDelegate<void (unsigned int)> > playerquit;
 	extern Typed<PlayerTemplate> playertemplate;
 	extern Typed<Player *> player;
 	extern Typed<PlayerController *> playercontroller;

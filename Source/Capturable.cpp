@@ -121,6 +121,7 @@ public:
 	CapturableCaptureUpdate(unsigned int aId)
 		: Updatable(aId)
 	{
+		SetAction(Action(this, &CapturableCaptureUpdate::Update));
 		Activate();
 	}
 
