@@ -39,6 +39,11 @@ namespace Database
 				RenderableTemplate &renderable = Database::renderabletemplate.Open(aId);
 				renderable.Configure(element, aId);
 				Database::renderabletemplate.Close(aId);
+
+				// process child elements
+				std::vector<unsigned int> &buffer = Database::dynamicdrawlist.Open(aId);
+				ProcessDrawItems(element, buffer);
+				Database::dynamicdrawlist.Close(aId);
 			}
 		}
 		renderableloader;
@@ -60,6 +65,7 @@ namespace Database
 				const RenderableTemplate &renderabletemplate = Database::renderabletemplate.Get(aId);
 				Renderable *renderable = new Renderable(renderabletemplate, aId);
 				Database::renderable.Put(aId, renderable);
+				renderable->SetAction(RenderDrawlist);
 				renderable->Show();
 			}
 
@@ -77,6 +83,7 @@ namespace Database
 	}
 }
 
+
 RenderableTemplate::RenderableTemplate(void)
 : mRadius(0)
 , mPeriod(FLT_MAX)
@@ -90,9 +97,6 @@ RenderableTemplate::~RenderableTemplate(void)
 // configure
 bool RenderableTemplate::Configure(const TiXmlElement *element, unsigned int aId)
 {
-	if (Hash(element->Value()) != 0x109dd1ad /* "renderable" */)
-		return false;
-
 	// animation period
 	element->QueryFloatAttribute("period", &mPeriod);
 
@@ -101,29 +105,34 @@ bool RenderableTemplate::Configure(const TiXmlElement *element, unsigned int aId
 //	element->QueryFloatAttribute("y", &mBounds.p.y);
 	element->QueryFloatAttribute("radius", &mRadius);
 
-	// process child elements
-//	ProcessDrawItems(element, mBuffer);
-	std::vector<unsigned int> &buffer = Database::dynamicdrawlist.Open(aId);
-	ProcessDrawItems(element, buffer);
-	Database::dynamicdrawlist.Close(aId);
-
 	return true;
 }
 
 
-
 Renderable *Renderable::sHead;
 Renderable *Renderable::sTail;
-unsigned int Renderable::sTurn;
-float Renderable::sOffset;
 
 Renderable::Renderable(void)
-: mId(0), mNext(NULL), mPrev(NULL), show(false), mRadius(0), mStart(sTurn), mFraction(0.0f)
+: mId(0)
+, mNext(NULL)
+, mPrev(NULL)
+, mActive(false)
+, mAction()
+, mRadius(0)
+, mStart(sim_turn)
+, mFraction(sim_fraction)
 {
 }
 
 Renderable::Renderable(const RenderableTemplate &aTemplate, unsigned int aId)
-: mId(aId), mNext(NULL), mPrev(NULL), show(false), mRadius(aTemplate.mRadius), mStart(sTurn), mFraction(0.0f)
+: mId(aId)
+, mNext(NULL)
+, mPrev(NULL)
+, mActive(false)
+, mAction()
+, mRadius(aTemplate.mRadius)
+, mStart(sim_turn)
+, mFraction(sim_fraction)
 {
 }
 
@@ -134,9 +143,7 @@ Renderable::~Renderable(void)
 
 void Renderable::Show(void)
 {
-	Hide();
-
-	if (!show)
+	if (!mActive)
 	{
 #ifdef DRAW_FRONT_TO_BACK
 		mNext = sHead;
@@ -153,13 +160,13 @@ void Renderable::Show(void)
 		if (!sHead)
 			sHead = this;
 #endif
-		show = true;
+		mActive = true;
 	}
 }
 
 void Renderable::Hide(void)
 {
-	if (show)
+	if (mActive)
 	{
 		if (sHead == this)
 			sHead = mNext;
@@ -171,15 +178,12 @@ void Renderable::Hide(void)
 			mPrev->mNext = mNext;
 		mNext = NULL;
 		mPrev = NULL;
-		show = false;
+		mActive = false;
 	}
 }
 
-void Renderable::RenderAll(float aRatio, float aStep, const AlignedBox2 &aView)
+void Renderable::RenderAll(const AlignedBox2 &aView)
 {
-	// compute offset between visible time and simulated time
-	sOffset = (aRatio - 1.0f);
-
 	// render matrix
 	float angle;
 	Vector2 position;
@@ -212,7 +216,7 @@ void Renderable::RenderAll(float aRatio, float aStep, const AlignedBox2 &aView)
 		glEnd();
 #endif
 		// get interpolated position
-		position = entity->GetInterpolatedPosition(aRatio);
+		position = entity->GetInterpolatedPosition(sim_fraction);
 
 		// if within the view area...
 		if (position.x + itor->mRadius >= aView.min.x &&
@@ -221,10 +225,16 @@ void Renderable::RenderAll(float aRatio, float aStep, const AlignedBox2 &aView)
 			position.y - itor->mRadius <= aView.max.y)
 		{
 			// get interpolated angle
-			angle = entity->GetInterpolatedAngle(aRatio);
+			angle = entity->GetInterpolatedAngle(sim_fraction);
+
+			// get the renderable template
+			const RenderableTemplate &renderable = Database::renderabletemplate.Get(itor->mId);
+
+			// elapsed time
+			float t = fmodf((sim_turn - itor->mStart + sim_fraction - itor->mFraction - 1) * sim_step, renderable.mPeriod);
 
 			// render
-			itor->Render(aStep, position.x, position.y, angle);
+			(itor->mAction)(itor->mId, t, position.x, position.y, angle);
 
 #ifdef RENDER_STATS
 			++drawn;
@@ -245,36 +255,3 @@ void Renderable::RenderAll(float aRatio, float aStep, const AlignedBox2 &aView)
 	DebugPrint("d=%d/%d\n", drawn, drawn+culled);
 #endif
 }
-
-void Renderable::Render(float aStep, float aPosX, float aPosY, float aAngle)
-{
-	// get the renderable template
-	const RenderableTemplate &renderable = Database::renderabletemplate.Get(mId);
-
-	// elapsed time
-	float t = fmodf((sTurn - mStart + sOffset - mFraction) * aStep, renderable.mPeriod);
-
-	// skip if not visible
-	if (t < 0)
-		return;
-
-	// get the dynamic draw list
-	const std::vector<unsigned int> &buffer = Database::dynamicdrawlist.Get(mId);
-
-	// skip if empty
-	if (buffer.empty())
-		return;
-
-	// push a transform
-	glPushMatrix();
-
-	// load matrix
-	glTranslatef(aPosX, aPosY, 0);
-	glRotatef(aAngle*180/float(M_PI), 0.0f, 0.0f, 1.0f);
-
-	// execute the deferred draw list
-	ExecuteDrawItems(&buffer[0], buffer.size(), t, mId);
-
-	// reset the transform
-	glPopMatrix();
-};

@@ -50,7 +50,7 @@ public:
 	}
 
 	// update
-	virtual void Update(float aStep);
+	void Update(float aStep);
 };
 
 namespace Database

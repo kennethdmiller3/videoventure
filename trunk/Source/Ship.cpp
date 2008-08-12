@@ -135,12 +135,15 @@ bool ShipTemplate::Configure(const TiXmlElement *element)
 Ship::Ship(void)
 : Simulatable(0)
 {
+	SetAction(Action(this, &Ship::Simulate));
 }
 
 // Ship Constructor
 Ship::Ship(const ShipTemplate &aTemplate, unsigned int aId)
 : Simulatable(aId)
 {
+	SetAction(Action(this, &Ship::Simulate));
+
 	// start the idle sound
 	PlaySound(aId, 0xc301cf93 /* "idle" */);
 
@@ -151,12 +154,6 @@ Ship::Ship(const ShipTemplate &aTemplate, unsigned int aId)
 // Ship Destructor
 Ship::~Ship(void)
 {
-}
-
-// configure
-bool Ship::Configure(const TiXmlElement *element)
-{
-	return Simulatable::Configure(element);
 }
 
 // Ship Simulate

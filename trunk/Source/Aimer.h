@@ -64,7 +64,7 @@ public:
 	virtual ~Aimer(void);
 
 	// control
-	virtual void Control(float aStep);
+	void Control(float aStep);
 
 protected:
 	Vector2 LeadTarget(float bulletSpeed, const Vector2 &targetPosition, const Vector2 &targetVelocity);

@@ -11,6 +11,8 @@
 
 namespace Database
 {
+	Typed<fastdelegate::FastDelegate<void (unsigned int)> > playerjoin(0xd15784b0 /* "playerjoin" */);
+	Typed<fastdelegate::FastDelegate<void (unsigned int)> > playerquit(0x33bcfaff /* "playerquit" */);
 	Typed<PlayerTemplate> playertemplate(0x4893610a /* "playertemplate" */);
 	Typed<Player *> player(0x2c99c300 /* "player" */);
 	Typed<bool> playercontrollertemplate(0xec81fd12 /* "playercontrollertemplate" */);
@@ -149,6 +151,7 @@ Player::Player(void)
 , mLives(0)
 , mScore(0)
 {
+	SetAction(Action(this, &Player::Update));
 }
 
 // player constructor
@@ -158,6 +161,12 @@ Player::Player(const PlayerTemplate &aTemplate, unsigned int aId)
 , mLives(aTemplate.mLives)
 , mScore(0)
 {
+	SetAction(Action(this, &Player::Update));
+
+	// notify join listeners
+	for (Database::Typed<fastdelegate::FastDelegate<void (unsigned int)> >::Iterator itor(&Database::playerjoin); itor.IsValid(); ++itor)
+		itor.GetValue()(mId);
+
 	{
 		// add a kill listener
 		Database::Typed<Damagable::KillListener> &listeners = Database::killlistener.Open(mId);
@@ -193,6 +202,10 @@ Player::~Player(void)
 		listeners.Delete(Database::Key(this));
 		Database::killlistener.Close(mId);
 	}
+
+	// notify leave listeners
+	for (Database::Typed<fastdelegate::FastDelegate<void (unsigned int)> >::Iterator itor(&Database::playerquit); itor.IsValid(); ++itor)
+		itor.GetValue()(mId);
 }
 
 // player update
@@ -319,6 +332,8 @@ void Player::GotKill(unsigned int aId, unsigned int aKillId)
 PlayerController::PlayerController(unsigned int aId)
 : Controller(aId)
 {
+	SetAction(Action(this, &PlayerController::Control));
+
 	unsigned int aOwnerId = Database::owner.Get(mId);
 	if (Player *player = Database::player.Get(aOwnerId))
 	{

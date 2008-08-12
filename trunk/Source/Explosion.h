@@ -48,7 +48,7 @@ public:
 	~Explosion(void);
 
 	// update
-	virtual void Update(float aStep);
+	void Update(float aStep);
 };
 
 namespace Database

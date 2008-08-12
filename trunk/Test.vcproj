@@ -73,6 +73,8 @@
 				AdditionalLibraryDirectories="&quot;..\SDL-1.2.13\VisualC\SDLmain\Debug&quot;,&quot;..\SDL-1.2.13\VisualC\SDL\Debug&quot;,&quot;..\Box2D\Library&quot;"
 				GenerateDebugInformation="true"
 				SubSystem="2"
+				RandomizedBaseAddress="1"
+				FixedBaseAddress="2"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -252,6 +254,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Source\Overlay.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\Source\Pathing.cpp"
 				>
 			</File>
@@ -407,6 +413,10 @@
 			</File>
 			<File
 				RelativePath=".\Source\Matrix2.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Overlay.h"
 				>
 			</File>
 			<File

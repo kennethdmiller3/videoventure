@@ -67,7 +67,7 @@ public:
 	bool Configure(const TiXmlElement *element);
 
 	// update
-	virtual void Update(float aStep);
+	void Update(float aStep);
 };
 
 namespace Database

@@ -86,6 +86,8 @@ bool GunnerTemplate::Configure(const TiXmlElement *element)
 Gunner::Gunner(const GunnerTemplate &aTemplate, unsigned int aId)
 : Updatable(aId)
 {
+	SetAction(Action(this, &Gunner::Update));
+
 	Entity *entity = Database::entity.Get(mId);
 #ifdef GUNNER_TRACK_DEQUE
 	mTrackPos.push_back(entity->GetPosition());

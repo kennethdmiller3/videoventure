@@ -38,7 +38,7 @@ void Input::Update(void)
 {
 	float scale;
 	
-	// limit magnitude of move control 1
+	// limit magnitude of move control to 1
 	scale = value[MOVE_VERTICAL]*value[MOVE_VERTICAL]+value[MOVE_HORIZONTAL]*value[MOVE_HORIZONTAL];
 	if (scale > 1.0f)
 		scale = InvSqrt(scale);

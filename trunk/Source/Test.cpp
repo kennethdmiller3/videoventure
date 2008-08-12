@@ -17,6 +17,7 @@
 #include "Interpolator.h"
 #include "Drawlist.h"
 #include "Sound.h"
+#include "Overlay.h"
 
 #ifdef USE_VARIABLE
 #include "Variable.h"
@@ -81,11 +82,16 @@ std::string RECORD_CONFIG = "record.xml";
 bool record = false;
 bool playback = false;
 
+// pause state
+bool paused = false;
+bool singlestep = false;
+
 // runtime
 bool runtime = false;
 
 // device was reset
 bool wasreset = true;
+
 
 // console
 OGLCONSOLE_Console console;
@@ -108,6 +114,16 @@ extern "C" void OGLCONSOLE_Resize(OGLCONSOLE_Console console);
 // input system
 Input input;
 
+// frame values (HACK)
+float frame_time;
+float frame_turns;
+
+// simulation values (HACK)
+float sim_rate = float(SIMULATION_RATE);
+float sim_step = 1.0f / sim_rate;
+unsigned int sim_turn = 0;
+float sim_fraction = 1.0f;
+
 // listener position (HACK)
 Vector2 listenerpos;
 
@@ -118,7 +134,39 @@ GLuint lives_handle;
 
 // forward declaration
 int ProcessCommand( unsigned int aCommand, char *aParam[], int aCount );
-void RunPlayState();
+void RunState();
+void EnterShellState();
+void ExitShellState();
+void EnterPlayState();
+void ExitPlayState();
+
+// game state machine (HACK)
+enum GameStateType
+{
+	STATE_NONE,
+	STATE_SHELL,
+	STATE_PLAY,
+	STATE_QUIT,
+	NUM_GAME_STATES
+};
+GameStateType curgamestate = STATE_NONE;
+GameStateType setgamestate = STATE_SHELL;
+
+struct GameState
+{
+	fastdelegate::FastDelegate<void ()> OnEnter;
+	fastdelegate::FastDelegate<void ()> OnUpdate;
+	fastdelegate::FastDelegate<void ()> OnExit;
+};
+
+GameState gamestates[NUM_GAME_STATES] = 
+{
+	{ NULL, NULL, NULL },
+	{ EnterShellState, RunState, ExitShellState },
+	{ EnterPlayState, RunState, ExitPlayState },
+	{ NULL, NULL, NULL },
+};
+
 
 // debug output
 int DebugPrint(const char *format, ...)
@@ -310,11 +358,12 @@ bool init()
 	// grab the cursor
 	SDL_WM_GrabInput(SDL_GRAB_ON);
 
-	// set window title
+	// set window option
 	SDL_WM_SetCaption( "Shmup!", NULL );
 
     /* Initialize OGLCONSOLE */                                                                      
     console = OGLCONSOLE_Create();                                                                             
+	OGLCONSOLE_EditConsole(console);
     OGLCONSOLE_EnterKey(cmdCB);                                                                      
 
 #ifdef TRACE_OPENGL_ATTRIBUTES
@@ -384,7 +433,6 @@ bool init()
 	if ( SDL_OpenAudio(&fmt, NULL) < 0 ) {
 		DebugPrint("Unable to open audio: %s\n", SDL_GetError());
 	}
-	SDL_PauseAudio(0);
 
 	// success!
 	return true;    
@@ -402,7 +450,7 @@ void clean_up()
 }
 
 
-void init_Input(const char *config)
+bool init_Input(const char *config)
 {
 	// clear existing bindings
 	input.Clear();
@@ -414,10 +462,15 @@ void init_Input(const char *config)
 
 	// process child elements of the root
 	if (const TiXmlElement *root = document.FirstChildElement("input"))
+	{
 		input.Configure(root);
+		return true;
+	}
+
+	return false;
 }
 
-void init_Level(const char *config)
+bool init_Level(const char *config)
 {
 	// stop any startup sound (HACK)
 	StopSound(0x94326baa /* "startup" */);
@@ -432,13 +485,26 @@ void init_Level(const char *config)
 
 	// process child elements of world
 	if (const TiXmlElement *root = document.FirstChildElement("world"))
+	{
 		ProcessWorldItems(root);
 
-	// get the reticule draw list (HACK)
-	reticule_handle = Database::drawlist.Get(0x170e4c58 /* "reticule" */);
+		// get the reticule draw list (HACK)
+		reticule_handle = Database::drawlist.Get(0x170e4c58 /* "reticule" */);
 
-	// play the startup sound (HACK)
-	PlaySound(0x94326baa /* "startup" */);
+		// play the startup sound (HACK)
+		PlaySound(0x94326baa /* "startup" */);
+
+		return true;
+	}
+
+	// clear the reticule draw list (HACK)
+	reticule_handle = 0;
+
+	// show the mouse cursor
+	SDL_ShowCursor(SDL_ENABLE);
+
+	return false;
+
 }
 
 
@@ -892,7 +958,20 @@ int SDL_main( int argc, char *argv[] )
 	if( !init() )
 		return 1;    
 	
-	RunPlayState();
+	do
+	{
+		if (setgamestate != curgamestate)
+		{
+			if (gamestates[curgamestate].OnExit)
+				gamestates[curgamestate].OnExit();
+			curgamestate = setgamestate;
+			if (gamestates[curgamestate].OnEnter)
+				gamestates[curgamestate].OnEnter();
+		}
+		if (gamestates[curgamestate].OnUpdate)
+			gamestates[curgamestate].OnUpdate();
+	}
+	while(curgamestate != STATE_QUIT);
 
 	// clean up
 	clean_up();
@@ -901,7 +980,313 @@ int SDL_main( int argc, char *argv[] )
 	return 0;
 }
 
-void RunPlayState()
+
+//
+// SHELL STATE
+//
+
+// convert HSV [0..1] to RGB [0..1]
+void HSV2RGB(float h, float s, float v, float &r, float &g, float &b)
+{
+#if 1
+	// convert hue to index and fraction
+	const int bits = 20;
+	int scaled = (xs_FloorToInt(h * (1 << bits)) & ((1 << bits) - 1)) * 6;
+	int i = scaled >> bits;
+	float f = scaled * (1.0f / (1 << bits)) - i;
+
+	// generate components
+	float p = v * (1 - s);
+	float q = v * (1 - f * s);
+	float t = v * (1 - (1 - f) * s);
+
+	switch (i)
+	{
+	case 0: r = v; g = t; b = p; break;
+	case 1: r = q; g = v; b = p; break;
+	case 2: r = p; g = v; b = t; break;
+	case 3: r = p; g = q; b = v; break;
+	case 4: r = t; g = p; b = v; break;
+	case 5: r = v; g = p; b = q; break;
+	}
+#else
+	// http://www.xmission.com/~trevin/atari/video_notes.html
+	const float Y = 0.7f, S = 0.7f, theta = float(M_PI) - float(M_PI) * (sim_turn & 63) / 32.0f;
+	float R = std::min(std::max(Y + S * sin(theta), 0.0f), 1.0f);
+	float G = std::min(std::max(Y - (27/53) * S * sin(theta) - (10/53) * S * cos(theta), 0.0f), 1.0f);
+	float B = std::min(std::max(Y + S * cos(theta), 0.0f), 1.0f);
+#endif
+}
+
+// draw title
+void RenderShellTitle(unsigned int aId, float aTime, float aPosX, float aPosY, float aAngle)
+{
+	glBegin(GL_QUADS);
+
+	// title text bitmap
+	static const char titlemap[][12*8+1] = 
+	{
+	//   123456781234567812345678123456781234567812345678123456781234567812345678123456781234567812345678
+		" ##  ##  ######  ####    ######   ####   ##  ##  ######  ##  ##  ######  ##  ##  #####   ###### ",
+		" ##  ##    ##    ## ##   ##      ##  ##  ##  ##  ##      ### ##    ##    ##  ##  ##  ##  ##     ",
+		" ##  ##    ##    ##  ##  #####   ##  ##  ##  ##  #####   ######    ##    ##  ##  ##  ##  #####  ",
+		" ##  ##    ##    ##  ##  ##      ##  ##  ##  ##  ##      ######    ##    ##  ##  #####   ##     ",
+		"  ####     ##    ## ##   ##      ##  ##   ####   ##      ## ###    ##    ##  ##  ## ##   ##     ",
+		"   ##    ######  ####    ######   ####     ##    ######  ##  ##    ##    ######  ##  ##  ###### ",
+	};
+
+	// title drawing properties
+	static const float titlew = 6;
+	static const float titleh = 4;
+	static const float titlex = 320 - titlew * 0.5f * SDL_arraysize(titlemap[0]);
+	static const float titley = 16;
+	static const float titlez = 0;
+
+	// title bar alphas
+	static float baralpha[SDL_arraysize(titlemap)] = { 0.2f, 0.4f, 0.6f, 0.6f, 0.4f, 0.2f };
+
+	// draw title bar
+	for (int row = 0; row < SDL_arraysize(titlemap); ++row)
+	{
+		float y0 = titley + row * titleh, y1 = y0 + titleh;
+
+		glColor4f(0.3f, 0.3f, 0.3f, baralpha[row]);
+		glVertex2f(0, y0);
+		glVertex2f(640, y0);
+		glVertex2f(640, y1);
+		glVertex2f(0, y1);
+	}
+
+	// draw title border
+	for (int row = 0; row < SDL_arraysize(titlemap); ++row)
+	{
+		float x0 = titlex, x1 = titlex, y0 = titley + row * titleh, y1 = y0 + titleh;
+
+		for (int col = 0; col < SDL_arraysize(titlemap[row])-1; ++col)
+		{
+			if (titlemap[row][col] == ' ')
+			{
+				if (x1 > x0)
+				{
+					float R, G, B;
+					HSV2RGB((sim_turn + 8 * (col >> 3) + 4 * row) / 256.0f + 0.5f, 1.0f, 0.75f, R, G, B);
+					glColor4f(R, G, B, 1.0f);
+					glVertex2f(x0 - 2, y0 - 2);
+					glVertex2f(x1 + 2, y0 - 2);
+					glVertex2f(x1 + 2, y1 + 2);
+					glVertex2f(x0 - 2, y1 + 2);
+				}
+				x0 = titlex + col * titlew + titlew;
+			}
+			else
+			{
+				x1 = titlex + col * titlew + titlew;
+			}
+		}
+	}
+
+	// draw title body
+	for (int row = 0; row < SDL_arraysize(titlemap); ++row)
+	{
+		float x0 = titlex, x1 = titlex, y0 = titley + row * titleh, y1 = y0 + titleh;
+		for (int col = 0; col < SDL_arraysize(titlemap[row]); ++col)
+		{
+			if (titlemap[row][col] == ' ')
+			{
+				if (x1 > x0)
+				{
+					float R, G, B;
+					HSV2RGB((sim_turn + 8 * (col >> 3) + 4 * row) / 256.0f, 1.0f, 1.0f, R, G, B);
+					glColor4f(R, G, B, 1.0f);
+					glVertex2f(x0, y0);
+					glVertex2f(x1, y0);
+					glVertex2f(x1, y1);
+					glVertex2f(x0, y1);
+				}
+				x0 = titlex + col * titlew + titlew;
+			}
+			else
+			{
+				x1 = titlex + col * titlew + titlew;
+			}
+		}
+	}
+
+	glEnd();
+}
+
+// draw options
+void RenderShellOptions(unsigned int aId, float aTime, float aPosX, float aPosY, float aAngle)
+{
+	static const int optioncount = 3;
+	static char * const optiontext[optioncount] =
+	{
+		"START",
+		"OPTIONS",
+		"QUIT" 
+	};
+	static const float optionw = 32;
+	static const float optionh = -24;
+	static const float optionbuttonx[optioncount] =
+	{
+		320 - 160,
+		320 - 160,
+		320 - 160,
+	};
+	static const float optionbuttonw[optioncount] =
+	{
+		320,
+		320,
+		320,
+	};
+	static const float optiontextx[optioncount] =
+	{
+		optionbuttonx[0] + 0.5f * (optionbuttonw[0] - optionw * strlen(optiontext[0])), 
+		optionbuttonx[1] + 0.5f * (optionbuttonw[1] - optionw * strlen(optiontext[1])), 
+		optionbuttonx[2] + 0.5f * (optionbuttonw[2] - optionw * strlen(optiontext[2]))
+	};
+	static const float optionbuttony[optioncount] =
+	{
+		200 + 80 * 0,
+		200 + 80 * 1,
+		200 + 80 * 2
+	};
+	static const float optionbuttonh[optioncount] =
+	{
+		64,
+		64,
+		64
+	};
+	static const float optiontexty[optioncount] = 
+	{
+		optionbuttony[0] + 0.5f * (optionbuttonh[0] - optionh),
+		optionbuttony[1] + 0.5f * (optionbuttonh[1] - optionh),
+		optionbuttony[2] + 0.5f * (optionbuttonh[2] - optionh),
+	};
+	static const float optionz = 0;
+
+	// palette
+	enum ButtonState
+	{
+		BUTTON_NORMAL = 0,
+		BUTTON_SELECTED = 1 << 0,
+		BUTTON_ROLLOVER = 1 << 1,
+	};
+	static const float optionbackcolor[4][4] =
+	{
+		{ 0.1f, 0.1f, 0.1f, 0.5f },
+		{ 0.1f, 0.3f, 1.0f, 0.5f },
+		{ 0.3f, 0.3f, 0.3f, 0.5f },
+		{ 0.1f, 0.7f, 1.0f, 0.5f },
+	};
+	static const float optionbordercolor[4][4] =
+	{
+		{ 0.3f, 0.3f, 0.3f, 1.0f },
+		{ 0.3f, 0.3f, 0.3f, 1.0f },
+		{ 0.0f, 0.0f, 0.0f, 1.0f },
+		{ 0.0f, 0.0f, 0.0f, 1.0f },
+	};
+	static const float optiontextcolor[4][2][4] =
+	{
+		{ { 0.1f, 0.6f, 1.0f, 1.0f }, { 0.1f, 0.6f, 1.0f, 1.0f } },
+		{ { 1.0f, 0.9f, 0.1f, 1.0f }, { 1.0f, 0.9f, 0.1f, 1.0f } },
+		{ { 0.7f, 0.7f, 0.7f, 1.0f }, { 1.0f, 1.0f, 1.0f, 1.0f } },
+		{ { 1.0f, 0.9f, 0.1f, 1.0f }, { 1.0f, 1.0f, 1.0f, 1.0f } },
+	};
+
+	// cursor position
+	float cursor_x = 320 - 240 * input.value[Input::AIM_HORIZONTAL];
+	float cursor_y = 240 - 240 * input.value[Input::AIM_VERTICAL];
+
+	// mouse rollover
+	int optionstate[optioncount];
+	for (int i = 0; i < optioncount; ++i)
+	{
+		optionstate[i] = BUTTON_NORMAL;
+		if (cursor_x >= optionbuttonx[i] && cursor_x <= optionbuttonx[i] + optionbuttonw[i] &&
+			cursor_y >= optionbuttony[i] && cursor_y <= optionbuttony[i] + optionbuttonh[i])
+		{
+			optionstate[i] |= BUTTON_ROLLOVER;
+			if (input[Input::FIRE_PRIMARY])
+			{
+				optionstate[i] |= BUTTON_SELECTED;
+
+				switch (i)
+				{
+				case 0:
+					setgamestate = STATE_PLAY;
+					break;
+
+				case 2:
+					setgamestate = STATE_QUIT;
+					break;
+
+				default:
+					break;
+				}
+			}
+		}
+	}
+
+	// draw option backgrounds
+	glBegin(GL_QUADS);
+	for (int i = 0; i < optioncount; ++i)
+	{
+		glColor4fv(optionbackcolor[optionstate[i]]);
+		glVertex2f(optionbuttonx[i], optionbuttony[i]);
+		glVertex2f(optionbuttonx[i] + optionbuttonw[i], optionbuttony[i]);
+		glVertex2f(optionbuttonx[i] + optionbuttonw[i], optionbuttony[i] + optionbuttonh[i]);
+		glVertex2f(optionbuttonx[i], optionbuttony[i] + optionbuttonh[i]);
+	}
+	glEnd();
+
+	// draw option text
+	glEnable(GL_TEXTURE_2D);
+	glBindTexture(GL_TEXTURE_2D, OGLCONSOLE_glFontHandle);
+
+	glBegin(GL_QUADS);
+
+	for (int i = 0; i < optioncount; ++i)
+	{
+		glColor4fv(optionbordercolor[optionstate[i]]);
+		OGLCONSOLE_DrawString(optiontext[i], optiontextx[i] - 2, optiontexty[i] - 2, optionw, optionh, optionz);
+		OGLCONSOLE_DrawString(optiontext[i], optiontextx[i]    , optiontexty[i] - 2, optionw, optionh, optionz);
+		OGLCONSOLE_DrawString(optiontext[i], optiontextx[i] + 2, optiontexty[i] - 2, optionw, optionh, optionz);
+		OGLCONSOLE_DrawString(optiontext[i], optiontextx[i] - 2, optiontexty[i]    , optionw, optionh, optionz);
+		OGLCONSOLE_DrawString(optiontext[i], optiontextx[i] + 2, optiontexty[i]    , optionw, optionh, optionz);
+		OGLCONSOLE_DrawString(optiontext[i], optiontextx[i] - 2, optiontexty[i] + 2, optionw, optionh, optionz);
+		OGLCONSOLE_DrawString(optiontext[i], optiontextx[i]    , optiontexty[i] + 2, optionw, optionh, optionz);
+		OGLCONSOLE_DrawString(optiontext[i], optiontextx[i] + 2, optiontexty[i] + 2, optionw, optionh, optionz);
+
+		float color[4];
+		float interp = ((sim_turn & 16) ? 16 - (sim_turn & 15) : (sim_turn & 15)) / 16.0f;
+		for (int c = 0; c < 4; c++)
+			color[c] = Lerp(optiontextcolor[optionstate[i]][0][c], optiontextcolor[optionstate[i]][1][c], interp);
+		glColor4fv(color);
+		OGLCONSOLE_DrawString(optiontext[i], optiontextx[i], optiontexty[i], optionw, optionh, optionz);
+	}
+
+	glEnd();
+
+	glDisable(GL_TEXTURE_2D);
+}
+
+// draw cursor
+void RenderShellCursor(unsigned int aId, float aTime, float aPosX, float aPosY, float aAngle)
+{
+	// cursor position
+	float cursor_x = 320 - 240 * input.value[Input::AIM_HORIZONTAL];
+	float cursor_y = 240 - 240 * input.value[Input::AIM_VERTICAL];
+
+	// draw reticule (HACK)
+	glPushMatrix();
+	glTranslatef(cursor_x, cursor_y, 0.0f);
+	glCallList(reticule_handle);
+	glPopMatrix();
+}
+
+// enter shell state
+void EnterShellState()
 {
 	// clear the screen
 	glClear(
@@ -914,6 +1299,12 @@ void RunPlayState()
 	// show the screen
 	SDL_GL_SwapBuffers();
 
+	// reset simulation timer
+	sim_rate = float(SIMULATION_RATE);
+	sim_step = 1.0f / sim_rate;
+	sim_turn = 0;
+	sim_fraction = 1.0f;
+
 	// collidable initialization
 	Collidable::WorldInit();
 
@@ -921,10 +1312,505 @@ void RunPlayState()
 	init_Input(INPUT_CONFIG.c_str());
 
 	// level configuration
-	init_Level(LEVEL_CONFIG.c_str());
+	init_Level("shell.xml");
+
+	// start audio
+	SDL_PauseAudio(0);
+
+	// create title overlay
+	Overlay *title = new Overlay(0x9865b509 /* "title" */);
+	Database::overlay.Put(0x9865b509 /* "title" */, title);
+	title->SetAction(Overlay::Action(RenderShellTitle));
+	title->Show();
+
+	// create options overlay
+	Overlay *options = new Overlay(0xef286ca5 /* "options" */);
+	Database::overlay.Put(0xef286ca5 /* "options" */, options);
+	options->SetAction(Overlay::Action(RenderShellOptions));
+	options->Show();
+
+	// create cursor overlay
+	Overlay *cursor = new Overlay(0xe336320f /* "cursor" */);
+	Database::overlay.Put(0xe336320f /* "cursor" */, cursor);
+	cursor->SetAction(Overlay::Action(RenderShellCursor));
+	cursor->Show();
+
+	// set to runtime mode
+	runtime = true;
+}
+
+void ExitShellState()
+{
+	// stop audio
+	SDL_PauseAudio(1);
+
+	// stop any startup sound (HACK)
+	StopSound(0x94326baa /* "startup" */);
+
+	// clear overlays
+	delete Database::overlay.Get(0x9865b509 /* "title" */);
+	Database::overlay.Delete(0x9865b509 /* "title" */);
+	delete Database::overlay.Get(0xef286ca5 /* "options" */);
+	Database::overlay.Delete(0xef286ca5 /* "options" */);
+	delete Database::overlay.Get(0xe336320f /* "cursor" */);
+	Database::overlay.Delete(0xe336320f /* "cursor" */);
+
+	// clear all databases
+	Database::Cleanup();
+
+	// collidable done
+	Collidable::WorldDone();
+
+	// set to non-runtime mode
+	runtime = false;
+}
 
 
-	//
+//
+// PLAY STATE
+//
+
+// drain values
+static const float DRAIN_DELAY = 1.0f;
+static const float DRAIN_RATE = 0.5f;
+
+// flash values
+static const int MAX_FLASH = 16;
+static const float FLASH_RATE = 2.0f;
+
+static const float healthcolor[3][4] =
+{
+	{ 1.0f, 0.0f, 0.0f, 1.0f },
+	{ 1.0f, 1.0f, 0.0f, 0.75f },
+	{ 0.0f, 1.0f, 0.0f, 0.5f }
+};
+static const float pulsecolor[3][4] =
+{
+	{ 1.0f, 1.0f, 1.0f, 1.0f },
+	{ 1.0f, 1.0f, 0.3f, 0.75f },
+	{ 0.2f, 1.0f, 0.2f, 0.5f },
+};
+
+class PlayerHUD : public Updatable, public Overlay
+{
+public:
+	// fill values
+	float fill;
+
+	// drain values
+	float drain;
+	float draindelay;
+
+	// flash values
+	struct Flash
+	{
+		float left;
+		float right;
+		float fade;
+	};
+	Flash flash[MAX_FLASH];
+	int flashcount;
+
+	// camera values
+	Vector2 trackpos[2];
+	Vector2 trackaim;
+
+	// reticule values
+	Vector2 aimpos[2];
+
+public:
+	PlayerHUD(unsigned int aPlayerId);
+
+	void Update(float aStep);
+	void Render(unsigned int aId, float aTime, float aPosX, float aPosY, float aAngle);
+};
+
+PlayerHUD::PlayerHUD(unsigned int aPlayerId = 0)
+	: Updatable(aPlayerId)
+	, Overlay(aPlayerId)
+	, fill(0)
+	, drain(0)
+	, draindelay(0)
+	, flashcount(0)
+{
+	trackpos[0] = Vector2(0, 0);
+	trackpos[1] = Vector2(0, 0);
+	trackaim = Vector2(0, 0);
+	aimpos[0] = Vector2(0, 0);
+	aimpos[1] = Vector2(0, 0);
+
+	Updatable::SetAction(Updatable::Action(this, &PlayerHUD::Update));
+	Overlay::SetAction(Overlay::Action(this, &PlayerHUD::Render));
+}
+
+void PlayerHUD::Update(float aStep)
+{
+	// get the player
+	Player *player = Database::player.Get(Updatable::mId);
+
+	// get the attached entity identifier
+	unsigned int id = player->mAttach;
+	if (!id)
+		return;
+
+	// get the entity
+	Entity *entity = Database::entity.Get(id);
+	if (!entity)
+		return;
+
+	// track player position
+	trackpos[0] = trackpos[1];
+	trackpos[1] = entity->GetPosition();
+
+	// update target aim position
+	aimpos[0] = aimpos[1];
+	aimpos[1] = Vector2(input[Input::AIM_HORIZONTAL], input[Input::AIM_VERTICAL]);
+
+	// set listener position
+	listenerpos = trackpos[1];
+
+	// if applying view aim
+	if (VIEW_AIM)
+	{
+		Vector2 trackdelta;
+		if (Database::ship.Get(id))
+			trackdelta = aimpos[1] - trackaim;
+		else
+			trackdelta = -trackaim;
+		if (trackdelta.LengthSq() > FLT_EPSILON)
+			trackaim += VIEW_AIM_FILTER * sim_step * trackdelta;
+		trackpos[1] += trackaim * VIEW_AIM;
+	}
+
+#ifdef TEST_PATHING
+	Pathing(entity->GetPosition(), trackpos[1] + aimpos[1] * 240 * VIEW_SIZE / 640, 4.0f);
+#endif
+}
+
+void PlayerHUD::Render(unsigned int aId, float aTime, float aPosX, float aPosY, float aAngle)
+{
+	// get the player
+	Player *player = Database::player.Get(aId);
+
+	// get the attached entity identifier
+	unsigned int id = player->mAttach;
+
+	// draw player health (HACK)
+	float health = 0.0f;
+	Damagable *damagable = Database::damagable.Get(id);
+	if (damagable)
+	{
+		// get health ratio
+		const DamagableTemplate &damagabletemplate = Database::damagabletemplate.Get(id);
+		health = damagable->GetHealth() / damagabletemplate.mHealth;
+	}
+
+	// if health is greater than the gauge fill...
+	if (fill < health - FLT_EPSILON)
+	{
+		// raise the fill
+		fill = health;
+		if (drain < fill)
+			drain = fill;
+	}
+	// else if health is lower than the gauge fill...
+	else if (fill > health + FLT_EPSILON)
+	{
+		// add a flash
+		if (flashcount == MAX_FLASH)
+			--flashcount;
+		for (int i = flashcount; i > 0; --i)
+			flash[i] = flash[i-1];
+		Flash &flashinfo = flash[0];
+		flashinfo.left = health;
+		flashinfo.right = fill;
+		flashinfo.fade = 1.0f;
+		++flashcount;
+
+		// lower the fill
+		fill = health;
+
+		// reset the drain delay
+		draindelay = DRAIN_DELAY;
+	}
+
+	// update pulse
+	static float pulsetimer = 0.0f;
+	pulsetimer += frame_time * (1.0f + (1.0f - health) * (1.0f - health) * 4.0f);
+	while (pulsetimer >= 1.0f)
+		pulsetimer -= 1.0f;
+	float pulse = sinf(pulsetimer * float(M_PI));
+	pulse *= pulse;
+	pulse *= pulse;
+	pulse *= pulse;
+
+	// set color based on health and pulse
+
+	int band = (health > 0.5f);
+	float ratio = health * 2.0f - band;
+
+	float fillcolor[4];
+	for (int i = 0; i < 4; i++)
+		fillcolor[i] = Lerp(Lerp(healthcolor[band][i], healthcolor[band+1][i], ratio), Lerp(pulsecolor[band][i], pulsecolor[band+1][i], ratio), pulse);
+
+	// begin drawing
+	glBegin(GL_QUADS);
+
+	// background
+	glColor4f(0.3f, 0.3f, 0.3f, 0.5f);
+	glVertex2f(8, 8);
+	glVertex2f(108, 8);
+	glVertex2f(108, 16);
+	glVertex2f(8, 16);
+
+	// drain
+	glColor4f(1.0f, 0.0f, 0.0f, 0.5f);
+	glVertex2f(8 + 100 * fill, 8);
+	glVertex2f(8 + 100 * drain, 8);
+	glVertex2f(8 + 100 * drain, 16);
+	glVertex2f(8 + 100 * fill, 16);
+
+	// flash
+	for (int i = 0; i < flashcount; ++i)
+	{
+		Flash &flashinfo = flash[i];
+		glColor4f(1.0f, 1.0f, 1.0f, flashinfo.fade);
+		glVertex2f(8 + 100 * flashinfo.left, 8 - 2 * flashinfo.fade);
+		glVertex2f(8 + 100 * flashinfo.right, 8 - 2 * flashinfo.fade);
+		glVertex2f(8 + 100 * flashinfo.right, 16 + 2 * flashinfo.fade);
+		glVertex2f(8 + 100 * flashinfo.left, 16 + 2 * flashinfo.fade);
+	}
+
+	// fill gauge
+	glColor4fv(fillcolor);
+	glVertex2f(8, 8);
+	glVertex2f(8 + 100 * fill, 8);
+	glVertex2f(8 + 100 * fill, 16);
+	glVertex2f(8, 16);
+
+	glEnd();
+
+	// if the drain delay elapsed...
+	draindelay -= frame_time;
+	if (draindelay <= 0)
+	{
+		// update drain
+		drain -= DRAIN_RATE * frame_time;
+		if (drain < fill)
+			drain = fill;
+	}
+
+	// count down flash timers
+	for (int i = 0; i < flashcount; ++i)
+	{
+		Flash &flashinfo = flash[i];
+		flashinfo.fade -= FLASH_RATE * frame_time;
+		if (flashinfo.fade <= 0.0f)
+		{
+			flashcount = i;
+			break;
+		}
+	}
+
+	// get player score
+	static int cur_score = -1;
+	int new_score = player->mScore;
+
+	// if the score has not changed...
+	if (new_score == cur_score && !wasreset)
+	{
+		// call the existing draw list
+		glCallList(score_handle);
+	}
+	else
+	{
+		// update score
+		cur_score = new_score;
+
+		// start a new draw list list
+		glNewList(score_handle, GL_COMPILE_AND_EXECUTE);
+
+		// draw player score (HACK)
+		char score[9];
+		sprintf(score, "%08d", new_score);
+		bool leading = true;
+
+		glEnable(GL_TEXTURE_2D);
+		glBindTexture(GL_TEXTURE_2D, OGLCONSOLE_glFontHandle);
+		glBegin(GL_QUADS);
+
+		float x = 8;
+		float y = 32;
+		float z = 0;
+		float w = 16;
+		float h = -16;
+		static const float textcolor[2][3] =
+		{
+			{ 0.4f, 0.5f, 1.0f },
+			{ 0.3f, 0.3f, 0.3f }
+		};
+
+		for (char *s = score; *s != '\0'; ++s)
+		{
+			char c = *s;
+			if (c != '0')
+				leading = false;
+			glColor3fv(textcolor[leading]);
+			OGLCONSOLE_DrawCharacter(c, x, y, w, h, z);
+			x += w;
+		}
+
+		glEnd();
+
+		glDisable(GL_TEXTURE_2D);
+
+		glEndList();
+	}
+
+	int cur_lives = -1;
+	int new_lives = player->mLives;
+	if (new_lives < INT_MAX)
+	{
+		// if the lives has not changed...
+		if (new_lives == cur_lives && !wasreset)
+		{
+			// call the existing draw list
+			glCallList(lives_handle);
+		}
+		else
+		{
+			// update lives
+			cur_lives = new_lives;
+
+			// start a new draw list list
+			glNewList(lives_handle, GL_COMPILE_AND_EXECUTE);
+
+			// draw remaining lives
+			char lives[16];
+			sprintf(lives, "x%d", cur_lives);
+
+			glEnable(GL_TEXTURE_2D);
+			glBindTexture(GL_TEXTURE_2D, OGLCONSOLE_glFontHandle);
+
+			glColor4f(0.4f, 0.5f, 1.0f, 1.0f);
+
+			glBegin(GL_QUADS);
+
+			float x = 116;
+			float y = 16;
+			float z = 0;
+			float w = 8;
+			float h = -8;
+			OGLCONSOLE_DrawString(lives, x, y, w, h, z);
+
+			glEnd();
+
+			glDisable(GL_TEXTURE_2D);
+
+			glEndList();
+		}
+	}
+
+	// draw reticule
+	Controller *controller = Database::controller.Get(id);
+	if (controller)
+	{
+		float x = 320 - 240 * Lerp(aimpos[0].x, aimpos[1].x, sim_fraction);
+		float y = 240 - 240 * Lerp(aimpos[0].y, aimpos[1].y, sim_fraction);
+
+		glPushMatrix();
+		glTranslatef(x, y, 0.0f);
+		glCallList(reticule_handle);
+		glPopMatrix();
+	}
+	else if (cur_lives <= 0)
+	{
+		glEnable(GL_TEXTURE_2D);
+		glBindTexture(GL_TEXTURE_2D, OGLCONSOLE_glFontHandle);
+
+
+		glBegin(GL_QUADS);
+
+		float x = 320 - 32 * 4 - 16;
+		float y = 240 - 16;
+		float z = 0;
+		float w = 32;
+		float h = -32;
+
+		glColor4f(0.0f, 0.0f, 0.0f, 1.0f);
+		OGLCONSOLE_DrawString("GAME OVER", x - 4, y, w, h, z);
+		OGLCONSOLE_DrawString("GAME OVER", x + 4, y, w, h, z);
+		OGLCONSOLE_DrawString("GAME OVER", x, y - 4, w, h, z);
+		OGLCONSOLE_DrawString("GAME OVER", x, y + 4, w, h, z);
+
+		glColor4f(1.0f, 0.9f, 0.1f, 1.0f);
+		OGLCONSOLE_DrawString("GAME OVER", x, y, w, h, z);
+
+		glEnd();
+
+		glDisable(GL_TEXTURE_2D);
+	}
+}
+
+namespace Database
+{
+	Typed<PlayerHUD> playerhud(0x8e522e29 /* "playerhud" */);
+}
+
+// player join
+void PlayerJoinListener(unsigned int aId)
+{
+	// create player hud overlay
+	PlayerHUD *playerhud = new (Database::playerhud.Alloc(aId)) PlayerHUD(aId);
+	playerhud->Activate();
+	playerhud->Show();
+}
+
+// player quit
+void PlayerQuitListener(unsigned int aId)
+{
+	// remove player hud overlay
+	Database::playerhud.Delete(aId);
+}
+
+// enter play state
+void EnterPlayState()
+{
+	// clear the screen
+	glClear(
+		GL_COLOR_BUFFER_BIT
+#ifdef ENABLE_DEPTH_BUFFER
+		| GL_DEPTH_BUFFER_BIT
+#endif
+		);
+
+	// show the screen
+	SDL_GL_SwapBuffers();
+
+	// reset simulation timer
+	sim_rate = float(SIMULATION_RATE);
+	sim_step = 1.0f / sim_rate;
+	sim_turn = 0;
+	sim_fraction = 1.0f;
+
+	// collidable initialization
+	Collidable::WorldInit();
+
+	// input binding
+	init_Input(INPUT_CONFIG.c_str());
+
+	// level configuration
+	if (!init_Level(LEVEL_CONFIG.c_str()))
+		setgamestate = STATE_SHELL;
+
+	// start audio
+	SDL_PauseAudio(0);
+
+	// add a join listener
+	Database::playerjoin.Put(0xe28d61c6 /* "hud" */, PlayerJoinListener);
+
+	// add a quit listener
+	Database::playerquit.Put(0xe28d61c6 /* "hud" */, PlayerQuitListener);
 
 	// allocate score draw list
 	score_handle = glGenLists(1);
@@ -932,18 +1818,39 @@ void RunPlayState()
 	// allocate lives draw list
 	lives_handle = glGenLists(1);
 
+	// set to runtime mode
+	runtime = true;
+
+	DebugPrint("Simulating at %dHz (x%f)\n", SIMULATION_RATE, TIME_SCALE);
+}
+
+// run play state
+// exit play state
+void ExitPlayState()
+{
+	DebugPrint("Quitting...\n");
+
+	// stop audio
+	SDL_PauseAudio(1);
+
+	// stop any startup sound (HACK)
+	StopSound(0x94326baa /* "startup" */);
+
+	// clear all databases
+	Database::Cleanup();
+
+	// collidable done
+	Collidable::WorldDone();
+
+	// set to non-runtime mode
+	runtime = false;
+}
+
+// common run state
+void RunState()
+{
 	// last ticks
 	unsigned int ticks = SDL_GetTicks();
-
-	// simulation timer
-	const float sim_rate = float(SIMULATION_RATE);
-	const float sim_step = 1.0f / sim_rate;
-	float sim_turns = 1.0f;
-	unsigned int sim_turn = 0;
-
-	// pause state
-	bool paused = false;
-	bool singlestep = false;
 
 	// input logging
 	TiXmlDocument inputlog(RECORD_CONFIG.c_str());
@@ -965,13 +1872,6 @@ void RunPlayState()
 		inputlogroot = NULL;
 		inputlognext = NULL;
 	}
-
-	// camera track position
-	Vector2 trackpos[2] = { Vector2(0.0f, 0.0f), Vector2(0.0f, 0.0f) };
-	Vector2 trackaim(0.0f, 0.0f);
-
-	// aim track position
-	Vector2 aimpos[2] = { Vector2(0.0f, 0.0f), Vector2(0.0f, 0.0f)  };
 
 #ifdef GET_PERFORMANCE_DETAILS
 	LARGE_INTEGER perf_freq;
@@ -995,15 +1895,6 @@ void RunPlayState()
 	// create a new draw list
 	GLuint debugdraw = glGenLists(1);
 #endif
-
-	DebugPrint("Simulating at %dHz (x%f)\n", SIMULATION_RATE, TIME_SCALE);
-
-	// set to runtime mode
-	runtime = true;
-
-	// quit flag
-	bool quit = false;
-
 
 	// wait for user exit
 	do
@@ -1040,7 +1931,7 @@ void RunPlayState()
 				input.OnPress( Input::TYPE_KEYBOARD, event.key.which, event.key.keysym.sym );
 				if ((event.key.keysym.sym == SDLK_F4) && (event.key.keysym.mod & KMOD_ALT))
 				{
-					quit = true;
+					setgamestate = STATE_QUIT;
 				}
 				if ((event.key.keysym.sym == SDLK_RETURN) && (event.key.keysym.mod & KMOD_ALT))
 				{
@@ -1058,7 +1949,7 @@ void RunPlayState()
 					{
 						paused = !paused;
 					}
-					SDL_ShowCursor(paused ? SDL_ENABLE : SDL_DISABLE);
+					SDL_ShowCursor(paused || !reticule_handle ? SDL_ENABLE : SDL_DISABLE);
 					SDL_WM_GrabInput(paused ? SDL_GRAB_OFF : SDL_GRAB_ON);
 					SDL_PauseAudio(paused);
 				}
@@ -1088,7 +1979,7 @@ void RunPlayState()
 				input.OnRelease( Input::TYPE_JOYSTICK_BUTTON, event.jbutton.which, event.jbutton.button );
 				break;
 			case SDL_QUIT:
-				quit = true;
+				setgamestate = STATE_QUIT;
 				break;
 			}
 		}
@@ -1103,9 +1994,6 @@ void RunPlayState()
 			delta = 100;
 
 		// frame time and turns
-		float frame_time;
-		float frame_turns;
-
 		if (singlestep)
 		{
 			singlestep = false;
@@ -1121,7 +2009,7 @@ void RunPlayState()
 			frame_turns = 0.0f;
 
 			// set turn counter to almost reach a new turn
-			sim_turns = 0.99609375f;
+			sim_fraction = 0.99609375f;
 		}
 		else if (FIXED_STEP)
 		{
@@ -1140,8 +2028,8 @@ void RunPlayState()
 		float step_turns = std::min(TIME_SCALE * MOTIONBLUR_TIME, sim_step) / MOTIONBLUR_STEPS * sim_rate;
 
 		// advance to beginning of motion blur steps
-		sim_turns += frame_turns;
-		sim_turns -= MOTIONBLUR_STEPS * step_turns;
+		sim_fraction += frame_turns;
+		sim_fraction -= MOTIONBLUR_STEPS * step_turns;
 
 		// for each motion-blur step
 		for (int blur = 0; blur < MOTIONBLUR_STEPS; ++blur)
@@ -1166,10 +2054,10 @@ void RunPlayState()
 			glScalef( -1.0f, -1.0f, -1.0f );
 
 			// advance the sim timer
-			sim_turns += step_turns;
+			sim_fraction += step_turns;
 
 			// while simulation turns to run...
-			while (sim_turns >= 1.0f)
+			while (sim_fraction >= 1.0f)
 			{
 #ifdef COLLECT_DEBUG_DRAW
 				// collect any debug draw
@@ -1177,7 +2065,7 @@ void RunPlayState()
 #endif
 
 				// deduct a turn
-				sim_turns -= 1.0f;
+				sim_fraction -= 1.0f;
 				
 				// update database
 				Database::Update();
@@ -1187,7 +2075,7 @@ void RunPlayState()
 					// quit if out of turns
 					if (!inputlognext)
 					{
-						quit = true;
+						setgamestate = STATE_SHELL;
 						break;
 					}
 
@@ -1297,49 +2185,11 @@ void RunPlayState()
 				update_time[profile_index] += perf_count4.QuadPart - perf_count3.QuadPart;
 #endif
 
-				// for each player...
-				for (Database::Typed<PlayerController *>::Iterator itor(&Database::playercontroller); itor.IsValid(); ++itor)
-				{
-					// TO DO: support multiple players
-
-					// get the entity
-					Entity *entity = Database::entity.Get(itor.GetKey());
-
-					// track player position
-					trackpos[0] = trackpos[1];
-					trackpos[1] = entity->GetPosition();
-
-					// update target aim position
-					aimpos[0] = aimpos[1];
-					aimpos[1] = Vector2(input[Input::AIM_HORIZONTAL], input[Input::AIM_VERTICAL]);
-
-					// set listener position
-					listenerpos = trackpos[1];
-
-					// if applying view aim
-					if (VIEW_AIM)
-					{
-						Vector2 trackdelta;
-						if (Database::ship.Get(itor.GetKey()))
-							trackdelta = aimpos[1] - trackaim;
-						else
-							trackdelta = -trackaim;
-						if (trackdelta.LengthSq() > FLT_EPSILON)
-							trackaim += VIEW_AIM_FILTER * sim_step * trackdelta;
-						trackpos[1] += trackaim * VIEW_AIM;
-					}
-
-#ifdef TEST_PATHING
-					Pathing(entity->GetPosition(), trackpos[1] + aimpos[1] * 240 * VIEW_SIZE / 640, 4.0f);
-#endif
-				}
-
 				// step inputs for next turn
 				input.Step();
 
 				// advance the turn counter
 				++sim_turn;
-				Renderable::SetTurn(sim_turn);
 
 #ifdef COLLECT_DEBUG_DRAW
 				// finish the draw list
@@ -1348,7 +2198,7 @@ void RunPlayState()
 			}
 
 #ifdef PRINT_SIMULATION_TIMER
-			DebugPrint("delta=%d ticks=%d sim_t=%f\n", delta, ticks, sim_turns);
+			DebugPrint("delta=%d ticks=%d sim_t=%f\n", delta, ticks, sim_fraction);
 #endif
 
 #ifdef GET_PERFORMANCE_DETAILS
@@ -1361,8 +2211,12 @@ void RunPlayState()
 			// push camera transform
 			glPushMatrix();
 
+			// get the first player hud overlay (HACK)
+			Database::Typed<PlayerHUD>::Iterator playerhuditor(&Database::playerhud);
+			const PlayerHUD &playerhud = playerhuditor.GetValue();
+
 			// get interpolated track position
-			Vector2 viewpos(Lerp(trackpos[0].x, trackpos[1].x, sim_turns), Lerp(trackpos[0].y, trackpos[1].y, sim_turns));
+			Vector2 viewpos(Lerp(playerhud.trackpos[0].x, playerhud.trackpos[1].x, sim_fraction), Lerp(playerhud.trackpos[0].y, playerhud.trackpos[1].y, sim_fraction));
 
 			// set view position
 			glTranslatef( -viewpos.x, -viewpos.y, 0 );
@@ -1376,7 +2230,7 @@ void RunPlayState()
 
 			// render all entities
 			// (send interpolation ratio and offset from simulation time)
-			Renderable::RenderAll(sim_turns, sim_step, view);
+			Renderable::RenderAll(view);
 
 			// reset camera transform
 			glPopMatrix();
@@ -1415,8 +2269,12 @@ void RunPlayState()
 		// push camera transform
 		glPushMatrix();
 
+		// get the first player hud overlay (HACK)
+		Database::Typed<PlayerHUD>::Iterator playerhuditor(&Database::playerhud);
+		const PlayerHUD &playerhud = playerhuditor.GetValue();
+
 		// get interpolated track position
-		Vector2 viewpos(Lerp(trackpos[0].x, trackpos[1].x, sim_turns), Lerp(trackpos[0].y, trackpos[1].y, sim_turns));
+		Vector2 viewpos(Lerp(playerhud.trackpos[0].x, playerhud.trackpos[1].x, sim_fraction), Lerp(playerhud.trackpos[0].y, playerhud.trackpos[1].y, sim_fraction));
 
 		// set camera to track position
 		glTranslatef( -viewpos.x, -viewpos.y, 0 );
@@ -1439,305 +2297,8 @@ void RunPlayState()
 		glPushMatrix();
 		glLoadIdentity();
 
-		// for each player...
-		int playerindex = 0;
-		for (Database::Typed<Player *>::Iterator itor(&Database::player); itor.IsValid(); ++itor)
-		{
-			// get the attached entity identifier
-			unsigned int id = itor.GetValue()->mAttach;
-
-			// draw player health (HACK)
-			float health = 0.0f;
-			Damagable *damagable = Database::damagable.Get(id);
-			if (damagable)
-			{
-				// get health ratio
-				const DamagableTemplate &damagabletemplate = Database::damagabletemplate.Get(id);
-				health = damagable->GetHealth() / damagabletemplate.mHealth;
-			}
-
-			// fill gauge values
-			static const int MAX_PLAYERS = 8;
-			static float fill[MAX_PLAYERS] = { 0 };
-
-			// drain values
-			static const float DRAIN_DELAY = 1.0f;
-			static const float DRAIN_RATE = 0.5f;
-			static float drain[MAX_PLAYERS] = { 0 };
-			static float draindelay[MAX_PLAYERS] = { 0 };
-
-			// flash values
-			static const int MAX_FLASH = 16;
-			static const float FLASH_RATE = 2.0f;
-			struct Flash
-			{
-				float left;
-				float right;
-				float fade;
-			};
-			static Flash flash[MAX_PLAYERS][MAX_FLASH] = { 0 };
-			static int flashcount[MAX_PLAYERS] = { 0 };
-
-			// if health is greater than the gauge fill...
-			if (fill[playerindex] < health - FLT_EPSILON)
-			{
-				// raise the fill
-				fill[playerindex] = health;
-				if (drain[playerindex] < fill[playerindex])
-					drain[playerindex] = fill[playerindex];
-			}
-			// else if health is lower than the gauge fill...
-			else if (fill[playerindex] > health + FLT_EPSILON)
-			{
-				// add a flash
-				if (flashcount[playerindex] == MAX_FLASH)
-					--flashcount[playerindex];
-				for (int i = flashcount[playerindex]; i > 0; --i)
-					flash[playerindex][i] = flash[playerindex][i-1];
-				Flash &flashinfo = flash[playerindex][0];
-				flashinfo.left = health;
-				flashinfo.right = fill[playerindex];
-				flashinfo.fade = 1.0f;
-				++flashcount[playerindex];
-
-				// lower the fill
-				fill[playerindex] = health;
-
-				// reset the drain delay
-				draindelay[playerindex] = DRAIN_DELAY;
-			}
-
-			// update pulse
-			static float pulsetimer = 0.0f;
-			pulsetimer += frame_time * (1.0f + (1.0f - health) * (1.0f - health) * 4.0f);
-			while (pulsetimer >= 1.0f)
-				pulsetimer -= 1.0f;
-			float pulse = sinf(pulsetimer * float(M_PI));
-			pulse *= pulse;
-			pulse *= pulse;
-			pulse *= pulse;
-
-			// set color based on health and pulse
-			static const float healthcolor[3][4] =
-			{
-				{ 1.0f, 0.0f, 0.0f, 1.0f },
-				{ 1.0f, 1.0f, 0.0f, 0.75f },
-				{ 0.0f, 1.0f, 0.0f, 0.5f }
-			};
-			static const float pulsecolor[3][4] =
-			{
-				{ 1.0f, 1.0f, 1.0f, 1.0f },
-				{ 1.0f, 1.0f, 0.3f, 0.75f },
-				{ 0.2f, 1.0f, 0.2f, 0.5f },
-			};
-
-			int band = (health > 0.5f);
-			float ratio = health * 2.0f - band;
-
-			float fillcolor[4];
-			for (int i = 0; i < 4; i++)
-				fillcolor[i] = Lerp(Lerp(healthcolor[band][i], healthcolor[band+1][i], ratio), Lerp(pulsecolor[band][i], pulsecolor[band+1][i], ratio), pulse);
-
-			// begin drawing
-			glBegin(GL_QUADS);
-
-			// background
-			glColor4f(0.3f, 0.3f, 0.3f, 0.5f);
-			glVertex2f(8, 8);
-			glVertex2f(108, 8);
-			glVertex2f(108, 16);
-			glVertex2f(8, 16);
-
-			// drain
-			glColor4f(1.0f, 0.0f, 0.0f, 0.5f);
-			glVertex2f(8 + 100 * fill[playerindex], 8);
-			glVertex2f(8 + 100 * drain[playerindex], 8);
-			glVertex2f(8 + 100 * drain[playerindex], 16);
-			glVertex2f(8 + 100 * fill[playerindex], 16);
-
-			// flash
-			for (int i = 0; i < flashcount[playerindex]; ++i)
-			{
-				Flash &flashinfo = flash[playerindex][i];
-				glColor4f(1.0f, 1.0f, 1.0f, flashinfo.fade);
-				glVertex2f(8 + 100 * flashinfo.left, 8 - 2 * flashinfo.fade);
-				glVertex2f(8 + 100 * flashinfo.right, 8 - 2 * flashinfo.fade);
-				glVertex2f(8 + 100 * flashinfo.right, 16 + 2 * flashinfo.fade);
-				glVertex2f(8 + 100 * flashinfo.left, 16 + 2 * flashinfo.fade);
-			}
-
-			// fill gauge
-			glColor4fv(fillcolor);
-			glVertex2f(8, 8);
-			glVertex2f(8 + 100 * fill[playerindex], 8);
-			glVertex2f(8 + 100 * fill[playerindex], 16);
-			glVertex2f(8, 16);
-
-			glEnd();
-
-			// if the drain delay elapsed...
-			draindelay[playerindex] -= frame_time;
-			if (draindelay[playerindex] <= 0)
-			{
-				// update drain
-				drain[playerindex] -= DRAIN_RATE * frame_time;
-				if (drain[playerindex] < fill[playerindex])
-					drain[playerindex] = fill[playerindex];
-			}
-
-			// count down flash timers
-			for (int i = 0; i < flashcount[playerindex]; ++i)
-			{
-				Flash &flashinfo = flash[playerindex][i];
-				flashinfo.fade -= FLASH_RATE * frame_time;
-				if (flashinfo.fade <= 0.0f)
-				{
-					flashcount[playerindex] = i;
-					break;
-				}
-			}
-
-			// get player score
-			static int cur_score = -1;
-			int new_score = itor.GetValue()->mScore;
-
-			// if the score has not changed...
-			if (new_score == cur_score && !wasreset)
-			{
-				// call the existing draw list
-				glCallList(score_handle);
-			}
-			else
-			{
-				// update score
-				cur_score = new_score;
-
-				// start a new draw list list
-				glNewList(score_handle, GL_COMPILE_AND_EXECUTE);
-
-				// draw player score (HACK)
-				char score[9];
-				sprintf(score, "%08d", new_score);
-				bool leading = true;
-
-				glEnable(GL_TEXTURE_2D);
-				glBindTexture(GL_TEXTURE_2D, OGLCONSOLE_glFontHandle);
-				glBegin(GL_QUADS);
-
-				float x = 8;
-				float y = 32;
-				float z = 0;
-				float w = 16;
-				float h = -16;
-				static const float textcolor[2][3] =
-				{
-					{ 0.4f, 0.5f, 1.0f },
-					{ 0.3f, 0.3f, 0.3f }
-				};
-
-				for (char *s = score; *s != '\0'; ++s)
-				{
-					char c = *s;
-					if (c != '0')
-						leading = false;
-					glColor3fv(textcolor[leading]);
-					OGLCONSOLE_DrawCharacter(c, x, y, w, h, z);
-					x += w;
-				}
-
-				glEnd();
-
-				glDisable(GL_TEXTURE_2D);
-
-				glEndList();
-			}
-
-			int cur_lives = -1;
-			int new_lives = itor.GetValue()->mLives;
-			if (new_lives < INT_MAX)
-			{
-				// if the lives has not changed...
-				if (new_lives == cur_lives && !wasreset)
-				{
-					// call the existing draw list
-					glCallList(lives_handle);
-				}
-				else
-				{
-					// update lives
-					cur_lives = new_lives;
-
-					// start a new draw list list
-					glNewList(lives_handle, GL_COMPILE_AND_EXECUTE);
-
-					// draw remaining lives
-					char lives[16];
-					sprintf(lives, "x%d", cur_lives);
-
-					glEnable(GL_TEXTURE_2D);
-					glBindTexture(GL_TEXTURE_2D, OGLCONSOLE_glFontHandle);
-
-					glColor4f(0.4f, 0.5f, 1.0f, 1.0f);
-
-					glBegin(GL_QUADS);
-
-					float x = 116;
-					float y = 16;
-					float z = 0;
-					float w = 8;
-					float h = -8;
-					OGLCONSOLE_DrawString(lives, x, y, w, h, z);
-
-					glEnd();
-
-					glDisable(GL_TEXTURE_2D);
-
-					glEndList();
-				}
-			}
-
-			// draw reticule
-			Controller *controller = Database::controller.Get(id);
-			if (controller)
-			{
-				float x = 320 - 240 * Lerp(aimpos[0].x, aimpos[1].x, sim_turns);
-				float y = 240 - 240 * Lerp(aimpos[0].y, aimpos[1].y, sim_turns);
-
-				glPushMatrix();
-				glTranslatef(x, y, 0.0f);
-				glCallList(reticule_handle);
-				glPopMatrix();
-			}
-			else if (cur_lives <= 0)
-			{
-				glEnable(GL_TEXTURE_2D);
-				glBindTexture(GL_TEXTURE_2D, OGLCONSOLE_glFontHandle);
-
-
-				glBegin(GL_QUADS);
-
-				float x = 320 - 32 * 4 - 16;
-				float y = 240 - 16;
-				float z = 0;
-				float w = 32;
-				float h = -32;
-
-				glColor4f(0.0f, 0.0f, 0.0f, 1.0f);
-				OGLCONSOLE_DrawString("GAME OVER", x - 4, y, w, h, z);
-				OGLCONSOLE_DrawString("GAME OVER", x + 4, y, w, h, z);
-				OGLCONSOLE_DrawString("GAME OVER", x, y - 4, w, h, z);
-				OGLCONSOLE_DrawString("GAME OVER", x, y + 4, w, h, z);
-
-				glColor4f(1.0f, 0.9f, 0.1f, 1.0f);
-				OGLCONSOLE_DrawString("GAME OVER", x, y, w, h, z);
-
-				glEnd();
-
-				glDisable(GL_TEXTURE_2D);
-			}
-
-			++playerindex;
-		}
+		// render all overlays
+		Overlay::RenderAll();
 
 #ifdef GET_PERFORMANCE_DETAILS
 		if (!OPENGL_SWAPCONTROL)
@@ -1919,22 +2480,11 @@ void RunPlayState()
 		// clear device reset flag
 		wasreset = false;
 	}
-	while( !quit );
-
-	DebugPrint("Quitting...\n");
+	while( setgamestate == curgamestate );
 
 	if (record)
 	{
 		// save input log
 		inputlog.SaveFile();
 	}
-
-	// stop audio
-	SDL_PauseAudio(1);
-
-	// clear all databases
-	Database::Cleanup();
-
-	// collidable done
-	Collidable::WorldDone();
 }

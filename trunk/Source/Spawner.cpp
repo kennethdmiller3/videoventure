@@ -156,6 +156,7 @@ Spawner::Spawner(void)
 , mSpawn(0)
 , mTimer(0)
 {
+	SetAction(Action(this, &Spawner::Update));
 }
 
 // spawner instantiation constructor
@@ -164,6 +165,7 @@ Spawner::Spawner(const SpawnerTemplate &aTemplate, unsigned int aId)
 , mSpawn(0)
 , mTimer(-aTemplate.mStart)
 {
+	SetAction(Action(this, &Spawner::Update));
 }
 
 // spawner destructor

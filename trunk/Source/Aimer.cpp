@@ -171,6 +171,7 @@ Aimer::Aimer(const AimerTemplate &aTemplate, unsigned int aId)
 , mOffset(0, 0)
 , mDelay(aTemplate.mPeriod * aId / UINT_MAX)
 {
+	SetAction(Action(this, &Aimer::Control));
 }
 
 Aimer::~Aimer(void)

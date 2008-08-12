@@ -6,7 +6,11 @@ static Updatable *sTail;
 static Updatable *sNext;
 
 Updatable::Updatable(unsigned int aId)
-: mId(aId), mNext(NULL), mPrev(NULL), entry()
+: mId(aId)
+, mNext(NULL)
+, mPrev(NULL)
+, mActive(false)
+, mAction()
 {
 }
 
@@ -17,23 +21,22 @@ Updatable::~Updatable(void)
 
 void Updatable::Activate(void)
 {
-	if (entry.empty())
+	if (!mActive)
 	{
-		entry.bind(this, &Updatable::Update);
 		mPrev = sTail;
 		if (sTail)
 			sTail->mNext = this;
 		sTail = this;
 		if (!sHead)
 			sHead = this;
+		mActive = true;
 	}
 }
 
 void Updatable::Deactivate(void)
 {
-	if (!entry.empty())
+	if (mActive)
 	{
-		entry.clear();
 		if (sHead == this)
 			sHead = mNext;
 		if (sTail == this)
@@ -46,6 +49,7 @@ void Updatable::Deactivate(void)
 			mPrev->mNext = mNext;
 		mNext = NULL;
 		mPrev = NULL;
+		mActive = false;
 	}
 }
 
@@ -59,8 +63,8 @@ void Updatable::UpdateAll(float aStep)
 		// (in case the entry gets deleted)
 		sNext = itor->mNext;
 
-		// perform update
-		(itor->entry)(aStep);
+		// perform action
+		(itor->mAction)(aStep);
 
 		// go to the next iterator
 		itor = sNext;

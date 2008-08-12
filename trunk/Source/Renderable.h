@@ -3,9 +3,6 @@
 class RenderableTemplate
 {
 public:
-	// drawlist buffer
-//	std::vector<unsigned int> mBuffer;
-
 	// bounding radius
 	float mRadius;
 
@@ -22,29 +19,30 @@ public:
 
 class Renderable
 {
+public:
+	typedef fastdelegate::FastDelegate<void (unsigned int, float, float, float, float)> Action;
+
+protected:
+	// identifier
+	unsigned int mId;
+
 private:
 	// list of all renderables
 	static Renderable *sHead;
 	static Renderable *sTail;
 
-	// identifier
-	unsigned int mId;
-
 	// linked list
 	Renderable *mNext;
 	Renderable *mPrev;
+	bool mActive;
 
-	// show?
-	bool show;
+	// action
+	Action mAction;
 
 	// bounding radius
 	float mRadius;
 
 protected:
-	// time offset
-	static unsigned int sTurn;
-	static float sOffset;
-
 	// creation turn
 	unsigned int mStart;
 	float mFraction;
@@ -60,19 +58,17 @@ public:
 	Renderable(const RenderableTemplate &aTemplate, unsigned int aId);
 	~Renderable(void);
 
+	// set action
+	void SetAction(Action aAction)
+	{
+		mAction = aAction;
+	}
+
 	// visibility
 	void Show(void);
 	void Hide(void);
 
-	// set turn
-	static void SetTurn(unsigned int aTurn)
-	{
-		sTurn = aTurn;
-	}
-	static unsigned int GetTurn(void)
-	{
-		return sTurn;
-	}
+	// set fraction
 	void SetFraction(float aFraction)
 	{
 		mFraction = aFraction;
@@ -83,9 +79,11 @@ public:
 	}
 
 	// render
-	static void RenderAll(float aRatio, float aStep, const AlignedBox2 &aView);
-	void Render(float aStep, float aPosX, float aPosY, float angle);
+	static void RenderAll(const AlignedBox2 &aView);
 };
+
+// render geometry
+void RenderGeometry(float aTime, unsigned int aId, float aPosX, float aPosY, float aAngle);
 
 namespace Database
 {

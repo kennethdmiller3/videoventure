@@ -111,12 +111,15 @@ Bullet::Bullet(void)
 : Simulatable(0)
 , mLife(0.0f)
 {
+	SetAction(Action(this, &Bullet::Simulate));
 }
 
 Bullet::Bullet(const BulletTemplate &aTemplate, unsigned int aId)
 : Simulatable(aId)
 , mLife(aTemplate.mLife)
 {
+	SetAction(Action(this, &Bullet::Simulate));
+
 	Database::Typed<Collidable::Listener> &listeners = Database::collidablecontactadd.Open(mId);
 	Collidable::Listener &listener = listeners.Open(Database::Key(this));
 	listener.bind(this, &Bullet::Collide);
@@ -220,6 +223,7 @@ public:
 	BulletKillUpdate(unsigned int aId, float aFraction)
 		: Updatable(aId), mTime(aFraction)
 	{
+		SetAction(Action(this, &BulletKillUpdate::Update));
 		Activate();
 	}
 

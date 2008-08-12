@@ -41,11 +41,8 @@ public:
 	// destructor
 	~Ship(void);
 
-	// configure
-	virtual bool Configure(const TiXmlElement *element);
-
 	// simulate
-	virtual void Simulate(float aStep);
+	void Simulate(float aStep);
 };
 
 namespace Database

@@ -2,6 +2,9 @@
 
 class Simulatable
 {
+public:
+	typedef fastdelegate::FastDelegate<void (float)> Action;
+
 protected:
 	// identifier
 	unsigned int mId;
@@ -10,14 +13,20 @@ private:
 	// linked list
 	Simulatable *mNext;
 	Simulatable *mPrev;
+	bool mActive;
 
-	// list entry
-	typedef fastdelegate::FastDelegate<void (float)> Entry;
-	Entry entry;
+	// action
+	Action mAction;
 
 public:
 	Simulatable(unsigned int aId);
 	virtual ~Simulatable(void);
+
+	// set action
+	void SetAction(Action aAction)
+	{
+		mAction = aAction;
+	}
 
 	// activate
 	void Activate(void);
@@ -26,13 +35,9 @@ public:
 	// is active?
 	bool IsActive(void)
 	{
-		return !entry.empty();
+		return mActive;
 	}
-
-	// configure
-	virtual bool Configure(const TiXmlElement *element) { return false; }
 
 	// simulate
 	static void SimulateAll(float aStep);
-	virtual void Simulate(float aStep) = 0;
 };
