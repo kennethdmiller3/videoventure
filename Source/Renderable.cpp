@@ -231,7 +231,7 @@ void Renderable::RenderAll(const AlignedBox2 &aView)
 			const RenderableTemplate &renderable = Database::renderabletemplate.Get(itor->mId);
 
 			// elapsed time
-			float t = fmodf((sim_turn - itor->mStart + sim_fraction - itor->mFraction - 1) * sim_step, renderable.mPeriod);
+			float t = fmodf((int(sim_turn - itor->mStart) + sim_fraction - itor->mFraction) * sim_step, renderable.mPeriod);
 
 			// render
 			(itor->mAction)(itor->mId, t, position.x, position.y, angle);

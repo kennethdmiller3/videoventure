@@ -6,9 +6,6 @@
 class BulletTemplate
 {
 public:
-	// life span
-	float mLife;
-
 	// damage value
 	float mDamage;
 
@@ -16,7 +13,6 @@ public:
 	bool mRicochet;
 
 	// spawn on death
-	unsigned int mSpawnOnExpire;
 	unsigned int mSpawnOnDeath;
 	unsigned int mSpawnOnImpact;
 
@@ -29,8 +25,11 @@ public:
 };
 
 class Bullet
-	: public Simulatable
 {
+protected:
+	unsigned int mId;
+	bool mDestroy;
+
 public:
 #ifdef USE_POOL_ALLOCATOR
 	// allocation
@@ -38,16 +37,10 @@ public:
 	void operator delete(void *aPtr);
 #endif
 
-	// life timer
-	float mLife;
-
 public:
 	Bullet(void);
 	Bullet(const BulletTemplate &aTemplate, unsigned int aId);
 	~Bullet(void);
-
-	// simulate
-	void Simulate(float aStep);
 
 	// collide
 	void Collide(unsigned int aId, unsigned int aHitId, float aTime, const b2ContactPoint &aPoint);

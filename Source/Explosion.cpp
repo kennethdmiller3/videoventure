@@ -3,6 +3,7 @@
 #include "Collidable.h"
 #include "Damagable.h"
 #include "Team.h"
+#include "Interpolator.h"
 
 
 #ifdef USE_POOL_ALLOCATOR
@@ -25,6 +26,7 @@ namespace Database
 {
 	Typed<ExplosionTemplate> explosiontemplate(0xbde38dea /* "explosiontemplate" */);
 	Typed<Explosion *> explosion(0x02bb1fe0 /* "explosion" */);
+	Typed<Typed<std::vector<unsigned int> > > explosionproperty(0xe6894b09 /* "explosionproperty" */);
 
 	namespace Loader
 	{
@@ -80,12 +82,13 @@ namespace Database
 
 
 ExplosionTemplate::ExplosionTemplate(void)
-: mLifeSpan(0.25f)
+: mLifeSpan(0.0f)
 , mCategoryBits(0xFFFF)
 , mMaskBits(0xFFFF)
-, mDamage(0.0f)
-, mRadius(0.0f)
-, mSpawnOnExpire(0)
+, mRadiusInner(0.0f)
+, mRadiusOuter(0.0f)
+, mDamageInner(0.0f)
+, mDamageOuter(0.0f)
 {
 }
 
@@ -97,10 +100,12 @@ ExplosionTemplate::~ExplosionTemplate(void)
 bool ExplosionTemplate::Configure(const TiXmlElement *element, unsigned int id)
 {
 	element->QueryFloatAttribute("life", &mLifeSpan);
-	element->QueryFloatAttribute("damage", &mDamage);
-	element->QueryFloatAttribute("radius", &mRadius);
-	if (const char *spawn = element->Attribute("spawnonexpire"))
-		mSpawnOnExpire = Hash(spawn);
+
+	// backwards compatibility
+	if (element->QueryFloatAttribute("radius", &mRadiusOuter) == TIXML_SUCCESS)
+		mRadiusInner = mRadiusOuter * 0.5f;
+	if (element->QueryFloatAttribute("damage", &mDamageInner) == TIXML_SUCCESS)
+		mDamageOuter = 0.0f;
 
 	int category = 0;
 	if (element->QueryIntAttribute("category", &category) == TIXML_SUCCESS)
@@ -120,6 +125,42 @@ bool ExplosionTemplate::Configure(const TiXmlElement *element, unsigned int id)
 		}
 	}
 
+	if (element->FirstChildElement())
+	{
+		Database::Typed<std::vector<unsigned int> > &properties = Database::explosionproperty.Open(id);
+		for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+		{
+			switch (Hash(child->Value()))
+			{
+			case 0x0dba4cb3 /* "radius" */:
+				child->QueryFloatAttribute("inner", &mRadiusInner);
+				child->QueryFloatAttribute("outer", &mRadiusOuter);
+				break;
+
+			case 0x59e94c40 /* "damage" */:
+				child->QueryFloatAttribute("inner", &mDamageInner);
+				child->QueryFloatAttribute("outer", &mDamageOuter);
+				break;
+
+			default:
+				continue;
+			}
+
+			// if the property has keyframes...
+			if (child->FirstChildElement())
+			{
+				// process the interpolator item
+				unsigned int propId = Hash(child->Value());
+				std::vector<unsigned int> &buffer = properties.Open(propId);
+				const char *names[2] = { "inner", "outer" };
+				const float data[2] = { 0.0f, 0.0f };
+				ProcessInterpolatorItem(child, buffer, 2, names, data);
+				properties.Close(propId);
+			}
+		}
+		Database::explosionproperty.Close(id);
+	}
+
 	return true;
 }
 
@@ -136,8 +177,38 @@ Explosion::Explosion(const ExplosionTemplate &aTemplate, unsigned int aId)
 , mLife(aTemplate.mLifeSpan)
 {
 	SetAction(Action(this, &Explosion::Update));
+}
 
-	if (aTemplate.mRadius > 0.0f)
+Explosion::~Explosion(void)
+{
+}
+
+void Explosion::Update(float aStep)
+{
+	// get explosion template properties
+	const ExplosionTemplate &explosion = Database::explosiontemplate.Get(mId);
+	float curRadius[2] = { explosion.mRadiusInner, explosion.mRadiusOuter };
+	float curDamage[2] = { explosion.mDamageInner, explosion.mDamageOuter };
+
+	// get animated properties (if any)
+	if (const Database::Typed<std::vector<unsigned int> > *properties = Database::explosionproperty.Find(mId))
+	{
+		const std::vector<unsigned int> &radiusbuffer = properties->Get(0x0dba4cb3 /* "radius" */);
+		if (!radiusbuffer.empty())
+		{
+			int index = 0;
+			ApplyInterpolator(curRadius, 2, radiusbuffer[0], reinterpret_cast<const float * __restrict>(&radiusbuffer[1]), explosion.mLifeSpan - mLife, index);
+		}
+		const std::vector<unsigned int> &damagebuffer = properties->Get(0x59e94c40 /* "damage" */);
+		if (!damagebuffer.empty())
+		{
+			int index = 0;
+			ApplyInterpolator(curDamage, 2, damagebuffer[0], reinterpret_cast<const float * __restrict>(&damagebuffer[1]), explosion.mLifeSpan - mLife, index);
+		}
+	}
+
+	// if applying damage...
+	if ((curDamage[0] != 0.0f) || (curDamage[1] != 0.0f))
 	{
 		// get parent entity
 		Entity *entity = Database::entity.Get(mId);
@@ -147,7 +218,7 @@ Explosion::Explosion(const ExplosionTemplate &aTemplate, unsigned int aId)
 
 		// get nearby shapes
 		b2AABB aabb;
-		const float lookRadius = aTemplate.mRadius;
+		const float lookRadius = curRadius[1];
 		aabb.lowerBound.Set(entity->GetPosition().x - lookRadius, entity->GetPosition().y - lookRadius);
 		aabb.upperBound.Set(entity->GetPosition().x + lookRadius, entity->GetPosition().y + lookRadius);
 		b2Shape* shapes[b2_maxProxies];
@@ -165,9 +236,9 @@ Explosion::Explosion(const ExplosionTemplate &aTemplate, unsigned int aId)
 			// skip unhittable shapes
 			if (shape->IsSensor())
 				continue;
-			if ((shape->GetFilterData().maskBits & aTemplate.mCategoryBits) == 0)
+			if ((shape->GetFilterData().maskBits & explosion.mCategoryBits) == 0)
 				continue;
-			if ((shape->GetFilterData().categoryBits & aTemplate.mMaskBits) == 0)
+			if ((shape->GetFilterData().categoryBits & explosion.mMaskBits) == 0)
 				continue;
 
 			// get the parent body
@@ -186,10 +257,11 @@ Explosion::Explosion(const ExplosionTemplate &aTemplate, unsigned int aId)
 
 			// get range
 			Vector2 dir(transform.Transform(Vector2(body->GetPosition())));
-			float range = dir.Length() - 0.5f * shapes[i]->GetSweepRadius();
+			float range = dir.Length();
+			float radius = 0.5f * shapes[i]->GetSweepRadius();
 
 			// skip if out of range
-			if (range > aTemplate.mRadius)
+			if (range > curRadius[1] + radius)
 				continue;
 
 			// if the recipient is damagable...
@@ -197,13 +269,19 @@ Explosion::Explosion(const ExplosionTemplate &aTemplate, unsigned int aId)
 			Damagable *damagable = Database::damagable.Get(targetId);
 			if (damagable)
 			{
-				// get base damage
-				float damage = aTemplate.mDamage;
-
 				// apply damage falloff
-				if (range > 0)
+				float interp;
+				if (range <= curRadius[0] - radius)
+					interp = 0.0f;
+				else
+					interp = (range - curRadius[0] + radius) / (curRadius[1] + radius - curRadius[0] + radius);
+				float damage = Lerp(curDamage[0], curDamage[1], interp);
+
+				// if applying damage over time...
+				if (explosion.mLifeSpan > 0.0f)
 				{
-					damage *= (1.0f - (range * range) / (aTemplate.mRadius * aTemplate.mRadius));
+					// scale by time step
+					damage *= aStep;
 				}
 
 				// limit healing
@@ -217,47 +295,14 @@ Explosion::Explosion(const ExplosionTemplate &aTemplate, unsigned int aId)
 			}
 		}
 	}
-}
 
-Explosion::~Explosion(void)
-{
-}
-
-void Explosion::Update(float aStep)
-{
 	// advance life timer
 	mLife -= aStep;
 
 	// if expired...
 	if (mLife <= 0)
 	{
-		// if spawning on expire...
-		const ExplosionTemplate &explosion = Database::explosiontemplate.Get(mId);
-		if (explosion.mSpawnOnExpire)
-		{
-#ifdef USE_CHANGE_DYNAMIC_TYPE
-			// change dynamic type
-			Database::Deactivate(mId);
-			Database::parent.Put(mId, explosion.mSpawnOnExpire);
-			Database::Activate(mId);
-#else
-			// get the entity
-			Entity *entity = Database::entity.Get(mId);
-			if (entity)
-			{
-				// spawn template at the entity location
-				Database::Instantiate(explosion.mSpawnOnExpire, Database::owner.Get(mId), entity->GetAngle(), entity->GetPosition(), entity->GetVelocity(), entity->GetOmega());
-			}
-#endif
-		}
-#ifdef USE_CHANGE_DYNAMIC_TYPE
-		else
-#endif
-		{
-			// delete the entity
-			Database::Delete(mId);
-		}
-
-		return;
+		// deactivate
+		Deactivate();
 	}
 }

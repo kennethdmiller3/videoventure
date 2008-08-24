@@ -485,6 +485,9 @@ void ProcessDrawData(const TiXmlElement *element, std::vector<unsigned int> &buf
 	else if (element->Attribute("rand"))
 	{
 		buffer.push_back(DD_Random);
+		int count;
+		element->QueryIntAttribute("rand", &count);
+		buffer.push_back(count);
 		for (int i = 0; i < width; i++)
 		{
 			char label[64];
@@ -495,6 +498,7 @@ void ProcessDrawData(const TiXmlElement *element, std::vector<unsigned int> &buf
 			sprintf(label, "%s_var", names[i]);
 			float variance = 0.0f;
 			element->QueryFloatAttribute(label, &variance);
+			variance /= count;
 			buffer.push_back(*reinterpret_cast<unsigned int *>(&variance));
 		}
 	}
@@ -1100,11 +1104,14 @@ void ProcessDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buf
 			element->QueryFloatAttribute("length", &length);
 			float scale = 1.0f;
 			element->QueryFloatAttribute("scale", &scale);
+			int repeat = 0;
+			element->QueryIntAttribute("repeat", &repeat);
 
 			buffer.push_back(DO_Block);
 			buffer.push_back(*reinterpret_cast<unsigned int *>(&start));
 			buffer.push_back(*reinterpret_cast<unsigned int *>(&length));
 			buffer.push_back(*reinterpret_cast<unsigned int *>(&scale));
+			buffer.push_back(*reinterpret_cast<unsigned int *>(&repeat));
 
 			buffer.push_back(0);
 			int size = buffer.size();
@@ -1145,7 +1152,7 @@ void ProcessDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buf
 
 	case 0x5c6e1222 /* "clear" */:
 		{
-			ProcessVariableOperator(element, buffer, DO_Clear, true);
+			ProcessVariableOperator(element, buffer, DO_Clear, false);
 		}
 		break;
 
@@ -1257,11 +1264,18 @@ size_t ExecuteDrawData(const unsigned int buffer[], size_t count, int width, flo
 	case DD_Random:
 		{
 			// generate random value
+			int count = *itor++;
 			for (int i = 0; i < width; i++)
 			{
+				// accumulate value
+				float value = 0.0f;
+				for (int c = 0; c < count; ++c)
+					value += 2.0f * RandFloat() - 1.0f;
+
+				// rescale value
 				float average = *reinterpret_cast<const float * __restrict>(itor++);
 				float variance = *reinterpret_cast<const float * __restrict>(itor++);
-				data[i] = RandValue(average, variance);
+				data[i] = value * variance + average;
 			}
 		}
 		break;
@@ -1625,9 +1639,19 @@ void ExecuteDrawItems(const unsigned int buffer[], size_t count, float param, un
 				float start = *reinterpret_cast<const float *>(itor++);
 				float length = *reinterpret_cast<const float *>(itor++);
 				float scale = *reinterpret_cast<const float *>(itor++);
+				int repeat = *reinterpret_cast<const int *>(itor++);
 				unsigned int size = *itor++;
-				if (param >= start && param <= start + length)
-					ExecuteDrawItems(itor, size, (param - start) * scale, id);
+				float t = param - start;
+				if (t >= 0.0f && length > 0.0f)
+				{
+					int loop = xs_FloorToInt(t / length);
+					if (loop <= repeat)
+					{
+						t -= loop * length;
+						t *= scale;
+						ExecuteDrawItems(itor, size, t, id);
+					}
+				}
 				itor += size;
 			}
 			break;

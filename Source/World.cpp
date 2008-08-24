@@ -48,7 +48,14 @@ namespace Database
 				element->QueryFloatAttribute("dy", &dy);
 
 				// tiles
-				unsigned int map[CHAR_MAX-CHAR_MIN+1] = { 0 };
+				struct Tile
+				{
+					unsigned int mSpawn;
+					Vector2 mOffset;
+					float mAngle;
+				};
+				Tile map[CHAR_MAX-CHAR_MIN+1];
+				memset(map, 0, sizeof(map));
 
 				// position value
 				Vector2 pos(x, y);
@@ -63,8 +70,13 @@ namespace Database
 							const char *name = child->Attribute("name");
 							if (!name || !name[0])
 								continue;
+							Tile &tile = map[name[0]-CHAR_MIN];
 							const char *spawn = child->Attribute("spawn");
-							map[name[0]-CHAR_MIN] = Hash(spawn);
+							tile.mSpawn = Hash(spawn);
+							child->QueryFloatAttribute("x", &tile.mOffset.x);
+							child->QueryFloatAttribute("y", &tile.mOffset.y);
+							if (child->QueryFloatAttribute("angle", &tile.mAngle) == TIXML_SUCCESS)
+								tile.mAngle *= float(M_PI) / 180.0f;
 						}
 						break;
 
@@ -80,10 +92,10 @@ namespace Database
 
 							for (const char *t = text; *t; ++t)
 							{
-								unsigned int id = map[*t-CHAR_MIN];
-								if (id)
+								Tile &tile = map[*t-CHAR_MIN];
+								if (tile.mSpawn)
 								{
-									Database::Instantiate(id, 0, 0, pos, Vector2(0, 0), 0);
+									Database::Instantiate(tile.mSpawn, 0, tile.mAngle, pos + tile.mOffset, Vector2(0, 0), 0);
 								}
 
 								pos.x += dx;

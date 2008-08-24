@@ -122,6 +122,9 @@ VarItem *VarItem::CreateCommand(const char *aPath)
 
 VarItem *VarItem::CreateInteger(const char *aPath, int aValue, int aMinimum, int aMaximum)
 {
+	if (VarItem *item = Database::varitem.Get(Hash(aPath)))
+		return item;
+
 	unsigned int id = BuildPath(aPath);
 
 	VarInteger *item = new VarInteger(id, aValue, aMinimum, aMaximum);
@@ -132,6 +135,9 @@ VarItem *VarItem::CreateInteger(const char *aPath, int aValue, int aMinimum, int
 
 VarItem *VarItem::CreateFloat(const char *aPath, float aValue, float aMinimum, float aMaximum)
 {
+	if (VarItem *item = Database::varitem.Get(Hash(aPath)))
+		return item;
+
 	unsigned int id = BuildPath(aPath);
 
 	VarFloat *item = new VarFloat(id, aValue, aMinimum, aMaximum);
@@ -142,12 +148,57 @@ VarItem *VarItem::CreateFloat(const char *aPath, float aValue, float aMinimum, f
 
 VarItem *VarItem::CreateString(const char *aPath, std::string aValue)
 {
+	if (VarItem *item = Database::varitem.Get(Hash(aPath)))
+		return item;
+
 	unsigned int id = BuildPath(aPath);
 
 	VarString *item = new VarString(id, aValue);
 	Database::varitem.Put(id, item);
 
 	return item;
+}
+
+void VarItem::SetInteger(const char *aPath, int aValue)
+{
+	if (VarItem *item = Database::varitem.Get(Hash(aPath)))
+		item->SetInteger(aValue);
+}
+
+void VarItem::SetFloat(const char *aPath, float aValue)
+{
+	if (VarItem *item = Database::varitem.Get(Hash(aPath)))
+		item->SetFloat(aValue);
+}
+
+void VarItem::SetString(const char *aPath, std::string aValue)
+{
+	if (VarItem *item = Database::varitem.Get(Hash(aPath)))
+		item->SetString(aValue);
+}
+
+int VarItem::GetInteger(const char *aPath)
+{
+	if (VarItem *item = Database::varitem.Get(Hash(aPath)))
+		return item->GetInteger();
+	else
+		return 0;
+}
+
+float VarItem::GetFloat(const char *aPath)
+{
+	if (VarItem *item = Database::varitem.Get(Hash(aPath)))
+		return item->GetFloat();
+	else
+		return 0.0f;
+}
+
+std::string VarItem::GetString(const char *aPath)
+{
+	if (VarItem *item = Database::varitem.Get(Hash(aPath)))
+		return item->GetString();
+	else
+		return "";
 }
 
 void VarItem::Notify()

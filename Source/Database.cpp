@@ -452,6 +452,14 @@ namespace Database
 		}
 	}
 
+	// change an instance's type
+	void Switch(unsigned int aInstanceId, unsigned int aTemplateId)
+	{
+		Deactivate(aInstanceId);
+		parent.Put(aInstanceId, aTemplateId);
+		Activate(aInstanceId);
+	}
+
 	// activate an identifier
 	void Activate(unsigned int aId)
 	{

@@ -91,7 +91,7 @@ void Overlay::RenderAll()
 		const OverlayTemplate &overlay = Database::overlaytemplate.Get(itor->mId);
 
 		// elapsed time
-		float t = fmodf((sim_turn - itor->mStart + sim_fraction - itor->mFraction - 1) * sim_step, overlay.mPeriod);
+		float t = fmodf((int(sim_turn - itor->mStart) + sim_fraction - itor->mFraction) * sim_step, overlay.mPeriod);
 
 		// perform action
 		(itor->mAction)(itor->mId, t, 0.0f, 0.0f, 0.0f);

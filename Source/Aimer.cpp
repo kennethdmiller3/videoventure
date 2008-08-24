@@ -91,7 +91,16 @@ AimerTemplate::AimerTemplate(void)
 , mFocus(1.0f)
 , mCategoryBits(0xFFFF)
 , mMaskBits(0xFFFF)
+, mDrift(0.0f)
+, mWanderSide(0.0f)
+, mWanderSideRate(0.0f)
+, mWanderFront(0.0f)
+, mWanderFrontRate(0.0f)
+, mWanderTurn(0.0f)
+, mWanderTurnRate(0.0f)
+, mAim(1.0f)
 , mLeading(0.0f)
+, mPursue(1.0f)
 , mEvade(0.0f)
 , mClose(0.0f)
 , mCloseDistScale(1.0f/16.0f)
@@ -153,7 +162,16 @@ bool AimerTemplate::Configure(const TiXmlElement *element)
 	}
 
 	// aiming
+	element->QueryFloatAttribute("drift", &mDrift);
+	element->QueryFloatAttribute("wanderside", &mWanderSide);
+	element->QueryFloatAttribute("wandersiderate", &mWanderSideRate);
+	element->QueryFloatAttribute("wanderfront", &mWanderFront);
+	element->QueryFloatAttribute("wanderfrontrate", &mWanderFrontRate);
+	element->QueryFloatAttribute("wanderturn", &mWanderTurn);
+	element->QueryFloatAttribute("wanderturnrate", &mWanderTurnRate);
+	element->QueryFloatAttribute("aim", &mAim);
 	element->QueryFloatAttribute("leading", &mLeading);
+	element->QueryFloatAttribute("pursue", &mPursue);
 	element->QueryFloatAttribute("evade", &mEvade);
 	element->QueryFloatAttribute("close", &mClose);
 	element->QueryFloatAttribute("closedistscale", &mCloseDistScale);
@@ -170,6 +188,9 @@ Aimer::Aimer(const AimerTemplate &aTemplate, unsigned int aId)
 , mTarget(0)
 , mOffset(0, 0)
 , mDelay(aTemplate.mPeriod * aId / UINT_MAX)
+, mWanderSidePhase(RandFloat() * 2.0f * float(M_PI))
+, mWanderFrontPhase(RandFloat() * 2.0f * float(M_PI))
+, mWanderTurnPhase(RandFloat() * 2.0f * float(M_PI))
 {
 	SetAction(Action(this, &Aimer::Control));
 }
@@ -220,16 +241,37 @@ void Aimer::Control(float aStep)
 
 	// get front vector
 	const Matrix2 transform(entity->GetTransform());
-	const Vector2 &front = transform.y;
-
-	// set default controls
-	mMove.x = 0;
-	mMove.y = 0;
-	mTurn = 0;
-	memset(mFire, 0, sizeof(mFire));
 
 	// get aimer template
 	const AimerTemplate &aimer = Database::aimertemplate.Get(mId);
+
+	// set default controls
+	mMove = aimer.mDrift * transform.y;
+	mTurn = 0;
+	memset(mFire, 0, sizeof(mFire));
+
+	// apply wander
+	if (aimer.mWanderSide)
+	{
+		mMove.x += aimer.mWanderSide * sinf(mWanderSidePhase);
+		mWanderSidePhase += RandFloat() * aimer.mWanderSideRate * 2.0f * float(M_PI) * sim_step;
+		if (mWanderSidePhase > 2.0f * float(M_PI))
+			mWanderSidePhase -= 2.0f * float(M_PI);
+	}
+	if (aimer.mWanderFront)
+	{
+		mMove.y += aimer.mWanderFront * sinf(mWanderFrontPhase);
+		mWanderFrontPhase += RandFloat() * aimer.mWanderFrontRate * 2.0f * float(M_PI) * sim_step;
+		if (mWanderFrontPhase > 2.0f * float(M_PI))
+			mWanderFrontPhase -= 2.0f * float(M_PI);
+	}
+	if (aimer.mWanderTurn)
+	{
+		mTurn += aimer.mWanderTurn * sinf(mWanderTurnPhase);
+		mWanderTurnPhase += RandFloat() * aimer.mWanderTurnRate * 2.0f * float(M_PI) * sim_step;
+		if (mWanderTurnPhase > 2.0f * float(M_PI))
+			mWanderTurnPhase -= 2.0f * float(M_PI);
+	}
 
 	// if ready to search...
 	mDelay -= aStep;
@@ -371,17 +413,21 @@ void Aimer::Control(float aStep)
 			targetDir *= InvSqrt(distSq);
 
 			// move towards target
-			mMove += targetDir;
+			mMove += aimer.mPursue * targetDir;
 
 			// local target direction
 			Vector2 localDir = transform.Unrotate(targetDir);
 
-			// turn towards target direction
-			const ShipTemplate &ship = Database::shiptemplate.Get(mId);	// <-- hack!
-			if (ship.mMaxOmega != 0.0f)
+			// if aiming
+			if (aimer.mAim)
 			{
-				float aim_angle = -atan2f(localDir.x, localDir.y);
-				mTurn = std::min(std::max(aim_angle / (ship.mMaxOmega * aStep), -1.0f), 1.0f);
+				// turn towards target direction
+				const ShipTemplate &ship = Database::shiptemplate.Get(mId);	// <-- hack!
+				if (ship.mMaxOmega != 0.0f)
+				{
+					float aim_angle = -atan2f(localDir.x, localDir.y);
+					mTurn += aimer.mAim * std::min(std::max(aim_angle / (ship.mMaxOmega * aStep), -1.0f), 1.0f);
+				}
 			}
 
 			// if evading...
@@ -430,8 +476,54 @@ void Aimer::Control(float aStep)
 				// fire if lined up and within attack range
 				mFire[i] = 
 					(distSq < aimer.mAttack[i] * aimer.mAttack[i]) &&
-					(front.Dot(targetDir) > aimer.mAngle[i]);
+					(localDir.y > aimer.mAngle[i]);
 			}
+		}
+	}
+
+	// push away from the edges of the world (HACK)
+	b2AABB edge(Collidable::GetBoundary());
+	edge.lowerBound.x += 64;
+	edge.upperBound.x -= 64;
+	edge.lowerBound.y += 64;
+	edge.upperBound.y -= 64;
+	Vector2 push(0, 0);
+	if (transform.p.x < edge.lowerBound.x)
+		push.x += (edge.lowerBound.x - transform.p.x) / 64.0f;
+	if (transform.p.x > edge.upperBound.x)
+		push.x += (edge.upperBound.x - transform.p.x) / 64.0f;
+	if (transform.p.y < edge.lowerBound.y)
+		push.y += (edge.lowerBound.y - transform.p.y) / 64.0f;
+	if (transform.p.y > edge.upperBound.y)
+		push.y += (edge.upperBound.y - transform.p.y) / 64.0f;
+	if (push.x || push.y)
+	{
+		mMove += push;
+		mTurn += transform.y.Cross(push) > 0 ? push.Length() : -push.Length();
+	}
+
+	// obstacle avoidance
+	if (Collidable *collidable = Database::collidable.Get(mId))
+	{
+		b2Body *body = collidable->GetBody();
+		b2Shape *shapelist = body->GetShapeList();
+		const b2FilterData &filter = shapelist->GetFilterData();
+
+		// collision probe
+		b2Segment segment;
+		segment.p1 = transform.p;
+		segment.p2 = transform.p + 32 * mMove;
+
+		// perform a segment test
+		float lambda = 1.0f;
+		b2Vec2 normal(0, 0);
+		b2Shape *shape = NULL;
+		Collidable::TestSegment(segment, shapelist->GetSweepRadius() * 0.5f, mId, filter.categoryBits, filter.maskBits, lambda, normal, shape);
+		if (lambda < 1.0f)
+		{
+			float push = 1.0f - lambda;
+			mMove += push * normal;
+			mTurn += transform.y.Cross(normal) > 0.0f ? push : -push;
 		}
 	}
 
@@ -440,9 +532,31 @@ void Aimer::Control(float aStep)
 	if (moveLengthSq > 1.0f)
 		mMove *= InvSqrt(moveLengthSq);
 
+#ifdef AIMER_DEBUG_DRAW_CONTROLS
+	glColor4f(0.0f, 0.0f, 1.0f, 1.0f);
+	glBegin(GL_LINES);
+	glVertex2f(transform.p.x, transform.p.y);
+	glVertex2f(transform.p.x + 16 * mMove.x, transform.p.y + 16 * mMove.y);
+	glEnd();
+#endif
+
 	// convert to local coordinates
 	mMove = transform.Unrotate(mMove);
 
 	// limit turn to 100%
 	mTurn = std::min(std::max(mTurn, -1.0f), 1.0f);
+
+#ifdef AIMER_DEBUG_DRAW_CONTROLS
+	glColor4f(1.0f, 0.0f, 1.0f, 1.0f);
+	glBegin(GL_LINE_STRIP);
+	glVertex2f(transform.p.x, transform.p.y);
+	int steps = xs_CeilToInt(mTurn * 16);
+	for(int i = 0; i < steps; i++)
+	{
+		float angle = float(M_PI) * i * mTurn / steps;
+		Vector2 dir = transform.Transform(Vector2(-16*sinf(angle), 16*cosf(angle)));
+		glVertex2f(dir.x, dir.y);
+	}
+	glEnd();
+#endif
 }

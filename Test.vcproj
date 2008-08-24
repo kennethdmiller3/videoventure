@@ -234,6 +234,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Source\Expire.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\Source\Explosion.cpp"
 				>
 			</File>
@@ -271,6 +275,10 @@
 			</File>
 			<File
 				RelativePath=".\Source\Renderable.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Resource.cpp"
 				>
 			</File>
 			<File
@@ -388,6 +396,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Source\Expire.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Source\Explosion.h"
 				>
 			</File>
@@ -432,6 +444,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Source\Resource.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Source\Ship.h"
 				>
 			</File>
@@ -465,6 +481,10 @@
 			</File>
 			<File
 				RelativePath=".\Source\Updatable.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Variable.h"
 				>
 			</File>
 			<File

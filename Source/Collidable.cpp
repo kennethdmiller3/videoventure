@@ -836,6 +836,7 @@ bool CollidableTemplate::SetupLinkJoint(const LinkTemplate &linktemplate, unsign
 
 
 b2World* Collidable::world;
+b2AABB Collidable::boundary;
 
 /// Implement this class to get collision results. You can use these results for
 /// things like sounds and game logic. You can also use this class to tweak contact 
@@ -1230,16 +1231,20 @@ void Collidable::RemoveFromWorld(void)
 
 
 // create collision world
-void Collidable::WorldInit(void)
+void Collidable::WorldInit(float aMinX, float aMinY, float aMaxX, float aMaxY)
 {
-	// physics world
-	b2AABB worldAABB;
-	worldAABB.lowerBound.Set(ARENA_X_MIN - 32, ARENA_Y_MIN - 32);
-	worldAABB.upperBound.Set(ARENA_X_MAX + 32, ARENA_Y_MAX + 32);
+	// save boundary extents
+	boundary.lowerBound.Set(aMinX, aMinY);
+	boundary.upperBound.Set(aMaxX, aMaxY);
+
+	// create physics world
+	b2AABB aabb;
+	aabb.lowerBound.Set(aMinX - 32, aMinY - 32);
+	aabb.upperBound.Set(aMaxX + 32, aMaxY + 32);
 	b2Vec2 gravity;
 	gravity.Set(0.0f, 0.0f);
 	bool doSleep = true;
-	world = new b2World(worldAABB, gravity, doSleep);
+	world = new b2World(aabb, gravity, doSleep);
 
 	// set contact listener
 	world->SetContactListener(&contactListener);
@@ -1255,19 +1260,19 @@ void Collidable::WorldInit(void)
 	b2Body *body = world->CreateBody(&bodydef);
 
 	b2PolygonDef top;
-	top.SetAsBox(0.5f * (ARENA_X_MAX - ARENA_X_MIN) + 32, 16, b2Vec2(0.5f * (ARENA_X_MAX + ARENA_X_MIN), ARENA_Y_MIN - 16), 0);
+	top.SetAsBox(0.5f * (aMaxX - aMinX) + 32, 16, b2Vec2(0.5f * (aMaxX + aMinX), aMinY - 16), 0);
 	body->CreateShape(&top);
 
 	b2PolygonDef bottom;
-	bottom.SetAsBox(0.5f * (ARENA_X_MAX - ARENA_X_MIN) + 32, 16, b2Vec2(0.5f * (ARENA_X_MAX + ARENA_X_MIN), ARENA_Y_MAX + 16), 0);
+	bottom.SetAsBox(0.5f * (aMaxX - aMinX) + 32, 16, b2Vec2(0.5f * (aMaxX + aMinX), aMaxY + 16), 0);
 	body->CreateShape(&bottom);
 
 	b2PolygonDef left;
-	left.SetAsBox(16, 0.5f * (ARENA_Y_MAX - ARENA_Y_MIN) + 32, b2Vec2(ARENA_X_MIN - 16, 0.5f * (ARENA_Y_MAX + ARENA_Y_MIN)), 0);
+	left.SetAsBox(16, 0.5f * (aMaxY - aMinY) + 32, b2Vec2(aMinX - 16, 0.5f * (aMaxY + aMinY)), 0);
 	body->CreateShape(&left);
 
 	b2PolygonDef right;
-	right.SetAsBox(16, 0.5f * (ARENA_Y_MAX - ARENA_Y_MIN) + 32, b2Vec2(ARENA_X_MAX + 16, 0.5f * (ARENA_Y_MAX + ARENA_Y_MIN)), 0);
+	right.SetAsBox(16, 0.5f * (aMaxY - aMinY) + 32, b2Vec2(aMaxX + 16, 0.5f * (aMaxY + aMinY)), 0);
 	body->CreateShape(&right);
 
 	body->SetMassFromShapes();
@@ -1280,8 +1285,8 @@ void Collidable::WorldDone(void)
 
 void Collidable::CollideAll(float aStep)
 {
+	// step the physics world
 	world->Step(aStep, 16, 16);
-	world->Validate();
 
 	// for each body...
 	for (b2Body* body = world->GetBodyList(); body; body = body->GetNext())
@@ -1309,7 +1314,7 @@ void Collidable::CollideAll(float aStep)
 	}
 }
 
-unsigned int Collidable::TestSegment(const b2Segment &aSegment, float aRadius,
+unsigned int Collidable::TestSegment(const b2Segment &aSegment, float aRadius, unsigned int aId,
 									 unsigned int aCategoryBits, unsigned int aMaskBits, 
 									 float &aLambda, b2Vec2 &aNormal, b2Shape *&aShape)
 {
@@ -1340,8 +1345,15 @@ unsigned int Collidable::TestSegment(const b2Segment &aSegment, float aRadius,
 		// get the parent body
 		b2Body* body = shape->GetBody();
 
+		// get the collidable identifier
+		unsigned int targetId = reinterpret_cast<unsigned int>(body->GetUserData());
+
+		// skip self
+		if (targetId == aId)
+			continue;
+
 		// if the segment intersects the shape...
-		if (shape->TestSegment(body->GetXForm(), &aLambda, &aNormal, aSegment, aLambda, aRadius))
+		if (shape->TestSegment(body->GetXForm(), &aLambda, &aNormal, aSegment, aLambda, aRadius) != 0)
 		{
 			// update hit shape
 			aShape = shape;

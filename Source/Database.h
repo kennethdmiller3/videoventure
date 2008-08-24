@@ -76,7 +76,7 @@ namespace Database
 			mKey[slot] = aKey;
 			if (mPool[slot >> mShift] == NULL)
 				mPool[slot >> mShift] = malloc(mStride << mShift);
-			return GetRecord(slot);
+			return memset(GetRecord(slot), 0, mStride);
 		}
 
 		inline void *GetRecord(size_t aSlot) const
@@ -240,8 +240,8 @@ namespace Database
 		}
 
 	public:
-		Typed(unsigned int aId = 0)
-			: Untyped(aId, sizeof(T), aId ? 8 : 4), mNil()
+		Typed(unsigned int aId = 0, const T& aNil = T())
+			: Untyped(aId, sizeof(T), aId ? 8 : 4), mNil(aNil)
 		{
 		}
 
@@ -263,7 +263,7 @@ namespace Database
 
 		T &OpenDefault(void)
 		{
-			return mNil;
+			return const_cast<T &>(mNil);
 		}
 
 		void CloseDefault(void)
@@ -352,7 +352,7 @@ namespace Database
 	// parent identifier database
 	extern Typed<Key> parent;
 
-	// owner identifier database;
+	// owner identifier database
 	extern Typed<Key> owner;
 
 	// instantiate a template
@@ -361,6 +361,9 @@ namespace Database
 
 	// inherit from a template
 	void Inherit(unsigned int aInstanceId, unsigned int aTemplateId);
+
+	// change an instance's type
+	void Switch(unsigned int aInstanceId, unsigned int aTemplateId);
 
 	// activate an identifier
 	void Activate(unsigned int aId);

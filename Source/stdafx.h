@@ -43,17 +43,17 @@
 #include "Database.h"
 #include "Input.h"
 
-// arena attributes
-const float ARENA_X_MIN = -2048;
-const float ARENA_X_MAX = 2048;
-const float ARENA_Y_MIN = -2048;
-const float ARENA_Y_MAX = 2048;
-
 // debug function
 extern int DebugPrint(const char *format, ...);
 
 // input system
 extern Input input;
+
+// simulation values
+extern float sim_rate;
+extern float sim_step;
+extern unsigned int sim_turn;
+extern float sim_fraction;
 
 // fast reciprocal square root
 inline float InvSqrt(float x)
@@ -74,11 +74,11 @@ inline float Lerp(float v0, float v1, float s)
 
 // random unsigned long
 // TO DO: allow multiple random number generators
+extern unsigned long randlongseed;
 inline unsigned long RandLong()
 {
-	static unsigned long idum;
-	idum = 1664525L * idum + 1013904223L;
-	return idum;
+	randlongseed = 1664525L * randlongseed + 1013904223L;
+	return randlongseed;
 }
 
 // random uniform float
@@ -94,6 +94,13 @@ inline float RandValue(float aAverage, float aVariance)
 	return (2.0f * RandFloat() - 1.0f) * aVariance + aAverage;
 }
 
+// color typedef (HACK)
+typedef float Color4[4];
+typedef Color4 Color4_2[2];
+
+
+// queue a turn action
+extern void OnTurn(unsigned int aTurn, float aFraction, fastdelegate::FastDelegate<void ()> aAction);
 
 // configuration
 //#define ENABLE_DEPTH_TEST
@@ -106,7 +113,7 @@ inline float RandValue(float aAverage, float aVariance)
 #define USE_POOL_ALLOCATOR
 #define USE_CHANGE_DYNAMIC_TYPE
 
-//#define COLLECT_DEBUG_DRAW
+#define COLLECT_DEBUG_DRAW
 //#define COLLIDABLE_DEBUG_DRAW
 
 const int AUDIO_FREQUENCY = 48000;

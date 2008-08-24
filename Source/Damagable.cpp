@@ -26,6 +26,7 @@ namespace Database
 	Typed<Typed<Damagable::DamageListener> > damagelistener(0x23d6dc58 /* "damagelistener" */);
 	Typed<Typed<Damagable::DeathListener> > deathlistener(0x4e26c609 /* "deathlistener" */);
 	Typed<Typed<Damagable::KillListener> > killlistener(0xa2bf0d7d /* "killlistener" */);
+	Typed<int> hitcombo(0xa2610244 /* "hitcombo" */);
 
 	namespace Loader
 	{
@@ -101,12 +102,12 @@ bool DamagableTemplate::Configure(const TiXmlElement *element)
 
 
 Damagable::Damagable(void)
-: id(0), mHealth(0)
+: mId(0), mHealth(0)
 {
 }
 
 Damagable::Damagable(const DamagableTemplate &aTemplate, unsigned int aId)
-: id(aId), mHealth(aTemplate.mHealth)
+: mId(aId), mHealth(aTemplate.mHealth)
 {
 }
 
@@ -162,34 +163,42 @@ void Damagable::Damage(unsigned int aSourceId, float aDamage)
 	mHealth -= aDamage;
 
 	// notify all damage listeners
-	for (Database::Typed<DamageListener>::Iterator itor(Database::damagelistener.Find(id)); itor.IsValid(); ++itor)
+	for (Database::Typed<DamageListener>::Iterator itor(Database::damagelistener.Find(mId)); itor.IsValid(); ++itor)
 	{
-		itor.GetValue()(id, aSourceId, aDamage);
+		itor.GetValue()(mId, aSourceId, aDamage);
 	}
 
 	// if destroyed...
 	if (mHealth <= 0)
 	{
+		// set owner to damage owner
+		Database::owner.Put(mId, Database::owner.Get(aSourceId));
+
+		// bump the hit combo counter
+		int &combo = Database::hitcombo.Open(mId);
+		combo = std::max<int>(combo, Database::hitcombo.Get(aSourceId) + 1);
+		Database::hitcombo.Close(mId);
+
 		// register a kill update
-		new DamagableKillUpdate(id);
+		new DamagableKillUpdate(mId);
 
 		// notify all source kill listeners
 		for (Database::Typed<KillListener>::Iterator itor(Database::killlistener.Find(aSourceId)); itor.IsValid(); ++itor)
 		{
-			itor.GetValue()(aSourceId, id);
+			itor.GetValue()(aSourceId, mId);
 		}
 
 		// notify all owner kill listeners
 		unsigned int aOwnerId = Database::owner.Get(aSourceId);
 		for (Database::Typed<KillListener>::Iterator itor(Database::killlistener.Find(aOwnerId)); itor.IsValid(); ++itor)
 		{
-			itor.GetValue()(aOwnerId, id);
+			itor.GetValue()(aOwnerId, mId);
 		}
 
 		// notify all death listeners
-		for (Database::Typed<DeathListener>::Iterator itor(Database::deathlistener.Find(id)); itor.IsValid(); ++itor)
+		for (Database::Typed<DeathListener>::Iterator itor(Database::deathlistener.Find(mId)); itor.IsValid(); ++itor)
 		{
-			itor.GetValue()(id, aSourceId);
+			itor.GetValue()(mId, aSourceId);
 		}
 	}
 }
@@ -197,21 +206,19 @@ void Damagable::Damage(unsigned int aSourceId, float aDamage)
 void Damagable::Kill(void)
 {
 	// if spawn on death...
-	const DamagableTemplate &damagable = Database::damagabletemplate.Get(id);
+	const DamagableTemplate &damagable = Database::damagabletemplate.Get(mId);
 	if (damagable.mSpawnOnDeath)
 	{
 #ifdef USE_CHANGE_DYNAMIC_TYPE
 		// change dynamic type
-		Database::Deactivate(id);
-		Database::parent.Put(id, damagable.mSpawnOnDeath);
-		Database::Activate(id);
+		Database::Switch(mId, damagable.mSpawnOnDeath);
 #else
 		// get the entity
-		Entity *entity = Database::entity.Get(id);
+		Entity *entity = Database::entity.Get(mId);
 		if (entity)
 		{
 			// instantiate the template
-			Database::Instantiate(damagable.mSpawnOnDeath, Database::owner.Get(id), entity->GetAngle(), entity->GetPosition(), entity->GetVelocity(), entity->GetOmega());
+			Database::Instantiate(damagable.mSpawnOnDeath, Database::owner.Get(mId), entity->GetAngle(), entity->GetPosition(), entity->GetVelocity(), entity->GetOmega());
 		}
 #endif
 	}
@@ -220,6 +227,6 @@ void Damagable::Kill(void)
 #endif
 	{
 		// delete the entity
-		Database::Delete(id);
+		Database::Delete(mId);
 	}
 }

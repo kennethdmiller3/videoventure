@@ -4,10 +4,39 @@
 #include "Bullet.h"
 #include "Damagable.h"
 #include "Capturable.h"
+#include "Team.h"
 #include "Points.h"
 #include "Sound.h"
 
 #include "Ship.h"
+
+#include "Overlay.h"
+
+extern "C" GLuint OGLCONSOLE_glFontHandle;
+extern "C" void OGLCONSOLE_DrawString(char *s, double x, double y, double w, double h, double z);
+
+// points overlay
+class PointsOverlay : public Overlay
+{
+	struct PointsItem
+	{
+		Vector2 mPosition;
+		int mValue : 24;
+		int mCombo : 8;
+		float mTime;
+	};
+	PointsItem mItems[256];
+	int mItemFirst;
+	int mItemLast;
+
+public:
+	PointsOverlay(void);
+	PointsOverlay(unsigned int aId);
+
+	void AddItem(const Vector2 &aPosition, int aValue, int aCombo);
+
+	void Render(unsigned int aId, float aTime, float aPosX, float aPosY, float aAngle);
+};
 
 namespace Database
 {
@@ -17,6 +46,7 @@ namespace Database
 	Typed<Player *> player(0x2c99c300 /* "player" */);
 	Typed<bool> playercontrollertemplate(0xec81fd12 /* "playercontrollertemplate" */);
 	Typed<PlayerController *> playercontroller(0x7a57caa8 /* "playercontroller" */);
+	Typed<PointsOverlay *> pointsoverlay(0x325ede2e /* "pointsoverlay" */);
 
 	namespace Loader
 	{
@@ -125,6 +155,7 @@ namespace Database
 PlayerTemplate::PlayerTemplate(void)
 : mSpawn(0)
 , mLives(INT_MAX)
+, mFirst(INT_MAX)
 , mExtra(INT_MAX)
 {
 }
@@ -135,6 +166,7 @@ bool PlayerTemplate::Configure(const TiXmlElement *element, unsigned int aId)
 	if (const char *spawn = element->Attribute("name"))
 		mSpawn = Hash(spawn);
 	element->QueryIntAttribute("lives", &mLives);
+	element->QueryIntAttribute("firstextra", &mFirst);
 	element->QueryIntAttribute("extra", &mExtra);
 	return true;
 }
@@ -184,11 +216,18 @@ Player::Player(const PlayerTemplate &aTemplate, unsigned int aId)
 		listeners.Close(Database::Key(this));
 		Database::capturelistener.Close(mId);
 	}
+	
+	// add points overlay
+	Database::pointsoverlay.Put(aId, new PointsOverlay(aId));
 }
 
 // player destructor
 Player::~Player(void)
 {
+	// remove points overlay
+	delete Database::pointsoverlay.Get(mId);
+	Database::pointsoverlay.Delete(mId);
+
 	{
 		// remove any capture listener
 		Database::Typed<Capturable::CaptureListener> &listeners = Database::capturelistener.Open(mId);
@@ -227,8 +266,12 @@ void Player::Update(float aStep)
 		}
 	}
 
-	// spawn a new entity
-	Spawn();
+	// if there are lives left...
+	if (mLives > 0)
+	{
+		// spawn a new entity
+		Spawn();
+	}
 }
 
 // player attach
@@ -287,11 +330,7 @@ void Player::Spawn(void)
 // player death notification
 void Player::OnDeath(unsigned int aId, unsigned int aSourceId)
 {
-	// if there are lives left...
-	if (mLives > 0)
-	{
-		Activate();
-	}
+	Activate();
 }
 
 // player kill notification
@@ -299,6 +338,23 @@ void Player::GotKill(unsigned int aId, unsigned int aKillId)
 {
 	// get point value
 	int aValue = Database::points.Get(aKillId);
+	if (aValue == 0)
+		return;
+
+	// no points for team-kill
+	if (Database::team.Get(aId) == Database::team.Get(aKillId))
+		return;
+
+	// get combo value
+	int aCombo = 1;
+	if (const int *combo = Database::hitcombo.Find(aKillId))
+		aCombo = *combo;
+
+	// show a point value indicator (HACK)
+	Database::pointsoverlay.Get(aId)->AddItem(Database::entity.Get(aKillId)->GetPosition(), aValue, aCombo);
+
+	// apply combo multiplier
+	aValue *= aCombo;
 
 	// get the player template
 	const PlayerTemplate &playertemplate = Database::playertemplate.Get(mId);
@@ -307,8 +363,8 @@ void Player::GotKill(unsigned int aId, unsigned int aKillId)
 	if (playertemplate.mExtra > 0)
 	{
 		// extra lives
-		int extra = ((mScore + aValue) / playertemplate.mExtra) - (mScore / playertemplate.mExtra);
-		if (extra)
+		int extra = ((mScore + aValue) >= playertemplate.mFirst) - (mScore >= playertemplate.mFirst) + ((mScore + aValue) / playertemplate.mExtra) - (mScore / playertemplate.mExtra);
+		if (extra > 0)
 		{
 			// add any extra lives
 			mLives += extra;
@@ -320,7 +376,6 @@ void Player::GotKill(unsigned int aId, unsigned int aKillId)
 
 	// add value to score
 	mScore += aValue;
-
 }
 
 
@@ -369,10 +424,12 @@ void PlayerController::Control(float aStep)
 	mMove = transform.Unrotate(mMove);
 
 	// set turn input
+	extern Vector2 camerapos[];
+	extern float VIEW_SIZE;
 	Vector2 mAim;
-	mAim.x = input[Input::AIM_HORIZONTAL];
-	mAim.y = input[Input::AIM_VERTICAL];
-	mAim = transform.Unrotate(mAim);
+	mAim.x = camerapos[1].x + input[Input::AIM_HORIZONTAL] * 120 * VIEW_SIZE / 320;
+	mAim.y = camerapos[1].y + input[Input::AIM_VERTICAL] * 120 * VIEW_SIZE / 320;
+	mAim = transform.Untransform(mAim);
 
 	// turn towards target direction
 	const ShipTemplate &ship = Database::shiptemplate.Get(mId);	// <-- hack!
@@ -385,4 +442,113 @@ void PlayerController::Control(float aStep)
 	// set fire input
 	mFire[0] = input[Input::FIRE_PRIMARY] != 0.0f;
 	mFire[1] = input[Input::FIRE_SECONDARY] != 0.0f;
+}
+
+
+// points overlay
+PointsOverlay::PointsOverlay(void)
+	: Overlay(0), mItemFirst(0), mItemLast(0)
+{
+}
+
+PointsOverlay::PointsOverlay(unsigned int aId)
+	: Overlay(aId), mItemFirst(0), mItemLast(0)
+{
+	SetAction(Action(this, &PointsOverlay::Render));
+}
+
+void PointsOverlay::AddItem(const Vector2 &aPosition, int aValue, int aCombo)
+{
+	// show if adding an item
+	if (mItemFirst == mItemLast)
+		Show();
+
+	mItems[mItemLast].mPosition = aPosition;
+	mItems[mItemLast].mValue = aValue;
+	mItems[mItemLast].mCombo = aCombo;
+	mItems[mItemLast].mTime = 2.0f;
+
+	mItemLast = (mItemLast + 1) % SDL_arraysize(mItems);
+
+	if (mItemFirst == mItemLast)
+		mItemFirst = (mItemLast + 1) % SDL_arraysize(mItems);
+}
+
+void PointsOverlay::Render(unsigned int aId, float aTime, float aPosX, float aPosY, float aAngle)
+{
+	extern float VIEW_SIZE;
+	extern int SCREEN_HEIGHT;
+	extern int SCREEN_WIDTH;
+	extern Vector2 camerapos[2];
+	extern float frame_time;
+
+	// set projection
+	glMatrixMode( GL_PROJECTION );
+	glPushMatrix();
+	glLoadIdentity();
+	glFrustum( -0.5*VIEW_SIZE, 0.5*VIEW_SIZE, 0.5f*VIEW_SIZE*SCREEN_HEIGHT/SCREEN_WIDTH, -0.5f*VIEW_SIZE*SCREEN_HEIGHT/SCREEN_WIDTH, 256.0f*1.0f, 256.0f*5.0f );
+
+	// set base modelview matrix
+	glMatrixMode( GL_MODELVIEW );
+	glPushMatrix();
+	glLoadIdentity();
+	glTranslatef( 0.0f, 0.0f, -256.0f );
+	glScalef( -1.0f, -1.0f, -1.0f );
+
+	// push camera transform
+	glPushMatrix();
+
+	// get interpolated track position
+	Vector2 viewpos(Lerp(camerapos[0].x, camerapos[1].x, sim_fraction), Lerp(camerapos[0].y, camerapos[1].y, sim_fraction));
+
+	// set view position
+	glTranslatef( -viewpos.x, -viewpos.y, 0 );
+
+	// start drawing
+	glEnable(GL_TEXTURE_2D);
+	glBindTexture(GL_TEXTURE_2D, OGLCONSOLE_glFontHandle);
+	glBegin(GL_QUADS);
+
+	// for each points item
+	for (int i = mItemFirst; i != mItemLast; i = (i + 1) % SDL_arraysize(mItems))
+	{
+		// get the item
+		PointsItem &item = mItems[i];
+
+		// get string
+		char buf[16];
+		if (item.mCombo > 1)
+			sprintf(buf, "%dx%d", item.mValue, item.mCombo);
+		else
+			sprintf(buf, "%d", item.mValue);
+
+		// draw point value
+		glColor4f(1.0f, 1.0f, 1.0f, std::min(item.mTime, 1.0f));
+		float w = 4 * VIEW_SIZE / 320;
+		OGLCONSOLE_DrawString(buf, item.mPosition.x + w * 0.5f * strlen(buf), item.mPosition.y - w * 0.5f, -w, w, 0);
+
+		// count down time
+		item.mTime -= frame_time;
+
+		// delete if expired
+		if (item.mTime <= 0.0f)
+			mItemFirst = (i + 1) % SDL_arraysize(mItems);
+	}
+
+	// finish drawing
+	glEnd();
+	glDisable(GL_TEXTURE_2D);
+
+	// reset camera transform
+	glPopMatrix();
+
+	// reset camera transform
+	glMatrixMode(GL_PROJECTION);
+	glPopMatrix();
+	glMatrixMode(GL_MODELVIEW);
+	glPopMatrix();
+
+	// hide if empty...
+	if (mItemFirst == mItemLast)
+		Hide();
 }
