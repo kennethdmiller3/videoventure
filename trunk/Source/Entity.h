@@ -79,7 +79,13 @@ public:
 		return Matrix2(GetInterpolatedAngle(aRatio), GetInterpolatedPosition(aRatio));
 	}
 
-	// st angle
+	// set previous angle
+	void SetPrevAngle(float aAngle)
+	{
+		angle_0 = aAngle;
+	}
+
+	// set angle
 	void SetAngle(float aAngle)
 	{
 		angle_1 = aAngle;
@@ -118,6 +124,12 @@ public:
 	const float GetOmega() const
 	{
 		return omega;
+	}
+
+	// set previous position
+	void SetPrevPosition(const Vector2 &aPos)
+	{
+		posit_0 = aPos;
 	}
 
 	// set position

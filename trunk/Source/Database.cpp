@@ -490,8 +490,12 @@ namespace Database
 				}
 			}
 
-			// initialize entity (HACK)
-			entity->Init();
+			// if entity has no physics...
+			if (!Database::collidable.Get(aId))
+			{
+				// initialize entity (HACK)
+				entity->Init();
+			}
 
 			// remove from the queue
 			activatequeue.pop_front();
