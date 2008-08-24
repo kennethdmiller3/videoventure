@@ -59,6 +59,7 @@ class Collidable
 {
 protected:
 	static b2World *world;
+	static b2AABB boundary;
 
 	// identifier
 	unsigned int id;
@@ -94,15 +95,19 @@ public:
 	}
 
 	// collision world
-	static void WorldInit(void);
+	static void WorldInit(float aMinX, float aMinY, float aMaxX, float aMaxY);
 	static void WorldDone(void);
 	static b2World *GetWorld(void)
 	{
 		return world;
 	}
+	static const b2AABB &GetBoundary(void)
+	{
+		return boundary;
+	}
 
 	// test segment for intersection with world shapes
-	static unsigned int TestSegment(const b2Segment &aSegment, float aRadius,
+	static unsigned int TestSegment(const b2Segment &aSegment, float aRadius, unsigned int aId,
 									unsigned int aCategoryBits, unsigned int aMaskBits, 
 									float &aLambda, b2Vec2 &aNormal, b2Shape *&aShape);
 

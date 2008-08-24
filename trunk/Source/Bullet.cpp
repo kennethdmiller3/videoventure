@@ -4,6 +4,7 @@
 #include "Damagable.h"
 #include "Link.h"
 #include "Team.h"
+#include "Expire.h"
 
 
 #ifdef USE_POOL_ALLOCATOR
@@ -64,7 +65,6 @@ namespace Database
 				const BulletTemplate &bullettemplate = Database::bullettemplate.Get(aId);
 				Bullet *bullet = new Bullet(bullettemplate, aId);
 				Database::bullet.Put(aId, bullet);
-				bullet->Activate();
 			}
 
 			void Deactivate(unsigned int aId)
@@ -82,7 +82,7 @@ namespace Database
 
 
 BulletTemplate::BulletTemplate(void)
-: mLife(FLT_MAX), mDamage(0), mRicochet(false), mSpawnOnDeath(0), mSpawnOnExpire(0)
+: mDamage(0), mRicochet(false), mSpawnOnDeath(0), mSpawnOnImpact(0)
 {
 }
 
@@ -92,13 +92,10 @@ BulletTemplate::~BulletTemplate(void)
 
 bool BulletTemplate::Configure(const TiXmlElement *element)
 {
-	element->QueryFloatAttribute("life", &mLife);
 	element->QueryFloatAttribute("damage", &mDamage);
 	int ricochet = mRicochet;
 	element->QueryIntAttribute("ricochet", &ricochet);
 	mRicochet = ricochet != 0;
-	if (const char *spawn = element->Attribute("spawnonexpire"))
-		mSpawnOnExpire = Hash(spawn);
 	if (const char *spawn = element->Attribute("spawnondeath"))
 		mSpawnOnDeath = Hash(spawn);
 	if (const char *spawn = element->Attribute("spawnonimpact"))
@@ -108,18 +105,13 @@ bool BulletTemplate::Configure(const TiXmlElement *element)
 
 
 Bullet::Bullet(void)
-: Simulatable(0)
-, mLife(0.0f)
+: mId(0), mDestroy(false)
 {
-	SetAction(Action(this, &Bullet::Simulate));
 }
 
 Bullet::Bullet(const BulletTemplate &aTemplate, unsigned int aId)
-: Simulatable(aId)
-, mLife(aTemplate.mLife)
+: mId(aId), mDestroy(false)
 {
-	SetAction(Action(this, &Bullet::Simulate));
-
 	Database::Typed<Collidable::Listener> &listeners = Database::collidablecontactadd.Open(mId);
 	Collidable::Listener &listener = listeners.Open(Database::Key(this));
 	listener.bind(this, &Bullet::Collide);
@@ -134,79 +126,39 @@ Bullet::~Bullet(void)
 	Database::collidablecontactadd.Close(mId);
 }
 
-void Bullet::Simulate(float aStep)
-{
-	// count down life
-	mLife -= aStep;
-
-	// if expired...
-	if (mLife <= 0)
-	{
-		// if spawning on expire...
-		const BulletTemplate &bullet = Database::bullettemplate.Get(mId);
-		if (bullet.mSpawnOnExpire)
-		{
-#ifdef USE_CHANGE_DYNAMIC_TYPE
-			// change dynamic type
-			Database::Deactivate(mId);
-			Database::parent.Put(mId, bullet.mSpawnOnExpire);
-			Database::Activate(mId);
-#else
-			// get the entity
-			Entity *entity = Database::entity.Get(mId);
-			if (entity)
-			{
-				// spawn template at entity location
-				Database::Instantiate(bullet.mSpawnOnExpire, Database::owner.Get(mId), entity->GetAngle(), entity->GetPosition(), entity->GetVelocity(), entity->GetOmega());
-			}
-#endif
-		}
-#ifdef USE_CHANGE_DYNAMIC_TYPE
-		else
-#endif
-		{
-			// delete the entity
-			Database::Delete(mId);
-		}
-
-		return;
-	}
-}
-
 void Bullet::Kill(float aFraction)
 {
-		// if spawning on expire...
-		const BulletTemplate &bullet = Database::bullettemplate.Get(mId);
-		if (bullet.mSpawnOnDeath)
-		{
+	// if spawning on death...
+	const BulletTemplate &bullet = Database::bullettemplate.Get(mId);
+	if (bullet.mSpawnOnDeath)
+	{
 #ifdef USE_CHANGE_DYNAMIC_TYPE
-			// change dynamic type
-			Database::Deactivate(mId);
-			Database::parent.Put(mId, bullet.mSpawnOnDeath);
-			Database::Activate(mId);
-			if (Renderable *renderable = Database::renderable.Get(mId))
-				renderable->SetFraction(aFraction);
+		// change dynamic type
+		unsigned int aId = mId;
+		Database::Switch(aId, bullet.mSpawnOnDeath);
+		if (Renderable *renderable = Database::renderable.Get(aId))
+			renderable->SetFraction(aFraction);
 #else
-			// get the entity
-			Entity *entity = Database::entity.Get(mId);
-			if (entity)
-			{
-				// spawn template at entity location
-				unsigned int spawnId = Database::Instantiate(bullet.mSpawnOnDeath, Database::owner.Get(mId), entity->GetAngle(), entity->GetPosition(), entity->GetVelocity(), entity->GetOmega());
-				if (Renderable *renderable = Database::renderable.Get(spawnId))
-					renderable->SetFraction(aFraction);
-			}
-#endif
-		}
-#ifdef USE_CHANGE_DYNAMIC_TYPE
-		else
-#endif
+		// get the entity
+		Entity *entity = Database::entity.Get(mId);
+		if (entity)
 		{
-			// delete the entity
-			Database::Delete(mId);
+			// spawn template at entity location
+			unsigned int spawnId = Database::Instantiate(bullet.mSpawnOnDeath, Database::owner.Get(mId), entity->GetAngle(), entity->GetPosition(), entity->GetVelocity(), entity->GetOmega());
+			if (Renderable *renderable = Database::renderable.Get(spawnId))
+				renderable->SetFraction(aFraction);
 		}
+#endif
+	}
+#ifdef USE_CHANGE_DYNAMIC_TYPE
+	else
+#endif
+	{
+		// delete the entity
+		Database::Delete(mId);
+	}
 
-		return;
+	return;
 }
 
 
@@ -253,8 +205,8 @@ void BulletKillUpdate::operator delete(void *aPtr)
 
 void Bullet::Collide(unsigned int aId, unsigned int aHitId, float aFraction, const b2ContactPoint &aPoint)
 {
-	// do nothing if expired...
-	if (mLife <= 0)
+	// do nothing if destroyed...
+	if (mDestroy)
 		return;
 	assert(mId == aId);
 
@@ -265,7 +217,7 @@ void Bullet::Collide(unsigned int aId, unsigned int aHitId, float aFraction, con
 	unsigned int aHitTeam = Database::team.Get(aHitId);
 
 	// if the bullet applies damage...
-	bool destroy = !bullet.mRicochet;
+	mDestroy = !bullet.mRicochet;
 	if (bullet.mDamage >= 0)
 	{
 		// if not hitting a teammate...
@@ -277,7 +229,7 @@ void Bullet::Collide(unsigned int aId, unsigned int aHitId, float aFraction, con
 			{
 				// apply damage value
 				damagable->Damage(mId, bullet.mDamage);
-				destroy = true;
+				mDestroy = true;
 			}
 		}
 	}
@@ -299,7 +251,7 @@ void Bullet::Collide(unsigned int aId, unsigned int aHitId, float aFraction, con
 					{
 						// apply healing value
 						damagable->Damage(mId, std::max(bullet.mDamage, curhealth - maxhealth));
-						destroy = true;
+						mDestroy = true;
 						break;
 					}
 				}
@@ -337,9 +289,8 @@ void Bullet::Collide(unsigned int aId, unsigned int aHitId, float aFraction, con
 	}
 #endif
 
-	if (destroy)
+	if (mDestroy)
 	{
 		new BulletKillUpdate(mId, aFraction);
-		mLife = 0.0f;
 	}
 }

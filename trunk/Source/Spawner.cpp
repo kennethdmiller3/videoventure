@@ -21,10 +21,47 @@ void Spawner::operator delete(void *aPtr)
 #endif
 
 
+class SpawnerTracker
+{
+public:
+	unsigned int mId;
+
+	SpawnerTracker(unsigned int aId = 0)
+		: mId(aId)
+	{
+		if (Spawner *spawner = Database::spawner.Get(mId))
+			spawner->Track(1);
+	}
+
+	SpawnerTracker(const SpawnerTracker &aSource)
+		: mId(aSource.mId)
+	{
+		if (Spawner *spawner = Database::spawner.Get(mId))
+			spawner->Track(1);
+	}
+
+	~SpawnerTracker()
+	{
+		if (Spawner *spawner = Database::spawner.Get(mId))
+			spawner->Track(-1);
+	}
+
+	const SpawnerTracker &operator=(const SpawnerTracker &aSource)
+	{
+		if (Spawner *spawner = Database::spawner.Get(mId))
+			spawner->Track(-1);
+		if (Spawner *spawner = Database::spawner.Get(mId))
+			spawner->Track(1);
+		return *this;
+	}
+};
+
+
 namespace Database
 {
 	Typed<SpawnerTemplate> spawnertemplate(0x8b6ef6ad /* "spawnertemplate" */);
 	Typed<Spawner *> spawner(0x4936726f /* "spawner" */);
+	Typed<SpawnerTracker> spawnertracker(0x9eefed29 /* "spawnertracker" */);
 
 	namespace Loader
 	{
@@ -87,7 +124,7 @@ SpawnerTemplate::SpawnerTemplate(void)
 , mSpawn(0)
 , mStart(0)
 , mCycle(FLT_MAX)
-, mTrack(false)
+, mTrack(0)
 {
 }
 
@@ -138,9 +175,7 @@ bool SpawnerTemplate::Configure(const TiXmlElement *element)
 					mSpawn = Hash(spawn);
 				child->QueryFloatAttribute("start", &mStart);
 				child->QueryFloatAttribute("cycle", &mCycle);
-				int track = mTrack;
-				child->QueryIntAttribute("track", &track);
-				mTrack = track != 0;
+				child->QueryIntAttribute("track", &mTrack);
 			}
 			break;
 		}
@@ -153,7 +188,7 @@ bool SpawnerTemplate::Configure(const TiXmlElement *element)
 // spawner default constructor
 Spawner::Spawner(void)
 : Updatable(0)
-, mSpawn(0)
+, mTrack(0)
 , mTimer(0)
 {
 	SetAction(Action(this, &Spawner::Update));
@@ -162,7 +197,7 @@ Spawner::Spawner(void)
 // spawner instantiation constructor
 Spawner::Spawner(const SpawnerTemplate &aTemplate, unsigned int aId)
 : Updatable(aId)
-, mSpawn(0)
+, mTrack(0)
 , mTimer(-aTemplate.mStart)
 {
 	SetAction(Action(this, &Spawner::Update));
@@ -171,6 +206,7 @@ Spawner::Spawner(const SpawnerTemplate &aTemplate, unsigned int aId)
 // spawner destructor
 Spawner::~Spawner(void)
 {
+	// remove listeners
 }
 
 // spawner update
@@ -179,23 +215,9 @@ void Spawner::Update(float aStep)
 	// get the spawner template
 	const SpawnerTemplate &spawner = Database::spawnertemplate.Get(mId);
 
-	// if tracking the spawned item...
-	if (spawner.mTrack)
-	{
-		// if the spawned item is still alive...
-		if (Database::entity.Get(mSpawn))
-		{
-			// wait
-			return;
-		}
-
-		// else if the spawned item just expired...
-		else if (mSpawn)
-		{
-			// clear the spawned item
-			mSpawn = 0;
-		}
-	}
+	// skip if limit reached
+	if (spawner.mTrack && mTrack >= spawner.mTrack)
+		return;
 
 	// advance the timer
 	mTimer += aStep;
@@ -210,19 +232,26 @@ void Spawner::Update(float aStep)
 			// instantiate the spawn entity
 			Matrix2 transform(spawner.mOffset * entity->GetInterpolatedTransform(mTimer / aStep));
 			Vector2 velocity(transform.Rotate(spawner.mInherit * transform.Unrotate(entity->GetVelocity()) + spawner.mVelocity));
-			mSpawn = Database::Instantiate(spawner.mSpawn, Database::owner.Get(mId), transform.Angle(), transform.p, velocity, entity->GetOmega());
+			unsigned int spawnId = Database::Instantiate(spawner.mSpawn, Database::owner.Get(mId), transform.Angle(), transform.p, velocity, entity->GetOmega());
 
 			// if the spawner has a team...
 			unsigned int team = Database::team.Get(mId);
 			if (team)
 			{
 				// propagate team to spawned item
-				Database::team.Put(mSpawn, team);
+				Database::team.Put(spawnId, team);
 			}
 
 			// set fractional turn
-			if (Renderable *renderable = Database::renderable.Get(mSpawn))
+			if (Renderable *renderable = Database::renderable.Get(spawnId))
 				renderable->SetFraction(mTimer / aStep);
+
+			// if tracking....
+			if (spawner.mTrack)
+			{
+				// add a tracker
+				Database::spawnertracker.Put(spawnId, SpawnerTracker(mId));
+			}
 		}
 
 		// set the timer

@@ -501,7 +501,7 @@ bool Pathing(const b2Vec2 &start, const b2Vec2 &goal, float radius)
 
 		// get segment intersection
 		// HACK: check collision against environment only
-		if (!Collidable::TestSegment(segment, radius - 0.0625f, aCategoryBits, aMaskBits, lambda, normal, shape))
+		if (!Collidable::TestSegment(segment, radius - 0.0625f, 0, aCategoryBits, aMaskBits, lambda, normal, shape))
 		{
 			// draw segment
 			glColor4f(0.0f, 1.0f, 0.0f, 1.0f);

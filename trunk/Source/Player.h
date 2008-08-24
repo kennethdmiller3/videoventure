@@ -11,6 +11,7 @@ class PlayerTemplate
 public:
 	unsigned int mSpawn;
 	int mLives;
+	int mFirst;
 	int mExtra;
 
 public:

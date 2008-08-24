@@ -186,9 +186,7 @@ void Capturable::Capture(void)
 	{
 #ifdef USE_CHANGE_DYNAMIC_TYPE
 		// change dynamic type
-		Database::Deactivate(mId);
-		Database::parent.Put(mId, capturable.mSpawnOnCapture);
-		Database::Activate(mId);
+		Database::Switch(mId, capturable.mSpawnOnCapture);
 #else
 		// get the entity
 		Entity *entity = Database::entity.Get(mId);

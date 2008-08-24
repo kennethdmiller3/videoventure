@@ -23,6 +23,11 @@ public:
 	float mDelay;
 	int mPhase;
 	int mCycle;
+	int mTrack;
+
+	// ammo
+	unsigned int mType;
+	float mCost;
 
 public:
 	WeaponTemplate(void);
@@ -43,8 +48,12 @@ protected:
 	int mChannel;
 
 	// fire timer
+	int mTrack;
 	float mTimer;
 	int mPhase;
+
+	// ammo pool
+	unsigned int mAmmo;
 
 public:
 #ifdef USE_POOL_ALLOCATOR
@@ -68,6 +77,15 @@ public:
 
 	// update
 	void Update(float aStep);
+
+protected:
+	friend class WeaponTracker;
+
+	// tracking
+	void Track(int aAdd)
+	{
+		mTrack += aAdd;
+	}
 };
 
 namespace Database

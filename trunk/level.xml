@@ -1,6 +1,6 @@
 <?xml version="1.0" standalone="no"?>
 <!-- Test Level -->
-<world>
+<world xmin="-1024" ymin="-1024" xmax="1024" ymax="1024">
 
 	<!-- sounds -->
 
@@ -12,7 +12,9 @@
 	<!-- players -->
 
 	<template name="1P">
-		<player name="playershipwarp" lives="3" extra="100000"/>
+		<player name="playershipwarp" lives="3" firstextra="20000" extra="50000"/>
+		<resource name="special" initial="3"/>
+		<team name="blue"/>
 	</template>
 	<entity name="playerspawn">
 		<position x="0" y="0"/>
@@ -283,28 +285,28 @@
 	<!-- clouds -->
 	<!--
 	<entity name="clouds">
-		<renderable radius="16384">
+		<renderable radius="512">
 			<drawlist>
-				<set name="d" type="translate" x="0" y="0" z="640"/>
+				<set name="d" type="translate" x="0" y="0" z="256"/>
 				<quads>
-					<repeat count="1024">
-						<color rand="1" r_avg="0.375" r_var="0.125" g_avg="0.375" g_var="0.125" b_avg="0.375" b_var="0.125" a_avg="0.75" a_var="0"/>
-						<set name="p0" type="position" rand="1" x_avg="0" x_var="2048" y_avg="0" y_var="2048" z_avg="0" z_var="0"/>
-						<set name="w" type="translate" rand="1" x_avg="128" x_var="96" y_avg="0" y_var="0" z_avg="0" z_var="0"/>
-						<set name="h" type="translate" rand="1" x_avg="0" x_var="0" y_avg="128" y_var="96" z_avg="0" z_var="0"/>
-						<add name="p0" variable="d"/>
-						<sub name="p0" variable="w"/>
-						<sub name="p0" variable="h"/>
-						<add name="w" variable="w"/>
-						<add name="h" variable="h"/>
+					<repeat count="64">
+						<color rand="1" r_avg="0.125" r_var="0.0625" g_avg="0.125" g_var="0.0625" b_avg="0.125" b_var="0.0625" a_avg="0.75" a_var="0"/>
+						<set name="p0" type="position" rand="4" x_avg="0" x_var="1024" y_avg="0" y_var="1024" z_avg="0" z_var="0"/>
+						<set name="w" type="translate" rand="1" x_avg="64" x_var="48" y_avg="0" y_var="0" z_avg="0" z_var="0"/>
+						<set name="h" type="translate" rand="1" x_avg="0" x_var="0" y_avg="64" y_var="48" z_avg="0" z_var="0"/>
+						<add name="p0" type="translate" variable="d"/>
+						<sub name="p0" type="translate" variable="w"/>
+						<sub name="p0" type="translate" variable="h"/>
+						<add name="w" type="translate" variable="w"/>
+						<add name="h" type="translate" variable="h"/>
 						<vertex variable="p0"/>
-						<add name="p0" variable="w"/>
+						<add name="p0" type="translate" variable="w"/>
 						<vertex variable="p0"/>
-						<add name="p0" variable="h"/>
+						<add name="p0" type="translate" variable="h"/>
 						<vertex variable="p0"/>
-						<sub name="p0" variable="w"/>
+						<sub name="p0" type="translate" variable="w"/>
 						<vertex variable="p0"/>
-						<add name="d" type="position" x="0" y="0" z="0.375" w="0"/>
+						<add name="d" type="translate" x="0" y="0" z="6"/>
 					</repeat>
 				</quads>
 				<clear name="p0"/>
@@ -316,14 +318,16 @@
 	</entity>
 	-->
 
+
 	<!-- starfield -->
+
 	<template name="starfield">
-		<renderable radius="1536">
+		<renderable radius="768">
 			<drawlist>
 				<quads>
 					<repeat count="128">
 						<color rand="1" r_avg="0.75" r_var="0.25" g_avg="0.75" g_var="0.25" b_avg="0.75" b_var="0.25" a_avg="1" a_var="0"/>
-						<set name="p0" type="position" rand="1" x_avg="0" x_var="512" y_avg="0" y_var="512" z_avg="640" z_var="384"/>
+						<set name="p0" type="position" rand="1" x_avg="0" x_var="256" y_avg="0" y_var="256" z_avg="640" z_var="384"/>
 						<add name="p0" type="translate" x="-1" y="-1"/>
 						<vertex variable="p0"/>
 						<add name="p0" type="translate" x="2" y="0"/>
@@ -339,7 +343,7 @@
 		</renderable>
 	</template>
 
-	<tilemap x="-1536" y="-1536" dx="1024" dy="1024">
+	<tilemap x="768" y="768" dx="-512" dy="-512">
 		<tile name="*" spawn="starfield"/>
 		<row data="****"/>
 		<row data="****"/>
@@ -351,9 +355,9 @@
 	<!-- reference grid -->
 
 	<entity name="playfield">
-		<renderable radius="2048">
+		<renderable radius="1024">
 			<drawlist>
-				<scale x="64" y="64"/>
+				<scale x="32" y="32"/>
 				<color r="1.0" g="1.0" b="1.0" a="1.0"/>
 				<line_loop>
 					<!-- perimeter -->
@@ -419,50 +423,6 @@
 	</entity>
 
 
-	<!-- test walls -->
-
-	<template name="wall">
-		<collidable>
-			<body name="main">
-				<box w="8" h="64">
-					<category value="0"/>
-				</box>
-			</body>
-		</collidable>
-		<renderable radius="64">
-			<drawlist>
-				<color r="1.0" g="0.9" b="0.1" a="1.0"/>
-				<quads>
-					<vertex x="-8" y="64"/>
-					<vertex x="8" y="64"/>
-					<vertex x="8" y="-64"/>
-					<vertex x="-8" y="-64"/>
-				</quads>
-			</drawlist>
-		</renderable>
-	</template>
-
-	<entity name="wallA" type="wall">
-		<!-- right wall -->
-		<position x="128.0" y="0.0" angle="0"/>
-	</entity>
-
-	<entity name="wallB" type="wall">
-		<!-- top wall -->
-		<position x="0.0" y="128.0" angle="90"/>
-	</entity>
-
-	<entity name="wallC" type="wall">
-		<!-- left wall -->
-		<position x="-128.0" y="0.0" angle="180"/>
-	</entity>
-
-	<entity name="wallD" type="wall">
-		<!-- bottom wall -->
-		<position x="0.0" y="-128.0" angle="270"/>
-	</entity>
-
-
 	<!-- enemy bullseye targets -->
 
 	<template name="enemytarget">
@@ -503,7 +463,7 @@
 	</template>
 
 	<template name="enemytargetappear">
-		<explosion life="0.25" spawnonexpire="enemytarget"/>
+		<expire time="0.25" spawnonexpire="enemytarget"/>
 		<renderable radius="20">
 			<pushmatrix>
 				<color>
@@ -530,148 +490,239 @@
 		</renderable>
 	</template>
 
+	<!-- 1-health powerup -->
 
-	<!-- friend bullseye targets -->
+	<template name="health1expire">
+		<expire time="0.25"/>
+		<renderable radius="8">
+			<pushmatrix>
+				<color>
+					<key time="0.00" r="0.7" g="1.0" b="0.4" a="0.5"/>
+					<key time="0.25" r="0.0" g="1.0" b="0.0" a="0.0"/>
+				</color>
+				<scale>
+					<key time="0.00" x="2.0" y="2.0"/>
+					<key time="0.25" x="8.0" y="8.0"/>
+				</scale>
+				<calllist name="circle16"/>
+			</pushmatrix>
+		</renderable>
+	</template>
 
-	<template name="friendtarget">
+	<template name="health1collect">
+		<expire time="0.5"/>
+		<sound>
+			<file name="stargate-humanoidcatch2.wav"/>
+		</sound>
+		<renderable radius="16">
+			<pushmatrix>
+				<color>
+					<key time="0.0" r="0.9" g="1.0" b="0.8" a="1.0"/>
+					<key time="0.5" r="0.5" g="1.0" b="0.0" a="0.0"/>
+				</color>
+				<scale>
+					<key time="0.0" x="2.0" y="2.0"/>
+					<key time="0.5" x="0.0" y="0.0"/>
+				</scale>
+				<calllist name="circle16"/>
+			</pushmatrix>
+			<pushmatrix>
+				<color>
+					<key time="0.0" r="0.7" g="1.0" b="0.4" a="0.5"/>
+					<key time="1.0"  r="0.0" g="1.0" b="0.0" a="0.0"/>
+				</color>
+				<repeat count="3">
+					<repeat count="8">
+						<pushmatrix>
+							<translate>
+								<key time="0.0" x="0" y="16"/>
+								<key time="0.5" x="0" y="2"/>
+							</translate>
+							<scale>
+								<key time="0.0" x="0.5" y="0.5"/>
+								<key time="0.5" x="1.0" y="1.0"/>
+							</scale>
+							<calllist name="diamond"/>
+						</pushmatrix>
+						<rotate angle="45"/>
+					</repeat>
+					<rotate angle="-30"/>
+					<scale x="0.75" y="0.75"/>
+				</repeat>
+			</pushmatrix>
+			<pushmatrix>
+				<color>
+					<key time="0.00" r="0.7" g="1.0" b="0.4" a="0.5"/>
+					<key time="0.25" r="0.0" g="1.0" b="0.0" a="0.0"/>
+				</color>
+				<scale>
+					<key time="0.00" x="2.0" y="2.0"/>
+					<key time="0.25" x="4.0" y="4.0"/>
+				</scale>
+				<calllist name="circle16"/>
+			</pushmatrix>
+		</renderable>
+	</template>
+
+	<template name="health1">
 		<collidable>
 			<body name="main">
-				<circle radius="5">
-					<density value="1"/>
+				<circle radius="2">
 					<friction value="0.5"/>
 					<restitution value="0.5"/>
+					<density value="1"/>
 					<category value="1"/>
+					<mask bit2="0" bit3="0" bit4="0"/>
 				</circle>
 				<damping linear="5.0" angular="5.0"/>
 			</body>
 		</collidable>
-		<renderable radius="5">
-			<drawlist>
-				<color r="0.1" g="0.2" b="1.0" a="1.0"/>
+		<renderable radius="6" period="1.0">
+			<color>
+				<key time="0.0" r="0.2" g="1.0" b="0.1" a="1.0"/>
+				<key time="0.4" r="0.7" g="1.0" b="0.4" a="1.0"/>
+				<key time="0.5" r="0.9" g="1.0" b="0.8" a="1.0"/>
+				<key time="0.6" r="0.7" g="1.0" b="0.4" a="1.0"/>
+				<key time="1.0" r="0.2" g="1.0" b="0.1" a="1.0"/>
+			</color>
+			<scale x="2" y="2"/>
+			<calllist name="diamond"/>
+		</renderable>
+		<expire time="10" spawnonexpire="health1expire"/>
+		<bullet damage="-1" ricochet="1" spawnondeath="health1collect"/>
+	</template>
+	
+	
+	<!-- enemy warp-in -->
+
+	<template name="enemywarpin">
+		<renderable radius="128">
+			<block start="0.8" length="0.2">
 				<pushmatrix>
-					<scale x="2" y="2"/>
-					<calllist name="circle8"/>
-				</pushmatrix>
-				<color r="1.0" g="1.0" b="1.0" a="1.0"/>
-				<pushmatrix>
-					<scale x="3.5" y="3.5"/>
-					<calllist name="circle12"/>
-				</pushmatrix>
-				<color r="0.1" g="0.2" b="1.0" a="1.0"/>
-				<pushmatrix>
-					<scale x="5" y="5"/>
+					<color>
+						<key time="0.0" r="1.0" g="0.7" b="0.4" a="0.0"/>
+						<key time="0.2" r="1.0" g="1.0" b="1.0" a="1.0"/>
+					</color>
+					<scale>
+						<key time="0.0" x="0.0" y="0.0"/>
+						<key time="0.2" x="6.0" y="6.0"/>
+					</scale>
 					<calllist name="circle16"/>
 				</pushmatrix>
-			</drawlist>
+			</block>
+			<block start="0.6" length="0.4">
+				<pushmatrix>
+					<color>
+						<key time="0.0" r="1.0" g="0.0" b="0.0" a="0.0"/>
+						<key time="0.4" r="1.0" g="0.7" b="0.4" a="0.5"/>
+					</color>
+					<scale>
+						<key time="0.0" x="0.0" y="0.0"/>
+						<key time="0.4" x="10.0" y="10.0"/>
+					</scale>
+					<calllist name="circle16"/>
+				</pushmatrix>
+			</block>
+			<block start="0.4" length="0.6">
+				<pushmatrix>
+					<color>
+						<key time="0.0" r="1.0" g="0.0" b="0.0" a="0.0"/>
+						<key time="0.6" r="1.0" g="0.5" b="0.0" a="0.25"/>
+					</color>
+					<scale>
+						<key time="0.0" x="0.0" y="0.0"/>
+						<key time="0.6" x="16.0" y="16.0"/>
+					</scale>
+					<calllist name="circle16"/>
+				</pushmatrix>
+			</block>
+			<pushmatrix>
+				<color>
+					<key time="0.0" r="1.0" g="0.0" b="0.0" a="0.0"/>
+					<key time="1.0" r="1.0" g="0.7" b="0.4" a="0.5"/>
+				</color>
+				<repeat count="6">
+					<repeat count="12">
+						<pushmatrix>
+							<translate>
+								<key time="0.0" x="128" y="0"/>
+								<key time="1.0" x="0" y="0"/>
+							</translate>
+							<scale>
+								<key time="0.0" x="0.5" y="0.5"/>
+								<key time="1.0" x="4.0" y="0.5"/>
+							</scale>
+							<calllist name="circle16"/>
+						</pushmatrix>
+						<rotate angle="30"/>
+					</repeat>
+					<scale x="0.8" y="0.8"/>
+					<rotate angle="18"/>
+				</repeat>
+			</pushmatrix>
 		</renderable>
-		<damagable health="10" spawnondeath="friendexplosionsmall"/>
-		<team name="blue"/>
-		<points value="100"/>
+		<expire time="1.0"/>
+		<sound>
+			<file name="stargate-warpin.wav"/>
+		</sound>
 	</template>
 
-	<template name="friendtargetappear">
-		<explosion life="0.25" spawnonexpire="friendtarget"/>
+
+	<!-- enemy long warp-in -->
+
+	<template name="enemylongwarpin">
 		<renderable radius="20">
+			<block start="2.0" length="0.4">
+				<pushmatrix>
+					<color>
+						<key time="0.0" r="1.0" g="5.0" b="0.0" a="0.0"/>
+						<key time="0.4" r="1.0" g="1.0" b="1.0" a="1.0"/>
+					</color>
+					<scale>
+						<key time="0.0" x="0.0" y="0.0"/>
+						<key time="0.4" x="8.0" y="8.0"/>
+					</scale>
+					<calllist name="circle16"/>
+				</pushmatrix>
+			</block>
 			<pushmatrix>
 				<color>
-					<key time="0.00" r="1.0" g="1.0" b="1.0" a="0.0"/>
-					<key time="0.25" r="1.0" g="1.0" b="1.0" a="1.0"/>
+					<key time="0.0" r="1.0" g="0.0" b="0.0" a="0.0"/>
+					<key time="1.6" r="1.0" g="0.5" b="0.0" a="0.5"/>
+					<key time="2.4" r="1.0" g="0.7" b="0.4" a="1.0"/>
 				</color>
 				<scale>
-					<key time="0.00" x="1.0" y="1.0"/>
-					<key time="0.25" x="5.0" y="5.0"/>
+					<key time="0.0" x="0.25" y="0.25"/>
+					<key time="2.4" x="1.0" y="1.0"/>
 				</scale>
-				<calllist name="circle16"/>
-			</pushmatrix>
-			<pushmatrix>
-				<color>
-					<key time="0.0" r="0.1" g="0.2" b="1.0" a="0.0"/>
-					<key time="0.25" r="0.1" g="0.2" b="1.0" a="0.5"/>
-				</color>
-				<scale>
-					<key time="0.00" x="20.0" y="20.0"/>
-					<key time="0.25" x="5.0" y="5.0"/>
-				</scale>
-				<calllist name="circle16"/>
+				<quads>
+					<repeat count="32">
+						<set name="p" type="position" rand="4" x_avg="0" x_var="12" y_avg="0" y_var="12"/>
+						<add name="p" type="translate" x="-1" y="-1"/>
+						<vertex variable="p"/>
+						<add name="p" type="translate" x="2" y="0"/>
+						<vertex variable="p"/>
+						<add name="p" type="translate" x="0" y="2"/>
+						<vertex variable="p"/>
+						<add name="p" type="translate" x="-2" y="0"/>
+						<vertex variable="p"/>
+					</repeat>
+					<clear name="p"/>
+				</quads>
 			</pushmatrix>
 		</renderable>
+		<expire time="2.4"/>
+		<playercontroller/>
+		<sound>
+			<file name="robotron-teleportin.wav"/>
+		</sound>
 	</template>
-
-	<template name="friendtargetspawn">
-		<spawner>
-			<spawn name="friendtargetappear" start="0" cycle="5" track="1"/>
-		</spawner>
-	</template>
-
-	<entity name="friendtargetspawn1" type="friendtargetspawn">
-		<position x="256.0" y="0.0"/>
-	</entity>
-
-	<entity name="friendtargetspawn2" type="friendtargetspawn">
-		<position x="236.5" y="98.0"/>
-	</entity>
-
-	<entity name="friendtargetspawn3" type="friendtargetspawn">
-		<position x="181.0" y="181.0"/>
-	</entity>
-
-	<entity name="friendtargetspawn4" type="friendtargetspawn">
-		<position x="98.0" y="236.5"/>
-	</entity>
-
-	<entity name="friendtargetspawn5" type="friendtargetspawn">
-		<position x="0.0" y="256.0"/>
-	</entity>
-
-	<entity name="friendtargetspawn6" type="friendtargetspawn">
-		<position x="-98.0" y="236.5"/>
-	</entity>
-
-	<entity name="friendtargetspawn7" type="friendtargetspawn">
-		<position x="-181.0" y="181.0"/>
-	</entity>
-
-	<entity name="friendtargetspawn8" type="friendtargetspawn">
-		<position x="-236.5" y="98.0"/>
-	</entity>
-
-	<entity name="friendtargetspawn9" type="friendtargetspawn">
-		<position x="-256.0" y="0.0"/>
-	</entity>
-
-	<entity name="friendtargetspawn10" type="friendtargetspawn">
-		<position x="-236.5" y="-98.0"/>
-	</entity>
-
-	<entity name="friendtargetspawn11" type="friendtargetspawn">
-		<position x="-181.0" y="-181.0"/>
-	</entity>
-
-	<entity name="friendtargetspawn12" type="friendtargetspawn">
-		<position x="-98.0" y="-236.5"/>
-	</entity>
-
-	<entity name="friendtargetspawn13" type="friendtargetspawn">
-		<position x="0.0" y="-256.0"/>
-	</entity>
-
-	<entity name="friendtargetspawn14" type="friendtargetspawn">
-		<position x="98.0" y="-236.5"/>
-	</entity>
-
-	<entity name="friendtargetspawn15" type="friendtargetspawn">
-		<position x="181.0" y="-181.0"/>
-	</entity>
-
-	<entity name="friendtargetspawn16" type="friendtargetspawn">
-		<position x="236.5" y="-98.0"/>
-	</entity>
 
 
 	<!-- enemy bullet explosion -->
 
 	<template name="enemybulletexplosion">
-		<explosion life="0.5"/>
+		<expire time="0.5"/>
 		<renderable radius="16">
 			<block length="0.1">
 				<pushmatrix>
@@ -762,7 +813,8 @@
 				</pushmatrix>
 			</drawlist>
 		</renderable>
-		<bullet life="1" damage="1" spawnondeath="enemybulletexplosion"/>
+		<expire time="1"/>
+		<bullet damage="1" spawnondeath="enemybulletexplosion"/>
 	</template>
 
 
@@ -770,7 +822,7 @@
 
 	<template name="enemyweapon">
 		<weapon>
-			<velocity x="0" y="240"/>
+			<velocity x="0" y="180"/>
 			<ordnance name="enemybullet"/>
 			<shot delay="0.5"/>
 		</weapon>
@@ -818,7 +870,8 @@
 				</pushmatrix>
 			</drawlist>
 		</renderable>
-		<bullet life="1" damage="1" spawnondeath="enemybulletexplosion"/>
+		<expire time="1"/>
+		<bullet damage="1" spawnondeath="enemybulletexplosion"/>
 	</template>
 
 
@@ -826,9 +879,9 @@
 
 	<template name="enemypulseweapon">
 		<weapon>
-			<velocity x="0" y="180"/>
+			<velocity x="0" y="150"/>
 			<ordnance name="enemypulsebullet"/>
-			<shot delay="0.5"/>
+			<shot delay="0.3" track="3"/>
 		</weapon>
 		<sound>
 			<file name="stargate-swarmerfire.wav"/>
@@ -842,7 +895,7 @@
 	<!-- enemy missile -->
 
 	<template name="missiletrail">
-		<explosion life="1.0"/>
+		<expire time="1.0"/>
 		<renderable radius="4">
 			<scale>
 				<key time="0.0" x="2" y="2"/>
@@ -911,15 +964,17 @@
 				</triangles>
 			</drawlist>
 		</renderable>
-		<bullet life="6" damage="3" spawnondeath="enemyfireballexplosion" spawnonexpire="enemybulletexplosion"/>
+		<expire time="6" spawnonexpire="enemybulletexplosion"/>
+		<bullet damage="3" spawnondeath="enemyfireballexplosion"/>
 		<damagable health="1" spawnondeath="enemyfireballexplosion"/>
 		<aimer range="512" leading="0" category="3" bit3="0" bit4="0"/>
-		<ship forwardveloc="180" neutralveloc="180" reverseveloc="180" strafeveloc="0" maxaccel="360" minaccel="360" maxomega="6"/>
+		<ship forwardveloc="120" neutralveloc="120" reverseveloc="120" strafeveloc="0" maxaccel="360" minaccel="360" maxomega="6"/>
 		<team name="red"/>
 		<sound volume="0.5">
 			<file name="stargate-playershot.wav"/>
 		</sound>
 		<points value="50"/>
+		<capturable resistance="1" spawnoncapture="friendmissile"/>
 		<spawner>
 			<offset x="0" y="0"/>
 			<spawn name="missiletrail" start="0" cycle="0.016667" track="0"/>
@@ -931,7 +986,7 @@
 			<offset x="0" y="10"/>
 			<velocity x="0" y="60"/>
 			<ordnance name="enemymissile"/>
-			<shot delay="0.6"/>
+			<shot delay="1.5"/>
 		</weapon>
 	</template>
 
@@ -939,7 +994,7 @@
 	<!-- enemy explosion -->
 
 	<template name="enemyexplosion">
-		<explosion life="3.0"/>
+		<expire time="3.0"/>
 		<sound>
 			<file name="stargate-landerkill.wav"/>
 		</sound>
@@ -1144,7 +1199,7 @@
 		<link name="gun" secondary="enemycannon">
 			<offset x="0" y="0" angle="0"/>
 		</link>
-		<aimer range="512" attack="192" leading="240" category="4" bit2="0" bit3="0" bit4="0"/>
+		<aimer range="256" attack="128" leading="240" category="4" bit2="0" bit3="0" bit4="0"/>
 	</template>
 
 	<template name="enemyturret2" type="enemyturret">
@@ -1154,7 +1209,7 @@
 		<link name="rgun" secondary="enemycannon1">
 			<offset x="-2" y="0" angle="0"/>
 		</link>
-		<aimer range="512" attack="192" leading="240" category="4" bit2="0" bit3="0" bit4="0"/>
+		<aimer range="256" attack="128" leading="240" category="4" bit2="0" bit3="0" bit4="0"/>
 	</template>
 
 	<template name="enemyturret3" type="enemyturret">
@@ -1167,34 +1222,38 @@
 		<link name="rgun" secondary="enemycannon1">
 			<offset x="-2.5" y="-1.5" angle="5"/>
 		</link>
-		<aimer range="512" attack="192" leading="240" category="4" bit2="0" bit3="0" bit4="0"/>
+		<aimer range="256" attack="128" leading="240" category="4" bit2="0" bit3="0" bit4="0"/>
 	</template>
 
 	<template name="enemyturretmissile" type="enemyturret">
 		<link name="gun" secondary="enemycannonmissile">
 			<offset x="0" y="0" angle="0"/>
 		</link>
-		<aimer range="512" attack="256" leading="0" category="3" bit3="0" bit4="0"/>
+		<aimer range="256" attack="128" leading="0" category="3" bit3="0" bit4="0"/>
 	</template>
 
 	<template name="enemyturretmount1" type="enemyturret1">
 		<damagable health="10" spawnondeath="enemyexplosion"/>
 		<points value="150"/>
+		<capturable resistance="10" spawnoncapture="friendturretmount1"/>
 	</template>
 
 	<template name="enemyturretmount2" type="enemyturret2">
 		<damagable health="10" spawnondeath="enemyexplosion"/>
 		<points value="250"/>
+		<capturable resistance="10" spawnoncapture="friendturretmount2"/>
 	</template>
 
 	<template name="enemyturretmount3" type="enemyturret3">
 		<damagable health="10" spawnondeath="enemyexplosion"/>
 		<points value="400"/>
+		<capturable resistance="10" spawnoncapture="friendturretmount3"/>
 	</template>
 
 	<template name="enemyturretmountmissile" type="enemyturretmissile">
 		<damagable health="10" spawnondeath="enemyexplosion"/>
 		<points value="250"/>
+		<capturable resistance="10" spawnoncapture="friendturretmountmissile"/>
 	</template>
 
 
@@ -1206,6 +1265,7 @@
 		</collidable>
 		<damagable health="10" spawnondeath="enemyexplosion"/>
 		<points value="150"/>
+		<capturable resistance="10" spawnoncapture="friendturretpod1"/>
 	</template>
 
 	<template name="enemyturretpod2" type="enemyturret2">
@@ -1216,6 +1276,7 @@
 		</collidable>
 		<damagable health="10" spawnondeath="enemyexplosion"/>
 		<points value="250"/>
+		<capturable resistance="10" spawnoncapture="friendturretpod2"/>
 	</template>
 
 	<template name="enemyturretpod3" type="enemyturret3">
@@ -1226,6 +1287,7 @@
 		</collidable>
 		<damagable health="10" spawnondeath="enemyexplosion"/>
 		<points value="400"/>
+		<capturable resistance="10" spawnoncapture="friendturretpod3"/>
 	</template>
 
 	<template name="enemyturretpodmissile" type="enemyturretmissile">
@@ -1236,29 +1298,46 @@
 		</collidable>
 		<damagable health="10" spawnondeath="enemyexplosion"/>
 		<points value="250"/>
+		<capturable resistance="10" spawnoncapture="friendturretpodmissile"/>
+	</template>
+
+	<template name="enemyturretpod1warp" type="enemylongwarpin">
+		<expire spawnonexpire="enemyturretpod1"/>
 	</template>
 
 	<template name="enemyturret1spawn">
 		<spawner>
-			<spawn name="enemyturretpod1" start="0" cycle="5" track="1"/>
+			<spawn name="enemyturretpod1warp" start="30" cycle="30" track="1"/>
 		</spawner>
+	</template>
+
+	<template name="enemyturretpod2warp" type="enemylongwarpin">
+		<expire spawnonexpire="enemyturretpod2"/>
 	</template>
 
 	<template name="enemyturret2spawn">
 		<spawner>
-			<spawn name="enemyturretpod2" start="0" cycle="5" track="1"/>
+			<spawn name="enemyturretpod2warp" start="60" cycle="30" track="1"/>
 		</spawner>
+	</template>
+
+	<template name="enemyturretpod3warp" type="enemylongwarpin">
+		<expire spawnonexpire="enemyturretpod3"/>
 	</template>
 
 	<template name="enemyturret3spawn">
 		<spawner>
-			<spawn name="enemyturretpod3" start="0" cycle="5" track="1"/>
+			<spawn name="enemyturretpod3warp" start="90" cycle="30" track="1"/>
 		</spawner>
+	</template>
+
+	<template name="enemyturretpodmissilewarp" type="enemylongwarpin">
+		<expire spawnonexpire="enemyturretpodmissile"/>
 	</template>
 
 	<template name="enemyturretlauncherspawn">
 		<spawner>
-			<spawn name="enemyturretpodmissile" start="0" cycle="5" track="1"/>
+			<spawn name="enemyturretpodmissilewarp" start="120" cycle="30" track="1"/>
 		</spawner>
 	</template>
 
@@ -1284,26 +1363,26 @@
 	</template>
 
 	<entity name="enemyturretcluster1" type="enemyturretcluster">
-		<position x="1024.0" y="1024.0" angle="135"/>
+		<position x="768.0" y="768.0" angle="135"/>
 	</entity>
 
 	<entity name="enemyturretcluster2" type="enemyturretcluster">
-		<position x="-1024.0" y="1024.0" angle="-135"/>
+		<position x="-768.0" y="768.0" angle="-135"/>
 	</entity>
 
 	<entity name="enemyturretcluster3" type="enemyturretcluster">
-		<position x="-1024.0" y="-1024.0" angle="-45"/>
+		<position x="-768.0" y="-768.0" angle="-45"/>
 	</entity>
 
 	<entity name="enemyturretcluster4" type="enemyturretcluster">
-		<position x="1024.0" y="-1024.0" angle="45"/>
+		<position x="768.0" y="-768.0" angle="45"/>
 	</entity>
 
 
 	<!-- enemy fireball explosion -->
 
 	<template name="enemyfireballexplosion">
-		<explosion life="1.0"/>
+		<expire time="1.0"/>
 		<sound>
 			<file name="stargate-fireballkill.wav"/>
 		</sound>
@@ -1391,7 +1470,7 @@
 	<!-- enemy fireball -->
 
 	<template name="enemyfireballtrail">
-		<explosion life="0.2"/>
+		<expire time="0.2"/>
 		<renderable radius="1.5">
 			<pushmatrix>
 				<scale>
@@ -1483,9 +1562,11 @@
 				</repeat>
 			</pushmatrix>
 		</renderable>
-		<bullet life="1" damage="3" spawnondeath="enemyfireballexplosion" spawnonexpire="enemybulletexplosion"/>
+		<expire time="1" spawnonexpire="enemybulletexplosion"/>
+		<bullet damage="1" spawnondeath="enemyfireballexplosion"/>
 		<team name="red"/>
 		<points value="100"/>
+		<capturable resistance="1" spawnoncapture="friendfireball"/>
 		<spawner>
 			<spawn name="enemyfireballtrail" start="0" cycle="0.033333" track="0"/>
 		</spawner>
@@ -1549,13 +1630,13 @@
 				<calllist name="bowtie"/>
 			</pushmatrix>
 		</renderable>
-		<aimer range="512" attack="128" leading="210" evade="2" close="64" category="3" bit3="0" bit4="0"/>
-		<ship maxveloc="120" maxaccel="480" minaccel="10" maxomega="2"/>
+		<aimer period="0.1" range="128" attack="128" leading="180" drift="0.25" wanderturn="0.25" wanderturnrate="0.25" pursue="0" evade="1" close="64" category="3" bit3="0" bit4="0"/>
+		<ship maxveloc="120" maxaccel="360" minaccel="10" maxomega="2"/>
 		<damagable health="3" spawnondeath="enemyexplosion"/>
 		<weapon>
-			<velocity x="0" y="210"/>
+			<velocity x="0" y="180"/>
 			<ordnance name="enemyfireball"/>
-			<shot delay="0.6"/>
+			<shot delay="0.3" track="1"/>
 		</weapon>
 		<sound>
 			<file name="stargate-firebomberfire.wav"/>
@@ -1565,13 +1646,24 @@
 		</soundcue>
 		<team name="red"/>
 		<points value="250"/>
+		<capturable resistance="3" spawnoncapture="friendfirebomber"/>
 	</template>
 
 
 	<!-- enemy mine explosion -->
 
 	<template name="enemymineexplosion">
-		<explosion life="1.0" damage="1" radius="64" category="4" bit2="0" bit3="0" bit4="0"/>
+		<expire time="1.0"/>
+		<explosion life="0.15" category="4" bit2="0" bit3="0" bit4="0">
+			<radius>
+				<key time="0.00" inner="16" outer="32"/>
+				<key time="0.15" inner="32" outer="64"/>
+			</radius>
+			<damage>
+				<key time="0.00" inner="10" outer="0"/>
+				<key time="0.05" inner="5" outer="0"/>
+			</damage>
+		</explosion>
 		<sound>
 			<file name="stargate-fireballhit.wav"/>
 		</sound>
@@ -1760,7 +1852,9 @@
 				<calllist name="circle32"/>
 			</pushmatrix>
 		</renderable>
-		<bullet life="5" damage="3" spawnondeath="enemymineexplosion" spawnonexpire="enemybulletexplosion"/>
+		<expire time="5" spawnonexpire="enemybulletexplosion"/>
+		<bullet damage="3" spawnondeath="enemymineexplosion"/>
+		<capturable resistance="1" spawnoncapture="friendmine"/>
 	</template>
 
 
@@ -1859,24 +1953,25 @@
 				<calllist name="diamond"/>
 			</pushmatrix>
 		</renderable>
-		<aimer range="512" attack="64" leading="60" angle="180" evade="1" close="128" category="4" bit2="0" bit3="0" bit4="0"/>
-		<ship maxveloc="60" maxaccel="120" minaccel="10" maxomega="3"/>
+		<aimer range="128" attack="128" leading="15" angle="180" drift="1" wanderturn="1" wanderturnrate="0.25" pursue="0" evade="0" close="32" category="4" bit2="0" bit3="0" bit4="0"/>
+		<ship maxveloc="30" maxaccel="60" minaccel="10" maxomega="1"/>
 		<damagable health="5" spawnondeath="enemyexplosion"/>
 		<weapon>
 			<velocity x="0" y="0"/>
 			<inherit x="0" y="0"/>
 			<ordnance name="enemymine"/>
-			<shot delay="0.5"/>
+			<shot delay="1.0"/>
 		</weapon>
 		<team name="red"/>
 		<points value="250"/>
+		<capturable resistance="5" spawnoncapture="friendbomber"/>
 	</template>
 
 
 	<!-- enemy space hum -->
 
 	<template name="enemyspacehumtrail">
-		<explosion life="0.2"/>
+		<expire time="0.2"/>
 		<renderable radius="2.5">
 			<pushmatrix>
 				<scale>
@@ -1946,14 +2041,16 @@
 				<calllist name="diamond"/>
 			</pushmatrix>
 		</renderable>
-		<bullet life="30" damage="3" ricochet="1" spawnondeath="enemyfireballexplosion" spawnonexpire="enemybulletexplosion"/>
+		<expire time="30" spawnonexpire="enemybulletexplosion"/>
+		<bullet damage="1" ricochet="1" spawnondeath="enemyfireballexplosion"/>
 		<damagable health="1" spawnondeath="enemyfireballexplosion"/>
 		<aimer range="512" attack="0" leading="0" category="3" bit3="0" bit4="0"/>
-		<ship maxveloc="120" maxaccel="360" minaccel="10" maxomega="1"/>
+		<ship maxveloc="90" maxaccel="180" minaccel="10" maxomega="0"/>
 		<team name="red"/>
 		<points value="100"/>
+		<capturable resistance="1" spawnoncapture="friendspacehum"/>
 		<spawner>
-			<spawn name="enemyspacehumtrail" start="0" cycle="0.1" track="0"/>
+			<spawn name="enemyspacehumtrail" start="0" cycle="0.2" track="0"/>
 		</spawner>
 	</template>
 
@@ -2014,13 +2111,13 @@
 				<rotate angle="180"/>
 			</repeat>
 		</renderable>
-		<aimer range="512" attack="192" leading="210" evade="1" close="64" category="3" bit3="0" bit4="0"/>
-		<ship maxveloc="90" maxaccel="90" minaccel="10" maxomega="2"/>
+		<aimer range="256" attack="128" leading="0" drift="0.5" wanderturn="1.0" wanderturnrate="0.25" wanderside="0.5" wandersiderate="0.25" wanderfront="0.5" wanderfrontrate="0.25" evade="0" close="64" category="3" bit3="0" bit4="0"/>
+		<ship maxveloc="30" maxaccel="120" minaccel="10" maxomega="2"/>
 		<damagable health="3" spawnondeath="enemyexplosion"/>
 		<weapon>
-			<velocity x="0" y="210"/>
+			<velocity x="0" y="60"/>
 			<ordnance name="enemyspacehum"/>
-			<shot delay="0.6"/>
+			<shot delay="1.0" track="4"/>
 		</weapon>
 		<sound>
 			<file name="stargate-dynamofire.wav"/>
@@ -2030,10 +2127,33 @@
 		</soundcue>
 		<team name="red"/>
 		<points value="200"/>
+		<capturable resistance="3" spawnoncapture="frienddynamo"/>
 	</template>
 
 
 	<!-- enemy swarmer -->
+
+	<template name="enemyswarmerbreakout">
+		<collidable>
+			<body name="main">
+				<circle radius="2">
+					<density value="1"/>
+					<friction value="0.5"/>
+					<restitution value="0.5"/>
+					<category value="3"/>
+				</circle>
+				<damping linear="0.5" angular="0.5"/>
+			</body>
+		</collidable>
+		<renderable radius="2" period="1.0">
+			<drawlist>
+				<color r="1.0" g="0.2" b="0.1" a="1.0"/>
+				<scale x="2" y="2"/>
+				<calllist name="circle16"/>
+			</drawlist>
+		</renderable>
+		<expire time="0.5" spawnonexpire="enemyswarmer"/>
+	</template>
 
 	<template name="enemyswarmer">
 		<collidable>
@@ -2081,8 +2201,8 @@
 				</triangle_strip>
 			</drawlist>
 		</renderable>
-		<aimer range="512" attack="128" leading="180" evade="1" close="64" category="4" bit2="0" bit3="0" bit4="0"/>
-		<ship maxveloc="120" maxaccel="240" minaccel="10" maxomega="2"/>
+		<aimer range="256" attack="128" leading="180" drift="0.25" wanderside="1" wandersiderate="1" pursue="0.5" evade="0.25" close="32" category="4" bit2="0" bit3="0" bit4="0"/>
+		<ship maxveloc="60" maxaccel="180" minaccel="10" maxomega="2"/>
 		<damagable health="1" spawnondeath="enemyfireballexplosion"/>
 		<weapon>
 			<offset x="0" y="3" angle="0"/>
@@ -2092,13 +2212,14 @@
 		</weapon>
 		<team name="red"/>
 		<points value="150"/>
+		<capturable resistance="1" spawnoncapture="friendswarmer"/>
 	</template>
 
 
 	<!-- small enemy explosion -->
 
 	<template name="enemyexplosionsmall">
-		<explosion life="2.0"/>
+		<expire time="2.0"/>
 		<sound>
 			<file name="stargate-anotherenemykill.wav"/>
 		</sound>
@@ -2188,38 +2309,38 @@
 
 	<!-- enemy pod -->
 
-	<template name="enemyswarmerspawn">
+	<template name="enemyswarmerbreakoutspawn">
 		<spawner>
 			<offset x="0" y="6"/>
 			<inherit x="0.5" y="0.5"/>
 			<velocity x="0" y="60"/>
-			<spawn name="enemyswarmer"/>
+			<spawn name="enemyswarmerbreakout"/>
 		</spawner>
 	</template>
 
 	<template name="enemypodexplosion" type="enemyexplosionsmall">
-		<link name="spawn0" secondary="enemyswarmerspawn">
+		<link name="spawn0" secondary="enemyswarmerbreakoutspawn">
 			<offset x="0" y="0" angle="0"/>
 		</link>
-		<link name="spawn1" secondary="enemyswarmerspawn">
+		<link name="spawn1" secondary="enemyswarmerbreakoutspawn">
 			<offset x="0" y="0" angle="45"/>
 		</link>
-		<link name="spawn2" secondary="enemyswarmerspawn">
+		<link name="spawn2" secondary="enemyswarmerbreakoutspawn">
 			<offset x="0" y="0" angle="90"/>
 		</link>
-		<link name="spawn3" secondary="enemyswarmerspawn">
+		<link name="spawn3" secondary="enemyswarmerbreakoutspawn">
 			<offset x="0" y="0" angle="135"/>
 		</link>
-		<link name="spawn4" secondary="enemyswarmerspawn">
+		<link name="spawn4" secondary="enemyswarmerbreakoutspawn">
 			<offset x="0" y="0" angle="180"/>
 		</link>
-		<link name="spawn5" secondary="enemyswarmerspawn">
+		<link name="spawn5" secondary="enemyswarmerbreakoutspawn">
 			<offset x="0" y="0" angle="225"/>
 		</link>
-		<link name="spawn6" secondary="enemyswarmerspawn">
+		<link name="spawn6" secondary="enemyswarmerbreakoutspawn">
 			<offset x="0" y="0" angle="270"/>
 		</link>
-		<link name="spawn7" secondary="enemyswarmerspawn">
+		<link name="spawn7" secondary="enemyswarmerbreakoutspawn">
 			<offset x="0" y="0" angle="315"/>
 		</link>
 		<sound volume="2">
@@ -2310,11 +2431,13 @@
 				<rotate angle="90"/>
 			</repeat>
 		</renderable>
-		<aimer range="512" attack="0" leading="90" category="3" bit3="0" bit4="0"/>
-		<ship maxveloc="90" maxaccel="30" minaccel="10" maxomega="0.5"/>
+		<aimer range="256" attack="0" drift="0.5" wanderturn="1" wanderturnrate="0.25" pursue="0.25" leading="30" category="3" bit3="0" bit4="0"/>
+		<ship maxveloc="30" maxaccel="30" minaccel="10" maxomega="0.5"/>
+		<bullet damage="1" ricochet="1" spawnondeath="enemypodexplosion"/>
 		<damagable health="5" spawnondeath="enemypodexplosion"/>
 		<team name="red"/>
 		<points value="1000"/>
+		<capturable resistance="5" spawnoncapture="friendpod"/>
 	</template>
 
 
@@ -2354,7 +2477,9 @@
 				</pushmatrix>
 			</drawlist>
 		</renderable>
-		<bullet life="1" damage="1" spawnondeath="enemybulletexplosion"/>
+		<expire time="1"/>
+		<bullet damage="1" spawnondeath="enemybulletexplosion"/>
+		<capturable resistance="1" spawnoncapture="friendmineshrapnel"/>
 	</template>
 
 	<template name="enemymineshrapnelspawn">
@@ -2468,6 +2593,7 @@
 		<damagable health="5" spawnondeath="enemyvapormineexplosion"/>
 		<team name="red"/>
 		<points value="100"/>
+		<capturable resistance="5" spawnoncapture="friendvapormine"/>
 	</template>
 
 
@@ -2507,10 +2633,12 @@
 				</triangles>
 			</drawlist>
 		</renderable>
-		<bullet life="5" damage="1" spawnondeath="enemymineexplosion" spawnonexpire="enemyvapormine"/>
+		<expire time="5" spawnonexpire="enemyvapormine"/>
+		<bullet damage="1" spawnondeath="enemymineexplosion"/>
 		<damagable health="3" spawnondeath="enemymineexplosion"/>
 		<team name="red"/>
 		<points value="50"/>
+		<capturable resistance="3" spawnoncapture="friendphotonmine"/>
 	</template>
 
 
@@ -2562,8 +2690,8 @@
 				</drawlist>
 			</pushmatrix>
 		</renderable>
-		<aimer range="512" attack1="128" attack2="128" angle2="180" leading="240" evade="1" close="64"/>
-		<ship maxveloc="60" maxaccel="120" minaccel="10" maxomega="2.0"/>
+		<aimer range="256" attack1="128" attack2="128" angle2="180" drift="0.25" wanderturn="0.5" wanderturnrate="0.25" leading="240" evade="1" close="64"/>
+		<ship maxveloc="45" maxaccel="90" minaccel="10" maxomega="2.0"/>
 		<damagable health="10" spawnondeath="enemyexplosion"/>
 		<link name="gun" secondary="enemyweapon">
 			<offset x="0" y="4" angle="0"/>
@@ -2573,10 +2701,11 @@
 			<inherit x="0" y="0"/>
 			<ordnance name="enemyphotonmine"/>
 			<trigger channel="2"/>
-			<shot delay="1"/>
+			<shot delay="1.5" track="4"/>
 		</weapon>
 		<team name="red"/>
 		<points value="300"/>
+		<capturable resistance="10" spawnoncapture="friendcommandship"/>
 	</template>
 
 
@@ -2623,7 +2752,7 @@
 		<ship maxveloc="0" maxaccel="0" minaccel="0" maxomega="2"/>
 		<weapon>
 			<offset x="0" y="5" angle="0"/>
-			<velocity x="0" y="240"/>
+			<velocity x="0" y="180"/>
 			<ordnance name="enemybullet"/>
 			<shot delay="0.2"/>
 		</weapon>
@@ -2726,11 +2855,12 @@
 			</drawlist>
 		</renderable>
 		<link name="turret" secondary="enemywarriorturret" updateangle="0"/>
-		<aimer range="512" attack="0" leading="0" evade="1" close="64" category="4" bit2="0" bit3="0" bit4="0"/>
-		<ship maxveloc="90" maxaccel="120" minaccel="10" maxomega="0.0"/>
+		<aimer range="256" attack="0" leading="0" wanderside="0.5" wandersiderate="0.125" wanderfront="0.5" wanderfrontrate="0.125" evade="1" close="64" category="4" bit2="0" bit3="0" bit4="0"/>
+		<ship maxveloc="60" maxaccel="120" minaccel="10" maxomega="0.0"/>
 		<damagable health="15" spawnondeath="enemyexplosion"/>
 		<team name="red"/>
 		<points value="500"/>
+		<capturable resistance="15" spawnoncapture="friendwarrior"/>
 	</template>
 
 
@@ -2751,14 +2881,15 @@
 			<color r="1.0" g="0.2" b="0.1" a="1.0"/>
 			<calllist name="shiptiny"/>
 		</renderable>
-		<aimer range="512" attack="128" leading="240" evade="1" close="64" category="4" bit2="0" bit3="0" bit4="0"/>
-		<ship maxveloc="180" maxaccel="120" minaccel="10" maxomega="2"/>
+		<aimer range="128" attack="64" drift="0.5" wanderturn="0.25" wanderturnrate="0.25" leading="240" evade="1" close="32" category="4" bit2="0" bit3="0" bit4="0"/>
+		<ship maxveloc="120" maxaccel="120" minaccel="10" maxomega="2"/>
 		<damagable health="1" spawnondeath="enemyfireballexplosion"/>
 		<link name="gun" secondary="enemyweapon">
 			<offset x="0" y="4" angle="0"/>
 		</link>
 		<team name="red"/>
 		<points value="150"/>
+		<capturable resistance="1" spawnoncapture="friendshiptiny"/>
 	</template>
 
 
@@ -2779,8 +2910,8 @@
 			<color r="1.0" g="0.2" b="0.1" a="1.0"/>
 			<calllist name="shipsmall"/>
 		</renderable>
-		<aimer range="512" attack="128" leading="240" evade="1" close="64" category="4" bit2="0" bit3="0" bit4="0"/>
-		<ship maxveloc="150" maxaccel="90" minaccel="10" maxomega="1.5"/>
+		<aimer range="256" attack="128" drift="0.5" wanderturn="0.25" wanderturnrate="0.25" leading="240" evade="1" close="64" category="4" bit2="0" bit3="0" bit4="0"/>
+		<ship maxveloc="90" maxaccel="90" minaccel="10" maxomega="1.5"/>
 		<damagable health="3" spawnondeath="enemyexplosionsmall"/>
 		<link name="lgun" secondary="enemyweapon">
 			<offset x="2" y="0" angle="0"/>
@@ -2790,6 +2921,7 @@
 		</link>
 		<team name="red"/>
 		<points value="200"/>
+		<capturable resistance="3" spawnoncapture="friendshipsmall"/>
 	</template>
 
 
@@ -2797,7 +2929,7 @@
 
 	<template name="enemyshipweapon">
 		<weapon>
-			<velocity x="0" y="240"/>
+			<velocity x="0" y="180"/>
 			<ordnance name="enemybullet"/>
 			<shot delay="0.3"/>
 		</weapon>
@@ -2839,8 +2971,8 @@
 				<calllist name="ship"/>
 			</drawlist>
 		</renderable>
-		<aimer range="512" attack="128" leading="240" angle="30" evade="1" close="64" category="4" bit2="0" bit3="0" bit4="0"/>
-		<ship maxveloc="120" maxaccel="60" minaccel="10" maxomega="1"/>
+		<aimer range="256" attack="128" drift="0.5" wanderturn="0.25" wanderturnrate="0.25" leading="240" angle="30" evade="1" close="64" category="4" bit2="0" bit3="0" bit4="0"/>
+		<ship maxveloc="60" maxaccel="60" minaccel="10" maxomega="1"/>
 		<damagable health="10" spawnondeath="enemyexplosion"/>
 		<link name="lgun" secondary="enemyshipweapon0">
 			<offset x="2" y="0" angle="0"/>
@@ -2850,13 +2982,15 @@
 		</link>
 		<team name="red"/>
 		<points value="500"/>
+		<capturable resistance="10" spawnoncapture="friendship"/>
 	</template>
 
-	
+
 	<!-- enemy laser ship beam -->
 
 	<template name="enemylasershipbeam">
-		<beam life="0.5" damage="10" range="256" category="4" bit2="0" bit3="0" bit4="0" spawnonimpact="enemyfireballexplosion"/>
+		<expire time="0.5"/>
+		<beam damage="10" range="256" category="4" bit2="0" bit3="0" bit4="0" spawnonimpact="enemyfireballexplosion"/>
 		<renderable radius="256">
 			<quads>
 				<block length="0.1">
@@ -2936,7 +3070,8 @@
 	<!-- enemy laser ship tracer -->
 
 	<template name="enemylasershiptracer">
-		<beam life="2.0" damage="0" range="256" category="4" bit2="0" bit3="0" bit4="0" spawnonexpire="enemylasershipbeam"/>
+		<expire time="2.0" spawnonexpire="enemylasershipbeam"/>
+		<beam damage="0" range="256" category="4" bit2="0" bit3="0" bit4="0"/>
 		<renderable radius="256">
 			<quads>
 				<color>
@@ -3035,21 +3170,22 @@
 				</triangle_strip>
 			</drawlist>
 		</renderable>
-		<aimer range="512" focus="3" attack="128" leading="0" angle="30" evade="1" close="64" closedistscale="0.0625" closespeedscale="0.015625" category="4" bit2="0" bit3="0" bit4="0"/>
-		<ship maxveloc="60" maxaccel="120" minaccel="10" maxomega="1"/>
+		<aimer range="256" focus="3" attack="128" drift="0.5" wanderturn="0.25" wanderturnrate="0.25" leading="0" angle="30" evade="1" close="64" closedistscale="0.0625" closespeedscale="0.015625" category="4" bit2="0" bit3="0" bit4="0"/>
+		<ship maxveloc="30" maxaccel="120" minaccel="10" maxomega="0.5"/>
 		<damagable health="6" spawnondeath="enemyexplosion"/>
 		<link name="gun" secondary="enemylasershipweapon">
 			<offset x="0" y="5" angle="0"/>
 		</link>
 		<team name="red"/>
 		<points value="300"/>
+		<capturable resistance="6" spawnoncapture="friendlasership"/>
 	</template>
 
-	
+
 	<!-- enemy carrier -->
 
 	<template name="enemycarrierexplosion">
-		<explosion life="3.0"/>
+		<expire time="3.0"/>
 		<sound volume="4">
 			<file name="stargate-smartbomb.wav"/>
 		</sound>
@@ -3167,7 +3303,7 @@
 			<trigger channel="2"/>
 			<velocity x="0" y="120"/>
 			<ordnance name="enemyshiptiny"/>
-			<shot delay="1.0"/>
+			<shot delay="1.0" track="4"/>
 		</weapon>
 	</template>
 
@@ -3261,7 +3397,7 @@
 				</triangle_strip>
 			</drawlist>
 		</renderable>
-		<aimer range="1024" attack1="192" attack2="256" angle1="90" angle2="180" leading="0" close="96"/>
+		<aimer range="512" attack1="192" attack2="256" angle1="90" angle2="180" drift="0.5" wanderturn="0.25" wanderturnrate="0.25" leading="0" close="96"/>
 		<ship maxveloc="90" maxaccel="10" minaccel="10" maxomega="0.1"/>
 		<damagable health="200" spawnondeath="enemycarrierexplosion"/>
 		<link name="lgun" secondary="enemyweaponmissile">
@@ -3299,135 +3435,172 @@
 		</link>
 		<team name="red"/>
 		<points value="2500"/>
+		<capturable resistance="200" spawnoncapture="friendcarrier"/>
 	</template>
 
 
 	<!-- enemy spawners -->
 
+	<template name="enemyshipsmallwarp" type="enemywarpin">
+		<expire spawnonexpire="enemyshipsmall"/>
+	</template>
+
 	<template name="enemyshipsmallspawn">
 		<spawner>
-			<velocity x="0" y="180"/>
-			<spawn name="enemyshipsmall" start="0" cycle="8" track="0"/>
+			<velocity x="0" y="60"/>
+			<spawn name="enemyshipsmallwarp" start="0" cycle="10" track="8"/>
 		</spawner>
 	</template>
 
-	<template name="enemyfirebomberspawn">
-		<spawner>
-			<velocity x="0" y="180"/>
-			<spawn name="enemyfirebomber" start="0" cycle="32" track="0"/>
-		</spawner>
+	<template name="enemybomberwarp" type="enemywarpin">
+		<expire spawnonexpire="enemybomber"/>
 	</template>
 
 	<template name="enemybomberspawn">
 		<spawner>
-			<velocity x="0" y="180"/>
-			<spawn name="enemybomber" start="1" cycle="32" track="0"/>
+			<velocity x="0" y="60"/>
+			<spawn name="enemybomberwarp" start="30" cycle="30" track="4"/>
 		</spawner>
+	</template>
+
+	<template name="enemyfirebomberwarp" type="enemywarpin">
+		<expire spawnonexpire="enemyfirebomber"/>
+	</template>
+
+	<template name="enemyfirebomberspawn">
+		<spawner>
+			<velocity x="0" y="60"/>
+			<spawn name="enemyfirebomberwarp" start="65" cycle="30" track="2"/>
+		</spawner>
+	</template>
+
+	<template name="enemydynamowarp" type="enemywarpin">
+		<expire spawnonexpire="enemydynamo"/>
 	</template>
 
 	<template name="enemydynamospawn">
 		<spawner>
-			<velocity x="0" y="180"/>
-			<spawn name="enemydynamo" start="2" cycle="32" track="0"/>
+			<velocity x="0" y="60"/>
+			<spawn name="enemydynamowarp" start="70" cycle="30" track="2"/>
 		</spawner>
+	</template>
+
+	<template name="enemypodwarp" type="enemywarpin">
+		<expire spawnonexpire="enemypod"/>
 	</template>
 
 	<template name="enemypodspawn">
 		<spawner>
-			<velocity x="0" y="180"/>
-			<spawn name="enemypod" start="3" cycle="32" track="0"/>
+			<velocity x="0" y="60"/>
+			<spawn name="enemypodwarp" start="100" cycle="30" track="2"/>
 		</spawner>
+	</template>
+
+	<template name="enemycommandshipwarp" type="enemywarpin">
+		<expire spawnonexpire="enemycommandship"/>
 	</template>
 
 	<template name="enemycommandshipspawn">
 		<spawner>
-			<velocity x="0" y="180"/>
-			<spawn name="enemycommandship" start="4" cycle="32" track="0"/>
+			<velocity x="0" y="60"/>
+			<spawn name="enemycommandshipwarp" start="105" cycle="30" track="2"/>
 		</spawner>
+	</template>
+
+	<template name="enemywarriorwarp" type="enemywarpin">
+		<expire spawnonexpire="enemywarrior"/>
 	</template>
 
 	<template name="enemywarriorspawn">
 		<spawner>
-			<velocity x="0" y="180"/>
-			<spawn name="enemywarrior" start="5" cycle="32" track="0"/>
+			<velocity x="0" y="60"/>
+			<spawn name="enemywarriorwarp" start="140" cycle="30" track="2"/>
 		</spawner>
+	</template>
+
+	<template name="enemyshipwarp" type="enemywarpin">
+		<expire spawnonexpire="enemyship"/>
 	</template>
 
 	<template name="enemyshipspawn">
 		<spawner>
-			<velocity x="0" y="180"/>
-			<spawn name="enemyship" start="6" cycle="32" track="0"/>
+			<velocity x="0" y="60"/>
+			<spawn name="enemyshipwarp" start="145" cycle="30" track="2"/>
 		</spawner>
+	</template>
+
+	<template name="enemylasershipwarp" type="enemywarpin">
+		<expire spawnonexpire="enemylasership"/>
 	</template>
 
 	<template name="enemylasershipspawn">
 		<spawner>
-			<velocity x="0" y="180"/>
-			<spawn name="enemylasership" start="7" cycle="8" track="0"/>
+			<velocity x="0" y="60"/>
+			<spawn name="enemylasershipwarp" start="200" cycle="30" track="2"/>
 		</spawner>
 	</template>
 
 	<template name="enemycarrierspawn">
 		<spawner>
-			<velocity x="0" y="120"/>
-			<spawn name="enemycarrier" start="32" cycle="32" track="1"/>
+			<velocity x="0" y="60"/>
+			<spawn name="enemycarrier" start="240" cycle="30" track="1"/>
 		</spawner>
 	</template>
 
 	<template name="enemyspawncluster">
 		<link name="enemyshipsmallspawn1" secondary="enemyshipsmallspawn">
-			<offset x="-192" y="0"/>
+			<offset x="-192" y="8"/>
 		</link>
 		<link name="enemyshipsmallspawn2" secondary="enemyshipsmallspawn">
-			<offset x="192" y="0"/>
+			<offset x="192" y="8"/>
 		</link>
 		<link name="enemyfirebomberspawn1" secondary="enemyfirebomberspawn">
-			<offset x="-128" y="0"/>
+			<offset x="-128" y="8"/>
 		</link>
 		<link name="enemyfirebomberspawn2" secondary="enemyfirebomberspawn">
-			<offset x="128" y="0"/>
+			<offset x="128" y="8"/>
 		</link>
 		<link name="enemybomberspawn1" secondary="enemybomberspawn">
-			<offset x="-96" y="0"/>
+			<offset x="-96" y="8"/>
 		</link>
 		<link name="enemybomberspawn2" secondary="enemybomberspawn">
-			<offset x="96" y="0"/>
+			<offset x="96" y="8"/>
 		</link>
 		<link name="enemydynamospawn1" secondary="enemydynamospawn">
-			<offset x="-160" y="0"/>
+			<offset x="-160" y="8"/>
 		</link>
 		<link name="enemydynamospawn2" secondary="enemydynamospawn">
-			<offset x="160" y="0"/>
+			<offset x="160" y="8"/>
 		</link>
 		<link name="enemypodspawn1" secondary="enemypodspawn">
-			<offset x="-128" y="0"/>
+			<offset x="-128" y="8"/>
 		</link>
 		<link name="enemypodspawn2" secondary="enemypodspawn">
-			<offset x="128" y="0"/>
+			<offset x="128" y="8"/>
 		</link>
 		<link name="enemycommandshipspawn1" secondary="enemycommandshipspawn">
-			<offset x="-160" y="0"/>
+			<offset x="-160" y="8"/>
 		</link>
 		<link name="enemycommandshipspawn2" secondary="enemycommandshipspawn">
-			<offset x="160" y="0"/>
+			<offset x="160" y="8"/>
 		</link>
 		<link name="enemywarriorspawn1" secondary="enemywarriorspawn">
-			<offset x="-160" y="0"/>
+			<offset x="-160" y="8"/>
 		</link>
 		<link name="enemywarriorspawn2" secondary="enemywarriorspawn">
-			<offset x="160" y="0"/>
+			<offset x="160" y="8"/>
 		</link>
 		<link name="enemyshipspawn1" secondary="enemyshipspawn">
-			<offset x="-64" y="0"/>
+			<offset x="-64" y="8"/>
 		</link>
 		<link name="enemyshipspawn2" secondary="enemyshipspawn">
-			<offset x="64" y="0"/>
+			<offset x="64" y="8"/>
 		</link>
 		<link name="enemylasershipspawn1" secondary="enemylasershipspawn">
-			<offset x="-256" y="0"/>
+			<offset x="-256" y="8"/>
 		</link>
 		<link name="enemylasershipspawn2" secondary="enemylasershipspawn">
-			<offset x="256" y="0"/>
+			<offset x="256" y="8"/>
 		</link>
 		<link name="enemycarrierspawn" secondary="enemycarrierspawn">
 			<offset x="0" y="0"/>
@@ -3435,68 +3608,219 @@
 	</template>
 
 	<entity name="enemyspawncluster1">
-		<position x="0" y="1984" angle="180"/>
+		<position x="0" y="1024" angle="180"/>
 		<spawner>
 			<spawn name="enemyspawncluster" start="0"/>
 		</spawner>
 	</entity>
 
 	<entity name="enemyspawncluster2">
-		<position x="1984" y="0" angle="90"/>
+		<position x="1024" y="0" angle="90"/>
 		<spawner>
 			<spawn name="enemyspawncluster" start="8"/>
 		</spawner>
 	</entity>
 
 	<entity name="enemyspawncluster3">
-		<position x="0" y="-1984" angle="0"/>
+		<position x="0" y="-1024" angle="0"/>
 		<spawner>
 			<spawn name="enemyspawncluster" start="16"/>
 		</spawner>
 	</entity>
 
 	<entity name="enemyspawncluster4">
-		<position x="-1984" y="0" angle="270"/>
+		<position x="-1024" y="0" angle="270"/>
 		<spawner>
 			<spawn name="enemyspawncluster" start="24"/>
 		</spawner>
 	</entity>
 
-	<!--
-	<entity name="enemyexplosionspawn1">
-		<position x="64" y="0" angle="0"/>
-		<spawner>
-			<spawn name="enemyexplosion" start="0.000000" cycle="0.133333" track="0"/>
-		</spawner>
-	</entity>
 
-	<entity name="enemyexplosionspawn2">
-		<position x="0" y="64" angle="0"/>
-		<spawner>
-			<spawn name="enemyexplosion" start="0.033333" cycle="0.133333" track="0"/>
-		</spawner>
-	</entity>
 
-	<entity name="enemyexplosionspawn3">
-		<position x="-64" y="0" angle="0"/>
-		<spawner>
-			<spawn name="enemyexplosion" start="0.066667" cycle="0.133333" track="0"/>
-		</spawner>
-	</entity>
+	<!-- missile command explosion -->
 
-	<entity name="enemyexplosionspawn4">
-		<position x="0" y="-64" angle="0"/>
-		<spawner>
-			<spawn name="enemyexplosion" start="0.100000" cycle="0.133333" track="0"/>
-		</spawner>
-	</entity>
-	-->
+	<template name="missilecommandexplosion">
+		<expire time="1.0"/>
+		<explosion life="1.0" category="2" bit1="0" bit2="0">
+			<radius>
+				<key time="0.0" inner="4" outer="6"/>
+				<key time="0.5" inner="32" outer="34"/>
+				<key time="1.0" inner="4" outer="6"/>
+			</radius>
+			<damage inner="100" outer="0"/>
+		</explosion>
+		<renderable radius="32">
+			<pushmatrix>
+				<!-- missile command color cycle
+				<block length="0.3466667" repeat="8">
+					<color>
+						<key time="0.000000" r="1.0" g="1.0" b="1.0" a="1.0"/>
+						<key time="0.033333" r="1.0" g="1.0" b="1.0" a="1.0"/>
+						<key time="0.033333" r="1.0" g="1.0" b="0.0" a="1.0"/>
+						<key time="0.066667" r="1.0" g="1.0" b="0.0" a="1.0"/>
+						<key time="0.066667" r="1.0" g="0.0" b="1.0" a="1.0"/>
+						<key time="0.100000" r="1.0" g="0.0" b="1.0" a="1.0"/>
+						<key time="0.100000" r="1.0" g="0.0" b="0.0" a="1.0"/>
+						<key time="0.133333" r="1.0" g="0.0" b="0.0" a="1.0"/>
+						<key time="0.133333" r="0.0" g="1.0" b="1.0" a="1.0"/>
+						<key time="0.166667" r="0.0" g="1.0" b="1.0" a="1.0"/>
+						<key time="0.166667" r="0.0" g="1.0" b="0.0" a="1.0"/>
+						<key time="0.200000" r="0.0" g="1.0" b="0.0" a="1.0"/>
+						<key time="0.200000" r="0.0" g="0.0" b="1.0" a="1.0"/>
+						<key time="0.233333" r="0.0" g="0.0" b="1.0" a="1.0"/>
+						<key time="0.233333" r="0.0" g="0.0" b="0.0" a="1.0"/>
+						<key time="0.346667" r="0.0" g="0.0" b="0.0" a="1.0"/>
+					</color>
+				</block>
+				-->
+				<!-- orange color cycle -->
+				<pushmatrix>
+					<block length="0.1" repeat="10">
+						<color>
+							<key time="0.00" r="0.1" g="0.8" b="1.0" a="1.0"/>
+							<key time="0.05" r="0.1" g="0.3" b="1.0" a="1.0"/>
+							<key time="0.10" r="0.1" g="0.8" b="1.0" a="1.0"/>
+						</color>
+					</block>
+					<scale>
+						<key time="0.0" x="4.0" y="4.0"/>
+						<key time="0.5" x="32.0" y="32.0"/>
+						<key time="1.0" x="4.0" y="4.0"/>
+					</scale>
+					<calllist name="circle32"/>
+				</pushmatrix>
+				<pushmatrix>
+					<block length="0.1" repeat="10">
+						<color>
+							<key time="0.00" r="0.1" g="0.8" b="1.0" a="0.633"/>
+							<key time="0.05" r="0.1" g="0.3" b="1.0" a="0.633"/>
+							<key time="0.10" r="0.1" g="0.8" b="1.0" a="0.633"/>
+						</color>
+					</block>
+					<scale>
+						<key time="0.0" x="5.0" y="5.0"/>
+						<key time="0.5" x="33.0" y="33.0"/>
+						<key time="1.0" x="5.0" y="5.0"/>
+					</scale>
+					<calllist name="circle32"/>
+				</pushmatrix>
+				<pushmatrix>
+					<block length="0.1" repeat="10">
+						<color>
+							<key time="0.00" r="0.1" g="0.8" b="1.0" a="0.375"/>
+							<key time="0.05" r="0.1" g="0.3" b="1.0" a="0.375"/>
+							<key time="0.10" r="0.1" g="0.8" b="1.0" a="0.375"/>
+						</color>
+					</block>
+					<scale>
+						<key time="0.0" x="6.0" y="6.0"/>
+						<key time="0.5" x="34.0" y="34.0"/>
+						<key time="1.0" x="6.0" y="6.0"/>
+					</scale>
+					<calllist name="circle32"/>
+				</pushmatrix>
+			</pushmatrix>
+		</renderable>
+		<sound volume="1.0">
+			<file name="missilecommand-explosion.wav"/>
+		</sound>
+	</template>
+
+
+	<!-- missile command rocket -->
+
+	<template name="missilecommandbullet">
+		<collidable>
+			<body name="main">
+				<fast value="1"/>
+				<circle radius="1">
+					<friction value="1"/>
+					<restitution value="0"/>
+					<density value="1.0"/>
+					<category value="2"/>
+					<mask bit1="0" bit2="0" bit3="0" bit4="0"/>
+				</circle>
+				<fixedrotation value="1"/>
+			</body>
+		</collidable>
+		<renderable radius="240">
+			<triangle_strip>
+				<drawlist>
+					<color r="1.0" g="1.0" b="1.0" a="1.0"/>
+					<vertex x="0" y="4"/>
+					<vertex x="1.5" y="-0.5"/>
+					<vertex x="-1.5" y="-0.5"/>
+					<vertex x="0.0" y="-2"/>
+				</drawlist>
+				<block length="0.1" repeat="5">
+					<color>
+						<key time="0.00" r="0.0" g="1.0" b="0.5" a="1.0"/>
+						<key time="0.05" r="0.0" g="0.5" b="1.0" a="1.0"/>
+						<key time="0.10" r="0.0" g="1.0" b="0.5" a="1.0"/>
+					</color>
+				</block>
+				<vertex x="0.5" y="-1"/>
+				<vertex x="-0.5" y="-1"/>
+				<vertex>
+					<key time="0.0" x="0.5" y="-1"/>
+					<key time="0.5" x="0.5" y="-180"/>
+				</vertex>
+				<vertex>
+					<key time="0.0" x="-0.5" y="-1"/>
+					<key time="0.5" x="-0.5" y="-180"/>
+				</vertex>
+			</triangle_strip>
+			<pushmatrix>
+				<set name="t" type="translate">
+					<key time="0.0" x="0" y="0" z="0"/>
+					<key time="0.5" x="0" y="-180" z="0"/>
+				</set>
+				<add name="t" type="translate" variable="localaim"/>
+				<translate variable="t"/>
+				<drawlist>
+					<color r="0.1" g="0.6" b="1.0" a="1.0"/>
+					<rotate angle="45"/>
+					<quads>
+						<vertex x="2.5" y="0.5"/>
+						<vertex x="-2.5" y="0.5"/>
+						<vertex x="-2.5" y="-0.5"/>
+						<vertex x="2.5" y="-0.5"/>
+						<vertex x="0.5" y="2.5"/>
+						<vertex x="-0.5" y="2.5"/>
+						<vertex x="-0.5" y="-2.5"/>
+						<vertex x="0.5" y="-2.5"/>
+					</quads>
+				</drawlist>
+				<clear name="t"/>
+			</pushmatrix>
+		</renderable>
+		<expire time="0.5" spawnonexpire="missilecommandexplosion" reticule="1"/>
+		<bullet damage="0" spawnondeath="missilecommandexplosion"/>
+	</template>
+
+
+	<!-- missile command launcher -->
+
+	<template name="missilecommandweapon">
+		<weapon>
+			<velocity x="0" y="360"/>
+			<inherit x="0" y="0"/>
+			<ordnance name="missilecommandbullet"/>
+			<shot delay="0.2"/>
+		</weapon>
+		<soundcue>
+			<cue name="fire" sound="missilecommandweapon"/>
+		</soundcue>
+		<sound volume="1.0">
+			<file name="missilecommand-fire.wav"/>
+		</sound>
+	</template>
 
 
 	<!-- gunner bullet explosion -->
 
 	<template name="gunnerbulletexplosion">
-		<explosion life="0.5"/>
+		<expire time="0.5"/>
 		<renderable radius="16">
 			<block length="0.1">
 				<pushmatrix>
@@ -3587,7 +3911,8 @@
 				</pushmatrix>
 			</drawlist>
 		</renderable>
-		<bullet life="1.0" damage="1" spawnondeath="gunnerbulletexplosion"/>
+		<expire time="1.0"/>
+		<bullet damage="1" spawnondeath="gunnerbulletexplosion"/>
 	</template>
 
 
@@ -3689,7 +4014,17 @@
 	<!-- bit bullet explosion -->
 
 	<template name="bitbulletexplosion">
-		<explosion life="1.0" damage="1" radius="40" category="2" bit1="0" bit2="0" bit4="0"/>
+		<expire time="1.0"/>
+		<explosion life="0.1" category="2" bit1="0" bit2="0" bit4="0">
+			<radius>
+				<key time="0.0" inner="10" outer="20.0"/>
+				<key time="0.1" inner="20" outer="40.0"/>
+			</radius>
+			<damage>
+				<key time="0.0" inner="20" outer="0"/>
+				<key time="0.1" inner="0" outer="0"/>
+			</damage>
+		</explosion>
 		<renderable radius="50">
 			<block length="0.1">
 				<pushmatrix>
@@ -3824,7 +4159,8 @@
 				</pushmatrix>
 			</drawlist>
 		</renderable>
-		<bullet life="1.5" damage="2" spawnondeath="bitbulletexplosion"/>
+		<expire time="1.5"/>
+		<bullet damage="2" spawnondeath="bitbulletexplosion"/>
 	</template>
 
 
@@ -3930,7 +4266,17 @@
 	<!-- force bullet explosion -->
 
 	<template name="forcebulletexplosion">
-		<explosion life="1.0" damage="5" radius="64" category="2" bit1="0" bit2="0" bit4="0"/>
+		<expire time="1.0"/>
+		<explosion life="0.1" category="2" bit1="0" bit2="0" bit4="0">
+			<radius>
+				<key time="0.0" inner="16" outer="32.0"/>
+				<key time="0.1" inner="64" outer="64.0"/>
+			</radius>
+			<damage>
+				<key time="0.0" inner="100" outer="0"/>
+				<key time="0.1" inner="0" outer="0"/>
+			</damage>
+		</explosion>
 		<sound volume="0.5">
 			<file name="stargate-anotherenemykill2.wav"/>
 		</sound>
@@ -4068,7 +4414,8 @@
 				</pushmatrix>
 			</drawlist>
 		</renderable>
-		<bullet life="1.0" damage="5" spawnondeath="forcebulletexplosion"/>
+		<expire time="1.0"/>
+		<bullet damage="5" spawnondeath="forcebulletexplosion"/>
 	</template>
 
 
@@ -4251,7 +4598,7 @@
 	<!-- player bullet explosion -->
 
 	<template name="playerbulletexplosion">
-		<explosion life="0.5"/>
+		<expire time="0.5"/>
 		<renderable radius="8">
 			<block length="0.1">
 				<pushmatrix>
@@ -4395,36 +4742,26 @@
 	<!-- player smart bomb explosion -->
 
 	<template name="playersmartbombexplosion">
-		<renderable radius="384">
+		<expire time="0.066667"/>
+		<renderable radius="256">
 			<color>
 				<key time="0.000000" r="1.0" g="1.0" b="1.0" a="1.0"/>
 				<key time="0.033334" r="1.0" g="1.0" b="1.0" a="1.0"/>
 				<key time="0.033334" r="1.0" g="1.0" b="1.0" a="0.0"/>
 				<key time="0.066667" r="1.0" g="1.0" b="1.0" a="0.0"/>
 			</color>
-			<scale x="384" y="384"/>
+			<scale x="256" y="256"/>
 			<calllist name="circle32"/>
 		</renderable>
-		<explosion life="0.066667" damage="10" radius="384" category="2" bit1="0" bit2="0" bit4="0"/>
+		<explosion category="2" bit1="0" bit2="0" bit4="0">
+			<radius inner="256" outer="256"/>
+			<damage inner="10" outer="10"/>
+		</explosion>
 		<team name="blue"/>
 	</template>
 
 	<template name="playersmartbombexplosion2" type="playersmartbombexplosion">
-		<explosion spawnonexpire="playersmartbombexplosion"/>
-	</template>
-
-
-	<!-- player smart bomb -->
-
-	<template name="playersmartbomb">
-		<explosion life="3.0"/>
-		<spawner>
-			<spawn name="playersmartbombexplosion2"/>
-		</spawner>
-		<sound volume="4">
-			<file name="stargate-smartbomb.wav"/>
-		</sound>
-		<team name="blue"/>
+		<expire spawnonexpire="playersmartbombexplosion"/>
 	</template>
 
 
@@ -4434,10 +4771,17 @@
 		<weapon>
 			<offset x="0" y="80"/>
 			<velocity x="0" y="0"/>
-			<ordnance name="playersmartbomb"/>
+			<ordnance name="playersmartbombexplosion2"/>
 			<trigger channel="2"/>
 			<shot delay="1.0"/>
+			<ammo type="special" cost="1"/>
 		</weapon>
+		<sound volume="4">
+			<file name="stargate-smartbomb.wav"/>
+		</sound>
+		<soundcue>
+			<cue name="fire" sound="playersmartbombweapon"/>
+		</soundcue>
 	</template>
 
 
@@ -4606,7 +4950,7 @@
 				</pushmatrix>
 			</block>
 		</renderable>
-		<explosion life="3.0"/>
+		<expire time="3.0"/>
 		<sound volume="4">
 			<file name="stargate-playershipexplosion.wav"/>
 		</sound>
@@ -4638,7 +4982,7 @@
 			</color>
 			<calllist name="ship"/>
 		</renderable>
-		<explosion life="0.3" spawnonexpire="playershipexplosion"/>
+		<expire time="0.3" spawnonexpire="playershipexplosion"/>
 		<sound volume="4">
 			<file name="stargate-playershipdeath.wav"/>
 		</sound>
@@ -4670,7 +5014,7 @@
 					<mask bit2="0" bit4="0"/>
 					<group value="-1"/>
 				</circle>
-				<box w="3" h="5">
+				<box w="2" h="3">
 					<position x="0" y="-4"/>
 					<density value="0"/>
 					<friction value="0.5"/>
@@ -4686,7 +5030,7 @@
 			<calllist name="ship"/>
 		</renderable>
 		<playercontroller/>
-		<ship maxveloc="150" maxaccel="600" minaccel="30" maxomega="20"/>
+		<ship maxveloc="150" maxaccel="1200" minaccel="150" maxomega="20"/>
 		<damagable health="10" spawnondeath="playershipdeath"/>
 		<soundcue>
 			<cue name="idle" sound="playershipidle"/>
@@ -4801,7 +5145,7 @@
 				</repeat>
 			</pushmatrix>
 		</renderable>
-		<explosion life="1.0" spawnonexpire="playership"/>
+		<expire time="1.0" spawnonexpire="playership"/>
 		<playercontroller/>
 		<sound>
 			<file name="stargate-warpin.wav"/>
@@ -4818,10 +5162,147 @@
 	</entity>
 	-->
 
-	<!-- health powerup -->
+	<!-- friend bullseye targets -->
 
-	<template name="healthupexplosion">
-		<explosion life="1.0"/>
+	<template name="friendtarget">
+		<collidable>
+			<body name="main">
+				<circle radius="5">
+					<density value="1"/>
+					<friction value="0.5"/>
+					<restitution value="0.5"/>
+					<category value="1"/>
+				</circle>
+				<damping linear="5.0" angular="5.0"/>
+			</body>
+		</collidable>
+		<renderable radius="5">
+			<drawlist>
+				<color r="0.1" g="0.2" b="1.0" a="1.0"/>
+				<pushmatrix>
+					<scale x="2" y="2"/>
+					<calllist name="circle8"/>
+				</pushmatrix>
+				<color r="1.0" g="1.0" b="1.0" a="1.0"/>
+				<pushmatrix>
+					<scale x="3.5" y="3.5"/>
+					<calllist name="circle12"/>
+				</pushmatrix>
+				<color r="0.1" g="0.2" b="1.0" a="1.0"/>
+				<pushmatrix>
+					<scale x="5" y="5"/>
+					<calllist name="circle16"/>
+				</pushmatrix>
+			</drawlist>
+		</renderable>
+		<damagable health="10" spawnondeath="friendexplosionsmall"/>
+		<team name="blue"/>
+		<points value="100"/>
+	</template>
+
+	<template name="friendtargetappear">
+		<expire time="0.25" spawnonexpire="friendtarget"/>
+		<renderable radius="20">
+			<pushmatrix>
+				<color>
+					<key time="0.00" r="1.0" g="1.0" b="1.0" a="0.0"/>
+					<key time="0.25" r="1.0" g="1.0" b="1.0" a="1.0"/>
+				</color>
+				<scale>
+					<key time="0.00" x="1.0" y="1.0"/>
+					<key time="0.25" x="5.0" y="5.0"/>
+				</scale>
+				<calllist name="circle16"/>
+			</pushmatrix>
+			<pushmatrix>
+				<color>
+					<key time="0.0" r="0.1" g="0.2" b="1.0" a="0.0"/>
+					<key time="0.25" r="0.1" g="0.2" b="1.0" a="0.5"/>
+				</color>
+				<scale>
+					<key time="0.00" x="20.0" y="20.0"/>
+					<key time="0.25" x="5.0" y="5.0"/>
+				</scale>
+				<calllist name="circle16"/>
+			</pushmatrix>
+		</renderable>
+	</template>
+
+	<template name="friendtargetspawn">
+		<spawner>
+			<spawn name="friendtargetappear" start="0" cycle="5" track="1"/>
+		</spawner>
+	</template>
+
+	<entity name="friendtargetspawn1" type="friendtargetspawn">
+		<position x="256.0" y="0.0"/>
+	</entity>
+
+	<entity name="friendtargetspawn2" type="friendtargetspawn">
+		<position x="236.5" y="98.0"/>
+	</entity>
+
+	<entity name="friendtargetspawn3" type="friendtargetspawn">
+		<position x="181.0" y="181.0"/>
+	</entity>
+
+	<entity name="friendtargetspawn4" type="friendtargetspawn">
+		<position x="98.0" y="236.5"/>
+	</entity>
+
+	<entity name="friendtargetspawn5" type="friendtargetspawn">
+		<position x="0.0" y="256.0"/>
+	</entity>
+
+	<entity name="friendtargetspawn6" type="friendtargetspawn">
+		<position x="-98.0" y="236.5"/>
+	</entity>
+
+	<entity name="friendtargetspawn7" type="friendtargetspawn">
+		<position x="-181.0" y="181.0"/>
+	</entity>
+
+	<entity name="friendtargetspawn8" type="friendtargetspawn">
+		<position x="-236.5" y="98.0"/>
+	</entity>
+
+	<entity name="friendtargetspawn9" type="friendtargetspawn">
+		<position x="-256.0" y="0.0"/>
+	</entity>
+
+	<entity name="friendtargetspawn10" type="friendtargetspawn">
+		<position x="-236.5" y="-98.0"/>
+	</entity>
+
+	<entity name="friendtargetspawn11" type="friendtargetspawn">
+		<position x="-181.0" y="-181.0"/>
+	</entity>
+
+	<entity name="friendtargetspawn12" type="friendtargetspawn">
+		<position x="-98.0" y="-236.5"/>
+	</entity>
+
+	<entity name="friendtargetspawn13" type="friendtargetspawn">
+		<position x="0.0" y="-256.0"/>
+	</entity>
+
+	<entity name="friendtargetspawn14" type="friendtargetspawn">
+		<position x="98.0" y="-236.5"/>
+	</entity>
+
+	<entity name="friendtargetspawn15" type="friendtargetspawn">
+		<position x="181.0" y="-181.0"/>
+	</entity>
+
+	<entity name="friendtargetspawn16" type="friendtargetspawn">
+		<position x="236.5" y="-98.0"/>
+	</entity>
+
+
+	<!-- 3-health powerup -->
+
+	<template name="health3explosion">
+		<expire time="1.0"/>
 		<sound>
 			<file name="stargate-humanoidcatch.wav"/>
 		</sound>
@@ -4881,7 +5362,7 @@
 		</renderable>
 	</template>
 
-	<template name="healthup">
+	<template name="health3">
 		<collidable>
 			<body name="main">
 				<circle radius="4">
@@ -4914,11 +5395,11 @@
 				</pushmatrix>
 			</drawlist>
 		</renderable>
-		<bullet damage="-3" ricochet="1" spawnondeath="healthupexplosion"/>
+		<bullet damage="-3" ricochet="1" spawnondeath="health3explosion"/>
 	</template>
 
-	<template name="healthupappear">
-		<explosion life="0.25" spawnonexpire="healthup"/>
+	<template name="health3appear">
+		<expire time="0.25" spawnonexpire="health3"/>
 		<renderable radius="20">
 			<pushmatrix>
 				<color>
@@ -4945,27 +5426,363 @@
 		</renderable>
 	</template>
 
-	<template name="healthupspawner">
+	<template name="health3spawner">
 		<spawner>
-			<spawn name="healthupappear" start="0" cycle="10" track="1"/>
+			<spawn name="health3appear" start="0" cycle="10" track="1"/>
 		</spawner>
 	</template>
 
-	<entity name="healthupspawner1" type="healthupspawner">
-		<position x="96" y="0"/>
-	</entity>
 
-	<entity name="healthupspawner2" type="healthupspawner">
-		<position x="0" y="96"/>
-	</entity>
+	<!-- player base -->
 
-	<entity name="healthupspawner3" type="healthupspawner">
-		<position x="-96" y="0"/>
-	</entity>
+	<template name="wall">
+		<collidable>
+			<body name="main">
+				<box w="8" h="8">
+					<category value="0"/>
+				</box>
+			</body>
+		</collidable>
+		<renderable radius="12">
+			<drawlist>
+				<color r="0.2" g="0.3" b="0.5" a="1.0"/>
+				<quads>
+					<vertex x="-8" y="8"/>
+					<vertex x="8" y="8"/>
+					<vertex x="8" y="-8"/>
+					<vertex x="-8" y="-8"/>
+				</quads>
+			</drawlist>
+		</renderable>
+	</template>
 
-	<entity name="healthupspawner4" type="healthupspawner">
-		<position x="0" y="-96"/>
+	<template name="gate">
+		<collidable>
+			<body name="main">
+				<box w="8" h="8">
+					<category value="0"/>
+				</box>
+			</body>
+		</collidable>
+		<renderable radius="12">
+			<drawlist>
+				<quads>
+					<color r="0.6" g="0.6" b="0.6" a="1.0"/>
+					<vertex x="4" y="5"/>
+					<vertex x="8" y="4"/>
+					<vertex x="8" y="-4"/>
+					<vertex x="4" y="-5"/>
+					<color r="0.4" g="0.4" b="0.4" a="1.0"/>
+					<vertex x="-8" y="8"/>
+					<vertex x="4" y="8"/>
+					<vertex x="4" y="-8"/>
+					<vertex x="-8" y="-8"/>
+				</quads>
+			</drawlist>
+		</renderable>
+	</template>
+
+	<template name="friendforcewall">
+		<collidable>
+			<body name="main">
+				<box w="8" h="3">
+					<category value="1"/>
+					<mask bit1="0"/>
+				</box>
+			</body>
+		</collidable>
+		<renderable radius="18" period="0.05">
+			<color>
+				<key time="0.00" r="0.1" g="0.8" b="1.0" a="0.5"/>
+				<key time="0.05" r="0.1" g="0.3" b="1.0" a="0.25"/>
+			</color>
+			<drawlist>
+				<quads>
+					<vertex x="-8" y="3"/>
+					<vertex x="8" y="3"/>
+					<vertex x="8" y="-3"/>
+					<vertex x="-8" y="-3"/>
+				</quads>
+			</drawlist>
+		</renderable>
+	</template>
+
+	<entity name="floor">
+		<renderable radius="120">
+			<color r="0.1" g="0.2" b="1.0" a="0.125"/>
+			<quads>
+				<vertex x="-85" y="-85"/>
+				<vertex x="85" y="-85"/>
+				<vertex x="85" y="85"/>
+				<vertex x="-85" y="85"/>
+			</quads>
+		</renderable>
 	</entity>
+	
+	<tilemap x="88" y="88" dx="-16" dy="-16">
+		<tile name="#" spawn="wall" angle="0"/>
+		<tile name="[" spawn="gate" angle="0"/>
+		<tile name="]" spawn="gate" angle="180"/>
+		<tile name="n" spawn="gate" angle="90"/>
+		<tile name="u" spawn="gate" angle="270"/>
+		<tile name="-" spawn="friendforcewall" angle="0"/>
+		<tile name="|" spawn="friendforcewall" angle="90"/>
+		<tile name="+" spawn="health3spawner"/>
+		<row data="###]----[###"/>
+		<row data="#          #"/>
+		<row data="# +      + #"/>
+		<row data="u          u"/>
+		<row data="|          |"/>
+		<row data="|          |"/>
+		<row data="|          |"/>
+		<row data="|          |"/>
+		<row data="n          n"/>
+		<row data="# +      + #"/>
+		<row data="#          #"/>
+		<row data="###]----[###"/>
+	</tilemap>
+
+
+	<!-- friend warp-in -->
+
+	<template name="friendwarpin">
+		<renderable radius="128">
+			<block start="0.8" length="0.2">
+				<pushmatrix>
+					<color>
+						<key time="0.0" r="0.4" g="0.7" b="1.0" a="0.0"/>
+						<key time="0.2" r="1.0" g="1.0" b="1.0" a="1.0"/>
+					</color>
+					<scale>
+						<key time="0.0" x="0.0" y="0.0"/>
+						<key time="0.2" x="6.0" y="6.0"/>
+					</scale>
+					<calllist name="circle16"/>
+				</pushmatrix>
+			</block>
+			<block start="0.6" length="0.4">
+				<pushmatrix>
+					<color>
+						<key time="0.0" r="0.0" g="0.0" b="1.0" a="0.0"/>
+						<key time="0.4" r="0.4" g="0.7" b="1.0" a="0.5"/>
+					</color>
+					<scale>
+						<key time="0.0" x="0.0" y="0.0"/>
+						<key time="0.4" x="10.0" y="10.0"/>
+					</scale>
+					<calllist name="circle16"/>
+				</pushmatrix>
+			</block>
+			<block start="0.4" length="0.6">
+				<pushmatrix>
+					<color>
+						<key time="0.0" r="0.0" g="0.0" b="1.0" a="0.0"/>
+						<key time="0.6" r="0.0" g="0.5" b="1.0" a="0.25"/>
+					</color>
+					<scale>
+						<key time="0.0" x="0.0" y="0.0"/>
+						<key time="0.6" x="16.0" y="16.0"/>
+					</scale>
+					<calllist name="circle16"/>
+				</pushmatrix>
+			</block>
+			<pushmatrix>
+				<color>
+					<key time="0.0" r="0.0" g="0.0" b="1.0" a="0.0"/>
+					<key time="1.0" r="0.4" g="0.7" b="1.0" a="0.5"/>
+				</color>
+				<repeat count="6">
+					<repeat count="12">
+						<pushmatrix>
+							<translate>
+								<key time="0.0" x="128" y="0"/>
+								<key time="1.0" x="0" y="0"/>
+							</translate>
+							<scale>
+								<key time="0.0" x="0.5" y="0.5"/>
+								<key time="1.0" x="4.0" y="0.5"/>
+							</scale>
+							<calllist name="circle16"/>
+						</pushmatrix>
+						<rotate angle="30"/>
+					</repeat>
+					<scale x="0.8" y="0.8"/>
+					<rotate angle="18"/>
+				</repeat>
+			</pushmatrix>
+		</renderable>
+		<expire time="1.0"/>
+		<sound>
+			<file name="stargate-warpin.wav"/>
+		</sound>
+	</template>
+
+
+	<!-- friend long warp-in -->
+
+	<template name="friendlongwarpin">
+		<renderable radius="20">
+			<block start="2.0" length="0.4">
+				<pushmatrix>
+					<color>
+						<key time="0.0" r="0.0" g="5.0" b="1.0" a="0.0"/>
+						<key time="0.4" r="1.0" g="1.0" b="1.0" a="1.0"/>
+					</color>
+					<scale>
+						<key time="0.0" x="0.0" y="0.0"/>
+						<key time="0.4" x="8.0" y="8.0"/>
+					</scale>
+					<calllist name="circle16"/>
+				</pushmatrix>
+			</block>
+			<pushmatrix>
+				<color>
+					<key time="0.0" r="0.0" g="0.0" b="1.0" a="0.0"/>
+					<key time="1.6" r="0.0" g="0.5" b="1.0" a="0.5"/>
+					<key time="2.4" r="0.4" g="0.7" b="1.0" a="1.0"/>
+				</color>
+				<scale>
+					<key time="0.0" x="0.25" y="0.25"/>
+					<key time="2.4" x="1.0" y="1.0"/>
+				</scale>
+				<quads>
+					<repeat count="32">
+						<set name="p" type="position" rand="4" x_avg="0" x_var="12" y_avg="0" y_var="12"/>
+						<add name="p" type="translate" x="-1" y="-1"/>
+						<vertex variable="p"/>
+						<add name="p" type="translate" x="2" y="0"/>
+						<vertex variable="p"/>
+						<add name="p" type="translate" x="0" y="2"/>
+						<vertex variable="p"/>
+						<add name="p" type="translate" x="-2" y="0"/>
+						<vertex variable="p"/>
+					</repeat>
+					<clear name="p"/>
+				</quads>
+			</pushmatrix>
+		</renderable>
+		<expire time="2.4"/>
+		<playercontroller/>
+		<sound>
+			<file name="robotron-teleportin.wav"/>
+		</sound>
+	</template>
+
+
+	<!-- friend bullet explosion -->
+
+	<template name="friendbulletexplosion">
+		<expire time="0.5"/>
+		<renderable radius="16">
+			<block length="0.1">
+				<pushmatrix>
+					<color>
+						<key time="0.0" r="1.0" g="1.0" b="1.0" a="1.0"/>
+						<key time="0.1" r="1.0" g="1.0" b="1.0" a="0.0"/>
+					</color>
+					<scale>
+						<key time="0.0" x="4.0" y="4.0"/>
+						<key time="0.1" x="0.0" y="0.0"/>
+					</scale>
+					<calllist name="circle16"/>
+				</pushmatrix>
+				<pushmatrix>
+					<color>
+						<key time="0.0" r="1.0" g="1.0" b="1.0" a="0.1"/>
+						<key time="0.1" r="1.0" g="1.0" b="1.0" a="0.0"/>
+					</color>
+					<scale>
+						<key time="0.0" x="4.0" y="4.0"/>
+						<key time="0.1" x="16.0" y="16.0"/>
+					</scale>
+					<calllist name="circle16"/>
+				</pushmatrix>
+			</block>
+			<block length="0.5">
+				<pushmatrix>
+					<color>
+						<key time="0.0" r="0.8" g="0.9" b="1.0" a="1.0"/>
+						<key time="0.5" r="0.0" g="0.5" b="1.0" a="0.0"/>
+					</color>
+					<scale>
+						<key time="0.0" x="3.0" y="3.0"/>
+						<key time="0.5" x="0.0" y="0.0"/>
+					</scale>
+					<calllist name="circle16"/>
+				</pushmatrix>
+			</block>
+			<block length="0.3">
+				<pushmatrix>
+					<color>
+						<key time="0.0" r="0.4" g="0.7" b="1.0" a="0.5"/>
+						<key time="0.3" r="0.0" g="0.0" b="1.0" a="0.0"/>
+					</color>
+					<scale>
+						<key time="0.0" x="4.0" y="4.0"/>
+						<key time="0.3" x="8.0" y="8.0"/>
+					</scale>
+					<calllist name="circle16"/>
+				</pushmatrix>
+			</block>
+		</renderable>
+	</template>
+
+
+	<!-- friend bullet -->
+
+	<template name="friendbullet">
+		<collidable>
+			<body name="main">
+				<fast value="1"/>
+				<circle radius="1">
+					<friction value="1"/>
+					<restitution value="0"/>
+					<density value="1.0"/>
+					<category value="2"/>
+					<mask bit1="0" bit2="0" bit4="0"/>
+				</circle>
+				<fixedrotation value="1"/>
+			</body>
+		</collidable>
+		<renderable radius="6">
+			<drawlist>
+				<color r="1.0" g="1.0" b="1.0" a="1.0"/>
+				<pushmatrix>
+					<scale x="0.5" y="4"/>
+					<calllist name="circle8"/>
+				</pushmatrix>
+				<color r="0.4" g="0.7" b="1.0" a="0.5"/>
+				<pushmatrix>
+					<scale x="1.0" y="5"/>
+					<calllist name="circle8"/>
+				</pushmatrix>
+				<color r="0.0" g="0.5" b="1.0" a="0.25"/>
+				<pushmatrix>
+					<scale x="1.5" y="6"/>
+					<calllist name="circle8"/>
+				</pushmatrix>
+			</drawlist>
+		</renderable>
+		<expire time="1"/>
+		<bullet damage="1" spawnondeath="friendbulletexplosion"/>
+	</template>
+
+
+	<!-- friend weapon -->
+
+	<template name="friendweapon">
+		<weapon>
+			<velocity x="0" y="180"/>
+			<ordnance name="friendbullet"/>
+			<shot delay="0.15"/>
+		</weapon>
+		<sound volume="0.5">
+			<file name="robotron-playershot.wav"/>
+		</sound>
+		<soundcue>
+			<cue name="fire" sound="friendweapon"/>
+		</soundcue>
+	</template>
 
 
 	<!-- friend pulse bullet -->
@@ -5003,7 +5820,8 @@
 				</pushmatrix>
 			</drawlist>
 		</renderable>
-		<bullet life="1" damage="1" spawnondeath="friendbulletexplosion"/>
+		<expire time="1"/>
+		<bullet damage="1" spawnondeath="friendbulletexplosion"/>
 	</template>
 
 
@@ -5011,9 +5829,9 @@
 
 	<template name="friendpulseweapon">
 		<weapon>
-			<velocity x="0" y="180"/>
+			<velocity x="0" y="120"/>
 			<ordnance name="friendpulsebullet"/>
-			<shot delay="0.5"/>
+			<shot delay="0.3" track="3"/>
 		</weapon>
 		<sound>
 			<file name="stargate-swarmerfire.wav"/>
@@ -5081,10 +5899,11 @@
 				</triangles>
 			</drawlist>
 		</renderable>
-		<bullet life="6" damage="3" spawnondeath="friendfireballexplosion" spawnonexpire="gunnerbulletexplosion"/>
+		<expire time="6" spawnonexpire="friendbulletexplosion"/>
+		<bullet damage="3" spawnondeath="friendfireballexplosion"/>
 		<damagable health="1" spawnondeath="friendfireballexplosion"/>
 		<aimer range="512" leading="0" category="1" bit1="0" bit2="0"/>
-		<ship forwardveloc="180" neutralveloc="180" reverseveloc="180" strafeveloc="0" maxaccel="360" minaccel="360" maxomega="6"/>
+		<ship forwardveloc="120" neutralveloc="120" reverseveloc="120" strafeveloc="0" maxaccel="360" minaccel="360" maxomega="6"/>
 		<team name="blue"/>
 		<sound volume="0.5">
 			<file name="stargate-playershot.wav"/>
@@ -5101,7 +5920,7 @@
 			<offset x="0" y="10"/>
 			<velocity x="0" y="60"/>
 			<ordnance name="friendmissile"/>
-			<shot delay="0.6"/>
+			<shot delay="1.5"/>
 		</weapon>
 	</template>
 
@@ -5109,7 +5928,7 @@
 	<!-- friend explosion -->
 
 	<template name="friendexplosion">
-		<explosion life="3.0"/>
+		<expire time="3.0"/>
 		<sound>
 			<file name="stargate-anotherenemykill.wav"/>
 		</sound>
@@ -5187,128 +6006,13 @@
 						<key time="1.0" r="0.0" g="0.0" b="1.0" a="0.0"/>
 					</color>
 					<scale>
-						<key time="0.0" x="12.0" y="12.0"/>
-						<key time="1.0" x="32.0" y="32.0"/>
+						<key time="0.0" x="15.0" y="15.0"/>
+						<key time="1.0" x="50.0" y="50.0"/>
 					</scale>
 					<calllist name="circle32"/>
 				</pushmatrix>
 			</block>
 		</renderable>
-	</template>
-
-
-	<!-- friend bullet explosion -->
-
-	<template name="friendbulletexplosion">
-		<explosion life="0.5"/>
-		<renderable radius="8">
-			<block length="0.1">
-				<pushmatrix>
-					<color>
-						<key time="0.0" r="1.0" g="1.0" b="1.0" a="1.0"/>
-						<key time="0.1" r="1.0" g="1.0" b="1.0" a="0.0"/>
-					</color>
-					<scale>
-						<key time="0.0" x="4.0" y="4.0"/>
-						<key time="0.1" x="0.0" y="0.0"/>
-					</scale>
-					<calllist name="circle16"/>
-				</pushmatrix>
-				<pushmatrix>
-					<color>
-						<key time="0.0" r="1.0" g="1.0" b="1.0" a="0.1"/>
-						<key time="0.1" r="1.0" g="1.0" b="1.0" a="0.0"/>
-					</color>
-					<scale>
-						<key time="0.0" x="4.0" y="4.0"/>
-						<key time="0.1" x="16.0" y="16.0"/>
-					</scale>
-					<calllist name="circle16"/>
-				</pushmatrix>
-			</block>
-			<block length="0.5">
-				<pushmatrix>
-					<color>
-						<key time="0.0" r="0.9" g="0.8" b="1.0" a="1.0"/>
-						<key time="0.5" r="0.5" g="0.0" b="1.0" a="0.0"/>
-					</color>
-					<scale>
-						<key time="0.0" x="3.0" y="3.0"/>
-						<key time="0.5" x="0.0" y="0.0"/>
-					</scale>
-					<calllist name="circle16"/>
-				</pushmatrix>
-			</block>
-			<block length="0.3">
-				<pushmatrix>
-					<color>
-						<key time="0.0" r="0.7" g="0.4" b="1.0" a="0.5"/>
-						<key time="0.3" r="0.0" g="0.0" b="1.0" a="0.0"/>
-					</color>
-					<scale>
-						<key time="0.0" x="4.0" y="4.0"/>
-						<key time="0.3" x="8.0" y="8.0"/>
-					</scale>
-					<calllist name="circle16"/>
-				</pushmatrix>
-			</block>
-		</renderable>
-	</template>
-
-
-	<!-- friend bullet -->
-
-	<template name="friendbullet">
-		<collidable>
-			<body name="main">
-				<fast value="1"/>
-				<circle radius="1">
-					<friction value="1"/>
-					<restitution value="0"/>
-					<density value="1.0"/>
-					<category value="2"/>
-					<mask bit1="0" bit2="0" bit4="0"/>
-				</circle>
-				<fixedrotation value="1"/>
-			</body>
-		</collidable>
-		<renderable radius="6">
-			<drawlist>
-				<color r="1.0" g="1.0" b="1.0" a="1.0"/>
-				<pushmatrix>
-					<scale x="0.5" y="4"/>
-					<calllist name="circle8"/>
-				</pushmatrix>
-				<color r="0.7" g="0.4" b="1.0" a="0.5"/>
-				<pushmatrix>
-					<scale x="1.25" y="5"/>
-					<calllist name="circle8"/>
-				</pushmatrix>
-				<color r="0.5" g="0.0" b="1.0" a="0.25"/>
-				<pushmatrix>
-					<scale x="2" y="6"/>
-					<calllist name="circle8"/>
-				</pushmatrix>
-			</drawlist>
-		</renderable>
-		<bullet life="1.0" damage="1" spawnondeath="friendbulletexplosion"/>
-	</template>
-
-
-	<!-- friend weapon -->
-
-	<template name="friendweapon">
-		<weapon>
-			<velocity x="0" y="360"/>
-			<ordnance name="friendbullet"/>
-			<shot delay="0.15"/>
-		</weapon>
-		<sound volume="0.5">
-			<file name="robotron-playershot.wav"/>
-		</sound>
-		<soundcue>
-			<cue name="fire" sound="friendweapon"/>
-		</soundcue>
 	</template>
 
 
@@ -5411,7 +6115,7 @@
 		<link name="gun" secondary="friendcannon">
 			<offset x="0" y="0" angle="0"/>
 		</link>
-		<aimer range="512" attack="192" leading="360" category="2" bit1="0" bit2="0" bit4="0"/>
+		<aimer range="256" attack="128" leading="240" category="2" bit1="0" bit2="0" bit4="0"/>
 	</template>
 
 	<template name="friendturret2" type="friendturret">
@@ -5421,7 +6125,7 @@
 		<link name="rgun" secondary="friendcannon1">
 			<offset x="-2" y="0" angle="0"/>
 		</link>
-		<aimer range="512" attack="192" leading="360" category="2" bit1="0" bit2="0" bit4="0"/>
+		<aimer range="256" attack="128" leading="240" category="2" bit1="0" bit2="0" bit4="0"/>
 	</template>
 
 	<template name="friendturret3" type="friendturret">
@@ -5434,21 +6138,14 @@
 		<link name="rgun" secondary="friendcannon1">
 			<offset x="-2.5" y="-1.5" angle="5"/>
 		</link>
-		<aimer range="512" attack="192" leading="360" category="2" bit1="0" bit2="0" bit4="0"/>
+		<aimer range="256" attack="128" leading="240" category="2" bit1="0" bit2="0" bit4="0"/>
 	</template>
 
 	<template name="friendturretmissile" type="friendturret">
 		<link name="gun" secondary="friendcannonmissile">
 			<offset x="0" y="0" angle="0"/>
 		</link>
-		<aimer range="512" attack="256" leading="0" category="1" bit1="0" bit2="0"/>
-	</template>
-
-	<template name="friendturretforce" type="friendturret">
-		<link name="gun" secondary="forcecannon">
-			<offset x="0" y="0" angle="0"/>
-		</link>
-		<aimer range="512" attack="192" leading="360" category="2" bit1="0" bit2="0" bit4="0"/>
+		<aimer range="256" attack="256" leading="0" category="1" bit1="0" bit2="0"/>
 	</template>
 
 	<template name="friendturretmount1" type="friendturret1">
@@ -5512,46 +6209,52 @@
 		<points value="250"/>
 	</template>
 
-	<template name="friendturretpodforce" type="friendturretforce">
-		<collidable>
-			<body name="main">
-				<damping linear="10.0" angular="10.0"/>
-			</body>
-		</collidable>
-		<damagable health="10" spawnondeath="friendexplosion"/>
-		<points value="250"/>
+	<template name="friendturretpod1warp" type="friendlongwarpin">
+		<expire spawnonexpire="friendturretpod1"/>
 	</template>
 
 	<template name="friendturret1spawn">
 		<spawner>
-			<spawn name="friendturretpod1" start="0" cycle="5" track="1"/>
+			<spawn name="friendturretpod1warp" start="0" cycle="10" track="1"/>
 		</spawner>
+	</template>
+
+	<template name="friendturretpod2warp" type="friendlongwarpin">
+		<expire spawnonexpire="friendturretpod2"/>
 	</template>
 
 	<template name="friendturret2spawn">
 		<spawner>
-			<spawn name="friendturretpod2" start="0" cycle="5" track="1"/>
+			<spawn name="friendturretpod2warp" start="0" cycle="10" track="1"/>
 		</spawner>
+	</template>
+
+	<template name="friendturretpod3warp" type="friendlongwarpin">
+		<expire spawnonexpire="friendturretpod3"/>
 	</template>
 
 	<template name="friendturret3spawn">
 		<spawner>
-			<spawn name="friendturretpod3" start="0" cycle="5" track="1"/>
+			<spawn name="friendturretpod3warp" start="0" cycle="10" track="1"/>
 		</spawner>
 	</template>
 
-	<template name="friendturretmissilespawn">
+	<template name="friendturretpodmissilewarp" type="friendlongwarpin">
+		<expire spawnonexpire="friendturretpodmissile"/>
+	</template>
+
+	<template name="friendturretlauncherspawn">
 		<spawner>
-			<spawn name="friendturretpodmissile" start="0" cycle="5" track="1"/>
+			<spawn name="friendturretpodmissilewarp" start="0" cycle="10" track="1"/>
 		</spawner>
 	</template>
 
 	<template name="friendturretcluster">
-		<link name="friendturretmissile" secondary="friendturretmissilespawn">
+		<link name="friendturretmissile" secondary="friendturretlauncherspawn">
 			<offset x="0" y="0"/>
 		</link>
 		<link name="friendturret3" secondary="friendturret3spawn">
-			<offset x="0" y="64"/>
+			<offset x="0" y="48"/>
 		</link>
 		<link name="friendturret2a" secondary="friendturret2spawn">
 			<offset x="64" y="16"/>
@@ -5583,10 +6286,11 @@
 		<position x="0.0" y="-384.0" angle="180"/>
 	</entity>
 
+
 	<!-- friend fireball explosion -->
 
 	<template name="friendfireballexplosion">
-		<explosion life="1.0"/>
+		<expire time="1.0"/>
 		<sound>
 			<file name="stargate-fireballkill.wav"/>
 		</sound>
@@ -5674,7 +6378,7 @@
 	<!-- friend fireball -->
 
 	<template name="friendfireballtrail">
-		<explosion life="0.2"/>
+		<expire time="0.2"/>
 		<renderable radius="1.5">
 			<pushmatrix>
 				<scale>
@@ -5766,10 +6470,8 @@
 				</repeat>
 			</pushmatrix>
 		</renderable>
-		<bullet life="1" damage="3" spawnondeath="friendfireballexplosion" spawnonexpire="friendbulletexplosion"/>
-		<sound>
-			<file name="stargate-firebomberfire.wav"/>
-		</sound>
+		<expire time="1" spawnonexpire="friendbulletexplosion"/>
+		<bullet damage="1" spawnondeath="friendfireballexplosion"/>
 		<team name="blue"/>
 		<points value="100"/>
 		<spawner>
@@ -5816,22 +6518,39 @@
 				<calllist name="bowtie"/>
 			</pushmatrix>
 		</renderable>
-		<aimer range="512" attack="128" leading="210" evade="2" close="64" category="1" bit1="0" bit2="0"/>
-		<ship maxveloc="120" maxaccel="480" minaccel="10" maxomega="2"/>
+		<aimer period="0.1" range="128" attack="128" leading="180" drift="0.25" wanderturn="0.25" wanderturnrate="0.25" pursue="0" evade="1" close="64" category="1" bit1="0" bit2="0"/>
+		<ship maxveloc="120" maxaccel="360" minaccel="10" maxomega="2"/>
 		<damagable health="3" spawnondeath="friendexplosion"/>
 		<weapon>
-			<velocity x="0" y="210"/>
+			<velocity x="0" y="180"/>
 			<ordnance name="friendfireball"/>
-			<shot delay="0.6"/>
+			<shot delay="0.3" track="1"/>
 		</weapon>
+		<sound>
+			<file name="stargate-firebomberfire.wav"/>
+		</sound>
+		<soundcue>
+			<cue name="fire" sound="friendfirebomber"/>
+		</soundcue>
 		<team name="blue"/>
 		<points value="250"/>
 	</template>
 
+
 	<!-- friend mine explosion -->
 
 	<template name="friendmineexplosion">
-		<explosion life="1.0" damage="1" radius="64" category="2" bit1="0" bit2="0" bit4="0"/>
+		<expire time="1.0"/>
+		<explosion life="0.15" category="2" bit1="0" bit2="0" bit4="0">
+			<radius>
+				<key time="0.00" inner="16" value="32"/>
+				<key time="0.15" inner="32" value="64"/>
+			</radius>
+			<damage>
+				<key time="0.00" inner="10" outer="0"/>
+				<key time="0.05" inner="5" outer="0"/>
+			</damage>
+		</explosion>
 		<sound>
 			<file name="stargate-fireballhit.wav"/>
 		</sound>
@@ -6020,7 +6739,8 @@
 				<calllist name="circle32"/>
 			</pushmatrix>
 		</renderable>
-		<bullet life="5" damage="3" spawnondeath="friendmineexplosion" spawnonexpire="friendbulletexplosion"/>
+		<expire time="5" spawnonexpire="friendbulletexplosion"/>
+		<bullet damage="3" spawnondeath="friendmineexplosion"/>
 	</template>
 
 
@@ -6119,23 +6839,24 @@
 				<calllist name="diamond"/>
 			</pushmatrix>
 		</renderable>
-		<aimer range="512" attack="64" leading="60" angle="180" evade="1" close="128" category="2" bit1="0" bit2="0" bit4="0"/>
-		<ship maxveloc="60" maxaccel="120" minaccel="10" maxomega="3"/>
+		<aimer range="128" attack="128" leading="15" angle="180" drift="1" wanderturn="1" wanderturnrate="0.25" pursue="0" evade="0" close="32" category="2" bit1="0" bit2="0" bit4="0"/>
+		<ship maxveloc="30" maxaccel="60" minaccel="10" maxomega="1"/>
 		<damagable health="5" spawnondeath="friendexplosion"/>
 		<weapon>
 			<velocity x="0" y="0"/>
 			<inherit x="0" y="0"/>
 			<ordnance name="friendmine"/>
-			<shot delay="0.5"/>
+			<shot delay="1.0"/>
 		</weapon>
 		<team name="blue"/>
 		<points value="250"/>
 	</template>
 
+
 	<!-- friend space hum -->
 
 	<template name="friendspacehumtrail">
-		<explosion life="0.2"/>
+		<expire time="0.2"/>
 		<renderable radius="2.5">
 			<pushmatrix>
 				<scale>
@@ -6205,17 +6926,15 @@
 				<calllist name="diamond"/>
 			</pushmatrix>
 		</renderable>
-		<bullet life="30" damage="3" ricochet="1" spawnondeath="friendfireballexplosion" spawnonexpire="friendbulletexplosion"/>
-		<sound>
-			<file name="stargate-dynamofire.wav"/>
-		</sound>
+		<expire time="30" spawnonexpire="friendbulletexplosion"/>
+		<bullet damage="1" ricochet="1" spawnondeath="friendfireballexplosion"/>
 		<damagable health="1" spawnondeath="friendfireballexplosion"/>
-		<aimer range="512" attack="0" leading="0"/>
-		<ship maxveloc="120" maxaccel="360" minaccel="10" maxomega="1" category="1" bit1="0" bit2="0"/>
+		<aimer range="512" attack="0" leading="0" category="1" bit1="0" bit2="0"/>
+		<ship maxveloc="90" maxaccel="180" minaccel="10" maxomega="0"/>
 		<team name="blue"/>
 		<points value="100"/>
 		<spawner>
-			<spawn name="friendspacehumtrail" start="0" cycle="0.1" track="0"/>
+			<spawn name="friendspacehumtrail" start="0" cycle="0.2" track="0"/>
 		</spawner>
 	</template>
 
@@ -6276,20 +6995,48 @@
 				<rotate angle="180"/>
 			</repeat>
 		</renderable>
-		<aimer range="512" attack="192" leading="210" evade="1" close="64" category="1" bit1="0" bit2="0"/>
-		<ship maxveloc="90" maxaccel="90" minaccel="10" maxomega="2"/>
+		<aimer range="256" attack="128" leading="0" drift="0.5" wanderturn="1.0" wanderturnrate="0.25" wanderside="0.5" wandersiderate="0.25" wanderfront="0.5" wanderfrontrate="0.25" evade="0" close="64" category="1" bit1="0" bit2="0"/>
+		<ship maxveloc="30" maxaccel="120" minaccel="10" maxomega="2"/>
 		<damagable health="3" spawnondeath="friendexplosion"/>
 		<weapon>
-			<velocity x="0" y="210"/>
+			<velocity x="0" y="60"/>
 			<ordnance name="friendspacehum"/>
-			<shot delay="0.6"/>
+			<shot delay="1.0" track="4"/>
 		</weapon>
+		<sound>
+			<file name="stargate-dynamofire.wav"/>
+		</sound>
+		<soundcue>
+			<cue name="fire" sound="frienddynamo"/>
+		</soundcue>
 		<team name="blue"/>
 		<points value="200"/>
 	</template>
 
 
-	<!-- enemy swarmer -->
+	<!-- friend swarmer -->
+
+	<template name="friendswarmerbreakout">
+		<collidable>
+			<body name="main">
+				<circle radius="2">
+					<density value="1"/>
+					<friction value="0.5"/>
+					<restitution value="0.5"/>
+					<category value="1"/>
+				</circle>
+				<damping linear="0.5" angular="0.5"/>
+			</body>
+		</collidable>
+		<renderable radius="2" period="1.0">
+			<drawlist>
+				<color r="0.1" g="0.2" b="1.0" a="1.0"/>
+				<scale x="2" y="2"/>
+				<calllist name="circle16"/>
+			</drawlist>
+		</renderable>
+		<expire time="0.5" spawnonexpire="friendswarmer"/>
+	</template>
 
 	<template name="friendswarmer">
 		<collidable>
@@ -6337,8 +7084,8 @@
 				</triangle_strip>
 			</drawlist>
 		</renderable>
-		<aimer range="512" attack="128" leading="180" evade="1" close="64" category="2" bit1="0" bit2="0" bit4="0"/>
-		<ship maxveloc="120" maxaccel="240" minaccel="10" maxomega="2"/>
+		<aimer range="256" attack="128" leading="180" drift="0.25" wanderside="1" wandersiderate="1" pursue="0.5" evade="0.25" close="32" category="2" bit1="0" bit2="0" bit4="0"/>
+		<ship maxveloc="60" maxaccel="180" minaccel="10" maxomega="2"/>
 		<damagable health="1" spawnondeath="friendfireballexplosion"/>
 		<weapon>
 			<offset x="0" y="3" angle="0"/>
@@ -6350,10 +7097,11 @@
 		<points value="150"/>
 	</template>
 
+
 	<!-- small friend explosion -->
 
 	<template name="friendexplosionsmall">
-		<explosion life="2.0"/>
+		<expire time="2.0"/>
 		<sound>
 			<file name="stargate-anotherfriendkill.wav"/>
 		</sound>
@@ -6443,38 +7191,38 @@
 
 	<!-- friend pod -->
 
-	<template name="friendswarmerspawn">
+	<template name="friendswarmerbreakoutspawn">
 		<spawner>
 			<offset x="0" y="6"/>
 			<inherit x="0.5" y="0.5"/>
 			<velocity x="0" y="60"/>
-			<spawn name="friendswarmer"/>
+			<spawn name="friendswarmerbreakout"/>
 		</spawner>
 	</template>
 
 	<template name="friendpodexplosion" type="friendexplosionsmall">
-		<link name="spawn0" secondary="friendswarmerspawn">
+		<link name="spawn0" secondary="friendswarmerbreakoutspawn">
 			<offset x="0" y="0" angle="0"/>
 		</link>
-		<link name="spawn1" secondary="friendswarmerspawn">
+		<link name="spawn1" secondary="friendswarmerbreakoutspawn">
 			<offset x="0" y="0" angle="45"/>
 		</link>
-		<link name="spawn2" secondary="friendswarmerspawn">
+		<link name="spawn2" secondary="friendswarmerbreakoutspawn">
 			<offset x="0" y="0" angle="90"/>
 		</link>
-		<link name="spawn3" secondary="friendswarmerspawn">
+		<link name="spawn3" secondary="friendswarmerbreakoutspawn">
 			<offset x="0" y="0" angle="135"/>
 		</link>
-		<link name="spawn4" secondary="friendswarmerspawn">
+		<link name="spawn4" secondary="friendswarmerbreakoutspawn">
 			<offset x="0" y="0" angle="180"/>
 		</link>
-		<link name="spawn5" secondary="friendswarmerspawn">
+		<link name="spawn5" secondary="friendswarmerbreakoutspawn">
 			<offset x="0" y="0" angle="225"/>
 		</link>
-		<link name="spawn6" secondary="friendswarmerspawn">
+		<link name="spawn6" secondary="friendswarmerbreakoutspawn">
 			<offset x="0" y="0" angle="270"/>
 		</link>
-		<link name="spawn7" secondary="friendswarmerspawn">
+		<link name="spawn7" secondary="friendswarmerbreakoutspawn">
 			<offset x="0" y="0" angle="315"/>
 		</link>
 		<sound volume="2">
@@ -6565,12 +7313,14 @@
 				<rotate angle="90"/>
 			</repeat>
 		</renderable>
-		<aimer range="512" attack="0" leading="90"/>
-		<ship maxveloc="90" maxaccel="30" minaccel="10" maxomega="0.5"/>
+		<aimer range="256" attack="0" drift="0.5" wanderturn="1" wanderturnrate="0.25" pursue="0.25" leading="30" category="1" bit1="0" bit2="0"/>
+		<ship maxveloc="30" maxaccel="30" minaccel="10" maxomega="0.5"/>
+		<bullet damage="1" ricochet="1" spawnondeath="friendpodexplosion"/>
 		<damagable health="5" spawnondeath="friendpodexplosion"/>
 		<team name="blue"/>
 		<points value="1000"/>
 	</template>
+
 
 	<!-- friend vapor mine -->
 
@@ -6608,7 +7358,8 @@
 				</pushmatrix>
 			</drawlist>
 		</renderable>
-		<bullet life="1" damage="1" spawnondeath="friendbulletexplosion"/>
+		<expire time="1"/>
+		<bullet damage="1" spawnondeath="friendbulletexplosion"/>
 	</template>
 
 	<template name="friendmineshrapnelspawn">
@@ -6685,7 +7436,7 @@
 					<restitution value="1"/>
 					<density value="0"/>
 					<category value="1"/>
-					<mask bit1="0" bit4="0"/>
+					<mask bit1="0" bit2="0"/>
 					<sensor value="1"/>
 				</circle>
 				<fixedrotation value="1"/>
@@ -6761,7 +7512,8 @@
 				</triangles>
 			</drawlist>
 		</renderable>
-		<bullet life="5" damage="1" spawnondeath="friendmineexplosion" spawnonexpire="friendvapormine"/>
+		<expire time="5" spawnonexpire="friendvapormine"/>
+		<bullet damage="1" spawnondeath="friendmineexplosion"/>
 		<damagable health="3" spawnondeath="friendmineexplosion"/>
 		<team name="blue"/>
 		<points value="50"/>
@@ -6816,8 +7568,8 @@
 				</drawlist>
 			</pushmatrix>
 		</renderable>
-		<aimer range="512" attack1="128" attack2="128" angle2="180" leading="240" evade="1" close="64"/>
-		<ship maxveloc="60" maxaccel="120" minaccel="10" maxomega="2.0"/>
+		<aimer range="256" attack1="128" attack2="128" angle2="180" drift="0.25" wanderturn="0.5" wanderturnrate="0.25" leading="240" evade="1" close="64"/>
+		<ship maxveloc="45" maxaccel="90" minaccel="10" maxomega="2.0"/>
 		<damagable health="10" spawnondeath="friendexplosion"/>
 		<link name="gun" secondary="friendweapon">
 			<offset x="0" y="4" angle="0"/>
@@ -6826,7 +7578,8 @@
 			<velocity x="0" y="0"/>
 			<inherit x="0" y="0"/>
 			<ordnance name="friendphotonmine"/>
-			<shot delay="1"/>
+			<trigger channel="2"/>
+			<shot delay="1.5" track="4"/>
 		</weapon>
 		<team name="blue"/>
 		<points value="300"/>
@@ -6876,7 +7629,7 @@
 		<ship maxveloc="0" maxaccel="0" minaccel="0" maxomega="2"/>
 		<weapon>
 			<offset x="0" y="5" angle="0"/>
-			<velocity x="0" y="240"/>
+			<velocity x="0" y="180"/>
 			<ordnance name="friendbullet"/>
 			<shot delay="0.2"/>
 		</weapon>
@@ -6979,8 +7732,8 @@
 			</drawlist>
 		</renderable>
 		<link name="turret" secondary="friendwarriorturret" updateangle="0"/>
-		<aimer range="512" attack="0" leading="0" evade="1" close="64" category="2" bit1="0" bit2="0" bit4="0"/>
-		<ship maxveloc="90" maxaccel="120" minaccel="10" maxomega="0.0"/>
+		<aimer range="256" attack="0" leading="0" wanderside="0.5" wandersiderate="0.125" wanderfront="0.5" wanderfrontrate="0.125" evade="1" close="64" category="2" bit1="0" bit2="0" bit4="0"/>
+		<ship maxveloc="60" maxaccel="120" minaccel="10" maxomega="0.0"/>
 		<damagable health="15" spawnondeath="friendexplosion"/>
 		<team name="blue"/>
 		<points value="500"/>
@@ -7004,8 +7757,8 @@
 			<color r="0.1" g="0.2" b="1.0" a="1.0"/>
 			<calllist name="shiptiny"/>
 		</renderable>
-		<aimer range="512" attack="128" leading="240" evade="1" close="64" category="2" bit1="0" bit2="0" bit4="0"/>
-		<ship maxveloc="180" maxaccel="120" minaccel="10" maxomega="2"/>
+		<aimer range="128" attack="64" drift="0.5" wanderturn="0.25" wanderturnrate="0.25" leading="240" evade="1" close="32" category="2" bit1="0" bit2="0" bit4="0"/>
+		<ship maxveloc="120" maxaccel="120" minaccel="10" maxomega="2"/>
 		<damagable health="1" spawnondeath="friendfireballexplosion"/>
 		<link name="gun" secondary="friendweapon">
 			<offset x="0" y="4" angle="0"/>
@@ -7032,8 +7785,8 @@
 			<color r="0.1" g="0.2" b="1.0" a="1.0"/>
 			<calllist name="shipsmall"/>
 		</renderable>
-		<aimer range="512" attack="128" leading="240" evade="1" close="64" category="2" bit1="0" bit2="0" bit4="0"/>
-		<ship maxveloc="150" maxaccel="90" minaccel="10" maxomega="1.5"/>
+		<aimer range="256" attack="128" drift="0.5" wanderturn="0.25" wanderturnrate="0.25" leading="240" evade="1" close="64" category="2" bit1="0" bit2="0" bit4="0"/>
+		<ship maxveloc="90" maxaccel="90" minaccel="10" maxomega="1.5"/>
 		<damagable health="3" spawnondeath="friendexplosionsmall"/>
 		<link name="lgun" secondary="friendweapon">
 			<offset x="2" y="0" angle="0"/>
@@ -7092,8 +7845,8 @@
 				<calllist name="ship"/>
 			</drawlist>
 		</renderable>
-		<aimer range="512" attack="128" leading="240" angle="30" evade="1" close="64" category="2" bit1="0" bit2="0" bit4="0"/>
-		<ship maxveloc="120" maxaccel="60" minaccel="10" maxomega="1"/>
+		<aimer range="256" attack="128" drift="0.5" wanderturn="0.25" wanderturnrate="0.25" leading="240" angle="30" evade="1" close="64" category="2" bit1="0" bit2="0" bit4="0"/>
+		<ship maxveloc="60" maxaccel="60" minaccel="10" maxomega="1"/>
 		<damagable health="10" spawnondeath="friendexplosion"/>
 		<link name="lgun" secondary="friendshipweapon0">
 			<offset x="2" y="0" angle="0"/>
@@ -7106,10 +7859,205 @@
 	</template>
 
 
+	<!-- friend laser ship beam -->
+
+	<template name="friendlasershipbeam">
+		<expire time="0.5"/>
+		<beam damage="10" range="256" category="2" bit1="0" bit2="0" bit4="0" spawnonimpact="friendfireballexplosion"/>
+		<renderable radius="256">
+			<quads>
+				<block length="0.1">
+					<color>
+						<key time="0.0" r="1.0" g="1.0" b="1.0" a="1.0"/>
+						<key time="0.1" r="1.0" g="1.0" b="1.0" a="0.0"/>
+					</color>
+					<set name="p" type="position">
+						<key time="0.0" x="2.0"/>
+						<key time="0.1" x="0.0"/>
+					</set>
+					<vertex variable="p"/>
+					<mul name="p" type="scale" x="-1"/>
+					<vertex variable="p"/>
+					<add name="p" type="translate" variable="beamend"/>
+					<vertex variable="p"/>
+					<mul name="p" type="scale" x="-1"/>
+					<vertex variable="p"/>
+					<color>
+						<key time="0.0" r="1.0" g="1.0" b="1.0" a="0.2"/>
+						<key time="0.1" r="1.0" g="1.0" b="1.0" a="0.0"/>
+					</color>
+					<set name="p" type="position">
+						<key time="0.0" x="2.0"/>
+						<key time="0.1" x="8.0"/>
+					</set>
+					<vertex variable="p"/>
+					<mul name="p" type="scale" x="-1"/>
+					<vertex variable="p"/>
+					<add name="p" type="translate" variable="beamend"/>
+					<vertex variable="p"/>
+					<mul name="p" type="scale" x="-1"/>
+					<vertex variable="p"/>
+				</block>
+				<block length="0.3">
+					<color>
+						<key time="0.0" r="0.1" g="0.8" b="1.0" a="1.0"/>
+						<key time="0.3" r="0.0" g="0.5" b="1.0" a="0.0"/>
+					</color>
+					<set name="p" type="position">
+						<key time="0.0" x="1.00"/>
+						<key time="0.3" x="0.25"/>
+					</set>
+					<vertex variable="p"/>
+					<mul name="p" type="scale" x="-1"/>
+					<vertex variable="p"/>
+					<add name="p" type="translate" variable="beamend"/>
+					<vertex variable="p"/>
+					<mul name="p" type="scale" x="-1"/>
+					<vertex variable="p"/>
+				</block>
+				<block length="0.2">
+					<color>
+						<key time="0.0" r="0.0" g="0.5" b="1.0" a="0.5"/>
+						<key time="0.2" r="0.0" g="0.0" b="1.0" a="0.0"/>
+					</color>
+					<set name="p" type="position">
+						<key time="0.0" x="2.0"/>
+						<key time="0.2" x="4.0"/>
+					</set>
+					<vertex variable="p"/>
+					<mul name="p" type="scale" x="-1"/>
+					<vertex variable="p"/>
+					<add name="p" type="translate" variable="beamend"/>
+					<vertex variable="p"/>
+					<mul name="p" type="scale" x="-1"/>
+					<vertex variable="p"/>
+				</block>
+			</quads>
+		</renderable>
+		<sound volume="4.0">
+			<file name="stargate-anotherfriendkill.wav"/>
+		</sound>
+	</template>
+
+
+	<!-- friend laser ship tracer -->
+
+	<template name="friendlasershiptracer">
+		<expire time="2.0" spawnonexpire="friendlasershipbeam"/>
+		<beam damage="0" range="256" category="2" bit1="0" bit2="0" bit4="0"/>
+		<renderable radius="256">
+			<quads>
+				<color>
+					<key time="0.0" r="0.0" g="0.0" b="1.0" a="0.0"/>
+					<key time="2.0" r="0.0" g="0.0" b="1.0" a="1.0"/>
+				</color>
+				<set name="p" type="position">
+					<key time="0.0" x="0.25"/>
+					<key time="2.0" x="0.50"/>
+				</set>
+				<vertex variable="p"/>
+				<mul name="p" type="scale" x="-1"/>
+				<vertex variable="p"/>
+				<add name="p" type="translate" variable="beamend"/>
+				<vertex variable="p"/>
+				<mul name="p" type="scale" x="-1"/>
+				<vertex variable="p"/>
+			</quads>
+		</renderable>
+	</template>
+
+
+	<!-- friend laser ship weapon -->
+
+	<template name="friendlasershipweapon">
+		<weapon>
+			<flash name="friendlasershiptracer"/>
+			<shot delay="3.0"/>
+		</weapon>
+	</template>
+
+
+	<!-- friend laser ship -->
+
+	<template name="friendlasership">
+		<collidable>
+			<body name="main">
+				<circle radius="6">
+					<density value="1"/>
+					<friction value="0.5"/>
+					<restitution value="0.5"/>
+					<category value="1"/>
+				</circle>
+			</body>
+		</collidable>
+		<renderable radius="6">
+			<drawlist>
+				<color r="0.1" g="0.8" b="1.0" a="1.0"/>
+				<quads>
+					<vertex x="0.75" y="2"/>
+					<vertex x="-0.75" y="2"/>
+					<vertex x="-0.5" y="6"/>
+					<vertex x="0.5" y="6"/>
+				</quads>
+				<color r="0.5" g="0.6" b="0.7" a="1.0"/>
+				<triangle_strip>
+					<vertex x="1.5" y="-5"/>
+					<vertex x="-1.5" y="-5"/>
+					<vertex x="1.5" y="-3.5"/>
+					<vertex x="-1.5" y="-3.5"/>
+					<vertex x="0.5" y="-2.5"/>
+					<vertex x="-0.5" y="-2.5"/>
+					<vertex x="0.75" y="-1"/>
+					<vertex x="-0.75" y="-1"/>
+					<vertex x="3.5" y="-1"/>
+					<vertex x="-3.5" y="-1"/>
+					<vertex x="3.5" y="1"/>
+					<vertex x="-3.5" y="1"/>
+					<vertex x="1.5" y="2"/>
+					<vertex x="-1.5" y="2"/>
+					<vertex x="1.0" y="3"/>
+					<vertex x="-1.0" y="3"/>
+				</triangle_strip>
+				<color r="0.1" g="0.2" b="1.0" a="1.0"/>
+				<triangle_strip>
+					<vertex x="2.5" y="-3"/>
+					<vertex x="5.5" y="-3"/>
+					<vertex x="2.5" y="-2.5"/>
+					<vertex x="5.5" y="-2.5"/>
+					<vertex x="3.5" y="-1.5"/>
+					<vertex x="4.5" y="-1.5"/>
+					<vertex x="3.5" y="3"/>
+					<vertex x="4.5" y="3"/>
+					<vertex x="4" y="3.5"/>
+				</triangle_strip>
+				<triangle_strip>
+					<vertex x="-2.5" y="-3"/>
+					<vertex x="-5.5" y="-3"/>
+					<vertex x="-2.5" y="-2.5"/>
+					<vertex x="-5.5" y="-2.5"/>
+					<vertex x="-3.5" y="-1.5"/>
+					<vertex x="-4.5" y="-1.5"/>
+					<vertex x="-3.5" y="3"/>
+					<vertex x="-4.5" y="3"/>
+					<vertex x="-4" y="3.5"/>
+				</triangle_strip>
+			</drawlist>
+		</renderable>
+		<aimer range="256" focus="3" attack="128" drift="0.5" wanderturn="0.25" wanderturnrate="0.25" leading="0" angle="30" evade="1" close="64" closedistscale="0.0625" closespeedscale="0.015625" category="2" bit1="0" bit2="0" bit4="0"/>
+		<ship maxveloc="30" maxaccel="120" minaccel="10" maxomega="0.5"/>
+		<damagable health="6" spawnondeath="friendexplosion"/>
+		<link name="gun" secondary="friendlasershipweapon">
+			<offset x="0" y="5" angle="0"/>
+		</link>
+		<team name="blue"/>
+		<points value="300"/>
+	</template>
+
+
 	<!-- friend carrier -->
 
 	<template name="friendcarrierexplosion">
-		<explosion life="3.0"/>
+		<expire time="3.0"/>
 		<sound volume="4">
 			<file name="stargate-smartbomb.wav"/>
 		</sound>
@@ -7227,7 +8175,7 @@
 			<trigger channel="2"/>
 			<velocity x="0" y="120"/>
 			<ordnance name="friendshiptiny"/>
-			<shot delay="1.0"/>
+			<shot delay="1.0" track="4"/>
 		</weapon>
 	</template>
 
@@ -7321,7 +8269,7 @@
 				</triangle_strip>
 			</drawlist>
 		</renderable>
-		<aimer range="1024" attack1="192" attack2="256" angle1="90" angle2="180" leading="0" close="96"/>
+		<aimer range="512" attack1="192" attack2="256" angle1="90" angle2="180" drift="0.5" wanderturn="0.25" wanderturnrate="0.25" leading="0" close="96"/>
 		<ship maxveloc="90" maxaccel="10" minaccel="10" maxomega="0.1"/>
 		<damagable health="200" spawnondeath="friendcarrierexplosion"/>
 		<link name="lgun" secondary="friendweaponmissile">
@@ -7355,7 +8303,7 @@
 			<offset x="0" y="8" angle="0"/>
 		</link>
 		<link name="bturret" secondary="friendturretmount2" updateangle="0">
-			<offset x="0" y="-10" angle="180"/>
+			<offset x="0" y="-10" angle="0"/>
 		</link>
 		<team name="blue"/>
 		<points value="2500"/>

@@ -11,15 +11,14 @@ public:
 	float mLifeSpan;
 
 	// damage
-	float mDamage;
-	float mRadius;
+	float mRadiusInner;
+	float mRadiusOuter;
+	float mDamageInner;
+	float mDamageOuter;
 
 	// collision
 	unsigned short mCategoryBits;
 	unsigned short mMaskBits;
-
-	// spawn on expire
-	unsigned int mSpawnOnExpire;
 
 public:
 	ExplosionTemplate(void);

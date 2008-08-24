@@ -16,7 +16,7 @@ public:
 	// spawn cycle
 	float mStart;
 	float mCycle;
-	bool mTrack;
+	int mTrack;
 
 public:
 	SpawnerTemplate(void);
@@ -29,7 +29,7 @@ class Spawner
 	: public Updatable
 {
 protected:
-	unsigned int mSpawn;
+	int mTrack;
 	float mTimer;
 
 public:
@@ -45,6 +45,15 @@ public:
 
 	// update
 	void Update(float aStep);
+
+protected:
+	friend class SpawnerTracker;
+
+	// tracking
+	void Track(int aAdd)
+	{
+		mTrack += aAdd;
+	}
 };
 
 namespace Database

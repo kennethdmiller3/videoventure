@@ -12,7 +12,6 @@ public:
 
 	// damage
 	float mDamage;
-	float mDamageRate;
 	float mRange;
 
 	// collision
@@ -20,7 +19,6 @@ public:
 	unsigned short mMaskBits;
 
 	// spawn
-	unsigned int mSpawnOnExpire;
 	unsigned int mSpawnOnImpact;
 
 public:

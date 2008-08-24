@@ -18,7 +18,7 @@ public:
 class Damagable
 {
 protected:
-	unsigned int id;
+	unsigned int mId;
 
 	float mHealth;
 
@@ -60,4 +60,5 @@ namespace Database
 	extern Typed<Typed<Damagable::DamageListener> > damagelistener;
 	extern Typed<Typed<Damagable::DeathListener> > deathlistener;
 	extern Typed<Typed<Damagable::KillListener> > killlistener;
+	extern Typed<int> hitcombo;
 }

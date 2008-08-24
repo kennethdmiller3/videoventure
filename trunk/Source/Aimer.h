@@ -16,8 +16,21 @@ public:
 	float mAttack[2];
 	float mAngle[2];
 
-	// leading
+	// wander
+	float mDrift;
+	float mWanderSide;
+	float mWanderSideRate;
+	float mWanderFront;
+	float mWanderFrontRate;
+	float mWanderTurn;
+	float mWanderTurnRate;
+
+	// aiming
+	float mAim;
 	float mLeading;
+
+	// pursuit
+	float mPursue;
 
 	// evasion
 	float mEvade;
@@ -48,10 +61,9 @@ protected:
 	unsigned int mTarget;
 	Vector2 mOffset;
 	float mDelay;
-	float mAvoidDelay;
-	float mAvoidPriority;
-	float mAvoidTurn;
-	Vector2 mAvoidMove;
+	float mWanderSidePhase;
+	float mWanderFrontPhase;
+	float mWanderTurnPhase;
 
 public:
 #ifdef USE_POOL_ALLOCATOR

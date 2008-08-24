@@ -33,6 +33,16 @@ public:
 	static VarItem *CreateFloat(const char *aPath, float aValue = 0.0f, float aMinimum = -FLT_MAX, float aMaximum = FLT_MAX);
 	static VarItem *CreateString(const char *aPath, std::string aValue = "");
 	
+	// set var items
+	static void SetInteger(const char *aPath, int aValue);
+	static void SetFloat(const char *aPath, float aValue);
+	static void SetString(const char *aPath, std::string aValue);
+
+	// get var items
+	static int GetInteger(const char *aPath);
+	static float GetFloat(const char *aPath);
+	static std::string GetString(const char *aPath);
+
 public:
 	VarItem(unsigned int aId, Type aType)
 		: mId(aId), mType(aType)

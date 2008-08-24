@@ -2,7 +2,7 @@
 #include "stdafx.h"
 
 // includes
-#include "oglconsole.h"                                                                              
+#include "oglconsole.h"
 #include "World.h"
 #include "Player.h"
 #include "Aimer.h"
@@ -18,10 +18,8 @@
 #include "Drawlist.h"
 #include "Sound.h"
 #include "Overlay.h"
-
-#ifdef USE_VARIABLE
+#include "Resource.h"
 #include "Variable.h"
-#endif
 
 #ifdef USE_PATHING
 #include "Pathing.h"
@@ -29,15 +27,22 @@
 
 #include <malloc.h>
 
+#include <algorithm>
+
+
 // screen attributes
 int SCREEN_WIDTH = 640;
 int SCREEN_HEIGHT = 480;
 int SCREEN_DEPTH = 0;
+#ifdef _DEBUG
 bool SCREEN_FULLSCREEN = false;
+#else
+bool SCREEN_FULLSCREEN = true;
+#endif
 
 // view attributes
 float VIEW_SIZE = 320;
-float VIEW_AIM = 100;
+float VIEW_AIM = 80;
 float VIEW_AIM_FILTER = 2.0f;
 
 // opengl attributes
@@ -85,6 +90,7 @@ bool playback = false;
 // pause state
 bool paused = false;
 bool singlestep = false;
+bool escape = false;
 
 // runtime
 bool runtime = false;
@@ -124,6 +130,12 @@ float sim_step = 1.0f / sim_rate;
 unsigned int sim_turn = 0;
 float sim_fraction = 1.0f;
 
+// random number seed (HACK)
+unsigned long randlongseed = 0;
+
+// camera position (HACK)
+Vector2 camerapos[2];
+
 // listener position (HACK)
 Vector2 listenerpos;
 
@@ -131,6 +143,7 @@ Vector2 listenerpos;
 GLuint reticule_handle;
 GLuint score_handle;
 GLuint lives_handle;
+GLuint ammo_handle;
 
 // forward declaration
 int ProcessCommand( unsigned int aCommand, char *aParam[], int aCount );
@@ -139,6 +152,7 @@ void EnterShellState();
 void ExitShellState();
 void EnterPlayState();
 void ExitPlayState();
+void ReloadState();
 
 // game state machine (HACK)
 enum GameStateType
@@ -147,6 +161,7 @@ enum GameStateType
 	STATE_SHELL,
 	STATE_PLAY,
 	STATE_QUIT,
+	STATE_RELOAD,
 	NUM_GAME_STATES
 };
 GameStateType curgamestate = STATE_NONE;
@@ -165,6 +180,7 @@ GameState gamestates[NUM_GAME_STATES] =
 	{ EnterShellState, RunState, ExitShellState },
 	{ EnterPlayState, RunState, ExitPlayState },
 	{ NULL, NULL, NULL },
+	{ NULL, ReloadState, NULL }
 };
 
 
@@ -449,8 +465,106 @@ void clean_up()
 	SDL_Quit();
 }
 
+bool ReadPreferences(const char *config)
+{
+	// load input binding file
+	DebugPrint("Preferences %s\n", config);
+	TiXmlDocument document(config);
+	document.LoadFile();
 
-bool init_Input(const char *config)
+	// process child elements of the root
+	if (const TiXmlElement *root = document.FirstChildElement("preferences"))
+	{
+		for (const TiXmlElement *element = root->FirstChildElement(); element != NULL; element = element->NextSiblingElement())
+		{
+			switch (Hash(element->Value()))
+			{
+			case 0x1d215c8f /* "resolution" */:
+				element->QueryIntAttribute("width", &SCREEN_WIDTH);
+				element->QueryIntAttribute("height", &SCREEN_HEIGHT);
+				break;
+
+			case 0x5032fb58 /* "fullscreen" */:
+				{
+					int enable = SCREEN_FULLSCREEN;
+					element->QueryIntAttribute("enable", &enable);
+					SCREEN_FULLSCREEN = enable != 0;
+				}
+				break;
+
+			case 0x423e6b0c /* "verticalsync" */:
+				{
+					int enable = OPENGL_SWAPCONTROL;
+					element->QueryIntAttribute("enable", &enable);
+					OPENGL_SWAPCONTROL = enable != 0;
+				}
+				break;
+
+			case 0x47d0f228 /* "multisample" */:
+				element->QueryIntAttribute("samples", &OPENGL_MULTISAMPLE);
+				break;
+
+			case 0xf744f3b2 /* "motionblur" */:
+				element->QueryIntAttribute("steps", &MOTIONBLUR_STEPS);
+				if (element->QueryFloatAttribute("strength", &MOTIONBLUR_TIME) == TIXML_SUCCESS)
+					MOTIONBLUR_TIME /= 6000;
+				break;
+
+			case 0x0e0d9594 /* "sound" */:
+				element->QueryIntAttribute("channels", &SOUND_CHANNELS);
+				if (element->QueryFloatAttribute("volume", &SOUND_VOLUME) == TIXML_SUCCESS)
+					SOUND_VOLUME /= 100;
+				break;
+			}
+		}
+		return true;
+	}
+
+	return false;
+}
+
+bool WritePreferences(const char *config)
+{
+	// load input binding file
+	DebugPrint("Preferences %s\n", config);
+	TiXmlDocument document(config);
+
+	TiXmlElement *preferences = new TiXmlElement("preferences");
+	document.LinkEndChild(preferences);
+
+	TiXmlElement *resolution = new TiXmlElement("resolution");
+	resolution->SetAttribute("width", SCREEN_WIDTH);
+	resolution->SetAttribute("height", SCREEN_HEIGHT);
+	preferences->LinkEndChild(resolution);
+
+	TiXmlElement *fullscreen = new TiXmlElement("fullscreen");
+	fullscreen->SetAttribute("enable", SCREEN_FULLSCREEN);
+	preferences->LinkEndChild(fullscreen);
+
+	TiXmlElement *verticalsync = new TiXmlElement("verticalsync");
+	verticalsync->SetAttribute("enable", OPENGL_SWAPCONTROL);
+	preferences->LinkEndChild(verticalsync);
+
+	TiXmlElement *multisample = new TiXmlElement("multisample");
+	multisample->SetAttribute("samples", OPENGL_MULTISAMPLE);
+	preferences->LinkEndChild(multisample);
+
+	TiXmlElement *motionblur = new TiXmlElement("motionblur");
+	motionblur->SetAttribute("steps", MOTIONBLUR_STEPS);
+	motionblur->SetAttribute("strength", xs_RoundToInt(MOTIONBLUR_TIME*6000));
+	preferences->LinkEndChild(motionblur);
+
+	TiXmlElement *sound = new TiXmlElement("sound");
+	sound->SetAttribute("channels", SOUND_CHANNELS);
+	sound->SetAttribute("volume", xs_RoundToInt(SOUND_VOLUME*100));
+	preferences->LinkEndChild(sound);
+
+	document.SaveFile();
+	return true;
+}
+
+
+bool InitInput(const char *config)
 {
 	// clear existing bindings
 	input.Clear();
@@ -470,22 +584,25 @@ bool init_Input(const char *config)
 	return false;
 }
 
-bool init_Level(const char *config)
+bool InitLevel(const char *config)
 {
-	// stop any startup sound (HACK)
-	StopSound(0x94326baa /* "startup" */);
-
-	// clear existing level
-	Database::Cleanup();
-
 	// load level data file
 	DebugPrint("Level %s\n", config);
 	TiXmlDocument document(config);
 	document.LoadFile();
 
-	// process child elements of world
+	// if the document has a world section...
 	if (const TiXmlElement *root = document.FirstChildElement("world"))
 	{
+		// set up the collidable world
+		float aMinX = -2048, aMinY = -2048, aMaxX = 2048, aMaxY = 2048;
+		root->QueryFloatAttribute("xmin", &aMinX);
+		root->QueryFloatAttribute("ymin", &aMinY);
+		root->QueryFloatAttribute("xmax", &aMaxX);
+		root->QueryFloatAttribute("ymax", &aMaxY);
+		Collidable::WorldInit(aMinX, aMinY, aMaxX, aMaxY);
+
+		// process child elements of world
 		ProcessWorldItems(root);
 
 		// get the reticule draw list (HACK)
@@ -605,12 +722,17 @@ void InitWindowAction()
 void InitInputAction()
 {
 	if (runtime)
-		init_Input(INPUT_CONFIG.c_str());
+		InitInput(INPUT_CONFIG.c_str());
 }
 void InitLevelAction()
 {
 	if (runtime)
-		init_Level(LEVEL_CONFIG.c_str());
+	{
+		if (curgamestate == STATE_PLAY)
+		{
+			setgamestate = STATE_RELOAD;
+		}
+	}
 }
 void InitRecordAction()
 {
@@ -926,8 +1048,14 @@ int SDL_main( int argc, char *argv[] )
 		_CrtSetDbgFlag( _CRTDBG_ALLOC_MEM_DF|_CRTDBG_CHECK_EVERY_1024_DF|_CRTDBG_CHECK_CRT_DF|_CRTDBG_LEAK_CHECK_DF );
 		_CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_FILE | _CRTDBG_MODE_DEBUG);
 		_CrtSetReportFile(_CRT_WARN, _CRTDBG_FILE_STDOUT);
+
+		// default to output debug
+		DEBUGPRINT_OUTPUTDEBUG = true;
 	}
 #endif
+
+	// read preferences
+	ReadPreferences("preferences.xml");
 
 	// process command-line arguments
 	for (int i = 1; i < argc; ++i)
@@ -982,6 +1110,58 @@ int SDL_main( int argc, char *argv[] )
 
 
 //
+// TURN ACTION QUEUE
+
+// turn action
+struct TurnAction
+{
+	unsigned int mTurn;
+	float mFraction;
+	fastdelegate::FastDelegate<void ()> mAction;
+
+	TurnAction(unsigned int aTurn, float aFraction, fastdelegate::FastDelegate<void ()> aAction)
+		: mTurn(aTurn), mFraction(aFraction), mAction(aAction)
+	{
+	}
+};
+
+// compare turn actions
+struct TurnActionCompare
+{
+	bool operator() (const TurnAction &a1, const TurnAction &a2)
+	{
+		float delta = (int)(a1.mTurn - a2.mTurn) + a1.mFraction - a2.mFraction;
+		return (delta > 0.0f) || (delta == 0.0f && a1.mAction > a2.mAction);
+	}
+};
+TurnActionCompare turnactioncompare;
+
+// queued actions
+std::deque<TurnAction> turnactions;
+
+// queue a turn action
+void OnTurn(unsigned int aTurn, float aFraction, fastdelegate::FastDelegate<void ()> aAction)
+{
+	turnactions.push_back(TurnAction(aTurn, aFraction, aAction));
+}
+
+// perform actions for this turn
+void DoTurn(void)
+{
+	while (!turnactions.empty())
+	{
+		std::make_heap(turnactions.begin(), turnactions.end(), turnactioncompare);
+		const TurnAction &a = turnactions.front();
+
+		if (int(sim_turn - a.mTurn) + sim_fraction - a.mFraction < 0.0f)
+			break;
+
+		(a.mAction)();
+		turnactions.pop_front();
+	}
+}
+
+//
 // SHELL STATE
 //
 
@@ -1018,32 +1198,68 @@ void HSV2RGB(float h, float s, float v, float &r, float &g, float &b)
 #endif
 }
 
+
 // draw title
 void RenderShellTitle(unsigned int aId, float aTime, float aPosX, float aPosY, float aAngle)
 {
-	glBegin(GL_QUADS);
-
 	// title text bitmap
 	static const char titlemap[][12*8+1] = 
 	{
 	//   123456781234567812345678123456781234567812345678123456781234567812345678123456781234567812345678
-		" ##  ##  ######  ####    ######   ####   ##  ##  ######  ##  ##  ######  ##  ##  #####   ###### ",
-		" ##  ##    ##    ## ##   ##      ##  ##  ##  ##  ##      ### ##    ##    ##  ##  ##  ##  ##     ",
-		" ##  ##    ##    ##  ##  #####   ##  ##  ##  ##  #####   ######    ##    ##  ##  ##  ##  #####  ",
-		" ##  ##    ##    ##  ##  ##      ##  ##  ##  ##  ##      ######    ##    ##  ##  #####   ##     ",
-		"  ####     ##    ## ##   ##      ##  ##   ####   ##      ## ###    ##    ##  ##  ## ##   ##     ",
-		"   ##    ######  ####    ######   ####     ##    ######  ##  ##    ##    ######  ##  ##  ###### ",
+		/*
+		" 1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111 ",
+		"                                                                                                ",
+		"                                                                                                ",
+		" 00  00  000000  00000   000000   0000   00  00  000000  00  00  000000  00  00  00000   000000 ",
+		" 00  00    00    00  00  00      00  00  00  00  00      000 00    00    00  00  00  00  00     ",
+		" 00  00    00    00  00  0000    00  00  00  00  0000    000000    00    00  00  00000   0000   ",
+		"  0000     00    00  00  00      00  00   0000   00      00 000    00    00  00  00  00  00     ",
+		"   00    000000  00000   000000   0000     00    000000  00  00    00     0000   00  00  000000 ",
+		"                                                                                                ",
+		"                                                                                                ",
+		" 1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111 ",
+		"                                                                                                ",
+		"                                                                                                ",
+		*/
+		" 0000000000000    000000000000    000000000000   000000  000000  00000000000000  00000000000000 ",
+		" 00000000000000  00000000000000  00000000000000  000000  000000  00000000000000  00000000000000 ",
+		" 000000  000000  000000  000000  000000  000000  000000 000000   000000              000000     ",
+		" 00000000000000  000000  000000  000000          000000000000    000000000           000000     ",
+		" 0000000000000   000000  000000  000000          000000000000    000000000           000000     ",
+		" 000000  000000  000000  000000  000000  000000  000000 000000   000000              000000     ",
+		" 000000  000000  00000000000000  00000000000000  000000  000000  00000000000000      000000     ",
+		" 000000  000000   000000000000    000000000000   000000  000000  00000000000000      000000     ",
+		"                                                                                                ",
+		"                                                                                                ",
+		" 111111111111111111111    11111111111111111111   111111111    111111111  111111111111111111111  ",
+		" 1111111111111111111111  1111111111111111111111  1111111111  1111111111  1111111111111111111111 ",
+		" 1111111111111111111111  1111111111111111111111  1111111111111111111111  1111111111111111111111 ",
+		" 1111111111  1111111111  1111111111  1111111111  1111111111111111111111  1111111111  1111111111 ",
+		" 1111111111  1111111111  1111111111  1111111111  11111111 1111 11111111  1111111111  1111111111 ",
+		" 111111111111111111111   1111111111  1111111111  111111111 11 111111111  111111111111111111111  ",
+		" 111111111111111111111   1111111111  1111111111  1111111111  1111111111  111111111111111111111  ",
+		" 1111111111  1111111111  1111111111  1111111111  1111111111  1111111111  1111111111  1111111111 ",
+		" 1111111111  1111111111  1111111111  1111111111  1111111111  1111111111  1111111111  1111111111 ",
+		" 1111111111111111111111  1111111111111111111111  1111111111  1111111111  1111111111111111111111 ",
+		" 1111111111111111111111  1111111111111111111111  1111111111  1111111111  1111111111111111111111 ",
+		" 111111111111111111111    11111111111111111111   1111111111  1111111111  111111111111111111111  ",
 	};
+
+	// border drawing properties
+	static const float borderw = 2;
+	static const float borderh = 2;
 
 	// title drawing properties
 	static const float titlew = 6;
-	static const float titleh = 4;
-	static const float titlex = 320 - titlew * 0.5f * SDL_arraysize(titlemap[0]);
+	static const float titleh = 6;
+	static const float titlex = 320 - titlew * 0.5f * (SDL_arraysize(titlemap[0]) - 1);
 	static const float titley = 16;
 	static const float titlez = 0;
 
 	// title bar alphas
-	static float baralpha[SDL_arraysize(titlemap)] = { 0.2f, 0.4f, 0.6f, 0.6f, 0.4f, 0.2f };
+	static float baralpha[SDL_arraysize(titlemap)] = { 0.0f, 0.2f, 0.4f, 0.6f, 0.6f, 0.4f, 0.2f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.2f, 0.4f, 0.6f, 0.6f, 0.4f, 0.2f, 0.0f, 0.0f, 0.0f };
+
+	glBegin(GL_QUADS);
 
 	// draw title bar
 	for (int row = 0; row < SDL_arraysize(titlemap); ++row)
@@ -1057,226 +1273,1445 @@ void RenderShellTitle(unsigned int aId, float aTime, float aPosX, float aPosY, f
 		glVertex2f(0, y1);
 	}
 
-	// draw title border
-	for (int row = 0; row < SDL_arraysize(titlemap); ++row)
+	// border rectangles
+	static const float block[9][2][2] =
 	{
-		float x0 = titlex, x1 = titlex, y0 = titley + row * titleh, y1 = y0 + titleh;
+		{ { 0, borderw }, { 0, borderh } },
+		{ { borderw, titlew - borderw }, { 0, borderh } },
+		{ { titlew - borderw, titlew }, { 0, borderh } },
+		{ { 0, borderw }, { borderh, titleh - borderh } },
+		{ { 0, titlew }, { 0, titleh } },	// <-- filled block
+		{ { titlew - borderw, titlew }, { borderh, titleh - borderh } },
+		{ { 0, borderw }, { titleh - borderh, titleh } },
+		{ { borderw, titlew - borderh}, { titleh - borderh, titleh } },
+		{ { titlew - borderw, titlew }, { titleh - borderh, titleh } },
+	};
+	static const int mask[9] =
+	{
+		(1<<0), ((1<<0)|(1<<1)|(1<<2)), (1<<2),
+		((1<<0)|(1<<3)|(1<<6)), (1 << 4), ((1<<2)|(1<<5)|(1<<8)),
+		(1<<6), ((1<<6)|(1<<7)|(1<<8)), (1<<8)
+	};
 
-		for (int col = 0; col < SDL_arraysize(titlemap[row])-1; ++col)
+#if 1
+
+//#define USE_TITLE_MIRROR_WATER_EFFECT
+#ifdef USE_TITLE_MIRROR_WATER_EFFECT
+	// mirror offset
+	float mirrorscale = -0.75f;
+	float titleheight = titleh * (SDL_arraysize(titlemap) + 1);
+	float mirrortop = titley + titleheight + titleh * 2 + 4;
+	float mirrorbottom = mirrortop - mirrorscale * titleheight;
+	float mirroralphadelta = -0.375f / 32;
+	float mirroralphastart = 0.375f - mirroralphadelta * mirrortop;
+#endif
+
+	// draw title body
+	for (int row = -1; row < (int)SDL_arraysize(titlemap) + 1; ++row)
+	{
+		float y = titley + row * titleh;
+
+		for (int col = -1; col < (int)SDL_arraysize(titlemap[0]); ++col)
 		{
-			if (titlemap[row][col] == ' ')
+			float x = titlex + col * titlew;
+
+			int phase = -1;
+			int fill = 0;
+
+			int c0 = std::max<int>(col - 1, 0);
+			int c1 = std::min<int>(col + 1, SDL_arraysize(titlemap[0]) - 2);
+			int r0 = std::max<int>(row - 1, 0);
+			int r1 = std::min<int>(row + 1, SDL_arraysize(titlemap) - 1);
+
+			for (int r = r0; r <= r1; ++r)
 			{
-				if (x1 > x0)
+				for (int c = c0; c <= c1; ++c)
 				{
-					float R, G, B;
-					HSV2RGB((sim_turn + 8 * (col >> 3) + 4 * row) / 256.0f + 0.5f, 1.0f, 0.75f, R, G, B);
-					glColor4f(R, G, B, 1.0f);
-					glVertex2f(x0 - 2, y0 - 2);
-					glVertex2f(x1 + 2, y0 - 2);
-					glVertex2f(x1 + 2, y1 + 2);
-					glVertex2f(x0 - 2, y1 + 2);
+					if (titlemap[r][c] >= '0')
+					{
+						phase = titlemap[r][c] - '0';
+						fill |= mask[(r - row + 1) * 3 + (c - col + 1)];
+					}
 				}
-				x0 = titlex + col * titlew + titlew;
+			}
+
+			if (fill & (1<<4))
+				fill = (1<<4);
+
+			if (phase >= 0)
+			{
+				// get block color
+				float R, G, B;
+				float h = sim_turn / 1024.0f + col / 512.0f + 0.03125f * sinf(sim_turn / 64.0f + row / 4.0f + 4.0f * sinf(sim_turn / 64.0f + col / 8.0f + 0.5f * sinf(sim_turn / 64.0f + row / 4.0f)));
+				bool border = (fill & ~(1<<4)) != 0;
+				HSV2RGB(h + phase * 0.5f + border * 0.5f, 1.0f, 1.0f - 0.25f * border, R, G, B);
+
+				// for each block...
+				for (int i = 0; i < 9; ++i)
+				{
+					// if the block is filled
+					if (fill & (1 << i))
+					{
+						// block borders
+						float x0 = x + block[i][0][0];
+						float x1 = x + block[i][0][1];
+						float y0 = y + block[i][1][0];
+						float y1 = y + block[i][1][1];
+
+						// upright
+						glColor4f(R, G, B, 1.0f);
+						glVertex2f(x0, y0);
+						glVertex2f(x1, y0);
+						glVertex2f(x1, y1);
+						glVertex2f(x0, y1);
+
+#ifdef USE_TITLE_MIRROR_WATER_EFFECT
+						// mirrored
+						y0 = mirrorbottom + mirrorscale * y0 + 1.0f * sinf(sim_turn / 64.0f + y0 / 8.0f) + 3.0f * sinf(sim_turn / 128.0f + y0 / 32.0f);
+						y1 = mirrorbottom + mirrorscale * y1 + 1.0f * sinf(sim_turn / 64.0f + y1 / 8.0f) + 3.0f * sinf(sim_turn / 128.0f + y1 / 32.0f);
+						float a0 = mirroralphastart + mirroralphadelta * y0;
+						float a1 = mirroralphastart + mirroralphadelta * y1;
+						if (a0 > 0.0f || a1 > 0.0f)
+						{
+							a0 = std::max(a0, 0.0f);
+							a1 = std::max(a1, 0.0f);
+							float d0 = 1.0f * sinf(sim_turn / 32.0f + y0 / 4.0f);
+							float d1 = 1.0f * sinf(sim_turn / 32.0f + y1 / 4.0f);
+							glColor4f(R, G, B, a1 * a1);
+							glVertex2f(x0 + d1, y1);
+							glVertex2f(x1 + d1, y1);
+							glColor4f(R, G, B, a0 * a0);
+							glVertex2f(x1 + d0, y0);
+							glVertex2f(x0 + d0, y0);
+						}
+#endif
+					}
+				}
+			}
+		}
+	}
+
+	glEnd();
+
+#else
+	// texture-based variant
+
+	glEnd();
+
+	glEnable(GL_TEXTURE_2D);
+
+	static const int titletexwidth = 128;
+	static const int titletexheight = 64;
+	static const float titleborderu = float(borderw) / float(titlew * titletexwidth);
+	static const float titleborderv = float(borderh) / float(titleh * titletexheight);
+
+	static GLuint titletexture = 0;
+	if (titletexture == 0)
+	{
+		glGenTextures(1, &titletexture);
+		{int err=glGetError();if(err)DebugPrint("glGenTextures() error: %i\n",err);}
+	}
+
+	// bind title texture
+	glBindTexture(GL_TEXTURE_2D, titletexture);
+	{int err=glGetError();if(err)DebugPrint("glBindTexture() error: %i\n",err);}
+	glTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+	// generate texture data
+	unsigned char texturedata[titletexheight][titletexwidth][3];
+	for (int row = -1; row < (int)SDL_arraysize(titlemap) + 1; ++row)
+	{
+		for (int col = -1; col < (int)SDL_arraysize(titlemap[0]); ++col)
+		{
+			int phase = -1;
+			int fill = 0;
+
+			int c0 = std::max<int>(col - 1, 0);
+			int c1 = std::min<int>(col + 1, SDL_arraysize(titlemap[0]) - 2);
+			int r0 = std::max<int>(row - 1, 0);
+			int r1 = std::min<int>(row + 1, SDL_arraysize(titlemap) - 1);
+
+			for (int r = r0; r <= r1; ++r)
+			{
+				for (int c = c0; c <= c1; ++c)
+				{
+					if (titlemap[r][c] >= '0')
+					{
+						phase = titlemap[r][c] - '0';
+						fill |= mask[(r - row + 1) * 3 + (c - col + 1)];
+					}
+				}
+			}
+
+			if (fill & (1<<4))
+				fill = (1<<4);
+
+			if (phase >= 0)
+			{
+				// get block color
+				float R, G, B;
+				float h = sim_turn / 1024.0f + col / 512.0f + 0.03125f * sinf(sim_turn / 64.0f + row / 4.0f + 4.0f * sinf(sim_turn / 64.0f + col / 8.0f + 0.5f * sinf(sim_turn / 64.0f + row / 4.0f)));
+				bool border = (fill & ~(1<<4)) != 0;
+				HSV2RGB(h + phase * 0.5f + border * 0.5f, 1.0f, 1.0f - 0.25f * border, R, G, B);
+
+				texturedata[row+1][col+1][0] = (unsigned char)(int)(R * 255);
+				texturedata[row+1][col+1][1] = (unsigned char)(int)(G * 255);
+				texturedata[row+1][col+1][2] = (unsigned char)(int)(B * 255);
 			}
 			else
 			{
-				x1 = titlex + col * titlew + titlew;
+				texturedata[row+1][col+1][0] = 0;
+				texturedata[row+1][col+1][1] = 0;
+				texturedata[row+1][col+1][2] = 0;
+			}
+		}
+	}
+
+	// upload texture
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, titletexwidth, titletexheight, 0, GL_RGB, GL_UNSIGNED_BYTE, texturedata);
+	{int err=glGetError();if(err)DebugPrint("glTexImage2D() error: %i\n",err);}
+
+	// if no title slabs generated...
+	static unsigned char titleslabmap[SDL_arraysize(titlemap)][SDL_arraysize(titlemap[0])-1];
+	static int titleslab[255][4];
+	static int titleslabcount = 0;
+	if (titleslabcount == 0)
+	{
+		// initialize slab map
+		memset(&titleslabmap[0][0], 0xFF, sizeof(titleslabmap));
+
+		// generate title slabs
+		for (int row = 0; row < SDL_arraysize(titlemap); ++row)
+		{
+			for (int col = 0; col < SDL_arraysize(titlemap[row])-1; ++col)
+			{
+				// skip empty spaces
+				if (titlemap[row][col] == ' ')
+					continue;
+
+				// skip assigned spaces
+				if (titleslabmap[row][col] != 0xFF)
+					continue;
+
+				// allocate a new index
+				int index = titleslabcount++;
+
+				// find horizontal extent
+				int c0 = col;
+				int c1 = SDL_arraysize(titlemap[row]) - 1;
+				for (int c = c0; c < c1; ++c)
+				{
+					if ((titlemap[row][c] == ' ') || ((titleslabmap[row][c] != 0xFF) && (titleslabmap[row][c] != index)))
+					{
+						c1 = c;
+						break;
+					}
+				}
+
+				// find vertical extent
+				int r0 = row;
+				int r1 = SDL_arraysize(titlemap);
+				for (int r = r0; r < r1; ++r)
+				{
+					for (int c = c0; c < c1; ++c)
+					{
+						if ((titlemap[r][c] == ' ') || ((titleslabmap[r][c] != 0xFF) && (titleslabmap[r][c] != index)))
+						{
+							r1 = r;
+							break;
+						}
+					}
+				}
+				
+				// fill slab
+				for (int r = r0; r < r1; ++r)
+				{
+					for (int c = c0; c < c1; ++c)
+					{
+						titleslabmap[r][c] = (unsigned char)index;
+					}
+				}
+
+				assert(c0 < c1 && r0 < r1);
+
+				// set slab extents
+				titleslab[index][0] = c0;
+				titleslab[index][1] = c1;
+				titleslab[index][2] = r0;
+				titleslab[index][3] = r1;
+
+				// skip visited columns
+				col = c1;
 			}
 		}
 	}
 
 	// draw title body
-	for (int row = 0; row < SDL_arraysize(titlemap); ++row)
-	{
-		float x0 = titlex, x1 = titlex, y0 = titley + row * titleh, y1 = y0 + titleh;
-		for (int col = 0; col < SDL_arraysize(titlemap[row]); ++col)
-		{
-			if (titlemap[row][col] == ' ')
-			{
-				if (x1 > x0)
-				{
-					float R, G, B;
-					HSV2RGB((sim_turn + 8 * (col >> 3) + 4 * row) / 256.0f, 1.0f, 1.0f, R, G, B);
-					glColor4f(R, G, B, 1.0f);
-					glVertex2f(x0, y0);
-					glVertex2f(x1, y0);
-					glVertex2f(x1, y1);
-					glVertex2f(x0, y1);
-				}
-				x0 = titlex + col * titlew + titlew;
-			}
-			else
-			{
-				x1 = titlex + col * titlew + titlew;
-			}
-		}
-	}
-
-	glEnd();
-}
-
-// draw options
-void RenderShellOptions(unsigned int aId, float aTime, float aPosX, float aPosY, float aAngle)
-{
-	static const int optioncount = 3;
-	static char * const optiontext[optioncount] =
-	{
-		"START",
-		"OPTIONS",
-		"QUIT" 
-	};
-	static const float optionw = 32;
-	static const float optionh = -24;
-	static const float optionbuttonx[optioncount] =
-	{
-		320 - 160,
-		320 - 160,
-		320 - 160,
-	};
-	static const float optionbuttonw[optioncount] =
-	{
-		320,
-		320,
-		320,
-	};
-	static const float optiontextx[optioncount] =
-	{
-		optionbuttonx[0] + 0.5f * (optionbuttonw[0] - optionw * strlen(optiontext[0])), 
-		optionbuttonx[1] + 0.5f * (optionbuttonw[1] - optionw * strlen(optiontext[1])), 
-		optionbuttonx[2] + 0.5f * (optionbuttonw[2] - optionw * strlen(optiontext[2]))
-	};
-	static const float optionbuttony[optioncount] =
-	{
-		200 + 80 * 0,
-		200 + 80 * 1,
-		200 + 80 * 2
-	};
-	static const float optionbuttonh[optioncount] =
-	{
-		64,
-		64,
-		64
-	};
-	static const float optiontexty[optioncount] = 
-	{
-		optionbuttony[0] + 0.5f * (optionbuttonh[0] - optionh),
-		optionbuttony[1] + 0.5f * (optionbuttonh[1] - optionh),
-		optionbuttony[2] + 0.5f * (optionbuttonh[2] - optionh),
-	};
-	static const float optionz = 0;
-
-	// palette
-	enum ButtonState
-	{
-		BUTTON_NORMAL = 0,
-		BUTTON_SELECTED = 1 << 0,
-		BUTTON_ROLLOVER = 1 << 1,
-	};
-	static const float optionbackcolor[4][4] =
-	{
-		{ 0.1f, 0.1f, 0.1f, 0.5f },
-		{ 0.1f, 0.3f, 1.0f, 0.5f },
-		{ 0.3f, 0.3f, 0.3f, 0.5f },
-		{ 0.1f, 0.7f, 1.0f, 0.5f },
-	};
-	static const float optionbordercolor[4][4] =
-	{
-		{ 0.3f, 0.3f, 0.3f, 1.0f },
-		{ 0.3f, 0.3f, 0.3f, 1.0f },
-		{ 0.0f, 0.0f, 0.0f, 1.0f },
-		{ 0.0f, 0.0f, 0.0f, 1.0f },
-	};
-	static const float optiontextcolor[4][2][4] =
-	{
-		{ { 0.1f, 0.6f, 1.0f, 1.0f }, { 0.1f, 0.6f, 1.0f, 1.0f } },
-		{ { 1.0f, 0.9f, 0.1f, 1.0f }, { 1.0f, 0.9f, 0.1f, 1.0f } },
-		{ { 0.7f, 0.7f, 0.7f, 1.0f }, { 1.0f, 1.0f, 1.0f, 1.0f } },
-		{ { 1.0f, 0.9f, 0.1f, 1.0f }, { 1.0f, 1.0f, 1.0f, 1.0f } },
-	};
-
-	// cursor position
-	float cursor_x = 320 - 240 * input.value[Input::AIM_HORIZONTAL];
-	float cursor_y = 240 - 240 * input.value[Input::AIM_VERTICAL];
-
-	// mouse rollover
-	int optionstate[optioncount];
-	for (int i = 0; i < optioncount; ++i)
-	{
-		optionstate[i] = BUTTON_NORMAL;
-		if (cursor_x >= optionbuttonx[i] && cursor_x <= optionbuttonx[i] + optionbuttonw[i] &&
-			cursor_y >= optionbuttony[i] && cursor_y <= optionbuttony[i] + optionbuttonh[i])
-		{
-			optionstate[i] |= BUTTON_ROLLOVER;
-			if (input[Input::FIRE_PRIMARY])
-			{
-				optionstate[i] |= BUTTON_SELECTED;
-
-				switch (i)
-				{
-				case 0:
-					setgamestate = STATE_PLAY;
-					break;
-
-				case 2:
-					setgamestate = STATE_QUIT;
-					break;
-
-				default:
-					break;
-				}
-			}
-		}
-	}
-
-	// draw option backgrounds
 	glBegin(GL_QUADS);
-	for (int i = 0; i < optioncount; ++i)
+	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+
+	// for each title slab...
+	for (int i = 0; i < titleslabcount; ++i)
 	{
-		glColor4fv(optionbackcolor[optionstate[i]]);
-		glVertex2f(optionbuttonx[i], optionbuttony[i]);
-		glVertex2f(optionbuttonx[i] + optionbuttonw[i], optionbuttony[i]);
-		glVertex2f(optionbuttonx[i] + optionbuttonw[i], optionbuttony[i] + optionbuttonh[i]);
-		glVertex2f(optionbuttonx[i], optionbuttony[i] + optionbuttonh[i]);
-	}
-	glEnd();
+		// get slab extents
+		int c0 = titleslab[i][0];
+		int c1 = titleslab[i][1];
+		int r0 = titleslab[i][2];
+		int r1 = titleslab[i][3];
 
-	// draw option text
-	glEnable(GL_TEXTURE_2D);
-	glBindTexture(GL_TEXTURE_2D, OGLCONSOLE_glFontHandle);
+		// generate texture extents
+		float u0 = float(c0+1) / titletexwidth - titleborderu, u1 = float(c1+1) / titletexwidth + titleborderu;
+		float v0 = float(r0+1) / titletexheight - titleborderv, v1 = float(r1+1) / titletexheight + titleborderv;
 
-	glBegin(GL_QUADS);
+		// generate position extents
+		float x0 = titlex + c0 * titlew - borderw, x1 = titlex + c1 * titlew + borderw;
+		float y0 = titley + r0 * titleh - borderh, y1 = titley + r1 * titleh + borderh;
 
-	for (int i = 0; i < optioncount; ++i)
-	{
-		glColor4fv(optionbordercolor[optionstate[i]]);
-		OGLCONSOLE_DrawString(optiontext[i], optiontextx[i] - 2, optiontexty[i] - 2, optionw, optionh, optionz);
-		OGLCONSOLE_DrawString(optiontext[i], optiontextx[i]    , optiontexty[i] - 2, optionw, optionh, optionz);
-		OGLCONSOLE_DrawString(optiontext[i], optiontextx[i] + 2, optiontexty[i] - 2, optionw, optionh, optionz);
-		OGLCONSOLE_DrawString(optiontext[i], optiontextx[i] - 2, optiontexty[i]    , optionw, optionh, optionz);
-		OGLCONSOLE_DrawString(optiontext[i], optiontextx[i] + 2, optiontexty[i]    , optionw, optionh, optionz);
-		OGLCONSOLE_DrawString(optiontext[i], optiontextx[i] - 2, optiontexty[i] + 2, optionw, optionh, optionz);
-		OGLCONSOLE_DrawString(optiontext[i], optiontextx[i]    , optiontexty[i] + 2, optionw, optionh, optionz);
-		OGLCONSOLE_DrawString(optiontext[i], optiontextx[i] + 2, optiontexty[i] + 2, optionw, optionh, optionz);
-
-		float color[4];
-		float interp = ((sim_turn & 16) ? 16 - (sim_turn & 15) : (sim_turn & 15)) / 16.0f;
-		for (int c = 0; c < 4; c++)
-			color[c] = Lerp(optiontextcolor[optionstate[i]][0][c], optiontextcolor[optionstate[i]][1][c], interp);
-		glColor4fv(color);
-		OGLCONSOLE_DrawString(optiontext[i], optiontextx[i], optiontexty[i], optionw, optionh, optionz);
+		// submit vertices
+		glTexCoord2f(u0, v0);	glVertex2f(x0, y0);
+		glTexCoord2f(u1, v0);	glVertex2f(x1, y0);
+		glTexCoord2f(u1, v1);	glVertex2f(x1, y1);
+		glTexCoord2f(u0, v1);	glVertex2f(x0, y1);
 	}
 
 	glEnd();
 
 	glDisable(GL_TEXTURE_2D);
+
+#endif
 }
 
-// draw cursor
-void RenderShellCursor(unsigned int aId, float aTime, float aPosX, float aPosY, float aAngle)
+enum ButtonState
+{
+	BUTTON_NORMAL = 0,
+	BUTTON_SELECTED = 1 << 0,
+	BUTTON_ROLLOVER = 1 << 1,
+	NUM_BUTTON_STATES = 1 << 2
+};
+
+static const Color4 optionbackcolor[NUM_BUTTON_STATES] =
+{
+	{ 0.2f, 0.2f, 0.2f, 0.5f },
+	{ 0.1f, 0.3f, 1.0f, 0.5f },
+	{ 0.4f, 0.4f, 0.4f, 0.5f },
+	{ 0.1f, 0.7f, 1.0f, 0.5f },
+};
+static const Color4 optionbordercolor[NUM_BUTTON_STATES] =
+{
+	{ 0.0f, 0.0f, 0.0f, 1.0f },
+	{ 0.0f, 0.0f, 0.0f, 1.0f },
+	{ 0.0f, 0.0f, 0.0f, 1.0f },
+	{ 0.0f, 0.0f, 0.0f, 1.0f },
+};
+static const Color4_2 optionlabelcolor[NUM_BUTTON_STATES] =
+{
+	{ { 0.1f, 0.6f, 1.0f, 1.0f }, { 0.1f, 0.6f, 1.0f, 1.0f } },
+	{ { 1.0f, 0.9f, 0.1f, 1.0f }, { 1.0f, 0.9f, 0.1f, 1.0f } },
+	{ { 0.7f, 0.7f, 0.7f, 1.0f }, { 1.0f, 1.0f, 1.0f, 1.0f } },
+	{ { 1.0f, 0.9f, 0.1f, 1.0f }, { 1.0f, 1.0f, 1.0f, 1.0f } },
+};
+static const Color4 inertbordercolor[] =
+{
+	{ 0.1f, 0.1f, 0.1f, 1.0f },
+};
+static const Color4_2 inertlabelcolor[] =
+{
+	{ { 0.7f, 0.7f, 0.7f, 1.0f }, { 0.7f, 0.7f, 0.7f, 1.0f } }
+};
+
+// shell menu option
+struct ShellMenuItem
+{
+	// option button
+	Vector2 mButtonPos;
+	Vector2 mButtonSize;
+	const Color4 *mButtonColor;
+
+	// option label
+	char *mLabel;
+	Vector2 mLabelPos;
+	Vector2 mLabelJustify;
+	Vector2 mCharSize;
+	const Color4 *mBorderColor;
+	const Color4_2 *mLabelColor;
+
+	// button state
+	unsigned int mState;
+
+	// action
+	fastdelegate::FastDelegate<void ()> mAction;
+
+	// associated variable
+	unsigned int mVariable;
+	int mValue;
+
+	// render the button
+	void Render(unsigned int aId, float aTime, float aPosX, float aPosY, float aAngle)
+	{
+		unsigned int state = mState;
+		if (VarItem *item = Database::varitem.Get(mVariable))
+			if (item->GetInteger() == mValue)
+				state |= BUTTON_SELECTED;
+
+		if (mButtonColor)
+		{
+			// render button
+			glBegin(GL_QUADS);
+			glColor4fv(mButtonColor[state]);
+			glVertex2f(mButtonPos.x, mButtonPos.y);
+			glVertex2f(mButtonPos.x + mButtonSize.x, mButtonPos.y);
+			glVertex2f(mButtonPos.x + mButtonSize.x, mButtonPos.y + mButtonSize.y);
+			glVertex2f(mButtonPos.x, mButtonPos.y + mButtonSize.y);
+			glEnd();
+		}
+
+		if (mLabel)
+		{
+			glEnable(GL_TEXTURE_2D);
+			glBindTexture(GL_TEXTURE_2D, OGLCONSOLE_glFontHandle);
+
+			glBegin(GL_QUADS);
+
+			// get text corner position
+			size_t labellen = strlen(mLabel);
+			Vector2 labelcorner(
+				mButtonPos.x + mLabelPos.x - mLabelJustify.x * mCharSize.x * labellen,
+				mButtonPos.y + mLabelPos.y + (1.0f - mLabelJustify.y) * mCharSize.y);
+
+			if (mBorderColor)
+			{
+				// render border
+				glColor4fv(mBorderColor[state]);
+				OGLCONSOLE_DrawString(mLabel, labelcorner.x - 2, labelcorner.y - 2, mCharSize.x, -mCharSize.y, 0);
+				OGLCONSOLE_DrawString(mLabel, labelcorner.x    , labelcorner.y - 2, mCharSize.x, -mCharSize.y, 0);
+				OGLCONSOLE_DrawString(mLabel, labelcorner.x + 2, labelcorner.y - 2, mCharSize.x, -mCharSize.y, 0);
+				OGLCONSOLE_DrawString(mLabel, labelcorner.x - 2, labelcorner.y    , mCharSize.x, -mCharSize.y, 0);
+				OGLCONSOLE_DrawString(mLabel, labelcorner.x + 2, labelcorner.y    , mCharSize.x, -mCharSize.y, 0);
+				OGLCONSOLE_DrawString(mLabel, labelcorner.x - 2, labelcorner.y + 2, mCharSize.x, -mCharSize.y, 0);
+				OGLCONSOLE_DrawString(mLabel, labelcorner.x    , labelcorner.y + 2, mCharSize.x, -mCharSize.y, 0);
+				OGLCONSOLE_DrawString(mLabel, labelcorner.x + 2, labelcorner.y + 2, mCharSize.x, -mCharSize.y, 0);
+			}
+
+			// render label
+			Color4 color;
+			float interp = ((sim_turn & 16) ? 16 - (sim_turn & 15) : (sim_turn & 15)) / 16.0f;
+			for (int c = 0; c < 4; c++)
+				color[c] = Lerp(mLabelColor[state][0][c], mLabelColor[state][1][c], interp);
+			glColor4fv(color);
+			OGLCONSOLE_DrawString(mLabel, labelcorner.x, labelcorner.y, mCharSize.x, -mCharSize.y, 0);
+
+			glEnd();
+
+			glDisable(GL_TEXTURE_2D);
+		}
+	}
+};
+
+// shell menu page
+struct ShellMenuPage
+{
+	ShellMenuItem *mOption;
+	unsigned int mCount;
+
+	fastdelegate::FastDelegate<void ()> mEnter;
+	fastdelegate::FastDelegate<void ()> mExit;
+
+	ShellMenuPage *mParent;
+};
+
+// shell menu
+struct ShellMenu
+{
+	ShellMenuPage *mActive;
+
+	void Push(ShellMenuPage *aPage)
+	{
+		aPage->mParent = mActive;
+		if (mActive && mActive->mExit)
+			(mActive->mExit)();
+		mActive = aPage;
+		if (mActive && mActive->mEnter)
+			(mActive->mEnter)();
+	}
+	void Pop()
+	{
+		if (mActive && mActive->mExit)
+			(mActive->mExit)();
+		mActive = mActive->mParent;
+		if (mActive && mActive->mEnter)
+			(mActive->mEnter)();
+	}
+};
+
+// forward declaration
+extern ShellMenu shellmenu;
+extern ShellMenuPage shellmenumainpage;
+extern ShellMenuPage shellmenuoptionspage;
+extern ShellMenuPage shellmenuvideopage;
+extern ShellMenuPage shellmenuaudiopage;
+
+//
+// MAIN MENU
+
+// start item
+void ShellMenuMainPressStart(void)
+{
+	setgamestate = STATE_PLAY;
+}
+
+void ShellMenuMainPressOptions(void)
+{
+	shellmenu.Push(&shellmenuoptionspage);
+}
+
+void ShellMenuMainPressQuit(void)
+{
+	setgamestate = STATE_QUIT;
+}
+
+ShellMenuItem shellmenumainitems[] =
+{
+	{
+		Vector2( 320 - 160, 200 + 80 * 0 ),
+		Vector2( 320, 64 ),
+		optionbackcolor,
+		"START",
+		Vector2(160, 32),
+		Vector2(0.5f, 0.5f),
+		Vector2(32, 24),
+		optionbordercolor,
+		optionlabelcolor,
+		BUTTON_NORMAL,
+		ShellMenuMainPressStart,
+	},
+	{
+		Vector2( 320 - 160, 200 + 80 * 1 ),
+		Vector2( 320, 64 ),
+		optionbackcolor,
+		"OPTIONS",
+		Vector2(160, 32),
+		Vector2(0.5f, 0.5f),
+		Vector2(32, 24),
+		optionbordercolor,
+		optionlabelcolor,
+		BUTTON_NORMAL,
+		ShellMenuMainPressOptions,
+	},
+	{
+		Vector2( 320 - 160, 200 + 80 * 2 ),
+		Vector2( 320, 64 ),
+		optionbackcolor,
+		"QUIT",
+		Vector2(160, 32),
+		Vector2(0.5f, 0.5f),
+		Vector2(32, 24),
+		optionbordercolor,
+		optionlabelcolor,
+		BUTTON_NORMAL,
+		ShellMenuMainPressQuit,
+	},
+};
+
+//
+// OPTION MENU
+
+void ShellMenuOptionsPressVideo()
+{
+	shellmenu.Push(&shellmenuvideopage);
+}
+
+void ShellMenuOptionsPressAudio()
+{
+	shellmenu.Push(&shellmenuaudiopage);
+}
+
+void ShellMenuOptionsPressDebug()
+{
+}
+
+void ShellMenuOptionsPressBack()
+{
+	shellmenu.Pop();
+}
+
+ShellMenuItem shellmenuoptionsitems[] =
+{
+	{
+		Vector2( 320 - 160, 200 + 64 * 0 ),
+		Vector2( 320, 48 ),
+		optionbackcolor,
+		"VIDEO",
+		Vector2( 160, 24 ),
+		Vector2( 0.5f, 0.5f ),
+		Vector2( 32, 24 ),
+		optionbordercolor,
+		optionlabelcolor,
+		BUTTON_NORMAL,
+		ShellMenuOptionsPressVideo,
+	},
+	{
+		Vector2( 320 - 160, 200 + 64 * 1 ),
+		Vector2( 320, 48 ),
+		optionbackcolor,
+		"AUDIO",
+		Vector2( 160, 24 ),
+		Vector2( 0.5f, 0.5f ),
+		Vector2( 32, 24 ),
+		optionbordercolor,
+		optionlabelcolor,
+		BUTTON_NORMAL,
+		ShellMenuOptionsPressAudio,
+	},
+	{
+		Vector2( 320 - 160, 200 + 64 * 2 ),
+		Vector2( 320, 48 ),
+		optionbackcolor,
+		"TEST",
+		Vector2( 160, 24 ),
+		Vector2( 0.5f, 0.5f ),
+		Vector2( 32, 24 ),
+		optionbordercolor,
+		optionlabelcolor,
+		BUTTON_NORMAL,
+		ShellMenuOptionsPressDebug,
+	},
+	{
+		Vector2( 320 - 100, 200 + 64 * 3 ),
+		Vector2( 200, 48 ),
+		optionbackcolor,
+		"(BACK)",
+		Vector2( 100, 24 ),
+		Vector2( 0.5f, 0.5f ),
+		Vector2( 32, 24 ),
+		optionbordercolor,
+		optionlabelcolor,
+		BUTTON_NORMAL,
+		ShellMenuOptionsPressBack,
+	},
+};
+
+
+//
+// VIDEO MENU
+
+/*
+resolution				[-] <width>x<height> [+]
+fullscreen				[off] [on]
+vertical sync			[off] [on]
+multisample				[-] <samples> [+]
+motion blur steps		[-] <steps> [+]
+motion blur strength	[-] <blur %> [+]
+*/
+
+extern ShellMenuItem shellmenuvideoitems[];
+
+SDL_Rect **shellmenuvideoresolutions;
+SDL_Rect **shellmenuvideoresolution;
+char shellmenuvideoresolutiontext[32];
+char shellmenuvideomultisampletext[8];
+char shellmenuvideomotionblurstepstext[8];
+char shellmenuvideomotionblurtimetext[8];
+
+void ShellMenuVideoEnter()
+{
+	shellmenuvideoresolutions = SDL_ListModes(NULL, SDL_OPENGL | SDL_FULLSCREEN);
+	shellmenuvideoresolution = shellmenuvideoresolutions;
+	for (SDL_Rect **mode = shellmenuvideoresolutions; *mode != NULL; ++mode)
+	{
+		if ((*mode)->w <= SCREEN_WIDTH && (*mode)->h <= SCREEN_HEIGHT)
+			shellmenuvideoresolution = mode;
+	}
+	TIXML_SNPRINTF(shellmenuvideoresolutiontext, sizeof(shellmenuvideoresolutiontext), "%dx%d", (*shellmenuvideoresolution)->w, (*shellmenuvideoresolution)->h);
+
+	VarItem::CreateInteger("shell.menu.video.fullscreen", SCREEN_FULLSCREEN, 0, 1);
+	VarItem::CreateInteger("shell.menu.video.verticalsync", OPENGL_SWAPCONTROL, 0, 1);
+
+	VarItem *varmultisample = VarItem::CreateInteger("shell.menu.video.multisample", OPENGL_MULTISAMPLE, 1, 16);
+	TIXML_SNPRINTF(shellmenuvideomultisampletext, sizeof(shellmenuvideomultisampletext), "%dx", varmultisample->GetInteger());
+
+	VarItem *varmotionblursteps = VarItem::CreateInteger("shell.menu.video.motionblur", MOTIONBLUR_STEPS, 1);
+	TIXML_SNPRINTF(shellmenuvideomotionblurstepstext, sizeof(shellmenuvideomotionblurstepstext), "%d", varmotionblursteps->GetInteger());
+
+	VarItem *varmotionblurtime = VarItem::CreateInteger("shell.menu.video.motionblurtime", xs_RoundToInt(MOTIONBLUR_TIME * 600), 0, 10);
+	TIXML_SNPRINTF(shellmenuvideomotionblurtimetext, sizeof(shellmenuvideomotionblurtimetext), "%d%%", varmotionblurtime->GetInteger() * 10);
+}
+
+void ShellMenuVideoExit()
+{
+	shellmenuvideoresolutions = NULL;
+	shellmenuvideoresolution = NULL;
+}
+
+void ShellMenuVideoPressAccept()
+{
+	SCREEN_WIDTH = (*shellmenuvideoresolution)->w;
+	SCREEN_HEIGHT = (*shellmenuvideoresolution)->h;
+	SCREEN_FULLSCREEN = VarItem::GetInteger("shell.menu.video.fullscreen") != 0;
+	OPENGL_SWAPCONTROL = VarItem::GetInteger("shell.menu.video.verticalsync") != 0;
+	OPENGL_MULTISAMPLE = VarItem::GetInteger("shell.menu.video.multisample");
+	MOTIONBLUR_STEPS = VarItem::GetInteger("shell.menu.video.motionblur");
+	MOTIONBLUR_TIME = VarItem::GetInteger("shell.menu.video.motionblurtime") / 600.0f;
+
+	WritePreferences("preferences.xml");
+	InitWindowAction();
+
+	shellmenu.Pop();
+}
+
+void ShellMenuVideoPressCancel()
+{
+	shellmenu.Pop();
+}
+
+void ShellMenuVideoPressResolutionUp()
+{
+	if (shellmenuvideoresolution > shellmenuvideoresolutions)
+	{
+		--shellmenuvideoresolution;
+		sprintf(shellmenuvideoresolutiontext, "%dx%d", (*shellmenuvideoresolution)->w, (*shellmenuvideoresolution)->h);
+	}
+}
+
+void ShellMenuVideoPressResolutionDown()
+{
+	if (*(shellmenuvideoresolution+1) != NULL)
+	{
+		++shellmenuvideoresolution;
+		sprintf(shellmenuvideoresolutiontext, "%dx%d", (*shellmenuvideoresolution)->w, (*shellmenuvideoresolution)->h);
+	}
+}
+
+void ShellMenuVideoPressFullScreenOff()
+{
+	VarItem::SetInteger("shell.menu.video.fullscreen", 0);
+}
+
+void ShellMenuVideoPressFullScreenOn()
+{
+	VarItem::SetInteger("shell.menu.video.fullscreen", 1);
+}
+
+void ShellMenuVideoPressVerticalSyncOff()
+{
+	VarItem::SetInteger("shell.menu.video.verticalsync", 0);
+}
+
+void ShellMenuVideoPressVerticalSyncOn()
+{
+	VarItem::SetInteger("shell.menu.video.verticalsync", 1);
+}
+
+void ShellMenuVideoPressMultisampleUp()
+{
+	if (VarItem *item = Database::varitem.Get(0x31bca13e /* "shell.menu.video.multisample" */))
+	{
+		item->SetInteger(item->GetInteger() + 1);
+		sprintf(shellmenuvideomultisampletext, "%dx", item->GetInteger());
+	}
+}
+
+void ShellMenuVideoPressMultisampleDown()
+{
+	if (VarItem *item = Database::varitem.Get(0x31bca13e /* "shell.menu.video.multisample" */))
+	{
+		item->SetInteger(item->GetInteger() - 1);
+		sprintf(shellmenuvideomultisampletext, "%dx", item->GetInteger());
+	}
+}
+
+void ShellMenuVideoPressMotionBlurStepsUp()
+{
+	if (VarItem *item = Database::varitem.Get(0x32e32e54 /* "shell.menu.video.motionblur" */))
+	{
+		item->SetInteger(item->GetInteger() + 1);
+		sprintf(shellmenuvideomotionblurstepstext, "%d", item->GetInteger());
+	}
+}
+
+void ShellMenuVideoPressMotionBlurStepsDown()
+{
+	if (VarItem *item = Database::varitem.Get(0x32e32e54 /* "shell.menu.video.motionblur" */))
+	{
+		item->SetInteger(item->GetInteger() - 1);
+		sprintf(shellmenuvideomotionblurstepstext, "%d", item->GetInteger());
+	}
+}
+
+void ShellMenuVideoPressMotionBlurTimeUp()
+{
+	if (VarItem *item = Database::varitem.Get(0xfdcc24f5 /* "shell.menu.video.motionblurtime" */))
+	{
+		item->SetInteger(item->GetInteger() + 1);
+		sprintf(shellmenuvideomotionblurtimetext, "%d%%", item->GetInteger() * 10);
+	}
+}
+
+void ShellMenuVideoPressMotionBlurTimeDown()
+{
+	if (VarItem *item = Database::varitem.Get(0xfdcc24f5 /* "shell.menu.video.motionblurtime" */))
+	{
+		item->SetInteger(item->GetInteger() - 1);
+		sprintf(shellmenuvideomotionblurtimetext, "%d%%", item->GetInteger() * 10);
+	}
+}
+
+ShellMenuItem shellmenuvideoitems[] =
+{
+	{
+		Vector2( 40, 220 - 24 - 16 ),
+		Vector2( 560, 12 ),
+		optionbackcolor,
+		"VIDEO",
+		Vector2( 280, 6 ),
+		Vector2( 0.5f, 0.5f ),
+		Vector2( 32, 24 ),
+		optionbordercolor,
+		optionlabelcolor,
+		BUTTON_SELECTED,
+		NULL,
+	},
+	{
+		Vector2( 320 - 20 - 240, 220 + 32 * 0 ),
+		Vector2( 240, 24 ),
+		NULL,
+		"Resolution",
+		Vector2( 240 - 8, 12 ),
+		Vector2( 1.0f, 0.5f ),
+		Vector2( 16, 16 ),
+		inertbordercolor,
+		inertlabelcolor,
+		BUTTON_NORMAL,
+		NULL,
+	},
+	{
+		Vector2( 320 + 20, 220 + 32 * 0 ),
+		Vector2( 30, 24 ),
+		optionbackcolor,
+		"-",
+		Vector2( 15, 12 ),
+		Vector2( 0.5f, 0.5f ),
+		Vector2( 16, 16 ),
+		optionbordercolor,
+		optionlabelcolor,
+		BUTTON_NORMAL,
+		ShellMenuVideoPressResolutionDown,
+	},
+	{
+		Vector2( 320 + 20 + 30 + 10, 220 + 32 * 0 ),
+		Vector2( 160, 24 ),
+		NULL,
+		shellmenuvideoresolutiontext,
+		Vector2( 80, 12 ),
+		Vector2( 0.5f, 0.5f ),
+		Vector2( 16, 16 ),
+		inertbordercolor,
+		inertlabelcolor,
+		BUTTON_NORMAL,
+		NULL,
+	},
+	{
+		Vector2( 320 + 20 + 30 + 10 + 160, 220 + 32 * 0 ),
+		Vector2( 30, 24 ),
+		optionbackcolor,
+		"+",
+		Vector2( 15, 12 ),
+		Vector2( 0.5f, 0.5f ),
+		Vector2( 16, 16 ),
+		optionbordercolor,
+		optionlabelcolor,
+		BUTTON_NORMAL,
+		ShellMenuVideoPressResolutionUp,
+	},
+	{
+		Vector2( 320 - 20 - 240, 220 + 32 * 1 ),
+		Vector2( 240, 24 ),
+		NULL,
+		"Full Screen",
+		Vector2( 240 - 8, 12 ),
+		Vector2( 1.0f, 0.5f ),
+		Vector2( 16, 16 ),
+		inertbordercolor,
+		inertlabelcolor,
+		BUTTON_NORMAL,
+		NULL,
+	},
+	{
+		Vector2( 320 + 20, 220 + 32 * 1 ),
+		Vector2( 110, 24 ),
+		optionbackcolor,
+		"Off",
+		Vector2( 55, 12 ),
+		Vector2( 0.5f, 0.5f ),
+		Vector2( 16, 16 ),
+		optionbordercolor,
+		optionlabelcolor,
+		BUTTON_NORMAL,
+		ShellMenuVideoPressFullScreenOff,
+		0x9ddbd712 /* "shell.menu.video.fullscreen" */,
+		0
+	},
+	{
+		Vector2( 320 + 20 + 110 + 10, 220 + 32 * 1 ),
+		Vector2( 110, 24 ),
+		optionbackcolor,
+		"On",
+		Vector2( 55, 12 ),
+		Vector2( 0.5f, 0.5f ),
+		Vector2( 16, 16 ),
+		optionbordercolor,
+		optionlabelcolor,
+		BUTTON_NORMAL,
+		ShellMenuVideoPressFullScreenOn,
+		0x9ddbd712 /* "shell.menu.video.fullscreen" */,
+		1
+	},
+	{
+		Vector2( 320 - 20 - 240, 220 + 32 * 2 ),
+		Vector2( 240, 24 ),
+		NULL,
+		"Vertical Sync",
+		Vector2( 240 - 8, 12 ),
+		Vector2( 1.0f, 0.5f ),
+		Vector2( 16, 16 ),
+		inertbordercolor,
+		inertlabelcolor,
+		BUTTON_NORMAL,
+		NULL,
+	},
+	{
+		Vector2( 320 + 20, 220 + 32 * 2 ),
+		Vector2( 110, 24 ),
+		optionbackcolor,
+		"Off",
+		Vector2( 55, 12 ),
+		Vector2( 0.5f, 0.5f ),
+		Vector2( 16, 16 ),
+		optionbordercolor,
+		optionlabelcolor,
+		BUTTON_NORMAL,
+		ShellMenuVideoPressVerticalSyncOff,
+		0x97eea3ca /* "shell.menu.video.verticalsync" */,
+		0
+	},
+	{
+		Vector2( 320 + 20 + 110 + 10, 220 + 32 * 2 ),
+		Vector2( 110, 24 ),
+		optionbackcolor,
+		"On",
+		Vector2( 55, 12 ),
+		Vector2( 0.5f, 0.5f ),
+		Vector2( 16, 16 ),
+		optionbordercolor,
+		optionlabelcolor,
+		BUTTON_NORMAL,
+		ShellMenuVideoPressVerticalSyncOn,
+		0x97eea3ca /* "shell.menu.video.verticalsync" */,
+		1
+	},
+	{
+		Vector2( 320 - 20 - 240, 220 + 32 * 3 ),
+		Vector2( 240, 24 ),
+		NULL,
+		"Multisampling",
+		Vector2( 240 - 8, 12 ),
+		Vector2( 1.0f, 0.5f ),
+		Vector2( 16, 16 ),
+		inertbordercolor,
+		inertlabelcolor,
+		BUTTON_NORMAL,
+		NULL,
+	},
+	{
+		Vector2( 320 + 20, 220 + 32 * 3 ),
+		Vector2( 30, 24 ),
+		optionbackcolor,
+		"-",
+		Vector2( 15, 12 ),
+		Vector2( 0.5f, 0.5f ),
+		Vector2( 16, 16 ),
+		optionbordercolor,
+		optionlabelcolor,
+		BUTTON_NORMAL,
+		ShellMenuVideoPressMultisampleDown,
+	},
+	{
+		Vector2( 320 + 20 + 30 + 10, 220 + 32 * 3 ),
+		Vector2( 160, 24 ),
+		NULL,
+		shellmenuvideomultisampletext,
+		Vector2( 80, 12 ),
+		Vector2( 0.5f, 0.5f ),
+		Vector2( 16, 16 ),
+		inertbordercolor,
+		inertlabelcolor,
+		BUTTON_NORMAL,
+		NULL,
+	},
+	{
+		Vector2( 320 + 20 + 30 + 10 + 160, 220 + 32 * 3 ),
+		Vector2( 30, 24 ),
+		optionbackcolor,
+		"+",
+		Vector2( 15, 12 ),
+		Vector2( 0.5f, 0.5f ),
+		Vector2( 16, 16 ),
+		optionbordercolor,
+		optionlabelcolor,
+		BUTTON_NORMAL,
+		ShellMenuVideoPressMultisampleUp,
+	},
+	{
+		Vector2( 320 - 20 - 240, 220 + 32 * 4 ),
+		Vector2( 240, 24 ),
+		NULL,
+		"Motion Steps",
+		Vector2( 240 - 8, 12 ),
+		Vector2( 1.0f, 0.5f ),
+		Vector2( 16, 16 ),
+		inertbordercolor,
+		inertlabelcolor,
+		BUTTON_NORMAL,
+		NULL,
+	},
+	{
+		Vector2( 320 + 20, 220 + 32 * 4 ),
+		Vector2( 30, 24 ),
+		optionbackcolor,
+		"-",
+		Vector2( 15, 12 ),
+		Vector2( 0.5f, 0.5f ),
+		Vector2( 16, 16 ),
+		optionbordercolor,
+		optionlabelcolor,
+		BUTTON_NORMAL,
+		ShellMenuVideoPressMotionBlurStepsDown,
+	},
+	{
+		Vector2( 320 + 20 + 30 + 10, 220 + 32 * 4 ),
+		Vector2( 160, 24 ),
+		NULL,
+		shellmenuvideomotionblurstepstext,
+		Vector2( 80, 12 ),
+		Vector2( 0.5f, 0.5f ),
+		Vector2( 16, 16 ),
+		inertbordercolor,
+		inertlabelcolor,
+		BUTTON_NORMAL,
+		NULL,
+	},
+	{
+		Vector2( 320 + 20 + 30 + 10 + 160, 220 + 32 * 4 ),
+		Vector2( 30, 24 ),
+		optionbackcolor,
+		"+",
+		Vector2( 15, 12 ),
+		Vector2( 0.5f, 0.5f ),
+		Vector2( 16, 16 ),
+		optionbordercolor,
+		optionlabelcolor,
+		BUTTON_NORMAL,
+		ShellMenuVideoPressMotionBlurStepsUp,
+	},
+	{
+		Vector2( 320 - 20 - 240, 220 + 32 * 5 ),
+		Vector2( 240, 24 ),
+		NULL,
+		"Motion Blur",
+		Vector2( 240 - 8, 12 ),
+		Vector2( 1.0f, 0.5f ),
+		Vector2( 16, 16 ),
+		inertbordercolor,
+		inertlabelcolor,
+		BUTTON_NORMAL,
+		NULL,
+	},
+	{
+		Vector2( 320 + 20, 220 + 32 * 5 ),
+		Vector2( 30, 24 ),
+		optionbackcolor,
+		"-",
+		Vector2( 15, 12 ),
+		Vector2( 0.5f, 0.5f ),
+		Vector2( 16, 16 ),
+		optionbordercolor,
+		optionlabelcolor,
+		BUTTON_NORMAL,
+		ShellMenuVideoPressMotionBlurTimeDown,
+	},
+	{
+		Vector2( 320 + 20 + 30 + 10, 220 + 32 * 5 ),
+		Vector2( 160, 24 ),
+		NULL,
+		shellmenuvideomotionblurtimetext,
+		Vector2( 80, 12 ),
+		Vector2( 0.5f, 0.5f ),
+		Vector2( 16, 16 ),
+		inertbordercolor,
+		inertlabelcolor,
+		BUTTON_NORMAL,
+		NULL,
+	},
+	{
+		Vector2( 320 + 20 + 30 + 10 + 160, 220 + 32 * 5 ),
+		Vector2( 30, 24 ),
+		optionbackcolor,
+		"+",
+		Vector2( 15, 12 ),
+		Vector2( 0.5f, 0.5f ),
+		Vector2( 16, 16 ),
+		optionbordercolor,
+		optionlabelcolor,
+		BUTTON_NORMAL,
+		ShellMenuVideoPressMotionBlurTimeUp,
+	},
+	{
+		Vector2( 40, 460 - 32 ),
+		Vector2( 240, 32 ),
+		optionbackcolor,
+		"ACCEPT",
+		Vector2( 120, 16 ),
+		Vector2( 0.5f, 0.5f ),
+		Vector2( 24, 16 ),
+		optionbordercolor,
+		optionlabelcolor,
+		BUTTON_NORMAL,
+		ShellMenuVideoPressAccept,
+	},
+	{
+		Vector2( 600 - 240, 460 - 32 ),
+		Vector2( 240, 32 ),
+		optionbackcolor,
+		"CANCEL",
+		Vector2( 120, 16 ),
+		Vector2( 0.5f, 0.5f ),
+		Vector2( 24, 16 ),
+		optionbordercolor,
+		optionlabelcolor,
+		BUTTON_NORMAL,
+		ShellMenuVideoPressCancel,
+	},
+};
+
+//
+// AUDIO MENU
+
+/*
+channels				[-] <channels> [+]
+volume					[-] <volume %> [+]
+test					[-] <sound> [+]
+*/
+
+char shellmenuaudiosoundchannelstext[8];
+char shellmenuaudiosoundvolumetext[8];
+
+void ShellMenuAudioEnter()
+{
+	VarItem *varsoundchannels = VarItem::CreateInteger("shell.menu.audio.channels", SOUND_CHANNELS, 1);
+	TIXML_SNPRINTF(shellmenuaudiosoundchannelstext, sizeof(shellmenuaudiosoundchannelstext), "%d", varsoundchannels->GetInteger());
+
+	VarItem *varsoundvolume = VarItem::CreateInteger("shell.menu.audio.volume", xs_RoundToInt(SOUND_VOLUME * 10), 0, 20);
+	TIXML_SNPRINTF(shellmenuaudiosoundvolumetext, sizeof(shellmenuaudiosoundvolumetext), "%d%%", varsoundvolume->GetInteger() * 10);
+}
+
+void ShellMenuAudioExit()
+{
+}
+
+void ShellMenuAudioPressAccept()
+{
+	SOUND_CHANNELS = VarItem::GetInteger("shell.menu.audio.channels");
+	SOUND_VOLUME = VarItem::GetInteger("shell.menu.audio.volume") / 10.0f;
+
+	WritePreferences("preferences.xml");
+
+	shellmenu.Pop();
+}
+
+void ShellMenuAudioPressCancel()
+{
+	shellmenu.Pop();
+}
+
+
+void ShellMenuAudioPressSoundChannelsUp()
+{
+	if (VarItem *item = Database::varitem.Get(0x2e3f9248 /* "shell.menu.audio.channels" */))
+	{
+		item->SetInteger(item->GetInteger() + 1);
+		sprintf(shellmenuaudiosoundchannelstext, "%d", item->GetInteger());
+	}
+}
+
+void ShellMenuAudioPressSoundChannelsDown()
+{
+	if (VarItem *item = Database::varitem.Get(0x2e3f9248 /* "shell.menu.audio.channels" */))
+	{
+		item->SetInteger(item->GetInteger() - 1);
+		sprintf(shellmenuaudiosoundchannelstext, "%d", item->GetInteger());
+	}
+}
+
+void ShellMenuAudioPressSoundVolumeUp()
+{
+	if (VarItem *item = Database::varitem.Get(0xf97c9992 /* "shell.menu.audio.volume" */))
+	{
+		item->SetInteger(item->GetInteger() + 1);
+		sprintf(shellmenuaudiosoundvolumetext, "%d%%", item->GetInteger() * 10);
+	}
+}
+
+void ShellMenuAudioPressSoundVolumeDown()
+{
+	if (VarItem *item = Database::varitem.Get(0xf97c9992 /* "shell.menu.audio.volume" */))
+	{
+		item->SetInteger(item->GetInteger() - 1);
+		sprintf(shellmenuaudiosoundvolumetext, "%d%%", item->GetInteger() * 10);
+	}
+}
+
+
+ShellMenuItem shellmenuaudioitems[] = 
+{
+	{
+		Vector2( 40, 220 - 24 - 16 ),
+		Vector2( 560, 12 ),
+		optionbackcolor,
+		"AUDIO",
+		Vector2( 280, 6 ),
+		Vector2( 0.5f, 0.5f ),
+		Vector2( 32, 24 ),
+		optionbordercolor,
+		optionlabelcolor,
+		BUTTON_SELECTED,
+		NULL,
+	},
+	{
+		Vector2( 320 - 20 - 240, 220 + 32 * 0 ),
+		Vector2( 240, 24 ),
+		NULL,
+		"Mixer Channels",
+		Vector2( 240 - 8, 12 ),
+		Vector2( 1.0f, 0.5f ),
+		Vector2( 16, 16 ),
+		inertbordercolor,
+		inertlabelcolor,
+		BUTTON_NORMAL,
+		NULL,
+	},
+	{
+		Vector2( 320 + 20, 220 + 32 * 0 ),
+		Vector2( 30, 24 ),
+		optionbackcolor,
+		"-",
+		Vector2( 15, 12 ),
+		Vector2( 0.5f, 0.5f ),
+		Vector2( 16, 16 ),
+		optionbordercolor,
+		optionlabelcolor,
+		BUTTON_NORMAL,
+		ShellMenuAudioPressSoundChannelsDown,
+	},
+	{
+		Vector2( 320 + 20 + 30 + 10, 220 + 32 * 0 ),
+		Vector2( 160, 24 ),
+		NULL,
+		shellmenuaudiosoundchannelstext,
+		Vector2( 80, 12 ),
+		Vector2( 0.5f, 0.5f ),
+		Vector2( 16, 16 ),
+		inertbordercolor,
+		inertlabelcolor,
+		BUTTON_NORMAL,
+		NULL,
+	},
+	{
+		Vector2( 320 + 20 + 30 + 10 + 160, 220 + 32 * 0 ),
+		Vector2( 30, 24 ),
+		optionbackcolor,
+		"+",
+		Vector2( 15, 12 ),
+		Vector2( 0.5f, 0.5f ),
+		Vector2( 16, 16 ),
+		optionbordercolor,
+		optionlabelcolor,
+		BUTTON_NORMAL,
+		ShellMenuAudioPressSoundChannelsUp,
+	},
+	{
+		Vector2( 320 - 20 - 240, 220 + 32 * 1 ),
+		Vector2( 240, 24 ),
+		NULL,
+		"Mixer Volume",
+		Vector2( 240 - 8, 12 ),
+		Vector2( 1.0f, 0.5f ),
+		Vector2( 16, 16 ),
+		inertbordercolor,
+		inertlabelcolor,
+		BUTTON_NORMAL,
+		NULL,
+	},
+	{
+		Vector2( 320 + 20, 220 + 32 * 1 ),
+		Vector2( 30, 24 ),
+		optionbackcolor,
+		"-",
+		Vector2( 15, 12 ),
+		Vector2( 0.5f, 0.5f ),
+		Vector2( 16, 16 ),
+		optionbordercolor,
+		optionlabelcolor,
+		BUTTON_NORMAL,
+		ShellMenuAudioPressSoundVolumeDown,
+	},
+	{
+		Vector2( 320 + 20 + 30 + 10, 220 + 32 * 1 ),
+		Vector2( 160, 24 ),
+		NULL,
+		shellmenuaudiosoundvolumetext,
+		Vector2( 80, 12 ),
+		Vector2( 0.5f, 0.5f ),
+		Vector2( 16, 16 ),
+		inertbordercolor,
+		inertlabelcolor,
+		BUTTON_NORMAL,
+		NULL,
+	},
+	{
+		Vector2( 320 + 20 + 30 + 10 + 160, 220 + 32 * 1 ),
+		Vector2( 30, 24 ),
+		optionbackcolor,
+		"+",
+		Vector2( 15, 12 ),
+		Vector2( 0.5f, 0.5f ),
+		Vector2( 16, 16 ),
+		optionbordercolor,
+		optionlabelcolor,
+		BUTTON_NORMAL,
+		ShellMenuAudioPressSoundVolumeUp,
+	},
+	{
+		Vector2( 40, 460 - 32 ),
+		Vector2( 240, 32 ),
+		optionbackcolor,
+		"ACCEPT",
+		Vector2( 120, 16 ),
+		Vector2( 0.5f, 0.5f ),
+		Vector2( 24, 16 ),
+		optionbordercolor,
+		optionlabelcolor,
+		BUTTON_NORMAL,
+		ShellMenuAudioPressAccept,
+	},
+	{
+		Vector2( 600 - 240, 460 - 32 ),
+		Vector2( 240, 32 ),
+		optionbackcolor,
+		"CANCEL",
+		Vector2( 120, 16 ),
+		Vector2( 0.5f, 0.5f ),
+		Vector2( 24, 16 ),
+		optionbordercolor,
+		optionlabelcolor,
+		BUTTON_NORMAL,
+		ShellMenuAudioPressCancel,
+	},
+};
+
+//
+// TEST MENU
+
+/*
+simulation rate			[-] <rate> [+]
+time scale				[-] <scale %> [+]
+profile screen			[off] [on]
+profile print			[off] [on]
+framerate screen		[off] [on]
+framerate print			[off] [on]
+*/
+
+//
+// SHELL
+
+ShellMenuPage shellmenumainpage =
+{
+	shellmenumainitems, SDL_arraysize(shellmenumainitems), NULL, NULL
+};
+ShellMenuPage shellmenuoptionspage =
+{
+	shellmenuoptionsitems, SDL_arraysize(shellmenuoptionsitems)
+};
+ShellMenuPage shellmenuvideopage =
+{
+	shellmenuvideoitems, SDL_arraysize(shellmenuvideoitems), ShellMenuVideoEnter, ShellMenuVideoExit
+};
+ShellMenuPage shellmenuaudiopage =
+{
+	shellmenuaudioitems, SDL_arraysize(shellmenuaudioitems), ShellMenuAudioEnter, ShellMenuAudioExit
+};
+
+ShellMenu shellmenu =
+{
+	0
+};
+
+// draw options
+void RenderOptions(ShellMenu &menu, unsigned int aId, float aTime, float aPosX, float aPosY, float aAngle)
 {
 	// cursor position
 	float cursor_x = 320 - 240 * input.value[Input::AIM_HORIZONTAL];
 	float cursor_y = 240 - 240 * input.value[Input::AIM_VERTICAL];
+
+	// HACK use the main page
+	ShellMenuPage &page = *menu.mActive;
+
+	// for each option on the page...
+	for (unsigned int i = 0; i < page.mCount; ++i)
+	{
+		// get the option
+		ShellMenuItem &option = page.mOption[i];
+
+		if (option.mAction)
+		{
+			// on mouse rollover
+			if (cursor_x >= option.mButtonPos.x && cursor_x <= option.mButtonPos.x + option.mButtonSize.x &&
+				cursor_y >= option.mButtonPos.y && cursor_y <= option.mButtonPos.y + option.mButtonSize.y)
+			{
+				// mark as rollover
+				option.mState |= BUTTON_ROLLOVER;
+
+				// if mouse button pressed...
+				if (input.value[Input::FIRE_PRIMARY])
+				{
+					// mark as selected
+					option.mState |= BUTTON_SELECTED;
+				}
+				else if (option.mState & BUTTON_SELECTED)
+				{
+					// mark as not selected
+					option.mState &= ~BUTTON_SELECTED;
+
+					// perform action
+					(option.mAction)();
+				}
+			}
+			else
+			{
+				// mark as not rollover
+				option.mState &= ~BUTTON_ROLLOVER;
+
+				if (!input.value[Input::FIRE_PRIMARY])
+				{
+					// mark as not selected
+					option.mState &= ~BUTTON_SELECTED;
+				}
+			}
+		}
+
+		// render the option
+		option.Render(aId, aTime, aPosX, aPosY, aAngle);
+	}
 
 	// draw reticule (HACK)
 	glPushMatrix();
@@ -1284,6 +2719,13 @@ void RenderShellCursor(unsigned int aId, float aTime, float aPosX, float aPosY, 
 	glCallList(reticule_handle);
 	glPopMatrix();
 }
+
+// render shell options
+void RenderShellOptions(unsigned int aId, float aTime, float aPosX, float aPosY, float aAngle)
+{
+	RenderOptions(shellmenu, aId, aTime, aPosX, aPosY, aAngle);
+}
+
 
 // enter shell state
 void EnterShellState()
@@ -1305,14 +2747,11 @@ void EnterShellState()
 	sim_turn = 0;
 	sim_fraction = 1.0f;
 
-	// collidable initialization
-	Collidable::WorldInit();
-
 	// input binding
-	init_Input(INPUT_CONFIG.c_str());
+	InitInput(INPUT_CONFIG.c_str());
 
 	// level configuration
-	init_Level("shell.xml");
+	InitLevel("shell.xml");
 
 	// start audio
 	SDL_PauseAudio(0);
@@ -1324,16 +2763,12 @@ void EnterShellState()
 	title->Show();
 
 	// create options overlay
+	shellmenu.mActive = NULL;
+	shellmenu.Push(&shellmenumainpage);
 	Overlay *options = new Overlay(0xef286ca5 /* "options" */);
 	Database::overlay.Put(0xef286ca5 /* "options" */, options);
 	options->SetAction(Overlay::Action(RenderShellOptions));
 	options->Show();
-
-	// create cursor overlay
-	Overlay *cursor = new Overlay(0xe336320f /* "cursor" */);
-	Database::overlay.Put(0xe336320f /* "cursor" */, cursor);
-	cursor->SetAction(Overlay::Action(RenderShellCursor));
-	cursor->Show();
 
 	// set to runtime mode
 	runtime = true;
@@ -1352,8 +2787,6 @@ void ExitShellState()
 	Database::overlay.Delete(0x9865b509 /* "title" */);
 	delete Database::overlay.Get(0xef286ca5 /* "options" */);
 	Database::overlay.Delete(0xef286ca5 /* "options" */);
-	delete Database::overlay.Get(0xe336320f /* "cursor" */);
-	Database::overlay.Delete(0xe336320f /* "cursor" */);
 
 	// clear all databases
 	Database::Cleanup();
@@ -1370,6 +2803,106 @@ void ExitShellState()
 // PLAY STATE
 //
 
+//
+// ESCAPE MENU
+
+extern void EscapeMenuExit();
+
+void EscapeMainMenuPressContinue(void)
+{
+	EscapeMenuExit();
+}
+
+void EscapeMainMenuPressRestart(void)
+{
+	setgamestate = STATE_RELOAD;
+	EscapeMenuExit();
+}
+
+void EscapeMainMenuPressMain(void)
+{
+	setgamestate = STATE_SHELL;
+	EscapeMenuExit();
+}
+
+ShellMenuItem escapemenumainitems[] =
+{
+	{
+		Vector2( 320 - 160, 200 + 64 * 0 ),
+		Vector2( 320, 48 ),
+		optionbackcolor,
+		"CONTINUE",
+		Vector2(160, 24),
+		Vector2(0.5f, 0.5f),
+		Vector2(32, 24),
+		optionbordercolor,
+		optionlabelcolor,
+		BUTTON_NORMAL,
+		EscapeMainMenuPressContinue,
+	},
+	{
+		Vector2( 320 - 160, 200 + 64 * 1 ),
+		Vector2( 320, 48 ),
+		optionbackcolor,
+		"RESTART",
+		Vector2(160, 24),
+		Vector2(0.5f, 0.5f),
+		Vector2(32, 24),
+		optionbordercolor,
+		optionlabelcolor,
+		BUTTON_NORMAL,
+		EscapeMainMenuPressRestart,
+	},
+	{
+		Vector2( 320 - 160, 200 + 64 * 2 ),
+		Vector2( 320, 48 ),
+		optionbackcolor,
+		"OPTIONS",
+		Vector2(160, 24),
+		Vector2(0.5f, 0.5f),
+		Vector2(32, 24),
+		optionbordercolor,
+		optionlabelcolor,
+		BUTTON_NORMAL,
+		ShellMenuMainPressOptions,
+	},
+	{
+		Vector2( 320 - 160, 200 + 64 * 3 ),
+		Vector2( 320, 48 ),
+		optionbackcolor,
+		"MAIN",
+		Vector2(160, 24),
+		Vector2(0.5f, 0.5f),
+		Vector2(32, 24),
+		optionbordercolor,
+		optionlabelcolor,
+		BUTTON_NORMAL,
+		EscapeMainMenuPressMain,
+	},
+};
+
+ShellMenuPage escapemenumainpage =
+{
+	escapemenumainitems, SDL_arraysize(escapemenumainitems), NULL, NULL
+};
+
+// render shell options
+void RenderEscapeOptions(unsigned int aId, float aTime, float aPosX, float aPosY, float aAngle)
+{
+	// darken the screen
+	glColor4f(0.0f, 0.0f, 0.0f, 0.5f);
+	glBegin(GL_QUADS);
+	glVertex2f(0, 0);
+	glVertex2f(640, 0);
+	glVertex2f(640, 480);
+	glVertex2f(0, 480);
+	glEnd();
+
+	// render options
+	RenderOptions(shellmenu, aId, aTime, aPosX, aPosY, aAngle);
+}
+
+
 // drain values
 static const float DRAIN_DELAY = 1.0f;
 static const float DRAIN_RATE = 0.5f;
@@ -1378,18 +2911,26 @@ static const float DRAIN_RATE = 0.5f;
 static const int MAX_FLASH = 16;
 static const float FLASH_RATE = 2.0f;
 
-static const float healthcolor[3][4] =
+template<typename T> struct Rect
 {
-	{ 1.0f, 0.0f, 0.0f, 1.0f },
-	{ 1.0f, 1.0f, 0.0f, 0.75f },
-	{ 0.0f, 1.0f, 0.0f, 0.5f }
+	T x;
+	T y;
+	T w;
+	T h;
 };
-static const float pulsecolor[3][4] =
+
+// health gauge
+static const Rect<float> healthrect =
 {
-	{ 1.0f, 1.0f, 1.0f, 1.0f },
-	{ 1.0f, 1.0f, 0.3f, 0.75f },
-	{ 0.2f, 1.0f, 0.2f, 0.5f },
+	8, 8, 128, 8
 };
+static const Color4 healthcolor[3][2] =
+{
+	{ { 1.0f, 0.0f, 0.0f, 1.0f },  { 1.0f, 1.0f, 1.0f, 1.0f } },
+	{ { 1.0f, 1.0f, 0.0f, 0.75f }, { 1.0f, 1.0f, 0.3f, 0.75f } },
+	{ { 0.0f, 1.0f, 0.0f, 0.5f },  { 0.2f, 1.0f, 0.2f, 0.5f } },
+};
+
 
 class PlayerHUD : public Updatable, public Overlay
 {
@@ -1420,6 +2961,7 @@ public:
 
 public:
 	PlayerHUD(unsigned int aPlayerId);
+	~PlayerHUD();
 
 	void Update(float aStep);
 	void Render(unsigned int aId, float aTime, float aPosX, float aPosY, float aAngle);
@@ -1441,6 +2983,10 @@ PlayerHUD::PlayerHUD(unsigned int aPlayerId = 0)
 
 	Updatable::SetAction(Updatable::Action(this, &PlayerHUD::Update));
 	Overlay::SetAction(Overlay::Action(this, &PlayerHUD::Render));
+}
+
+PlayerHUD::~PlayerHUD()
+{
 }
 
 void PlayerHUD::Update(float aStep)
@@ -1482,8 +3028,12 @@ void PlayerHUD::Update(float aStep)
 		trackpos[1] += trackaim * VIEW_AIM;
 	}
 
+	// set camera position
+	camerapos[0] = trackpos[0];
+	camerapos[1] = trackpos[1];
+
 #ifdef TEST_PATHING
-	Pathing(entity->GetPosition(), trackpos[1] + aimpos[1] * 240 * VIEW_SIZE / 640, 4.0f);
+	Pathing(entity->GetPosition(), trackpos[1] + aimpos[1] * 120 * VIEW_SIZE / 320, 4.0f);
 #endif
 }
 
@@ -1549,44 +3099,44 @@ void PlayerHUD::Render(unsigned int aId, float aTime, float aPosX, float aPosY, 
 	int band = (health > 0.5f);
 	float ratio = health * 2.0f - band;
 
-	float fillcolor[4];
+	Color4 fillcolor;
 	for (int i = 0; i < 4; i++)
-		fillcolor[i] = Lerp(Lerp(healthcolor[band][i], healthcolor[band+1][i], ratio), Lerp(pulsecolor[band][i], pulsecolor[band+1][i], ratio), pulse);
+		fillcolor[i] = Lerp(Lerp(healthcolor[band][0][i], healthcolor[band+1][0][i], ratio), Lerp(healthcolor[band][1][i], healthcolor[band+1][1][i], ratio), pulse);
 
 	// begin drawing
 	glBegin(GL_QUADS);
 
 	// background
 	glColor4f(0.3f, 0.3f, 0.3f, 0.5f);
-	glVertex2f(8, 8);
-	glVertex2f(108, 8);
-	glVertex2f(108, 16);
-	glVertex2f(8, 16);
+	glVertex2f(healthrect.x, healthrect.y);
+	glVertex2f(healthrect.x + healthrect.w, healthrect.y);
+	glVertex2f(healthrect.x + healthrect.w, healthrect.y + healthrect.h);
+	glVertex2f(healthrect.x, healthrect.y + healthrect.h);
 
 	// drain
 	glColor4f(1.0f, 0.0f, 0.0f, 0.5f);
-	glVertex2f(8 + 100 * fill, 8);
-	glVertex2f(8 + 100 * drain, 8);
-	glVertex2f(8 + 100 * drain, 16);
-	glVertex2f(8 + 100 * fill, 16);
+	glVertex2f(healthrect.x + healthrect.w * fill, healthrect.y);
+	glVertex2f(healthrect.x + healthrect.w * drain, healthrect.y);
+	glVertex2f(healthrect.x + healthrect.w * drain, healthrect.y + healthrect.h);
+	glVertex2f(healthrect.x + healthrect.w * fill, healthrect.y + healthrect.h);
 
 	// flash
 	for (int i = 0; i < flashcount; ++i)
 	{
 		Flash &flashinfo = flash[i];
 		glColor4f(1.0f, 1.0f, 1.0f, flashinfo.fade);
-		glVertex2f(8 + 100 * flashinfo.left, 8 - 2 * flashinfo.fade);
-		glVertex2f(8 + 100 * flashinfo.right, 8 - 2 * flashinfo.fade);
-		glVertex2f(8 + 100 * flashinfo.right, 16 + 2 * flashinfo.fade);
-		glVertex2f(8 + 100 * flashinfo.left, 16 + 2 * flashinfo.fade);
+		glVertex2f(healthrect.x + healthrect.w * flashinfo.left, healthrect.y - 2 * flashinfo.fade);
+		glVertex2f(healthrect.x + healthrect.w * flashinfo.right, healthrect.y - 2 * flashinfo.fade);
+		glVertex2f(healthrect.x + healthrect.w * flashinfo.right, healthrect.y + healthrect.h + 2 * flashinfo.fade);
+		glVertex2f(healthrect.x + healthrect.w * flashinfo.left, healthrect.y + healthrect.h + 2 * flashinfo.fade);
 	}
 
 	// fill gauge
 	glColor4fv(fillcolor);
-	glVertex2f(8, 8);
-	glVertex2f(8 + 100 * fill, 8);
-	glVertex2f(8 + 100 * fill, 16);
-	glVertex2f(8, 16);
+	glVertex2f(healthrect.x, healthrect.y);
+	glVertex2f(healthrect.x + healthrect.w * fill, healthrect.y);
+	glVertex2f(healthrect.x + healthrect.w * fill, healthrect.y + healthrect.h);
+	glVertex2f(healthrect.x, healthrect.y + healthrect.h);
 
 	glEnd();
 
@@ -1685,6 +3235,14 @@ void PlayerHUD::Render(unsigned int aId, float aTime, float aPosX, float aPosY, 
 			// start a new draw list list
 			glNewList(lives_handle, GL_COMPILE_AND_EXECUTE);
 
+			// draw the player ship
+			glColor4f(0.4f, 0.5f, 1.0f, 1.0f);
+			glPushMatrix();
+			glTranslatef(healthrect.x + healthrect.w + 8, healthrect.y + 4, 0.0f);
+			glScalef(-0.5, -0.5, 1);
+			RenderDrawlist(0xeec1dafa /* "playership" */, 0.0f, 0.0f, 0.0f, 0.0f);
+			glPopMatrix();
+
 			// draw remaining lives
 			char lives[16];
 			sprintf(lives, "x%d", cur_lives);
@@ -1692,15 +3250,12 @@ void PlayerHUD::Render(unsigned int aId, float aTime, float aPosX, float aPosY, 
 			glEnable(GL_TEXTURE_2D);
 			glBindTexture(GL_TEXTURE_2D, OGLCONSOLE_glFontHandle);
 
-			glColor4f(0.4f, 0.5f, 1.0f, 1.0f);
-
 			glBegin(GL_QUADS);
-
-			float x = 116;
-			float y = 16;
-			float z = 0;
 			float w = 8;
 			float h = -8;
+			float x = healthrect.x + healthrect.w + 16;
+			float y = healthrect.y + 4 - 0.5f * h;
+			float z = 0;
 			OGLCONSOLE_DrawString(lives, x, y, w, h, z);
 
 			glEnd();
@@ -1711,10 +3266,68 @@ void PlayerHUD::Render(unsigned int aId, float aTime, float aPosX, float aPosY, 
 		}
 	}
 
-	// draw reticule
+	// get "special" ammo resource (HACK)
+
+	int cur_ammo = -1;
+	int new_ammo = INT_MAX;
+	if (Resource *specialammo = Database::resource.Get(aId).Get(0xd940d530 /* "special" */))
+	{
+		new_ammo = xs_FloorToInt(specialammo->GetValue());
+	}
+	if (new_ammo < INT_MAX)
+	{
+		// if the ammo has not changed...
+		if (new_ammo == cur_ammo && !wasreset)
+		{
+			// call the existing draw list
+			glCallList(ammo_handle);
+		}
+		else
+		{
+			// update ammo
+			cur_ammo = new_ammo;
+
+			// start a new draw list list
+			glNewList(ammo_handle, GL_COMPILE_AND_EXECUTE);
+
+			// draw the special ammo
+			glColor4f(0.4f, 0.5f, 1.0f, 1.0f);
+			glPushMatrix();
+			glTranslatef(healthrect.x + healthrect.w + 8, healthrect.y + 16, 0.0f);
+			glScalef(4, 4, 1);
+			glCallList(Database::drawlist.Get(0x8cdedbba /* "circle16" */));
+			glPopMatrix();
+
+			// draw remaining ammo
+			char ammo[16];
+			sprintf(ammo, "x%d", cur_ammo);
+
+			glEnable(GL_TEXTURE_2D);
+			glBindTexture(GL_TEXTURE_2D, OGLCONSOLE_glFontHandle);
+
+			glBegin(GL_QUADS);
+			float w = 8;
+			float h = -8;
+			float x = healthrect.x + healthrect.w + 16;
+			float y = healthrect.y + 16 - 0.5f * h;
+			float z = 0;
+			OGLCONSOLE_DrawString(ammo, x, y, w, h, z);
+
+			glEnd();
+
+			glDisable(GL_TEXTURE_2D);
+
+			glEndList();
+		}
+	}
+
+	static float gameovertimer = 0.0f;
+
+	// if tracking an active controller...
 	Controller *controller = Database::controller.Get(id);
 	if (controller)
 	{
+		// draw reticule
 		float x = 320 - 240 * Lerp(aimpos[0].x, aimpos[1].x, sim_fraction);
 		float y = 240 - 240 * Lerp(aimpos[0].y, aimpos[1].y, sim_fraction);
 
@@ -1722,29 +3335,42 @@ void PlayerHUD::Render(unsigned int aId, float aTime, float aPosX, float aPosY, 
 		glTranslatef(x, y, 0.0f);
 		glCallList(reticule_handle);
 		glPopMatrix();
+
+		gameovertimer = 0.0f;
 	}
 	else if (cur_lives <= 0)
 	{
+		// display game over
+		gameovertimer += frame_time;
+		if (gameovertimer > 1.0f)
+			gameovertimer = 1.0f;
+
 		glEnable(GL_TEXTURE_2D);
 		glBindTexture(GL_TEXTURE_2D, OGLCONSOLE_glFontHandle);
 
 
 		glBegin(GL_QUADS);
 
-		float x = 320 - 32 * 4 - 16;
-		float y = 240 - 16;
-		float z = 0;
-		float w = 32;
-		float h = -32;
+		static char *text = "GAME OVER";
+		const float w = Lerp(96, 48, gameovertimer);
+		const float h = Lerp(-64, -32, gameovertimer);
+		const float x = 320 - 0.5f * w * strlen(text);
+		const float y = 240 - 0.5f * h;
+		const float z = 0;
+		const float a = gameovertimer * gameovertimer;
 
-		glColor4f(0.0f, 0.0f, 0.0f, 1.0f);
-		OGLCONSOLE_DrawString("GAME OVER", x - 4, y, w, h, z);
-		OGLCONSOLE_DrawString("GAME OVER", x + 4, y, w, h, z);
-		OGLCONSOLE_DrawString("GAME OVER", x, y - 4, w, h, z);
-		OGLCONSOLE_DrawString("GAME OVER", x, y + 4, w, h, z);
+		glColor4f(0.1f, 0.1f, 0.1f, a);
+		OGLCONSOLE_DrawString(text, x - 2, y - 2, w, h, z);
+		OGLCONSOLE_DrawString(text, x    , y - 2, w, h, z);
+		OGLCONSOLE_DrawString(text, x + 2, y - 2, w, h, z);
+		OGLCONSOLE_DrawString(text, x - 2, y    , w, h, z);
+		OGLCONSOLE_DrawString(text, x + 2, y    , w, h, z);
+		OGLCONSOLE_DrawString(text, x - 2, y + 2, w, h, z);
+		OGLCONSOLE_DrawString(text, x    , y + 2, w, h, z);
+		OGLCONSOLE_DrawString(text, x + 2, y + 2, w, h, z);
 
-		glColor4f(1.0f, 0.9f, 0.1f, 1.0f);
-		OGLCONSOLE_DrawString("GAME OVER", x, y, w, h, z);
+		glColor4f(1.0f, 0.2f, 0.1f, a);
+		OGLCONSOLE_DrawString(text, x, y, w, h, z);
 
 		glEnd();
 
@@ -1754,14 +3380,15 @@ void PlayerHUD::Render(unsigned int aId, float aTime, float aPosX, float aPosY, 
 
 namespace Database
 {
-	Typed<PlayerHUD> playerhud(0x8e522e29 /* "playerhud" */);
+	Typed<PlayerHUD *> playerhud(0x8e522e29 /* "playerhud" */);
 }
 
 // player join
 void PlayerJoinListener(unsigned int aId)
 {
 	// create player hud overlay
-	PlayerHUD *playerhud = new (Database::playerhud.Alloc(aId)) PlayerHUD(aId);
+	PlayerHUD *playerhud = new PlayerHUD(aId);
+	Database::playerhud.Put(aId, playerhud);
 	playerhud->Activate();
 	playerhud->Show();
 }
@@ -1769,8 +3396,38 @@ void PlayerJoinListener(unsigned int aId)
 // player quit
 void PlayerQuitListener(unsigned int aId)
 {
-	// remove player hud overlay
-	Database::playerhud.Delete(aId);
+	if (PlayerHUD *playerhud = Database::playerhud.Get(aId))
+	{
+		// remove player hud overlay
+		delete playerhud;
+		Database::playerhud.Delete(aId);
+	}
+}
+
+// enter escape menu
+void EscapeMenuEnter()
+{
+	escape = true;
+	if (Overlay *overlay = Database::overlay.Get(0x9e212406 /* "escape" */))
+	{
+		for (Database::Typed<PlayerHUD *>::Iterator itor(&Database::playerhud); itor.IsValid(); ++itor)
+			itor.GetValue()->Hide();
+		shellmenu.mActive = NULL;
+		shellmenu.Push(&escapemenumainpage);
+		overlay->Show();
+	}
+}
+
+// exit escape menu
+void EscapeMenuExit()
+{
+	if (Overlay *overlay = Database::overlay.Get(0x9e212406 /* "escape" */))
+	{
+		for (Database::Typed<PlayerHUD *>::Iterator itor(&Database::playerhud); itor.IsValid(); ++itor)
+			itor.GetValue()->Show();
+		overlay->Hide();
+	}
+	escape = false;
 }
 
 // enter play state
@@ -1787,20 +3444,20 @@ void EnterPlayState()
 	// show the screen
 	SDL_GL_SwapBuffers();
 
+	// reset camera position
+	camerapos[0] = camerapos[1] = Vector2(0, 0);
+
 	// reset simulation timer
 	sim_rate = float(SIMULATION_RATE);
 	sim_step = 1.0f / sim_rate;
 	sim_turn = 0;
 	sim_fraction = 1.0f;
 
-	// collidable initialization
-	Collidable::WorldInit();
-
 	// input binding
-	init_Input(INPUT_CONFIG.c_str());
+	InitInput(INPUT_CONFIG.c_str());
 
 	// level configuration
-	if (!init_Level(LEVEL_CONFIG.c_str()))
+	if (!InitLevel(LEVEL_CONFIG.c_str()))
 		setgamestate = STATE_SHELL;
 
 	// start audio
@@ -1811,6 +3468,11 @@ void EnterPlayState()
 
 	// add a quit listener
 	Database::playerquit.Put(0xe28d61c6 /* "hud" */, PlayerQuitListener);
+
+	// create escape overlay
+	Overlay *escape = new Overlay(0x9e212406 /* "escape" */);
+	Database::overlay.Put(0x9e212406 /* "escape" */, escape);
+	escape->SetAction(Overlay::Action(RenderEscapeOptions));
 
 	// allocate score draw list
 	score_handle = glGenLists(1);
@@ -1835,6 +3497,10 @@ void ExitPlayState()
 
 	// stop any startup sound (HACK)
 	StopSound(0x94326baa /* "startup" */);
+
+	// delete escape overlay
+	delete Database::overlay.Get(0x9e212406 /* "escape" */);
+	Database::overlay.Delete(0x9e212406 /* "escape" */);
 
 	// clear all databases
 	Database::Cleanup();
@@ -1883,6 +3549,7 @@ void RunState()
 	LONGLONG collide_time[NUM_SAMPLES] = { 0 };
 	LONGLONG update_time[NUM_SAMPLES] = { 0 };
 	LONGLONG render_time[NUM_SAMPLES] = { 0 };
+	LONGLONG overlay_time[NUM_SAMPLES] = { 0 };
 	LONGLONG display_time[NUM_SAMPLES] = { 0 };
 	LONGLONG total_time[NUM_SAMPLES] = { 0 };
 	int profile_index = -1;
@@ -1909,6 +3576,7 @@ void RunState()
 		collide_time[profile_index] = 0;
 		update_time[profile_index] = 0;
 		render_time[profile_index] = 0;
+		overlay_time[profile_index] = 0;
 		display_time[profile_index] = 0;
 		total_time[profile_index] = 0;
 #endif
@@ -1921,25 +3589,37 @@ void RunState()
 		// process events
 		while( SDL_PollEvent( &event ) )
 		{
-			/* Give the console first dibs on event processing */                                    
-            if (OGLCONSOLE_SDLEvent(&event))
+			/* Give the console first dibs on event processing */
+			if (OGLCONSOLE_SDLEvent(&event))
 				continue;
 
 			switch (event.type)
 			{
 			case SDL_KEYDOWN:
 				input.OnPress( Input::TYPE_KEYBOARD, event.key.which, event.key.keysym.sym );
-				if ((event.key.keysym.sym == SDLK_F4) && (event.key.keysym.mod & KMOD_ALT))
+				switch (event.key.keysym.sym)
 				{
-					setgamestate = STATE_QUIT;
-				}
-				if ((event.key.keysym.sym == SDLK_RETURN) && (event.key.keysym.mod & KMOD_ALT))
-				{
-					SCREEN_FULLSCREEN = !SCREEN_FULLSCREEN;
-					init_Window();
-				}
-				else if (event.key.keysym.sym == SDLK_PAUSE)
-				{
+				case SDLK_F4:
+					if (event.key.keysym.mod & KMOD_ALT)
+						setgamestate = STATE_QUIT;
+					break;
+				case SDLK_RETURN:
+					if (event.key.keysym.mod & KMOD_ALT)
+					{
+						SCREEN_FULLSCREEN = !SCREEN_FULLSCREEN;
+						init_Window();
+					}
+					break;
+				case SDLK_ESCAPE:
+					if (curgamestate == STATE_PLAY)
+					{
+						if (escape)
+							EscapeMenuExit();
+						else
+							EscapeMenuEnter();
+					}
+					break;
+				case SDLK_PAUSE:
 					if (event.key.keysym.mod & KMOD_SHIFT)
 					{
 						paused = true;
@@ -1952,6 +3632,7 @@ void RunState()
 					SDL_ShowCursor(paused || !reticule_handle ? SDL_ENABLE : SDL_DISABLE);
 					SDL_WM_GrabInput(paused ? SDL_GRAB_OFF : SDL_GRAB_ON);
 					SDL_PauseAudio(paused);
+					break;
 				}
 				break;
 			case SDL_KEYUP:
@@ -1996,20 +3677,15 @@ void RunState()
 		// frame time and turns
 		if (singlestep)
 		{
-			singlestep = false;
-
 			// advance 1/60th of a second
 			frame_time = TIME_SCALE / 60.0f;
 			frame_turns = frame_time * sim_rate;
 		}
-		else if (paused)
+		else if (paused || escape)
 		{
 			// freeze time
 			frame_time = 0.0f;
 			frame_turns = 0.0f;
-
-			// set turn counter to almost reach a new turn
-			sim_fraction = 0.99609375f;
 		}
 		else if (FIXED_STEP)
 		{
@@ -2025,7 +3701,7 @@ void RunState()
 		}
 
 		// turns per motion-blur step
-		float step_turns = std::min(TIME_SCALE * MOTIONBLUR_TIME, sim_step) / MOTIONBLUR_STEPS * sim_rate;
+		float step_turns = std::min(TIME_SCALE * MOTIONBLUR_TIME * sim_rate, 1.0f) / MOTIONBLUR_STEPS;
 
 		// advance to beginning of motion blur steps
 		sim_fraction += frame_turns;
@@ -2056,17 +3732,35 @@ void RunState()
 			// advance the sim timer
 			sim_fraction += step_turns;
 
-			// while simulation turns to run...
-			while (sim_fraction >= 1.0f)
+			if (escape)
 			{
+				input.Update();
+				input.Step();
+			}
+			// while simulation turns to run...
+			else while ((singlestep || !paused) && sim_fraction >= 1.0f)
+			{
+				// deduct a turn
+				sim_fraction -= 1.0f;
+				
+				// advance the turn counter
+				++sim_turn;
+
+				// save original fraction
+				float save_fraction = sim_fraction;
+
+				// switch fraction to simulation mode
+				sim_fraction = 0.0f;
+
 #ifdef COLLECT_DEBUG_DRAW
 				// collect any debug draw
 				glNewList(debugdraw, GL_COMPILE);
 #endif
 
-				// deduct a turn
-				sim_fraction -= 1.0f;
-				
+				// seed the random number generator
+				randlongseed = sim_turn;
+				(void)RandLong();
+
 				// update database
 				Database::Update();
 
@@ -2138,6 +3832,9 @@ void RunState()
 					input.Update();
 				}
 
+				// do any pending turn actions
+				DoTurn();
+
 
 				// CONTROL PHASE
 
@@ -2188,14 +3885,21 @@ void RunState()
 				// step inputs for next turn
 				input.Step();
 
-				// advance the turn counter
-				++sim_turn;
-
 #ifdef COLLECT_DEBUG_DRAW
 				// finish the draw list
 				glEndList();
 #endif
+				
+				// restore original fraction
+				sim_fraction = save_fraction;
 			}
+
+			// clear single-step
+			singlestep = false;
+
+			// seed the random number generator
+			randlongseed = sim_turn ^ *(unsigned long *)&sim_fraction;
+			(void)RandLong();
 
 #ifdef PRINT_SIMULATION_TIMER
 			DebugPrint("delta=%d ticks=%d sim_t=%f\n", delta, ticks, sim_fraction);
@@ -2211,12 +3915,8 @@ void RunState()
 			// push camera transform
 			glPushMatrix();
 
-			// get the first player hud overlay (HACK)
-			Database::Typed<PlayerHUD>::Iterator playerhuditor(&Database::playerhud);
-			const PlayerHUD &playerhud = playerhuditor.GetValue();
-
 			// get interpolated track position
-			Vector2 viewpos(Lerp(playerhud.trackpos[0].x, playerhud.trackpos[1].x, sim_fraction), Lerp(playerhud.trackpos[0].y, playerhud.trackpos[1].y, sim_fraction));
+			Vector2 viewpos(Lerp(camerapos[0].x, camerapos[1].x, sim_fraction), Lerp(camerapos[0].y, camerapos[1].y, sim_fraction));
 
 			// set view position
 			glTranslatef( -viewpos.x, -viewpos.y, 0 );
@@ -2265,16 +3965,18 @@ void RunState()
 		glPushAttrib(GL_COLOR_BUFFER_BIT | GL_TEXTURE_BIT);
 		glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
 
+#ifdef GET_PERFORMANCE_DETAILS
+		LARGE_INTEGER perf_count1;
+		QueryPerformanceCounter(&perf_count1);
+		render_time[profile_index] += perf_count1.QuadPart - perf_count0.QuadPart;
+#endif
+
 #ifdef COLLECT_DEBUG_DRAW
 		// push camera transform
 		glPushMatrix();
 
-		// get the first player hud overlay (HACK)
-		Database::Typed<PlayerHUD>::Iterator playerhuditor(&Database::playerhud);
-		const PlayerHUD &playerhud = playerhuditor.GetValue();
-
 		// get interpolated track position
-		Vector2 viewpos(Lerp(playerhud.trackpos[0].x, playerhud.trackpos[1].x, sim_fraction), Lerp(playerhud.trackpos[0].y, playerhud.trackpos[1].y, sim_fraction));
+		Vector2 viewpos(Lerp(camerapos[0].x, camerapos[1].x, sim_fraction), Lerp(camerapos[0].y, camerapos[1].y, sim_fraction));
 
 		// set camera to track position
 		glTranslatef( -viewpos.x, -viewpos.y, 0 );
@@ -2301,18 +4003,18 @@ void RunState()
 		Overlay::RenderAll();
 
 #ifdef GET_PERFORMANCE_DETAILS
+		LARGE_INTEGER perf_count2;
+		QueryPerformanceCounter(&perf_count2);
+		overlay_time[profile_index] += perf_count2.QuadPart - perf_count1.QuadPart;
+
 		if (!OPENGL_SWAPCONTROL)
 		{
-			LARGE_INTEGER perf_count1;
-			QueryPerformanceCounter(&perf_count1);
-			render_time[profile_index] += perf_count1.QuadPart - perf_count0.QuadPart;
-
 			// wait for rendering to finish
 			glFinish();
 
-			LARGE_INTEGER perf_count2;
-			QueryPerformanceCounter(&perf_count2);
-			display_time[profile_index] += perf_count2.QuadPart - perf_count1.QuadPart;
+			LARGE_INTEGER perf_count3;
+			QueryPerformanceCounter(&perf_count3);
+			display_time[profile_index] += perf_count3.QuadPart - perf_count2.QuadPart;
 		}
 		else
 		{
@@ -2331,24 +4033,25 @@ void RunState()
 				float b;
 				float a;
 			};
-			static BandInfo band_info[6] =
+			static BandInfo band_info[] =
 			{
 				{ control_time,		1.0f,	0.0f,	0.0f,	0.5f },
 				{ simulate_time,	1.0f,	1.0f,	0.0f,	0.5f },
 				{ collide_time,		0.0f,	1.0f,	0.0f,	0.5f },
 				{ update_time,		0.0f,	0.5f,	1.0f,	0.5f },
 				{ render_time,		1.0f,	0.0f,	1.0f,	0.5f },
+				{ overlay_time,		1.0f,	0.5f,	0.0f,	0.5f },
 				{ display_time,		0.5f,	0.5f,	0.5f,	0.5f },
 			};
 
 			// generate y samples
-			float sample_y[7][NUM_SAMPLES];
+			float sample_y[SDL_arraysize(band_info)+1][NUM_SAMPLES];
 			int index = profile_index;
 			for (int i = 0; i < NUM_SAMPLES; ++i)
 			{
 				float y = 480.0f;
 				sample_y[0][i] = y;
-				for (int band = 0; band < 6; ++band)
+				for (int band = 0; band < SDL_arraysize(band_info); ++band)
 				{
 					y -= 60.0f * 480.0f * band_info[band].time[index] / perf_freq.QuadPart;
 					sample_y[band+1][i] = y;
@@ -2358,7 +4061,7 @@ void RunState()
 			}
 
 			glBegin(GL_QUADS);
-			for (int band = 0; band < 6; ++band)
+			for (int band = 0; band < SDL_arraysize(band_info); ++band)
 			{
 				glColor4fv(&band_info[band].r);
 				float x = 0;
@@ -2379,12 +4082,13 @@ void RunState()
 #ifdef PRINT_PERFORMANCE_DETAILS
 		if (PROFILER_OUTPUTPRINT)
 		{
-			DebugPrint("C=%d S=%d P=%d U=%d R=%d D=%d\n",
+			DebugPrint("C=%d S=%d P=%d U=%d R=%d O=%d D=%d\n",
 				1000000 * control_time[profile_index] / perf_freq.QuadPart,
 				1000000 * simulate_time[profile_index] / perf_freq.QuadPart,
 				1000000 * collide_time[profile_index] / perf_freq.QuadPart,
 				1000000 * update_time[profile_index] / perf_freq.QuadPart,
 				1000000 * render_time[profile_index] / perf_freq.QuadPart,
+				1000000 * overlay_time[profile_index] / perf_freq.QuadPart,
 				1000000 * display_time[profile_index] / perf_freq.QuadPart);
 		}
 #endif
@@ -2416,6 +4120,7 @@ void RunState()
 			total_sum /= total_samples;
 
 			// compute frame rates
+
 			double rate_max = (double)perf_freq.QuadPart / total_min;
 			double rate_avg = (double)perf_freq.QuadPart / total_sum;
 			double rate_min = (double)perf_freq.QuadPart / total_max;
@@ -2468,14 +4173,14 @@ void RunState()
 		/* Render our console */
 		OGLCONSOLE_Draw();
 
+		// show the screen
+		SDL_GL_SwapBuffers();
+
 #ifdef GET_PERFORMANCE_DETAILS
 		if (OPENGL_SWAPCONTROL)
 #endif
 		// wait for rendering to finish
 		glFinish();
-
-		// show the screen
-		SDL_GL_SwapBuffers();
 
 		// clear device reset flag
 		wasreset = false;
@@ -2487,4 +4192,13 @@ void RunState()
 		// save input log
 		inputlog.SaveFile();
 	}
+}
+
+
+//
+// RELOAD STATE
+
+void ReloadState()
+{
+	setgamestate = STATE_PLAY;
 }

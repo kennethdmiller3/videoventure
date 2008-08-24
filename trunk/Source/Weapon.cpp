@@ -6,6 +6,7 @@
 #include "Link.h"
 #include "Renderable.h"
 #include "Sound.h"
+#include "Resource.h"
 
 
 #ifdef USE_POOL_ALLOCATOR
@@ -24,10 +25,46 @@ void Weapon::operator delete(void *aPtr)
 #endif
 
 
+class WeaponTracker
+{
+public:
+	unsigned int mId;
+
+	WeaponTracker(unsigned int aId = 0)
+		: mId(aId)
+	{
+		if (Weapon *weapon = Database::weapon.Get(mId))
+			weapon->Track(1);
+	}
+
+	WeaponTracker(const WeaponTracker &aSource)
+		: mId(aSource.mId)
+	{
+		if (Weapon *weapon = Database::weapon.Get(mId))
+			weapon->Track(1);
+	}
+
+	~WeaponTracker()
+	{
+		if (Weapon *weapon = Database::weapon.Get(mId))
+			weapon->Track(-1);
+	}
+
+	const WeaponTracker &operator=(const WeaponTracker &aSource)
+	{
+		if (Weapon *weapon = Database::weapon.Get(mId))
+			weapon->Track(-1);
+		if (Weapon *weapon = Database::weapon.Get(mId))
+			weapon->Track(1);
+		return *this;
+	}
+};
+
 namespace Database
 {
 	Typed<WeaponTemplate> weapontemplate(0xb1050fa7 /* "weapontemplate" */);
 	Typed<Weapon *> weapon(0x6f332041 /* "weapon" */);
+	Typed<WeaponTracker> weapontracker(0x49c0728f /* "weapontracker" */);
 
 	namespace Loader
 	{
@@ -98,10 +135,14 @@ WeaponTemplate::WeaponTemplate(void)
 , mInherit(1, 1)
 , mVelocity(0, 0)
 , mOrdnance(0)
+, mFlash(0)
 , mChannel(0)
 , mDelay(1.0f)
 , mPhase(0)
 , mCycle(1)
+, mTrack(0)
+, mType(0U)
+, mCost(0.0f)
 {
 }
 
@@ -168,6 +209,15 @@ bool WeaponTemplate::Configure(const TiXmlElement *element)
 				child->QueryFloatAttribute("delay", &mDelay);
 				child->QueryIntAttribute("phase", &mPhase);
 				child->QueryIntAttribute("cycle", &mCycle);
+				child->QueryIntAttribute("track", &mTrack);
+			}
+			break;
+
+		case 0x5b9b0daf /* "ammo" */:
+			{
+				if (const char *type = child->Attribute("type"))
+					mType = Hash(type);
+				child->QueryFloatAttribute("cost", &mCost);
 			}
 			break;
 		}
@@ -181,6 +231,7 @@ Weapon::Weapon(void)
 : Updatable(0)
 , mControlId(0)
 , mChannel(0)
+, mTrack(0)
 , mTimer(0.0f)
 , mPhase(0)
 {
@@ -191,10 +242,41 @@ Weapon::Weapon(const WeaponTemplate &aTemplate, unsigned int aId)
 : Updatable(aId)
 , mControlId(0)
 , mChannel(aTemplate.mChannel)
+, mTrack(0)
 , mTimer(0.0f)
 , mPhase(aTemplate.mPhase)
+, mAmmo(0)
 {
 	SetAction(Action(this, &Weapon::Update));
+
+	// if the weapon uses ammo...
+	if (aTemplate.mCost)
+	{
+		// check the weapon and backlinks
+		for (unsigned int aId = mId; aId; aId = Database::backlink.Get(aId))
+		{
+			// if the entity has a matching resource...
+			if (Database::resource.Get(aId).Get(aTemplate.mType))
+			{
+				// use that
+				mAmmo = aId;
+			}
+		}
+
+		// if no ammo found
+		if (!mAmmo)
+		{
+			// get the owner (player)
+			unsigned int owner = Database::owner.Get(mId);
+
+			// if the owner has a matching resource...
+			if (Database::resource.Get(owner).Get(aTemplate.mType))
+			{
+				// use that
+				mAmmo = owner;
+			}
+		}
+	}
 }
 
 Weapon::~Weapon(void)
@@ -225,11 +307,48 @@ void Weapon::Update(float aStep)
 		const WeaponTemplate &weapon = Database::weapontemplate.Get(mId);
 
 		// if ready to fire...
-		while (mTimer > 0.0f)
+		while (mTimer > 0.0f && (!weapon.mTrack || mTrack < weapon.mTrack))
 		{
+			Resource *resource = NULL;
+
+			// if using ammo
+			if (weapon.mCost)
+			{
+				// ammo resource (if any)
+				resource = Database::resource.Get(mId).Get(mAmmo);
+			}
+
+			// don't fire if out of ammo
+			if (resource && weapon.mCost > resource->GetValue())
+				break;
+
+			// if the weapon uses ammo...
+			if (weapon.mCost)
+			{
+				// find ammo resource
+				for (unsigned int aId = mId; aId; aId = Database::backlink.Get(aId))
+				{
+					resource = Database::resource.Get(aId).Get(weapon.mType);
+					if (resource)
+						break;
+				}
+
+				// check owner if not found
+				if (!resource)
+					resource = Database::resource.Get(Database::owner.Get(mId)).Get(weapon.mType);
+
+				// don't fire if out of ammo
+				if (resource && weapon.mCost > resource->GetValue())
+					break;
+			}
+
 			// if firing on this phase...
 			if (mPhase == 0)
 			{
+				// deduct ammo
+				if (resource)
+					resource->Add(mId, -weapon.mCost);
+
 				// get the entity
 				Entity *entity = Database::entity.Get(mId);
 
@@ -271,6 +390,13 @@ void Weapon::Update(float aStep)
 					// set fractional turn
 					if (Renderable *renderable = Database::renderable.Get(ordId))
 						renderable->SetFraction(mTimer / aStep);
+
+					// if tracking....
+					if (weapon.mTrack)
+					{
+						// add a tracker
+						Database::weapontracker.Put(ordId, WeaponTracker(mId));
+					}
 				}
 
 				// wrap around
