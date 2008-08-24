@@ -2953,6 +2953,7 @@ public:
 	int flashcount;
 
 	// camera values
+	unsigned int trackid;
 	Vector2 trackpos[2];
 	Vector2 trackaim;
 
@@ -2975,6 +2976,7 @@ PlayerHUD::PlayerHUD(unsigned int aPlayerId = 0)
 	, draindelay(0)
 	, flashcount(0)
 {
+	trackid = 0;
 	trackpos[0] = Vector2(0, 0);
 	trackpos[1] = Vector2(0, 0);
 	trackaim = Vector2(0, 0);
@@ -3026,6 +3028,14 @@ void PlayerHUD::Update(float aStep)
 		if (trackdelta.LengthSq() > FLT_EPSILON)
 			trackaim += VIEW_AIM_FILTER * sim_step * trackdelta;
 		trackpos[1] += trackaim * VIEW_AIM;
+	}
+
+	// if the tracked identifier changes...
+	if (trackid != id)
+	{
+		// snap position
+		trackid = id;
+		trackpos[0] = trackpos[1];
 	}
 
 	// set camera position

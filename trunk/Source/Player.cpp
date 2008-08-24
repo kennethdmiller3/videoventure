@@ -9,6 +9,7 @@
 #include "Sound.h"
 
 #include "Ship.h"
+#include "Resource.h"
 
 #include "Overlay.h"
 
@@ -368,6 +369,10 @@ void Player::GotKill(unsigned int aId, unsigned int aKillId)
 		{
 			// add any extra lives
 			mLives += extra;
+
+			// add any extra bombs (HACK)
+			if (Resource *resource = Database::resource.Get(mId).Get(0xd940d530 /* "special" */))
+				resource->Add(mId, float(extra));
 
 			// trigger sound cue
 			PlaySound(mAttach, 0x62b13a2b /* "extralife" */);
