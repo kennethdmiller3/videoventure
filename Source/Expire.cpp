@@ -179,7 +179,7 @@ void Expire::Update(float aStep)
 {
 	// skip if not expired...
 	float t = int(sim_turn - mTurn) + sim_fraction - mFraction;
-	if (t <= 0.0f)
+	if (t < 0.0f)
 		return;
 
 	// if spawning on expire...
