@@ -449,12 +449,14 @@ void PlayerController::Control(float aStep)
 		bool alignfacing = Database::playercontrollertemplate.Get(mId);
 		const Vector2 face(alignfacing ? mMove : mAim * 0.0625);
 		float aim_angle = -std::min(face.LengthSq(), 1.0f) * atan2f(face.x, face.y);
-		mTurn = std::min(std::max(aim_angle / (ship.mMaxOmega * aStep), -1.0f), 1.0f);
+		mTurn = Clamp(aim_angle / (ship.mMaxOmega * aStep), -1.0f, 1.0f);
 	}
 
 	// set fire input
 	mFire[0] = input[Input::FIRE_PRIMARY] != 0.0f;
 	mFire[1] = input[Input::FIRE_SECONDARY] != 0.0f;
+	mFire[2] = input[Input::FIRE_CHANNEL3] != 0.0f;
+	mFire[3] = input[Input::FIRE_CHANNEL4] != 0.0f;
 }
 
 

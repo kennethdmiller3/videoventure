@@ -159,7 +159,7 @@ SoundTemplate::SoundTemplate(const SoundTemplate &aTemplate)
 , mVolume(aTemplate.mVolume)
 , mRepeat(aTemplate.mRepeat)
 {
-	memcpy(mData, aTemplate.mData, mLength);
+	memcpy(mData, aTemplate.mData, mSize);
 }
 
 SoundTemplate::~SoundTemplate(void)
@@ -334,7 +334,7 @@ bool SoundTemplate::ConfigureSample(const TiXmlElement *element, unsigned int id
 		}
 
 		// append sample
-		short sample = short(std::min(std::max(xs_RoundToInt(accum * 32767.0f / oversample), SHRT_MIN), SHRT_MAX));
+		short sample = short(Clamp(xs_RoundToInt(accum * 32767.0f / oversample), SHRT_MIN, SHRT_MAX));
 		mData[mLength++] = sample;
 	}
 
@@ -627,7 +627,7 @@ bool SoundTemplate::ConfigurePokey(const TiXmlElement *element, unsigned int id)
 		}
 
 		// append sample
-		short sample = short(std::min(std::max(xs_RoundToInt(accum * 32767.0f / oversample), SHRT_MIN), SHRT_MAX));
+		short sample = short(Clamp(xs_RoundToInt(accum * 32767.0f / oversample), SHRT_MIN, SHRT_MAX));
 		mData[mLength++] = sample;
 	}
 

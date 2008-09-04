@@ -1211,9 +1211,9 @@ void HSV2RGB(float h, float s, float v, float &r, float &g, float &b)
 #else
 	// http://www.xmission.com/~trevin/atari/video_notes.html
 	const float Y = 0.7f, S = 0.7f, theta = float(M_PI) - float(M_PI) * (sim_turn & 63) / 32.0f;
-	float R = std::min(std::max(Y + S * sin(theta), 0.0f), 1.0f);
-	float G = std::min(std::max(Y - (27/53) * S * sin(theta) - (10/53) * S * cos(theta), 0.0f), 1.0f);
-	float B = std::min(std::max(Y + S * cos(theta), 0.0f), 1.0f);
+	float R = Clamp(Y + S * sin(theta), 0.0f, 1.0f);
+	float G = Clamp(Y - (27/53) * S * sin(theta) - (10/53) * S * cos(theta), 0.0f, 1.0f);
+	float B = Clamp(Y + S * cos(theta), 0.0f, 1.0f);
 #endif
 }
 
@@ -3815,6 +3815,8 @@ void RunState()
 						inputlognext->QueryIntAttribute("aim_y", reinterpret_cast<int *>(&input.output[Input::AIM_VERTICAL]));
 						inputlognext->QueryIntAttribute("fire1", reinterpret_cast<int *>(&input.output[Input::FIRE_PRIMARY]));
 						inputlognext->QueryIntAttribute("fire2", reinterpret_cast<int *>(&input.output[Input::FIRE_SECONDARY]));
+						inputlognext->QueryIntAttribute("fire3", reinterpret_cast<int *>(&input.output[Input::FIRE_CHANNEL3]));
+						inputlognext->QueryIntAttribute("fire4", reinterpret_cast<int *>(&input.output[Input::FIRE_CHANNEL4]));
 
 						// go to the next entry
 						inputlognext = inputlognext->NextSiblingElement();
@@ -3849,6 +3851,10 @@ void RunState()
 							item.SetAttribute( "fire1", *reinterpret_cast<int *>(&input.output[Input::FIRE_PRIMARY]));
 						if (input.output[Input::FIRE_SECONDARY] != prev[Input::FIRE_SECONDARY])
 							item.SetAttribute( "fire2", *reinterpret_cast<int *>(&input.output[Input::FIRE_SECONDARY]));
+						if (input.output[Input::FIRE_CHANNEL3] != prev[Input::FIRE_CHANNEL3])
+							item.SetAttribute( "fire3", *reinterpret_cast<int *>(&input.output[Input::FIRE_CHANNEL3]));
+						if (input.output[Input::FIRE_CHANNEL4] != prev[Input::FIRE_CHANNEL4])
+							item.SetAttribute( "fire4", *reinterpret_cast<int *>(&input.output[Input::FIRE_CHANNEL4]));
 
 						// add the new input entry
 						inputlogroot->InsertEndChild(item);

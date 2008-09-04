@@ -426,7 +426,7 @@ void Aimer::Control(float aStep)
 				if (ship.mMaxOmega != 0.0f)
 				{
 					float aim_angle = -atan2f(localDir.x, localDir.y);
-					mTurn += aimer.mAim * std::min(std::max(aim_angle / (ship.mMaxOmega * aStep), -1.0f), 1.0f);
+					mTurn += aimer.mAim * Clamp(aim_angle / (ship.mMaxOmega * aStep), -1.0f, 1.0f);
 				}
 			}
 
@@ -544,7 +544,7 @@ void Aimer::Control(float aStep)
 	mMove = transform.Unrotate(mMove);
 
 	// limit turn to 100%
-	mTurn = std::min(std::max(mTurn, -1.0f), 1.0f);
+	mTurn = Clamp(mTurn, -1.0f, 1.0f);
 
 #ifdef AIMER_DEBUG_DRAW_CONTROLS
 	glColor4f(1.0f, 0.0f, 1.0f, 1.0f);
