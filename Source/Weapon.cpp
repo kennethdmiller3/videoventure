@@ -134,6 +134,8 @@ WeaponTemplate::WeaponTemplate(void)
 : mOffset(Vector2(1, 0), Vector2(0, 1), Vector2(0, 0))
 , mInherit(1, 1)
 , mVelocity(0, 0)
+, mScatter(0, 0)
+, mSpread(0)
 , mOrdnance(0)
 , mFlash(0)
 , mChannel(0)
@@ -179,6 +181,15 @@ bool WeaponTemplate::Configure(const TiXmlElement *element)
 			{
 				child->QueryFloatAttribute("x", &mVelocity.x);
 				child->QueryFloatAttribute("y", &mVelocity.y);
+			}
+			break;
+
+		case 0xcab7a341 /* "scatter" */:
+			{
+				child->QueryFloatAttribute("x", &mScatter.x);
+				child->QueryFloatAttribute("y", &mScatter.y);
+				if (child->QueryFloatAttribute("angle", &mSpread) == TIXML_SUCCESS)
+					mSpread *= float(M_PI) / 180.0f;
 			}
 			break;
 
@@ -311,17 +322,6 @@ void Weapon::Update(float aStep)
 		{
 			Resource *resource = NULL;
 
-			// if using ammo
-			if (weapon.mCost)
-			{
-				// ammo resource (if any)
-				resource = Database::resource.Get(mId).Get(mAmmo);
-			}
-
-			// don't fire if out of ammo
-			if (resource && weapon.mCost > resource->GetValue())
-				break;
-
 			// if the weapon uses ammo...
 			if (weapon.mCost)
 			{
@@ -383,9 +383,17 @@ void Weapon::Update(float aStep)
 				if (weapon.mOrdnance)
 				{
 					// instantiate a bullet
-					Vector2 velocity(transform.Rotate(weapon.mInherit * transform.Unrotate(entity->GetVelocity()) + weapon.mVelocity));
-					unsigned int ordId = Database::Instantiate(weapon.mOrdnance, Database::owner.Get(mId), 
-						transform.Angle(), transform.p, velocity, 0);
+					if (weapon.mSpread)
+						transform = Matrix2(transform.Angle() + weapon.mSpread * (RandFloat() - RandFloat()), transform.p);
+					const Vector2 inheritvelocity(weapon.mInherit * transform.Unrotate(entity->GetVelocity()));
+					const Vector2 scattervelocity(weapon.mScatter.x ? weapon.mScatter.x * (RandFloat() - RandFloat()) : 0, weapon.mScatter.y ? weapon.mScatter.y * (RandFloat() - RandFloat()) : 0);
+					const Vector2 velocity(transform.Rotate(weapon.mVelocity + inheritvelocity + scattervelocity));
+					unsigned int ordId = Database::Instantiate(weapon.mOrdnance, Database::owner.Get(mId), transform.Angle(), transform.p, velocity, 0);
+#ifdef DEBUG_WEAPON_CREATE_ORDNANCE
+					DebugPrint("ordnance=\"%s\" owner=\"%s\"\n",
+						Database::name.Get(ordId).c_str(),
+						Database::name.Get(Database::owner.Get(ordId)).c_str());
+#endif
 
 					// set fractional turn
 					if (Renderable *renderable = Database::renderable.Get(ordId))

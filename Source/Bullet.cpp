@@ -228,6 +228,14 @@ void Bullet::Collide(unsigned int aId, unsigned int aHitId, float aFraction, con
 			if (damagable)
 			{
 				// apply damage value
+#ifdef DEBUG_BULLET_APPLY_DAMAGE
+				DebugPrint("bullet=\"%s\" owner=\"%s\" hit=\"%s\" damage=%f\n",
+					Database::name.Get(mId).c_str(), 
+					Database::name.Get(Database::owner.Get(mId)).c_str(),
+					Database::name.Get(aHitId).c_str(),
+					bullet.mDamage
+					);
+#endif
 				damagable->Damage(mId, bullet.mDamage);
 				mDestroy = true;
 			}
@@ -250,6 +258,14 @@ void Bullet::Collide(unsigned int aId, unsigned int aHitId, float aFraction, con
 					if (curhealth < maxhealth)
 					{
 						// apply healing value
+#ifdef DEBUG_BULLET_APPLY_DAMAGE
+						DebugPrint("bullet=\"%s\" owner=\"%s\" hit=\"%s\" damage=%f\n",
+							Database::name.Get(mId).c_str(), 
+							Database::name.Get(Database::owner.Get(mId)).c_str(),
+							Database::name.Get(aHitId).c_str(),
+							bullet.mDamage
+							);
+#endif
 						damagable->Damage(mId, std::max(bullet.mDamage, curhealth - maxhealth));
 						mDestroy = true;
 						break;

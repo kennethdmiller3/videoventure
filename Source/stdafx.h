@@ -67,9 +67,9 @@ inline float InvSqrt(float x)
 }
 
 // linear interpolation
-inline float Lerp(float v0, float v1, float s)
+template<typename T> inline const T Lerp(T v0, T v1, float s)
 {
-	return v0 + (v1 - v0) * s;
+	return (1 - s) * v0 + s * v1;
 }
 
 // random unsigned long

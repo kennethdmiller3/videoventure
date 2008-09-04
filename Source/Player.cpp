@@ -79,7 +79,9 @@ namespace Database
 			void Configure(unsigned int aId, const TiXmlElement *element)
 			{
 				bool &playercontroller = Database::playercontrollertemplate.Open(aId);
-				playercontroller = true;
+				int value = playercontroller;
+				if (element->QueryIntAttribute("alignmove", &value) == TIXML_SUCCESS)
+					playercontroller = value != 0;
 				Database::playercontrollertemplate.Close(aId);
 			}
 		}
@@ -263,7 +265,7 @@ void Player::Update(float aStep)
 		else
 		{
 			// detach
-			Detach();
+			Detach(mAttach);
 		}
 	}
 
@@ -278,6 +280,10 @@ void Player::Update(float aStep)
 // player attach
 void Player::Attach(unsigned int aAttach)
 {
+	// do nothing if attached
+	if (mAttach)
+		return;
+
 	// attach to entity
 	mAttach = aAttach;
 
@@ -290,10 +296,10 @@ void Player::Attach(unsigned int aAttach)
 }
 
 // player detach
-void Player::Detach(void)
+void Player::Detach(unsigned int aAttach)
 {
 	// do nothing if not attached
-	if (!mAttach)
+	if (!mAttach || mAttach != aAttach)
 		return;
 
 	// remove any death listener
@@ -407,7 +413,7 @@ PlayerController::~PlayerController(void)
 	unsigned int aOwnerId = Database::owner.Get(mId);
 	if (Player *player = Database::player.Get(aOwnerId))
 	{
-		player->Detach();
+		player->Detach(mId);
 	}
 
 }
@@ -440,7 +446,9 @@ void PlayerController::Control(float aStep)
 	const ShipTemplate &ship = Database::shiptemplate.Get(mId);	// <-- hack!
 	if (ship.mMaxOmega != 0.0f)
 	{
-		float aim_angle = -atan2f(mAim.x, mAim.y);
+		bool alignfacing = Database::playercontrollertemplate.Get(mId);
+		const Vector2 face(alignfacing ? mMove : mAim * 0.0625);
+		float aim_angle = -std::min(face.LengthSq(), 1.0f) * atan2f(face.x, face.y);
 		mTurn = std::min(std::max(aim_angle / (ship.mMaxOmega * aStep), -1.0f), 1.0f);
 	}
 
@@ -504,7 +512,7 @@ void PointsOverlay::Render(unsigned int aId, float aTime, float aPosX, float aPo
 	glPushMatrix();
 
 	// get interpolated track position
-	Vector2 viewpos(Lerp(camerapos[0].x, camerapos[1].x, sim_fraction), Lerp(camerapos[0].y, camerapos[1].y, sim_fraction));
+	Vector2 viewpos(Lerp(camerapos[0], camerapos[1], sim_fraction));
 
 	// set view position
 	glTranslatef( -viewpos.x, -viewpos.y, 0 );

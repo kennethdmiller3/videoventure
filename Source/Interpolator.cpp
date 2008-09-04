@@ -55,6 +55,7 @@ static float ProcessInterpolatorKeyItems(const TiXmlElement *element, Interpolat
 	{
 		switch (Hash(child->Value()))
 		{
+#if 0
 		case 0x652b04df /* "start" */:
 			{
 				ProcessInterpolatorKeyItem(child, interpolator, time, scale, names, values);
@@ -67,10 +68,19 @@ static float ProcessInterpolatorKeyItems(const TiXmlElement *element, Interpolat
 				ProcessInterpolatorKeyItem(child, interpolator, time + duration, scale, names, values);
 			}
 			break;
+#endif
 
 		case 0x6815c86c /* "key" */:
 			{
 				duration = std::max(duration, ProcessInterpolatorKeyItem(child, interpolator, time, scale, names, values) - time);
+			}
+			break;
+
+		case 0xc7441a0f /* "step" */:
+			{
+				ProcessInterpolatorKeyItem(child, interpolator, time, 0, names, values);
+				element->QueryFloatAttribute("time", &duration);
+				time += duration;
 			}
 			break;
 		}
@@ -80,16 +90,17 @@ static float ProcessInterpolatorKeyItems(const TiXmlElement *element, Interpolat
 	return time + duration;
 }
 
-void ProcessInterpolatorItem(const TiXmlElement *element, std::vector<unsigned int> &buffer, int width, const char *names[], const float data[])
+bool ProcessInterpolatorItem(const TiXmlElement *element, std::vector<unsigned int> &buffer, int width, const char *names[], const float data[])
 {
 	if (!element->FirstChildElement())
-		return;
+		return false;
 
 	// temporary interpolator
 	InterpolatorTemplate interpolator(width);
 
 	// start at zero time
 	float time = 0.0f;
+	element->QueryFloatAttribute("time", &time);
 
 	// get time scale
 	float scale = 1.0f;
@@ -127,6 +138,15 @@ void ProcessInterpolatorItem(const TiXmlElement *element, std::vector<unsigned i
 				ProcessInterpolatorKeyItem(child, interpolator, time, scale, names, data);
 			}
 			break;
+
+		case 0xc7441a0f /* "step" */:
+			{
+				ProcessInterpolatorKeyItem(child, interpolator, time, 0, names, data);
+				float duration = 0.0f;
+				if (child->QueryFloatAttribute("time", &duration) == TIXML_SUCCESS)
+					time += duration * scale;
+			}
+			break;
 		}
 	}
 
@@ -147,9 +167,83 @@ void ProcessInterpolatorItem(const TiXmlElement *element, std::vector<unsigned i
 	buffer.push_back(interpolator.mCount);
 	for (int i = 0; i < interpolator.mCount * interpolator.mStride; i++)
 		buffer.push_back(*reinterpret_cast<unsigned int *>(&interpolator.mKeys[i]));
+	return true;
 }
 
 #pragma optimize( "t", on )
+bool ApplyInterpolatorConstant(float aTarget[], int aWidth, int aCount, const float aKeys[], float aTime, int &aHint)
+{
+	int i0, i1;
+
+	// get stride
+	const int aStride = aWidth + 1;
+
+	// get time of hint key
+	const float tt = aKeys[aHint * aStride];
+
+	// if requested time is earlier...
+	if (aTime < tt)
+	{
+		// set lower bound to first key
+		i0 = 0;
+		if (aTime < aKeys[i0 * aStride])
+			return false;
+
+		// set upper bound to hint key
+		i1 = aHint;
+	}
+	else
+	{
+		// set lower bound to hint key
+		i0 = aHint;
+
+		// set upper bound to last key
+		i1 = aCount-1;
+		if (aTime > aKeys[i1 * aStride])
+			return false;
+	}
+
+	// while still checking a range of keys...
+	while (i0 <= i1)
+	{
+		// get midpoint
+		const int im = (i0 + i1) >> 1;
+
+		// if time is before segment start...
+		const int iL = im;
+		const float tL = aKeys[iL * aStride];
+		if (aTime < tL - FLT_EPSILON)
+		{
+			// set upper bound to segment start
+			i1 = iL;
+			continue;
+		}
+
+		// if time is after segment end...
+		const int iH = im + 1;
+		const float tH = aKeys[iH * aStride];
+		if (aTime > tH + FLT_EPSILON)
+		{
+			// set lower bound to segment end
+			i0 = iH;
+			continue;
+		}
+
+		// found!
+		// get first value
+		const float *key0 = &aKeys[iL * aStride + 1];
+		for (int element = 0; element < aWidth; element++)
+		{
+			aTarget[element] = key0[element];
+		}
+		aHint = iL;
+		return true;
+	}
+
+	// not found...
+	return false;
+}
+
 bool ApplyInterpolator(float aTarget[], int aWidth, int aCount, const float aKeys[], float aTime, int &aHint)
 {
 	int i0, i1;

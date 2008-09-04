@@ -1281,10 +1281,15 @@ void Collidable::WorldInit(float aMinX, float aMinY, float aMaxX, float aMaxY)
 void Collidable::WorldDone(void)
 {
 	delete world;
+	world = NULL;
 }
 
 void Collidable::CollideAll(float aStep)
 {
+	// exit if no world
+	if (!world)
+		return;
+
 	// step the physics world
 	world->Step(aStep, 16, 16);
 

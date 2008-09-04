@@ -83,7 +83,7 @@ namespace Database
 
 ExplosionTemplate::ExplosionTemplate(void)
 : mLifeSpan(0.0f)
-, mCategoryBits(0xFFFF)
+, mCategoryBits(0x0001)
 , mMaskBits(0xFFFF)
 , mRadiusInner(0.0f)
 , mRadiusOuter(0.0f)
