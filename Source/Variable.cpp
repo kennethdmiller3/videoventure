@@ -218,7 +218,7 @@ int VarInteger::GetInteger()
 void VarInteger::SetInteger(int aValue)
 {
 	value = aValue;
-	value = std::min(std::max(value, minimum), maximum);
+	value = Clamp(value, minimum, maximum);
 	Notify();
 }
 void VarInteger::SetIntegerRange(int aMinimum, int aMaximum)
@@ -234,7 +234,7 @@ float VarInteger::GetFloat()
 void VarInteger::SetFloat(float aValue)
 {
 	value = (int)aValue;
-	value = std::min(std::max(value, minimum), maximum);
+	value = Clamp(value, minimum, maximum);
 	Notify();
 }
 void VarInteger::SetFloatRange(float aMinimum, float aMaximum)
@@ -252,7 +252,7 @@ std::string VarInteger::GetString()
 void VarInteger::SetString(std::string aValue)
 {
 	TIXML_SNSCANF( aValue.c_str(), aValue.length(), "%d", &value );
-	value = std::min(std::max(value, minimum), maximum);
+	value = Clamp(value, minimum, maximum);
 	Notify();
 }
 
@@ -267,7 +267,7 @@ int VarFloat::GetInteger()
 void VarFloat::SetInteger(int aValue)
 {
 	value = (float)aValue;
-	value = std::min(std::max(value, minimum), maximum);
+	value = Clamp(value, minimum, maximum);
 	Notify();
 }
 void VarFloat::SetIntegerRange(int aMinimum, int aMaximum)
@@ -283,7 +283,7 @@ float VarFloat::GetFloat()
 void VarFloat::SetFloat(float aValue)
 {
 	value = aValue;
-	value = std::min(std::max(value, minimum), maximum);
+	value = Clamp(value, minimum, maximum);
 	Notify();
 }
 void VarFloat::SetFloatRange(float aMinimum, float aMaximum)
@@ -301,7 +301,7 @@ std::string VarFloat::GetString()
 void VarFloat::SetString(std::string aValue)
 {
 	TIXML_SNSCANF( aValue.c_str(), aValue.length(), "%f", &value );
-	value = std::min(std::max(value, minimum), maximum);
+	value = Clamp(value, minimum, maximum);
 	Notify();
 }
 

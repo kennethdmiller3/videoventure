@@ -72,6 +72,16 @@ template<typename T> inline const T Lerp(T v0, T v1, float s)
 	return (1 - s) * v0 + s * v1;
 }
 
+// value clamp
+template<typename T> inline const T Clamp(T v, T min, T max)
+{
+	if (v < min)
+		return min;
+	if (v > max)
+		return max;
+	return v;
+}
+
 // random unsigned long
 // TO DO: allow multiple random number generators
 extern unsigned long randlongseed;

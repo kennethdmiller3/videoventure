@@ -23,6 +23,8 @@ public:
 		AIM_HORIZONTAL,
 		FIRE_PRIMARY,
 		FIRE_SECONDARY,
+		FIRE_CHANNEL3,
+		FIRE_CHANNEL4,
 		NUM_LOGICAL
 	};
 	float value[NUM_LOGICAL];
@@ -34,6 +36,8 @@ public:
 		LOGICAL target;	// target logical value
 		float deadzone;	// deadzone threshold
 		float scale;	// scale factor
+		float min;		// minimum value
+		float max;		// maximum value
 		float previous;	// previous axis value
 		bool pressed;	// pressed this turn
 		bool released;	// released this turn
@@ -49,7 +53,7 @@ public:
 	void Clear(void);
 
 	// add an input binding
-	void Bind(LOGICAL aLogical, int aType, int aDevice, int aControl, float aDeadzone, float aScale);
+	void Bind(LOGICAL aLogical, int aType, int aDevice, int aControl, float aDeadzone, float aScale, float aMin, float aMax);
 
 	// update inputs
 	void Update(void);

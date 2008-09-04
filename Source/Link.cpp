@@ -42,7 +42,7 @@ namespace Database
 				Database::Typed<LinkTemplate> &links = Database::linktemplate.Open(aId);
 				unsigned int aSubId = Hash(element->Attribute("name"));
 				LinkTemplate &link = links.Open(aSubId);
-				link.Configure(element);
+				link.Configure(element, aId, aSubId);
 				links.Close(aSubId);
 				Database::linktemplate.Close(aId);
 			}
@@ -127,20 +127,27 @@ LinkTemplate::~LinkTemplate(void)
 {
 }
 
-bool LinkTemplate::Configure(const TiXmlElement *element)
+bool LinkTemplate::Configure(const TiXmlElement *element, unsigned int aId, unsigned int aSubId)
 {
-	if (const char *name = element->Attribute("name"))
-		mSub = Hash(name);
+	// set sub-identifier
+	mSub = aSubId;
+
+	// set linked template
 	if (const char *secondary = element->Attribute("secondary"))
 		mSecondary = Hash(secondary);
 
+	// update linked angle?
 	int updateangle = mUpdateAngle;
 	element->QueryIntAttribute("updateangle", &updateangle);
 	mUpdateAngle = updateangle != 0;
 
+	// update linked position?
 	int updateposition = mUpdatePosition;
 	element->QueryIntAttribute("updateposition", &updateposition);
 	mUpdatePosition = updateposition != 0;
+
+	// custom template identifier (if any)
+	unsigned int custom = 0U;
 
 	// process child elements
 	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
@@ -155,6 +162,30 @@ bool LinkTemplate::Configure(const TiXmlElement *element)
 				float angle = 0.0f;
 				if (child->QueryFloatAttribute("angle", &angle) == TIXML_SUCCESS)
 					mOffset = Matrix2(angle * float(M_PI) / 180.0f, mOffset.p);
+			}
+			break;
+
+		default:
+			{
+				const char *value = child->Value();
+				const Database::Loader::Entry &configure = Database::Loader::GetConfigure(Hash(value));
+				if (configure)
+				{
+					if (!custom)
+					{
+						// create a customized template
+						DebugPrint("Link custom template \"%s:%s\"\n", Database::name.Get(aId).c_str(), element->Attribute("name"));
+						custom = Hash(":", aId);
+						custom = Hash(element->Attribute("name"), custom);
+						Database::Inherit(custom, mSecondary);
+						mSecondary = custom;
+					}
+					configure(mSecondary, child);
+				}
+				else
+				{
+					DebugPrint("Unrecognized tag \"%s\"\n", value);
+				}
 			}
 			break;
 		}

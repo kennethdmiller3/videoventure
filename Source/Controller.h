@@ -19,7 +19,7 @@ private:
 	Action mAction;
 
 public:
-	static const int FIRE_CHANNELS = 2;
+	static const int FIRE_CHANNELS = 4;
 
 	// controls
 	Vector2 mMove;

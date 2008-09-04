@@ -18,7 +18,7 @@ void Input::Clear(void)
 }
 
 // add an input binding
-void Input::Bind(LOGICAL aLogical, int aType, int aDevice, int aControl, float aDeadzone, float aScale)
+void Input::Bind(LOGICAL aLogical, int aType, int aDevice, int aControl, float aDeadzone, float aScale, float aMin, float aMax)
 {
 	int aPhysical = (aType << 24) | (aDevice << 16) | aControl;
 	Bindings &bindings = bindingmap.Open(aPhysical);
@@ -26,6 +26,8 @@ void Input::Bind(LOGICAL aLogical, int aType, int aDevice, int aControl, float a
 	binding.target = aLogical;
 	binding.deadzone = aDeadzone;
 	binding.scale = aScale;
+	binding.min = aMin;
+	binding.max = aMax;
 	binding.previous = 0.0f;
 	binding.pressed = false;
 	binding.released = false;
@@ -57,8 +59,10 @@ void Input::Update(void)
 	output[AIM_HORIZONTAL] = value[AIM_HORIZONTAL] * scale;
 
 	// limit magnitude of fire control to 1
-	output[FIRE_PRIMARY] = std::min(std::max(value[FIRE_PRIMARY], -1.0f), 1.0f);
-	output[FIRE_SECONDARY] = std::min(std::max(value[FIRE_SECONDARY], -1.0f), 1.0f);
+	output[FIRE_PRIMARY] = Clamp(value[FIRE_PRIMARY], -1.0f, 1.0f);
+	output[FIRE_SECONDARY] = Clamp(value[FIRE_SECONDARY], -1.0f, 1.0f);
+	output[FIRE_CHANNEL3] = Clamp(value[FIRE_CHANNEL3], -1.0f, 1.0f);
+	output[FIRE_CHANNEL4] = Clamp(value[FIRE_CHANNEL4], -1.0f, 1.0f);
 }
 
 // step inputs
@@ -96,6 +100,7 @@ void Input::OnAxis(int aType, int aDevice, int aControl, float aValue)
 			scaled = (scaled - binding.deadzone) * binding.scale;
 		else
 			scaled = 0.0f;
+		scaled = Clamp(scaled, binding.min, binding.max);
 		value[binding.target] += scaled - binding.previous;
 		binding.previous = scaled;
 #ifdef PRINT_AXIS_UPDATE
@@ -150,6 +155,8 @@ void Input::ProcessItem(const TiXmlElement *element)
 			case 0x8eab16d9 /* "fire" */:
 			case 0x7f550f38 /* "fire1" */:	logical = FIRE_PRIMARY; break;
 			case 0x825513f1 /* "fire2" */:	logical = FIRE_SECONDARY; break;
+			case 0x8155125e /* "fire3" */:	logical = FIRE_CHANNEL3; break;
+			case 0x84551717 /* "fire4" */:	logical = FIRE_CHANNEL4; break;
 			default:						logical = NUM_LOGICAL; break;
 			}
 
@@ -175,8 +182,12 @@ void Input::ProcessItem(const TiXmlElement *element)
 			element->QueryFloatAttribute("deadzone", &deadzone);
 			float scale = 1.0f;
 			element->QueryFloatAttribute("scale", &scale);
+			float minimum = -FLT_MAX;
+			element->QueryFloatAttribute("min", &minimum);
+			float maximum = FLT_MAX;
+			element->QueryFloatAttribute("max", &maximum);
 
-			input.Bind(logical, inputtype, device, control, deadzone, scale);
+			input.Bind(logical, inputtype, device, control, deadzone, scale, minimum, maximum);
 		}
 		break;
 	}
