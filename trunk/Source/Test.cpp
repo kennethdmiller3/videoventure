@@ -160,8 +160,8 @@ enum GameStateType
 	STATE_NONE,
 	STATE_SHELL,
 	STATE_PLAY,
-	STATE_QUIT,
 	STATE_RELOAD,
+	STATE_QUIT,
 	NUM_GAME_STATES
 };
 GameStateType curgamestate = STATE_NONE;
@@ -179,8 +179,8 @@ GameState gamestates[NUM_GAME_STATES] =
 	{ NULL, NULL, NULL },
 	{ EnterShellState, RunState, ExitShellState },
 	{ EnterPlayState, RunState, ExitPlayState },
-	{ NULL, NULL, NULL },
-	{ NULL, ReloadState, NULL }
+	{ NULL, ReloadState, NULL },
+	{ NULL, NULL, NULL }
 };
 
 
@@ -529,6 +529,9 @@ bool WritePreferences(const char *config)
 	DebugPrint("Preferences %s\n", config);
 	TiXmlDocument document(config);
 
+	TiXmlDeclaration * declaration = new TiXmlDeclaration( "1.0", "", "" );
+	document.LinkEndChild(declaration);
+
 	TiXmlElement *preferences = new TiXmlElement("preferences");
 	document.LinkEndChild(preferences);
 
@@ -753,6 +756,22 @@ int ProcessCommand( unsigned int aCommand, char *aParam[], int aCount )
 {
 	switch (aCommand)
 	{
+	case 0x11e1fc01 /* "shell" */:
+		setgamestate = STATE_SHELL;
+		return 0;
+
+	case 0xc2cbd863 /* "play" */:
+		setgamestate = STATE_PLAY;
+		return 0;
+
+	case 0xed7cdd8c /* "reload" */:
+		setgamestate = STATE_RELOAD;
+		return 0;
+
+	case 0x47878736 /* "quit" */:
+		setgamestate = STATE_QUIT;
+		return 0;
+
 	case 0x1d215c8f /* "resolution" */:
 		return ProcessCommandInt2(SCREEN_WIDTH, SCREEN_HEIGHT, aParam, aCount, InitWindowAction, "resolution: %dx%d\n"); 
 
@@ -2998,36 +3017,35 @@ void PlayerHUD::Update(float aStep)
 
 	// get the attached entity identifier
 	unsigned int id = player->mAttach;
-	if (!id)
-		return;
-
-	// get the entity
-	Entity *entity = Database::entity.Get(id);
-	if (!entity)
-		return;
-
-	// track player position
-	trackpos[0] = trackpos[1];
-	trackpos[1] = entity->GetPosition();
-
-	// update target aim position
-	aimpos[0] = aimpos[1];
-	aimpos[1] = Vector2(input[Input::AIM_HORIZONTAL], input[Input::AIM_VERTICAL]);
-
-	// set listener position
-	listenerpos = trackpos[1];
-
-	// if applying view aim
-	if (VIEW_AIM)
+	if (id)
 	{
-		Vector2 trackdelta;
-		if (Database::ship.Get(id))
-			trackdelta = aimpos[1] - trackaim;
-		else
-			trackdelta = -trackaim;
-		if (trackdelta.LengthSq() > FLT_EPSILON)
-			trackaim += VIEW_AIM_FILTER * sim_step * trackdelta;
-		trackpos[1] += trackaim * VIEW_AIM;
+		// get the entity
+		if (Entity *entity = Database::entity.Get(id))
+		{
+			// track player position
+			trackpos[0] = trackpos[1];
+			trackpos[1] = entity->GetPosition();
+
+			// update target aim position
+			aimpos[0] = aimpos[1];
+			aimpos[1] = Vector2(input[Input::AIM_HORIZONTAL], input[Input::AIM_VERTICAL]);
+
+			// set listener position
+			listenerpos = trackpos[1];
+
+			// if applying view aim
+			if (VIEW_AIM)
+			{
+				Vector2 trackdelta;
+				if (Database::ship.Get(id))
+					trackdelta = aimpos[1] - trackaim;
+				else
+					trackdelta = -trackaim;
+				if (trackdelta.LengthSq() > FLT_EPSILON)
+					trackaim += VIEW_AIM_FILTER * sim_step * trackdelta;
+				trackpos[1] += trackaim * VIEW_AIM;
+			}
+		}
 	}
 
 	// if the tracked identifier changes...
@@ -3362,8 +3380,8 @@ void PlayerHUD::Render(unsigned int aId, float aTime, float aPosX, float aPosY, 
 		glBegin(GL_QUADS);
 
 		static char *text = "GAME OVER";
-		const float w = Lerp(96, 48, gameovertimer);
-		const float h = Lerp(-64, -32, gameovertimer);
+		const float w = Lerp<float>(96, 48, gameovertimer);
+		const float h = Lerp<float>(-64, -32, gameovertimer);
 		const float x = 320 - 0.5f * w * strlen(text);
 		const float y = 240 - 0.5f * h;
 		const float z = 0;
@@ -3926,7 +3944,7 @@ void RunState()
 			glPushMatrix();
 
 			// get interpolated track position
-			Vector2 viewpos(Lerp(camerapos[0].x, camerapos[1].x, sim_fraction), Lerp(camerapos[0].y, camerapos[1].y, sim_fraction));
+			Vector2 viewpos(Lerp(camerapos[0], camerapos[1], sim_fraction));
 
 			// set view position
 			glTranslatef( -viewpos.x, -viewpos.y, 0 );
@@ -3986,7 +4004,7 @@ void RunState()
 		glPushMatrix();
 
 		// get interpolated track position
-		Vector2 viewpos(Lerp(camerapos[0].x, camerapos[1].x, sim_fraction), Lerp(camerapos[0].y, camerapos[1].y, sim_fraction));
+		Vector2 viewpos(Lerp(camerapos[0], camerapos[1], sim_fraction));
 
 		// set camera to track position
 		glTranslatef( -viewpos.x, -viewpos.y, 0 );

@@ -50,7 +50,7 @@ public:
 	void Attach(unsigned int aAttach);
 
 	// detach from an object
-	void Detach(void);
+	void Detach(unsigned int aAttach);
 
 	// died
 	void OnDeath(unsigned int aId, unsigned int aSourceId);

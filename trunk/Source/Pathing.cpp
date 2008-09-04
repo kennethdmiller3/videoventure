@@ -552,7 +552,7 @@ bool Pathing(const b2Vec2 &start, const b2Vec2 &goal, float radius)
 #endif
 
 			// draw segment
-			b2Vec2 intersect(Lerp(segment.p1.x, segment.p2.x, lambda), Lerp(segment.p1.y, segment.p2.y, lambda));
+			b2Vec2 intersect(Lerp(segment.p1, segment.p2, lambda));
 			glColor4f(1.0f, 0.0f, 0.0f, 1.0f);
 			glVertex2f(segment.p1.x, segment.p1.y);
 			glVertex2f(intersect.x, intersect.y);

@@ -20,7 +20,7 @@ enum DrawlistOp
 	DO_glClearIndex, //(GLfloat c)
 	DO_glClearStencil, //(GLint s)
 	DO_glClipPlane, //(GLenum plane, const GLdouble *equation)
-	DO_glColor4f, //(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha)
+//	DO_glColor4f, //(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha)
 	DO_glColor4fv, //(const GLfloat *v)
 	DO_glColorMask, //(GLboolean red, GLboolean green, GLboolean blue, GLboolean alpha)
 	DO_glColorMaterial, //(GLenum face, GLenum mode)
@@ -283,7 +283,10 @@ namespace Database
 							// get the surface
 							SDL_Surface *surface = SDL_LoadBMP(file);
 							if (!surface)
+							{
+								DebugPrint("error: could not open %s\n", file);
 								continue;
+							}
 
 							// check if the width is a power of 2
 							if ((surface->w & (surface->w - 1)) != 0)
@@ -749,7 +752,7 @@ void ProcessDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buf
 
 	case 0xdd612dd3 /* "texcoord" */:
 		{
-			buffer.push_back(DO_glTexCoord4f);
+			buffer.push_back(DO_glTexCoord4fv);
 			ProcessDrawData(element, buffer, 4, sTexCoordNames, sTexCoordDefault);
 		}
 		break;

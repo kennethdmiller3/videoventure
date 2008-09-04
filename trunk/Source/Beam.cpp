@@ -84,7 +84,7 @@ namespace Database
 
 BeamTemplate::BeamTemplate(void)
 : mLifeSpan(0.0f)
-, mCategoryBits(0xFFFF)
+, mCategoryBits(0x0001)
 , mMaskBits(0xFFFF)
 , mDamage(0.0f)
 , mRange(0.0f)

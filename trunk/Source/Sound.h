@@ -5,8 +5,9 @@
 class SoundTemplate
 {
 public:
-	short *mData;
-	size_t mLength;
+	short *mData;		// data buffer
+	size_t mSize;		// data buffer size in bytes
+	size_t mLength;		// sound length
 	float mVolume;
 	int mRepeat;
 
@@ -14,6 +15,11 @@ public:
 	SoundTemplate(void);
 	SoundTemplate(const SoundTemplate &aTemplate);
 	~SoundTemplate(void);
+
+	bool ConfigureFile(const TiXmlElement *element, unsigned int id);
+	bool ConfigureSample(const TiXmlElement *element, unsigned int id);
+	bool ConfigurePokey(const TiXmlElement *element, unsigned int id);
+	bool Configure(const TiXmlElement *element, unsigned int id);
 };
 
 class Sound

@@ -168,11 +168,22 @@ void Damagable::Damage(unsigned int aSourceId, float aDamage)
 		itor.GetValue()(mId, aSourceId, aDamage);
 	}
 
+#ifdef DEBUG_DAMAGABLE_APPLY_DAMAGE
+	DebugPrint("damaged=\"%s\" source=\"%s\" owner=\"%s\" damage=%f health=%f\n",
+		Database::name.Get(mId).c_str(), 
+		Database::name.Get(aSourceId).c_str(),
+		Database::name.Get(Database::owner.Get(aSourceId)).c_str(),
+		aDamage,
+		mHealth
+		);
+#endif
+
 	// if destroyed...
 	if (mHealth <= 0)
 	{
-		// set owner to damage owner
-		Database::owner.Put(mId, Database::owner.Get(aSourceId));
+		// set owner to source damage owner
+		unsigned int aOwnerId = Database::owner.Get(aSourceId);
+		Database::owner.Put(mId, aOwnerId);
 
 		// bump the hit combo counter
 		int &combo = Database::hitcombo.Open(mId);
@@ -182,6 +193,15 @@ void Damagable::Damage(unsigned int aSourceId, float aDamage)
 		// register a kill update
 		new DamagableKillUpdate(mId);
 
+#ifdef DEBUG_DAMAGABLE_KILLED
+		DebugPrint("killed=\"%s\" source=\"%s\" owner=\"%s\" combo=%d\n",
+			Database::name.Get(mId).c_str(), 
+			Database::name.Get(aSourceId).c_str(),
+			Database::name.Get(aOwnerId).c_str(),
+			combo
+			);
+#endif
+
 		// notify all source kill listeners
 		for (Database::Typed<KillListener>::Iterator itor(Database::killlistener.Find(aSourceId)); itor.IsValid(); ++itor)
 		{
@@ -189,7 +209,6 @@ void Damagable::Damage(unsigned int aSourceId, float aDamage)
 		}
 
 		// notify all owner kill listeners
-		unsigned int aOwnerId = Database::owner.Get(aSourceId);
 		for (Database::Typed<KillListener>::Iterator itor(Database::killlistener.Find(aOwnerId)); itor.IsValid(); ++itor)
 		{
 			itor.GetValue()(aOwnerId, mId);
