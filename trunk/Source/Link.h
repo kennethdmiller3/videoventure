@@ -18,6 +18,9 @@ public:
 	bool mUpdateAngle;
 	bool mUpdatePosition;
 
+	// relative depth
+	bool mBelow;
+
 public:
 	LinkTemplate(void);
 	~LinkTemplate(void);
@@ -58,4 +61,5 @@ namespace Database
 	extern Typed<Typed<LinkTemplate> > linktemplate;
 	extern Typed<Typed<Link *> > link;
 	extern Typed<unsigned int> backlink;
+	extern Typed<bool> below;
 }

@@ -199,7 +199,7 @@ void Expire::Update(float aStep)
 			Database::Switch(mId, expire.mSpawn);
 #else
 			// spawn template at the entity location
-			Database::Instantiate(expire.mSpawn, Database::owner.Get(mId), entity->GetAngle(), entity->GetPosition(), entity->GetVelocity(), entity->GetOmega());
+			Database::Instantiate(expire.mSpawn, Database::owner.Get(mId), mId, entity->GetAngle(), entity->GetPosition(), entity->GetVelocity(), entity->GetOmega());
 #endif
 		}
 	}

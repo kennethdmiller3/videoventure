@@ -336,10 +336,13 @@ bool init_Window()
 
 	if (runtime)
 	{
+		// rebuild textures
+		RebuildTextures();
+
 		// rebuild draw lists
 		RebuildDrawlists();
 
-		// TO DO: rebuild textures
+		// rebuild console
 		OGLCONSOLE_CreateFont();
 		OGLCONSOLE_Resize(console);
 	}

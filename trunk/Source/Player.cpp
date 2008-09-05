@@ -327,7 +327,7 @@ void Player::Spawn(void)
 
 		// instantiate the spawn entity
 		// TO DO: use a named spawn point
-		Database::Instantiate(playertemplate.mSpawn, mId, entity->GetAngle(), entity->GetPosition(), entity->GetVelocity(), entity->GetOmega());
+		Database::Instantiate(playertemplate.mSpawn, mId, mId, entity->GetAngle(), entity->GetPosition(), entity->GetVelocity(), entity->GetOmega());
 
 		// done for now
 		Deactivate();

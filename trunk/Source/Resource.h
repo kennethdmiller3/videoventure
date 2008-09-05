@@ -1,13 +1,24 @@
 #pragma once
 
 #include "Database.h"
+#include "Updatable.h"
 
 class ResourceTemplate
 {
 public:
+	// resource name hash
 	unsigned int mSubId;
+
+	// initial value
 	float mInitial;
+
+	// maximum value
 	float mMaximum;
+
+	// recovery/decay
+	float mDelay;
+	float mCycle;
+	float mAdd;
 
 public:
 	ResourceTemplate(void);
@@ -16,12 +27,12 @@ public:
 	bool Configure(const TiXmlElement *element, unsigned int aId, unsigned int aSubId);
 };
 
-class Resource
+class Resource : public Updatable
 {
 protected:
-	unsigned int mId;
 	unsigned int mSubId;
 	float mValue;
+	float mTimer;
 
 public:
 	typedef fastdelegate::FastDelegate<void (unsigned int, unsigned int, unsigned int, float)> ChangeListener;
@@ -41,6 +52,8 @@ public:
 
 	void Set(unsigned int aSourceId, float aValue);
 	void Add(unsigned int aSourceId, float aAdd);
+
+	void Update(float aStep);
 
 	float GetValue(void)
 	{

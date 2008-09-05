@@ -31,6 +31,9 @@ namespace Database
 	// owner identifier database
 	Typed<Key> owner(0xf5674cd4 /* "owner" */);
 
+	// creator identifier database
+	Typed<Key> creator(0x27d56017 /* "creator" */);
+
 
 	//
 	// UNTYPED DATABASE
@@ -400,13 +403,16 @@ namespace Database
 	std::deque<unsigned int> deletequeue;
 
 	// instantiate a template
-	void Instantiate(unsigned int aInstanceId, unsigned int aTemplateId, unsigned int aOwnerId, float aAngle, Vector2 aPosition, Vector2 aVelocity, float aOmega)
+	void Instantiate(unsigned int aInstanceId, unsigned int aTemplateId, unsigned int aOwnerId, unsigned int aCreatorId, float aAngle, Vector2 aPosition, Vector2 aVelocity, float aOmega, bool aActivate)
 	{
 		// set parent
 		parent.Put(aInstanceId, aTemplateId);
 
 		// set owner
 		owner.Put(aInstanceId, aOwnerId);
+
+		// set creator
+		creator.Put(aInstanceId, aCreatorId);
 
 		// create a new entity
 		Entity *entity = new Entity(aInstanceId);
@@ -416,19 +422,22 @@ namespace Database
 		entity->Step();
 		Database::entity.Put(aInstanceId, entity);
 
-		// activate the instance identifier
-		Activate(aInstanceId);
+		if (aActivate)
+		{
+			// activate the instance identifier
+			Activate(aInstanceId);
+		}
 	}
 
 	// instantiate a template (automatically-generated identifier)
-	unsigned int Instantiate(unsigned int aTemplateId, unsigned int aOwnerId, float aAngle, Vector2 aPosition, Vector2 aVelocity, float aOmega)
+	unsigned int Instantiate(unsigned int aTemplateId, unsigned int aOwnerId, unsigned int aCreatorId, float aAngle, Vector2 aPosition, Vector2 aVelocity, float aOmega, bool aActivate)
 	{
 		// generate an instance identifier
 		const unsigned int aInstanceTag = Entity::TakeId();
 		const unsigned int aInstanceId = Hash(&aInstanceTag, sizeof(aInstanceTag), aTemplateId);
 
 		// instantiate the template
-		Instantiate(aInstanceId, aTemplateId, aOwnerId, aAngle, aPosition, aVelocity, aOmega);
+		Instantiate(aInstanceId, aTemplateId, aOwnerId, aCreatorId, aAngle, aPosition, aVelocity, aOmega, aActivate);
 
 		// return the instance identifier
 		return aInstanceId;

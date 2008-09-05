@@ -237,7 +237,7 @@ void Damagable::Kill(void)
 		if (entity)
 		{
 			// instantiate the template
-			Database::Instantiate(damagable.mSpawnOnDeath, Database::owner.Get(mId), entity->GetAngle(), entity->GetPosition(), entity->GetVelocity(), entity->GetOmega());
+			Database::Instantiate(damagable.mSpawnOnDeath, Database::owner.Get(mId), mId, entity->GetAngle(), entity->GetPosition(), entity->GetVelocity(), entity->GetOmega());
 		}
 #endif
 	}

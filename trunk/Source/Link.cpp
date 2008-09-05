@@ -26,6 +26,7 @@ namespace Database
 	Typed<Typed<LinkTemplate> > linktemplate(0x801f01af /* "linktemplate" */);
 	Typed<Typed<Link *> > link(0x0ddb0669 /* "link" */);
 	Typed<unsigned int> backlink(0xe3736e9a /* "backlink" */);
+	Typed<bool> below(0x9253c0f2 /* "below" */);
 
 	namespace Loader
 	{
@@ -120,6 +121,7 @@ LinkTemplate::LinkTemplate(void)
 , mSecondary(0)
 , mUpdateAngle(true)
 , mUpdatePosition(true)
+, mBelow(false)
 {
 }
 
@@ -145,6 +147,11 @@ bool LinkTemplate::Configure(const TiXmlElement *element, unsigned int aId, unsi
 	int updateposition = mUpdatePosition;
 	element->QueryIntAttribute("updateposition", &updateposition);
 	mUpdatePosition = updateposition != 0;
+
+	// relative depth
+	int below = mBelow;
+	element->QueryIntAttribute("below", &below);
+	mBelow = below != 0;
 
 	// custom template identifier (if any)
 	unsigned int custom = 0U;
@@ -209,19 +216,19 @@ Link::Link(const LinkTemplate &aTemplate, unsigned int aId)
 	SetAction(Action(this, &Link::Update));
 
 	// get the source entity
-	Entity *entity = Database::entity.Get(aId);
+	Entity *entity = Database::entity.Get(mId);
 
 	// if not already instantiated...
 	if (!Database::entity.Get(aTemplate.mSecondary))
 	{
 		// instantiate the linked template
 		Matrix2 transform(aTemplate.mOffset * entity->GetTransform());
-		mSecondary = Database::Instantiate(mSecondary, Database::owner.Get(aId), 
-			transform.Angle(), transform.p, entity->GetVelocity(), entity->GetOmega());
+		mSecondary = Database::Instantiate(mSecondary, Database::owner.Get(mId), mId,
+			transform.Angle(), transform.p, entity->GetVelocity(), entity->GetOmega(), false);
 	}
 
 	// if the owner has a team...
-	unsigned int team = Database::team.Get(aId);
+	unsigned int team = Database::team.Get(mId);
 	if (team)
 	{
 		// propagate team to spawned item
@@ -229,8 +236,16 @@ Link::Link(const LinkTemplate &aTemplate, unsigned int aId)
 	}
 
 	// create a backlink
-	Database::backlink.Put(mSecondary, aId);
+	Database::backlink.Put(mSecondary, mId);
 
+	// propagate below
+	Database::below.Put(mSecondary, aTemplate.mBelow);
+
+	if (!Database::entity.Get(aTemplate.mSecondary))
+	{
+		// activate
+		Database::Activate(mSecondary);
+	}
 }
 
 Link::~Link(void)
