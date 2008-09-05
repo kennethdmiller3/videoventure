@@ -204,10 +204,24 @@ void GetTypeData(unsigned int type, int &width, const char **&names, const float
 	}
 }
 
+// texture descriptor
+struct TextureTemplate
+{
+	SDL_Surface *mSurface;
+	GLint mFormat;
+	GLint mEnvMode;
+	GLint mMinFilter;
+	GLint mMagFilter;
+	GLint mWrapS;
+	GLint mWrapT;
+};
+
+
 namespace Database
 {
 	Typed<std::vector<unsigned int> > dynamicdrawlist(0xdf3cf9c0 /* "dynamicdrawlist" */);
 	Typed<GLuint> drawlist(0xc98b019b /* "drawlist" */);
+	Typed<TextureTemplate> texturetemplate(0x3f64431e /* "texturetemplate" */);
 	Typed<GLuint> texture(0x3c6468f4 /* "texture" */);
 	Typed<Typed<float> > variable(0x19385305 /* "variable" */);
 
@@ -302,15 +316,14 @@ namespace Database
 						 
 							// get the number of channels in the SDL surface
 							GLenum texture_format;
-							GLint color_size = surface->format->BytesPerPixel;
-							if (color_size == 4)     // contains an alpha channel
+							if (surface->format->BytesPerPixel == 4)     // contains an alpha channel
 							{
 								if (surface->format->Rmask == 0x000000ff)
 									texture_format = GL_RGBA;
 								else
 									texture_format = GL_BGRA;
 							}
-							else if (color_size == 3)     // no alpha channel
+							else if (surface->format->BytesPerPixel == 3)     // no alpha channel
 							{
 								if (surface->format->Rmask == 0x000000ff)
 									texture_format = GL_RGB;
@@ -324,84 +337,93 @@ namespace Database
 								break;
 							}
 
-							// generate a texture object handle
-							GLuint texture;
-							glGenTextures( 1, &texture );
+							// generate a handle object handle
+							GLuint handle;
+							glGenTextures( 1, &handle );
 
-							// register the texture
-							Database::texture.Put(aId, texture);
+							// register the handle
+							Database::texture.Put(aId, handle);
 
-							// save texture state
-							glPushAttrib(GL_TEXTURE_BIT);
+							// get a texture template
+							TextureTemplate &texture = Database::texturetemplate.Open(handle);
 
-							// bind the texture object
-							glBindTexture(GL_TEXTURE_2D, texture);
-
-							// mode
-							GLint mode;
+							// save surface
+							texture.mSurface = surface;
+							texture.mFormat = texture_format;
 
 							// set blend mode
 							switch (Hash(child->Attribute("mode")))
 							{
 							default:
-							case 0x818f75ae /* "modulate" */:	mode = GL_MODULATE; break;
-							case 0xde15f6ae /* "decal" */:		mode = GL_DECAL; break;
-							case 0x0bbc40d8 /* "blend" */:		mode = GL_BLEND; break;
-							case 0xa13884c3 /* "replace" */:	mode = GL_REPLACE; break;
+							case 0x818f75ae /* "modulate" */:	texture.mEnvMode = GL_MODULATE; break;
+							case 0xde15f6ae /* "decal" */:		texture.mEnvMode = GL_DECAL; break;
+							case 0x0bbc40d8 /* "blend" */:		texture.mEnvMode = GL_BLEND; break;
+							case 0xa13884c3 /* "replace" */:	texture.mEnvMode = GL_REPLACE; break;
 							}
-							glTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, mode );
 
 							// set minification filter
 							switch (Hash(child->Attribute("minfilter")))
 							{
 							default:
-							case 0xc42bfa19 /* "nearest" */:			mode = GL_NEAREST; break;
-							case 0xd00594c0 /* "linear" */:				mode = GL_LINEAR; break;
-							case 0x70bf16c1 /* "nearestmipnearest" */:	mode = GL_NEAREST_MIPMAP_NEAREST; break;
-							case 0xc81505e8 /* "linearmipnearest" */:	mode = GL_LINEAR_MIPMAP_NEAREST; break;
-							case 0x95d62f98 /* "nearestmiplinear" */:	mode = GL_NEAREST_MIPMAP_LINEAR; break;
-							case 0x1274a447 /* "linearmiplinear" */:	mode = GL_LINEAR_MIPMAP_LINEAR; break;
+							case 0xc42bfa19 /* "nearest" */:			texture.mMinFilter = GL_NEAREST; break;
+							case 0xd00594c0 /* "linear" */:				texture.mMinFilter = GL_LINEAR; break;
+							case 0x70bf16c1 /* "nearestmipnearest" */:	texture.mMinFilter = GL_NEAREST_MIPMAP_NEAREST; break;
+							case 0xc81505e8 /* "linearmipnearest" */:	texture.mMinFilter = GL_LINEAR_MIPMAP_NEAREST; break;
+							case 0x95d62f98 /* "nearestmiplinear" */:	texture.mMinFilter = GL_NEAREST_MIPMAP_LINEAR; break;
+							case 0x1274a447 /* "linearmiplinear" */:	texture.mMinFilter = GL_LINEAR_MIPMAP_LINEAR; break;
 							}
-							glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, mode );
 
 							// set magnification filter
 							switch (Hash(child->Attribute("magfilter")))
 							{
 							default:
-							case 0xc42bfa19 /* "nearest" */:			mode = GL_NEAREST; break;
-							case 0xd00594c0 /* "linear" */:				mode = GL_LINEAR; break;
+							case 0xc42bfa19 /* "nearest" */:			texture.mMagFilter = GL_NEAREST; break;
+							case 0xd00594c0 /* "linear" */:				texture.mMagFilter = GL_LINEAR; break;
 							}
-							glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, mode );
 
 							// set s wrapping
 							switch (Hash(child->Attribute("wraps")))
 							{
 							default:
-							case 0xa82efcbc /* "clamp" */:				mode = GL_CLAMP; break;
-							case 0xd99ba82a /* "repeat" */:				mode = GL_REPEAT; break;
+							case 0xa82efcbc /* "clamp" */:				texture.mWrapS = GL_CLAMP; break;
+							case 0xd99ba82a /* "repeat" */:				texture.mWrapS = GL_REPEAT; break;
 							}
-							glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, mode );
 
 							// set t wrapping
 							switch (Hash(child->Attribute("wrapt")))
 							{
 							default:
-							case 0xa82efcbc /* "clamp" */:				mode = GL_CLAMP; break;
-							case 0xd99ba82a /* "repeat" */:				mode = GL_REPEAT; break;
+							case 0xa82efcbc /* "clamp" */:				texture.mWrapT = GL_CLAMP; break;
+							case 0xd99ba82a /* "repeat" */:				texture.mWrapT = GL_REPEAT; break;
 							}
-							glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, mode );
+
+							// save texture state
+							glPushAttrib(GL_TEXTURE_BIT);
+
+							// bind the texture object
+							glBindTexture(GL_TEXTURE_2D, handle);
+
+							// set texture properties
+							glTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, texture.mEnvMode );
+							glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, texture.mMinFilter );
+							glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, texture.mMagFilter );
+							glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, texture.mWrapS );
+							glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, texture.mWrapT );
 
 							// set texture image data
+							gluBuild2DMipmaps(GL_TEXTURE_2D, texture.mSurface->format->BytesPerPixel, texture.mSurface->w, texture.mSurface->h, texture.mFormat, GL_UNSIGNED_BYTE, texture.mSurface->pixels);
+							/*
 							glTexImage2D(
-								GL_TEXTURE_2D, 0, color_size, surface->w, surface->h, 0,
-								texture_format, GL_UNSIGNED_BYTE, surface->pixels
+								GL_TEXTURE_2D, 0, texture.mSurface->format->BytesPerPixel, texture.mSurface->w, texture.mSurface->h, 0,
+								texture.mFormat, GL_UNSIGNED_BYTE, texture.mSurface->pixels
 								);
+							*/
+
+							// done with texture template
+							Database::texturetemplate.Close(handle);
 
 							// restore texture state
 							glPopAttrib();
-
-							// free the surface
-							SDL_FreeSurface( surface );
 						}
 					}
 				}
@@ -1830,9 +1852,51 @@ void ExecuteDrawItems(const unsigned int buffer[], size_t count, float param, un
 }
 #pragma optimize( "", on )
 
+void RebuildTextures(void)
+{
+	// for each entry in the texture database
+	for (Database::Typed<GLuint>::Iterator itor(&Database::texture); itor.IsValid(); ++itor)
+	{
+		// recreate the texture
+		GLuint handle = itor.GetValue();
+		glGenTextures( 1, &handle );
+
+		// get the corresponding template
+		const TextureTemplate &texture = Database::texturetemplate.Get(handle);
+		if (!texture.mSurface)
+			continue;
+
+		// save texture state
+		glPushAttrib(GL_TEXTURE_BIT);
+
+		// bind the texture object
+		glBindTexture(GL_TEXTURE_2D, handle);
+
+		// set texture properties
+		glTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, texture.mEnvMode );
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, texture.mMinFilter );
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, texture.mMagFilter );
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, texture.mWrapS );
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, texture.mWrapT );
+
+		// set texture image data
+		gluBuild2DMipmaps(GL_TEXTURE_2D, texture.mSurface->format->BytesPerPixel, texture.mSurface->w, texture.mSurface->h, texture.mFormat, GL_UNSIGNED_BYTE, texture.mSurface->pixels);
+		/*
+		glTexImage2D(
+			GL_TEXTURE_2D, 0, texture.mSurface->format->BytesPerPixel, texture.mSurface->w, texture.mSurface->h, 0,
+			texture.mFormat, GL_UNSIGNED_BYTE, texture.mSurface->pixels
+			);
+		*/
+
+		// restore texture state
+		glPopAttrib();
+	}
+}
+
 void RebuildDrawlists(void)
 {
-	for (Database::Typed<unsigned int>::Iterator itor(&Database::drawlist); itor.IsValid(); ++itor)
+	// for each entry in the drawlist database...
+	for (Database::Typed<GLuint>::Iterator itor(&Database::drawlist); itor.IsValid(); ++itor)
 	{
 		// recreate the draw list
 		GLuint handle = itor.GetValue();

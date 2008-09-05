@@ -254,7 +254,7 @@ void Beam::Update(float aStep)
 				if (entity)
 				{
 					// spawn template at the impact location
-					unsigned int spawnId = Database::Instantiate(beam.mSpawnOnImpact, Database::owner.Get(mId),
+					unsigned int spawnId = Database::Instantiate(beam.mSpawnOnImpact, Database::owner.Get(mId), mId, 
 						entity->GetAngle(), Vector2(segment.p1 + lambda * (segment.p2 - segment.p1)));
 
 					// copy renderable fractional turn

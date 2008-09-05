@@ -355,9 +355,12 @@ namespace Database
 	// owner identifier database
 	extern Typed<Key> owner;
 
+	// creator identifier database
+	extern Typed<Key> creator;
+
 	// instantiate a template
-	void Instantiate(unsigned int aInstanceId, unsigned int aTemplateId, unsigned int aOwnerId, float aAngle, Vector2 aPosition, Vector2 aVelocity = Vector2(0, 0), float aOmega = 0);
-	unsigned int Instantiate(unsigned int aTemplateId, unsigned int aOwnerId, float aAngle, Vector2 aPosition, Vector2 aVelocity = Vector2(0, 0), float aOmega = 0);
+	void Instantiate(unsigned int aInstanceId, unsigned int aTemplateId, unsigned int aOwnerId, unsigned int aCreatorId, float aAngle, Vector2 aPosition, Vector2 aVelocity = Vector2(0, 0), float aOmega = 0, bool aActivate = true);
+	unsigned int Instantiate(unsigned int aTemplateId, unsigned int aOwnerId, unsigned int aCreatorId, float aAngle, Vector2 aPosition, Vector2 aVelocity = Vector2(0, 0), float aOmega = 0, bool aActivate = true);
 
 	// inherit from a template
 	void Inherit(unsigned int aInstanceId, unsigned int aTemplateId);

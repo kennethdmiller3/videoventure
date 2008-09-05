@@ -95,7 +95,7 @@ namespace Database
 								Tile &tile = map[*t-CHAR_MIN];
 								if (tile.mSpawn)
 								{
-									Database::Instantiate(tile.mSpawn, 0, tile.mAngle, pos + tile.mOffset, Vector2(0, 0), 0);
+									Database::Instantiate(tile.mSpawn, 0, 0, tile.mAngle, pos + tile.mOffset, Vector2(0, 0), 0);
 								}
 
 								pos.x += dx;

@@ -42,6 +42,7 @@ namespace Database
 			{
 				Database::Typed<ResourceTemplate> &resources = Database::resourcetemplate.Open(aId);
 				unsigned int aSubId = Hash(element->Attribute("name"));
+				Database::name.Put(aSubId, element->Attribute("name"));
 				ResourceTemplate &resource = resources.Open(aSubId);
 				resource.Configure(element, aId, aSubId);
 				resources.Close(aSubId);
@@ -93,7 +94,12 @@ namespace Database
 
 
 ResourceTemplate::ResourceTemplate(void)
-: mSubId(0), mInitial(0), mMaximum(FLT_MAX)
+: mSubId(0)
+, mInitial(0)
+, mMaximum(FLT_MAX)
+, mDelay(0)
+, mCycle(0)
+, mAdd(0)
 {
 }
 
@@ -154,7 +160,7 @@ void ExecuteActions(const unsigned int buffer[], size_t count, unsigned int aId)
 				if (entity)
 				{
 					// instantiate the template
-					Database::Instantiate(aTemplateId, Database::owner.Get(aId), entity->GetAngle(), entity->GetPosition(), entity->GetVelocity(), entity->GetOmega());
+					Database::Instantiate(aTemplateId, Database::owner.Get(aId), aId, entity->GetAngle(), entity->GetPosition(), entity->GetVelocity(), entity->GetOmega());
 				}
 			}
 			break;
@@ -175,7 +181,7 @@ void ExecuteActions(const unsigned int buffer[], size_t count, unsigned int aId)
 				if (entity)
 				{
 					// instantiate the template
-					Database::Instantiate(aTemplateId, Database::owner.Get(aId), entity->GetAngle(), entity->GetPosition(), entity->GetVelocity(), entity->GetOmega());
+					Database::Instantiate(aTemplateId, Database::owner.Get(aId), aId, entity->GetAngle(), entity->GetPosition(), entity->GetVelocity(), entity->GetOmega());
 				}
 
 				// delete the old entity
@@ -266,6 +272,11 @@ bool ResourceTemplate::Configure(const TiXmlElement *element, unsigned int aId, 
 
 	element->QueryFloatAttribute("initial", &mInitial);
 	element->QueryFloatAttribute("maximum", &mMaximum);
+	element->QueryFloatAttribute("delay", &mDelay);
+	element->QueryFloatAttribute("cycle", &mCycle);
+	element->QueryFloatAttribute("add", &mAdd);
+	if (element->QueryFloatAttribute("rate", &mAdd) == TIXML_SUCCESS)
+		mAdd *= mCycle;
 
 	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
@@ -293,62 +304,99 @@ bool ResourceTemplate::Configure(const TiXmlElement *element, unsigned int aId, 
 
 
 Resource::Resource(void)
-: mId(0), mSubId(0), mValue(0)
+: Updatable(0)
+, mSubId(0)
+, mValue(0)
+, mTimer(0)
 {
 }
 
 Resource::Resource(const ResourceTemplate &aTemplate, unsigned int aId)
-: mId(aId), mSubId(aTemplate.mSubId), mValue(aTemplate.mInitial)
+: Updatable(aId)
+, mSubId(aTemplate.mSubId)
+, mValue(aTemplate.mInitial)
+, mTimer(0)
 {
+	if (aTemplate.mAdd)
+	{
+		Updatable::SetAction(Updatable::Action(this, &Resource::Update));
+	}
 }
 
 Resource::~Resource(void)
 {
 }
 
+void Resource::Update(float aStep)
+{
+	mTimer -= aStep;
+	if (mTimer <= 0)
+	{
+		const ResourceTemplate &resource = Database::resourcetemplate.Get(mId).Get(mSubId);
+		Add(mId, resource.mAdd);
+		mTimer += resource.mCycle;
+	}
+}
+
 void Resource::Set(unsigned int aSourceId, float aValue)
 {
-	// update the value
-	mValue = aValue;
-
-	// notify all change listeners
-	for (Database::Typed<ChangeListener>::Iterator itor(Database::resourcechangelistener.Get(mId).Find(mSubId)); itor.IsValid(); ++itor)
-	{
-		itor.GetValue()(mId, mSubId, aSourceId, aValue);
-	}
+	const ResourceTemplate &resource = Database::resourcetemplate.Get(mId).Get(mSubId);
 
 	// if empty...
-	if (mValue <= 0)
+	if (aValue <= 0)
 	{
-		mValue = 0;
+		aValue = 0;
 
 		// notify all empty listeners
 		for (Database::Typed<EmptyListener>::Iterator itor(Database::resourceemptylistener.Get(mId).Find(mSubId)); itor.IsValid(); ++itor)
 		{
 			itor.GetValue()(mId, mSubId, aSourceId);
 		}
+
+		if (resource.mAdd < 0)
+			Deactivate();
 	}
 
 	// if full...
-	float aMaximum = Database::resourcetemplate.Get(mId).Get(mSubId).mMaximum;
-	if (mValue >= aMaximum)
+	if (aValue >= resource.mMaximum)
 	{
-		mValue = aMaximum;
+		aValue = resource.mMaximum;
 		
 		// notify all full listeners
 		for (Database::Typed<FullListener>::Iterator itor(Database::resourcefulllistener.Get(mId).Find(mSubId)); itor.IsValid(); ++itor)
 		{
 			itor.GetValue()(mId, mSubId, aSourceId);
 		}
+
+		if (resource.mAdd > 0)
+			Deactivate();
+	}
+
+	if (mValue != aValue)
+	{
+		// if something dropped the value...
+		if (aSourceId != mId && (mValue - aValue) * (resource.mAdd) > 0)
+		{
+			// reset timer
+			mTimer = Database::resourcetemplate.Get(mId).Get(mSubId).mDelay;
+			Activate();
+		}
+
+		DebugPrint("\"%s\" resource=\"%s\" value=%f->%f\n", Database::name.Get(mId).c_str(), Database::name.Get(mSubId).c_str(), mValue, aValue);
+
+		// update the value
+		mValue = aValue;
+
+		// notify all change listeners
+		for (Database::Typed<ChangeListener>::Iterator itor(Database::resourcechangelistener.Get(mId).Find(mSubId)); itor.IsValid(); ++itor)
+		{
+			itor.GetValue()(mId, mSubId, aSourceId, aValue);
+		}
 	}
 }
 
 void Resource::Add(unsigned int aSourceId, float aAdd)
 {
-	// ignore change if already empty
-	if (mValue <= 0)
-		return;
-
 	// set the value
 	Set(aSourceId, mValue + aAdd);
 }

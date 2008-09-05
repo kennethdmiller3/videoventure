@@ -232,7 +232,7 @@ void Spawner::Update(float aStep)
 			// instantiate the spawn entity
 			Matrix2 transform(spawner.mOffset * entity->GetInterpolatedTransform(mTimer / aStep));
 			Vector2 velocity(transform.Rotate(spawner.mInherit * transform.Unrotate(entity->GetVelocity()) + spawner.mVelocity));
-			unsigned int spawnId = Database::Instantiate(spawner.mSpawn, Database::owner.Get(mId), transform.Angle(), transform.p, velocity, entity->GetOmega());
+			unsigned int spawnId = Database::Instantiate(spawner.mSpawn, Database::owner.Get(mId), mId, transform.Angle(), transform.p, velocity, entity->GetOmega(), false);
 
 			// if the spawner has a team...
 			unsigned int team = Database::team.Get(mId);
@@ -241,6 +241,9 @@ void Spawner::Update(float aStep)
 				// propagate team to spawned item
 				Database::team.Put(spawnId, team);
 			}
+
+			// activate
+			Database::Activate(spawnId);
 
 			// set fractional turn
 			if (Renderable *renderable = Database::renderable.Get(spawnId))

@@ -322,25 +322,16 @@ void Weapon::Update(float aStep)
 		{
 			Resource *resource = NULL;
 
-			// if the weapon uses ammo...
+			// if using ammo
 			if (weapon.mCost)
 			{
-				// find ammo resource
-				for (unsigned int aId = mId; aId; aId = Database::backlink.Get(aId))
-				{
-					resource = Database::resource.Get(aId).Get(weapon.mType);
-					if (resource)
-						break;
-				}
-
-				// check owner if not found
-				if (!resource)
-					resource = Database::resource.Get(Database::owner.Get(mId)).Get(weapon.mType);
-
-				// don't fire if out of ammo
-				if (resource && weapon.mCost > resource->GetValue())
-					break;
+				// ammo resource (if any)
+				resource = Database::resource.Get(mAmmo).Get(weapon.mType);
 			}
+
+			// don't fire if out of ammo
+			if (resource && weapon.mCost > resource->GetValue())
+				break;
 
 			// if firing on this phase...
 			if (mPhase == 0)
@@ -361,7 +352,7 @@ void Weapon::Update(float aStep)
 				if (weapon.mFlash)
 				{
 					// instantiate a flash
-					unsigned int flashId = Database::Instantiate(weapon.mFlash, Database::owner.Get(mId),
+					unsigned int flashId = Database::Instantiate(weapon.mFlash, Database::owner.Get(mId), mId,
 						transform.Angle(), transform.p, entity->GetVelocity(), entity->GetOmega());
 
 					// set fractional turn
@@ -388,7 +379,7 @@ void Weapon::Update(float aStep)
 					const Vector2 inheritvelocity(weapon.mInherit * transform.Unrotate(entity->GetVelocity()));
 					const Vector2 scattervelocity(weapon.mScatter.x ? weapon.mScatter.x * (RandFloat() - RandFloat()) : 0, weapon.mScatter.y ? weapon.mScatter.y * (RandFloat() - RandFloat()) : 0);
 					const Vector2 velocity(transform.Rotate(weapon.mVelocity + inheritvelocity + scattervelocity));
-					unsigned int ordId = Database::Instantiate(weapon.mOrdnance, Database::owner.Get(mId), transform.Angle(), transform.p, velocity, 0);
+					unsigned int ordId = Database::Instantiate(weapon.mOrdnance, Database::owner.Get(mId), mId, transform.Angle(), transform.p, velocity, 0);
 #ifdef DEBUG_WEAPON_CREATE_ORDNANCE
 					DebugPrint("ordnance=\"%s\" owner=\"%s\"\n",
 						Database::name.Get(ordId).c_str(),

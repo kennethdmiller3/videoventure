@@ -3,6 +3,8 @@
 #include "Drawlist.h"
 #include "Entity.h"
 
+#include "Link.h"
+
 #ifdef USE_POOL_ALLOCATOR
 #include <boost/pool/pool.hpp>
 
@@ -145,21 +147,55 @@ void Renderable::Show(void)
 {
 	if (!mActive)
 	{
+		Renderable *aParent = NULL;
+		bool below = false;
+		for (unsigned int id = mId, creator = Database::creator.Get(mId); creator != 0; id = creator, creator = Database::creator.Get(creator))
+		{
+			below = Database::below.Get(id);
+			aParent = Database::renderable.Get(creator);
+			if (aParent)
+				break;
+		}
 #ifdef DRAW_FRONT_TO_BACK
-		mNext = sHead;
-		if (sHead)
-			sHead->mPrev = this;
-		sHead = this;
-		if (!sTail)
-			sTail = this;
+		if (!below)
 #else
-		mPrev = sTail;
-		if (sTail)
-			sTail->mNext = this;
-		sTail = this;
-		if (!sHead)
-			sHead = this;
+		if (below)
 #endif
+		{
+			if (aParent)
+			{
+				mNext = aParent;
+				mPrev = aParent->mPrev;
+			}
+			else
+			{
+				mNext = sHead;
+				mPrev = NULL;
+			}
+		}
+		else
+		{
+			mNext = aParent;
+			if (aParent)
+			{
+				mNext = aParent->mNext;
+				mPrev = aParent;
+			}
+			else
+			{
+				mNext = NULL;
+				mPrev = sTail;
+			}
+		}
+
+		if (mNext)
+			mNext->mPrev = this;
+		else
+			sTail = this;
+		if (mPrev)
+			mPrev->mNext = this;
+		else
+			sHead = this;
 		mActive = true;
 	}
 }

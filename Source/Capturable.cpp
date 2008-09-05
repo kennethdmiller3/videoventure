@@ -193,7 +193,7 @@ void Capturable::Capture(void)
 		if (entity)
 		{
 			// instantiate the template
-			Database::Instantiate(capturable.mSpawnOnCapture, Database::owner.Get(mId), entity->GetAngle(), entity->GetPosition(), entity->GetVelocity(), entity->GetOmega());
+			Database::Instantiate(capturable.mSpawnOnCapture, Database::owner.Get(mId), mId, entity->GetAngle(), entity->GetPosition(), entity->GetVelocity(), entity->GetOmega());
 		}
 #endif
 	}

@@ -144,7 +144,8 @@ void Bullet::Kill(float aFraction)
 		if (entity)
 		{
 			// spawn template at entity location
-			unsigned int spawnId = Database::Instantiate(bullet.mSpawnOnDeath, Database::owner.Get(mId), entity->GetAngle(), entity->GetPosition(), entity->GetVelocity(), entity->GetOmega());
+			unsigned int spawnId = Database::Instantiate(bullet.mSpawnOnDeath, Database::owner.Get(mId), mId,
+				entity->GetAngle(), entity->GetPosition(), entity->GetVelocity(), entity->GetOmega());
 			if (Renderable *renderable = Database::renderable.Get(spawnId))
 				renderable->SetFraction(aFraction);
 		}
@@ -297,7 +298,7 @@ void Bullet::Collide(unsigned int aId, unsigned int aHitId, float aFraction, con
 		b2Vec2 position(aPoint.position - aPoint.separation * aPoint.normal);
 
 		// spawn the template
-		unsigned int spawnId = Database::Instantiate(bullet.mSpawnOnImpact, Database::owner.Get(mId), 0, Vector2(position), Vector2(0, 0), 0);
+		unsigned int spawnId = Database::Instantiate(bullet.mSpawnOnImpact, Database::owner.Get(mId), mId, 0, Vector2(position), Vector2(0, 0), 0);
 
 		// set fractional turn
 		if (Renderable *renderable = Database::renderable.Get(spawnId))
