@@ -13,8 +13,8 @@ public:
 	unsigned short mMaskBits;
 
 	// attack cone
-	float mAttack[2];
-	float mAngle[2];
+	float mAttack[Controller::FIRE_CHANNELS];
+	float mAngle[Controller::FIRE_CHANNELS];
 
 	// wander
 	float mDrift;
