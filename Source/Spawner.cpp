@@ -118,7 +118,7 @@ namespace Database
 
 // spawner template constructor
 SpawnerTemplate::SpawnerTemplate(void)
-: mOffset(Vector2(1, 0), Vector2(0, 1), Vector2(0, 0))
+: mOffset(0, Vector2(0, 0))
 , mInherit(1, 1)
 , mVelocity(0, 0)
 , mSpawn(0)
@@ -151,7 +151,7 @@ bool SpawnerTemplate::Configure(const TiXmlElement *element)
 				child->QueryFloatAttribute("y", &mOffset.p.y);
 				float angle = 0.0f;
 				if (child->QueryFloatAttribute("angle", &angle) == TIXML_SUCCESS)
-					mOffset = Matrix2(angle * float(M_PI) / 180.0f, mOffset.p);
+					mOffset = Transform2(angle * float(M_PI) / 180.0f, mOffset.p);
 			}
 			break;
 
@@ -230,7 +230,7 @@ void Spawner::Update(float aStep)
 		if (entity)
 		{
 			// instantiate the spawn entity
-			Matrix2 transform(spawner.mOffset * entity->GetInterpolatedTransform(mTimer / aStep));
+			Transform2 transform(spawner.mOffset * entity->GetInterpolatedTransform(mTimer / aStep));
 			Vector2 velocity(transform.Rotate(spawner.mInherit * transform.Unrotate(entity->GetVelocity()) + spawner.mVelocity));
 			unsigned int spawnId = Database::Instantiate(spawner.mSpawn, Database::owner.Get(mId), mId, transform.Angle(), transform.p, velocity, entity->GetOmega(), false);
 

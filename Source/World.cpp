@@ -1,11 +1,36 @@
 #include "StdAfx.h"
 #include "World.h"
 #include "Entity.h"
+#include "Collidable.h"
 
 namespace Database
 {
 	namespace Loader
 	{
+		class WorldLoader
+		{
+		public:
+			WorldLoader()
+			{
+				AddConfigure(0x37a3e893 /* "world" */, Entry(this, &WorldLoader::Configure));
+			}
+
+			void Configure(unsigned int aId, const TiXmlElement *element)
+			{
+				// set up the collidable world
+				float aMinX = -2048, aMinY = -2048, aMaxX = 2048, aMaxY = 2048;
+				element->QueryFloatAttribute("xmin", &aMinX);
+				element->QueryFloatAttribute("ymin", &aMinY);
+				element->QueryFloatAttribute("xmax", &aMaxX);
+				element->QueryFloatAttribute("ymax", &aMaxY);
+				Collidable::WorldInit(aMinX, aMinY, aMaxX, aMaxY);
+
+				// recurse on children
+				ProcessWorldItems(element);
+			}
+		}
+		worldloader;
+
 		class ImportLoader
 		{
 		public:
@@ -18,100 +43,86 @@ namespace Database
 			{
 				// level configuration
 				const char *name = element->Attribute("name");
-				DebugPrint("Import %s\n", name);
 				TiXmlDocument document(name);
-				document.LoadFile();
+				if (!document.LoadFile())
+					DebugPrint("error loading import file \"%s\": %s\n", name, document.ErrorDesc());
 
 				// process child elements
 				if (const TiXmlElement *root = document.FirstChildElement())
-					ProcessWorldItems(root);
+					ProcessWorldItem(root);
 			}
 		}
 		importloader;
 
-		class TilemapLoader
+		class FogLoader
 		{
 		public:
-			TilemapLoader()
+			FogLoader()
 			{
-				AddConfigure(0xbaf310c5 /* "tilemap" */, Entry(this, &TilemapLoader::Configure));
+				AddConfigure(0xa1f3723f /* "fog" */, Entry(this, &FogLoader::Configure));
 			}
 
-			void Configure(unsigned int aid, const TiXmlElement *element)
+			void Configure(unsigned int aId, const TiXmlElement *element)
 			{
-				// tilemap configuration
-				float x = 0.0f, y = 0.0f;
-				element->QueryFloatAttribute("x", &x);
-				element->QueryFloatAttribute("y", &y);
-				float dx = 1.0f, dy = 1.0f;
-				element->QueryFloatAttribute("dx", &dx);
-				element->QueryFloatAttribute("dy", &dy);
-
-				// tiles
-				struct Tile
+				// set up depth fog
+				int enable = 0;
+				if (element->QueryIntAttribute("enable", &enable) == TIXML_SUCCESS)
 				{
-					unsigned int mSpawn;
-					Vector2 mOffset;
-					float mAngle;
-				};
-				Tile map[CHAR_MAX-CHAR_MIN+1];
-				memset(map, 0, sizeof(map));
-
-				// position value
-				Vector2 pos(x, y);
-
-				// process child elements
-				for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
-				{
-					switch(Hash(child->Value()))
-					{
-					case 0x713a7cc9 /* "tile" */:
-						{
-							const char *name = child->Attribute("name");
-							if (!name || !name[0])
-								continue;
-							Tile &tile = map[name[0]-CHAR_MIN];
-							const char *spawn = child->Attribute("spawn");
-							tile.mSpawn = Hash(spawn);
-							child->QueryFloatAttribute("x", &tile.mOffset.x);
-							child->QueryFloatAttribute("y", &tile.mOffset.y);
-							if (child->QueryFloatAttribute("angle", &tile.mAngle) == TIXML_SUCCESS)
-								tile.mAngle *= float(M_PI) / 180.0f;
-						}
-						break;
-
-					case 0x440e1d7b /* "row" */:
-						{
-							pos.x = x;
-
-							const char *text = child->Attribute("data");
-							if (!text)
-								text = child->GetText();
-							if (!text)
-								continue;
-
-							for (const char *t = text; *t; ++t)
-							{
-								Tile &tile = map[*t-CHAR_MIN];
-								if (tile.mSpawn)
-								{
-									Database::Instantiate(tile.mSpawn, 0, 0, tile.mAngle, pos + tile.mOffset, Vector2(0, 0), 0);
-								}
-
-								pos.x += dx;
-							}
-
-							pos.y += dy;
-						}
-						break;
-
-					default:
-						break;
-					}
+					if (enable)
+						glEnable( GL_FOG );
+					else
+						glDisable( GL_FOG );
 				}
+				glHint( GL_FOG_HINT, GL_DONT_CARE );
+
+				switch (Hash(element->Attribute("mode")))
+				{
+				default:
+				case 0xd00594c0 /* "linear" */:
+					{
+						glFogi( GL_FOG_MODE, GL_LINEAR );
+
+						float start = 0;
+						if (element->QueryFloatAttribute("start", &start) == TIXML_SUCCESS)
+							glFogf( GL_FOG_START, start );
+
+						float end = 1;
+						if (element->QueryFloatAttribute("end", &end) == TIXML_SUCCESS)
+							glFogf( GL_FOG_END, end );
+					}
+					break;
+
+				case 0x72a68728 /* "exp" */:
+					{
+						glFogi( GL_FOG_MODE, GL_EXP );
+
+						float density = 1.0f;
+						if (element->QueryFloatAttribute("density", &density) == TIXML_SUCCESS)
+							glFogf( GL_FOG_DENSITY, density );
+					}
+					break;
+
+				case 0x9626adee /* "exp2" */:
+					{
+						glFogi( GL_FOG_MODE, GL_EXP2 );
+
+						float density = 1.0f;
+						if (element->QueryFloatAttribute("density", &density) == TIXML_SUCCESS)
+							glFogf( GL_FOG_DENSITY, density );
+					}
+					break;
+				}
+
+				GLfloat fogColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
+				element->QueryFloatAttribute("r", &fogColor[0]);
+				element->QueryFloatAttribute("g", &fogColor[1]);
+				element->QueryFloatAttribute("b", &fogColor[2]);
+				element->QueryFloatAttribute("a", &fogColor[3]);
+				glFogfv( GL_FOG_COLOR, fogColor );
+				glClearColor( fogColor[0], fogColor[1], fogColor[2], 0 );
 			}
 		}
-		tilemaploader;
+		fogloader;
 	}
 }
 

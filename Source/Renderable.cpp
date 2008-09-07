@@ -42,8 +42,13 @@ namespace Database
 				renderable.Configure(element, aId);
 				Database::renderabletemplate.Close(aId);
 
+				int inherit = 1;
+				element->Attribute("inherit", &inherit);
+
 				// process child elements
 				std::vector<unsigned int> &buffer = Database::dynamicdrawlist.Open(aId);
+				if (!inherit)
+					buffer.clear();
 				ProcessDrawItems(element, buffer);
 				Database::dynamicdrawlist.Close(aId);
 			}

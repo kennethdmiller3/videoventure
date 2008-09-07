@@ -36,6 +36,7 @@
 #include "Vector2.h"
 #include "Sphere2.h"
 #include "Matrix2.h"
+#include "Transform2.h"
 #include "AlignedBox2.h"
 
 // utility includes

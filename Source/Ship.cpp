@@ -188,7 +188,7 @@ void Ship::Simulate(float aStep)
 			(mMove.y >= 0.0f)
 			? Lerp(ship.mNeutralVeloc, ship.mForwardVeloc, mMove.y)
 			: Lerp(ship.mNeutralVeloc, ship.mReverseVeloc, -mMove.y));
-		Matrix2 transform(entity->GetTransform());
+		const Transform2 &transform = entity->GetTransform();
 		Vector2 dv(transform.Rotate(localvel) - entity->GetVelocity());
 		float it = std::min(acc * InvSqrt(dv.LengthSq() + 0.0001f), 1.0f / aStep);
 		Vector2 new_thrust(dv * it * body->GetMass());

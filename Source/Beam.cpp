@@ -192,7 +192,7 @@ void Beam::Update(float aStep)
 		// beam segment
 		b2Segment segment;
 		segment.p1 = entity->GetPosition();
-		segment.p2 = entity->GetPosition() + entity->GetTransform().y * curRange;
+		segment.p2 = entity->GetPosition() + Matrix2(entity->GetTransform()).y * curRange;
 
 		// impact point
 		float lambda = 1.0f;

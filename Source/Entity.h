@@ -12,17 +12,11 @@ protected:
 	// identifier
 	unsigned int id;
 
-	// previous transform
-	float angle_0;
-	Vector2 posit_0;
-
-	// current transform
-	float angle_1;
-	Vector2 posit_1;
+	// previous and current transform
+	Transform2 trans[2];
 
 	// current velocity
-	float omega;
-	Vector2 veloc;
+	Transform2 veloc;
 
 public:
 #ifdef USE_POOL_ALLOCATOR
@@ -52,121 +46,120 @@ public:
 	// step
 	void Step(void)
 	{
-		angle_0 = angle_1;
-		posit_0 = posit_1;
+		trans[0] = trans[1];
 	}
 
 	// set transform
 	void SetTransform(const float aAngle, const Vector2 &aPosit)
 	{
-		angle_1 = aAngle;
-		posit_1 = aPosit;
+		trans[1].a = aAngle;
+		trans[1].p = aPosit;
 	}
-	void SetTransform(const Matrix2 &aTransform)
+	void SetTransform(const Transform2 &aTransform)
 	{
-		SetTransform(aTransform.Angle(), aTransform.p);
+		trans[1] = aTransform;
 	}
 
 	// get transform
-	const Matrix2 GetTransform() const
+	const Transform2 GetTransform() const
 	{
-		return Matrix2(angle_1, posit_1);
+		return trans[1];
 	}
 
 	// get interpolated transform
-	const Matrix2 GetInterpolatedTransform(float aRatio) const
+	const Transform2 GetInterpolatedTransform(float aRatio) const
 	{
-		return Matrix2(GetInterpolatedAngle(aRatio), GetInterpolatedPosition(aRatio));
+		return Transform2(GetInterpolatedAngle(aRatio), GetInterpolatedPosition(aRatio));
 	}
 
 	// set previous angle
 	void SetPrevAngle(float aAngle)
 	{
-		angle_0 = aAngle;
+		trans[0].a = aAngle;
 	}
 
 	// set angle
 	void SetAngle(float aAngle)
 	{
-		angle_1 = aAngle;
+		trans[1].a = aAngle;
 	}
 
 	// get previous angle
 	float GetPrevAngle() const
 	{
-		return angle_0;
+		return trans[0].a;
 	}
 
 	// get current angle
 	float GetAngle() const
 	{
-		return angle_1;
+		return trans[1].a;
 	}
 
 	// get interpolated angle
 	float GetInterpolatedAngle(float aRatio) const
 	{
-		float angle_d = angle_1 - angle_0;
+		float angle_d = trans[1].a - trans[0].a;
 		if (angle_d > float(M_PI))
 			angle_d -= 2.0f*float(M_PI);
 		else if (angle_d < -float(M_PI))
 			angle_d += 2.0f*float(M_PI);
-		return angle_0 + angle_d * aRatio;
+		return trans[0].a + angle_d * aRatio;
 	}
 
-	// set omega
+	// set veloc.a
 	void SetOmega(float aOmega)
 	{
-		omega = aOmega;
+		veloc.a = aOmega;
 	}
 
-	// get omega
+	// get veloc.a
 	const float GetOmega() const
 	{
-		return omega;
+		return veloc.a;
 	}
 
 	// set previous position
 	void SetPrevPosition(const Vector2 &aPos)
 	{
-		posit_0 = aPos;
+		trans[0].p = aPos;
 	}
 
 	// set position
 	void SetPosition(const Vector2 &aPos)
 	{
-		posit_1 = aPos;
+		trans[1].p = aPos;
 	}
 
 	// get previous position
 	const Vector2 &GetPrevPosition() const
 	{
-		return posit_0;
+		return trans[0].p;
 	}
 
 	// get current position
 	const Vector2 &GetPosition() const
 	{
-		return posit_1;
+		return trans[1].p;
 	}
 
 	// get interpolated position
 	const Vector2 GetInterpolatedPosition(float aRatio) const
 	{
-		return posit_0 + (posit_1 - posit_0) * aRatio;
+		return trans[0].p + (trans[1].p - trans[0].p) * aRatio;
 	}
 
 
 	// set velocity
 	void SetVelocity(const Vector2 &aVel)
 	{
-		veloc = aVel;
+		veloc.p = aVel;
 	}
 
 	// get velocity
 	const Vector2 &GetVelocity() const
 	{
-		return veloc;
+		return veloc.p;
 	}
 
 	// configure

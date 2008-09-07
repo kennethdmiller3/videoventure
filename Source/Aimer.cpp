@@ -502,6 +502,7 @@ void Aimer::Control(float aStep)
 		mTurn += transform.y.Cross(push) > 0 ? push.Length() : -push.Length();
 	}
 
+#ifdef AIMER_OBSTACLE_AVOIDANCE
 	// obstacle avoidance
 	if (Collidable *collidable = Database::collidable.Get(mId))
 	{
@@ -526,6 +527,7 @@ void Aimer::Control(float aStep)
 			mTurn += transform.y.Cross(normal) > 0.0f ? push : -push;
 		}
 	}
+#endif
 
 	// limit move to 100%
 	float moveLengthSq = mMove.LengthSq();
