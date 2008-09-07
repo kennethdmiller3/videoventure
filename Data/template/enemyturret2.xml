@@ -1,0 +1,10 @@
+<?xml version="1.0" ?>
+<template name="enemyturret2" type="enemyturret">
+	<link name="lgun" secondary="enemycannon0">
+		<offset x="2" y="0" angle="0" />
+	</link>
+	<link name="rgun" secondary="enemycannon1">
+		<offset x="-2" y="0" angle="0" />
+	</link>
+	<aimer range="256" attack="128" leading="240" category="4" bit2="0" bit3="0" bit4="0" />
+</template>

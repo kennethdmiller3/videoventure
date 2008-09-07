@@ -1,0 +1,36 @@
+<?xml version="1.0" ?>
+<template name="health3">
+	<collidable>
+		<body name="main">
+			<circle radius="4">
+				<friction value="0.5" />
+				<restitution value="0.5" />
+				<density value="1" />
+				<category value="0" />
+				<mask bit2="0" bit4="0" />
+			</circle>
+			<damping linear="5.0" angular="5.0" />
+		</body>
+	</collidable>
+	<renderable radius="4">
+		<drawlist>
+			<color r="1.0" g="1.0" b="1.0" a="1.0" />
+			<quads>
+				<vertex x="1" y="3" />
+				<vertex x="-1" y="3" />
+				<vertex x="-1" y="-3" />
+				<vertex x="1" y="-3" />
+				<vertex x="3" y="1" />
+				<vertex x="3" y="-1" />
+				<vertex x="-3" y="-1" />
+				<vertex x="-3" y="1" />
+			</quads>
+			<color r="0.2" g="1.0" b="0.1" a="1.0" />
+			<pushmatrix>
+				<scale x="4" y="4" />
+				<calllist name="circle16" />
+			</pushmatrix>
+		</drawlist>
+	</renderable>
+	<bullet damage="-3" ricochet="1" spawnondeath="health3collect" />
+</template>

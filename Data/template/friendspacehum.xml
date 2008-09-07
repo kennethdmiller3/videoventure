@@ -1,0 +1,55 @@
+<?xml version="1.0" ?>
+<template name="friendspacehum">
+	<collidable>
+		<body name="main">
+			<circle radius="3">
+				<friction value="0" />
+				<restitution value="1" />
+				<density value="1.0" />
+				<category value="1" />
+				<mask bit2="0" />
+			</circle>
+		</body>
+	</collidable>
+	<renderable radius="4" period="0.1">
+		<pushmatrix>
+			<color r="0.2" g="0.2" b="0.2" a="1.0" />
+			<scale>
+				<key time="0.000000" x="0.0" y="0.0" />
+				<key time="0.033333" x="2.5" y="2.5" />
+				<key time="0.066667" x="2.5" y="2.5" />
+				<key time="0.100000" x="0.0" y="0.0" />
+			</scale>
+			<calllist name="diamond" />
+		</pushmatrix>
+		<pushmatrix>
+			<color r="1.0" g="1.0" b="1.0" a="1.0" />
+			<scale>
+				<key time="0.000000" x="1.5" y="1.5" />
+				<key time="0.033333" x="4.0" y="4.0" />
+				<key time="0.066667" x="4.0" y="4.0" />
+				<key time="0.100000" x="1.5" y="1.5" />
+			</scale>
+			<calllist name="diamond" />
+		</pushmatrix>
+		<color r="0.1" g="0.2" b="1.0" a="1.0" />
+		<pushmatrix>
+			<scale x="1.5" y="4" />
+			<calllist name="diamond" />
+		</pushmatrix>
+		<pushmatrix>
+			<scale x="4" y="1.5" />
+			<calllist name="diamond" />
+		</pushmatrix>
+	</renderable>
+	<expire time="30" spawnonexpire="friendbulletexplosion" />
+	<bullet damage="1" ricochet="1" spawnondeath="friendfireballexplosion" />
+	<damagable health="1" spawnondeath="friendfireballexplosion" />
+	<aimer range="512" attack="0" leading="0" category="1" bit1="0" bit2="0" />
+	<ship maxveloc="90" maxaccel="180" minaccel="10" maxomega="0" />
+	<team name="blue" />
+	<points value="100" />
+	<spawner>
+		<spawn name="friendspacehumtrail" start="0" cycle="0.2" track="0" />
+	</spawner>
+</template>

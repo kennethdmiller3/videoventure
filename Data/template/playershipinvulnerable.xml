@@ -1,0 +1,83 @@
+<?xml version="1.0" ?>
+<template name="playershipinvulnerable" type="playership">
+	<expire time="3.0" spawnonexpire="playership" />
+	<renderable radius="12" inherit="0">
+		<pushmatrix>
+			<block start="0" length="0.05" repeat="40">
+				<color>
+					<key time="0.00" r="0.4" g="0.7" b="1.0" a="1.0" />
+					<key time="0.05" r="0.1" g="0.2" b="1.0" a="0.5" />
+				</color>
+			</block>
+			<block start="2">
+				<color>
+					<key time="0.00" r="0.1" g="0.2" b="1.0" a="0.5" />
+					<key time="0.05" r="0.4" g="0.7" b="1.0" a="0.9" />
+					<key time="0.10" r="0.1" g="0.2" b="1.0" a="0.45" />
+					<key time="0.15" r="0.4" g="0.7" b="1.0" a="0.8" />
+					<key time="0.20" r="0.1" g="0.2" b="1.0" a="0.4" />
+					<key time="0.25" r="0.4" g="0.7" b="1.0" a="0.7" />
+					<key time="0.30" r="0.1" g="0.2" b="1.0" a="0.35" />
+					<key time="0.35" r="0.4" g="0.7" b="1.0" a="0.6" />
+					<key time="0.40" r="0.1" g="0.2" b="1.0" a="0.3" />
+					<key time="0.45" r="0.4" g="0.7" b="1.0" a="0.5" />
+					<key time="0.50" r="0.1" g="0.2" b="1.0" a="0.25" />
+					<key time="0.55" r="0.4" g="0.7" b="1.0" a="0.4" />
+					<key time="0.60" r="0.1" g="0.2" b="1.0" a="0.2" />
+					<key time="0.65" r="0.4" g="0.7" b="1.0" a="0.3" />
+					<key time="0.70" r="0.1" g="0.2" b="1.0" a="0.15" />
+					<key time="0.75" r="0.4" g="0.7" b="1.0" a="0.2" />
+					<key time="0.80" r="0.1" g="0.2" b="1.0" a="0.1" />
+					<key time="0.85" r="0.4" g="0.7" b="1.0" a="0.1" />
+					<key time="0.90" r="0.1" g="0.2" b="1.0" a="0.0" />
+				</color>
+			</block>
+			<pushmatrix>
+				<scale x="12" y="12" />
+				<repeat count="3">
+					<pushmatrix>
+						<rotate>
+							<key time="0" angle="0" />
+							<key time="3" angle="360" />
+						</rotate>
+						<line_loop>
+							<vertex x="1.000000" y="0.000000" />
+							<vertex x="0.707107" y="0.707107" />
+							<vertex x="0.000000" y="1.000000" />
+							<vertex x="-0.707107" y="0.707107" />
+							<vertex x="-1.000000" y="0.00000" />
+							<vertex x="-0.707107" y="-0.707107" />
+							<vertex x="0.000000" y="-1.00000" />
+							<vertex x="0.707107" y="-0.707107" />
+						</line_loop>
+					</pushmatrix>
+					<pushmatrix>
+						<rotate>
+							<key time="0" angle="0" />
+							<key time="3" angle="-360" />
+						</rotate>
+						<line_loop>
+							<vertex x="1.000000" y="0.000000" />
+							<vertex x="0.707107" y="0.707107" />
+							<vertex x="0.000000" y="1.000000" />
+							<vertex x="-0.707107" y="0.707107" />
+							<vertex x="-1.000000" y="0.00000" />
+							<vertex x="-0.707107" y="-0.707107" />
+							<vertex x="0.000000" y="-1.00000" />
+							<vertex x="0.707107" y="-0.707107" />
+						</line_loop>
+					</pushmatrix>
+					<scale x="0.85" y="0.85" />
+					<rotate angle="30" />
+				</repeat>
+			</pushmatrix>
+		</pushmatrix>
+		<color>
+			<key time="0" r="1.0" g="1.0" b="1.0" />
+			<key time="2" r="1.0" g="1.0" b="1.0" />
+			<key time="3" r="0.4" g="0.5" b="1.0" />
+		</color>
+		<calllist name="ship" />
+	</renderable>
+	<damagable health="0"/>
+</template>

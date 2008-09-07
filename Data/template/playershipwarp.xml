@@ -1,0 +1,73 @@
+<?xml version="1.0" ?>
+<template name="playershipwarp">
+	<renderable radius="2048">
+		<block start="0.8" length="0.3">
+			<pushmatrix>
+				<color>
+					<key time="0.0" r="0.0" g="0.0" b="1.0" a="0.0" />
+					<key time="0.3" r="1.0" g="1.0" b="1.0" a="1.0" />
+				</color>
+				<scale>
+					<key time="0.0" x="0.0" y="0.0" />
+					<key time="0.3" x="1.0" y="1.0" />
+				</scale>
+				<calllist name="ship" />
+			</pushmatrix>
+		</block>
+		<block start="0.6" length="0.5">
+			<pushmatrix>
+				<color>
+					<key time="0.0" r="0.0" g="0.0" b="1.0" a="0.0" />
+					<key time="0.5" r="0.4" g="0.7" b="1.0" a="0.5" />
+				</color>
+				<scale>
+					<key time="0.0" x="0.0" y="0.0" />
+					<key time="0.5" x="10.0" y="10.0" />
+				</scale>
+				<calllist name="circle16" />
+			</pushmatrix>
+		</block>
+		<block start="0.4" length="0.7">
+			<pushmatrix>
+				<color>
+					<key time="0.0" r="0.0" g="0.0" b="1.0" a="0.0" />
+					<key time="0.7" r="0.0" g="0.5" b="1.0" a="0.25" />
+				</color>
+				<scale>
+					<key time="0.0" x="0.0" y="0.0" />
+					<key time="0.7" x="16.0" y="16.0" />
+				</scale>
+				<calllist name="circle16" />
+			</pushmatrix>
+		</block>
+		<pushmatrix>
+			<color>
+				<key time="0.0" r="0.0" g="0.0" b="1.0" a="0.0" />
+				<key time="1.1" r="0.4" g="0.7" b="1.0" a="0.5" />
+			</color>
+			<repeat count="6">
+				<repeat count="12">
+					<pushmatrix>
+						<translate>
+							<key time="0.0" x="256" y="0" />
+							<key time="1.0" x="0" y="0" />
+						</translate>
+						<scale>
+							<key time="0.0" x="1.0" y="1.0" />
+							<key time="1.0" x="8.0" y="1.0" />
+						</scale>
+						<calllist name="circle16" />
+					</pushmatrix>
+					<rotate angle="30" />
+				</repeat>
+				<scale x="0.8" y="0.8" />
+				<rotate angle="18" />
+			</repeat>
+		</pushmatrix>
+	</renderable>
+	<expire time="1.1" spawnonexpire="playershipinvulnerable" />
+	<playercontroller />
+	<soundcue>
+		<cue sound="stargate-warpin" />
+	</soundcue>
+</template>

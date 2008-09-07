@@ -1,0 +1,10 @@
+<?xml version="1.0" ?>
+<template name="friendturret2" type="friendturret">
+	<link name="lgun" secondary="friendcannon0">
+		<offset x="2" y="0" angle="0" />
+	</link>
+	<link name="rgun" secondary="friendcannon1">
+		<offset x="-2" y="0" angle="0" />
+	</link>
+	<aimer range="256" attack="128" leading="240" category="2" bit1="0" bit2="0" bit4="0" />
+</template>

@@ -1,0 +1,28 @@
+<?xml version="1.0" ?>
+<template name="enemyrocketbombtrail">
+	<expire time="0.5" />
+	<renderable radius="2.5">
+		<pushmatrix>
+			<scale>
+				<key time="0.0" x="1.5" y="1.5" />
+				<key time="0.5" x="0.5" y="0.5" />
+			</scale>
+			<color>
+				<key time="0.0" r="1.0" g="0.8" b="0.1" a="0.5" />
+				<key time="0.5" r="1.0" g="0.2" b="0.1" a="0.0" />
+			</color>
+			<calllist name="diamond" />
+		</pushmatrix>
+		<pushmatrix>
+			<scale>
+				<key time="0.0" x="2.5" y="2.5" />
+				<key time="0.5" x="1.0" y="1.0" />
+			</scale>
+			<color>
+				<key time="0.0" r="1.0" g="0.2" b="0.1" a="0.25" />
+				<key time="0.5" r="1.0" g="0.2" b="0.1" a="0.0" />
+			</color>
+			<calllist name="diamond" />
+		</pushmatrix>
+	</renderable>
+</template>

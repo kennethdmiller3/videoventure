@@ -1,0 +1,104 @@
+<?xml version="1.0" ?>
+<template name="friendwarrior">
+	<collidable>
+		<body name="main">
+			<circle radius="8">
+				<density value="1" />
+				<friction value="0.5" />
+				<restitution value="0.5" />
+				<category value="1" />
+			</circle>
+			<fixedrotation value="1" />
+		</body>
+	</collidable>
+	<renderable radius="9">
+		<drawlist>
+			<pushmatrix>
+				<repeat count="4">
+					<color r="0.1" g="0.2" b="1.0" a="1.0" />
+					<triangle_strip>
+						<vertex x="6.5" y="0.5" />
+						<vertex x="6.5" y="-0.5" />
+						<vertex x="5.5" y="0.5" />
+						<vertex x="5.5" y="-0.5" />
+					</triangle_strip>
+					<triangle_strip>
+						<vertex x="5.5" y="3.5" />
+						<vertex x="5.5" y="4.5" />
+						<vertex x="4.5" y="3.5" />
+						<vertex x="4.5" y="4.5" />
+						<vertex x="3.5" y="3.5" />
+						<vertex x="4.5" y="4.5" />
+						<vertex x="3.5" y="4.5" />
+						<vertex x="3.5" y="5.5" />
+						<vertex x="4.5" y="5.5" />
+					</triangle_strip>
+					<color r="0.35" g="0.15" b="0.45" a="1.0" />
+					<triangle_strip>
+						<vertex x="7.5" y="0.5" />
+						<vertex x="7.5" y="-0.5" />
+						<vertex x="6.5" y="1.5" />
+						<vertex x="6.5" y="-1.5" />
+						<vertex x="4.5" y="1.5" />
+						<vertex x="4.5" y="-1.5" />
+						<vertex x="4.5" y="0.5" />
+						<vertex x="4.5" y="-0.5" />
+						<vertex x="3.5" y="0.5" />
+						<vertex x="3.5" y="-0.5" />
+						<vertex x="3.5" y="1.5" />
+						<vertex x="3.5" y="-1.5" />
+						<vertex x="2.5" y="1.5" />
+						<vertex x="2.5" y="-1.5" />
+					</triangle_strip>
+					<triangle_strip>
+						<vertex x="5.5" y="5.5" />
+						<vertex x="2.5" y="5.5" />
+						<vertex x="5.5" y="2.5" />
+						<vertex x="2.5" y="4.5" />
+						<vertex x="4.5" y="2.5" />
+					</triangle_strip>
+					<triangle_strip>
+						<vertex x="3.5" y="3.5" />
+						<vertex x="2.5" y="3.5" />
+						<vertex x="3.5" y="2.5" />
+						<vertex x="2.5" y="2.5" />
+					</triangle_strip>
+					<rotate angle="90" />
+				</repeat>
+			</pushmatrix>
+			<color r="0.3" g="0.3" b="0.3" a="1.0" />
+			<triangle_strip>
+				<vertex x="8.5" y="2.5" />
+				<vertex x="2.5" y="8.5" />
+				<vertex x="8.5" y="2" />
+				<vertex x="2" y="8.5" />
+				<vertex x="7.5" y="1.5" />
+				<vertex x="1.5" y="7.5" />
+				<vertex x="7.5" y="-2" />
+				<vertex x="-1.5" y="7.5" />
+				<vertex x="8.5" y="-1.5" />
+				<vertex x="-2" y="8.5" />
+				<vertex x="8.5" y="-2.5" />
+				<vertex x="-2.5" y="8.5" />
+				<vertex x="2.5" y="-8.5" />
+				<vertex x="-8.5" y="2.5" />
+				<vertex x="2" y="-8.5" />
+				<vertex x="-8.5" y="2" />
+				<vertex x="1.5" y="-7.5" />
+				<vertex x="-7.5" y="1.5" />
+				<vertex x="-1.5" y="-7.5" />
+				<vertex x="-7.5" y="-1.5" />
+				<vertex x="-2" y="-8.5" />
+				<vertex x="-8.5" y="-2" />
+				<vertex x="-2.5" y="-8.5" />
+				<vertex x="-8.5" y="-2.5" />
+			</triangle_strip>
+		</drawlist>
+	</renderable>
+	<link name="turret" secondary="friendwarriorturret" updateangle="0" />
+	<aimer range="256" attack="0" leading="0" wanderside="0.5" wandersiderate="0.125" wanderfront="0.5" wanderfrontrate="0.125" evade="1" close="64" category="2" bit1="0" bit2="0" bit4="0" />
+	<ship maxveloc="60" maxaccel="120" minaccel="10" maxomega="0.0" />
+	<damagable health="15" spawnondeath="friendexplosion" />
+	<team name="blue" />
+	<points value="500" />
+</template>

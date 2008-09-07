@@ -2,13 +2,6 @@
 <!-- Test Level -->
 <world xmin="-1024" ymin="-1024" xmax="1024" ymax="1024">
 
-	<!-- sounds -->
-
-	<sound name="startup">
-		<file name="stargate-start.wav"/>
-	</sound>
-
-
 	<!-- players -->
 
 	<template name="1P">
@@ -2929,7 +2922,7 @@
 
 	<template name="enemyshipweapon">
 		<weapon>
-			<velocity x="0" y="180"/>
+			<velocity x="0" y="240"/>
 			<ordnance name="enemybullet"/>
 			<shot delay="0.3"/>
 		</weapon>
@@ -3610,28 +3603,28 @@
 	<entity name="enemyspawncluster1">
 		<position x="0" y="1024" angle="180"/>
 		<spawner>
-			<spawn name="enemyspawncluster" start="0"/>
+			<spawn name="enemyspawncluster" start="5"/>
 		</spawner>
 	</entity>
 
 	<entity name="enemyspawncluster2">
 		<position x="1024" y="0" angle="90"/>
 		<spawner>
-			<spawn name="enemyspawncluster" start="8"/>
+			<spawn name="enemyspawncluster" start="35"/>
 		</spawner>
 	</entity>
 
 	<entity name="enemyspawncluster3">
 		<position x="0" y="-1024" angle="0"/>
 		<spawner>
-			<spawn name="enemyspawncluster" start="16"/>
+			<spawn name="enemyspawncluster" start="65"/>
 		</spawner>
 	</entity>
 
 	<entity name="enemyspawncluster4">
 		<position x="-1024" y="0" angle="270"/>
 		<spawner>
-			<spawn name="enemyspawncluster" start="24"/>
+			<spawn name="enemyspawncluster" start="95"/>
 		</spawner>
 	</entity>
 
@@ -4595,9 +4588,9 @@
 	</template>
 
 
-	<!-- player bullet explosion -->
+	<!-- player laser beam impact -->
 
-	<template name="playerbulletexplosion">
+	<template name="playerlaserbeamimpact">
 		<expire time="0.5"/>
 		<renderable radius="8">
 			<block length="0.1">
@@ -4654,88 +4647,85 @@
 	</template>
 
 
-	<!-- player bullet -->
+	<!-- player laser beam -->
 
-	<template name="playerbullet">
-		<collidable>
-			<body name="main">
-				<fast value="1"/>
-				<circle radius="1">
-					<friction value="1"/>
-					<restitution value="0"/>
-					<density value="1.0"/>
-					<category value="2"/>
-					<mask bit1="0" bit2="0" bit4="0"/>
-				</circle>
-				<fixedrotation value="1"/>
-			</body>
-		</collidable>
-		<renderable radius="150">
-			<triangle_strip>
-				<drawlist>
-					<color r="1.0" g="1.0" b="1.0" a="1.0"/>
-					<vertex x="0" y="3"/>
-					<vertex x="0.75" y="1"/>
-					<vertex x="-0.75" y="1"/>
-					<vertex x="0.75" y="-1"/>
-					<vertex x="-0.75" y="-1"/>
-				</drawlist>
+	<template name="playerlaserbeam">
+		<expire time="0.05"/>
+		<beam damage="1" range="384" category="2" bit1="0" bit2="0" bit4="0" spawnonimpact="playerlaserbeamimpact"/>
+		<renderable radius="384">
+			<quad_strip>
+				<set name="p" type="position">
+					<key time="0.00" x="0.50"/>
+					<key time="0.05" x="0.25"/>
+				</set>
 				<color>
-					<key time="0.0" r="1.0" g="0.0" b="1.0" a="1.0"/>
-					<key time="0.1" r="0.0" g="1.0" b="1.0" a="1.0"/>
-					<key time="0.2" r="1.0" g="0.0" b="1.0" a="1.0"/>
-					<key time="0.3" r="0.0" g="1.0" b="1.0" a="1.0"/>
-					<key time="0.4" r="1.0" g="0.0" b="1.0" a="1.0"/>
-					<key time="0.5" r="0.0" g="1.0" b="1.0" a="1.0"/>
-					<key time="0.6" r="1.0" g="0.0" b="1.0" a="1.0"/>
-					<key time="0.7" r="0.0" g="1.0" b="1.0" a="1.0"/>
-					<key time="0.8" r="1.0" g="0.0" b="1.0" a="1.0"/>
+					<key time="0.00" r="1.0" g="1.0" b="1.0" a="1.0"/>
+					<key time="0.05" r="0.7" g="0.4" b="1.0" a="0.0"/>
 				</color>
-				<vertex x="0.75" y="-1"/>
-				<vertex x="-0.75" y="-1"/>
+				<vertex variable="p"/>
+				<mul name="p" type="scale" x="-1"/>
+				<vertex variable="p"/>
+				<mul name="p" type="scale" x="-1"/>
 				<color>
-					<key time="0.0" r="0.5" g="0.0" b="1.0" a="1.0"/>
-					<key time="0.1" r="0.0" g="0.5" b="1.0" a="0.9"/>
-					<key time="0.2" r="0.5" g="0.0" b="1.0" a="0.8"/>
-					<key time="0.3" r="0.0" g="0.5" b="1.0" a="0.7"/>
-					<key time="0.4" r="0.5" g="0.0" b="1.0" a="0.6"/>
-					<key time="0.5" r="0.0" g="0.5" b="1.0" a="0.5"/>
-					<key time="0.6" r="0.5" g="0.0" b="1.0" a="0.4"/>
-					<key time="0.7" r="0.0" g="0.5" b="1.0" a="0.3"/>
-					<key time="0.8" r="0.5" g="0.0" b="1.0" a="0.2"/>
+					<key time="0.00" r="0.9" g="0.8" b="1.0" a="1.0"/>
+					<key time="0.05" r="0.5" g="0.0" b="1.0" a="0.0"/>
 				</color>
-				<vertex>
-					<key time="0.0" x="0.5" y="0"/>
-					<key time="0.6" x="0.4" y="-48"/>
-					<key time="0.8" x="0.3" y="0"/>
-				</vertex>
-				<vertex>
-					<key time="0.0" x="-0.5" y="0"/>
-					<key time="0.6" x="-0.4" y="-48"/>
-					<key time="0.8" x="-0.3" y="0"/>
-				</vertex>
-				<vertex>
-					<key time="0.0" x="0" y="0"/>
-					<key time="0.6" x="0" y="-144"/>
-					<key time="0.8" x="0" y="0"/>
-				</vertex>
-			</triangle_strip>
+				<add name="p" type="translate" y="8"/>
+				<vertex variable="p"/>
+				<mul name="p" type="scale" x="-1"/>
+				<vertex variable="p"/>
+				<mul name="p" type="scale" x="-1"/>
+				<sub name="p" type="translate" y="8"/>
+				<add name="p" type="translate" variable="beamend"/>
+				<vertex variable="p"/>
+				<mul name="p" type="scale" x="-1"/>
+				<vertex variable="p"/>
+			</quad_strip>
+			<quad_strip>
+				<set name="p" type="position">
+					<key time="0.00" x="1.00"/>
+					<key time="0.05" x="2.00"/>
+				</set>
+				<color>
+					<key time="0.00" r="0.7" g="0.4" b="1.0" a="0.5"/>
+					<key time="0.05" r="0.5" g="0.0" b="1.0" a="0.0"/>
+				</color>
+				<vertex variable="p"/>
+				<mul name="p" type="scale" x="-1"/>
+				<vertex variable="p"/>
+				<mul name="p" type="scale" x="-1"/>
+				<color>
+					<key time="0.00" r="0.5" g="0.0" b="1.0" a="0.5"/>
+					<key time="0.05" r="0.0" g="0.0" b="1.0" a="0.0"/>
+				</color>
+				<add name="p" type="translate" y="8"/>
+				<vertex variable="p"/>
+				<mul name="p" type="scale" x="-1"/>
+				<vertex variable="p"/>
+				<mul name="p" type="scale" x="-1"/>
+				<sub name="p" type="translate" y="8"/>
+				<add name="p" type="translate" variable="beamend"/>
+				<vertex variable="p"/>
+				<mul name="p" type="scale" x="-1"/>
+				<vertex variable="p"/>
+			</quad_strip>
 		</renderable>
-		<bullet life="0.8" damage="2" spawnondeath="playerbulletexplosion"/>
-		<sound volume="0.25">
-			<file name="stargate-playershot.wav"/>
-		</sound>
 	</template>
 
 
-	<!-- player ship weapon -->
+	<!-- player laser weapon -->
 
-	<template name="playershipweapon">
+	<template name="playerlaserweapon">
 		<weapon>
-			<velocity x="0" y="480"/>
-			<ordnance name="playerbullet"/>
-			<shot delay="0.2"/>
+			<flash name="playerlaserbeam"/>
+			<shot delay="0.1"/>
 		</weapon>
+		<sound volume="0.25">
+			<file name="robotron-playershot.wav"/>
+		</sound>
+		<soundcue>
+			<cue name="fire" sound="playerlaserweapon"/>
+		</soundcue>
 	</template>
 
 
@@ -4787,7 +4777,7 @@
 
 	<!-- player multiple -->
 
-	<template name="multiple" type="playershipweapon">
+	<template name="multiple" type="playerlaserweapon">
 		<renderable radius="6" period="0.5">
 			<pushmatrix>
 				<color r="1.0" g="1.0" b="1.0" a="1.0"/>
@@ -5037,16 +5027,16 @@
 			<cue name="thrust" sound="playershipthrust"/>
 			<cue name="extralife" sound="extralife"/>
 		</soundcue>
-		<link name="lgun" secondary="playershipweapon">
+		<link name="lgun" secondary="playerlaserweapon">
 			<offset x="2" y="0" angle="0"/>
 		</link>
-		<link name="rgun" secondary="playershipweapon">
+		<link name="rgun" secondary="playerlaserweapon">
 			<offset x="-2" y="0" angle="0"/>
 		</link>
 		<link name="bomb" secondary="playersmartbombweapon">
 			<offset x="0" y="0" angle="0"/>
 		</link>
-		<!-- -->
+		<!-- 
 		<link name="gunnerA" secondary="gunner0">
 			<offset x="-8" y="0" angle="10"/>
 		</link>
@@ -5059,10 +5049,12 @@
 		<link name="gunnerD" secondary="gunner0">
 			<offset x="12" y="-4" angle="-25"/>
 		</link>
-		<!-- -->
+		-->
+		<!-- 
 		<link name="force" secondary="force4">
 			<offset x="0" y="16" angle="0"/>
 		</link>
+		-->
 		<!--
 		<link name="bit1" secondary="bit1">
 			<offset x="16" y="0"/>

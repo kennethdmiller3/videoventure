@@ -1,0 +1,28 @@
+<?xml version="1.0" ?>
+<template name="friendspacehumtrail">
+	<expire time="0.2" />
+	<renderable radius="2.5">
+		<pushmatrix>
+			<scale>
+				<key time="0.0" x="1.5" y="1.5" />
+				<key time="0.2" x="0.5" y="0.5" />
+			</scale>
+			<color>
+				<key time="0.0" r="1.0" g="1.0" b="1.0" a="1.0" />
+				<key time="0.2" r="1.0" g="1.0" b="1.0" a="0.0" />
+			</color>
+			<calllist name="diamond" />
+		</pushmatrix>
+		<pushmatrix>
+			<scale>
+				<key time="0.0" x="2.5" y="2.5" />
+				<key time="0.2" x="1.0" y="1.0" />
+			</scale>
+			<color>
+				<key time="0.0" r="0.1" g="0.2" b="1.0" a="0.5" />
+				<key time="0.2" r="0.1" g="0.2" b="1.0" a="0.0" />
+			</color>
+			<calllist name="diamond" />
+		</pushmatrix>
+	</renderable>
+</template>
