@@ -425,7 +425,7 @@ void PlayerController::Control(float aStep)
 	Entity *entity = Database::entity.Get(mId);
 
 	// get transform
-	const Matrix2 transform(entity->GetTransform());
+	const Transform2 &transform = entity->GetTransform();
 
 	// TO DO: support multiple players
 

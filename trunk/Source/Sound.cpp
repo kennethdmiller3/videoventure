@@ -1163,6 +1163,42 @@ bool ConfigurePulseLoop(SoundTemplate *self, const TiXmlElement *element, unsign
 	return true;
 }
 
+static size_t ReadBinaryData(const char *data, unsigned char buffer[], size_t size)
+{
+	size_t count = 0;
+	size_t len = strlen(data);
+	bool high = false;
+	for (size_t i = 0; i < len; ++i)
+	{
+		unsigned char value;
+		if (data[i] >= '0' && data[i] <= '9')
+			value = unsigned char(data[i] - '0');
+		else if (data[i] >= 'A' && data[i] <= 'F')
+			value = unsigned char(data[i] - 'A' + 10);
+		else if (data[i] >= 'a' && data[i] <= 'f')
+			value = unsigned char(data[i] - 'a' + 10);
+		else
+		{
+			high = false; continue;
+		}
+
+		if (high)
+		{
+			buffer[count] = (buffer[count] << 4) + value;
+			++count;
+			high = false;
+		}
+		else
+		{
+			buffer[count] = value;
+			high = true;
+		}
+		if (count >= size)
+			break;
+	}
+	return count;
+}
+
 bool ConfigureWaveLoop(SoundTemplate *self, const TiXmlElement *element, unsigned int id)
 {
 	// clock frequency
@@ -1288,6 +1324,8 @@ bool ConfigureWaveLoop(SoundTemplate *self, const TiXmlElement *element, unsigne
 		{
 		case 0xa9f017d4 /* "wave" */:
 			{
+				if (const char *data = child->Attribute("data"))
+					wavelength = ReadBinaryData(data, wavesource, SDL_arraysize(wavesource));
 
 				for (const TiXmlElement *data = child->FirstChildElement(); data != NULL; data = data->NextSiblingElement())
 				{
@@ -1307,6 +1345,9 @@ bool ConfigureWaveLoop(SoundTemplate *self, const TiXmlElement *element, unsigne
 
 		case 0x4ed1f1d8 /* "delay" */:
 			{
+				if (const char *data = child->Attribute("data"))
+					pitchlength = ReadBinaryData(data, pitchsource, SDL_arraysize(pitchsource));
+
 				for (const TiXmlElement *data = child->FirstChildElement(); data != NULL; data = data->NextSiblingElement())
 				{
 					switch(Hash(data->Value()))
@@ -1564,6 +1605,21 @@ bool SoundTemplate::Configure(const TiXmlElement *element, unsigned int id)
 	{
 		switch (Hash(child->Value()))
 		{
+		case 0x0e0d9594 /* "sound" */:
+			{
+				// get sound template
+				const char *name = child->Attribute("name");
+				const SoundTemplate &sound = Database::soundtemplate.Get(Hash(name));
+				if (sound.mLength)
+				{
+					// append sound data
+					mSize = (mLength + sound.mLength) * sizeof(short);
+					mData = static_cast<short *>(realloc(mData, mSize));
+					memcpy(mData + mLength, sound.mData, sound.mLength * sizeof(short));
+				}
+			}
+			break;
+
 		case 0xaaea5743 /* "file" */:
 			ConfigureFile(child, id);
 			break;
@@ -1606,7 +1662,7 @@ bool SoundTemplate::Configure(const TiXmlElement *element, unsigned int id)
 	DebugPrint("size=%d length=%d (%fs)\n", mSize, mLength, float(mLength) / AUDIO_FREQUENCY);
 
 #ifdef _DEBUG
-#define DEBUG_OUTPUT_SOUND_FILE
+//#define DEBUG_OUTPUT_SOUND_FILE
 #endif
 #ifdef DEBUG_OUTPUT_SOUND_FILE
 	// debug
@@ -2027,6 +2083,8 @@ void PlaySound(unsigned int aId, unsigned int aCueId)
 {
 	const Database::Typed<unsigned int> &soundcues = Database::soundcue.Get(aId);
 	unsigned int aSoundId = soundcues.Get(aCueId);
+	if (!aSoundId)
+		aSoundId = aId;
 	const SoundTemplate &soundtemplate = Database::soundtemplate.Get(aSoundId);
 	if (soundtemplate.mData)
 	{

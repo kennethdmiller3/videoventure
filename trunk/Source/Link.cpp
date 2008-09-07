@@ -116,7 +116,7 @@ namespace Database
 
 
 LinkTemplate::LinkTemplate(void)
-: mOffset(Vector2(1, 0), Vector2(0, 1), Vector2(0, 0))
+: mOffset(0, Vector2(0, 0))
 , mSub(0)
 , mSecondary(0)
 , mUpdateAngle(true)
@@ -168,7 +168,7 @@ bool LinkTemplate::Configure(const TiXmlElement *element, unsigned int aId, unsi
 				child->QueryFloatAttribute("y", &mOffset.p.y);
 				float angle = 0.0f;
 				if (child->QueryFloatAttribute("angle", &angle) == TIXML_SUCCESS)
-					mOffset = Matrix2(angle * float(M_PI) / 180.0f, mOffset.p);
+					mOffset = Transform2(angle * float(M_PI) / 180.0f, mOffset.p);
 			}
 			break;
 
@@ -222,7 +222,7 @@ Link::Link(const LinkTemplate &aTemplate, unsigned int aId)
 	if (!Database::entity.Get(aTemplate.mSecondary))
 	{
 		// instantiate the linked template
-		Matrix2 transform(aTemplate.mOffset * entity->GetTransform());
+		Transform2 transform(aTemplate.mOffset * entity->GetTransform());
 		mSecondary = Database::Instantiate(mSecondary, Database::owner.Get(mId), mId,
 			transform.Angle(), transform.p, entity->GetVelocity(), entity->GetOmega(), false);
 	}
@@ -276,7 +276,7 @@ void Link::Update(float aStep)
 		const LinkTemplate &link = Database::linktemplate.Get(mId).Get(mSub);
 
 		// update secondary transform
-		Matrix2 transform(link.mOffset * entity->GetTransform());
+		Transform2 transform(link.mOffset * entity->GetTransform());
 		secondary->Step();
 		if (link.mUpdateAngle)
 		{

@@ -6,7 +6,7 @@ class LinkTemplate
 {
 public:
 	// offset
-	Matrix2 mOffset;
+	Transform2 mOffset;
 
 	// sub-id
 	unsigned int mSub;

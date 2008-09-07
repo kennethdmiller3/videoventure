@@ -6,7 +6,7 @@ class WeaponTemplate
 {
 public:
 	// offset
-	Matrix2 mOffset;
+	Transform2 mOffset;
 	Vector2 mInherit;
 	Vector2 mScatter;
 	Vector2 mVelocity;

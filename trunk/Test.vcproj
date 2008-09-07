@@ -326,6 +326,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Source\Tilemap.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\Source\Updatable.cpp"
 				>
 			</File>
@@ -477,6 +481,10 @@
 			</File>
 			<File
 				RelativePath=".\Source\Team.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Transform2.h"
 				>
 			</File>
 			<File

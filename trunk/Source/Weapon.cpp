@@ -131,7 +131,7 @@ namespace Database
 
 
 WeaponTemplate::WeaponTemplate(void)
-: mOffset(Vector2(1, 0), Vector2(0, 1), Vector2(0, 0))
+: mOffset(0, Vector2(0, 0))
 , mInherit(1, 1)
 , mVelocity(0, 0)
 , mScatter(0, 0)
@@ -166,7 +166,7 @@ bool WeaponTemplate::Configure(const TiXmlElement *element)
 				child->QueryFloatAttribute("y", &mOffset.p.y);
 				float angle = 0.0f;
 				if (child->QueryFloatAttribute("angle", &angle) == TIXML_SUCCESS)
-					mOffset = Matrix2(angle * float(M_PI) / 180.0f, mOffset.p);
+					mOffset = Transform2(angle * float(M_PI) / 180.0f, mOffset.p);
 			}
 			break;
 
@@ -347,7 +347,7 @@ void Weapon::Update(float aStep)
 				PlaySound(mId, 0x8eab16d9 /* "fire" */);
 
 				// interpolated offset
-				Matrix2 transform(weapon.mOffset * entity->GetInterpolatedTransform(mTimer / aStep));
+				Transform2 transform(weapon.mOffset * entity->GetInterpolatedTransform(mTimer / aStep));
 
 				if (weapon.mFlash)
 				{
@@ -375,7 +375,7 @@ void Weapon::Update(float aStep)
 				{
 					// instantiate a bullet
 					if (weapon.mSpread)
-						transform = Matrix2(transform.Angle() + weapon.mSpread * (RandFloat() - RandFloat()), transform.p);
+						transform = Transform2(transform.Angle() + weapon.mSpread * (RandFloat() - RandFloat()), transform.p);
 					const Vector2 inheritvelocity(weapon.mInherit * transform.Unrotate(entity->GetVelocity()));
 					const Vector2 scattervelocity(weapon.mScatter.x ? weapon.mScatter.x * (RandFloat() - RandFloat()) : 0, weapon.mScatter.y ? weapon.mScatter.y * (RandFloat() - RandFloat()) : 0);
 					const Vector2 velocity(transform.Rotate(weapon.mVelocity + inheritvelocity + scattervelocity));

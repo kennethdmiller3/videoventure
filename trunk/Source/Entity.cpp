@@ -48,6 +48,9 @@ namespace Database
 				const char *type = element->Attribute("type");
 				unsigned int aParentId = Hash(type);
 
+				if (aParentId && !Database::name.Find(aParentId))
+					DebugPrint("warning: template \"%s\" parent \"%s\" not found\n", element->Attribute("name"), type);
+
 				// inherit parent components
 				Database::Inherit(aId, aParentId);
 
@@ -79,6 +82,9 @@ namespace Database
 				// get parent identifier
 				const char *type = element->Attribute("type");
 				unsigned int aParentId = Hash(type);
+
+				if (aParentId && !Database::name.Find(aParentId))
+					DebugPrint("warning: entity \"%s\" parent \"%s\" not found\n", element->Attribute("name"), type);
 
 				// set name
 				std::string &namebuf = Database::name.Open(aId);
@@ -119,11 +125,9 @@ unsigned int Entity::sNextId = 1;
 
 Entity::Entity(unsigned int id)
 : id(id)
-, angle_0(0), posit_0(0, 0)
-, angle_1(0), posit_1(0, 0)
-, veloc(0, 0)
-, omega(0)
 {
+	memset(&trans, 0, sizeof(trans));
+	memset(&veloc, 0, sizeof(veloc));
 }
 
 Entity::~Entity(void)
@@ -137,17 +141,17 @@ bool Entity::Configure(const TiXmlElement *element)
 	switch (Hash(label))
 	{
 	case 0x934f4e0a /* "position" */:
-		element->QueryFloatAttribute("x", &posit_1.x);
-		element->QueryFloatAttribute("y", &posit_1.y);
-		if (element->QueryFloatAttribute("angle", &angle_1) == TIXML_SUCCESS)
-			angle_1 *= float(M_PI) / 180.0f;
+		element->QueryFloatAttribute("x", &trans[1].p.x);
+		element->QueryFloatAttribute("y", &trans[1].p.y);
+		if (element->QueryFloatAttribute("angle", &trans[1].a) == TIXML_SUCCESS)
+			trans[1].a *= float(M_PI) / 180.0f;
 		return true;
 
 	case 0x32741c32 /* "velocity" */:
-		element->QueryFloatAttribute("x", &veloc.x);
-		element->QueryFloatAttribute("y", &veloc.y);
-		if (element->QueryFloatAttribute("angle", &omega) == TIXML_SUCCESS)
-			omega *= float(M_PI) / 180.0f;
+		element->QueryFloatAttribute("x", &veloc.p.x);
+		element->QueryFloatAttribute("y", &veloc.p.y);
+		if (element->QueryFloatAttribute("angle", &veloc.a) == TIXML_SUCCESS)
+			veloc.a *= float(M_PI) / 180.0f;
 		return true;
 
 	case 0xf5674cd4 /* "owner" */:

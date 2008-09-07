@@ -1088,9 +1088,8 @@ void Collidable::AddToWorld(void)
 	const Entity *entity = Database::entity.Get(id);
 	if (entity)
 	{
-		const Matrix2 &transform = entity->GetTransform();
-		def.angle = transform.Angle();
-		def.position = transform.p;
+		def.angle = entity->GetAngle();
+		def.position = entity->GetPosition();
 	}
 
 	// create the body

@@ -77,7 +77,7 @@ int SOUND_CHANNELS = 8;
 float SOUND_VOLUME = 1.0f;
 
 // default input configuration
-std::string INPUT_CONFIG = "input.xml";
+std::string INPUT_CONFIG = "input/default.xml";
 
 // default level configuration
 std::string LEVEL_CONFIG = "level.xml";
@@ -279,6 +279,8 @@ bool init_GL()
 	glDisable( GL_DEPTH_TEST );
 #endif
 
+	glDisable( GL_FOG );
+	/*
 #ifdef ENABLE_FOG
 	// enable depth fog
 	GLfloat fogColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
@@ -289,6 +291,7 @@ bool init_GL()
 	glFogf( GL_FOG_START, 256.0f*2.0f );
 	glFogf( GL_FOG_END, 256.0f*5.0f );
 #endif
+	*/
 
 	// return true if no errors
 	return glGetError() == GL_NO_ERROR;
@@ -473,7 +476,8 @@ bool ReadPreferences(const char *config)
 	// load input binding file
 	DebugPrint("Preferences %s\n", config);
 	TiXmlDocument document(config);
-	document.LoadFile();
+	if (!document.LoadFile())
+		DebugPrint("error loading preferences file \"%s\": %s\n", config, document.ErrorDesc());
 
 	// process child elements of the root
 	if (const TiXmlElement *root = document.FirstChildElement("preferences"))
@@ -578,7 +582,8 @@ bool InitInput(const char *config)
 	// load input binding file
 	DebugPrint("Input %s\n", config);
 	TiXmlDocument document(config);
-	document.LoadFile();
+	if (!document.LoadFile())
+		DebugPrint("error loading input file \"%s\": %s\n", config, document.ErrorDesc());
 
 	// process child elements of the root
 	if (const TiXmlElement *root = document.FirstChildElement("input"))
@@ -590,26 +595,97 @@ bool InitInput(const char *config)
 	return false;
 }
 
+bool SplitLevel(const char *config, const char *output)
+{
+	// load level data file
+	DebugPrint("Level %s -> %s\n", config, output);
+	TiXmlDocument document(config);
+	document.SetCondenseWhiteSpace(false);
+	if (!document.LoadFile())
+		DebugPrint("error loading level file \"%s\": %s\n", config, document.ErrorDesc());
+
+	// if the document has a world section...
+	if (const TiXmlElement *root = document.FirstChildElement("world"))
+	{
+		// output level data file
+		TiXmlDocument split(output);
+		split.SetCondenseWhiteSpace(false);
+		TiXmlElement *splitroot = NULL;
+
+		// copy nodes from the original
+		for (const TiXmlNode *node = document.FirstChild(); node != NULL; node = node->NextSibling())
+		{
+			if (node == root)
+			{
+				splitroot = new TiXmlElement(root->Value());
+				for (const TiXmlAttribute *attribute = root->FirstAttribute(); attribute != NULL; attribute = attribute->Next())
+					splitroot->SetAttribute(attribute->Name(), attribute->Value());
+				split.LinkEndChild(splitroot);
+			}
+			else
+			{
+				split.InsertEndChild(*node);
+			}
+		}
+
+		// for each node...
+		for (const TiXmlNode *node = root->FirstChild(); node != NULL; node = node->NextSibling())
+		{
+			// if the node is an element...
+			if (const TiXmlElement *element = node->ToElement())
+			{
+				// if the element is not an instance
+				if (Hash(element->Value()) != 0xd33ff5da /* "entity" */)
+				{
+					// if the element has a name...
+					if (const char *name = element->Attribute("name"))
+					{
+						// export child element as a separate XML file
+						char filename[256];
+						TIXML_SNPRINTF(filename, sizeof(filename), "%s/%s.xml", element->Value(), name);
+						DebugPrint("%s\n", filename);
+						TiXmlDocument piece(filename);
+						TiXmlDeclaration * declaration = new TiXmlDeclaration( "1.0", "", "" );
+						piece.LinkEndChild(declaration);
+						piece.InsertEndChild(*element);
+						if (piece.SaveFile())
+						{
+							// insert an import element
+							TiXmlElement *import = new TiXmlElement("import");
+							import->SetAttribute("name", filename);
+							splitroot->LinkEndChild(import);
+
+							continue;
+						}
+					}
+				}
+			}
+
+			// copy to the output
+			splitroot->InsertEndChild(*node);
+		}
+
+		split.SaveFile();
+
+		return true;
+	}
+
+	return false;
+}
+
 bool InitLevel(const char *config)
 {
 	// load level data file
 	DebugPrint("Level %s\n", config);
 	TiXmlDocument document(config);
-	document.LoadFile();
+	if (!document.LoadFile())
+		DebugPrint("error loading level file \"%s\": %s\n", config, document.ErrorDesc());
 
 	// if the document has a world section...
 	if (const TiXmlElement *root = document.FirstChildElement("world"))
 	{
-		// set up the collidable world
-		float aMinX = -2048, aMinY = -2048, aMaxX = 2048, aMaxY = 2048;
-		root->QueryFloatAttribute("xmin", &aMinX);
-		root->QueryFloatAttribute("ymin", &aMinY);
-		root->QueryFloatAttribute("xmax", &aMaxX);
-		root->QueryFloatAttribute("ymax", &aMaxY);
-		Collidable::WorldInit(aMinX, aMinY, aMaxX, aMaxY);
-
-		// process child elements of world
-		ProcessWorldItems(root);
+		// process the world
+		ProcessWorldItem(root);
 
 		// get the reticule draw list (HACK)
 		reticule_handle = Database::drawlist.Get(0x170e4c58 /* "reticule" */);
@@ -808,6 +884,29 @@ int ProcessCommand( unsigned int aCommand, char *aParam[], int aCount )
 	case 0x9b99e7dd /* "level" */:
 		return ProcessCommandString(LEVEL_CONFIG, aParam, aCount, InitLevelAction, "level: %s\n");
 
+	case 0x112a90d4 /* "import" */:
+		if (aCount > 0)
+		{
+			// level configuration
+			TiXmlDocument document(aParam[0]);
+			if (!document.LoadFile())
+				DebugPrint("error loading import file \"%s\": %s\n", aParam[0], document.ErrorDesc());
+
+			// process child element
+			if (const TiXmlElement *root = document.FirstChildElement())
+				ProcessWorldItem(root);
+			return 1;
+		}
+		return 0;
+
+	case 0x87b82de3 /* "split" */:
+		if (aCount > 0)
+		{
+			SplitLevel(LEVEL_CONFIG.c_str(), aParam[0]);
+			return 1;
+		}
+		return 0;
+
 	case 0x593058cc /* "record" */:
 		return ProcessCommandString(RECORD_CONFIG, aParam, aCount, InitRecordAction, "record: %s\n");
 
@@ -986,6 +1085,11 @@ int ProcessCommand( unsigned int aCommand, char *aParam[], int aCount )
 		{
 			PlaySound(Hash(aParam[0]), Hash(aParam[1]));
 			return 2;
+		}
+		else if (aCount == 1)
+		{
+			PlaySound(Hash(aParam[0]));
+			return 1;
 		}
 		else
 		{
@@ -3083,7 +3187,10 @@ void PlayerHUD::Render(unsigned int aId, float aTime, float aPosX, float aPosY, 
 	{
 		// get health ratio
 		const DamagableTemplate &damagabletemplate = Database::damagabletemplate.Get(id);
-		health = damagable->GetHealth() / damagabletemplate.mHealth;
+		if (damagabletemplate.mHealth > 0)
+		{
+			health = damagable->GetHealth() / damagabletemplate.mHealth;
+		}
 	}
 
 	// if health is greater than the gauge fill...
@@ -3555,7 +3662,8 @@ void RunState()
 	TiXmlElement *inputlognext;
 	if (playback)
 	{
-		inputlog.LoadFile();
+		if (!inputlog.LoadFile())
+			DebugPrint("error loading recording file \"%s\": %s\n", RECORD_CONFIG.c_str(), inputlog.ErrorDesc());
 		inputlogroot = inputlog.RootElement();
 		inputlognext = inputlogroot->FirstChildElement();
 	}
