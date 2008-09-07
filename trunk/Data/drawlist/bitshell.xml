@@ -1,0 +1,18 @@
+<?xml version="1.0" ?>
+<drawlist name="bitshell">
+	<pushmatrix>
+		<color r="0.8" g="0.8" b="0.8" a="1.0" />
+		<scale x="2.0" y="2.0" />
+		<calllist name="semicircle16" />
+	</pushmatrix>
+	<pushmatrix>
+		<color r="0.6" g="0.6" b="0.6" a="1.0" />
+		<scale x="3.0" y="3.0" />
+		<calllist name="semicircle16" />
+	</pushmatrix>
+	<pushmatrix>
+		<color r="0.4" g="0.4" b="0.4" a="1.0" />
+		<scale x="4.0" y="4.0" />
+		<calllist name="semicircle16" />
+	</pushmatrix>
+</drawlist>

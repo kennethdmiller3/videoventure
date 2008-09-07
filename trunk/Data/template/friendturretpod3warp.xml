@@ -1,0 +1,4 @@
+<?xml version="1.0" ?>
+<template name="friendturretpod3warp" type="friendlongwarpin">
+	<expire spawnonexpire="friendturretpod3" />
+</template>

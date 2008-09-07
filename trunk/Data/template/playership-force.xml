@@ -1,0 +1,24 @@
+<?xml version="1.0" ?>
+<template name="playership">
+	<link name="lgun" secondary="playershipweapon">
+		<offset x="2" y="0" angle="0"/>
+	</link>
+	<link name="rgun" secondary="playershipweapon">
+		<offset x="-2" y="0" angle="0"/>
+	</link>
+	<link name="bomb" secondary="playersmartbombweapon">
+		<offset x="0" y="0" angle="0"/>
+	</link>
+	<!-- -->
+	<link name="force" secondary="force4">
+		<offset x="0" y="16" angle="0"/>
+	</link>
+	<!-- -->
+	<link name="bit1" secondary="bit1">
+		<offset x="16" y="0"/>
+	</link>
+	<link name="bit2" secondary="bit2">
+		<offset x="-16" y="0"/>
+	</link>
+	<team name="blue"/>
+</template>

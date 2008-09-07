@@ -1,0 +1,59 @@
+<?xml version="1.0" ?>
+<template name="friendswarmer">
+	<collidable>
+		<body name="main">
+			<circle radius="3">
+				<density value="1" />
+				<friction value="0.5" />
+				<restitution value="0.5" />
+				<category value="1" />
+			</circle>
+		</body>
+	</collidable>
+	<renderable radius="3" period="1.0">
+		<color>
+			<key time="0.0" r="0.1" g="0.3" b="1.0" a="1.0" />
+			<key time="0.5" r="0.1" g="0.9" b="1.0" a="1.0" />
+			<key time="1.0" r="0.1" g="0.3" b="1.0" a="1.0" />
+		</color>
+		<drawlist>
+			<quads>
+				<vertex x="0.5" y="0.5" />
+				<vertex x="0.5" y="-1" />
+				<vertex x="2" y="-0.5" />
+				<vertex x="2" y="0" />
+				<vertex x="-0.5" y="0.5" />
+				<vertex x="-0.5" y="-1" />
+				<vertex x="-2" y="-0.5" />
+				<vertex x="-2" y="0" />
+			</quads>
+			<color r="0.1" g="0.2" b="1.0" a="1.0" />
+			<triangle_strip>
+				<vertex x="3" y="-1" />
+				<vertex x="3" y="0" />
+				<vertex x="1" y="-2" />
+				<vertex x="1.5" y="1.5" />
+				<vertex x="0.75" y="-2" />
+				<vertex x="0.5" y="3" />
+				<vertex x="0" y="-2" />
+				<vertex x="-0.5" y="3" />
+				<vertex x="-0.75" y="-2" />
+				<vertex x="-1.5" y="1.5" />
+				<vertex x="-1" y="-2" />
+				<vertex x="-3" y="0" />
+				<vertex x="-3" y="-1" />
+			</triangle_strip>
+		</drawlist>
+	</renderable>
+	<aimer range="256" attack="128" leading="180" drift="0.25" wanderside="1" wandersiderate="1" pursue="0.5" evade="0.25" close="32" category="2" bit1="0" bit2="0" bit4="0" />
+	<ship maxveloc="60" maxaccel="180" minaccel="10" maxomega="2" />
+	<damagable health="1" spawnondeath="friendfireballexplosion" />
+	<weapon>
+		<offset x="0" y="3" angle="0" />
+		<velocity x="0" y="180" />
+		<ordnance name="friendpulsebullet" />
+		<shot delay="1.0" />
+	</weapon>
+	<team name="blue" />
+	<points value="150" />
+</template>

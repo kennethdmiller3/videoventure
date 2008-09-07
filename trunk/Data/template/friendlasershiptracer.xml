@@ -1,0 +1,24 @@
+<?xml version="1.0" ?>
+<template name="friendlasershiptracer">
+	<expire time="2.0" spawnonexpire="friendlasershipbeam" />
+	<beam damage="0" range="256" category="2" bit1="0" bit2="0" bit4="0" />
+	<renderable radius="256">
+		<quads>
+			<color>
+				<key time="0.0" r="0.0" g="0.0" b="1.0" a="0.0" />
+				<key time="2.0" r="0.0" g="0.0" b="1.0" a="1.0" />
+			</color>
+			<set name="p" type="position">
+				<key time="0.0" x="0.25" />
+				<key time="2.0" x="0.50" />
+			</set>
+			<vertex variable="p" />
+			<mul name="p" type="scale" x="-1" />
+			<vertex variable="p" />
+			<add name="p" type="translate" variable="beamend" />
+			<vertex variable="p" />
+			<mul name="p" type="scale" x="-1" />
+			<vertex variable="p" />
+		</quads>
+	</renderable>
+</template>

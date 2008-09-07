@@ -1,0 +1,51 @@
+<?xml version="1.0" ?>
+<template name="gunner">
+	<collidable>
+		<body name="main">
+			<circle radius="3">
+				<density value="0.1" />
+				<friction value="0.5" />
+				<restitution value="0.25" />
+				<category value="1" />
+				<mask bit2="0" />
+				<group value="-1" />
+			</circle>
+		</body>
+	</collidable>
+	<renderable radius="4">
+		<drawlist>
+			<color r="0.5" g="0.5" b="0.5" a="1.0" />
+			<quads>
+				<vertex x="0.5" y="4" />
+				<vertex x="-0.5" y="4" />
+				<vertex x="-1" y="1" />
+				<vertex x="1" y="1" />
+			</quads>
+			<pushmatrix>
+				<color r="0.7" g="0.7" b="0.7" a="1.0" />
+				<scale x="2" y="2" />
+				<calllist name="circle12" />
+			</pushmatrix>
+			<pushmatrix>
+				<color r="1.0" g="1.0" b="1.0" a="1.0" />
+				<scale x="2.5" y="2.5" />
+				<calllist name="circle12" />
+			</pushmatrix>
+			<pushmatrix>
+				<color r="0.1" g="0.2" b="1.0" a="1.0" />
+				<scale x="3" y="3" />
+				<calllist name="circle12" />
+			</pushmatrix>
+		</drawlist>
+	</renderable>
+	<link name="lgun">
+		<offset x="0" y="4" angle="5" />
+	</link>
+	<link name="mgun">
+		<offset x="0" y="4" angle="0" />
+	</link>
+	<link name="rgun">
+		<offset x="0" y="4" angle="-5" />
+	</link>
+	<team name="blue" />
+</template>

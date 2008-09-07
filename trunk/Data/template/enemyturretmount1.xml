@@ -1,0 +1,6 @@
+<?xml version="1.0" ?>
+<template name="enemyturretmount1" type="enemyturret1">
+	<damagable health="10" spawnondeath="enemyexplosion" />
+	<points value="150" />
+	<capturable resistance="10" spawnoncapture="friendturretmount1" />
+</template>

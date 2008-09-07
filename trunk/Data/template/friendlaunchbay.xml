@@ -1,0 +1,9 @@
+<?xml version="1.0" ?>
+<template name="friendlaunchbay">
+	<weapon>
+		<trigger channel="2" />
+		<velocity x="0" y="120" />
+		<ordnance name="friendshiptiny" />
+		<shot delay="1.0" track="4" />
+	</weapon>
+</template>

@@ -1,0 +1,11 @@
+<?xml version="1.0" ?>
+<template name="enemypulseweapon">
+	<weapon>
+		<velocity x="0" y="150" />
+		<ordnance name="enemypulsebullet" />
+		<shot delay="0.3" track="3" />
+	</weapon>
+	<soundcue>
+		<cue name="fire" sound="stargate-swarmerfire" />
+	</soundcue>
+</template>

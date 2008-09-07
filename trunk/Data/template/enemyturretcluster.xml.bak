@@ -1,0 +1,39 @@
+<?xml version="1.0" ?>
+<template name="enemyturretcluster">
+	<link name="enemyturretmissile">
+		<offset x="0" y="0" />
+		<spawner>
+			<spawn name="enemyturretpodmissilewarp" start="120" cycle="30" track="1" />
+		</spawner>
+	</link>
+	<link name="enemyturret3">
+		<offset x="0" y="48" />
+		<spawner>
+			<spawn name="enemyturretpod3warp" start="90" cycle="30" track="1" />
+		</spawner>
+	</link>
+	<link name="enemyturret2a">
+		<offset x="64" y="16" />
+		<spawner>
+			<spawn name="enemyturretpod2warp" start="60" cycle="30" track="1" />
+		</spawner>
+	</link>
+	<link name="enemyturret2b">
+		<offset x="-64" y="16" />
+		<spawner>
+			<spawn name="enemyturretpod2warp" start="60" cycle="30" track="1" />
+		</spawner>
+	</link>
+	<link name="enemyturret1a">
+		<offset x="128" y="-16" />
+		<spawner>
+			<spawn name="enemyturretpod1warp" start="30" cycle="30" track="1" />
+		</spawner>
+	</link>
+	<link name="enemyturret1b">
+		<offset x="-128" y="-16" />
+		<spawner>
+			<spawn name="enemyturretpod1warp" start="30" cycle="30" track="1" />
+		</spawner>
+	</link>
+</template>

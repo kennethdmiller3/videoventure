@@ -1,0 +1,69 @@
+<?xml version="1.0" ?>
+<template name="frienddynamo">
+	<collidable>
+		<body name="main">
+			<circle radius="5">
+				<density value="1" />
+				<friction value="0.5" />
+				<restitution value="0.5" />
+				<category value="1" />
+			</circle>
+		</body>
+	</collidable>
+	<renderable radius="8" period="0.133333">
+		<repeat count="2">
+			<pushmatrix>
+				<translate>
+					<key time="0.000000" x="0" y="3" />
+					<key time="0.033333" x="3" y="0" />
+					<key time="0.066667" x="0" y="-3" />
+					<key time="0.100000" x="-3" y="0" />
+					<key time="0.133333" x="0" y="3" />
+				</translate>
+				<drawlist>
+					<color r="1.0" g="1.0" b="1.0" a="1.0" />
+					<pushmatrix>
+						<translate x="3" y="0" />
+						<calllist name="diamond" />
+					</pushmatrix>
+					<pushmatrix>
+						<translate x="0" y="3" />
+						<calllist name="diamond" />
+					</pushmatrix>
+					<pushmatrix>
+						<translate x="-3" y="0" />
+						<calllist name="diamond" />
+					</pushmatrix>
+					<pushmatrix>
+						<translate x="0" y="-3" />
+						<calllist name="diamond" />
+					</pushmatrix>
+					<pushmatrix>
+						<scale x="2" y="2" />
+						<color r="0.3" g="0.3" b="0.3" a="1.0" />
+						<calllist name="diamond" />
+					</pushmatrix>
+					<pushmatrix>
+						<scale x="4" y="4" />
+						<color r="0.1" g="0.2" b="1.0" a="1.0" />
+						<calllist name="diamond" />
+					</pushmatrix>
+				</drawlist>
+			</pushmatrix>
+			<rotate angle="180" />
+		</repeat>
+	</renderable>
+	<aimer range="256" attack="128" leading="0" drift="0.5" wanderturn="1.0" wanderturnrate="0.25" wanderside="0.5" wandersiderate="0.25" wanderfront="0.5" wanderfrontrate="0.25" evade="0" close="64" category="1" bit1="0" bit2="0" />
+	<ship maxveloc="30" maxaccel="120" minaccel="10" maxomega="2" />
+	<damagable health="3" spawnondeath="friendexplosion" />
+	<weapon>
+		<velocity x="0" y="60" />
+		<ordnance name="friendspacehum" />
+		<shot delay="1.0" track="4" />
+	</weapon>
+	<soundcue>
+		<cue name="fire" sound="stargate-dynamofire" />
+	</soundcue>
+	<team name="blue" />
+	<points value="200" />
+</template>

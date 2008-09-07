@@ -1,0 +1,75 @@
+<?xml version="1.0" ?>
+<template name="enemyrocketbombwarp">
+	<expire time="1.0" spawnonexpire="enemyrocketbomb" />
+	<renderable radius="64">
+		<block start="0.8" length="0.2">
+			<pushmatrix>
+				<color>
+					<key time="0.0" r="1.0" g="0.7" b="0.4" a="0.0" />
+					<key time="0.2" r="1.0" g="1.0" b="1.0" a="1.0" />
+				</color>
+				<scale>
+					<key time="0.0" x="0.0" y="0.0" />
+					<key time="0.2" x="3.0" y="3.0" />
+				</scale>
+				<calllist name="circle16" />
+			</pushmatrix>
+		</block>
+		<block start="0.6" length="0.4">
+			<pushmatrix>
+				<color>
+					<key time="0.0" r="1.0" g="0.0" b="0.0" a="0.0" />
+					<key time="0.4" r="1.0" g="0.7" b="0.4" a="0.5" />
+				</color>
+				<scale>
+					<key time="0.0" x="0.0" y="0.0" />
+					<key time="0.4" x="5.0" y="5.0" />
+				</scale>
+				<calllist name="circle16" />
+			</pushmatrix>
+		</block>
+		<block start="0.4" length="0.6">
+			<pushmatrix>
+				<color>
+					<key time="0.0" r="1.0" g="0.0" b="0.0" a="0.0" />
+					<key time="0.6" r="1.0" g="0.5" b="0.0" a="0.25" />
+				</color>
+				<scale>
+					<key time="0.0" x="0.0" y="0.0" />
+					<key time="0.6" x="8.0" y="8.0" />
+				</scale>
+				<calllist name="circle16" />
+			</pushmatrix>
+		</block>
+		<pushmatrix>
+			<color>
+				<key time="0.0" r="1.0" g="0.0" b="0.0" a="0.0" />
+				<key time="1.0" r="1.0" g="0.7" b="0.4" a="0.5" />
+			</color>
+			<repeat count="3">
+				<repeat count="12">
+					<pushmatrix>
+						<translate>
+							<key time="0.0" x="64" y="0" />
+							<key time="1.0" x="0" y="0" />
+						</translate>
+						<scale>
+							<key time="0.0" x="0.5" y="0.5" />
+							<key time="1.0" x="4.0" y="0.5" />
+						</scale>
+						<calllist name="circle16" />
+					</pushmatrix>
+					<rotate angle="30" />
+				</repeat>
+				<scale x="0.8" y="0.8" />
+				<rotate angle="18" />
+			</repeat>
+		</pushmatrix>
+	</renderable>
+	<sound volume="0.25">
+		<!-- innerdelay: 39+6*delay, +6 when bit flips -->
+		<!-- outerdelay: 17 -->
+		<!-- parameters: 0x60 delay start, 0xFF delay delta, 0x20 iterations -->
+		<bitnoiseramp frequency="3579000" divider="4" outersteps="96" outerdelay="17" innersteps="32" innerdelay="615" innerdelta="-6" />
+	</sound>
+</template>
