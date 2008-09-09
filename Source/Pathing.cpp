@@ -694,3 +694,232 @@ bool Pathing(const b2Vec2 &start, const b2Vec2 &goal, float radius)
 
 	return probe.empty();
 }
+
+static GLuint grid_handle = 0;
+Color4 cell_color[] =
+{
+	{ 0.0f, 0.5f, 1.0f, 0.5f },
+	{ 1.0f, 0.0f, 0.0f, 1.0f },
+};
+
+static void AddGridSlab(const b2AABB &aabb, Color4 &color)
+{
+	// trivial accept
+	glBegin(GL_QUADS);
+	glColor4f(color[0], color[1], color[2], color[3] * 0.5f);
+	glVertex2f(aabb.lowerBound.x, aabb.lowerBound.y);
+	glVertex2f(aabb.upperBound.x, aabb.lowerBound.y);
+	glVertex2f(aabb.upperBound.x, aabb.upperBound.y);
+	glVertex2f(aabb.lowerBound.x, aabb.upperBound.y);
+	glEnd();
+	glBegin(GL_LINE_LOOP);
+	glColor4f(color[0], color[1], color[2], color[3]);
+	glVertex2f(aabb.lowerBound.x, aabb.lowerBound.y);
+	glVertex2f(aabb.upperBound.x, aabb.lowerBound.y);
+	glVertex2f(aabb.upperBound.x, aabb.upperBound.y);
+	glVertex2f(aabb.lowerBound.x, aabb.upperBound.y);
+	glEnd();
+}
+
+void BuildPathingGrid(const int aZoneSize, const int aCellSize)
+{
+	if (grid_handle)
+	{
+		glCallList(grid_handle);
+		return;
+	}
+
+	// create a new grid handle
+	grid_handle = glGenLists(1);
+
+	// create a new list
+	glNewList(grid_handle, GL_COMPILE);
+
+	// get world boundary
+	const b2AABB &boundary = Collidable::GetBoundary();
+
+	// get zone extents
+	int zx0 = xs_FloorToInt(boundary.lowerBound.x / aZoneSize);
+	int zx1 = xs_CeilToInt(boundary.upperBound.x / aZoneSize);
+	int zy0 = xs_FloorToInt(boundary.lowerBound.y / aZoneSize);
+	int zy1 = xs_CeilToInt(boundary.upperBound.y / aZoneSize);
+
+	// cells per zone
+	int cell_side = aZoneSize / aCellSize;
+	int cell_count = cell_side * cell_side;
+
+	// get the collision world
+	b2World *world = Collidable::GetWorld();
+
+	// create a probe shape
+	b2PolygonDef probedef;
+	probedef.SetAsBox(aCellSize * 0.5f, aCellSize * 0.5f, b2Vec2(aCellSize * 0.5f, aCellSize * 0.5f), 0.0f);
+	probedef.isSensor = true;
+	b2Shape *probe = world->GetGroundBody()->CreateShape(&probedef);
+
+	// for each zone row...
+	for (int zy = zy0; zy < zy1; ++zy)
+	{
+		// for each zone column...
+		for (int zx = zx0; zx < zx1; ++zx)
+		{
+			// get zone boundary
+			b2AABB zone_aabb;
+			zone_aabb.lowerBound.x = float((zx) * aZoneSize);
+			zone_aabb.lowerBound.y = float((zy) * aZoneSize);
+			zone_aabb.upperBound.x = float((zx + 1) * aZoneSize);
+			zone_aabb.upperBound.y = float((zy + 1) * aZoneSize);
+
+			// draw zone boundary
+			glBegin(GL_LINE_LOOP);
+			glColor4f(1, 1, 1, 1);
+			glVertex2f(zone_aabb.lowerBound.x, zone_aabb.lowerBound.y);
+			glVertex2f(zone_aabb.upperBound.x, zone_aabb.lowerBound.y);
+			glVertex2f(zone_aabb.upperBound.x, zone_aabb.upperBound.y);
+			glVertex2f(zone_aabb.lowerBound.x, zone_aabb.upperBound.y);
+			glEnd();
+
+			// initialize cell map
+			unsigned char *cell_map = static_cast<unsigned char *>(_alloca(cell_count));
+			memset(cell_map, 0xFF, cell_count);
+
+			// for each cell row
+			for (int row = 0; row < cell_side; ++row)
+			{
+				// for each cell column...
+				for (int col = 0; col < cell_side; ++col)
+				{
+					// get shapes intersecting the cell
+					b2AABB cell_aabb;
+					cell_aabb.lowerBound.x = zone_aabb.lowerBound.x + (col) * aCellSize;
+					cell_aabb.lowerBound.y = zone_aabb.lowerBound.y + (row) * aCellSize;
+					cell_aabb.upperBound.x = zone_aabb.lowerBound.x + (col + 1) * aCellSize;
+					cell_aabb.upperBound.y = zone_aabb.lowerBound.y + (row + 1) * aCellSize;
+					b2Shape* shapes[b2_maxProxies];
+					int count = world->Query(cell_aabb, shapes, b2_maxProxies);
+
+					// probe transform
+					b2XForm probe_xform(cell_aabb.lowerBound, b2Mat22(1, 0, 0, 1));
+
+					static const unsigned int aCategoryBits = 1 << 0;
+					static const unsigned int aMaskBits = 0xFFFF;
+
+					bool blocked = false;
+					for (int i = 0; i < count; ++i)
+					{
+						// get the shape
+						b2Shape *shape = shapes[i];
+
+						// skip unhittable shapes
+						if (shape->IsSensor())
+							continue;
+						if ((shape->GetFilterData().maskBits & aCategoryBits) == 0)
+							continue;
+						if ((shape->GetFilterData().categoryBits & aMaskBits) == 0)
+							continue;
+
+						// get the parent body
+						b2Body* body = shape->GetBody();
+						if (!body->IsStatic())
+							continue;
+
+						// probe intersection
+						b2Vec2 x1, x2;
+						if (b2Distance(&x1, &x2, probe, probe_xform, shape, body->GetXForm()) <= 0.0f)
+						{
+							blocked = true;
+							break;
+						}
+					}
+
+					// cell type (0=empty, 1=blocked)
+					cell_map[row * cell_side + col] = blocked;
+				}
+			}
+
+			// initialize slab map
+			unsigned char *slab_map = static_cast<unsigned char *>(_alloca(cell_count));
+			memset(slab_map, 0xFF, cell_count);
+			int slab_count = 0;
+
+			// for each cell row
+			for (int row = 0; row < cell_side; ++row)
+			{
+				// for each cell column...
+				for (int col = 0; col < cell_side; ++col)
+				{
+					// skip assigned spaces
+					if (slab_map[row * cell_side + col] != 0xFF)
+						continue;
+
+					// cell type
+					unsigned char cell = cell_map[row * cell_side + col];
+
+					// allocate a new index
+					unsigned char index = unsigned char(slab_count++);
+					assert(index < 0xFF);
+
+					// find horizontal extent
+					int c0 = col;
+					int c1 = cell_side;
+					for (int c = c0; c < c1; ++c)
+					{
+						if ((cell_map[row * cell_side + c] != cell) || ((slab_map[row * cell_side + c] != 0xFF) && (slab_map[row * cell_side + c] != index)))
+						{
+							c1 = c;
+							break;
+						}
+					}
+
+					// find vertical extent
+					int r0 = row;
+					int r1 = cell_side;
+					for (int r = r0; r < r1; ++r)
+					{
+						for (int c = c0; c < c1; ++c)
+						{
+							if ((cell_map[r * cell_side + c] != cell) || ((slab_map[r * cell_side + c] != 0xFF) && (slab_map[r * cell_side + c] != index)))
+							{
+								r1 = r;
+								break;
+							}
+						}
+					}
+					
+					// fill slab
+					for (int r = r0; r < r1; ++r)
+					{
+						for (int c = c0; c < c1; ++c)
+						{
+							slab_map[r * cell_side + c] = index;
+						}
+					}
+
+					assert(c0 < c1 && r0 < r1);
+
+					// set slab extents
+					//titleslab[index][0] = c0;
+					//titleslab[index][1] = c1;
+					//titleslab[index][2] = r0;
+					//titleslab[index][3] = r1;
+					b2AABB slab_aabb;
+					slab_aabb.lowerBound.x = zone_aabb.lowerBound.x + c0 * aCellSize;
+					slab_aabb.lowerBound.y = zone_aabb.lowerBound.y + r0 * aCellSize;
+					slab_aabb.upperBound.x = zone_aabb.lowerBound.x + c1 * aCellSize;
+					slab_aabb.upperBound.y = zone_aabb.lowerBound.y + r1 * aCellSize;
+					AddGridSlab(slab_aabb, cell_color[cell]);
+
+					// skip visited columns
+					col = c1 - 1;
+				}
+			}
+
+			DebugPrint("zone %d %d slabs %d\n", zx, zy, slab_count);
+		}
+	}
+
+	// destroy the probe shape
+	world->GetGroundBody()->DestroyShape(probe);
+
+	glEndList();
+}
