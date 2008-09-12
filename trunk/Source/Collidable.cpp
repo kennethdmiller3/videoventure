@@ -162,6 +162,7 @@ CollidableTemplate::~CollidableTemplate(void)
 	for (std::vector<b2ShapeDef *>::const_iterator itor = shapes.begin(); itor != shapes.end(); ++itor)
 	{
 		b2ShapeDef *shapedef = *itor;
+		shapedef->~b2ShapeDef();
 		shapepool.free(shapedef);
 	}
 #endif
@@ -170,6 +171,7 @@ CollidableTemplate::~CollidableTemplate(void)
 	for (std::vector<b2JointDef *>::const_iterator itor = joints.begin(); itor != joints.end(); ++itor)
 	{
 		b2JointDef *jointdef = *itor;
+		jointdef->~b2JointDef();
 		jointpool.free(jointdef);
 	}
 #endif

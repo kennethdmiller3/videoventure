@@ -2,14 +2,6 @@
 #include "Database.h"
 #include "Entity.h"
 #include "Collidable.h"
-#include "Renderable.h"
-#include "Damagable.h"
-#include "Bullet.h"
-#include "Explosion.h"
-#include "Spawner.h"
-#include "Player.h"
-#include "Gunner.h"
-#include "Aimer.h"
 #include <new>
 
 namespace Database
@@ -485,9 +477,6 @@ namespace Database
 			// get the first entry
 			unsigned int aId = activatequeue.front();
 
-			// initialize entity
-			Entity *entity = Database::entity.Get(aId);
-
 			// for each activation initializer...
 			for (Typed<Initializer::Entry>::Iterator itor(&Initializer::GetActivate()); itor.IsValid(); ++itor)
 			{
@@ -502,8 +491,11 @@ namespace Database
 			// if entity has no physics...
 			if (!Database::collidable.Get(aId))
 			{
-				// initialize entity (HACK)
-				entity->Init();
+				// get the entity
+				Entity *entity = Database::entity.Get(aId);
+
+				// step the entity (HACK)
+				entity->Step();
 			}
 
 			// remove from the queue
