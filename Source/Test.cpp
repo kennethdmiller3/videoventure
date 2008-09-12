@@ -380,7 +380,7 @@ bool init()
 	// grab the cursor
 	SDL_WM_GrabInput(SDL_GRAB_ON);
 
-	// set window option
+	// set window title
 	SDL_WM_SetCaption( "Shmup!", NULL );
 
     /* Initialize OGLCONSOLE */                                                                      
