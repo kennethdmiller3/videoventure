@@ -3691,6 +3691,7 @@ void RunState()
 	LONGLONG overlay_time[NUM_SAMPLES] = { 0 };
 	LONGLONG display_time[NUM_SAMPLES] = { 0 };
 	LONGLONG total_time[NUM_SAMPLES] = { 0 };
+	int profile_count = 0;
 	int profile_index = -1;
 
 	LARGE_INTEGER perf_lastframe;
@@ -3710,6 +3711,8 @@ void RunState()
 //		if (!paused)
 		if (++profile_index >= NUM_SAMPLES)
 			profile_index = 0;
+		if (++profile_count > NUM_SAMPLES)
+			profile_count = NUM_SAMPLES;
 		control_time[profile_index] = 0;
 		simulate_time[profile_index] = 0;
 		collide_time[profile_index] = 0;
@@ -4261,11 +4264,10 @@ void RunState()
 				++total_samples;
 				i = (i > 0) ? i - 1 : NUM_SAMPLES - 1;
 			}
-			while (total_sum <= perf_freq.QuadPart && i != profile_index);
+			while (total_sum <= perf_freq.QuadPart && i != profile_index && total_samples != profile_count);
 			total_sum /= total_samples;
 
 			// compute frame rates
-
 			double rate_max = (double)perf_freq.QuadPart / total_min;
 			double rate_avg = (double)perf_freq.QuadPart / total_sum;
 			double rate_min = (double)perf_freq.QuadPart / total_max;
