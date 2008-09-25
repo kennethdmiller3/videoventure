@@ -7,6 +7,7 @@ class ExpireTemplate
 public:
 	float mTime;
 	unsigned int mSpawn;
+	unsigned int mSwitch;
 	bool mReticule;
 
 public:

@@ -43,7 +43,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="&quot;..\SDL-1.2.13\include&quot;,&quot;tinyxml&quot;,&quot;oglconsole&quot;,&quot;..\Box2D\Include&quot;,&quot;FastDelegate&quot;"
-				PreprocessorDefinitions="WIN32;_DEBUG;_CRT_SECURE_NO_WARNINGS;OGLCONSOLE_USE_SDL;_HAS_EXCEPTIONS=0"
+				PreprocessorDefinitions="WIN32;_DEBUG;_CRT_SECURE_NO_WARNINGS;USE_SDL;OGLCONSOLE_USE_SDL;_HAS_EXCEPTIONS=0"
 				StringPooling="true"
 				MinimalRebuild="true"
 				ExceptionHandling="0"
@@ -68,9 +68,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="SDL.lib SDLmain.lib OpenGL32.lib glu32.lib Box2D_d.lib"
+				AdditionalDependencies="SDL.lib SDLmain.lib OpenGL32.lib glu32.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="&quot;..\SDL-1.2.13\VisualC\SDLmain\Debug&quot;,&quot;..\SDL-1.2.13\VisualC\SDL\Debug&quot;,&quot;..\Box2D\Library&quot;"
+				AdditionalLibraryDirectories="&quot;..\SDL-1.2.13\VisualC\SDLmain\Debug&quot;,&quot;..\SDL-1.2.13\VisualC\SDL\Debug&quot;"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				RandomizedBaseAddress="1"
@@ -126,7 +126,7 @@
 				Optimization="1"
 				EnableIntrinsicFunctions="true"
 				AdditionalIncludeDirectories="&quot;..\SDL-1.2.13\include&quot;,&quot;tinyxml&quot;,&quot;oglconsole&quot;,&quot;..\Box2D\Include&quot;,&quot;FastDelegate&quot;"
-				PreprocessorDefinitions="WIN32;NDEBUG;_CRT_SECURE_NO_WARNINGS;OGLCONSOLE_USE_SDL;_HAS_EXCEPTIONS=0"
+				PreprocessorDefinitions="WIN32;NDEBUG;_CRT_SECURE_NO_WARNINGS;USE_SDL;OGLCONSOLE_USE_SDL;_HAS_EXCEPTIONS=0"
 				StringPooling="true"
 				ExceptionHandling="0"
 				RuntimeLibrary="2"
@@ -149,9 +149,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="SDL.lib SDLmain.lib OpenGL32.lib glu32.lib box2d.lib"
+				AdditionalDependencies="SDL.lib SDLmain.lib OpenGL32.lib glu32.lib"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="&quot;..\SDL-1.2.13\VisualC\SDLmain\Release_NoSTDIO&quot;,&quot;..\SDL-1.2.13\VisualC\SDL\Release&quot;,&quot;..\Box2D\Library&quot;"
+				AdditionalLibraryDirectories="&quot;..\SDL-1.2.13\VisualC\SDLmain\Release_NoSTDIO&quot;,&quot;..\SDL-1.2.13\VisualC\SDL\Release&quot;"
 				GenerateDebugInformation="true"
 				GenerateMapFile="true"
 				SubSystem="2"
@@ -266,6 +266,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Source\Pickup.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\Source\Player.cpp"
 				>
 			</File>
@@ -279,6 +283,10 @@
 			</File>
 			<File
 				RelativePath=".\Source\Resource.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Shield.cpp"
 				>
 			</File>
 			<File
@@ -436,6 +444,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Source\Pickup.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Source\Player.h"
 				>
 			</File>
@@ -449,6 +461,10 @@
 			</File>
 			<File
 				RelativePath=".\Source\Resource.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Shield.h"
 				>
 			</File>
 			<File

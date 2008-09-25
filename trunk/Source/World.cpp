@@ -130,6 +130,8 @@ void ProcessWorldItem(const TiXmlElement *element)
 {
 	const char *value = element->Value();
 	const char *name = element->Attribute("name");
+	if (name)
+		Database::name.Put(Hash(name), name);
 	DebugPrint("Processing %s (%s)\n", element->Value(), name);
 
 	// process world item

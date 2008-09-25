@@ -84,7 +84,7 @@ namespace Database
 
 
 DamagableTemplate::DamagableTemplate(void)
-: mHealth(0), mSpawnOnDeath(0)
+: mHealth(0), mSpawnOnDeath(0), mSwitchOnDeath(0)
 {
 }
 
@@ -97,6 +97,8 @@ bool DamagableTemplate::Configure(const TiXmlElement *element)
 	element->QueryFloatAttribute("health", &mHealth);
 	if (const char *spawn = element->Attribute("spawnondeath"))
 		mSpawnOnDeath = Hash(spawn);
+	if (const char *spawn = element->Attribute("switchondeath"))
+		mSwitchOnDeath = Hash(spawn);
 	return true;
 }
 
@@ -159,14 +161,14 @@ void Damagable::Damage(unsigned int aSourceId, float aDamage)
 	if (mHealth <= 0)
 		return;
 
-	// deduct damage from health
-	mHealth -= aDamage;
-
 	// notify all damage listeners
 	for (Database::Typed<DamageListener>::Iterator itor(Database::damagelistener.Find(mId)); itor.IsValid(); ++itor)
 	{
 		itor.GetValue()(mId, aSourceId, aDamage);
 	}
+
+	// deduct damage from health
+	mHealth -= aDamage;
 
 #ifdef DEBUG_DAMAGABLE_APPLY_DAMAGE
 	DebugPrint("damaged=\"%s\" source=\"%s\" owner=\"%s\" damage=%f health=%f\n",
@@ -224,26 +226,31 @@ void Damagable::Damage(unsigned int aSourceId, float aDamage)
 
 void Damagable::Kill(void)
 {
-	// if spawn on death...
 	const DamagableTemplate &damagable = Database::damagabletemplate.Get(mId);
+
+	// if spawn on death...
 	if (damagable.mSpawnOnDeath)
 	{
-#ifdef USE_CHANGE_DYNAMIC_TYPE
-		// change dynamic type
-		Database::Switch(mId, damagable.mSpawnOnDeath);
-#else
 		// get the entity
 		Entity *entity = Database::entity.Get(mId);
 		if (entity)
 		{
 			// instantiate the template
-			Database::Instantiate(damagable.mSpawnOnDeath, Database::owner.Get(mId), mId, entity->GetAngle(), entity->GetPosition(), entity->GetVelocity(), entity->GetOmega());
+			unsigned int spawnId = Database::Instantiate(damagable.mSpawnOnDeath, Database::owner.Get(mId), mId, entity->GetAngle(), entity->GetPosition(), entity->GetVelocity(), entity->GetOmega());
+
+			// propagate hit combo
+			if (const int *combo = Database::hitcombo.Find(mId))
+				Database::hitcombo.Put(spawnId, *combo);
 		}
-#endif
 	}
-#ifdef USE_CHANGE_DYNAMIC_TYPE
+
+	// if switch on death...
+	if (damagable.mSwitchOnDeath)
+	{
+		// change dynamic type
+		Database::Switch(mId, damagable.mSwitchOnDeath);
+	}
 	else
-#endif
 	{
 		// delete the entity
 		Database::Delete(mId);

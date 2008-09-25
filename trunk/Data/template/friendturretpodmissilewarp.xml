@@ -1,4 +1,4 @@
 <?xml version="1.0" ?>
 <template name="friendturretpodmissilewarp" type="friendlongwarpin">
-	<expire spawnonexpire="friendturretpodmissile" />
+	<expire switchonexpire="friendturretpodmissile" />
 </template>

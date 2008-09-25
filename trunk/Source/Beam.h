@@ -15,8 +15,7 @@ public:
 	float mRange;
 
 	// collision
-	unsigned short mCategoryBits;
-	unsigned short mMaskBits;
+	b2FilterData mFilter;
 
 	// spawn
 	unsigned int mSpawnOnImpact;

@@ -79,7 +79,9 @@ namespace Database
 
 
 CapturableTemplate::CapturableTemplate(void)
-: mResistance(0), mSpawnOnCapture(0)
+: mResistance(0)
+, mSpawnOnCapture(0)
+, mSwitchOnCapture(0)
 {
 }
 
@@ -92,6 +94,8 @@ bool CapturableTemplate::Configure(const TiXmlElement *element)
 	element->QueryFloatAttribute("resistance", &mResistance);
 	if (const char *spawn = element->Attribute("spawnoncapture"))
 		mSpawnOnCapture = Hash(spawn);
+	if (const char *spawn = element->Attribute("switchoncapture"))
+		mSwitchOnCapture = Hash(spawn);
 	return true;
 }
 
@@ -180,14 +184,11 @@ void Capturable::Persuade(unsigned int aSourceId, float aEffect)
 
 void Capturable::Capture(void)
 {
-	// if spawn on capture...
 	const CapturableTemplate &capturable = Database::capturabletemplate.Get(mId);
+
+	// if spawning on capture...
 	if (capturable.mSpawnOnCapture)
 	{
-#ifdef USE_CHANGE_DYNAMIC_TYPE
-		// change dynamic type
-		Database::Switch(mId, capturable.mSpawnOnCapture);
-#else
 		// get the entity
 		Entity *entity = Database::entity.Get(mId);
 		if (entity)
@@ -195,11 +196,15 @@ void Capturable::Capture(void)
 			// instantiate the template
 			Database::Instantiate(capturable.mSpawnOnCapture, Database::owner.Get(mId), mId, entity->GetAngle(), entity->GetPosition(), entity->GetVelocity(), entity->GetOmega());
 		}
-#endif
 	}
-#ifdef USE_CHANGE_DYNAMIC_TYPE
+
+	// if switching on capture...
+	if (capturable.mSwitchOnCapture)
+	{
+		// change dynamic type
+		Database::Switch(mId, capturable.mSwitchOnCapture);
+	}
 	else
-#endif
 	{
 		// delete the entity
 		Database::Delete(mId);

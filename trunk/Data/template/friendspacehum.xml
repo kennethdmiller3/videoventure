@@ -42,7 +42,7 @@
 			<calllist name="diamond" />
 		</pushmatrix>
 	</renderable>
-	<expire time="30" spawnonexpire="friendbulletexplosion" />
+	<expire time="30" switchonexpire="friendbulletexplosion" />
 	<bullet damage="1" ricochet="1" spawnondeath="friendfireballexplosion" />
 	<damagable health="1" spawnondeath="friendfireballexplosion" />
 	<aimer range="512" attack="0" leading="0" category="1" bit1="0" bit2="0" />

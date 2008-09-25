@@ -19,9 +19,9 @@
 			<key time="0.033333" r="0.0" g="0.0" b="0.0" a="1.0" />
 			<key time="0.050000" r="0.0" g="0.0" b="0.0" a="1.0" />
 		</color>
-		<calllist name="ship" />
+		<calllist name="playership" />
 	</renderable>
-	<expire time="0.3" spawnonexpire="playershipexplosion" />
+	<expire time="0.3" switchonexpire="playershipexplosion" />
 	<soundcue>
 		<cue sound="stargate-playershipdeath" />
 	</soundcue>

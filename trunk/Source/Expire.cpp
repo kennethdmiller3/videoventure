@@ -87,6 +87,7 @@ namespace Database
 ExpireTemplate::ExpireTemplate(void)
 : mTime(FLT_MAX)
 , mSpawn(0)
+, mSwitch(0)
 , mReticule(false)
 {
 }
@@ -102,6 +103,8 @@ bool ExpireTemplate::Configure(const TiXmlElement *element)
 	element->QueryFloatAttribute("time", &mTime);
 	if (const char *spawn = element->Attribute("spawnonexpire"))
 		mSpawn = Hash(spawn);
+	if (const char *spawn = element->Attribute("switchonexpire"))
+		mSwitch = Hash(spawn);
 	int reticule = mReticule;
 	element->QueryIntAttribute("reticule", &reticule);
 	mReticule = reticule != 0;
@@ -182,8 +185,9 @@ void Expire::Update(float aStep)
 	if (t < 0.0f)
 		return;
 
-	// if spawning on expire...
 	const ExpireTemplate &expire = Database::expiretemplate.Get(mId);
+
+	// if spawning on expire...
 	if (expire.mSpawn)
 	{
 		// get the entity
@@ -194,18 +198,27 @@ void Expire::Update(float aStep)
 			entity->SetPosition(entity->GetInterpolatedPosition(1.0f - t));
 			entity->SetAngle(entity->GetInterpolatedAngle(1.0f - t));
 
-#ifdef USE_CHANGE_DYNAMIC_TYPE
-			// change dynamic type
-			Database::Switch(mId, expire.mSpawn);
-#else
 			// spawn template at the entity location
 			Database::Instantiate(expire.mSpawn, Database::owner.Get(mId), mId, entity->GetAngle(), entity->GetPosition(), entity->GetVelocity(), entity->GetOmega());
-#endif
 		}
 	}
-#ifdef USE_CHANGE_DYNAMIC_TYPE
+
+	// if switching on expire...
+	if (expire.mSwitch)
+	{
+		// get the entity
+		Entity *entity = Database::entity.Get(mId);
+		if (entity)
+		{
+			// rewind position to fraction
+			entity->SetPosition(entity->GetInterpolatedPosition(1.0f - t));
+			entity->SetAngle(entity->GetInterpolatedAngle(1.0f - t));
+
+			// change dynamic type
+			Database::Switch(mId, expire.mSwitch);
+		}
+	}
 	else
-#endif
 	{
 		// delete the entity
 		Database::Delete(mId);

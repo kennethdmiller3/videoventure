@@ -4,6 +4,7 @@
 #include "Collidable.h"
 #include "Controller.h"
 #include "Sound.h"
+#include "Drawlist.h"
 
 
 #ifdef USE_POOL_ALLOCATOR
@@ -145,10 +146,10 @@ Ship::Ship(const ShipTemplate &aTemplate, unsigned int aId)
 	SetAction(Action(this, &Ship::Simulate));
 
 	// start the idle sound
-	PlaySound(aId, 0xc301cf93 /* "idle" */);
+	PlaySoundCue(aId, 0xc301cf93 /* "idle" */);
 
 	// also start a thrust sound
-	PlaySound(aId, 0xd0624e33 /* "thrust" */);
+	PlaySoundCue(aId, 0xd0624e33 /* "thrust" */);
 }
 
 // Ship Destructor
@@ -165,22 +166,17 @@ void Ship::Simulate(float aStep)
 	// get ship template
 	const ShipTemplate &ship = Database::shiptemplate.Get(mId);
 
-	// get ship collidable
-	const Collidable *collidable = Database::collidable.Get(mId);
-	if (!collidable)
-		return;
-	b2Body *body = collidable->GetBody();
-	if (!body)
-		return;
+	// get collision body (if any)
+	b2Body *body = NULL;
+	if (const Collidable *collidable = Database::collidable.Get(mId))
+		body = collidable->GetBody();
 
 	// get ship controller
 	const Controller *controller = Database::controller.Get(mId);
-	if (!controller)
-		return;
 
 	// apply thrust
 	{
-		const Vector2 &mMove = controller->mMove;
+		const Vector2 mMove = controller ? controller->mMove : Vector2(0, 0);
 		float control = std::min(mMove.LengthSq(), 1.0f);
 		float acc = Lerp(ship.mMinAccel, ship.mMaxAccel, control);
 		Vector2 localvel(
@@ -191,8 +187,19 @@ void Ship::Simulate(float aStep)
 		const Transform2 &transform = entity->GetTransform();
 		Vector2 dv(transform.Rotate(localvel) - entity->GetVelocity());
 		float it = std::min(acc * InvSqrt(dv.LengthSq() + 0.0001f), 1.0f / aStep);
-		Vector2 new_thrust(dv * it * body->GetMass());
-		body->ApplyForce(b2Vec2(new_thrust.x, new_thrust.y), body->GetXForm().position);
+		Vector2 new_accel(dv * it);
+		if (body)
+			body->ApplyForce(new_accel * body->GetMass(), body->GetXForm().position);
+		else
+			entity->SetVelocity(entity->GetVelocity() + aStep * new_accel);
+
+		// save throttle for the renderer
+		Database::Typed<float> &variables = Database::variable.Open(mId);
+		variables.Put(0xd0624e33 /* "thrust" */ + 0, mMove.x);
+		variables.Put(0xd0624e33 /* "thrust" */ + 1, mMove.y);
+		variables.Put(0xd0624e33 /* "thrust" */ + 2, 0.0f);
+		variables.Put(0xd0624e33 /* "thrust" */ + 3, 1.0f);
+		Database::variable.Close(mId);
 
 		// update thrust sound (if any)
 		Database::Typed<Sound *> &sounds = Database::sound.Open(mId);
@@ -206,7 +213,10 @@ void Ship::Simulate(float aStep)
 
 	// apply steering
 	{
-		const float mTurn = controller->mTurn;
-		body->SetAngularVelocity(mTurn * ship.mMaxOmega);
+		const float mTurn = controller ? controller->mTurn : 0.0f;
+		if (body)
+			body->SetAngularVelocity(mTurn * ship.mMaxOmega);
+		else
+			entity->SetOmega(mTurn * ship.mMaxOmega);
 	}
 }

@@ -98,6 +98,6 @@
 			<calllist name="circle32" />
 		</pushmatrix>
 	</renderable>
-	<expire time="5" spawnonexpire="friendbulletexplosion" />
+	<expire time="5" switchonexpire="friendbulletexplosion" />
 	<bullet damage="3" spawnondeath="friendmineexplosion" />
 </template>

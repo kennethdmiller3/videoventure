@@ -107,122 +107,32 @@ ResourceTemplate::~ResourceTemplate(void)
 {
 }
 
-enum ActionOp
-{
-	AO_Create,
-	AO_Replace,
-	AO_Delete,
-};
-
-void ProcessActions(const TiXmlElement *element, unsigned int aId, unsigned int aSubId, unsigned int aEventId)
-{
-	Database::Typed<Database::Typed<std::vector<unsigned int> > > &actionss = Database::resourceaction.Open(aId);
-	Database::Typed<std::vector<unsigned int> > &actions = actionss.Open(aSubId);
-	std::vector<unsigned int> &action = actions.Open(aEventId);
-	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
-	{
-		switch(Hash(child->Value()))
-		{
-		case 0x26bb595d /* "create" */:
-			action.push_back(AO_Create);
-			action.push_back(Hash(child->Attribute("type")));
-			break;
-		case 0xa13884c3 /* "replace" */:
-			action.push_back(AO_Replace);
-			action.push_back(Hash(child->Attribute("type")));
-			break;
-		case 0x67c2444a /* "delete" */:
-			action.push_back(AO_Delete);
-			break;
-		}
-	}
-	actions.Close(aEventId);
-	actionss.Close(aSubId);
-	Database::resourceaction.Close(aId);
-}
-
-void ExecuteActions(const unsigned int buffer[], size_t count, unsigned int aId)
-{
-	const unsigned int * __restrict itor = buffer;
-	while (itor < buffer + count)
-	{
-		switch (*itor++)
-		{
-		case AO_Create:
-			{
-				// get the template identifier
-				unsigned int aTemplateId = *itor++;
-
-				// TO DO: get offset position, angle, velocity, and omega
-
-				// get the entity
-				Entity *entity = Database::entity.Get(aId);
-				if (entity)
-				{
-					// instantiate the template
-					Database::Instantiate(aTemplateId, Database::owner.Get(aId), aId, entity->GetAngle(), entity->GetPosition(), entity->GetVelocity(), entity->GetOmega());
-				}
-			}
-			break;
-
-		case AO_Replace:
-			{
-				// get the template identifier
-				unsigned int aTemplateId = *itor++;
-
-				// TO DO: get offset position, angle, velocity, and omega
-
-#ifdef USE_CHANGE_DYNAMIC_TYPE
-				// change dynamic type
-				Database::Switch(aId, aTemplateId);
-#else
-				// get the entity
-				Entity *entity = Database::entity.Get(aId);
-				if (entity)
-				{
-					// instantiate the template
-					Database::Instantiate(aTemplateId, Database::owner.Get(aId), aId, entity->GetAngle(), entity->GetPosition(), entity->GetVelocity(), entity->GetOmega());
-				}
-
-				// delete the old entity
-				Database::Delete(aId);
-#endif
-			}
-			break;
-
-		case AO_Delete:
-			{
-				// delete the entity
-				Database::Delete(aId);
-			}
-			break;
-		}
-	}
-}
-
+#if 0
 void ResourceChangeActions(unsigned int aId, unsigned int aSubId, unsigned int aSourceId, float aValue)
 {
 	const std::vector<unsigned int> &action = Database::resourceaction.Get(aId).Get(aSubId).Get(0x729d01bd /* "change" */);
 	if (action.size() > 0)
-		ExecuteActions(&action[0], action.size(), aId);
+		ExecuteActionItems(&action[0], action.size(), aId);
 }
 
 void ResourceEmptyActions(unsigned int aId, unsigned int aSubId, unsigned int aSourceId)
 {
 	const std::vector<unsigned int> &action = Database::resourceaction.Get(aId).Get(aSubId).Get(0x18a7beee /* "empty" */);
 	if (action.size() > 0)
-		ExecuteActions(&action[0], action.size(), aId);
+		ExecuteActionItems(&action[0], action.size(), aId);
 }
 
 void ResourceFullActions(unsigned int aId, unsigned int aSubId, unsigned int aSourceId)
 {
 	const std::vector<unsigned int> &action = Database::resourceaction.Get(aId).Get(aSubId).Get(0xff79b33c /* "full" */);
 	if (action.size() > 0)
-		ExecuteActions(&action[0], action.size(), aId);
+		ExecuteActionItems(&action[0], action.size(), aId);
 }
+#endif
 
 void ProcessResourceChange(const TiXmlElement *element, unsigned int aId, unsigned int aSubId)
 {
+#if 0
 	ProcessActions(element, aId, aSubId, 0x729d01bd /* "change" */);
 
 	Database::Typed<Database::Typed<Resource::ChangeListener> > &listenerss = Database::resourcechangelistener.Open(aId);
@@ -234,10 +144,12 @@ void ProcessResourceChange(const TiXmlElement *element, unsigned int aId, unsign
 
 	listenerss.Close(aSubId);
 	Database::resourcechangelistener.Close(aId);
+#endif
 }
 
 void ProcessResourceEmpty(const TiXmlElement *element, unsigned int aId, unsigned int aSubId)
 {
+#if 0
 	ProcessActions(element, aId, aSubId, 0x18a7beee /* "empty" */);
 
 	Database::Typed<Database::Typed<Resource::EmptyListener> > &listenerss = Database::resourceemptylistener.Open(aId);
@@ -249,10 +161,12 @@ void ProcessResourceEmpty(const TiXmlElement *element, unsigned int aId, unsigne
 
 	listenerss.Close(aSubId);
 	Database::resourceemptylistener.Close(aId);
+#endif
 }
 
 void ProcessResourceFull(const TiXmlElement *element, unsigned int aId, unsigned int aSubId)
 {
+#if 0
 	ProcessActions(element, aId, aSubId, 0xff79b33c /* "full" */);
 
 	Database::Typed<Database::Typed<Resource::FullListener> > &listenerss = Database::resourcefulllistener.Open(aId);
@@ -264,6 +178,7 @@ void ProcessResourceFull(const TiXmlElement *element, unsigned int aId, unsigned
 
 	listenerss.Close(aSubId);
 	Database::resourcefulllistener.Close(aId);
+#endif
 }
 
 bool ResourceTemplate::Configure(const TiXmlElement *element, unsigned int aId, unsigned int aSubId)
@@ -375,7 +290,7 @@ void Resource::Set(unsigned int aSourceId, float aValue)
 	if (mValue != aValue)
 	{
 		// if something dropped the value...
-		if (aSourceId != mId && (mValue - aValue) * (resource.mAdd) > 0)
+		if ((mValue - aValue) * (resource.mAdd) > 0)
 		{
 			// reset timer
 			mTimer = Database::resourcetemplate.Get(mId).Get(mSubId).mDelay;

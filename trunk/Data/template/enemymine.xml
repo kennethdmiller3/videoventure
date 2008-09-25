@@ -98,7 +98,7 @@
 			<calllist name="circle32" />
 		</pushmatrix>
 	</renderable>
-	<expire time="5" spawnonexpire="enemybulletexplosion" />
+	<expire time="5" switchonexpire="enemybulletexplosion" />
 	<bullet damage="1" spawnondeath="enemymineexplosion" />
 	<capturable resistance="1" spawnoncapture="friendmine" />
 </template>

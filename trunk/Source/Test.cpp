@@ -25,11 +25,6 @@
 #include "Pathing.h"
 #endif
 
-#include <malloc.h>
-
-#include <algorithm>
-
-
 // screen attributes
 int SCREEN_WIDTH = 640;
 int SCREEN_HEIGHT = 480;
@@ -131,7 +126,7 @@ unsigned int sim_turn = 0;
 float sim_fraction = 1.0f;
 
 // random number seed (HACK)
-unsigned long randlongseed = 0;
+unsigned long randlongseed = 0x92D68CA2;
 
 // camera position (HACK)
 Vector2 camerapos[2];
@@ -232,6 +227,84 @@ void cmdCB(OGLCONSOLE_Console console, char *cmd)
 	ProcessCommand(command, param, count);
 }
 
+#if defined(USE_GLFW)
+
+// forward declaration
+bool init_Window();
+void EscapeMenuExit();
+void EscapeMenuEnter();
+
+void KeyCallback(int aIndex, int aState)
+{
+	if (aState == GLFW_PRESS)
+	{
+		input.OnPress(Input::TYPE_KEYBOARD, 0, aIndex);
+
+		switch (aIndex)
+		{
+		case GLFW_KEY_F4:
+			if (glfwGetKey(GLFW_KEY_LALT) || glfwGetKey(GLFW_KEY_RALT))
+				setgamestate = STATE_QUIT;
+			break;
+		case GLFW_KEY_ENTER:
+			if (glfwGetKey(GLFW_KEY_LALT) || glfwGetKey(GLFW_KEY_RALT))
+			{
+				SCREEN_FULLSCREEN = !SCREEN_FULLSCREEN;
+				init_Window();
+			}
+			break;
+		case GLFW_KEY_ESC:
+			if (curgamestate == STATE_PLAY)
+			{
+				if (escape)
+					EscapeMenuExit();
+				else
+					EscapeMenuEnter();
+			}
+			break;
+		case 'P':
+			if (glfwGetKey(GLFW_KEY_LSHIFT) || glfwGetKey(GLFW_KEY_RSHIFT))
+			{
+				paused = true;
+				singlestep = true;
+			}
+			else
+			{
+				paused = !paused;
+			}
+			if (paused)
+				glfwEnable(GLFW_MOUSE_CURSOR);
+			else
+				glfwDisable(GLFW_MOUSE_CURSOR);
+			break;
+		}
+	}
+	else
+	{
+		input.OnRelease(Input::TYPE_KEYBOARD, 0, aIndex);
+	}
+}
+
+void MousePosCallback(int aPosX, int aPosY)
+{
+	input.OnAxis(Input::TYPE_MOUSE_AXIS, 0, 0, float(aPosX * 2 - SCREEN_WIDTH) / float(SCREEN_HEIGHT));
+	input.OnAxis(Input::TYPE_MOUSE_AXIS, 0, 1, float(aPosY * 2 - SCREEN_HEIGHT) / float(SCREEN_HEIGHT));
+}
+
+void MouseButtonCallback(int aIndex, int aState)
+{
+	if (aState == GLFW_PRESS)
+		input.OnPress(Input::TYPE_MOUSE_BUTTON, 0, aIndex);
+	else
+		input.OnRelease(Input::TYPE_MOUSE_BUTTON, 0, aIndex);
+}
+
+void MouseWheelCallback(int aPos)
+{
+}
+
+#endif
+
 bool init_GL()
 {	
 	// set clear color
@@ -262,6 +335,9 @@ bool init_GL()
 		// disable polygon smoothing
 		glDisable( GL_POLYGON_SMOOTH );
 	}
+
+	// disable lighting
+	glDisable( GL_LIGHTING );
 
 	// enable blending
 	glEnable( GL_BLEND );
@@ -299,6 +375,7 @@ bool init_GL()
 
 bool init_Window()
 {
+#if defined(USE_SDL)
 	// set OpenGL attributes
     SDL_GL_SetAttribute( SDL_GL_RED_SIZE, 8 );
     SDL_GL_SetAttribute( SDL_GL_GREEN_SIZE, 8 );
@@ -329,6 +406,22 @@ bool init_Window()
 		flags |= SDL_FULLSCREEN;
 	if( SDL_SetVideoMode( SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_DEPTH, flags ) == NULL )
 		return false;
+#elif defined(USE_SFML)
+	// create the window
+	window.Create(sf::VideoMode(SCREEN_WIDTH, SCREEN_HEIGHT, 32), "Shmup!", SCREEN_FULLSCREEN ? sf::Style::Fullscreen : sf::Style::Close, sf::WindowSettings(32, 0, OPENGL_MULTISAMPLE));
+	window.UseVerticalSync(OPENGL_SWAPCONTROL);
+#elif defined(USE_GLFW)
+	glfwOpenWindowHint(GLFW_ACCUM_RED_BITS, 16);
+	glfwOpenWindowHint(GLFW_ACCUM_GREEN_BITS, 16);
+	glfwOpenWindowHint(GLFW_ACCUM_BLUE_BITS, 16);
+	glfwOpenWindowHint(GLFW_ACCUM_ALPHA_BITS, 16);
+	glfwOpenWindowHint(GLFW_FSAA_SAMPLES, OPENGL_MULTISAMPLE);
+	glfwOpenWindow(SCREEN_WIDTH, SCREEN_HEIGHT, 8, 8, 8, 8, 0, 0, SCREEN_FULLSCREEN ? GLFW_FULLSCREEN : GLFW_WINDOW);
+	glfwSetWindowTitle("Shmup!");
+	glfwSwapInterval( OPENGL_SWAPCONTROL );
+#else
+#error
+#endif
 
 	// device was reset
 	wasreset = true;
@@ -355,6 +448,7 @@ bool init_Window()
 
 bool init()
 {
+#if defined(USE_SDL)
 	// initialize SDL
 	if( SDL_Init( SDL_INIT_EVERYTHING ) < 0 )
 		return false;    
@@ -370,10 +464,15 @@ bool init()
 			DebugPrint("Name: %s\n", SDL_JoystickName(0));
 		}
 	}
+#elif defined (USE_GLFW)
+	// initialize GLFW
+	glfwInit();
+#endif
 
 	// initialize the window
 	init_Window();
 
+#if defined(USE_SDL)
 	// hide the mouse cursor
 	SDL_ShowCursor(SDL_DISABLE);
 
@@ -382,6 +481,19 @@ bool init()
 
 	// set window title
 	SDL_WM_SetCaption( "Shmup!", NULL );
+#elif defined(USE_SFML)
+	// hide the mouse cursor
+	window.ShowMouseCursor(false);
+#elif defined(USE_GLFW)
+	// hide the mouse cursor
+	glfwDisable(GLFW_MOUSE_CURSOR);
+
+	// set callbacks
+	glfwSetKeyCallback(KeyCallback);
+	glfwSetMousePosCallback(MousePosCallback);
+	glfwSetMouseButtonCallback(MouseButtonCallback);
+	glfwSetMouseWheelCallback(MouseWheelCallback);
+#endif
 
     /* Initialize OGLCONSOLE */                                                                      
     console = OGLCONSOLE_Create();                                                                             
@@ -389,10 +501,10 @@ bool init()
     OGLCONSOLE_EnterKey(cmdCB);                                                                      
 
 #ifdef TRACE_OPENGL_ATTRIBUTES
-	int value;
-
+#if defined(USE_SDL)
 	DebugPrint("Screen BPP: %d\n", SDL_GetVideoSurface()->format->BitsPerPixel);
 	DebugPrint("\n");
+#endif
 	DebugPrint( "Vendor     : %s\n", glGetString( GL_VENDOR ) );
 	DebugPrint( "Renderer   : %s\n", glGetString( GL_RENDERER ) );
 	DebugPrint( "Version    : %s\n", glGetString( GL_VERSION ) );
@@ -410,6 +522,8 @@ bool init()
 	while(extension);
 	DebugPrint("\n");
 
+#if defined(USE_SDL)
+	int value;
 	const char *attrib[] =
 	{
 		"SDL_GL_RED_SIZE",
@@ -442,7 +556,9 @@ bool init()
 	for (SDL_Rect **mode = modes; *mode != NULL; ++mode)
 		DebugPrint("%dx%d\n", (*mode)->w, (*mode)->h);
 #endif
+#endif
 
+#if defined(USE_SDL)
 	SDL_AudioSpec fmt;
 	fmt.freq = AUDIO_FREQUENCY;
 	fmt.format = AUDIO_S16SYS;
@@ -455,6 +571,7 @@ bool init()
 	if ( SDL_OpenAudio(&fmt, NULL) < 0 ) {
 		DebugPrint("Unable to open audio: %s\n", SDL_GetError());
 	}
+#endif
 
 	// success!
 	return true;    
@@ -465,10 +582,19 @@ void clean_up()
     /* clean up oglconsole */                                                                        
     OGLCONSOLE_Quit();
 
+#if defined(USE_SDL)
+
 	SDL_CloseAudio();
 
 	// quit SDL
 	SDL_Quit();
+
+#elif defined(USE_GLFW)
+
+	// terminate GLFW
+	glfwTerminate();
+
+#endif
 }
 
 bool ReadPreferences(const char *config)
@@ -691,7 +817,7 @@ bool InitLevel(const char *config)
 		reticule_handle = Database::drawlist.Get(0x170e4c58 /* "reticule" */);
 
 		// play the startup sound (HACK)
-		PlaySound(0x94326baa /* "startup" */);
+		PlaySoundCue(0x94326baa /* "startup" */);
 
 		return true;
 	}
@@ -699,8 +825,10 @@ bool InitLevel(const char *config)
 	// clear the reticule draw list (HACK)
 	reticule_handle = 0;
 
+#if defined(USE_SDL)
 	// show the mouse cursor
 	SDL_ShowCursor(SDL_ENABLE);
+#endif
 
 	return false;
 
@@ -1083,12 +1211,12 @@ int ProcessCommand( unsigned int aCommand, char *aParam[], int aCount )
 	case 0x0e0d9594 /* "sound" */:
 		if (aCount >= 2)
 		{
-			PlaySound(Hash(aParam[0]), Hash(aParam[1]));
+			PlaySoundCue(Hash(aParam[0]), Hash(aParam[1]));
 			return 2;
 		}
 		else if (aCount == 1)
 		{
-			PlaySound(Hash(aParam[0]));
+			PlaySoundCue(Hash(aParam[0]));
 			return 1;
 		}
 		else
@@ -1161,7 +1289,13 @@ BOOL IsDebuggerAttached()
 #endif
 
 // main
+#if defined(USE_SDL)
 int SDL_main( int argc, char *argv[] )
+#elif defined(WIN32)
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd)
+#else
+int main( int argc, char *argv[] )
+#endif
 {
 #ifdef _MSC_VER
 	if (IsDebuggerAttached())
@@ -1182,6 +1316,20 @@ int SDL_main( int argc, char *argv[] )
 
 	// read preferences
 	ReadPreferences("preferences.xml");
+
+#if !defined(USE_SDL) && defined(WIN32)
+	int argc = 1;
+	char *argv[64] = { NULL };
+	int argsize = strlen(lpCmdLine) + 1;
+	char *argdata = static_cast<char *>(_alloca(argsize));
+	memcpy(argdata, lpCmdLine, argsize);
+	{
+		for (char *ptr = strtok(argdata, " \t"); ptr != NULL; ptr = strtok(NULL, " \t"))
+		{
+			argv[argc++] = ptr;
+		}
+	}
+#endif
 
 	// process command-line arguments
 	for (int i = 1; i < argc; ++i)
@@ -2033,8 +2181,10 @@ motion blur strength	[-] <blur %> [+]
 
 extern ShellMenuItem shellmenuvideoitems[];
 
+#if defined(USE_SDL)
 SDL_Rect **shellmenuvideoresolutions;
 SDL_Rect **shellmenuvideoresolution;
+#endif
 char shellmenuvideoresolutiontext[32];
 char shellmenuvideomultisampletext[8];
 char shellmenuvideomotionblurstepstext[8];
@@ -2042,6 +2192,7 @@ char shellmenuvideomotionblurtimetext[8];
 
 void ShellMenuVideoEnter()
 {
+#if defined(USE_SDL)
 	shellmenuvideoresolutions = SDL_ListModes(NULL, SDL_OPENGL | SDL_FULLSCREEN);
 	shellmenuvideoresolution = shellmenuvideoresolutions;
 	for (SDL_Rect **mode = shellmenuvideoresolutions; *mode != NULL; ++mode)
@@ -2050,6 +2201,7 @@ void ShellMenuVideoEnter()
 			shellmenuvideoresolution = mode;
 	}
 	TIXML_SNPRINTF(shellmenuvideoresolutiontext, sizeof(shellmenuvideoresolutiontext), "%dx%d", (*shellmenuvideoresolution)->w, (*shellmenuvideoresolution)->h);
+#endif
 
 	VarItem::CreateInteger("shell.menu.video.fullscreen", SCREEN_FULLSCREEN, 0, 1);
 	VarItem::CreateInteger("shell.menu.video.verticalsync", OPENGL_SWAPCONTROL, 0, 1);
@@ -2066,14 +2218,18 @@ void ShellMenuVideoEnter()
 
 void ShellMenuVideoExit()
 {
+#if defined(USE_SDL)
 	shellmenuvideoresolutions = NULL;
 	shellmenuvideoresolution = NULL;
+#endif
 }
 
 void ShellMenuVideoPressAccept()
 {
+#if defined(USE_SDL)
 	SCREEN_WIDTH = (*shellmenuvideoresolution)->w;
 	SCREEN_HEIGHT = (*shellmenuvideoresolution)->h;
+#endif
 	SCREEN_FULLSCREEN = VarItem::GetInteger("shell.menu.video.fullscreen") != 0;
 	OPENGL_SWAPCONTROL = VarItem::GetInteger("shell.menu.video.verticalsync") != 0;
 	OPENGL_MULTISAMPLE = VarItem::GetInteger("shell.menu.video.multisample");
@@ -2093,20 +2249,24 @@ void ShellMenuVideoPressCancel()
 
 void ShellMenuVideoPressResolutionUp()
 {
+#if defined(USE_SDL)
 	if (shellmenuvideoresolution > shellmenuvideoresolutions)
 	{
 		--shellmenuvideoresolution;
 		sprintf(shellmenuvideoresolutiontext, "%dx%d", (*shellmenuvideoresolution)->w, (*shellmenuvideoresolution)->h);
 	}
+#endif
 }
 
 void ShellMenuVideoPressResolutionDown()
 {
+#if defined(USE_SDL)
 	if (*(shellmenuvideoresolution+1) != NULL)
 	{
 		++shellmenuvideoresolution;
 		sprintf(shellmenuvideoresolutiontext, "%dx%d", (*shellmenuvideoresolution)->w, (*shellmenuvideoresolution)->h);
 	}
+#endif
 }
 
 void ShellMenuVideoPressFullScreenOff()
@@ -2864,8 +3024,14 @@ void EnterShellState()
 #endif
 		);
 
+#if defined(USE_SDL)
 	// show the screen
 	SDL_GL_SwapBuffers();
+#elif defined(USE_SFML)
+	window.Display();
+#elif defined(USE_GLFW)
+	glfwSwapBuffers();
+#endif
 
 	// reset simulation timer
 	sim_rate = float(SIMULATION_RATE);
@@ -2879,8 +3045,10 @@ void EnterShellState()
 	// level configuration
 	InitLevel("shell.xml");
 
+#if defined(USE_SDL)
 	// start audio
 	SDL_PauseAudio(0);
+#endif
 
 	// create title overlay
 	Overlay *title = new Overlay(0x9865b509 /* "title" */);
@@ -2902,11 +3070,13 @@ void EnterShellState()
 
 void ExitShellState()
 {
+#if defined(USE_SDL)
 	// stop audio
 	SDL_PauseAudio(1);
+#endif
 
 	// stop any startup sound (HACK)
-	StopSound(0x94326baa /* "startup" */);
+	StopSoundCue(0x94326baa /* "startup" */);
 
 	// clear overlays
 	delete Database::overlay.Get(0x9865b509 /* "title" */);
@@ -3160,7 +3330,9 @@ void PlayerHUD::Update(float aStep)
 	{
 		// snap position
 		trackid = id;
+		aimpos[0] = aimpos[1];
 		trackpos[0] = trackpos[1];
+		trackaim = Vector2(0, 0);
 	}
 
 	// set camera position
@@ -3378,7 +3550,7 @@ void PlayerHUD::Render(unsigned int aId, float aTime, float aPosX, float aPosY, 
 			glPushMatrix();
 			glTranslatef(healthrect.x + healthrect.w + 8, healthrect.y + 4, 0.0f);
 			glScalef(-0.5, -0.5, 1);
-			RenderDrawlist(0xeec1dafa /* "playership" */, 0.0f, 0.0f, 0.0f, 0.0f);
+			glCallList(Database::drawlist.Get(0xeec1dafa /* "playership" */));
 			glPopMatrix();
 
 			// draw remaining lives
@@ -3388,6 +3560,7 @@ void PlayerHUD::Render(unsigned int aId, float aTime, float aPosX, float aPosY, 
 			glEnable(GL_TEXTURE_2D);
 			glBindTexture(GL_TEXTURE_2D, OGLCONSOLE_glFontHandle);
 
+			glColor4f(0.4f, 0.5f, 1.0f, 1.0f);
 			glBegin(GL_QUADS);
 			float w = 8;
 			float h = -8;
@@ -3443,6 +3616,8 @@ void PlayerHUD::Render(unsigned int aId, float aTime, float aPosX, float aPosY, 
 			glEnable(GL_TEXTURE_2D);
 			glBindTexture(GL_TEXTURE_2D, OGLCONSOLE_glFontHandle);
 
+			glColor4f(0.4f, 0.5f, 1.0f, 1.0f);
+
 			glBegin(GL_QUADS);
 			float w = 8;
 			float h = -8;
@@ -3476,7 +3651,7 @@ void PlayerHUD::Render(unsigned int aId, float aTime, float aPosX, float aPosY, 
 
 		gameovertimer = 0.0f;
 	}
-	else if (cur_lives <= 0)
+	else if (cur_lives <= 0 && player->mTimer <= 0.0f)
 	{
 		// display game over
 		gameovertimer += frame_time;
@@ -3579,8 +3754,14 @@ void EnterPlayState()
 #endif
 		);
 
+#if defined(USE_SDL)
 	// show the screen
 	SDL_GL_SwapBuffers();
+#elif defined(USE_SFML)
+	window.Display();
+#elif defined(USE_GLFW)
+	glfwSwapBuffers();
+#endif
 
 	// reset camera position
 	camerapos[0] = camerapos[1] = Vector2(0, 0);
@@ -3594,18 +3775,20 @@ void EnterPlayState()
 	// input binding
 	InitInput(INPUT_CONFIG.c_str());
 
-	// level configuration
-	if (!InitLevel(LEVEL_CONFIG.c_str()))
-		setgamestate = STATE_SHELL;
-
-	// start audio
-	SDL_PauseAudio(0);
-
 	// add a join listener
 	Database::playerjoin.Put(0xe28d61c6 /* "hud" */, PlayerJoinListener);
 
 	// add a quit listener
 	Database::playerquit.Put(0xe28d61c6 /* "hud" */, PlayerQuitListener);
+
+	// level configuration
+	if (!InitLevel(LEVEL_CONFIG.c_str()))
+		setgamestate = STATE_SHELL;
+
+#if defined(USE_SDL)
+	// start audio
+	SDL_PauseAudio(0);
+#endif
 
 	// create escape overlay
 	Overlay *escape = new Overlay(0x9e212406 /* "escape" */);
@@ -3630,11 +3813,13 @@ void ExitPlayState()
 {
 	DebugPrint("Quitting...\n");
 
+#if defined(USE_SDL)
 	// stop audio
 	SDL_PauseAudio(1);
+#endif
 
 	// stop any startup sound (HACK)
-	StopSound(0x94326baa /* "startup" */);
+	StopSoundCue(0x94326baa /* "startup" */);
 
 	// delete escape overlay
 	delete Database::overlay.Get(0x9e212406 /* "escape" */);
@@ -3653,8 +3838,18 @@ void ExitPlayState()
 // common run state
 void RunState()
 {
+#if defined(USE_SDL)
 	// last ticks
 	unsigned int ticks = SDL_GetTicks();
+#elif defined(USE_SFML)
+	// timer
+	sf::Clock timer;
+
+	// start timer
+	timer.Reset();
+#elif defined(USE_GLFW)
+	double prevtime = glfwGetTime();
+#endif
 
 	// input logging
 	TiXmlDocument inputlog(RECORD_CONFIG.c_str());
@@ -3725,6 +3920,7 @@ void RunState()
 
 		// INPUT PHASE
 
+#if defined(USE_SDL)
 		// event handler
 		SDL_Event event;
 
@@ -3808,13 +4004,122 @@ void RunState()
 		}
 
 		// get loop time in ticks
-		unsigned int delta = SDL_GetTicks() - ticks;
-		ticks += delta;
+		unsigned int nextticks = SDL_GetTicks();
+		float delta = (nextticks - ticks) / 1000.0f;
+		ticks = nextticks;
+#elif defined(USE_SFML)
+	    sf::Event event;
+		while (window.GetEvent(event))
+		{
+			/* Give the console first dibs on event processing */
+			if (OGLCONSOLE_SFMLEvent(&event))
+				continue;
+
+			// Some code for stopping application on close or when escape is pressed...
+			switch (event.Type)
+			{
+			case sf::Event::Resized:
+				glViewport(0, 0, event.Size.Width, event.Size.Height);
+				break;
+			case sf::Event::KeyPressed:
+				input.OnPress( Input::TYPE_KEYBOARD, 0, event.Key.Code );
+				switch(event.Key.Code)
+				{
+				case sf::Key::F4:
+					if (event.Key.Alt)
+						setgamestate = STATE_QUIT;
+					break;
+				case sf::Key::Return:
+					if (event.Key.Alt)
+					{
+						SCREEN_FULLSCREEN = !SCREEN_FULLSCREEN;
+						init_Window();
+					}
+					break;
+				case sf::Key::Escape:
+					if (curgamestate == STATE_PLAY)
+					{
+						if (escape)
+							EscapeMenuExit();
+						else
+							EscapeMenuEnter();
+					}
+					break;
+				case sf::Key::Pause:
+					if (event.Key.Shift)
+					{
+						paused = true;
+						singlestep = true;
+					}
+					else
+					{
+						paused = !paused;
+					}
+					window.ShowMouseCursor(paused);
+					//SDL_WM_GrabInput(paused ? SDL_GRAB_OFF : SDL_GRAB_ON);
+					//SDL_PauseAudio(paused);
+					break;
+				}
+				break;
+			case sf::Event::KeyReleased:
+				input.OnRelease( Input::TYPE_KEYBOARD, 0, event.Key.Code );
+				break;
+			case sf::Event::MouseMoved:
+				input.OnAxis( Input::TYPE_MOUSE_AXIS, 0, 0, float(int(event.MouseMove.X) * 2 - SCREEN_WIDTH) / float(SCREEN_HEIGHT) );
+				input.OnAxis( Input::TYPE_MOUSE_AXIS, 0, 1, float(int(event.MouseMove.Y) * 2 - SCREEN_HEIGHT) / float(SCREEN_HEIGHT) );
+				break;
+			case sf::Event::MouseButtonPressed:
+				input.OnPress( Input::TYPE_MOUSE_BUTTON, 0, event.MouseButton.Button );
+				break;
+			case sf::Event::MouseButtonReleased:
+				input.OnRelease( Input::TYPE_MOUSE_BUTTON, 0, event.MouseButton.Button );
+				break;
+			case sf::Event::JoyMoved:
+				input.OnAxis( Input::TYPE_JOYSTICK_AXIS, event.JoyMove.JoystickId, event.JoyMove.Axis, event.JoyMove.Position / 100.0f );
+				break;
+			case sf::Event::JoyButtonPressed:
+				input.OnPress( Input::TYPE_JOYSTICK_BUTTON, event.JoyButton.JoystickId, event.JoyButton.Button );
+				break;
+			case sf::Event::JoyButtonReleased:
+				input.OnRelease( Input::TYPE_JOYSTICK_BUTTON, event.JoyButton.JoystickId, event.JoyButton.Button );
+				break;
+			case sf::Event::Closed:
+				setgamestate = STATE_QUIT;
+				break;
+			}
+		}
+
+		// get loop time in ticks
+		float delta = timer.GetElapsedTime();
+		timer.Reset();
+		//ticks += delta;
+#elif defined(USE_GLFW)
+		if (glfwGetJoystickParam(0, GLFW_PRESENT))
+		{
+			// get joystick axis positions
+			int axiscount = glfwGetJoystickParam(0, GLFW_AXES);
+			float *axis = static_cast<float *>(_alloca(axiscount * sizeof(float)));
+			axiscount = glfwGetJoystickPos(0, axis, axiscount);
+			for (int i = 0; i < axiscount; ++i)
+				input.OnAxis(Input::TYPE_JOYSTICK_AXIS, 0, i, axis[i]);
+
+			// get joystick button states
+			int buttoncount = glfwGetJoystickParam(0, GLFW_BUTTONS);
+			unsigned char *button = static_cast<unsigned char *>(_alloca(buttoncount * sizeof(unsigned char)));
+			buttoncount = glfwGetJoystickButtons(0, button, buttoncount);
+			for (int i = 0; i < buttoncount; ++i)
+				input.OnAxis(Input::TYPE_JOYSTICK_BUTTON, 0, i, button[i]);
+		}
+		
+		double nexttime = glfwGetTime();
+		float delta = float(nexttime - prevtime);
+		prevtime = nexttime;
+#endif
 
 		// clamp ticks to something sensible
 		// (while debugging, for example)
-		if (delta > 100)
-			delta = 100;
+		if (delta > 0.1f)
+			delta = 0.1f;
 
 		// frame time and turns
 		if (singlestep)
@@ -3838,7 +4143,7 @@ void RunState()
 		else
 		{
 			// advance by frame time
-			frame_time = delta * TIME_SCALE / 1000.0f;
+			frame_time = delta * TIME_SCALE;
 			frame_turns = frame_time * sim_rate;
 		}
 
@@ -3900,84 +4205,87 @@ void RunState()
 #endif
 
 				// seed the random number generator
-				randlongseed = sim_turn;
+				randlongseed = 0x92D68CA2 ^ sim_turn;
 				(void)RandLong();
 
 				// update database
 				Database::Update();
 
-				if (playback)
+				if (curgamestate == STATE_PLAY)
 				{
-					// quit if out of turns
-					if (!inputlognext)
+					if (playback)
 					{
-						setgamestate = STATE_SHELL;
-						break;
+						// quit if out of turns
+						if (!inputlognext)
+						{
+							setgamestate = STATE_SHELL;
+							break;
+						}
+
+						// get the next turn value
+						int turn = -1;
+						inputlognext->QueryIntAttribute("turn", &turn);
+
+						// if the turn matches the simulation turn...
+						if ((unsigned int)turn == sim_turn)
+						{
+							// update the control values
+							inputlognext->QueryIntAttribute("move_x", reinterpret_cast<int *>(&input.output[Input::MOVE_HORIZONTAL]));
+							inputlognext->QueryIntAttribute("move_y", reinterpret_cast<int *>(&input.output[Input::MOVE_VERTICAL]));
+							inputlognext->QueryIntAttribute("aim_x", reinterpret_cast<int *>(&input.output[Input::AIM_HORIZONTAL]));
+							inputlognext->QueryIntAttribute("aim_y", reinterpret_cast<int *>(&input.output[Input::AIM_VERTICAL]));
+							inputlognext->QueryIntAttribute("fire1", reinterpret_cast<int *>(&input.output[Input::FIRE_PRIMARY]));
+							inputlognext->QueryIntAttribute("fire2", reinterpret_cast<int *>(&input.output[Input::FIRE_SECONDARY]));
+							inputlognext->QueryIntAttribute("fire3", reinterpret_cast<int *>(&input.output[Input::FIRE_CHANNEL3]));
+							inputlognext->QueryIntAttribute("fire4", reinterpret_cast<int *>(&input.output[Input::FIRE_CHANNEL4]));
+
+							// go to the next entry
+							inputlognext = inputlognext->NextSiblingElement();
+						}
 					}
-
-					// get the next turn value
-					int turn = -1;
-					inputlognext->QueryIntAttribute("turn", &turn);
-
-					// if the turn matches the simulation turn...
-					if ((unsigned int)turn == sim_turn)
+					else if (record)
 					{
-						// update the control values
-						inputlognext->QueryIntAttribute("move_x", reinterpret_cast<int *>(&input.output[Input::MOVE_HORIZONTAL]));
-						inputlognext->QueryIntAttribute("move_y", reinterpret_cast<int *>(&input.output[Input::MOVE_VERTICAL]));
-						inputlognext->QueryIntAttribute("aim_x", reinterpret_cast<int *>(&input.output[Input::AIM_HORIZONTAL]));
-						inputlognext->QueryIntAttribute("aim_y", reinterpret_cast<int *>(&input.output[Input::AIM_VERTICAL]));
-						inputlognext->QueryIntAttribute("fire1", reinterpret_cast<int *>(&input.output[Input::FIRE_PRIMARY]));
-						inputlognext->QueryIntAttribute("fire2", reinterpret_cast<int *>(&input.output[Input::FIRE_SECONDARY]));
-						inputlognext->QueryIntAttribute("fire3", reinterpret_cast<int *>(&input.output[Input::FIRE_CHANNEL3]));
-						inputlognext->QueryIntAttribute("fire4", reinterpret_cast<int *>(&input.output[Input::FIRE_CHANNEL4]));
+						// save original input values
+						float prev[Input::NUM_LOGICAL];
+						memcpy(prev, input.output, sizeof(prev));
 
-						// go to the next entry
-						inputlognext = inputlognext->NextSiblingElement();
+						// update input values
+						input.Update();
+
+						// if any controls have changed...
+						if (memcmp(prev, input.output, sizeof(prev)) != 0)
+						{
+							// create an input turn entry
+							TiXmlElement item( "input" );
+							item.SetAttribute( "turn", sim_turn );
+
+							// add changed control values
+							if (input.output[Input::MOVE_HORIZONTAL] != prev[Input::MOVE_HORIZONTAL])
+								item.SetAttribute( "move_x", *reinterpret_cast<int *>(&input.output[Input::MOVE_HORIZONTAL]));
+							if (input.output[Input::MOVE_VERTICAL] != prev[Input::MOVE_VERTICAL])
+								item.SetAttribute( "move_y", *reinterpret_cast<int *>(&input.output[Input::MOVE_VERTICAL]));
+							if (input.output[Input::AIM_HORIZONTAL] != prev[Input::AIM_HORIZONTAL])
+								item.SetAttribute( "aim_x", *reinterpret_cast<int *>(&input.output[Input::AIM_HORIZONTAL]));
+							if (input.output[Input::AIM_VERTICAL] != prev[Input::AIM_VERTICAL])
+								item.SetAttribute( "aim_y", *reinterpret_cast<int *>(&input.output[Input::AIM_VERTICAL]));
+							if (input.output[Input::FIRE_PRIMARY] != prev[Input::FIRE_PRIMARY])
+								item.SetAttribute( "fire1", *reinterpret_cast<int *>(&input.output[Input::FIRE_PRIMARY]));
+							if (input.output[Input::FIRE_SECONDARY] != prev[Input::FIRE_SECONDARY])
+								item.SetAttribute( "fire2", *reinterpret_cast<int *>(&input.output[Input::FIRE_SECONDARY]));
+							if (input.output[Input::FIRE_CHANNEL3] != prev[Input::FIRE_CHANNEL3])
+								item.SetAttribute( "fire3", *reinterpret_cast<int *>(&input.output[Input::FIRE_CHANNEL3]));
+							if (input.output[Input::FIRE_CHANNEL4] != prev[Input::FIRE_CHANNEL4])
+								item.SetAttribute( "fire4", *reinterpret_cast<int *>(&input.output[Input::FIRE_CHANNEL4]));
+
+							// add the new input entry
+							inputlogroot->InsertEndChild(item);
+						}
 					}
-				}
-				else if (record)
-				{
-					// save original input values
-					float prev[Input::NUM_LOGICAL];
-					memcpy(prev, input.output, sizeof(prev));
-
-					// update input values
-					input.Update();
-
-					// if any controls have changed...
-					if (memcmp(prev, input.output, sizeof(prev)) != 0)
+					else
 					{
-						// create an input turn entry
-						TiXmlElement item( "input" );
-						item.SetAttribute( "turn", sim_turn );
-
-						// add changed control values
-						if (input.output[Input::MOVE_HORIZONTAL] != prev[Input::MOVE_HORIZONTAL])
-							item.SetAttribute( "move_x", *reinterpret_cast<int *>(&input.output[Input::MOVE_HORIZONTAL]));
-						if (input.output[Input::MOVE_VERTICAL] != prev[Input::MOVE_VERTICAL])
-							item.SetAttribute( "move_y", *reinterpret_cast<int *>(&input.output[Input::MOVE_VERTICAL]));
-						if (input.output[Input::AIM_HORIZONTAL] != prev[Input::AIM_HORIZONTAL])
-							item.SetAttribute( "aim_x", *reinterpret_cast<int *>(&input.output[Input::AIM_HORIZONTAL]));
-						if (input.output[Input::AIM_VERTICAL] != prev[Input::AIM_VERTICAL])
-							item.SetAttribute( "aim_y", *reinterpret_cast<int *>(&input.output[Input::AIM_VERTICAL]));
-						if (input.output[Input::FIRE_PRIMARY] != prev[Input::FIRE_PRIMARY])
-							item.SetAttribute( "fire1", *reinterpret_cast<int *>(&input.output[Input::FIRE_PRIMARY]));
-						if (input.output[Input::FIRE_SECONDARY] != prev[Input::FIRE_SECONDARY])
-							item.SetAttribute( "fire2", *reinterpret_cast<int *>(&input.output[Input::FIRE_SECONDARY]));
-						if (input.output[Input::FIRE_CHANNEL3] != prev[Input::FIRE_CHANNEL3])
-							item.SetAttribute( "fire3", *reinterpret_cast<int *>(&input.output[Input::FIRE_CHANNEL3]));
-						if (input.output[Input::FIRE_CHANNEL4] != prev[Input::FIRE_CHANNEL4])
-							item.SetAttribute( "fire4", *reinterpret_cast<int *>(&input.output[Input::FIRE_CHANNEL4]));
-
-						// add the new input entry
-						inputlogroot->InsertEndChild(item);
+						// update input values
+						input.Update();
 					}
-				}
-				else
-				{
-					// update input values
-					input.Update();
 				}
 
 				// do any pending turn actions
@@ -4046,11 +4354,11 @@ void RunState()
 			singlestep = false;
 
 			// seed the random number generator
-			randlongseed = sim_turn ^ *(unsigned long *)&sim_fraction;
+			randlongseed = 0x92D68CA2 ^ sim_turn ^ *(unsigned long *)&sim_fraction;
 			(void)RandLong();
 
 #ifdef PRINT_SIMULATION_TIMER
-			DebugPrint("delta=%d ticks=%d sim_t=%f\n", delta, ticks, sim_fraction);
+			DebugPrint("delta=%f ticks=%d sim_t=%f\n", delta, ticks, sim_fraction);
 #endif
 
 #ifdef GET_PERFORMANCE_DETAILS
@@ -4317,11 +4625,17 @@ void RunState()
 		// restore blend mode
 		glPopAttrib();
 
+#if defined(USE_SDL)
 		/* Render our console */
 		OGLCONSOLE_Draw();
 
 		// show the screen
 		SDL_GL_SwapBuffers();
+#elif defined(USE_SFML)
+		window.Display();
+#elif defined(USE_GLFW)
+		glfwSwapBuffers();
+#endif
 
 #ifdef GET_PERFORMANCE_DETAILS
 		if (OPENGL_SWAPCONTROL)

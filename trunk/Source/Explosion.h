@@ -10,15 +10,14 @@ public:
 	// life span
 	float mLifeSpan;
 
+	// collision
+	b2FilterData mFilter;
+
 	// damage
 	float mRadiusInner;
 	float mRadiusOuter;
 	float mDamageInner;
 	float mDamageOuter;
-
-	// collision
-	unsigned short mCategoryBits;
-	unsigned short mMaskBits;
 
 public:
 	ExplosionTemplate(void);

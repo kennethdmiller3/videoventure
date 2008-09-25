@@ -278,7 +278,7 @@ void Capture::Start(void)
 		renderable->Show();
 
 	// start the sound cue
-	PlaySound(mId, 0x8eab16d9 /* "fire" */);
+	PlaySoundCue(mId, 0x8eab16d9 /* "fire" */);
 }
 
 // stop effects
@@ -296,5 +296,5 @@ void Capture::Stop(void)
 		renderable->Hide();
 
 	// stop the sound cue
-	StopSound(mId, 0x8eab16d9 /* "fire" */);
+	StopSoundCue(mId, 0x8eab16d9 /* "fire" */);
 }

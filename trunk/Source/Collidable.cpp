@@ -1320,14 +1320,13 @@ void Collidable::CollideAll(float aStep)
 	}
 }
 
-unsigned int Collidable::TestSegment(const b2Segment &aSegment, float aRadius, unsigned int aId,
-									 unsigned int aCategoryBits, unsigned int aMaskBits, 
+unsigned int Collidable::TestSegment(const b2Segment &aSegment, const b2FilterData &aFilter, unsigned int aId,
 									 float &aLambda, b2Vec2 &aNormal, b2Shape *&aShape)
 {
 	// get nearby shapes
 	b2AABB aabb;
-	aabb.lowerBound.Set(std::min(aSegment.p1.x, aSegment.p2.x) - aRadius, std::min(aSegment.p1.y, aSegment.p2.y) - aRadius);
-	aabb.upperBound.Set(std::max(aSegment.p1.x, aSegment.p2.x) + aRadius, std::max(aSegment.p1.y, aSegment.p2.y) + aRadius);
+	aabb.lowerBound.Set(std::min(aSegment.p1.x, aSegment.p2.x), std::min(aSegment.p1.y, aSegment.p2.y));
+	aabb.upperBound.Set(std::max(aSegment.p1.x, aSegment.p2.x), std::max(aSegment.p1.y, aSegment.p2.y));
 	b2Shape* shapes[b2_maxProxies];
 	int32 count = world->Query(aabb, shapes, b2_maxProxies);
 
@@ -1343,9 +1342,7 @@ unsigned int Collidable::TestSegment(const b2Segment &aSegment, float aRadius, u
 		// skip unhittable shapes
 		if (shape->IsSensor())
 			continue;
-		if ((shape->GetFilterData().maskBits & aCategoryBits) == 0)
-			continue;
-		if ((shape->GetFilterData().categoryBits & aMaskBits) == 0)
+		if (!CheckFilter(aFilter, shape->GetFilterData()))
 			continue;
 
 		// get the parent body
@@ -1359,7 +1356,7 @@ unsigned int Collidable::TestSegment(const b2Segment &aSegment, float aRadius, u
 			continue;
 
 		// if the segment intersects the shape...
-		if (shape->TestSegment(body->GetXForm(), &aLambda, &aNormal, aSegment, aLambda, aRadius) != 0)
+		if (shape->TestSegment(body->GetXForm(), &aLambda, &aNormal, aSegment, aLambda) != 0)
 		{
 			// update hit shape
 			aShape = shape;

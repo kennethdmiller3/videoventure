@@ -9,8 +9,7 @@ public:
 	float mPeriod;
 	float mRange;
 	float mFocus;
-	unsigned short mCategoryBits;
-	unsigned short mMaskBits;
+	b2FilterData mFilter;
 
 	// attack cone
 	float mAttack[Controller::FIRE_CHANNELS];

@@ -89,8 +89,7 @@ AimerTemplate::AimerTemplate(void)
 : mPeriod(1.0f)
 , mRange(0.0f)
 , mFocus(1.0f)
-, mCategoryBits(0x0001)
-, mMaskBits(0xFFFF)
+, mFilter(Collidable::GetDefaultFilter())
 , mDrift(0.0f)
 , mWanderSide(0.0f)
 , mWanderSideRate(0.0f)
@@ -129,7 +128,7 @@ bool AimerTemplate::Configure(const TiXmlElement *element)
 
 	int category = 0;
 	if (element->QueryIntAttribute("category", &category) == TIXML_SUCCESS)
-		mCategoryBits = (category >= 0) ? (1<<category) : 0;
+		mFilter.categoryBits = (category >= 0) ? (1<<category) : 0;
 
 	char buf[16];
 	for (int i = 0; i < 16; i++)
@@ -139,11 +138,15 @@ bool AimerTemplate::Configure(const TiXmlElement *element)
 		if (element->QueryIntAttribute(buf, &bit) == TIXML_SUCCESS)
 		{
 			if (bit)
-				mMaskBits |= (1 << i);
+				mFilter.maskBits |= (1 << i);
 			else
-				mMaskBits &= ~(1 << i);
+				mFilter.maskBits &= ~(1 << i);
 		}
 	}
+
+	int group = mFilter.groupIndex;
+	element->QueryIntAttribute("group", &group);
+	mFilter.groupIndex = short(group);
 
 	// attack
 	for (int i = 0; i < Controller::FIRE_CHANNELS; ++i)
@@ -305,9 +308,7 @@ void Aimer::Control(float aStep)
 			// skip unhittable shapes
 			if (shapes[i]->IsSensor())
 				continue;
-			if ((shapes[i]->GetFilterData().maskBits & aimer.mCategoryBits) == 0)
-				continue;
-			if ((shapes[i]->GetFilterData().categoryBits & aimer.mMaskBits) == 0)
+			if (!Collidable::CheckFilter(shapes[i]->GetFilterData(), aimer.mFilter))
 				continue;
 
 			// get the parent body
