@@ -75,7 +75,7 @@
 			</repeat>
 		</pushmatrix>
 	</renderable>
-	<expire time="1" spawnonexpire="enemybulletexplosion" />
+	<expire time="1" switchonexpire="enemybulletexplosion" />
 	<bullet damage="1" spawnondeath="enemyfireballexplosion" />
 	<team name="red" />
 	<points value="100" />

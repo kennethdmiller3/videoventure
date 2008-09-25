@@ -33,7 +33,7 @@
 			</triangles>
 		</drawlist>
 	</renderable>
-	<expire time="5" spawnonexpire="friendvapormine" />
+	<expire time="5" switchonexpire="friendvapormine" />
 	<bullet damage="1" spawnondeath="friendmineexplosion" />
 	<damagable health="3" spawnondeath="friendmineexplosion" />
 	<team name="blue" />

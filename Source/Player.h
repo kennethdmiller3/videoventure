@@ -10,6 +10,8 @@ class PlayerTemplate
 {
 public:
 	unsigned int mSpawn;
+	float mStart;
+	float mCycle;
 	int mLives;
 	int mFirst;
 	int mExtra;
@@ -26,6 +28,7 @@ public:
 class Player : public Updatable
 {
 public:
+	float mTimer;
 	unsigned int mAttach;
 	int mLives;
 	int mScore;
@@ -44,7 +47,7 @@ public:
 	void Update(float aStep);
 
 	// spawn
-	void Spawn(void);
+	unsigned int Spawn(void);
 
 	// attach to an object
 	void Attach(unsigned int aAttach);

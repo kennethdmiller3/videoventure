@@ -54,7 +54,7 @@
 			</triangles>
 		</drawlist>
 	</renderable>
-	<expire time="6" spawnonexpire="enemybulletexplosion" />
+	<expire time="6" switchonexpire="enemybulletexplosion" />
 	<bullet damage="1" spawnondeath="enemyfireballexplosion" />
 	<damagable health="1" spawnondeath="enemyfireballexplosion" />
 	<aimer range="512" leading="0" category="3" bit3="0" bit4="0" />

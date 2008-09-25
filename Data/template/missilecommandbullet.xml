@@ -64,6 +64,6 @@
 			<clear name="t" />
 		</pushmatrix>
 	</renderable>
-	<expire time="0.666667" spawnonexpire="missilecommandexplosion" reticule="1" />
+	<expire time="0.666667" switchonexpire="missilecommandexplosion" reticule="1" />
 	<bullet damage="0" spawnondeath="missilecommandexplosion" />
 </template>

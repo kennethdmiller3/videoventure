@@ -83,8 +83,7 @@ namespace Database
 
 ExplosionTemplate::ExplosionTemplate(void)
 : mLifeSpan(0.0f)
-, mCategoryBits(0x0001)
-, mMaskBits(0xFFFF)
+, mFilter(Collidable::GetDefaultFilter())
 , mRadiusInner(0.0f)
 , mRadiusOuter(0.0f)
 , mDamageInner(0.0f)
@@ -109,7 +108,7 @@ bool ExplosionTemplate::Configure(const TiXmlElement *element, unsigned int id)
 
 	int category = 0;
 	if (element->QueryIntAttribute("category", &category) == TIXML_SUCCESS)
-		mCategoryBits = (category >= 0) ? (1<<category) : 0;
+		mFilter.categoryBits = (category >= 0) ? (1<<category) : 0;
 
 	char buf[16];
 	for (int i = 0; i < 16; i++)
@@ -119,11 +118,15 @@ bool ExplosionTemplate::Configure(const TiXmlElement *element, unsigned int id)
 		if (element->QueryIntAttribute(buf, &bit) == TIXML_SUCCESS)
 		{
 			if (bit)
-				mMaskBits |= (1 << i);
+				mFilter.maskBits |= (1 << i);
 			else
-				mMaskBits &= ~(1 << i);
+				mFilter.maskBits &= ~(1 << i);
 		}
 	}
+
+	int group = 0;
+	element->QueryIntAttribute("group", &group);
+	mFilter.groupIndex = short(group);
 
 	if (element->FirstChildElement())
 	{
@@ -236,9 +239,7 @@ void Explosion::Update(float aStep)
 			// skip unhittable shapes
 			if (shape->IsSensor())
 				continue;
-			if ((shape->GetFilterData().maskBits & explosion.mCategoryBits) == 0)
-				continue;
-			if ((shape->GetFilterData().categoryBits & explosion.mMaskBits) == 0)
+			if (!Collidable::CheckFilter(explosion.mFilter, shape->GetFilterData()))
 				continue;
 
 			// get the parent body

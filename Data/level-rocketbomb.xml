@@ -1,7 +1,6 @@
 <?xml version="1.0" standalone="no" ?>
 <!-- Test Level -->
 <world xmin="-512" ymin="-512" xmax="512" ymax="512">
-	<fog enable="1" mode="linear" r="0" g="0" b="0" a="0" start="512" end="1280" />
 	<!-- sounds -->
 	<import name="sound/robotron-start.xml" />
 	<import name="sound/missilecommand-alert.xml" />
@@ -35,12 +34,11 @@
 	<import name="sound/stargate-createmutant.xml" />
 	<import name="sound/stargate-humanoidcatch.xml" />
 	<!-- players -->
-	<import name="template/1P.xml" />
-	<entity name="playerspawn">
+	<entity name="1P">
 		<position x="0" y="0" />
-		<spawner>
-			<spawn name="1P" start="1.5" cycle="1" track="1" />
-		</spawner>
+		<player name="playershipwarp" start="1.5" cycle="4" lives="3" firstextra="20000" extra="50000" />
+		<resource name="special" initial="3" />
+		<team name="blue" />
 	</entity>
 	<!-- draw lists -->
 	<import name="drawlist/square.xml" />
@@ -59,9 +57,12 @@
 		<renderable radius="512">
 			<drawlist>
 				<set name="d" type="translate" x="0" y="0" z="256" />
+				<set name="c0" type="color" r="0.125" g="0.125" b="0.125" a="0.75" />
 				<quads>
 					<repeat count="64">
-						<color rand="1" r_avg="0.125" r_var="0.0625" g_avg="0.125" g_var="0.0625" b_avg="0.125" b_var="0.0625" a_avg="0.75" a_var="0" />
+						<set name="c" type="color" rand="1" r_avg="1" r_var="0.5" g_avg="1" g_var="0.5" b_avg="1" b_var="0.5" a_avg="1" a_var="0" />
+						<mul name="c" variable="c0" />
+						<color variable="c" />
 						<set name="p0" type="position" rand="4" x_avg="0" x_var="1024" y_avg="0" y_var="1024" z_avg="0" z_var="0" />
 						<set name="w" type="translate" rand="1" x_avg="64" x_var="48" y_avg="0" y_var="0" z_avg="0" z_var="0" />
 						<set name="h" type="translate" rand="1" x_avg="0" x_var="0" y_avg="64" y_var="48" z_avg="0" z_var="0" />
@@ -78,12 +79,15 @@
 						<sub name="p0" type="translate" variable="w" />
 						<vertex variable="p0" />
 						<add name="d" type="translate" x="0" y="0" z="6" />
+						<add name="c0" type="color" r="-0.001953125" g="-0.001953125" b="-0.001953125" a="0.0" />
 					</repeat>
 				</quads>
+				<clear name="c" />
 				<clear name="p0" />
 				<clear name="w" />
 				<clear name="h" />
 				<clear name="d" />
+				<clear name="c0" />
 			</drawlist>
 		</renderable>
 	</entity>
@@ -166,6 +170,9 @@
 	</entity>
 	<!-- enemy bullseye targets -->
 	<import name="template/enemytarget.xml" />
+	<template name="enemytarget">
+		<damagable spawnondeath="enemyrocketbombexplosion" />
+	</template>
 	<import name="template/enemytargetappear.xml" />
 	<import name="template/enemytargetspawn.xml" />
 	<tilemap x="176" y="176" dx="-32" dy="-32">

@@ -157,6 +157,8 @@ namespace Database
 // player template constructor
 PlayerTemplate::PlayerTemplate(void)
 : mSpawn(0)
+, mStart(0.0f)
+, mCycle(0.0f)
 , mLives(INT_MAX)
 , mFirst(INT_MAX)
 , mExtra(INT_MAX)
@@ -168,6 +170,8 @@ bool PlayerTemplate::Configure(const TiXmlElement *element, unsigned int aId)
 {
 	if (const char *spawn = element->Attribute("name"))
 		mSpawn = Hash(spawn);
+	element->QueryFloatAttribute("start", &mStart);
+	element->QueryFloatAttribute("cycle", &mCycle);
 	element->QueryIntAttribute("lives", &mLives);
 	element->QueryIntAttribute("firstextra", &mFirst);
 	element->QueryIntAttribute("extra", &mExtra);
@@ -182,6 +186,7 @@ bool PlayerTemplate::Configure(const TiXmlElement *element, unsigned int aId)
 // player default constructor
 Player::Player(void)
 : Updatable(0)
+, mTimer(0.0f)
 , mAttach(0)
 , mLives(0)
 , mScore(0)
@@ -192,6 +197,7 @@ Player::Player(void)
 // player constructor
 Player::Player(const PlayerTemplate &aTemplate, unsigned int aId)
 : Updatable(aId)
+, mTimer(aTemplate.mStart)
 , mAttach(0)
 , mLives(aTemplate.mLives)
 , mScore(0)
@@ -269,11 +275,14 @@ void Player::Update(float aStep)
 		}
 	}
 
-	// if there are lives left...
-	if (mLives > 0)
+	// count down timer
+	mTimer -= aStep;
+
+	// if the timer elapses, and there are lives left...
+	if (mTimer <= 0.0f && mLives > 0)
 	{
 		// spawn a new entity
-		Spawn();
+		Attach(Spawn());
 	}
 }
 
@@ -283,6 +292,10 @@ void Player::Attach(unsigned int aAttach)
 	// do nothing if attached
 	if (mAttach)
 		return;
+
+#ifdef DEBUG_PLAYER_ATTACH
+	DebugPrint("%s attach %s\n", Database::name.Get(mId).c_str(), Database::name.Get(aAttach).c_str());
+#endif
 
 	// attach to entity
 	mAttach = aAttach;
@@ -302,17 +315,24 @@ void Player::Detach(unsigned int aAttach)
 	if (!mAttach || mAttach != aAttach)
 		return;
 
+#ifdef DEBUG_PLAYER_ATTACH
+	DebugPrint("%s detach %s\n", Database::name.Get(mId).c_str(), Database::name.Get(aAttach).c_str());
+#endif
+
 	// remove any death listener
 	Database::Typed<Damagable::DeathListener> &listeners = Database::deathlistener.Open(mAttach);
 	listeners.Delete(Database::Key(this));
 	Database::deathlistener.Close(mAttach);
 
-	// detach from enemy
+	// detach from entity
 	mAttach = 0;
+
+	// start delay
+	mTimer = Database::playertemplate.Get(mId).mCycle;
 }
 
 // player spawn
-void Player::Spawn(void)
+unsigned int Player::Spawn(void)
 {
 	// get the spawner entity
 	Entity *entity = Database::entity.Get(mId);
@@ -327,11 +347,16 @@ void Player::Spawn(void)
 
 		// instantiate the spawn entity
 		// TO DO: use a named spawn point
-		Database::Instantiate(playertemplate.mSpawn, mId, mId, entity->GetAngle(), entity->GetPosition(), entity->GetVelocity(), entity->GetOmega());
+		unsigned int spawnId = Database::Instantiate(playertemplate.mSpawn, mId, mId, entity->GetAngle(), entity->GetPosition(), entity->GetVelocity(), entity->GetOmega());
 
 		// done for now
 		Deactivate();
+
+		// return the spawned entity
+		return spawnId;
 	}
+
+	return 0;
 }
 
 // player death notification
@@ -381,7 +406,7 @@ void Player::GotKill(unsigned int aId, unsigned int aKillId)
 				resource->Add(mId, float(extra));
 
 			// trigger sound cue
-			PlaySound(mAttach, 0x62b13a2b /* "extralife" */);
+			PlaySoundCue(mAttach, 0x62b13a2b /* "extralife" */);
 		}
 	}
 
@@ -400,8 +425,8 @@ PlayerController::PlayerController(unsigned int aId)
 {
 	SetAction(Action(this, &PlayerController::Control));
 
-	unsigned int aOwnerId = Database::owner.Get(mId);
-	if (Player *player = Database::player.Get(aOwnerId))
+	unsigned int aCreatorId = Database::creator.Get(mId);
+	if (Player *player = Database::player.Get(aCreatorId))
 	{
 		player->Attach(mId);
 	}
@@ -410,12 +435,11 @@ PlayerController::PlayerController(unsigned int aId)
 // player controller destructor
 PlayerController::~PlayerController(void)
 {
-	unsigned int aOwnerId = Database::owner.Get(mId);
-	if (Player *player = Database::player.Get(aOwnerId))
+	unsigned int aCreatorId = Database::creator.Get(mId);
+	if (Player *player = Database::player.Get(aCreatorId))
 	{
 		player->Detach(mId);
 	}
-
 }
 
 // player controller ontrol

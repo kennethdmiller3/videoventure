@@ -7,10 +7,11 @@ class WeaponTemplate
 public:
 	// offset
 	Transform2 mOffset;
-	Vector2 mInherit;
-	Vector2 mScatter;
-	Vector2 mVelocity;
-	float mSpread;
+	Transform2 mScatter;
+	Transform2 mInherit;
+	Transform2 mVelocity;
+	Transform2 mVariance;
+	float mRecoil;
 
 	// ordnance
 	unsigned int mOrdnance;
@@ -73,9 +74,6 @@ public:
 	{
 		mControlId = aControlId;
 	}
-
-	// configure
-	bool Configure(const TiXmlElement *element);
 
 	// update
 	void Update(float aStep);

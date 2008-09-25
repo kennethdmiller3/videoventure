@@ -7,6 +7,7 @@ class DamagableTemplate
 public:
 	float mHealth;
 	unsigned int mSpawnOnDeath;
+	unsigned int mSwitchOnDeath;
 
 public:
 	DamagableTemplate(void);

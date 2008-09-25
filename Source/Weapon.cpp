@@ -132,10 +132,11 @@ namespace Database
 
 WeaponTemplate::WeaponTemplate(void)
 : mOffset(0, Vector2(0, 0))
-, mInherit(1, 1)
-, mVelocity(0, 0)
-, mScatter(0, 0)
-, mSpread(0)
+, mScatter(0, Vector2(0, 0))
+, mInherit(0, Vector2(1, 1))
+, mVelocity(0, Vector2(0, 0))
+, mVariance(0, Vector2(0, 0))
+, mRecoil(0)
 , mOrdnance(0)
 , mFlash(0)
 , mChannel(0)
@@ -162,34 +163,52 @@ bool WeaponTemplate::Configure(const TiXmlElement *element)
 		{
 		case 0x14c8d3ca /* "offset" */:
 			{
+				if (child->QueryFloatAttribute("angle", &mOffset.a) == TIXML_SUCCESS)
+					mOffset.a *= float(M_PI) / 180.0f;
 				child->QueryFloatAttribute("x", &mOffset.p.x);
 				child->QueryFloatAttribute("y", &mOffset.p.y);
-				float angle = 0.0f;
-				if (child->QueryFloatAttribute("angle", &angle) == TIXML_SUCCESS)
-					mOffset = Transform2(angle * float(M_PI) / 180.0f, mOffset.p);
-			}
-			break;
-
-		case 0xca04efe0 /* "inherit" */:
-			{
-				child->QueryFloatAttribute("x", &mInherit.x);
-				child->QueryFloatAttribute("y", &mInherit.y);
-			}
-			break;
-
-		case 0x32741c32 /* "velocity" */:
-			{
-				child->QueryFloatAttribute("x", &mVelocity.x);
-				child->QueryFloatAttribute("y", &mVelocity.y);
 			}
 			break;
 
 		case 0xcab7a341 /* "scatter" */:
 			{
-				child->QueryFloatAttribute("x", &mScatter.x);
-				child->QueryFloatAttribute("y", &mScatter.y);
-				if (child->QueryFloatAttribute("angle", &mSpread) == TIXML_SUCCESS)
-					mSpread *= float(M_PI) / 180.0f;
+				if (child->QueryFloatAttribute("angle", &mScatter.a) == TIXML_SUCCESS)
+					mScatter.a *= float(M_PI) / 180.0f;
+				child->QueryFloatAttribute("x", &mScatter.p.x);
+				child->QueryFloatAttribute("y", &mScatter.p.y);
+			}
+			break;
+
+		case 0xca04efe0 /* "inherit" */:
+			{
+				if (child->QueryFloatAttribute("angle", &mInherit.a) == TIXML_SUCCESS)
+					mInherit.a *= float(M_PI) / 180.0f;
+				child->QueryFloatAttribute("x", &mInherit.p.x);
+				child->QueryFloatAttribute("y", &mInherit.p.y);
+			}
+			break;
+
+		case 0x32741c32 /* "velocity" */:
+			{
+				if (child->QueryFloatAttribute("angle", &mVelocity.a) == TIXML_SUCCESS)
+					mVelocity.a *= float(M_PI) / 180.0f;
+				child->QueryFloatAttribute("x", &mVelocity.p.x);
+				child->QueryFloatAttribute("y", &mVelocity.p.y);
+			}
+			break;
+
+		case 0x0dd0b0be /* "variance" */:
+			{
+				if (child->QueryFloatAttribute("angle", &mVariance.a) == TIXML_SUCCESS)
+					mVariance.a *= float(M_PI) / 180.0f;
+				child->QueryFloatAttribute("x", &mVariance.p.x);
+				child->QueryFloatAttribute("y", &mVariance.p.y);
+			}
+			break;
+
+		case 0x63734e77 /* "recoil" */:
+			{
+				child->QueryFloatAttribute("value", &mRecoil);
 			}
 			break;
 
@@ -245,6 +264,7 @@ Weapon::Weapon(void)
 , mTrack(0)
 , mTimer(0.0f)
 , mPhase(0)
+, mAmmo(0)
 {
 	SetAction(Action(this, &Weapon::Update));
 }
@@ -294,12 +314,6 @@ Weapon::~Weapon(void)
 {
 }
 
-// Weapon Configure
-bool Weapon::Configure(const TiXmlElement *element)
-{
-	return true;
-}
-
 // Weapon Update
 void Weapon::Update(float aStep)
 {
@@ -344,10 +358,26 @@ void Weapon::Update(float aStep)
 				Entity *entity = Database::entity.Get(mId);
 
 				// start the sound cue
-				PlaySound(mId, 0x8eab16d9 /* "fire" */);
+				PlaySoundCue(mId, 0x8eab16d9 /* "fire" */);
 
-				// interpolated offset
-				Transform2 transform(weapon.mOffset * entity->GetInterpolatedTransform(mTimer / aStep));
+				// interpolated transform
+				Transform2 transform(entity->GetInterpolatedTransform(mTimer / aStep));
+
+				// apply transform offset
+				transform = weapon.mOffset * transform;
+
+				if (weapon.mRecoil)
+				{
+					// apply recoil force
+					for (unsigned int id = mId; id != 0; id = Database::backlink.Get(id))
+					{
+						if (Collidable *collidable = Database::collidable.Get(id))
+						{
+							collidable->GetBody()->ApplyImpulse(transform.Rotate(Vector2(0, -weapon.mRecoil)), transform.p);
+							break;
+						}
+					}
+				}
 
 				if (weapon.mFlash)
 				{
@@ -373,13 +403,40 @@ void Weapon::Update(float aStep)
 
 				if (weapon.mOrdnance)
 				{
+					// apply transform scatter
+					if (weapon.mScatter.a)
+						transform.a += RandValue(0.0f, weapon.mScatter.a);
+					if (weapon.mScatter.p.x)
+						transform.p.x += RandValue(0.0f, weapon.mScatter.p.x);
+					if (weapon.mScatter.p.y)
+						transform.p.y += RandValue(0.0f, weapon.mScatter.p.y);
+
+					// get local velocity
+					Transform2 velocity(entity->GetOmega(), transform.Unrotate(entity->GetVelocity()));
+
+					// apply velocity inherit
+					velocity.a *= weapon.mInherit.a;
+					velocity.p.x *= weapon.mInherit.p.x;
+					velocity.p.y *= weapon.mInherit.p.y;
+
+					// apply velocity add
+					velocity.a += weapon.mVelocity.a;
+					velocity.p.x += weapon.mVelocity.p.x;
+					velocity.p.y += weapon.mVelocity.p.y;
+
+					// apply velocity variance
+					if (weapon.mVariance.a)
+						velocity.a += RandValue(0.0f, weapon.mVariance.a);
+					if (weapon.mVariance.p.x)
+						velocity.p.x += RandValue(0.0f, weapon.mVariance.p.x);
+					if (weapon.mVariance.p.y)
+						velocity.p.y += RandValue(0.0f, weapon.mVariance.p.y);
+
+					// get world velocity
+					velocity.p = transform.Rotate(velocity.p);
+
 					// instantiate a bullet
-					if (weapon.mSpread)
-						transform = Transform2(transform.Angle() + weapon.mSpread * (RandFloat() - RandFloat()), transform.p);
-					const Vector2 inheritvelocity(weapon.mInherit * transform.Unrotate(entity->GetVelocity()));
-					const Vector2 scattervelocity(weapon.mScatter.x ? weapon.mScatter.x * (RandFloat() - RandFloat()) : 0, weapon.mScatter.y ? weapon.mScatter.y * (RandFloat() - RandFloat()) : 0);
-					const Vector2 velocity(transform.Rotate(weapon.mVelocity + inheritvelocity + scattervelocity));
-					unsigned int ordId = Database::Instantiate(weapon.mOrdnance, Database::owner.Get(mId), mId, transform.Angle(), transform.p, velocity, 0);
+					unsigned int ordId = Database::Instantiate(weapon.mOrdnance, Database::owner.Get(mId), mId, transform.a, transform.p, velocity.p, velocity.a);
 #ifdef DEBUG_WEAPON_CREATE_ORDNANCE
 					DebugPrint("ordnance=\"%s\" owner=\"%s\"\n",
 						Database::name.Get(ordId).c_str(),

@@ -84,10 +84,9 @@ namespace Database
 
 BeamTemplate::BeamTemplate(void)
 : mLifeSpan(0.0f)
-, mCategoryBits(0x0001)
-, mMaskBits(0xFFFF)
 , mDamage(0.0f)
 , mRange(0.0f)
+, mFilter(Collidable::GetDefaultFilter())
 {
 }
 
@@ -106,7 +105,7 @@ bool BeamTemplate::Configure(const TiXmlElement *element, unsigned int id)
 
 	int category = 0;
 	if (element->QueryIntAttribute("category", &category) == TIXML_SUCCESS)
-		mCategoryBits = (category >= 0) ? (1<<category) : 0;
+		mFilter.categoryBits = (category >= 0) ? (1<<category) : 0;
 
 	char buf[16];
 	for (int i = 0; i < 16; i++)
@@ -116,11 +115,15 @@ bool BeamTemplate::Configure(const TiXmlElement *element, unsigned int id)
 		if (element->QueryIntAttribute(buf, &bit) == TIXML_SUCCESS)
 		{
 			if (bit)
-				mMaskBits |= (1 << i);
+				mFilter.maskBits |= (1 << i);
 			else
-				mMaskBits &= ~(1 << i);
+				mFilter.maskBits &= ~(1 << i);
 		}
 	}
+
+	int group = mFilter.groupIndex;
+	element->QueryIntAttribute("group", &group);
+	mFilter.groupIndex = short(group);
 
 	if (element->FirstChildElement())
 	{
@@ -200,7 +203,7 @@ void Beam::Update(float aStep)
 		b2Shape *shape = NULL;
 
 		// check for segment intersection
-		unsigned int hitId = Collidable::TestSegment(segment, 0.0f, mId, beam.mCategoryBits, beam.mMaskBits, lambda, normal, shape);
+		unsigned int hitId = Collidable::TestSegment(segment, beam.mFilter, mId, lambda, normal, shape);
 
 		// save local endpoint for the renderer
 		Database::Typed<float> &variables = Database::variable.Open(mId);

@@ -155,6 +155,9 @@ enum DrawlistOp
 	DO_Sub,
 	DO_Mul,
 	DO_Div,
+	DO_Min,
+	DO_Max,
+	DO_Swizzle,
 	DO_Clear,
 #ifdef DRAWLIST_LOOP
 	DO_Loop,
@@ -207,8 +210,11 @@ void GetTypeData(unsigned int type, int &width, const char **&names, const float
 // texture descriptor
 struct TextureTemplate
 {
-	SDL_Surface *mSurface;
-	GLint mFormat;
+	GLint mComponents;
+	GLint mWidth;
+	GLint mHeight;
+	GLenum mFormat;
+	unsigned char *mPixels;
 	GLint mEnvMode;
 	GLint mMinFilter;
 	GLint mMagFilter;
@@ -216,6 +222,133 @@ struct TextureTemplate
 	GLint mWrapT;
 };
 
+
+// http://aggregate.org/MAGIC/
+
+inline float fast_fabs(register float x)
+{
+	return *(float *)(*(((int *)&x)+1)&0x7FFFFFFF);
+}
+
+inline unsigned int align_down(register unsigned int a, register unsigned int b)
+{
+	return a & ~(b - 1);
+}
+
+inline unsigned int align_up(register unsigned int a, register unsigned int b)
+{
+	return (a + b - 1) & -b;
+}
+
+inline unsigned int average(register unsigned int x, register unsigned int y)
+{
+	return (x & y) + ((x ^ y) >> 1);
+}
+
+inline unsigned int bit_reverse(register unsigned int x)
+{
+	register unsigned int y = 0x55555555;
+	x = (((x >> 1) & y) | ((x & y) << 1));
+	y = 0x33333333;
+	x = (((x >> 2) & y) | ((x & y) << 2));
+	y = 0x0f0f0f0f;
+	x = (((x >> 4) & y) | ((x & y) << 4));
+	y = 0x00ff00ff;
+	x = (((x >> 8) & y) | ((x & y) << 8));
+	return((x >> 16) | (x << 16));
+}
+
+inline int int_min(register int x, register int y)
+{
+	return x + (((y - x) >> (sizeof(int)*8-1)) & (y - x));
+}
+
+inline int int_max(register int x, register int y)
+{
+	return x - (((x - y) >> (sizeof(int)*8-1)) & (x - y));
+}
+
+inline bool is_pow2(register unsigned int x)
+{
+	return (x & (x - 1)) == 0;
+}
+
+inline unsigned int count_ones(register unsigned int x)
+{
+	/* 32-bit recursive reduction using SWAR...
+	but first step is mapping 2-bit values
+	into sum of 2 1-bit values in sneaky way
+	*/
+	x -= ((x >> 1) & 0x55555555);
+	x = (((x >> 2) & 0x33333333) + (x & 0x33333333));
+	x = (((x >> 4) + x) & 0x0f0f0f0f);
+	x += (x >> 8);
+	x += (x >> 16);
+	return(x & 0x0000003f);
+}
+
+inline unsigned int leading_zero_count(register unsigned int x)
+{
+	x |= (x >> 1);
+	x |= (x >> 2);
+	x |= (x >> 4);
+	x |= (x >> 8);
+	x |= (x >> 16);
+	return(sizeof(int)*8 - count_ones(x));
+}
+
+inline unsigned int trailing_zero_count(register unsigned int x)
+{
+	return count_ones((x & -x) - 1);
+}
+
+inline unsigned int least_significant_one(register unsigned int x)
+{
+	return x & -x;
+}
+
+inline unsigned int most_significant_one(register unsigned int x)
+{
+	x |= (x >> 1);
+	x |= (x >> 2);
+	x |= (x >> 4);
+	x |= (x >> 8);
+	x |= (x >> 16);
+	return(x & ~(x >> 1));
+}
+
+inline unsigned int next_pow2(register unsigned int x)
+{
+        x |= (x >> 1);
+        x |= (x >> 2);
+        x |= (x >> 4);
+        x |= (x >> 8);
+        x |= (x >> 16);
+        return(x+1);
+}
+
+inline unsigned int floor_log2(register unsigned int x)
+{
+	x |= (x >> 1);
+	x |= (x >> 2);
+	x |= (x >> 4);
+	x |= (x >> 8);
+	x |= (x >> 16);
+	return(count_ones(x) - 1);
+}
+
+inline unsigned int log2(register unsigned int x)
+{
+	register int y = (x & (x - 1));
+	y |= -y;
+	y >>= (sizeof(unsigned int)*8 - 1);
+	x |= (x >> 1);
+	x |= (x >> 2);
+	x |= (x >> 4);
+	x |= (x >> 8);
+	x |= (x >> 16);
+	return(count_ones(x) - 1 - y);
+}
 
 namespace Database
 {
@@ -279,6 +412,49 @@ namespace Database
 
 		class TextureLoader
 		{
+		private:
+			static float noise(float x, float y, float z)
+			{
+				unsigned char X = unsigned char(xs_FloorToInt(x));
+				unsigned char Y = unsigned char(xs_FloorToInt(y));
+				unsigned char Z = unsigned char(xs_FloorToInt(z));
+				x -= xs_FloorToInt(x);
+				y -= xs_FloorToInt(y);
+				z -= xs_FloorToInt(z);
+				float u = fade(x);
+				float v = fade(y);
+				float w = fade(z);
+				unsigned char A = p[unsigned char(X  )]+Y, AA = p[unsigned char(A)]+Z, AB = p[unsigned char(A+1)]+Z;
+				unsigned char B = p[unsigned char(X+1)]+Y, BA = p[unsigned char(B)]+Z, BB = p[unsigned char(B+1)]+Z;
+				return
+					lerp(w,
+						lerp(v, 
+							lerp(u, grad(p[unsigned char(AA  )], x  , y  , z  ), grad(p[unsigned char(BA  )], x-1, y  , z  )),
+							lerp(u, grad(p[unsigned char(AB  )], x  , y-1, z  ), grad(p[unsigned char(BB  )], x-1, y-1, z  ))
+							),
+						lerp(v, 
+							lerp(u, grad(p[unsigned char(AA+1)], x  , y  , z-1), grad(p[unsigned char(BA+1)], x-1, y  , z-1)),
+							lerp(u, grad(p[unsigned char(AB+1)], x  , y-1, z-1), grad(p[unsigned char(BB+1)], x-1, y-1, z-1))
+							)
+						);
+			}
+			static float fade(float t)
+			{
+				return t * t * t * (t * (t * 6 - 15) + 10);
+			}
+			static float lerp(float t, float a, float b)
+			{
+				return a + t * (b - a);
+			}
+			static float grad(int hash, float x, float y, float z)
+			{
+				int h = hash & 15;
+				float u = h<8 ? x : y;
+				float v = h<4 ? y : h==12||h==14 ? x : z;
+				return ((h&1) == 0 ? u : -u) + ((h&2) == 0 ? v : -v);
+			}
+			static unsigned char p[256];
+
 		public:
 			TextureLoader()
 			{
@@ -287,13 +463,181 @@ namespace Database
 
 			void Configure(unsigned int aId, const TiXmlElement *element)
 			{
+				// generate a handle object handle
+				GLuint handle;
+				glGenTextures( 1, &handle );
+
+				// register the handle
+				Database::texture.Put(aId, handle);
+
+				// get a texture template
+				TextureTemplate &texture = Database::texturetemplate.Open(handle);
+
+				// set blend mode
+				switch (Hash(element->Attribute("mode")))
+				{
+				default:
+				case 0x818f75ae /* "modulate" */:	texture.mEnvMode = GL_MODULATE; break;
+				case 0xde15f6ae /* "decal" */:		texture.mEnvMode = GL_DECAL; break;
+				case 0x0bbc40d8 /* "blend" */:		texture.mEnvMode = GL_BLEND; break;
+				case 0xa13884c3 /* "replace" */:	texture.mEnvMode = GL_REPLACE; break;
+				}
+
+				// set minification filter
+				switch (Hash(element->Attribute("minfilter")))
+				{
+				default:
+				case 0xc42bfa19 /* "nearest" */:			texture.mMinFilter = GL_NEAREST; break;
+				case 0xd00594c0 /* "linear" */:				texture.mMinFilter = GL_LINEAR; break;
+				case 0x70bf16c1 /* "nearestmipnearest" */:	texture.mMinFilter = GL_NEAREST_MIPMAP_NEAREST; break;
+				case 0xc81505e8 /* "linearmipnearest" */:	texture.mMinFilter = GL_LINEAR_MIPMAP_NEAREST; break;
+				case 0x95d62f98 /* "nearestmiplinear" */:	texture.mMinFilter = GL_NEAREST_MIPMAP_LINEAR; break;
+				case 0x1274a447 /* "linearmiplinear" */:	texture.mMinFilter = GL_LINEAR_MIPMAP_LINEAR; break;
+				}
+
+				// set magnification filter
+				switch (Hash(element->Attribute("magfilter")))
+				{
+				default:
+				case 0xc42bfa19 /* "nearest" */:			texture.mMagFilter = GL_NEAREST; break;
+				case 0xd00594c0 /* "linear" */:				texture.mMagFilter = GL_LINEAR; break;
+				}
+
+				// set s wrapping
+				switch (Hash(element->Attribute("wraps")))
+				{
+				default:
+				case 0xa82efcbc /* "clamp" */:				texture.mWrapS = GL_CLAMP; break;
+				case 0xd99ba82a /* "repeat" */:				texture.mWrapS = GL_REPEAT; break;
+				}
+
+				// set t wrapping
+				switch (Hash(element->Attribute("wrapt")))
+				{
+				default:
+				case 0xa82efcbc /* "clamp" */:				texture.mWrapT = GL_CLAMP; break;
+				case 0xd99ba82a /* "repeat" */:				texture.mWrapT = GL_REPEAT; break;
+				}
+
+				// save texture state
+				glPushAttrib(GL_TEXTURE_BIT);
+
+				// bind the texture object
+				glBindTexture(GL_TEXTURE_2D, handle);
+
+				// set texture properties
+				glTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, texture.mEnvMode );
+				glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, texture.mMinFilter );
+				glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, texture.mMagFilter );
+				glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, texture.mWrapS );
+				glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, texture.mWrapT );
+
 				for (const TiXmlElement *child = element->FirstChildElement(); child; child = child->NextSiblingElement())
 				{
 					switch (Hash(child->Value()))
 					{
+					case 0x7494fdb7 /* "perlin" */:
+						{
+							texture.mComponents = 4;
+
+							texture.mWidth = 64;
+							child->QueryIntAttribute("width", &texture.mWidth);
+							texture.mHeight = 64;
+							child->QueryIntAttribute("height", &texture.mHeight);
+
+							texture.mFormat = GL_RGBA;
+
+							int octaves[4] = { 0, 0, 0, 0 };
+							float frequency[4] = { 1.0f, 1.0f, 1.0f, 1.0f  };
+							float persistence[4] = { 0.5f, 0.5f, 0.5f, 0.5f };
+							float amplitude[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+							float average[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+							float seed[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+
+							for (const TiXmlElement *param = child->FirstChildElement(); param; param = param->NextSiblingElement())
+							{
+								switch (Hash(param->Value()))
+								{
+								case 0x8ebf1fca /* "octaves" */:
+									param->QueryIntAttribute("r", &octaves[0]);
+									param->QueryIntAttribute("g", &octaves[1]);
+									param->QueryIntAttribute("b", &octaves[2]);
+									param->QueryIntAttribute("a", &octaves[3]);
+									break;
+
+								case 0x2fb31c01 /* "frequency" */:
+									param->QueryFloatAttribute("r", &frequency[0]);
+									param->QueryFloatAttribute("g", &frequency[1]);
+									param->QueryFloatAttribute("b", &frequency[2]);
+									param->QueryFloatAttribute("a", &frequency[3]);
+									break;
+
+								case 0x54c237b0 /* "persistence" */:
+									param->QueryFloatAttribute("r", &persistence[0]);
+									param->QueryFloatAttribute("g", &persistence[1]);
+									param->QueryFloatAttribute("b", &persistence[2]);
+									param->QueryFloatAttribute("a", &persistence[3]);
+									break;
+
+								case 0x16746aa2 /* "amplitude" */:
+									param->QueryFloatAttribute("r", &amplitude[0]);
+									param->QueryFloatAttribute("g", &amplitude[1]);
+									param->QueryFloatAttribute("b", &amplitude[2]);
+									param->QueryFloatAttribute("a", &amplitude[3]);
+									break;
+
+								case 0x175eb228 /* "average" */:
+									param->QueryFloatAttribute("r", &average[0]);
+									param->QueryFloatAttribute("g", &average[1]);
+									param->QueryFloatAttribute("b", &average[2]);
+									param->QueryFloatAttribute("a", &average[3]);
+									break;
+
+								case 0x5045bcac /* "seed" */:
+									param->QueryFloatAttribute("r", &seed[0]);
+									param->QueryFloatAttribute("g", &seed[1]);
+									param->QueryFloatAttribute("b", &seed[2]);
+									param->QueryFloatAttribute("a", &seed[3]);
+									break;
+								}
+							}
+
+							texture.mPixels = static_cast<unsigned char *>(malloc(texture.mWidth * texture.mHeight * texture.mComponents));
+
+							unsigned char *pixel = texture.mPixels;
+
+							for (int y = 0; y < texture.mHeight; ++y)
+							{
+								for (int x = 0; x < texture.mWidth; ++x)
+								{
+									for (int c = 0; c < 4; ++c)
+									{
+										float value = average[c];
+										float f = frequency[c];
+										float a = amplitude[c];
+										for (int i = 0; i < octaves[c]; ++i)
+										{
+											value += a * (
+												noise((x) * f, (y) * f, seed[c] * f) * (texture.mWidth - x) * (texture.mHeight - y) +
+												noise((x - texture.mWidth) * f, (y) * f, seed[c] * f) * (x) * (texture.mHeight - y) +
+												noise((x - texture.mWidth) * f, (y - texture.mHeight) * f, seed[c] * f) * (x) * (y) +
+												noise((x) * f, (y - texture.mHeight) * f, seed[c] * f) * (texture.mWidth - x) * (y)
+												) / (texture.mWidth * texture.mHeight);
+											f *= 2;
+											a *= persistence[c];
+										}
+										value = Clamp(value, 0.0f, 1.0f);
+										*pixel++ = (unsigned char)xs_RoundToInt(value * 255);
+									}
+								}
+							}
+						}
+						break;
+
 					case 0xaaea5743 /* "file" */:
 						if (const char *file = child->Attribute("name"))
 						{
+#if defined(USE_SDL)
 							// get the surface
 							SDL_Surface *surface = SDL_LoadBMP(file);
 							if (!surface)
@@ -314,122 +658,74 @@ namespace Database
 								DebugPrint("warning: %s height %d is not a power of 2\n", file, surface->h);
 							}
 						 
+							// components per pixel
+							texture.mComponents = surface->format->BytesPerPixel;
+
+							// texture dimensions
+							texture.mWidth = surface->w;
+							texture.mHeight = surface->h;
+
 							// get the number of channels in the SDL surface
-							GLenum texture_format;
-							if (surface->format->BytesPerPixel == 4)     // contains an alpha channel
+							if (texture.mComponents == 4)     // contains an alpha channel
 							{
 								if (surface->format->Rmask == 0x000000ff)
-									texture_format = GL_RGBA;
+									texture.mFormat = GL_RGBA;
 								else
-									texture_format = GL_BGRA;
+									texture.mFormat = GL_BGRA;
 							}
-							else if (surface->format->BytesPerPixel == 3)     // no alpha channel
+							else if (texture.mComponents == 3)     // no alpha channel
 							{
 								if (surface->format->Rmask == 0x000000ff)
-									texture_format = GL_RGB;
+									texture.mFormat = GL_RGB;
 								else
-									texture_format = GL_BGR;
+									texture.mFormat = GL_BGR;
 							}
 							else
 							{
 								DebugPrint("warning: %s is not truecolor\n", file);
-								SDL_FreeSurface( surface );
-								break;
+								texture.mFormat = GL_LUMINANCE;
 							}
 
-							// generate a handle object handle
-							GLuint handle;
-							glGenTextures( 1, &handle );
+							// copy pixel data
+							size_t count = texture.mWidth * texture.mHeight * texture.mComponents;
+							texture.mPixels = static_cast<unsigned char *>(malloc(count));
+							memcpy(texture.mPixels, surface->pixels, count);
 
-							// register the handle
-							Database::texture.Put(aId, handle);
-
-							// get a texture template
-							TextureTemplate &texture = Database::texturetemplate.Open(handle);
-
-							// save surface
-							texture.mSurface = surface;
-							texture.mFormat = texture_format;
-
-							// set blend mode
-							switch (Hash(child->Attribute("mode")))
-							{
-							default:
-							case 0x818f75ae /* "modulate" */:	texture.mEnvMode = GL_MODULATE; break;
-							case 0xde15f6ae /* "decal" */:		texture.mEnvMode = GL_DECAL; break;
-							case 0x0bbc40d8 /* "blend" */:		texture.mEnvMode = GL_BLEND; break;
-							case 0xa13884c3 /* "replace" */:	texture.mEnvMode = GL_REPLACE; break;
-							}
-
-							// set minification filter
-							switch (Hash(child->Attribute("minfilter")))
-							{
-							default:
-							case 0xc42bfa19 /* "nearest" */:			texture.mMinFilter = GL_NEAREST; break;
-							case 0xd00594c0 /* "linear" */:				texture.mMinFilter = GL_LINEAR; break;
-							case 0x70bf16c1 /* "nearestmipnearest" */:	texture.mMinFilter = GL_NEAREST_MIPMAP_NEAREST; break;
-							case 0xc81505e8 /* "linearmipnearest" */:	texture.mMinFilter = GL_LINEAR_MIPMAP_NEAREST; break;
-							case 0x95d62f98 /* "nearestmiplinear" */:	texture.mMinFilter = GL_NEAREST_MIPMAP_LINEAR; break;
-							case 0x1274a447 /* "linearmiplinear" */:	texture.mMinFilter = GL_LINEAR_MIPMAP_LINEAR; break;
-							}
-
-							// set magnification filter
-							switch (Hash(child->Attribute("magfilter")))
-							{
-							default:
-							case 0xc42bfa19 /* "nearest" */:			texture.mMagFilter = GL_NEAREST; break;
-							case 0xd00594c0 /* "linear" */:				texture.mMagFilter = GL_LINEAR; break;
-							}
-
-							// set s wrapping
-							switch (Hash(child->Attribute("wraps")))
-							{
-							default:
-							case 0xa82efcbc /* "clamp" */:				texture.mWrapS = GL_CLAMP; break;
-							case 0xd99ba82a /* "repeat" */:				texture.mWrapS = GL_REPEAT; break;
-							}
-
-							// set t wrapping
-							switch (Hash(child->Attribute("wrapt")))
-							{
-							default:
-							case 0xa82efcbc /* "clamp" */:				texture.mWrapT = GL_CLAMP; break;
-							case 0xd99ba82a /* "repeat" */:				texture.mWrapT = GL_REPEAT; break;
-							}
-
-							// save texture state
-							glPushAttrib(GL_TEXTURE_BIT);
-
-							// bind the texture object
-							glBindTexture(GL_TEXTURE_2D, handle);
-
-							// set texture properties
-							glTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, texture.mEnvMode );
-							glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, texture.mMinFilter );
-							glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, texture.mMagFilter );
-							glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, texture.mWrapS );
-							glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, texture.mWrapT );
-
-							// set texture image data
-							gluBuild2DMipmaps(GL_TEXTURE_2D, texture.mSurface->format->BytesPerPixel, texture.mSurface->w, texture.mSurface->h, texture.mFormat, GL_UNSIGNED_BYTE, texture.mSurface->pixels);
-							/*
-							glTexImage2D(
-								GL_TEXTURE_2D, 0, texture.mSurface->format->BytesPerPixel, texture.mSurface->w, texture.mSurface->h, 0,
-								texture.mFormat, GL_UNSIGNED_BYTE, texture.mSurface->pixels
-								);
-							*/
-
-							// done with texture template
-							Database::texturetemplate.Close(handle);
-
-							// restore texture state
-							glPopAttrib();
+							// done with surface
+							SDL_FreeSurface(surface);
+#endif
 						}
 					}
 				}
+
+				// set texture image data
+				gluBuild2DMipmaps(GL_TEXTURE_2D, texture.mComponents, texture.mWidth, texture.mHeight, texture.mFormat, GL_UNSIGNED_BYTE, texture.mPixels);
+
+				// done with texture template
+				Database::texturetemplate.Close(handle);
+
+				// restore texture state
+				glPopAttrib();
 			}
 		}
 		textureloader;
+
+		unsigned char TextureLoader::p[256] =
+		{
+			151,160,137,91,90,15,
+			131,13,201,95,96,53,194,233,7,225,140,36,103,30,69,142,8,99,37,240,21,10,23,
+			190, 6,148,247,120,234,75,0,26,197,62,94,252,219,203,117,35,11,32,57,177,33,
+			88,237,149,56,87,174,20,125,136,171,168, 68,175,74,165,71,134,139,48,27,166,
+			77,146,158,231,83,111,229,122,60,211,133,230,220,105,92,41,55,46,245,40,244,
+			102,143,54, 65,25,63,161, 1,216,80,73,209,76,132,187,208, 89,18,169,200,196,
+			135,130,116,188,159,86,164,100,109,198,173,186, 3,64,52,217,226,250,124,123,
+			5,202,38,147,118,126,255,82,85,212,207,206,59,227,47,16,58,17,182,189,28,42,
+			223,183,170,213,119,248,152, 2,44,154,163, 70,221,153,101,155,167, 43,172,9,
+			129,22,39,253, 19,98,108,110,79,113,224,232,178,185, 112,104,218,246,97,228,
+			251,34,242,193,238,210,144,12,191,179,162,241, 81,51,145,235,249,14,239,107,
+			49,192,214, 31,181,199,106,157,184, 84,204,176,115,121,50,45,127, 4,150,254,
+			138,236,205,93,222,114,67,29,24,72,243,141,128,195,78,66,215,61,156,180
+		};
 
 		class VariableLoader
 		{
@@ -1175,6 +1471,59 @@ void ProcessDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buf
 		}
 		break;
 
+	case 0xc98f4557 /* "min" */:
+		{
+			ProcessVariableOperator(element, buffer, DO_Min, true);
+		}
+		break;
+
+	case 0xd7a2e319 /* "max" */:
+		{
+			ProcessVariableOperator(element, buffer, DO_Max, true);
+		}
+		break;
+
+	case 0x3deb1461 /* "swizzle" */:
+		{
+			unsigned int name = Hash(element->Attribute("name"));
+			unsigned int type = Hash(element->Attribute("type"));
+			int width;
+			const char **names;
+			const float *data;
+			GetTypeData(type, width, names, data);
+
+			buffer.push_back(DO_Swizzle);
+			buffer.push_back(name);
+			buffer.push_back(width);
+
+			for (int i = 0; i < width; ++i)
+			{
+				unsigned int map;
+				const char *attrib = element->Attribute(names[i]);
+				if (attrib == NULL)
+				{
+					map = ~0U;
+				}
+				else if (isdigit(attrib[0]))
+				{
+					map = attrib[0] - '0';
+				}
+				else if (unsigned int hash = Hash(attrib))
+				{
+					for (int j = 0; j < width; ++j)
+					{
+						if (Hash(names[j]) == hash)
+						{
+							map = j;
+							break;
+						}
+					}
+				}
+				buffer.push_back(map);
+			}
+		}
+		break;
+
 	case 0x5c6e1222 /* "clear" */:
 		{
 			ProcessVariableOperator(element, buffer, DO_Clear, false);
@@ -1439,6 +1788,20 @@ void VariableOperatorDiv(Database::Typed<float> &variables, unsigned int name, f
 	variables.Close(name);
 }
 
+void VariableOperatorMin(Database::Typed<float> &variables, unsigned int name, float data)
+{
+	float &v = variables.Open(name);
+	v = std::min(v, data);
+	variables.Close(name);
+}
+
+void VariableOperatorMax(Database::Typed<float> &variables, unsigned int name, float data)
+{
+	float &v = variables.Open(name);
+	v = std::max(v, data);
+	variables.Close(name);
+}
+
 
 #pragma optimize( "t", on )
 void ExecuteDrawItems(const unsigned int buffer[], size_t count, float param, unsigned int id)
@@ -1670,7 +2033,7 @@ void ExecuteDrawItems(const unsigned int buffer[], size_t count, float param, un
 				if (t >= 0.0f && length > 0.0f)
 				{
 					int loop = xs_FloorToInt(t / length);
-					if (loop <= repeat)
+					if (repeat < 0 || loop <= repeat)
 					{
 						t -= loop * length;
 						t *= scale;
@@ -1699,6 +2062,28 @@ void ExecuteDrawItems(const unsigned int buffer[], size_t count, float param, un
 
 		case DO_Div:
 			itor += ExecuteVariableOperator(itor, buffer + count - itor, param, id, VariableOperatorDiv);
+			break;
+
+		case DO_Min:
+			itor += ExecuteVariableOperator(itor, buffer + count - itor, param, id, VariableOperatorMin);
+			break;
+
+		case DO_Max:
+			itor += ExecuteVariableOperator(itor, buffer + count - itor, param, id, VariableOperatorMax);
+			break;
+
+		case DO_Swizzle:
+			{
+				unsigned int name = *itor++;
+				int width = *itor++;
+				Database::Typed<float> &variables = Database::variable.Open(id);
+				float *temp = static_cast<float *>(_alloca(width * sizeof(float)));
+				for (int i = 0; i < width; i++)
+					temp[i] = variables.Get(name + *itor++);
+				for (int i = 0; i < width; i++)
+					variables.Put(name + i, temp[i]);
+				Database::variable.Close(id);
+			}
 			break;
 
 		case DO_Clear:
@@ -1854,16 +2239,16 @@ void ExecuteDrawItems(const unsigned int buffer[], size_t count, float param, un
 
 void RebuildTextures(void)
 {
+#if defined(USE_SDL)
 	// for each entry in the texture database
 	for (Database::Typed<GLuint>::Iterator itor(&Database::texture); itor.IsValid(); ++itor)
 	{
 		// recreate the texture
 		GLuint handle = itor.GetValue();
-		glGenTextures( 1, &handle );
 
 		// get the corresponding template
 		const TextureTemplate &texture = Database::texturetemplate.Get(handle);
-		if (!texture.mSurface)
+		if (!texture.mPixels)
 			continue;
 
 		// save texture state
@@ -1880,7 +2265,8 @@ void RebuildTextures(void)
 		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, texture.mWrapT );
 
 		// set texture image data
-		gluBuild2DMipmaps(GL_TEXTURE_2D, texture.mSurface->format->BytesPerPixel, texture.mSurface->w, texture.mSurface->h, texture.mFormat, GL_UNSIGNED_BYTE, texture.mSurface->pixels);
+		gluBuild2DMipmaps(GL_TEXTURE_2D, texture.mComponents, texture.mWidth, texture.mHeight, texture.mFormat, GL_UNSIGNED_BYTE, texture.mPixels);
+
 		/*
 		glTexImage2D(
 			GL_TEXTURE_2D, 0, texture.mSurface->format->BytesPerPixel, texture.mSurface->w, texture.mSurface->h, 0,
@@ -1891,6 +2277,7 @@ void RebuildTextures(void)
 		// restore texture state
 		glPopAttrib();
 	}
+#endif
 }
 
 void RebuildDrawlists(void)

@@ -1,6 +1,6 @@
 <?xml version="1.0" ?>
 <template name="enemyrocketbombwarp">
-	<expire time="1.0" spawnonexpire="enemyrocketbomb" />
+	<expire time="1.0" switchonexpire="enemyrocketbomb" />
 	<renderable radius="64">
 		<block start="0.8" length="0.2">
 			<pushmatrix>

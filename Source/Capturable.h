@@ -7,6 +7,7 @@ class CapturableTemplate
 public:
 	float mResistance;
 	unsigned int mSpawnOnCapture;
+	unsigned int mSwitchOnCapture;
 
 public:
 	CapturableTemplate(void);

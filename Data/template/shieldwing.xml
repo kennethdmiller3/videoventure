@@ -1,0 +1,157 @@
+<?xml version="1.0" ?>
+<template name="shieldwing">
+	<drawlist>
+		<pushmatrix>
+			<translate y="11.0" />
+			<scale y="-1" />
+			<pushmatrix>
+				<color r="0.3" g="0.3" b="0.3" a="1.0" />
+				<translate x="1.75" y="11.5" />
+				<scale x="1.75" y="1.75" />
+				<calllist name="circle12" />
+			</pushmatrix>
+			<lines>
+				<color r="0.5" g="0.5" b="0.5" a="1.0" />
+				<vertex x="0.5" y="9.25" />
+				<vertex x="2.5" y="9.25" />
+				<vertex x="2.5" y="8.0" />
+				<vertex x="5.0" y="4.0" />
+				<vertex x="3.675" y="10.0" />
+				<vertex x="6.5" y="8.875" />
+				<vertex x="3.5" y="12.25" />
+				<vertex x="5.25" y="13.25" />
+				<vertex x="2.5" y="13.5" />
+				<vertex x="3.5" y="15.0" />
+			</lines>
+			<triangle_strip>
+				<color r="0.8" g="0.8" b="0.8" a="1.0" />
+				<vertex x="0.5" y="9.25" />
+				<vertex x="0.5" y="11.5" />
+				<color r="1.0" g="1.0" b="1.0" a="1.0" />
+				<vertex x="1.5" y="9.25" />
+				<vertex x="1.75" y="11.5" />
+				<color r="0.8" g="0.8" b="0.8" a="1.0" />
+				<vertex x="2.5" y="9.25" />
+				<vertex x="3.0" y="11.5" />
+			</triangle_strip>
+			<triangle_strip>
+				<color r="0.8" g="0.8" b="0.8" a="1.0" />
+				<vertex x="0.5" y="8.5" />
+				<vertex x="0.5" y="9.25" />
+				<color r="1.0" g="1.0" b="1.0" a="1.0" />
+				<vertex x="1.325" y="8.5" />
+				<vertex x="1.5" y="9.25" />
+				<color r="0.8" g="0.8" b="0.8" a="1.0" />
+				<vertex x="2.25" y="8.5" />
+				<vertex x="2.5" y="9.25" />
+			</triangle_strip>
+			<triangle_strip>
+				<color r="0.9" g="0.9" b="0.9" a="1.0" />
+				<vertex x="1.25" y="7.5" />
+				<color r="0.6" g="0.6" b="0.6" a="1.0" />
+				<vertex x="1.25" y="0.0" />
+				<color r="0.9" g="0.9" b="0.9" a="1.0" />
+				<vertex x="2.0" y="7.75" />
+				<color r="0.6" g="0.6" b="0.6" a="1.0" />
+				<vertex x="3.75" y="2.25" />
+				<color r="0.9" g="0.9" b="0.9" a="1.0" />
+				<vertex x="2.5" y="8.0" />
+				<color r="0.6" g="0.6" b="0.6" a="1.0" />
+				<vertex x="5.0" y="4.0" />
+				<color r="0.9" g="0.9" b="0.9" a="1.0" />
+				<vertex x="3.25" y="8.875" />
+				<color r="0.6" g="0.6" b="0.6" a="1.0" />
+				<vertex x="6.125" y="6.25" />
+				<color r="0.9" g="0.9" b="0.9" a="1.0" />
+				<vertex x="3.625" y="10.0" />
+				<color r="0.6" g="0.6" b="0.6" a="1.0" />
+				<vertex x="6.5" y="8.75" />
+				<color r="0.9" g="0.9" b="0.9" a="1.0" />
+				<vertex x="3.75" y="11.0" />
+				<color r="0.6" g="0.6" b="0.6" a="1.0" />
+				<vertex x="6.125" y="11.25" />
+				<color r="0.9" g="0.9" b="0.9" a="1.0" />
+				<vertex x="3.5" y="12.25" />
+				<color r="0.6" g="0.6" b="0.6" a="1.0" />
+				<vertex x="5.25" y="13.25" />
+				<color r="0.9" g="0.9" b="0.9" a="1.0" />
+				<vertex x="3.25" y="12.75" />
+				<color r="0.6" g="0.6" b="0.6" a="1.0" />
+				<vertex x="4.5" y="14.125" />
+				<color r="0.9" g="0.9" b="0.9" a="1.0" />
+				<vertex x="2.5" y="13.5" />
+				<color r="0.6" g="0.6" b="0.6" a="1.0" />
+				<vertex x="3.5" y="15.0" />
+				<color r="0.9" g="0.9" b="0.9" a="1.0" />
+				<vertex x="2.0" y="13.75" />
+				<color r="0.6" g="0.6" b="0.6" a="1.0" />
+				<vertex x="2.5" y="15.5" />
+				<color r="0.9" g="0.9" b="0.9" a="1.0" />
+				<vertex x="1.25" y="14.0" />
+				<color r="0.6" g="0.6" b="0.6" a="1.0" />
+				<vertex x="1.25" y="15.75" />
+			</triangle_strip>
+			<triangle_strip>
+				<color r="0.3" g="0.3" b="0.3" a="1.0" />
+				<vertex x="0.75" y="4.5" />
+				<vertex x="1.25" y="4.0" />
+				<color r="0.5" g="0.5" b="0.5" a="1.0" />
+				<vertex x="0.75" y="11.5" />
+				<vertex x="5.0" y="11.5" />
+				<color r="0.4" g="0.4" b="0.4" a="1.0" />
+				<vertex x="0.75" y="14.75" />
+				<vertex x="1.25" y="15.0" />
+			</triangle_strip>
+			<quads>
+				<color r="0.5" g="0.5" b="0.5" a="1.0" />
+				<vertex x="3.375" y="14.25" />
+				<vertex x="4.625" y="13.375" />
+				<vertex x="5.5" y="14.5" />
+				<vertex x="4.875" y="15.125" />
+				<vertex x="1.75" y="15.625" />
+				<vertex x="3.0" y="15.0" />
+				<vertex x="3.25" y="16.25" />
+				<vertex x="2.375" y="16.5" />
+				<color r="0.7" g="0.7" b="0.7" a="1.0" />
+				<vertex x="4.75" y="14.75" />
+				<vertex x="5.25" y="14.5" />
+				<vertex x="10.5" y="19.5" />
+				<vertex x="10.25" y="19.75" />
+				<vertex x="2.5" y="16.25" />
+				<vertex x="3.0" y="16.125" />
+				<vertex x="5.5" y="23.5" />
+				<vertex x="5.125" y="23.625" />
+				<color r="0.4" g="0.4" b="0.4" a="1.0" />
+				<vertex x="0.0" y="9.0" />
+				<vertex x="0.75" y="8.5" />
+				<vertex x="0.75" y="13.75" />
+				<vertex x="0.0" y="13.25" />
+			</quads>
+		</pushmatrix>
+	</drawlist>
+	<link name="fire1" below="1">
+		<weapon>
+			<velocity y="60" />
+			<shot delay="0.4" />
+			<trigger channel="2" />
+		</weapon>
+		<soundcue>
+			<cue name="fire" sound="shieldcommand-fire" />
+		</soundcue>
+	</link>
+	<link name="fire2" below="1">
+		<weapon>
+			<velocity y="60" />
+			<shot delay="0.4" />
+			<trigger channel="2" />
+		</weapon>
+		<soundcue>
+			<cue name="fire" sound="shieldcommand-fire" />
+		</soundcue>
+	</link>
+	<damagable health="10" />
+	<shield>
+		<ammo type="shield" cost="1" />
+	</shield>
+	<resource name="shield" initial="20" maximum="20" delay="5" cycle="0.1" add="0.5" />
+</template>

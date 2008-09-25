@@ -106,9 +106,25 @@ public:
 		return boundary;
 	}
 
+	// default filter
+	static const b2FilterData &GetDefaultFilter(void)
+	{
+		static b2FilterData filter = { 0x0001, 0xFFFF, 0 };
+		return filter;
+	}
+
+	// check filtering
+	static bool CheckFilter(const b2FilterData &aFilter1, const b2FilterData &aFilter2)
+	{
+		if (aFilter1.groupIndex == aFilter2.groupIndex && aFilter1.groupIndex != 0)
+			return aFilter1.groupIndex > 0;
+		return 
+			(aFilter1.maskBits & aFilter2.categoryBits) != 0 && 
+			(aFilter1.categoryBits & aFilter2.maskBits) != 0;
+	}
+
 	// test segment for intersection with world shapes
-	static unsigned int TestSegment(const b2Segment &aSegment, float aRadius, unsigned int aId,
-									unsigned int aCategoryBits, unsigned int aMaskBits, 
+	static unsigned int TestSegment(const b2Segment &aSegment, const b2FilterData &aFilter, unsigned int aId,
 									float &aLambda, b2Vec2 &aNormal, b2Shape *&aShape);
 
 	// control

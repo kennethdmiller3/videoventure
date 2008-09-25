@@ -9,19 +9,38 @@
 
 #define _USE_MATH_DEFINES
 
+#ifdef WIN32
+#define NOMINMAX
+#include <windows.h>
+#endif
+
 #include <stdio.h>
 #include <math.h>
+#include <malloc.h>
 
 // STL includes
 #include <vector>
 #include <deque>
+#include <algorithm>
+#include <cstdarg>
 
 // Fast floating-point
 #include "xs_Float.h"
 
+#if defined(USE_SDL)
 // SDL includes
 #include "SDL.h"
 #include "SDL_opengl.h"
+#elif defined(USE_SFML)
+// SFML includes
+#include <SFML/System.hpp>
+#include <SFML/Window.hpp>
+#include <GL/gl.h>
+#include <GL/glu.h>
+// GLFW includes
+#elif defined(USE_GLFW)
+#include <GL/glfw.h>
+#endif
 
 // TinyXML includes
 #include "tinyxml.h"
@@ -88,7 +107,10 @@ template<typename T> inline const T Clamp(T v, T min, T max)
 extern unsigned long randlongseed;
 inline unsigned long RandLong()
 {
-	randlongseed = 1664525L * randlongseed + 1013904223L;
+//	randlongseed = 1664525L * randlongseed + 1013904223L;
+	randlongseed ^= (randlongseed << 13);
+	randlongseed ^= (randlongseed >> 17);
+	randlongseed ^= (randlongseed << 5);
 	return randlongseed;
 }
 
@@ -112,6 +134,10 @@ typedef Color4 Color4_2[2];
 
 // queue a turn action
 extern void OnTurn(unsigned int aTurn, float aFraction, fastdelegate::FastDelegate<void ()> aAction);
+
+#ifndef SDL_arraysize
+#define SDL_arraysize(array)	(sizeof(array)/sizeof(array[0]))
+#endif
 
 // configuration
 //#define ENABLE_DEPTH_TEST

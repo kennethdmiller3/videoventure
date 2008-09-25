@@ -21,9 +21,34 @@
 			</box>
 		</body>
 	</collidable>
+	<drawlist>
+		<triangle_strip>
+			<vertex x="8" y="-8" />
+			<vertex x="8" y="-5.5" />
+			<vertex x="2.5" y="-8" />
+			<vertex x="3" y="-3" />
+			<vertex x="2" y="-6.5" />
+			<vertex x="3" y="0.5" />
+			<vertex x="1.5" y="-6.5" />
+			<vertex x="1.5" y="2" />
+			<vertex x="1" y="-8" />
+			<vertex x="1" y="8" />
+			<vertex x="0" y="-8" />
+			<vertex x="-1" y="8" />
+			<vertex x="-1" y="-8" />
+			<vertex x="-1.5" y="2" />
+			<vertex x="-1.5" y="-6.5" />
+			<vertex x="-3" y="0.5" />
+			<vertex x="-2" y="-6.5" />
+			<vertex x="-3" y="-3" />
+			<vertex x="-2.5" y="-8" />
+			<vertex x="-8" y="-5.5" />
+			<vertex x="-8" y="-8" />
+		</triangle_strip>
+	</drawlist>
 	<renderable radius="8">
 		<color r="0.4" g="0.5" b="1.0" a="1.0" />
-		<calllist name="ship" />
+		<calllist name="playership" />
 	</renderable>
 	<playercontroller />
 	<ship maxveloc="150" maxaccel="1200" minaccel="150" maxomega="20" />

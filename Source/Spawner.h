@@ -7,8 +7,10 @@ class SpawnerTemplate
 public:
 	// offset
 	Transform2 mOffset;
-	Vector2 mInherit;
-	Vector2 mVelocity;
+	Transform2 mScatter;
+	Transform2 mInherit;
+	Transform2 mVelocity;
+	Transform2 mVariance;
 
 	// item to spawn
 	unsigned int mSpawn;

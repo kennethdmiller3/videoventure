@@ -69,7 +69,7 @@ public:
 	void Update(float aStep);
 
 	// mix
-	static void Mix(void *userdata, Uint8 *stream, int len);
+	static void Mix(void *userdata, unsigned char *stream, int len);
 };
 
 namespace Database
@@ -79,5 +79,5 @@ namespace Database
 	extern Typed<Typed<Sound *> > sound;
 }
 
-void PlaySound(unsigned int aId, unsigned int aCueId = 0);
-void StopSound(unsigned int aId, unsigned int aCueId = 0);
+void PlaySoundCue(unsigned int aId, unsigned int aCueId = 0);
+void StopSoundCue(unsigned int aId, unsigned int aCueId = 0);

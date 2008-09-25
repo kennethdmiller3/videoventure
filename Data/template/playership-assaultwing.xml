@@ -1,0 +1,316 @@
+﻿<?xml version="1.0"?>
+<template name="playership">
+	<collidable>
+		<body name="main">
+			<box w="4" h="8">
+				<density value="2"/>
+				<friction value="0.5"/>
+				<restitution value="0.5"/>
+				<category value="1"/>
+				<mask bit2="0" bit4="0"/>
+				<group value="-1"/>
+			</box>
+			<box w="2" h="3">
+				<position x="0" y="-4"/>
+				<density value="0"/>
+				<friction value="0.5"/>
+				<restitution value="0.5"/>
+				<category value="1"/>
+				<mask bit2="0"/>
+				<group value="-1"/>
+			</box>
+		</body>
+	</collidable>
+	<drawlist>
+		<triangle_strip>
+			<vertex x="4.5" y="-0.5" />
+			<vertex x="4.5" y="-3.5" />
+			<vertex x="3" y="-0.5" />
+			<vertex x="3" y="-5" />
+			<vertex x="2" y="2.5" />
+			<vertex x="2.5" y="-8" />
+			<vertex x="1.5" y="2.5" />
+			<vertex x="0.5" y="-8" />
+			<vertex x="1" y="8" />
+			<vertex x="0" y="-6.5" />
+			<vertex x="-1" y="8" />
+			<vertex x="-0.5" y="-8" />
+			<vertex x="-1.5" y="2.5" />
+			<vertex x="-2.5" y="-8" />
+			<vertex x="-2" y="2.5" />
+			<vertex x="-3" y="-5" />
+			<vertex x="-3" y="-0.5" />
+			<vertex x="-4.5" y="-3.5" />
+			<vertex x="-4.5" y="-0.5" />
+		</triangle_strip>
+	</drawlist>
+	<renderable radius="8" period="0.066667">
+		<color r="0.4" g="0.5" b="1.0" a="1.0"/>
+		<calllist name="playership"/>
+		<translate y="-8"/>
+		<set name="s" type="scale" variable="thrust"/>
+		<max name="s" type="scale" y="0"/>
+		<swizzle name="s" type="scale" x="y" y="y"/>
+		<scale variable="s"/>
+		<pushmatrix>
+			<scale>
+				<key time="0.000000" x="0.5" y="0.5"/>
+				<key time="0.033333" x="1.0" y="1.0"/>
+				<key time="0.066667" x="0.5" y="0.5"/>
+			</scale>
+			<drawlist>
+				<triangles>
+					<color r="0.4" g="0.7" b="1.0" a="1.0"/>
+					<vertex x="1" y="0"/>
+					<vertex x="0" y="-8"/>
+					<vertex x="-1" y="0"/>
+					<color r="0.0" g="0.5" b="1.0" a="0.5"/>
+					<vertex x="2" y="0"/>
+					<vertex x="0" y="-16"/>
+					<vertex x="-2" y="0"/>
+					<color r="0.0" g="0.0" b="1.0" a="0.25"/>
+					<vertex x="3" y="0"/>
+					<vertex x="0" y="-24"/>
+					<vertex x="-3" y="0"/>
+				</triangles>
+			</drawlist>
+		</pushmatrix>
+		<translate y="-1"/>
+		<scale>
+			<key time="0.000000" x="2" y="2"/>
+			<key time="0.033333" x="1" y="1"/>
+			<key time="0.066667" x="2" y="2"/>
+		</scale>
+		<color r="0.4" g="0.7" b="1.0" a="0.75"/>
+		<calllist name="circle12"/>
+		<scale x="2" y="2"/>
+		<color r="0.0" g="0.5" b="1.0" a="0.5"/>
+		<calllist name="circle12"/>
+		<scale x="1.5" y="1.5"/>
+		<color r="0.0" g="0.0" b="1.0" a="0.25"/>
+		<calllist name="circle12"/>
+	</renderable>
+	<damagable health="10" spawnondeath="playershipdeath"/>
+	<playercontroller alignmove="1"/>
+	<team name="blue"/>
+	<ship forwardveloc="150" neutralveloc="0" reverseveloc="-120" strafeveloc="120" maxaccel="600" minaccel="120" maxomega="6"/>
+	<soundcue>
+		<cue name="idle" sound="stargate-playershipidle"/>
+		<cue name="thrust" sound="stargate-playershipthrust"/>
+		<cue name="extralife" sound="stargate-extralife"/>
+	</soundcue>
+	<link name="turret" updateangle="0">
+		<offset x="0" y="-2" angle="0"/>
+		<collidable>
+			<body name="main">
+				<circle radius="2">
+					<density value="1"/>
+					<friction value="0.5"/>
+					<restitution value="0.5"/>
+					<category value="1"/>
+					<group value="-1"/>
+				</circle>
+			</body>
+		</collidable>
+		<renderable radius="10">
+			<drawlist>
+				<quads>
+					<color r="0.0" g="0.5" b="1.0" a="1.0"/>
+					<vertex x="1.0" y="-2.5"/>
+					<vertex x="0.25" y="0.0"/>
+					<color r="1.0" g="1.0" b="1.0" a="1.0"/>
+					<vertex x="0.0" y="0.0"/>
+					<vertex x="0.0" y="-2.5"/>
+					<vertex x="0.0" y="0.0"/>
+					<vertex x="0.0" y="-2.5"/>
+					<color r="0.0" g="0.5" b="1.0" a="1.0"/>
+					<vertex x="-1.0" y="-2.5"/>
+					<vertex x="-0.25" y="0.0"/>
+
+					<color r="0.6" g="0.6" b="0.6" a="1.0"/>
+					<vertex x="1.0" y="10.0"/>
+					<vertex x="0.75" y="8.5"/>
+					<color r="1.0" g="1.0" b="1.0" a="1.0"/>
+					<vertex x="0.0" y="8.5"/>
+					<vertex x="0.0" y="10.0"/>
+					<vertex x="0.0" y="10.0"/>
+					<vertex x="0.0" y="8.5"/>
+					<color r="0.6" g="0.6" b="0.6" a="1.0"/>
+					<vertex x="-0.75" y="8.5"/>
+					<vertex x="-1.0" y="10.0"/>`
+
+					<color r="0.3" g="0.3" b="0.3" a="1.0"/>
+					<vertex x="0.5" y="8.5"/>
+					<vertex x="0.5" y="8.0"/>
+					<color r="0.5" g="0.5" b="0.5" a="1.0"/>
+					<vertex x="0.0" y="8.0"/>
+					<vertex x="0.0" y="8.5"/>
+					<vertex x="0.0" y="8.5"/>
+					<vertex x="0.0" y="8.0"/>
+					<color r="0.3" g="0.3" b="0.3" a="1.0"/>
+					<vertex x="-0.5" y="8.0"/>
+					<vertex x="-0.5" y="8.5"/>
+
+					<color r="0.6" g="0.6" b="0.6" a="1.0"/>
+					<vertex x="0.75" y="8.0"/>
+					<vertex x="0.75" y="7.0"/>
+					<color r="1.0" g="1.0" b="1.0" a="1.0"/>
+					<vertex x="0.0" y="7.0"/>
+					<vertex x="0.0" y="8.0"/>
+					<vertex x="0.0" y="8.0"/>
+					<vertex x="0.0" y="7.0"/>
+					<color r="0.6" g="0.6" b="0.6" a="1.0"/>
+					<vertex x="-0.75" y="7.0"/>
+					<vertex x="-0.75" y="8.0"/>
+
+					<color r="0.3" g="0.3" b="0.3" a="1.0"/>
+					<vertex x="0.5" y="7.0"/>
+					<vertex x="0.5" y="6.5"/>
+					<color r="0.5" g="0.5" b="0.5" a="1.0"/>
+					<vertex x="0.0" y="6.5"/>
+					<vertex x="0.0" y="7.0"/>
+					<vertex x="0.0" y="7.0"/>
+					<vertex x="0.0" y="6.5"/>
+					<color r="0.3" g="0.3" b="0.3" a="1.0"/>
+					<vertex x="-0.5" y="6.5"/>
+					<vertex x="-0.5" y="7.0"/>
+
+					<color r="0.6" g="0.6" b="0.6" a="1.0"/>
+					<vertex x="0.75" y="6.5"/>
+					<vertex x="0.75" y="-1.5"/>
+					<color r="1.0" g="1.0" b="1.0" a="1.0"/>
+					<vertex x="0.0" y="-1.5"/>
+					<vertex x="0.0" y="6.5"/>
+					<vertex x="0.0" y="6.5"/>
+					<vertex x="0.0" y="-1.5"/>
+					<color r="0.6" g="0.6" b="0.6" a="1.0"/>
+					<vertex x="-0.75" y="-1.5"/>
+					<vertex x="-0.75" y="6.5"/>
+
+					<color r="0.0" g="0.5" b="1.0" a="1.0"/>
+					<vertex x="1.0" y="2.25"/>
+					<vertex x="1.25" y="1.5"/>
+					<color r="1.0" g="1.0" b="1.0" a="1.0"/>
+					<vertex x="0.0" y="1.5"/>
+					<vertex x="0.0" y="2.25"/>
+					<vertex x="0.0" y="2.25"/>
+					<vertex x="0.0" y="1.5"/>
+					<color r="0.0" g="0.5" b="1.0" a="1.0"/>
+					<vertex x="-1.25" y="1.5"/>
+					<vertex x="-1.0" y="2.25"/>
+
+					<color r="0.7" g="0.7" b="0.7" a="1.0"/>
+					<vertex x="1.25" y="1.5"/>
+					<vertex x="1.5" y="0.75"/>
+					<color r="1.0" g="1.0" b="1.0" a="1.0"/>
+					<vertex x="0.0" y="0.75"/>
+					<vertex x="0.0" y="1.5"/>
+					<vertex x="0.0" y="1.5"/>
+					<vertex x="0.0" y="0.75"/>
+					<color r="0.7" g="0.7" b="0.7" a="1.0"/>
+					<vertex x="-1.5" y="0.75"/>
+					<vertex x="-1.25" y="1.5"/>
+
+					<color r="0.0" g="0.5" b="1.0" a="1.0"/>
+					<vertex x="1.5" y="0.75"/>
+					<vertex x="1.75" y="0.0"/>
+					<color r="1.0" g="1.0" b="1.0" a="1.0"/>
+					<vertex x="0.0" y="0.0"/>
+					<vertex x="0.0" y="0.75"/>
+					<vertex x="0.0" y="0.75"/>
+					<vertex x="0.0" y="0.0"/>
+					<color r="0.0" g="0.5" b="1.0" a="1.0"/>
+					<vertex x="-1.75" y="0.0"/>
+					<vertex x="-1.5" y="0.75"/>
+
+					<color r="0.7" g="0.7" b="0.7" a="1.0"/>
+					<vertex x="1.75" y="0.0"/>
+					<vertex x="2.25" y="-1.5"/>
+					<color r="1.0" g="1.0" b="1.0" a="1.0"/>
+					<vertex x="0.0" y="-1.5"/>
+					<vertex x="0.0" y="0.0"/>
+					<vertex x="0.0" y="0.0"/>
+					<vertex x="0.0" y="-1.5"/>
+					<color r="0.7" g="0.7" b="0.7" a="1.0"/>
+					<vertex x="-2.25" y="-1.5"/>
+					<vertex x="-1.75" y="0.0"/>
+
+					<vertex x="2.25" y="-1.5"/>
+					<vertex x="1.25" y="-2.5"/>
+					<color r="1.0" g="1.0" b="1.0" a="1.0"/>
+					<vertex x="0.0" y="-2.5"/>
+					<vertex x="0.0" y="-1.5"/>
+					<vertex x="0.0" y="-1.5"/>
+					<vertex x="0.0" y="-2.5"/>
+					<color r="0.7" g="0.7" b="0.7" a="1.0"/>
+					<vertex x="-1.25" y="-2.5"/>
+					<vertex x="-2.25" y="-1.5"/>
+
+					<color r="0.3" g="0.3" b="0.3" a="1.0"/>
+					<vertex x="0.625" y="-2.5"/>
+					<vertex x="0.625" y="-3.0"/>
+					<color r="0.5" g="0.5" b="0.5" a="1.0"/>
+					<vertex x="0.0" y="-3.0"/>
+					<vertex x="0.0" y="-2.5"/>
+					<vertex x="0.0" y="-2.5"/>
+					<vertex x="0.0" y="-3.0"/>
+					<color r="0.3" g="0.3" b="0.3" a="1.0"/>
+					<vertex x="-0.625" y="-3.0"/>
+					<vertex x="-0.625" y="-2.5"/>
+
+					<color r="0.6" g="0.6" b="0.6" a="1.0"/>
+					<vertex x="1.0" y="-3.0"/>
+					<vertex x="0.75" y="-5.5"/>
+					<color r="1.0" g="1.0" b="1.0" a="1.0"/>
+					<vertex x="0.0" y="-5.5"/>
+					<vertex x="0.0" y="-3.0"/>
+					<vertex x="0.0" y="-3.0"/>
+					<vertex x="0.0" y="-5.5"/>
+					<color r="0.6" g="0.6" b="0.6" a="1.0"/>
+					<vertex x="-0.75" y="-5.5"/>
+					<vertex x="-1.0" y="-3.0"/>
+				</quads>
+			</drawlist>
+		</renderable>
+		<ship maxveloc="0" maxaccel="0" minaccel="0" maxomega="20"/>
+		<link name="cannon" secondary="playerblastcannon">
+			<offset x="0" y="10" angle="0"/>
+			<weapon>
+				<trigger channel="1"/>
+			</weapon>
+		</link>
+		<playercontroller/>
+		<team name="blue"/>
+	</link>
+	<link name="lgun" secondary="playermachinegun">
+		<offset x="2" y="1.5" angle="0"/>
+		<weapon>
+			<trigger channel="2"/>
+		</weapon>
+	</link>
+	<link name="rgun" secondary="playermachinegun">
+		<offset x="-2" y="1.5" angle="0"/>
+		<weapon>
+			<trigger channel="2"/>
+		</weapon>
+	</link>
+	<link name="lwing" group="wing" next="lwing2">
+		<offset x="4" y="-2.5" angle="0"/>
+	</link>
+	<link name="rwing" group="wing" next="rwing2">
+		<offset x="-4" y="-2.5" angle="0"/>
+	</link>
+	<link name="lwing2" group="wing2" next="lwing3">
+		<offset x="12" y="10" angle="0"/>
+	</link>
+	<link name="rwing2" group="wing2" next="rwing3">
+		<offset x="-12" y="10" angle="0"/>
+	</link>
+	<link name="lwing3" group="wing3">
+		<offset x="0" y="-20" angle="0"/>
+	</link>
+	<link name="rwing3" group="wing3">
+		<offset x="0" y="-20" angle="0"/>
+	</link>
+</template>
+

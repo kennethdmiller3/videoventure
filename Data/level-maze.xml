@@ -35,12 +35,11 @@
 	<import name="sound/stargate-createmutant.xml" />
 	<import name="sound/stargate-humanoidcatch.xml" />
 	<!-- players -->
-	<import name="template/1P.xml" />
-	<entity name="playerspawn">
+	<entity name="1P">
 		<position x="0" y="0" />
-		<spawner>
-			<spawn name="1P" start="1.5" cycle="1" track="1" />
-		</spawner>
+		<player name="playershipwarp" start="1.5" cycle="4" lives="3" firstextra="20000" extra="50000" />
+		<resource name="special" initial="3" />
+		<team name="blue" />
 	</entity>
 	<!-- draw lists -->
 	<import name="drawlist/square.xml" />

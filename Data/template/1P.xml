@@ -1,6 +1,6 @@
 <?xml version="1.0" ?>
 <template name="1P">
-	<player name="playershipwarp" lives="3" firstextra="20000" extra="50000" />
+	<player name="playershipwarp" start="1.5" cycle="4" lives="3" firstextra="20000" extra="50000" />
 	<resource name="special" initial="3" />
 	<team name="blue" />
 </template>

@@ -13,8 +13,9 @@ public:
 	bool mRicochet;
 
 	// spawn on death
-	unsigned int mSpawnOnDeath;
 	unsigned int mSpawnOnImpact;
+	unsigned int mSpawnOnDeath;
+	unsigned int mSwitchOnDeath;
 
 public:
 	BulletTemplate(void);

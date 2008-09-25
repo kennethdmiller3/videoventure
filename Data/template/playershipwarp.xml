@@ -11,7 +11,7 @@
 					<key time="0.0" x="0.0" y="0.0" />
 					<key time="0.3" x="1.0" y="1.0" />
 				</scale>
-				<calllist name="ship" />
+				<calllist name="playership" />
 			</pushmatrix>
 		</block>
 		<block start="0.6" length="0.5">
@@ -65,7 +65,7 @@
 			</repeat>
 		</pushmatrix>
 	</renderable>
-	<expire time="1.1" spawnonexpire="playershipinvulnerable" />
+	<expire time="1.1" switchonexpire="playershipinvulnerable" />
 	<playercontroller />
 	<soundcue>
 		<cue sound="stargate-warpin" />

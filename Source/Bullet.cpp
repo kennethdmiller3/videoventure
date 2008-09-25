@@ -82,7 +82,7 @@ namespace Database
 
 
 BulletTemplate::BulletTemplate(void)
-: mDamage(0), mRicochet(false), mSpawnOnDeath(0), mSpawnOnImpact(0)
+: mDamage(0), mRicochet(false), mSpawnOnImpact(0), mSpawnOnDeath(0), mSwitchOnDeath(0)
 {
 }
 
@@ -96,10 +96,12 @@ bool BulletTemplate::Configure(const TiXmlElement *element)
 	int ricochet = mRicochet;
 	element->QueryIntAttribute("ricochet", &ricochet);
 	mRicochet = ricochet != 0;
-	if (const char *spawn = element->Attribute("spawnondeath"))
-		mSpawnOnDeath = Hash(spawn);
 	if (const char *spawn = element->Attribute("spawnonimpact"))
 		mSpawnOnImpact = Hash(spawn);
+	if (const char *spawn = element->Attribute("spawnondeath"))
+		mSpawnOnDeath = Hash(spawn);
+	if (const char *spawn = element->Attribute("switchondeath"))
+		mSwitchOnDeath = Hash(spawn);
 	return true;
 }
 
@@ -128,17 +130,11 @@ Bullet::~Bullet(void)
 
 void Bullet::Kill(float aFraction)
 {
-	// if spawning on death...
 	const BulletTemplate &bullet = Database::bullettemplate.Get(mId);
+
+	// if spawning on death...
 	if (bullet.mSpawnOnDeath)
 	{
-#ifdef USE_CHANGE_DYNAMIC_TYPE
-		// change dynamic type
-		unsigned int aId = mId;
-		Database::Switch(aId, bullet.mSpawnOnDeath);
-		if (Renderable *renderable = Database::renderable.Get(aId))
-			renderable->SetFraction(aFraction);
-#else
 		// get the entity
 		Entity *entity = Database::entity.Get(mId);
 		if (entity)
@@ -149,11 +145,18 @@ void Bullet::Kill(float aFraction)
 			if (Renderable *renderable = Database::renderable.Get(spawnId))
 				renderable->SetFraction(aFraction);
 		}
-#endif
 	}
-#ifdef USE_CHANGE_DYNAMIC_TYPE
+
+	// if switching on death...
+	if (bullet.mSwitchOnDeath)
+	{
+		// change dynamic type
+		unsigned int aId = mId;
+		Database::Switch(aId, bullet.mSwitchOnDeath);
+		if (Renderable *renderable = Database::renderable.Get(aId))
+			renderable->SetFraction(aFraction);
+	}
 	else
-#endif
 	{
 		// delete the entity
 		Database::Delete(mId);

@@ -41,7 +41,6 @@
 		</pushmatrix>
 	</renderable>
 	<expire time="2.4" />
-	<playercontroller />
 	<sound>
 		<file name="robotron-teleportin.wav" />
 	</sound>

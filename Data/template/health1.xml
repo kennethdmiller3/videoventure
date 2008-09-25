@@ -23,6 +23,6 @@
 		<scale x="2" y="2" />
 		<calllist name="diamond" />
 	</renderable>
-	<expire time="60" spawnonexpire="health1expire" />
+	<expire time="60" switchonexpire="health1expire" />
 	<bullet damage="-1" ricochet="1" spawnondeath="health1collect" />
 </template>

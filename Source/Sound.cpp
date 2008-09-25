@@ -123,11 +123,30 @@ namespace Database
 
 			void Activate(unsigned int aId)
 			{
-				PlaySound(aId, 0);
+#if defined(USE_SDL)
+#ifdef SOUND_VALIDATE_CUE
+				for (Typed<unsigned int>::Iterator itor(soundcue.Find(aId)); itor.IsValid(); ++itor)
+				{
+					if (const SoundTemplate *sound = soundtemplate.Find(itor.GetValue()))
+					{
+						if (sound->mLength == 0)
+						{
+							DebugPrint("Entity %s cue %s empty sound %s\n", Database::name.Get(aId).c_str(), Database::name.Get(itor.GetKey()).c_str(), Database::name.Get(itor.GetValue()).c_str());
+						}
+					}
+					else
+					{
+						DebugPrint("Entity %s cue %s missing sound %s\n", Database::name.Get(aId).c_str(), Database::name.Get(itor.GetKey()).c_str(), Database::name.Get(itor.GetValue()).c_str());
+					}
+				}
+#endif
+				PlaySoundCue(aId, 0);
+#endif
 			}
 
 			void Deactivate(unsigned int aId)
 			{
+#if defined(USE_SDL)
 				if (Database::sound.Find(aId))
 				{
 					SDL_LockAudio();
@@ -137,6 +156,7 @@ namespace Database
 					Database::sound.Delete(aId);
 					SDL_UnlockAudio();
 				}
+#endif
 			}
 		}
 		soundinitializer;
@@ -181,6 +201,7 @@ bool SoundTemplate::ConfigureFile(const TiXmlElement *element, unsigned int id)
 	if (name == NULL)
 		return false;
 
+#if defined(USE_SDL)
 	// load wave file data
 	SDL_AudioSpec wave;
 	Uint8 *data;
@@ -211,6 +232,7 @@ bool SoundTemplate::ConfigureFile(const TiXmlElement *element, unsigned int id)
 
 	// release wave file data
 	SDL_FreeWAV(data);
+#endif
 
 	return true;
 }
@@ -1770,6 +1792,7 @@ void Sound::Play(unsigned int aOffset)
 {
 	if (!mPlaying)
 	{
+#if defined(USE_SDL)
 		SDL_LockAudio();
 		mPlaying = true;
 		mPrev = sTail;
@@ -1779,6 +1802,7 @@ void Sound::Play(unsigned int aOffset)
 		if (!sHead)
 			sHead = this;
 		SDL_UnlockAudio();
+#endif
 	}
 
 	mOffset = aOffset;
@@ -1791,6 +1815,7 @@ void Sound::Stop(void)
 {
 	if (mPlaying)
 	{
+#if defined(USE_SDL)
 		SDL_LockAudio();
 		mPlaying = false;
 		if (sHead == this)
@@ -1806,6 +1831,7 @@ void Sound::Stop(void)
 		mNext = NULL;
 		mPrev = NULL;
 		SDL_UnlockAudio();
+#endif
 	}
 
 	// also deactivate
@@ -1842,7 +1868,7 @@ static float level = minlevel;
 static const float levelfilter = 1.0f * timestep;
 static const float postscale = 32767.0f;
 
-void Sound::Mix(void *userdata, Uint8 *stream, int len)
+void Sound::Mix(void *userdata, unsigned char *stream, int len)
 {
 	int samples = len / sizeof(short);
 
@@ -2079,12 +2105,10 @@ void Sound::Mix(void *userdata, Uint8 *stream, int len)
 #endif
 }
 
-void PlaySound(unsigned int aId, unsigned int aCueId)
+void PlaySoundCue(unsigned int aId, unsigned int aCueId)
 {
 	const Database::Typed<unsigned int> &soundcues = Database::soundcue.Get(aId);
 	unsigned int aSoundId = soundcues.Get(aCueId);
-	if (!aSoundId)
-		aSoundId = aId;
 	const SoundTemplate &soundtemplate = Database::soundtemplate.Get(aSoundId);
 	if (soundtemplate.mData)
 	{
@@ -2105,7 +2129,7 @@ void PlaySound(unsigned int aId, unsigned int aCueId)
 	}
 }
 
-void StopSound(unsigned int aId, unsigned int aCueId)
+void StopSoundCue(unsigned int aId, unsigned int aCueId)
 {
 	const Database::Typed<Sound *> &sounds = Database::sound.Get(aId);
 	if (Sound *s = sounds.Get(aCueId))

@@ -1,6 +1,6 @@
 <?xml version="1.0" ?>
 <template name="friendtargetappear">
-	<expire time="0.25" spawnonexpire="friendtarget" />
+	<expire time="0.25" switchonexpire="friendtarget" />
 	<renderable radius="20">
 		<pushmatrix>
 			<color>

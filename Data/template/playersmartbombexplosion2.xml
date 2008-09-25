@@ -1,4 +1,4 @@
 <?xml version="1.0" ?>
 <template name="playersmartbombexplosion2" type="playersmartbombexplosion">
-	<expire spawnonexpire="playersmartbombexplosion" />
+	<expire switchonexpire="playersmartbombexplosion" />
 </template>

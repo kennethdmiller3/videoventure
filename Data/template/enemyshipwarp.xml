@@ -1,4 +1,4 @@
 <?xml version="1.0" ?>
 <template name="enemyshipwarp" type="enemywarpin">
-	<expire spawnonexpire="enemyship" />
+	<expire switchonexpire="enemyship" />
 </template>

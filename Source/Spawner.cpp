@@ -119,8 +119,10 @@ namespace Database
 // spawner template constructor
 SpawnerTemplate::SpawnerTemplate(void)
 : mOffset(0, Vector2(0, 0))
-, mInherit(1, 1)
-, mVelocity(0, 0)
+, mScatter(0, Vector2(0, 0))
+, mInherit(0, Vector2(1, 1))
+, mVelocity(0, Vector2(0, 0))
+, mVariance(0, Vector2(0, 0))
 , mSpawn(0)
 , mStart(0)
 , mCycle(FLT_MAX)
@@ -147,25 +149,46 @@ bool SpawnerTemplate::Configure(const TiXmlElement *element)
 		{
 		case 0x14c8d3ca /* "offset" */:
 			{
+				if (child->QueryFloatAttribute("angle", &mOffset.a) == TIXML_SUCCESS)
+					mOffset.a *= float(M_PI) / 180.0f;
 				child->QueryFloatAttribute("x", &mOffset.p.x);
 				child->QueryFloatAttribute("y", &mOffset.p.y);
-				float angle = 0.0f;
-				if (child->QueryFloatAttribute("angle", &angle) == TIXML_SUCCESS)
-					mOffset = Transform2(angle * float(M_PI) / 180.0f, mOffset.p);
+			}
+			break;
+
+		case 0xcab7a341 /* "scatter" */:
+			{
+				if (child->QueryFloatAttribute("angle", &mScatter.a) == TIXML_SUCCESS)
+					mScatter.a *= float(M_PI) / 180.0f;
+				child->QueryFloatAttribute("x", &mScatter.p.x);
+				child->QueryFloatAttribute("y", &mScatter.p.y);
 			}
 			break;
 
 		case 0xca04efe0 /* "inherit" */:
 			{
-				child->QueryFloatAttribute("x", &mInherit.x);
-				child->QueryFloatAttribute("y", &mInherit.y);
+				if (child->QueryFloatAttribute("angle", &mInherit.a) == TIXML_SUCCESS)
+					mInherit.a *= float(M_PI) / 180.0f;
+				child->QueryFloatAttribute("x", &mInherit.p.x);
+				child->QueryFloatAttribute("y", &mInherit.p.y);
 			}
 			break;
 
 		case 0x32741c32 /* "velocity" */:
 			{
-				child->QueryFloatAttribute("x", &mVelocity.x);
-				child->QueryFloatAttribute("y", &mVelocity.y);
+				if (child->QueryFloatAttribute("angle", &mVelocity.a) == TIXML_SUCCESS)
+					mVelocity.a *= float(M_PI) / 180.0f;
+				child->QueryFloatAttribute("x", &mVelocity.p.x);
+				child->QueryFloatAttribute("y", &mVelocity.p.y);
+			}
+			break;
+
+		case 0x0dd0b0be /* "variance" */:
+			{
+				if (child->QueryFloatAttribute("angle", &mVariance.a) == TIXML_SUCCESS)
+					mVariance.a *= float(M_PI) / 180.0f;
+				child->QueryFloatAttribute("x", &mVariance.p.x);
+				child->QueryFloatAttribute("y", &mVariance.p.y);
 			}
 			break;
 
@@ -229,10 +252,46 @@ void Spawner::Update(float aStep)
 		Entity *entity = Database::entity.Get(mId);
 		if (entity)
 		{
+			// interpolated transform
+			Transform2 transform(entity->GetInterpolatedTransform(mTimer / aStep));
+
+			// apply transform offset
+			transform = spawner.mOffset * transform;
+
+			// apply transform scatter
+			if (spawner.mScatter.a)
+				transform.a += RandValue(0.0f, spawner.mScatter.a);
+			if (spawner.mScatter.p.x)
+				transform.p.x += RandValue(0.0f, spawner.mScatter.p.x);
+			if (spawner.mScatter.p.y)
+				transform.p.y += RandValue(0.0f, spawner.mScatter.p.y);
+
+			// get local velocity
+			Transform2 velocity(entity->GetOmega(), transform.Unrotate(entity->GetVelocity()));
+
+			// apply velocity inherit
+			velocity.a *= spawner.mInherit.a;
+			velocity.p.x *= spawner.mInherit.p.x;
+			velocity.p.y *= spawner.mInherit.p.y;
+
+			// apply velocity add
+			velocity.a += spawner.mVelocity.a;
+			velocity.p.x += spawner.mVelocity.p.x;
+			velocity.p.y += spawner.mVelocity.p.y;
+
+			// apply velocity variance
+			if (spawner.mVariance.a)
+				velocity.a += RandValue(0.0f, spawner.mVariance.a);
+			if (spawner.mVariance.p.x)
+				velocity.p.x += RandValue(0.0f, spawner.mVariance.p.x);
+			if (spawner.mVariance.p.y)
+				velocity.p.y += RandValue(0.0f, spawner.mVariance.p.y);
+
+			// get world velocity
+			velocity.p = transform.Rotate(velocity.p);
+
 			// instantiate the spawn entity
-			Transform2 transform(spawner.mOffset * entity->GetInterpolatedTransform(mTimer / aStep));
-			Vector2 velocity(transform.Rotate(spawner.mInherit * transform.Unrotate(entity->GetVelocity()) + spawner.mVelocity));
-			unsigned int spawnId = Database::Instantiate(spawner.mSpawn, Database::owner.Get(mId), mId, transform.Angle(), transform.p, velocity, entity->GetOmega(), false);
+			unsigned int spawnId = Database::Instantiate(spawner.mSpawn, Database::owner.Get(mId), mId, transform.a, transform.p, velocity.p, velocity.a, false);
 
 			// if the spawner has a team...
 			unsigned int team = Database::team.Get(mId);

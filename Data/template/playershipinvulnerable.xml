@@ -1,6 +1,6 @@
 <?xml version="1.0" ?>
 <template name="playershipinvulnerable" type="playership">
-	<expire time="3.0" spawnonexpire="playership" />
+	<expire time="3.0" switchonexpire="playership" />
 	<renderable radius="12" inherit="0">
 		<pushmatrix>
 			<block start="0" length="0.05" repeat="40">
@@ -77,7 +77,7 @@
 			<key time="2" r="1.0" g="1.0" b="1.0" />
 			<key time="3" r="0.4" g="0.5" b="1.0" />
 		</color>
-		<calllist name="ship" />
+		<calllist name="playership" />
 	</renderable>
 	<damagable health="0"/>
 </template>
