@@ -1,6 +1,7 @@
 #include "StdAfx.h"
-#include "Interpolator.h"
 #include "Drawlist.h"
+#include "Interpolator.h"
+#include "Noise.h"
 
 enum DrawlistOp
 {
@@ -412,49 +413,6 @@ namespace Database
 
 		class TextureLoader
 		{
-		private:
-			static float noise(float x, float y, float z)
-			{
-				unsigned char X = unsigned char(xs_FloorToInt(x));
-				unsigned char Y = unsigned char(xs_FloorToInt(y));
-				unsigned char Z = unsigned char(xs_FloorToInt(z));
-				x -= xs_FloorToInt(x);
-				y -= xs_FloorToInt(y);
-				z -= xs_FloorToInt(z);
-				float u = fade(x);
-				float v = fade(y);
-				float w = fade(z);
-				unsigned char A = p[unsigned char(X  )]+Y, AA = p[unsigned char(A)]+Z, AB = p[unsigned char(A+1)]+Z;
-				unsigned char B = p[unsigned char(X+1)]+Y, BA = p[unsigned char(B)]+Z, BB = p[unsigned char(B+1)]+Z;
-				return
-					lerp(w,
-						lerp(v, 
-							lerp(u, grad(p[unsigned char(AA  )], x  , y  , z  ), grad(p[unsigned char(BA  )], x-1, y  , z  )),
-							lerp(u, grad(p[unsigned char(AB  )], x  , y-1, z  ), grad(p[unsigned char(BB  )], x-1, y-1, z  ))
-							),
-						lerp(v, 
-							lerp(u, grad(p[unsigned char(AA+1)], x  , y  , z-1), grad(p[unsigned char(BA+1)], x-1, y  , z-1)),
-							lerp(u, grad(p[unsigned char(AB+1)], x  , y-1, z-1), grad(p[unsigned char(BB+1)], x-1, y-1, z-1))
-							)
-						);
-			}
-			static float fade(float t)
-			{
-				return t * t * t * (t * (t * 6 - 15) + 10);
-			}
-			static float lerp(float t, float a, float b)
-			{
-				return a + t * (b - a);
-			}
-			static float grad(int hash, float x, float y, float z)
-			{
-				int h = hash & 15;
-				float u = h<8 ? x : y;
-				float v = h<4 ? y : h==12||h==14 ? x : z;
-				return ((h&1) == 0 ? u : -u) + ((h&2) == 0 ? v : -v);
-			}
-			static unsigned char p[256];
-
 		public:
 			TextureLoader()
 			{
@@ -547,88 +505,67 @@ namespace Database
 
 							texture.mFormat = GL_RGBA;
 
-							int octaves[4] = { 0, 0, 0, 0 };
-							float frequency[4] = { 1.0f, 1.0f, 1.0f, 1.0f  };
-							float persistence[4] = { 0.5f, 0.5f, 0.5f, 0.5f };
-							float amplitude[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
-							float average[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
-							float seed[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+							int octaves = 0;
+							child->QueryIntAttribute("octaves", &octaves);
 
-							for (const TiXmlElement *param = child->FirstChildElement(); param; param = param->NextSiblingElement())
-							{
-								switch (Hash(param->Value()))
-								{
-								case 0x8ebf1fca /* "octaves" */:
-									param->QueryIntAttribute("r", &octaves[0]);
-									param->QueryIntAttribute("g", &octaves[1]);
-									param->QueryIntAttribute("b", &octaves[2]);
-									param->QueryIntAttribute("a", &octaves[3]);
-									break;
+							float frequency = 1.0f;
+							child->QueryFloatAttribute("frequency", &frequency);
 
-								case 0x2fb31c01 /* "frequency" */:
-									param->QueryFloatAttribute("r", &frequency[0]);
-									param->QueryFloatAttribute("g", &frequency[1]);
-									param->QueryFloatAttribute("b", &frequency[2]);
-									param->QueryFloatAttribute("a", &frequency[3]);
-									break;
+							float amplitude = 1.0f;
+							child->QueryFloatAttribute("amplitude", &amplitude);
 
-								case 0x54c237b0 /* "persistence" */:
-									param->QueryFloatAttribute("r", &persistence[0]);
-									param->QueryFloatAttribute("g", &persistence[1]);
-									param->QueryFloatAttribute("b", &persistence[2]);
-									param->QueryFloatAttribute("a", &persistence[3]);
-									break;
+							float average = 0.0f;
+							child->QueryFloatAttribute("average", &average);
 
-								case 0x16746aa2 /* "amplitude" */:
-									param->QueryFloatAttribute("r", &amplitude[0]);
-									param->QueryFloatAttribute("g", &amplitude[1]);
-									param->QueryFloatAttribute("b", &amplitude[2]);
-									param->QueryFloatAttribute("a", &amplitude[3]);
-									break;
+							float persistence = 0.5f;
+							child->QueryFloatAttribute("persistence", &persistence);
 
-								case 0x175eb228 /* "average" */:
-									param->QueryFloatAttribute("r", &average[0]);
-									param->QueryFloatAttribute("g", &average[1]);
-									param->QueryFloatAttribute("b", &average[2]);
-									param->QueryFloatAttribute("a", &average[3]);
-									break;
+							float seed = 0.0f;
+							child->QueryFloatAttribute("seed", &seed);
 
-								case 0x5045bcac /* "seed" */:
-									param->QueryFloatAttribute("r", &seed[0]);
-									param->QueryFloatAttribute("g", &seed[1]);
-									param->QueryFloatAttribute("b", &seed[2]);
-									param->QueryFloatAttribute("a", &seed[3]);
-									break;
-								}
-							}
+							std::vector<unsigned int> buffer;
+							ProcessInterpolatorItem(child, buffer, SDL_arraysize(sColorNames), sColorNames, sColorDefault);
 
 							texture.mPixels = static_cast<unsigned char *>(malloc(texture.mWidth * texture.mHeight * texture.mComponents));
 
 							unsigned char *pixel = texture.mPixels;
 
+							// interpolator output
+							int index = 0;
+							float data[SDL_arraysize(sColorNames)];
+
 							for (int y = 0; y < texture.mHeight; ++y)
 							{
 								for (int x = 0; x < texture.mWidth; ++x)
 								{
-									for (int c = 0; c < 4; ++c)
+									float value =average;
+									float f = frequency;
+									float a = amplitude;
+									for (int i = 0; i < octaves; ++i)
 									{
-										float value = average[c];
-										float f = frequency[c];
-										float a = amplitude[c];
-										for (int i = 0; i < octaves[c]; ++i)
-										{
-											value += a * (
-												noise((x) * f, (y) * f, seed[c] * f) * (texture.mWidth - x) * (texture.mHeight - y) +
-												noise((x - texture.mWidth) * f, (y) * f, seed[c] * f) * (x) * (texture.mHeight - y) +
-												noise((x - texture.mWidth) * f, (y - texture.mHeight) * f, seed[c] * f) * (x) * (y) +
-												noise((x) * f, (y - texture.mHeight) * f, seed[c] * f) * (texture.mWidth - x) * (y)
-												) / (texture.mWidth * texture.mHeight);
-											f *= 2;
-											a *= persistence[c];
-										}
-										value = Clamp(value, 0.0f, 1.0f);
-										*pixel++ = (unsigned char)xs_RoundToInt(value * 255);
+#if 0
+										value += a * Noise(x * f + seed[c], y * f - seed[c], xs_FloorToInt(texture.mWidth * f), xs_FloorToInt(texture.mHeight * f));
+#else
+										value += a * (
+											Noise((x) * f, (y) * f) * (texture.mWidth - x) * (texture.mHeight - y) +
+											Noise((x - texture.mWidth) * f, (y) * f) * (x) * (texture.mHeight - y) +
+											Noise((x - texture.mWidth) * f, (y - texture.mHeight) * f) * (x) * (y) +
+											Noise((x) * f, (y - texture.mHeight) * f) * (texture.mWidth - x) * (y)
+											) / (texture.mWidth * texture.mHeight);
+#endif
+										f *= 2;
+										a *= persistence;
 									}
+									value = Clamp(value, -1.0f, 1.0f);
+
+									// get interpolator value
+									if (!ApplyInterpolator(data, SDL_arraysize(data), buffer[0], reinterpret_cast<const float * __restrict>(&buffer[1]), value, index))
+										memset(data, 0, sizeof(data));
+
+									*pixel++ = (unsigned char)xs_RoundToInt(data[0] * 255);
+									*pixel++ = (unsigned char)xs_RoundToInt(data[1] * 255);
+									*pixel++ = (unsigned char)xs_RoundToInt(data[2] * 255);
+									*pixel++ = (unsigned char)xs_RoundToInt(data[3] * 255);
 								}
 							}
 						}
@@ -709,23 +646,6 @@ namespace Database
 			}
 		}
 		textureloader;
-
-		unsigned char TextureLoader::p[256] =
-		{
-			151,160,137,91,90,15,
-			131,13,201,95,96,53,194,233,7,225,140,36,103,30,69,142,8,99,37,240,21,10,23,
-			190, 6,148,247,120,234,75,0,26,197,62,94,252,219,203,117,35,11,32,57,177,33,
-			88,237,149,56,87,174,20,125,136,171,168, 68,175,74,165,71,134,139,48,27,166,
-			77,146,158,231,83,111,229,122,60,211,133,230,220,105,92,41,55,46,245,40,244,
-			102,143,54, 65,25,63,161, 1,216,80,73,209,76,132,187,208, 89,18,169,200,196,
-			135,130,116,188,159,86,164,100,109,198,173,186, 3,64,52,217,226,250,124,123,
-			5,202,38,147,118,126,255,82,85,212,207,206,59,227,47,16,58,17,182,189,28,42,
-			223,183,170,213,119,248,152, 2,44,154,163, 70,221,153,101,155,167, 43,172,9,
-			129,22,39,253, 19,98,108,110,79,113,224,232,178,185, 112,104,218,246,97,228,
-			251,34,242,193,238,210,144,12,191,179,162,241, 81,51,145,235,249,14,239,107,
-			49,192,214, 31,181,199,106,157,184, 84,204,176,115,121,50,45,127, 4,150,254,
-			138,236,205,93,222,114,67,29,24,72,243,141,128,195,78,66,215,61,156,180
-		};
 
 		class VariableLoader
 		{

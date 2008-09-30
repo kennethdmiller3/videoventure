@@ -258,6 +258,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Source\Noise.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\Source\Overlay.cpp"
 				>
 			</File>
@@ -437,6 +441,10 @@
 			</File>
 			<File
 				RelativePath=".\Source\Matrix2.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Noise.h"
 				>
 			</File>
 			<File

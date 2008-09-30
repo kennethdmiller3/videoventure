@@ -55,13 +55,10 @@
 	<!-- nebula -->
 	<entity name="nebula">
 		<texture mode="modulate" minfilter="linear" magfilter="linear" wraps="repeat" wrapt="repeat">
-			<perlin width="256" height="256">
-				<octaves r="0" g="0" b="0" a="8" />
-				<frequency r="0" g="0" b="0" a="0.00390625" />
-				<persistence r="0" g="0" b="0" a="0.625" />
-				<amplitude r="0" g="0" b="0" a="0.75" />
-				<average r="1" g="1" b="1" a="0.25" />
-				<seed r="0" g="0" b="0" a="64" />
+			<perlin width="256" height="256" octaves="8" frequency="0.00390625" persistence="0.625">
+				<key time="-1.000000" r="1" g="1" b="1" a="0.00"/>
+				<key time="-0.333333" r="1" g="1" b="1" a="0.00"/>
+				<key time="1.000000" r="1" g="1" b="1" a="1.00"/>
 			</perlin>
 		</texture>
 		<renderable radius="512">

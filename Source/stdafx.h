@@ -128,7 +128,32 @@ inline float RandValue(float aAverage, float aVariance)
 }
 
 // color typedef (HACK)
-typedef float Color4[4];
+struct Color4
+{
+	float r;
+	float g;
+	float b;
+	float a;
+
+	Color4()
+	{
+	}
+
+	Color4(float r, float g, float b, float a)
+		: r(r), g(g), b(b), a(a)
+	{
+	}
+
+	operator float *()
+	{
+		return static_cast<float *>(&r);
+	}
+
+	operator const float *() const
+	{
+		return static_cast<const float *>(&r);
+	}
+};
 typedef Color4 Color4_2[2];
 
 
