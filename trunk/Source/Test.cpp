@@ -1472,390 +1472,577 @@ void HSV2RGB(float h, float s, float v, float &r, float &g, float &b)
 #endif
 }
 
+#define TITLE_DEFAULT 0
+#define TITLE_ROCKETBOMB 3
+#define TITLE_ASSAULTWING 4
 
-// draw title
-void RenderShellTitle(unsigned int aId, float aTime, float aPosX, float aPosY, float aAngle)
+#define TITLE_TEXT TITLE_DEFAULT
+
+#if TITLE_TEXT == TITLE_ROCKETBOMB
+
+// title text bitmap
+static const char titlemap[][94+1] = 
 {
-	// title text bitmap
-	static const char titlemap[][12*8+1] = 
-	{
-	//   123456781234567812345678123456781234567812345678123456781234567812345678123456781234567812345678
-		/*
-		" 1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111 ",
-		"                                                                                                ",
-		"                                                                                                ",
-		" 00  00  000000  00000   000000   0000   00  00  000000  00  00  000000  00  00  00000   000000 ",
-		" 00  00    00    00  00  00      00  00  00  00  00      000 00    00    00  00  00  00  00     ",
-		" 00  00    00    00  00  0000    00  00  00  00  0000    000000    00    00  00  00000   0000   ",
-		"  0000     00    00  00  00      00  00   0000   00      00 000    00    00  00  00  00  00     ",
-		"   00    000000  00000   000000   0000     00    000000  00  00    00     0000   00  00  000000 ",
-		"                                                                                                ",
-		"                                                                                                ",
-		" 1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111 ",
-		"                                                                                                ",
-		"                                                                                                ",
-		*/
-		" 0000000000000    000000000000    000000000000   000000  000000  00000000000000  00000000000000 ",
-		" 00000000000000  00000000000000  00000000000000  000000  000000  00000000000000  00000000000000 ",
-		" 000000  000000  000000  000000  000000  000000  000000 000000   000000              000000     ",
-		" 00000000000000  000000  000000  000000          000000000000    000000000           000000     ",
-		" 0000000000000   000000  000000  000000          000000000000    000000000           000000     ",
-		" 000000  000000  000000  000000  000000  000000  000000 000000   000000              000000     ",
-		" 000000  000000  00000000000000  00000000000000  000000  000000  00000000000000      000000     ",
-		" 000000  000000   000000000000    000000000000   000000  000000  00000000000000      000000     ",
-		"                                                                                                ",
-		"                                                                                                ",
-		" 111111111111111111111    11111111111111111111   111111111    111111111  111111111111111111111  ",
-		" 1111111111111111111111  1111111111111111111111  1111111111  1111111111  1111111111111111111111 ",
-		" 1111111111111111111111  1111111111111111111111  1111111111111111111111  1111111111111111111111 ",
-		" 1111111111  1111111111  1111111111  1111111111  1111111111111111111111  1111111111  1111111111 ",
-		" 1111111111  1111111111  1111111111  1111111111  11111111 1111 11111111  1111111111  1111111111 ",
-		" 111111111111111111111   1111111111  1111111111  111111111 11 111111111  111111111111111111111  ",
-		" 111111111111111111111   1111111111  1111111111  1111111111  1111111111  111111111111111111111  ",
-		" 1111111111  1111111111  1111111111  1111111111  1111111111  1111111111  1111111111  1111111111 ",
-		" 1111111111  1111111111  1111111111  1111111111  1111111111  1111111111  1111111111  1111111111 ",
-		" 1111111111111111111111  1111111111111111111111  1111111111  1111111111  1111111111111111111111 ",
-		" 1111111111111111111111  1111111111111111111111  1111111111  1111111111  1111111111111111111111 ",
-		" 111111111111111111111    11111111111111111111   1111111111  1111111111  111111111111111111111  ",
-	};
+//   0000000001111111111222222222233333333334444444444555555555566666666667777777777888888888899999
+//   1234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234
+	"0000000000000    000000000000    000000000000   000000  000000  00000000000000  00000000000000",
+	"00000000000000  00000000000000  00000000000000  000000  000000  00000000000000  00000000000000",
+	"000000  000000  000000  000000  000000  000000  000000 000000   000000              000000    ",
+	"00000000000000  000000  000000  000000          000000000000    000000000           000000    ",
+	"0000000000000   000000  000000  000000          000000000000    000000000           000000    ",
+	"000000  000000  000000  000000  000000  000000  000000 000000   000000              000000    ",
+	"000000  000000  00000000000000  00000000000000  000000  000000  00000000000000      000000    ",
+	"000000  000000   000000000000    000000000000   000000  000000  00000000000000      000000    ",
+	"                                                                                              ",
+	"                                                                                              ",
+	"111111111111111111111    11111111111111111111   111111111    111111111  111111111111111111111 ",
+	"1111111111111111111111  1111111111111111111111  1111111111  1111111111  1111111111111111111111",
+	"1111111111111111111111  1111111111111111111111  1111111111111111111111  1111111111111111111111",
+	"1111111111  1111111111  1111111111  1111111111  1111111111111111111111  1111111111  1111111111",
+	"1111111111  1111111111  1111111111  1111111111  11111111 1111 11111111  1111111111  1111111111",
+	"111111111111111111111   1111111111  1111111111  111111111 11 111111111  111111111111111111111 ",
+	"111111111111111111111   1111111111  1111111111  1111111111  1111111111  111111111111111111111 ",
+	"1111111111  1111111111  1111111111  1111111111  1111111111  1111111111  1111111111  1111111111",
+	"1111111111  1111111111  1111111111  1111111111  1111111111  1111111111  1111111111  1111111111",
+	"1111111111111111111111  1111111111111111111111  1111111111  1111111111  1111111111111111111111",
+	"1111111111111111111111  1111111111111111111111  1111111111  1111111111  1111111111111111111111",
+	"111111111111111111111    11111111111111111111   1111111111  1111111111  111111111111111111111 ",
+}
 
-	// border drawing properties
-	static const float borderw = 2;
-	static const float borderh = 2;
+// title bar alphas
+static float baralpha[SDL_arraysize(titlemap)] = { 0.0f, 0.2f, 0.4f, 0.6f, 0.6f, 0.4f, 0.2f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.2f, 0.4f, 0.6f, 0.6f, 0.4f, 0.2f, 0.0f, 0.0f, 0.0f };
 
-	// title drawing properties
-	static const float titlew = 6;
-	static const float titleh = 6;
-	static const float titlex = 320 - titlew * 0.5f * (SDL_arraysize(titlemap[0]) - 1);
-	static const float titley = 16;
-	static const float titlez = 0;
+#elif TITLE_TEXT == TITLE_ASSAULTWING
 
-	// title bar alphas
-	static float baralpha[SDL_arraysize(titlemap)] = { 0.0f, 0.2f, 0.4f, 0.6f, 0.6f, 0.4f, 0.2f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.2f, 0.4f, 0.6f, 0.6f, 0.4f, 0.2f, 0.0f, 0.0f, 0.0f };
+// title text bitmap
+static const char titlemap[][102+1] =
+{
+//   00000000011111111112222222222333333333344444444445555555555666666666677777777778888888888999999999900000
+//   12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234
+	" 000000000000    0000000000000   000000000000    000000000000   000000  000000  000000  00000000000000",
+	"000000  000000  000000          000000          000000  000000  000000  000000  000000          000000",
+	"00000000000000   000000000000    000000000000   00000000000000  000000  000000  000000          000000",
+	"000000  000000          000000          000000  000000  000000  000000  000000  000000          000000",
+	"000000  000000  00000000000000  00000000000000  000000  000000  00000000000000  00000000000000  000000",
+	"000000  000000  00000000000000  00000000000000  000000  000000  00000000000000  00000000000000  000000",
+	"000000  000000  00000000000000  00000000000000  000000  000000  00000000000000  00000000000000  000000",
+	"000000  000000  0000000000000   0000000000000   000000  000000   000000000000    0000000000000  000000",
+	"                                                                                                      ",
+	"                                                                                                      ",
+	"  11111111            11111111  11111111   1111111111111111   11111111   11111111111111111111111111   ",
+	"  11111111            11111111  11111111  111111111111111111  11111111  1111111111111111111111111111  ",
+	"  11111111  11111111  11111111  11111111  11111111  11111111  11111111  11111111                      ",
+	"  11111111  11111111  11111111  11111111  11111111  11111111  11111111  11111111  111111111111111111  ",
+	"  11111111  11111111  11111111  11111111  11111111  11111111  11111111  11111111  111111111111111111  ",
+	"  11111111  11111111  11111111  11111111  11111111  11111111  11111111  11111111            11111111  ",
+	"  1111111111111111111111111111  11111111  11111111  111111111111111111  1111111111111111111111111111  ",
+	"  1111111111111111111111111111  11111111  11111111  111111111111111111  1111111111111111111111111111  ",
+	"  1111111111111111111111111111  11111111  11111111  111111111111111111  1111111111111111111111111111  ",
+	"  1111111111111111111111111111  11111111  11111111  111111111111111111  1111111111111111111111111111  ",
+	"  1111111111111111111111111111  11111111  11111111  111111111111111111  1111111111111111111111111111  ",
+	"   11111111111111111111111111   11111111  11111111   1111111111111111    11111111111111111111111111   ",
+};
 
-	glBegin(GL_QUADS);
-
-	// draw title bar
-	for (int row = 0; row < SDL_arraysize(titlemap); ++row)
-	{
-		float y0 = titley + row * titleh, y1 = y0 + titleh;
-
-		glColor4f(0.3f, 0.3f, 0.3f, baralpha[row]);
-		glVertex2f(0, y0);
-		glVertex2f(640, y0);
-		glVertex2f(640, y1);
-		glVertex2f(0, y1);
-	}
-
-	// border rectangles
-	static const float block[9][2][2] =
-	{
-		{ { 0, borderw }, { 0, borderh } },
-		{ { borderw, titlew - borderw }, { 0, borderh } },
-		{ { titlew - borderw, titlew }, { 0, borderh } },
-		{ { 0, borderw }, { borderh, titleh - borderh } },
-		{ { 0, titlew }, { 0, titleh } },	// <-- filled block
-		{ { titlew - borderw, titlew }, { borderh, titleh - borderh } },
-		{ { 0, borderw }, { titleh - borderh, titleh } },
-		{ { borderw, titlew - borderh}, { titleh - borderh, titleh } },
-		{ { titlew - borderw, titlew }, { titleh - borderh, titleh } },
-	};
-	static const int mask[9] =
-	{
-		(1<<0), ((1<<0)|(1<<1)|(1<<2)), (1<<2),
-		((1<<0)|(1<<3)|(1<<6)), (1 << 4), ((1<<2)|(1<<5)|(1<<8)),
-		(1<<6), ((1<<6)|(1<<7)|(1<<8)), (1<<8)
-	};
-
-#if 1
-
-//#define USE_TITLE_MIRROR_WATER_EFFECT
-#ifdef USE_TITLE_MIRROR_WATER_EFFECT
-	// mirror offset
-	float mirrorscale = -0.75f;
-	float titleheight = titleh * (SDL_arraysize(titlemap) + 1);
-	float mirrortop = titley + titleheight + titleh * 2 + 4;
-	float mirrorbottom = mirrortop - mirrorscale * titleheight;
-	float mirroralphadelta = -0.375f / 32;
-	float mirroralphastart = 0.375f - mirroralphadelta * mirrortop;
-#endif
-
-	// draw title body
-	for (int row = -1; row < (int)SDL_arraysize(titlemap) + 1; ++row)
-	{
-		float y = titley + row * titleh;
-
-		for (int col = -1; col < (int)SDL_arraysize(titlemap[0]); ++col)
-		{
-			float x = titlex + col * titlew;
-
-			int phase = -1;
-			int fill = 0;
-
-			int c0 = std::max<int>(col - 1, 0);
-			int c1 = std::min<int>(col + 1, SDL_arraysize(titlemap[0]) - 2);
-			int r0 = std::max<int>(row - 1, 0);
-			int r1 = std::min<int>(row + 1, SDL_arraysize(titlemap) - 1);
-
-			for (int r = r0; r <= r1; ++r)
-			{
-				for (int c = c0; c <= c1; ++c)
-				{
-					if (titlemap[r][c] >= '0')
-					{
-						phase = titlemap[r][c] - '0';
-						fill |= mask[(r - row + 1) * 3 + (c - col + 1)];
-					}
-				}
-			}
-
-			if (fill & (1<<4))
-				fill = (1<<4);
-
-			if (phase >= 0)
-			{
-				// get block color
-				float R, G, B;
-				float h = sim_turn / 1024.0f + col / 512.0f + 0.03125f * sinf(sim_turn / 64.0f + row / 4.0f + 4.0f * sinf(sim_turn / 64.0f + col / 8.0f + 0.5f * sinf(sim_turn / 64.0f + row / 4.0f)));
-				bool border = (fill & ~(1<<4)) != 0;
-				HSV2RGB(h + phase * 0.5f + border * 0.5f, 1.0f, 1.0f - 0.25f * border, R, G, B);
-
-				// for each block...
-				for (int i = 0; i < 9; ++i)
-				{
-					// if the block is filled
-					if (fill & (1 << i))
-					{
-						// block borders
-						float x0 = x + block[i][0][0];
-						float x1 = x + block[i][0][1];
-						float y0 = y + block[i][1][0];
-						float y1 = y + block[i][1][1];
-
-						// upright
-						glColor4f(R, G, B, 1.0f);
-						glVertex2f(x0, y0);
-						glVertex2f(x1, y0);
-						glVertex2f(x1, y1);
-						glVertex2f(x0, y1);
-
-#ifdef USE_TITLE_MIRROR_WATER_EFFECT
-						// mirrored
-						y0 = mirrorbottom + mirrorscale * y0 + 1.0f * sinf(sim_turn / 64.0f + y0 / 8.0f) + 3.0f * sinf(sim_turn / 128.0f + y0 / 32.0f);
-						y1 = mirrorbottom + mirrorscale * y1 + 1.0f * sinf(sim_turn / 64.0f + y1 / 8.0f) + 3.0f * sinf(sim_turn / 128.0f + y1 / 32.0f);
-						float a0 = mirroralphastart + mirroralphadelta * y0;
-						float a1 = mirroralphastart + mirroralphadelta * y1;
-						if (a0 > 0.0f || a1 > 0.0f)
-						{
-							a0 = std::max(a0, 0.0f);
-							a1 = std::max(a1, 0.0f);
-							float d0 = 1.0f * sinf(sim_turn / 32.0f + y0 / 4.0f);
-							float d1 = 1.0f * sinf(sim_turn / 32.0f + y1 / 4.0f);
-							glColor4f(R, G, B, a1 * a1);
-							glVertex2f(x0 + d1, y1);
-							glVertex2f(x1 + d1, y1);
-							glColor4f(R, G, B, a0 * a0);
-							glVertex2f(x1 + d0, y0);
-							glVertex2f(x0 + d0, y0);
-						}
-#endif
-					}
-				}
-			}
-		}
-	}
-
-	glEnd();
+// title bar alphas
+static float baralpha[SDL_arraysize(titlemap)] = { 0.0f, 0.2f, 0.4f, 0.6f, 0.6f, 0.4f, 0.2f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.2f, 0.4f, 0.6f, 0.6f, 0.4f, 0.2f, 0.0f, 0.0f, 0.0f };
 
 #else
-	// texture-based variant
 
-	glEnd();
+// title text bitmap
+static const char titlemap[][96+1] = 
+{
+//   000000000111111111122222222223333333333444444444455555555556666666666777777777788888888889999999
+//   123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456
+	"    00000000  00000000  00000000  00000000000000000   000000000000000000   0000000000000000     ",
+	"    00000000  00000000  00000000  000000000000000000  000000000000000000  000000000000000000    ",
+	"    00000000  00000000  00000000  000000000000000000  000000000000000000  000000000000000000    ",
+	"    00000000  00000000  00000000  00000000  00000000  00000000            00000000  00000000    ",
+	"    00000000  00000000  00000000  00000000  00000000  00000000            00000000  00000000    ",
+	"    00000000  00000000  00000000  00000000  00000000  0000000000000000    00000000  00000000    ",
+	"    00000000  00000000  00000000  00000000  00000000  0000000000000000    00000000  00000000    ",
+	"    00000000  00000000  00000000  00000000  00000000  00000000            00000000  00000000    ",
+	"     0000000000000000   00000000  00000000  00000000  00000000            00000000  00000000    ",
+	"      00000000000000    00000000  000000000000000000  000000000000000000  000000000000000000    ",
+	"       000000000000     00000000  000000000000000000  000000000000000000  000000000000000000    ",
+	"        0000000000      00000000  00000000000000000   000000000000000000   0000000000000000     ",
+	"                                                                                                ",
+	"                                                                                                ",
+	"11111  11111  111111111111  11111  11111  111111111111  11111  11111  11111111111   111111111111",
+	"11111  11111  111111111111  11111  11111  111111111111  11111  11111  111111111111  111111111111",
+	"11111  11111  11111         111111 11111     111111     11111  11111  11111  11111  11111       ",
+	"11111  11111  1111111111    111111111111     111111     11111  11111  111111111111  1111111111  ",
+	"11111  11111  1111111111    111111111111     111111     11111  11111  11111111111   1111111111  ",
+	" 1111111111   11111         11111 111111     111111     11111  11111  11111  11111  11111       ",
+	"  11111111    111111111111  11111  11111     111111     111111111111  11111  11111  111111111111",
+	"   111111     111111111111  11111  11111     111111      1111111111   11111  11111  111111111111",
+};
 
-	glEnable(GL_TEXTURE_2D);
+// title bar alphas
+static float baralpha[SDL_arraysize(titlemap)] = { 0.0f, 0.0f, 0.0f, 0.2f, 0.4f, 0.6f, 0.6f, 0.4f, 0.2f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.2f, 0.4f, 0.6f, 0.6f, 0.4f, 0.2f, 0.0f};
 
-	static const int titletexwidth = 128;
-	static const int titletexheight = 64;
-	static const float titleborderu = float(borderw) / float(titlew * titletexwidth);
-	static const float titleborderv = float(borderh) / float(titleh * titletexheight);
+#endif
 
-	static GLuint titletexture = 0;
-	if (titletexture == 0)
+
+// border drawing properties
+static const float borderw = 2;
+static const float borderh = 2;
+
+// title drawing properties
+static const float titlew = 6;
+static const float titleh = 6;
+static const float titlex = 320 - titlew * 0.5f * (SDL_arraysize(titlemap[0]) - 1);
+static const float titley = 16;
+static const float titlez = 0;
+
+// border rectangles
+enum BorderCorner
+{
+	BORDER_UL,
+	BORDER_U,
+	BORDER_UR,
+	BORDER_L,
+	BORDER_C,
+	BORDER_R,
+	BORDER_BL,
+	BORDER_B,
+	BORDER_BR
+};
+static const float block[9][2][2] =
+{
+	{ { 0, borderw }, { 0, borderh } },
+	{ { borderw, titlew - borderw }, { 0, borderh } },
+	{ { titlew - borderw, titlew }, { 0, borderh } },
+	{ { 0, borderw }, { borderh, titleh - borderh } },
+	{ { 0, titlew }, { 0, titleh } },	// <-- filled block
+	{ { titlew - borderw, titlew }, { borderh, titleh - borderh } },
+	{ { 0, borderw }, { titleh - borderh, titleh } },
+	{ { borderw, titlew - borderh}, { titleh - borderh, titleh } },
+	{ { titlew - borderw, titlew }, { titleh - borderh, titleh } },
+};
+static const int mask[9] =
+{
+	(1<<BORDER_UL), ((1<<BORDER_UL)|(1<<BORDER_U)|(1<<BORDER_UR)), (1<<BORDER_UR),
+	((1<<BORDER_UL)|(1<<BORDER_L)|(1<<BORDER_BL)), (1 << BORDER_C), ((1<<BORDER_UR)|(1<<BORDER_R)|(1<<BORDER_BR)),
+	(1<<BORDER_BL), ((1<<BORDER_BL)|(1<<BORDER_B)|(1<<BORDER_BR)), (1<<BORDER_BR)
+};
+
+#define USE_TITLE_MIRROR_WATER_EFFECT
+#ifdef USE_TITLE_MIRROR_WATER_EFFECT
+// mirror offset
+static const float mirrorscale = -0.75f;
+static const float titleheight = titleh * (SDL_arraysize(titlemap) + 1);
+static const float mirrortop = titley + titleheight + titleh * 2 + 4;
+static const float mirrorbottom = mirrortop - mirrorscale * titleheight;
+static const float mirroralphadelta = -0.375f / 32;
+static const float mirroralphastart = 0.375f - mirroralphadelta * mirrortop;
+#endif
+
+class ShellTitle : public Overlay
+{
+	unsigned short titlefill[(SDL_arraysize(titlemap) + 2) * (SDL_arraysize(titlemap[0]) + 1)];
+
+public:
+	ShellTitle(unsigned int aId)
+		: Overlay(aId)
 	{
-		glGenTextures(1, &titletexture);
-		{int err=glGetError();if(err)DebugPrint("glGenTextures() error: %i\n",err);}
-	}
+		SetAction(Action(this, &ShellTitle::Render));
 
-	// bind title texture
-	glBindTexture(GL_TEXTURE_2D, titletexture);
-	{int err=glGetError();if(err)DebugPrint("glBindTexture() error: %i\n",err);}
-	glTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-	// generate texture data
-	unsigned char texturedata[titletexheight][titletexwidth][3];
-	for (int row = -1; row < (int)SDL_arraysize(titlemap) + 1; ++row)
-	{
-		for (int col = -1; col < (int)SDL_arraysize(titlemap[0]); ++col)
+		// generate fill data
+		unsigned short *titlefillptr = titlefill;
+		for (int row = -1; row < (int)SDL_arraysize(titlemap) + 1; ++row)
 		{
-			int phase = -1;
-			int fill = 0;
-
-			int c0 = std::max<int>(col - 1, 0);
-			int c1 = std::min<int>(col + 1, SDL_arraysize(titlemap[0]) - 2);
-			int r0 = std::max<int>(row - 1, 0);
-			int r1 = std::min<int>(row + 1, SDL_arraysize(titlemap) - 1);
-
-			for (int r = r0; r <= r1; ++r)
+			for (int col = -1; col < (int)SDL_arraysize(titlemap[0]); ++col)
 			{
-				for (int c = c0; c <= c1; ++c)
+				int phase = 0;
+				int fill = 0;
+
+				int c0 = std::max<int>(col - 1, 0);
+				int c1 = std::min<int>(col + 1, SDL_arraysize(titlemap[0]) - 2);
+				int r0 = std::max<int>(row - 1, 0);
+				int r1 = std::min<int>(row + 1, SDL_arraysize(titlemap) - 1);
+
+				for (int r = r0; r <= r1; ++r)
 				{
-					if (titlemap[r][c] >= '0')
+					for (int c = c0; c <= c1; ++c)
 					{
-						phase = titlemap[r][c] - '0';
-						fill |= mask[(r - row + 1) * 3 + (c - col + 1)];
+						if (titlemap[r][c] >= '0')
+						{
+							phase = titlemap[r][c] - '0';
+							fill |= mask[(r - row + 1) * 3 + (c - col + 1)];
+						}
 					}
 				}
-			}
 
-			if (fill & (1<<4))
-				fill = (1<<4);
+				if (fill & (1<<4))
+					fill = (1<<4);
 
-			if (phase >= 0)
-			{
-				// get block color
-				float R, G, B;
-				float h = sim_turn / 1024.0f + col / 512.0f + 0.03125f * sinf(sim_turn / 64.0f + row / 4.0f + 4.0f * sinf(sim_turn / 64.0f + col / 8.0f + 0.5f * sinf(sim_turn / 64.0f + row / 4.0f)));
-				bool border = (fill & ~(1<<4)) != 0;
-				HSV2RGB(h + phase * 0.5f + border * 0.5f, 1.0f, 1.0f - 0.25f * border, R, G, B);
-
-				texturedata[row+1][col+1][0] = (unsigned char)(int)(R * 255);
-				texturedata[row+1][col+1][1] = (unsigned char)(int)(G * 255);
-				texturedata[row+1][col+1][2] = (unsigned char)(int)(B * 255);
-			}
-			else
-			{
-				texturedata[row+1][col+1][0] = 0;
-				texturedata[row+1][col+1][1] = 0;
-				texturedata[row+1][col+1][2] = 0;
+				*titlefillptr++ = unsigned short(fill | (phase << 9));
 			}
 		}
 	}
 
-	// upload texture
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, titletexwidth, titletexheight, 0, GL_RGB, GL_UNSIGNED_BYTE, texturedata);
-	{int err=glGetError();if(err)DebugPrint("glTexImage2D() error: %i\n",err);}
-
-	// if no title slabs generated...
-	static unsigned char titleslabmap[SDL_arraysize(titlemap)][SDL_arraysize(titlemap[0])-1];
-	static int titleslab[255][4];
-	static int titleslabcount = 0;
-	if (titleslabcount == 0)
+#ifdef USE_TITLE_MIRROR_WATER_EFFECT
+	// mirror y-axis wave function
+	float MirrorWaveY(float y)
 	{
-		// initialize slab map
-		memset(&titleslabmap[0][0], 0xFF, sizeof(titleslabmap));
+		return mirrorbottom + mirrorscale * y + 1.0f * sinf(sim_turn / 64.0f + y / 8.0f) + 3.0f * sinf(sim_turn / 128.0f + y / 32.0f);
+	}
 
-		// generate title slabs
+	// mirror x-axis wave function
+	float MirrorWaveX(float y)
+	{
+		return 1.0f * sinf(sim_turn / 32.0f + y / 4.0f);
+	}
+#endif
+
+	// block color
+	float BlockHue(int col, int row)
+	{
+		return sim_turn / 1024.0f + row / 128.0f + 0.03125f * sinf(sim_turn / 64.0f + row / 4.0f + 4.0f * sinf(sim_turn / 64.0f + col / 8.0f + 0.5f * sinf(sim_turn / 64.0f + row / 4.0f)));
+	}
+
+	// draw title
+	void Render(unsigned int aId, float aTime, float aPosX, float aPosY, float aAngle)
+	{
+//#define USE_TITLE_VERTEX_ARRAY
+#ifdef USE_TITLE_VERTEX_ARRAY
+		static Vector2 vertexarray[32768];
+		static unsigned int colorarray[32768];
+		Vector2 *vertexptr = vertexarray;
+		unsigned int *colorptr = colorarray;
+#else
+		glBegin(GL_QUADS);
+#endif
+
+		// draw title bar
 		for (int row = 0; row < SDL_arraysize(titlemap); ++row)
 		{
-			for (int col = 0; col < SDL_arraysize(titlemap[row])-1; ++col)
+			float y0 = titley + row * titleh, y1 = y0 + titleh;
+
+#ifdef USE_TITLE_VERTEX_ARRAY
+			unsigned int color = (xs_RoundToInt(255*baralpha[row]) << 24) | 0x00505050;
+			*colorptr++ = color;
+			*colorptr++ = color;
+			*colorptr++ = color;
+			*colorptr++ = color;
+			*vertexptr++ = Vector2(0, y0);
+			*vertexptr++ = Vector2(640, y0);
+			*vertexptr++ = Vector2(640, y1);
+			*vertexptr++ = Vector2(0, y1);
+#else
+			glColor4f(0.3f, 0.3f, 0.3f, baralpha[row]);
+			glVertex2f(0, y0);
+			glVertex2f(640, y0);
+			glVertex2f(640, y1);
+			glVertex2f(0, y1);
+#endif
+		}
+
+		// draw title body
+		unsigned short *titlefillptr = titlefill;
+
+#if 1
+#ifdef USE_TITLE_MIRROR_WATER_EFFECT
+		// starting mirror properties
+		float mirror_y0 = MirrorWaveY(titley - titleh);
+		float mirror_d0 = MirrorWaveX(mirror_y0);
+		float mirror_a0 = mirroralphastart + mirroralphadelta * mirror_y0;
+#endif
+
+		for (int row = -1; row < (int)SDL_arraysize(titlemap) + 1; ++row)
+		{
+			float y = titley + row * titleh;
+
+#ifdef USE_TITLE_MIRROR_WATER_EFFECT
+			// row mirror properties
+			float mirror_y1 = MirrorWaveY(y + titleh);
+			float mirror_yd = (mirror_y1 - mirror_y0) / titleh;
+			float mirror_d1 = MirrorWaveX(mirror_y1);
+			float mirror_dd = (mirror_d1 - mirror_d0) / titleh;
+			float mirror_a1 = mirroralphastart + mirroralphadelta * mirror_y1;
+			float mirror_ad = (mirror_a1 - mirror_a0) / titleh;
+#endif
+
+			for (int col = -1; col < (int)SDL_arraysize(titlemap[0]); ++col)
 			{
-				// skip empty spaces
-				if (titlemap[row][col] == ' ')
-					continue;
+				float x = titlex + col * titlew;
 
-				// skip assigned spaces
-				if (titleslabmap[row][col] != 0xFF)
-					continue;
-
-				// allocate a new index
-				int index = titleslabcount++;
-
-				// find horizontal extent
-				int c0 = col;
-				int c1 = SDL_arraysize(titlemap[row]) - 1;
-				for (int c = c0; c < c1; ++c)
+				if (*titlefillptr != 0)
 				{
-					if ((titlemap[row][c] == ' ') || ((titleslabmap[row][c] != 0xFF) && (titleslabmap[row][c] != index)))
+					int phase = *titlefillptr >> 9;
+					int fill = *titlefillptr & 0x1FF;
+
+					// get block color
+					float R, G, B;
+					float h = BlockHue(col, row);
+					bool border = (fill & ~(1<<4)) != 0;
+					HSV2RGB(h + phase * 0.5f + border * 0.5f, 1.0f, 1.0f - 0.25f * border, R, G, B);
+
+					// for each block...
+					for (int i = 0; i < 9; ++i)
 					{
-						c1 = c;
-						break;
+						// if the block is filled
+						if (fill & (1 << i))
+						{
+							// block borders
+							float x0 = x + block[i][0][0];
+							float x1 = x + block[i][0][1];
+							float y0 = y + block[i][1][0];
+							float y1 = y + block[i][1][1];
+
+							// upright
+#ifdef USE_TITLE_VERTEX_ARRAY
+							unsigned int color = 0xFF000000 | (xs_RoundToInt(B * 255) << 16) | (xs_RoundToInt(G * 255) << 8) | (xs_RoundToInt(R * 255) );
+							*colorptr++ = color;
+							*colorptr++ = color;
+							*colorptr++ = color;
+							*colorptr++ = color;
+							*vertexptr++ = Vector2(x0, y0);
+							*vertexptr++ = Vector2(x1, y0);
+							*vertexptr++ = Vector2(x1, y1);
+							*vertexptr++ = Vector2(x0, y1);
+#else
+							glColor4f(R, G, B, 1.0f);
+							glVertex2f(x0, y0);
+							glVertex2f(x1, y0);
+							glVertex2f(x1, y1);
+							glVertex2f(x0, y1);
+#endif
+
+#ifdef USE_TITLE_MIRROR_WATER_EFFECT
+							if (mirror_a0 > 0.0f || mirror_a1 > 0.0f)
+							{
+								// mirrored
+								float m0 = y0 - y;
+								float m1 = y1 - y;
+								float a0 = std::max(mirror_a0 + mirror_ad * m0, 0.0f);
+								float a1 = std::max(mirror_a0 + mirror_ad * m1, 0.0f);
+								float dx0 = mirror_d0 + mirror_dd * m0;
+								float dx1 = mirror_d0 + mirror_dd * m1;
+								float yy0 = mirror_y0 + mirror_yd * m0;
+								float yy1 = mirror_y0 + mirror_yd * m1;
+#ifdef USE_TITLE_VERTEX_ARRAY
+								color &= 0x00FFFFFF;
+								color |= xs_RoundToInt(a1 * a1 * 255) << 24;
+								*colorptr++ = color;
+								*colorptr++ = color;
+								*vertexptr++ = Vector2(x0 + dx1, yy1);
+								*vertexptr++ = Vector2(x1 + dx1, yy1);
+								color &= 0x00FFFFFF;
+								color |= xs_RoundToInt(a0 * a0 * 255) << 24;
+								*colorptr++ = color;
+								*colorptr++ = color;
+								*vertexptr++ = Vector2(x1 + dx0, yy0);
+								*vertexptr++ = Vector2(x0 + dx0, yy0);
+#else
+								glColor4f(R, G, B, a1 * a1);
+								glVertex2f(x0 + dx1, yy1);
+								glVertex2f(x1 + dx1, yy1);
+								glColor4f(R, G, B, a0 * a0);
+								glVertex2f(x1 + dx0, yy0);
+								glVertex2f(x0 + dx0, yy0);
+#endif
+							}
+#endif
+						}
 					}
 				}
 
-				// find vertical extent
-				int r0 = row;
-				int r1 = SDL_arraysize(titlemap);
-				for (int r = r0; r < r1; ++r)
+				++titlefillptr;
+			}
+
+#ifdef USE_TITLE_MIRROR_WATER_EFFECT
+			// mirror shift row
+			mirror_y0 = mirror_y1;
+			mirror_d0 = mirror_d1;
+			mirror_a0 = mirror_a1;
+#endif
+		}
+
+#ifdef USE_TITLE_VERTEX_ARRAY
+		glEnableClientState(GL_VERTEX_ARRAY);
+		glEnableClientState(GL_COLOR_ARRAY);
+		glVertexPointer(2, GL_FLOAT, 0, vertexarray);
+		glColorPointer(4, GL_UNSIGNED_BYTE, 0, colorarray);
+		glDrawArrays(GL_QUADS, 0, vertexptr - vertexarray);
+		glDisableClientState(GL_VERTEX_ARRAY);
+		glDisableClientState(GL_COLOR_ARRAY);
+#else
+		glEnd();
+#endif
+
+#else
+		// texture-based variant
+
+		glEnd();
+
+		glEnable(GL_TEXTURE_2D);
+
+		static const int titletexwidth = 128;
+		static const int titletexheight = 64;
+		static const float titleborderu = float(borderw) / float(titlew * titletexwidth);
+		static const float titleborderv = float(borderh) / float(titleh * titletexheight);
+
+		static GLuint titletexture = 0;
+		if (titletexture == 0)
+		{
+			glGenTextures(1, &titletexture);
+			{int err=glGetError();if(err)DebugPrint("glGenTextures() error: %i\n",err);}
+		}
+
+		// bind title texture
+		glBindTexture(GL_TEXTURE_2D, titletexture);
+		{int err=glGetError();if(err)DebugPrint("glBindTexture() error: %i\n",err);}
+		glTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+		// generate texture data
+		unsigned char texturedata[titletexheight][titletexwidth][3];
+		for (int row = -1; row < (int)SDL_arraysize(titlemap) + 1; ++row)
+		{
+			for (int col = -1; col < (int)SDL_arraysize(titlemap[0]); ++col)
+			{
+				if (*titlefillptr != 0)
 				{
+					int phase = *titlefillptr >> 9;
+					int fill = *titlefillptr & 0x1FF;
+
+					// get block color
+					float R, G, B;
+					float h = BlockHue(col, row);
+					bool border = (fill & ~(1<<4)) != 0;
+					HSV2RGB(h + phase * 0.5f + border * 0.5f, 1.0f, 1.0f - 0.25f * border, R, G, B);
+
+					texturedata[row+1][col+1][0] = (unsigned char)(int)(R * 255);
+					texturedata[row+1][col+1][1] = (unsigned char)(int)(G * 255);
+					texturedata[row+1][col+1][2] = (unsigned char)(int)(B * 255);
+				}
+				else
+				{
+					texturedata[row+1][col+1][0] = 0;
+					texturedata[row+1][col+1][1] = 0;
+					texturedata[row+1][col+1][2] = 0;
+				}
+
+				++titlefillptr;
+			}
+		}
+
+		// upload texture
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, titletexwidth, titletexheight, 0, GL_RGB, GL_UNSIGNED_BYTE, texturedata);
+		{int err=glGetError();if(err)DebugPrint("glTexImage2D() error: %i\n",err);}
+
+		// if no title slabs generated...
+		static unsigned char titleslabmap[SDL_arraysize(titlemap)][SDL_arraysize(titlemap[0])-1];
+		static int titleslab[255][4];
+		static int titleslabcount = 0;
+		if (titleslabcount == 0)
+		{
+			// initialize slab map
+			memset(&titleslabmap[0][0], 0xFF, sizeof(titleslabmap));
+
+			// generate title slabs
+			for (int row = 0; row < SDL_arraysize(titlemap); ++row)
+			{
+				for (int col = 0; col < SDL_arraysize(titlemap[row])-1; ++col)
+				{
+					// skip empty spaces
+					if (titlemap[row][col] == ' ')
+						continue;
+
+					// skip assigned spaces
+					if (titleslabmap[row][col] != 0xFF)
+						continue;
+
+					// allocate a new index
+					int index = titleslabcount++;
+
+					// find horizontal extent
+					int c0 = col;
+					int c1 = SDL_arraysize(titlemap[row]) - 1;
 					for (int c = c0; c < c1; ++c)
 					{
-						if ((titlemap[r][c] == ' ') || ((titleslabmap[r][c] != 0xFF) && (titleslabmap[r][c] != index)))
+						if ((titlemap[row][c] == ' ') || ((titleslabmap[row][c] != 0xFF) && (titleslabmap[row][c] != index)))
 						{
-							r1 = r;
+							c1 = c;
 							break;
 						}
 					}
-				}
-				
-				// fill slab
-				for (int r = r0; r < r1; ++r)
-				{
-					for (int c = c0; c < c1; ++c)
+
+					// find vertical extent
+					int r0 = row;
+					int r1 = SDL_arraysize(titlemap);
+					for (int r = r0; r < r1; ++r)
 					{
-						titleslabmap[r][c] = (unsigned char)index;
+						for (int c = c0; c < c1; ++c)
+						{
+							if ((titlemap[r][c] == ' ') || ((titleslabmap[r][c] != 0xFF) && (titleslabmap[r][c] != index)))
+							{
+								r1 = r;
+								break;
+							}
+						}
 					}
+
+					// fill slab
+					for (int r = r0; r < r1; ++r)
+					{
+						for (int c = c0; c < c1; ++c)
+						{
+							titleslabmap[r][c] = (unsigned char)index;
+						}
+					}
+
+					assert(c0 < c1 && r0 < r1);
+
+					// set slab extents
+					titleslab[index][0] = c0;
+					titleslab[index][1] = c1;
+					titleslab[index][2] = r0;
+					titleslab[index][3] = r1;
+
+					// skip visited columns
+					col = c1;
 				}
-
-				assert(c0 < c1 && r0 < r1);
-
-				// set slab extents
-				titleslab[index][0] = c0;
-				titleslab[index][1] = c1;
-				titleslab[index][2] = r0;
-				titleslab[index][3] = r1;
-
-				// skip visited columns
-				col = c1;
 			}
 		}
-	}
 
-	// draw title body
-	glBegin(GL_QUADS);
-	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+		// draw title body
+		glBegin(GL_QUADS);
+		glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 
-	// for each title slab...
-	for (int i = 0; i < titleslabcount; ++i)
-	{
-		// get slab extents
-		int c0 = titleslab[i][0];
-		int c1 = titleslab[i][1];
-		int r0 = titleslab[i][2];
-		int r1 = titleslab[i][3];
+		// for each title slab...
+		for (int i = 0; i < titleslabcount; ++i)
+		{
+			// get slab extents
+			int c0 = titleslab[i][0];
+			int c1 = titleslab[i][1];
+			int r0 = titleslab[i][2];
+			int r1 = titleslab[i][3];
 
-		// generate texture extents
-		float u0 = float(c0+1) / titletexwidth - titleborderu, u1 = float(c1+1) / titletexwidth + titleborderu;
-		float v0 = float(r0+1) / titletexheight - titleborderv, v1 = float(r1+1) / titletexheight + titleborderv;
+			// generate texture extents
+			float u0 = float(c0+1) / titletexwidth - titleborderu, u1 = float(c1+1) / titletexwidth + titleborderu;
+			float v0 = float(r0+1) / titletexheight - titleborderv, v1 = float(r1+1) / titletexheight + titleborderv;
 
-		// generate position extents
-		float x0 = titlex + c0 * titlew - borderw, x1 = titlex + c1 * titlew + borderw;
-		float y0 = titley + r0 * titleh - borderh, y1 = titley + r1 * titleh + borderh;
+			// generate position extents
+			float x0 = titlex + c0 * titlew - borderw, x1 = titlex + c1 * titlew + borderw;
+			float y0 = titley + r0 * titleh - borderh, y1 = titley + r1 * titleh + borderh;
 
-		// submit vertices
-		glTexCoord2f(u0, v0);	glVertex2f(x0, y0);
-		glTexCoord2f(u1, v0);	glVertex2f(x1, y0);
-		glTexCoord2f(u1, v1);	glVertex2f(x1, y1);
-		glTexCoord2f(u0, v1);	glVertex2f(x0, y1);
-	}
+			// submit vertices
+			glTexCoord2f(u0, v0);	glVertex2f(x0, y0);
+			glTexCoord2f(u1, v0);	glVertex2f(x1, y0);
+			glTexCoord2f(u1, v1);	glVertex2f(x1, y1);
+			glTexCoord2f(u0, v1);	glVertex2f(x0, y1);
+		}
 
-	glEnd();
+		glEnd();
 
-	glDisable(GL_TEXTURE_2D);
+		glDisable(GL_TEXTURE_2D);
 
 #endif
-}
+	}
+};
 
 enum ButtonState
 {
@@ -1867,32 +2054,32 @@ enum ButtonState
 
 static const Color4 optionbackcolor[NUM_BUTTON_STATES] =
 {
-	{ 0.2f, 0.2f, 0.2f, 0.5f },
-	{ 0.1f, 0.3f, 1.0f, 0.5f },
-	{ 0.4f, 0.4f, 0.4f, 0.5f },
-	{ 0.1f, 0.7f, 1.0f, 0.5f },
+	Color4( 0.2f, 0.2f, 0.2f, 0.5f ),
+	Color4( 0.1f, 0.3f, 1.0f, 0.5f ),
+	Color4( 0.4f, 0.4f, 0.4f, 0.5f ),
+	Color4( 0.1f, 0.7f, 1.0f, 0.5f ),
 };
 static const Color4 optionbordercolor[NUM_BUTTON_STATES] =
 {
-	{ 0.0f, 0.0f, 0.0f, 1.0f },
-	{ 0.0f, 0.0f, 0.0f, 1.0f },
-	{ 0.0f, 0.0f, 0.0f, 1.0f },
-	{ 0.0f, 0.0f, 0.0f, 1.0f },
+	Color4( 0.0f, 0.0f, 0.0f, 1.0f ),
+	Color4( 0.0f, 0.0f, 0.0f, 1.0f ),
+	Color4( 0.0f, 0.0f, 0.0f, 1.0f ),
+	Color4( 0.0f, 0.0f, 0.0f, 1.0f ),
 };
 static const Color4_2 optionlabelcolor[NUM_BUTTON_STATES] =
 {
-	{ { 0.1f, 0.6f, 1.0f, 1.0f }, { 0.1f, 0.6f, 1.0f, 1.0f } },
-	{ { 1.0f, 0.9f, 0.1f, 1.0f }, { 1.0f, 0.9f, 0.1f, 1.0f } },
-	{ { 0.7f, 0.7f, 0.7f, 1.0f }, { 1.0f, 1.0f, 1.0f, 1.0f } },
-	{ { 1.0f, 0.9f, 0.1f, 1.0f }, { 1.0f, 1.0f, 1.0f, 1.0f } },
+	{ Color4( 0.1f, 0.6f, 1.0f, 1.0f ), Color4( 0.1f, 0.6f, 1.0f, 1.0f ) },
+	{ Color4( 1.0f, 0.9f, 0.1f, 1.0f ), Color4( 1.0f, 0.9f, 0.1f, 1.0f ) },
+	{ Color4( 0.7f, 0.7f, 0.7f, 1.0f ), Color4( 1.0f, 1.0f, 1.0f, 1.0f ) },
+	{ Color4( 1.0f, 0.9f, 0.1f, 1.0f ), Color4( 1.0f, 1.0f, 1.0f, 1.0f ) },
 };
 static const Color4 inertbordercolor[] =
 {
-	{ 0.1f, 0.1f, 0.1f, 1.0f },
+	Color4( 0.1f, 0.1f, 0.1f, 1.0f ),
 };
 static const Color4_2 inertlabelcolor[] =
 {
-	{ { 0.7f, 0.7f, 0.7f, 1.0f }, { 0.7f, 0.7f, 0.7f, 1.0f } }
+	{ Color4( 0.7f, 0.7f, 0.7f, 1.0f ), Color4( 0.7f, 0.7f, 0.7f, 1.0f ) }
 };
 
 // shell menu option
@@ -3051,9 +3238,8 @@ void EnterShellState()
 #endif
 
 	// create title overlay
-	Overlay *title = new Overlay(0x9865b509 /* "title" */);
+	ShellTitle *title = new ShellTitle(0x9865b509 /* "title" */);
 	Database::overlay.Put(0x9865b509 /* "title" */, title);
-	title->SetAction(Overlay::Action(RenderShellTitle));
 	title->Show();
 
 	// create options overlay
@@ -3222,9 +3408,9 @@ static const Rect<float> healthrect =
 };
 static const Color4 healthcolor[3][2] =
 {
-	{ { 1.0f, 0.0f, 0.0f, 1.0f },  { 1.0f, 1.0f, 1.0f, 1.0f } },
-	{ { 1.0f, 1.0f, 0.0f, 0.75f }, { 1.0f, 1.0f, 0.3f, 0.75f } },
-	{ { 0.0f, 1.0f, 0.0f, 0.5f },  { 0.2f, 1.0f, 0.2f, 0.5f } },
+	{ Color4( 1.0f, 0.0f, 0.0f, 1.0f ),  Color4( 1.0f, 1.0f, 1.0f, 1.0f ) },
+	{ Color4( 1.0f, 1.0f, 0.0f, 0.75f ), Color4( 1.0f, 1.0f, 0.3f, 0.75f ) },
+	{ Color4( 0.0f, 1.0f, 0.0f, 0.5f ),  Color4( 0.2f, 1.0f, 0.2f, 0.5f ) },
 };
 
 
@@ -4446,13 +4632,11 @@ void RunState()
 
 		// push projection transform
 		glMatrixMode(GL_PROJECTION);
-		glPushMatrix();
 		glLoadIdentity();
 		glOrtho(0, 640, 480, 0, -1, 1);
 
 		// use 640x480 screen coordinates
 		glMatrixMode(GL_MODELVIEW);
-		glPushMatrix();
 		glLoadIdentity();
 
 		// render all overlays
@@ -4539,13 +4723,13 @@ void RunState()
 		if (PROFILER_OUTPUTPRINT)
 		{
 			DebugPrint("C=%d S=%d P=%d U=%d R=%d O=%d D=%d\n",
-				1000000 * control_time[profile_index] / perf_freq.QuadPart,
-				1000000 * simulate_time[profile_index] / perf_freq.QuadPart,
-				1000000 * collide_time[profile_index] / perf_freq.QuadPart,
-				1000000 * update_time[profile_index] / perf_freq.QuadPart,
-				1000000 * render_time[profile_index] / perf_freq.QuadPart,
-				1000000 * overlay_time[profile_index] / perf_freq.QuadPart,
-				1000000 * display_time[profile_index] / perf_freq.QuadPart);
+				int(1000000 * control_time[profile_index] / perf_freq.QuadPart),
+				int(1000000 * simulate_time[profile_index] / perf_freq.QuadPart),
+				int(1000000 * collide_time[profile_index] / perf_freq.QuadPart),
+				int(1000000 * update_time[profile_index] / perf_freq.QuadPart),
+				int(1000000 * render_time[profile_index] / perf_freq.QuadPart),
+				int(1000000 * overlay_time[profile_index] / perf_freq.QuadPart),
+				int(1000000 * display_time[profile_index] / perf_freq.QuadPart));
 		}
 #endif
 

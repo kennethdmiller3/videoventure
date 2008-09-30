@@ -38,8 +38,8 @@ function A*(start,goal)
 static GLuint grid_handle = 0;
 Color4 cell_color[] =
 {
-	{ 0.0f, 0.5f, 1.0f, 0.5f },
-	{ 1.0f, 0.0f, 0.0f, 1.0f },
+	Color4( 0.0f, 0.5f, 1.0f, 0.5f ),
+	Color4( 1.0f, 0.0f, 0.0f, 1.0f ),
 };
 
 static void AddGridSlab(const b2AABB &aabb, Color4 &color)
