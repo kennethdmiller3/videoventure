@@ -63,12 +63,24 @@
 			</triangle_strip>
 		</drawlist>
 	</renderable>
-	<aimer range="256" focus="3" attack="128" drift="0.5" wanderturn="0.25" wanderturnrate="0.25" leading="0" angle="30" evade="1" close="64" closedistscale="0.0625" closespeedscale="0.015625" category="4" bit2="0" bit3="0" bit4="0" />
+	<!--aimer range="256" focus="3" attack="128" drift="0.5" wanderturn="0.25" wanderturnrate="0.25" leading="0" angle="30" evade="1" close="64" closedistscale="0.0625" closespeedscale="0.015625" category="4" bit2="0" bit3="0" bit4="0" /-->
+	<aimer>
+		<drift strength="0.5" />
+		<wander turn="0.25" turnrate="0.25" />
+		<target range="256" focus="3" category="4" bit2="0" bit3="0" bit4="0" />
+		<pursue strength="1" leading="0" />
+		<aim strength="1" leading="0" />
+		<fire channel="1" range="128" angle="30" />
+		<evade strength="1" />
+		<close range="64" scaledist="0.0625" scalespeed="0.015625" />
+	</aimer>
 	<ship maxveloc="30" maxaccel="120" minaccel="10" maxomega="0.5" />
 	<damagable health="6" spawnondeath="enemyexplosion" />
-	<link name="gun" secondary="enemylasershipweapon">
+	<weapon>
 		<offset x="0" y="5" angle="0" />
-	</link>
+		<flash name="enemylasershiptracer" />
+		<shot delay="3.0" />
+	</weapon>
 	<team name="red" />
 	<points value="300" />
 	<capturable resistance="6" spawnoncapture="friendlasership" />

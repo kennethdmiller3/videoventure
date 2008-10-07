@@ -35,7 +35,16 @@
 			<calllist name="bowtie" />
 		</pushmatrix>
 	</renderable>
-	<aimer period="0.1" range="128" attack="128" leading="180" drift="0.25" wanderturn="0.25" wanderturnrate="0.25" pursue="0" evade="1" close="64" category="1" bit1="0" bit2="0" />
+	<!--aimer period="0.1" range="128" attack="128" leading="180" drift="0.25" wanderturn="0.25" wanderturnrate="0.25" pursue="0" evade="1" close="64" category="1" bit1="0" bit2="0" /-->
+	<aimer>
+		<drift strength="0.25" />
+		<wander turn="0.25" turnrate="0.25" />
+		<target period="0.1" range="128" category="1" bit1="0" bit2="0" />
+		<aim strength="1" leading="180" />
+		<fire channel="1" range="128" />
+		<evade strength="1" />
+		<close range="64" />
+	</aimer>
 	<ship maxveloc="120" maxaccel="360" minaccel="10" maxomega="2" />
 	<damagable health="3" spawnondeath="friendexplosion" />
 	<weapon>

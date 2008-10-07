@@ -57,7 +57,11 @@
 	<expire time="6" switchonexpire="enemybulletexplosion" />
 	<bullet damage="1" spawnondeath="enemyfireballexplosion" />
 	<damagable health="1" spawnondeath="enemyfireballexplosion" />
-	<aimer range="512" leading="0" category="3" bit3="0" bit4="0" />
+	<!--aimer range="512" leading="0" category="3" bit3="0" bit4="0" /-->
+	<aimer>
+		<target range="512" leading="0" category="3" bit3="0" bit4="0" />
+		<aim strength="1" leading="0" />
+	</aimer>
 	<ship forwardveloc="120" neutralveloc="120" reverseveloc="120" strafeveloc="0" maxaccel="360" minaccel="360" maxomega="6" />
 	<team name="red" />
 	<soundcue>

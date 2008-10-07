@@ -9,6 +9,7 @@
 				<category value="1" />
 				<mask bit2="0" />
 			</circle>
+			<preventrotation value="1" />
 		</body>
 	</collidable>
 	<renderable radius="4" period="0.1">
@@ -45,7 +46,11 @@
 	<expire time="30" switchonexpire="friendbulletexplosion" />
 	<bullet damage="1" ricochet="1" spawnondeath="friendfireballexplosion" />
 	<damagable health="1" spawnondeath="friendfireballexplosion" />
-	<aimer range="512" attack="0" leading="0" category="1" bit1="0" bit2="0" />
+	<!--aimer range="512" attack="0" leading="0" category="1" bit1="0" bit2="0" /-->
+	<aimer>
+		<target range="512" category="1" bit1="0" bit2="0" bit4="0" />
+		<pursue strength="1" leading="0" />
+	</aimer>
 	<ship maxveloc="90" maxaccel="180" minaccel="10" maxomega="0" />
 	<team name="blue" />
 	<points value="100" />

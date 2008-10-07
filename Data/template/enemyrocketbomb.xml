@@ -62,8 +62,12 @@
 			</quads>
 		</pushmatrix>
 	</renderable>
-	<aimer range="512" attack="0" drift="1" leading="0" category="3" bit2="0" bit3="0" bit4="0" />
-	<ship forwardveloc="60" neutralveloc="60" reverseveloc="60" strafeveloc="0" maxaccel="120" minaccel="10" maxomega="2.0" />
+	<!--aimer range="512" attack="0" drift="1" leading="0" category="3" bit2="0" bit3="0" bit4="0" /-->
+	<aimer>
+		<target range="512" category="3" bit2="0" bit3="0" bit4="0" />
+		<aim strength="1" leading="0" />
+	</aimer>
+	<ship forwardveloc="60" neutralveloc="60" reverseveloc="60" strafeveloc="0" maxaccel="120" minaccel="120" maxomega="2.0" />
 	<bullet damage="0" spawnondeath="enemyrocketbombexplosion" />
 	<damagable health="1" spawnondeath="enemyrocketbombexplosion" />
 	<spawner>

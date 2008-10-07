@@ -4021,6 +4021,89 @@ void ExitPlayState()
 	runtime = false;
 }
 
+#ifdef GET_PERFORMANCE_DETAILS
+class PerfTimer
+{
+public:
+	static const int NUM_SAMPLES = 640;
+	static LONGLONG mFrequency;
+	static int mIndex;
+	static int mCount;
+
+public:
+	static void Init()
+	{
+		// get frequency
+		LARGE_INTEGER freq;
+		QueryPerformanceFrequency(&freq);
+		mFrequency = freq.QuadPart;
+
+		// reset counters
+		mIndex = NUM_SAMPLES - 1;
+		mCount = 0;
+	}
+
+	static void Next()
+	{
+		if (++mIndex >= NUM_SAMPLES)
+			mIndex = 0;
+		if (++mCount > NUM_SAMPLES)
+			mCount = NUM_SAMPLES;
+	}
+
+public:
+	LONGLONG mHistory[NUM_SAMPLES];
+	LONGLONG mStamp;
+
+public:
+	PerfTimer()
+	{
+		// clear history
+		memset(mHistory, 0, sizeof(mHistory));
+	}
+
+	void Clear()
+	{
+		mHistory[mIndex] = 0;
+	}
+
+	void Start()
+	{
+		LARGE_INTEGER count;
+		QueryPerformanceCounter(&count);
+		mStamp = count.QuadPart;
+	}
+	void Stop()
+	{
+		LARGE_INTEGER count;
+		QueryPerformanceCounter(&count);
+		mHistory[mIndex] += count.QuadPart - mStamp;
+	}
+
+	void Stamp()
+	{
+		LARGE_INTEGER count;
+		QueryPerformanceCounter(&count);
+		mHistory[mIndex] = count.QuadPart - mStamp;
+		mStamp = count.QuadPart;
+	}
+
+	LONGLONG Ticks()
+	{
+		return mHistory[mIndex];
+	}
+
+	int Microseconds()
+	{
+		return int(1000000 * mHistory[mIndex] / mFrequency);
+	}
+};
+
+LONGLONG PerfTimer::mFrequency;
+int PerfTimer::mIndex;
+int PerfTimer::mCount;
+#endif
+
 // common run state
 void RunState()
 {
@@ -4060,23 +4143,18 @@ void RunState()
 	}
 
 #ifdef GET_PERFORMANCE_DETAILS
-	LARGE_INTEGER perf_freq;
-	QueryPerformanceFrequency(&perf_freq);
+	PerfTimer::Init();
 
-	static const int NUM_SAMPLES = 640;
-	LONGLONG control_time[NUM_SAMPLES] = { 0 };
-	LONGLONG simulate_time[NUM_SAMPLES] = { 0 };
-	LONGLONG collide_time[NUM_SAMPLES] = { 0 };
-	LONGLONG update_time[NUM_SAMPLES] = { 0 };
-	LONGLONG render_time[NUM_SAMPLES] = { 0 };
-	LONGLONG overlay_time[NUM_SAMPLES] = { 0 };
-	LONGLONG display_time[NUM_SAMPLES] = { 0 };
-	LONGLONG total_time[NUM_SAMPLES] = { 0 };
-	int profile_count = 0;
-	int profile_index = -1;
+	PerfTimer control_timer;
+	PerfTimer simulate_timer;
+	PerfTimer collide_timer;
+	PerfTimer update_timer;
+	PerfTimer render_timer;
+	PerfTimer overlay_timer;
+	PerfTimer display_timer;
+	PerfTimer total_timer;
 
-	LARGE_INTEGER perf_lastframe;
-	QueryPerformanceCounter(&perf_lastframe);
+	total_timer.Stamp();
 #endif
 
 #ifdef COLLECT_DEBUG_DRAW
@@ -4089,19 +4167,16 @@ void RunState()
 	{
 
 #ifdef GET_PERFORMANCE_DETAILS
-//		if (!paused)
-		if (++profile_index >= NUM_SAMPLES)
-			profile_index = 0;
-		if (++profile_count > NUM_SAMPLES)
-			profile_count = NUM_SAMPLES;
-		control_time[profile_index] = 0;
-		simulate_time[profile_index] = 0;
-		collide_time[profile_index] = 0;
-		update_time[profile_index] = 0;
-		render_time[profile_index] = 0;
-		overlay_time[profile_index] = 0;
-		display_time[profile_index] = 0;
-		total_time[profile_index] = 0;
+		PerfTimer::Next();
+
+		control_timer.Clear();
+		simulate_timer.Clear();
+		collide_timer.Clear();
+		update_timer.Clear();
+		render_timer.Clear();
+		overlay_timer.Clear();
+		display_timer.Clear();
+		total_timer.Clear();
 #endif
 
 		// INPUT PHASE
@@ -4481,17 +4556,16 @@ void RunState()
 				// CONTROL PHASE
 
 #ifdef GET_PERFORMANCE_DETAILS
-				LARGE_INTEGER perf_count0;
-				QueryPerformanceCounter(&perf_count0);
+				control_timer.Start();
 #endif
 
 				// control all entities
 				Controller::ControlAll(sim_step);
 
 #ifdef GET_PERFORMANCE_DETAILS
-				LARGE_INTEGER perf_count1;
-				QueryPerformanceCounter(&perf_count1);
-				control_time[profile_index] += perf_count1.QuadPart - perf_count0.QuadPart;
+				control_timer.Stop();
+
+				simulate_timer.Start();
 #endif
 
 				// SIMULATION PHASE
@@ -4499,9 +4573,9 @@ void RunState()
 				Simulatable::SimulateAll(sim_step);
 
 #ifdef GET_PERFORMANCE_DETAILS
-				LARGE_INTEGER perf_count2;
-				QueryPerformanceCounter(&perf_count2);
-				simulate_time[profile_index] += perf_count2.QuadPart - perf_count1.QuadPart;
+				simulate_timer.Stop();
+
+				collide_timer.Start();
 #endif
 
 				// COLLISION PHASE
@@ -4509,9 +4583,9 @@ void RunState()
 				Collidable::CollideAll(sim_step);
 
 #ifdef GET_PERFORMANCE_DETAILS
-				LARGE_INTEGER perf_count3;
-				QueryPerformanceCounter(&perf_count3);
-				collide_time[profile_index] += perf_count3.QuadPart - perf_count2.QuadPart;
+				collide_timer.Stop();
+
+				update_timer.Start();
 #endif
 
 				// UPDATE PHASE
@@ -4519,9 +4593,7 @@ void RunState()
 				Updatable::UpdateAll(sim_step);
 
 #ifdef GET_PERFORMANCE_DETAILS
-				LARGE_INTEGER perf_count4;
-				QueryPerformanceCounter(&perf_count4);
-				update_time[profile_index] += perf_count4.QuadPart - perf_count3.QuadPart;
+				update_timer.Stop();
 #endif
 
 				// step inputs for next turn
@@ -4548,8 +4620,7 @@ void RunState()
 #endif
 
 #ifdef GET_PERFORMANCE_DETAILS
-			LARGE_INTEGER perf_count0;
-			QueryPerformanceCounter(&perf_count0);
+			render_timer.Start();
 #endif
 
 			// RENDERING PHASE
@@ -4585,15 +4656,12 @@ void RunState()
 			}
 
 #ifdef GET_PERFORMANCE_DETAILS
-			LARGE_INTEGER perf_count1;
-			QueryPerformanceCounter(&perf_count1);
-			render_time[profile_index] += perf_count1.QuadPart - perf_count0.QuadPart;
+			render_timer.Stop();
 #endif
 		}
 
 #ifdef GET_PERFORMANCE_DETAILS
-		LARGE_INTEGER perf_count0;
-		QueryPerformanceCounter(&perf_count0);
+		render_timer.Start();
 #endif
 
 		// if performing motion blur...
@@ -4608,9 +4676,9 @@ void RunState()
 		glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
 
 #ifdef GET_PERFORMANCE_DETAILS
-		LARGE_INTEGER perf_count1;
-		QueryPerformanceCounter(&perf_count1);
-		render_time[profile_index] += perf_count1.QuadPart - perf_count0.QuadPart;
+		render_timer.Stop();
+
+		overlay_timer.Start();
 #endif
 
 #ifdef COLLECT_DEBUG_DRAW
@@ -4643,23 +4711,16 @@ void RunState()
 		Overlay::RenderAll();
 
 #ifdef GET_PERFORMANCE_DETAILS
-		LARGE_INTEGER perf_count2;
-		QueryPerformanceCounter(&perf_count2);
-		overlay_time[profile_index] += perf_count2.QuadPart - perf_count1.QuadPart;
+		overlay_timer.Stop();
 
 		if (!OPENGL_SWAPCONTROL)
 		{
+			display_timer.Start();
+
 			// wait for rendering to finish
 			glFinish();
 
-			LARGE_INTEGER perf_count3;
-			QueryPerformanceCounter(&perf_count3);
-			display_time[profile_index] += perf_count3.QuadPart - perf_count2.QuadPart;
-		}
-		else
-		{
-			// don't count display time
-			display_time[profile_index] = 0;
+			display_timer.Stop();
 		}
 
 #ifdef DRAW_PERFORMANCE_DETAILS
@@ -4675,28 +4736,28 @@ void RunState()
 			};
 			static BandInfo band_info[] =
 			{
-				{ control_time,		1.0f,	0.0f,	0.0f,	0.5f },
-				{ simulate_time,	1.0f,	1.0f,	0.0f,	0.5f },
-				{ collide_time,		0.0f,	1.0f,	0.0f,	0.5f },
-				{ update_time,		0.0f,	0.5f,	1.0f,	0.5f },
-				{ render_time,		1.0f,	0.0f,	1.0f,	0.5f },
-				{ overlay_time,		1.0f,	0.5f,	0.0f,	0.5f },
-				{ display_time,		0.5f,	0.5f,	0.5f,	0.5f },
+				{ control_timer.mHistory,	1.0f,	0.0f,	0.0f,	0.5f },
+				{ simulate_timer.mHistory,	1.0f,	1.0f,	0.0f,	0.5f },
+				{ collide_timer.mHistory,	0.0f,	1.0f,	0.0f,	0.5f },
+				{ update_timer.mHistory,	0.0f,	0.5f,	1.0f,	0.5f },
+				{ render_timer.mHistory,	1.0f,	0.0f,	1.0f,	0.5f },
+				{ overlay_timer.mHistory,	1.0f,	0.5f,	0.0f,	0.5f },
+				{ display_timer.mHistory,	0.5f,	0.5f,	0.5f,	0.5f },
 			};
 
 			// generate y samples
-			float sample_y[SDL_arraysize(band_info)+1][NUM_SAMPLES];
-			int index = profile_index;
-			for (int i = 0; i < NUM_SAMPLES; ++i)
+			float sample_y[SDL_arraysize(band_info)+1][PerfTimer::NUM_SAMPLES];
+			int index = PerfTimer::mIndex;
+			for (int i = 0; i < PerfTimer::NUM_SAMPLES; ++i)
 			{
 				float y = 480.0f;
 				sample_y[0][i] = y;
 				for (int band = 0; band < SDL_arraysize(band_info); ++band)
 				{
-					y -= 60.0f * 480.0f * band_info[band].time[index] / perf_freq.QuadPart;
+					y -= 60.0f * 480.0f * band_info[band].time[index] / PerfTimer::mFrequency;
 					sample_y[band+1][i] = y;
 				}
-				if (++index >= NUM_SAMPLES)
+				if (++index >= PerfTimer::NUM_SAMPLES)
 					index = 0;
 			}
 
@@ -4705,8 +4766,8 @@ void RunState()
 			{
 				glColor4fv(&band_info[band].r);
 				float x = 0;
-				float dx = 640.0f / NUM_SAMPLES;
-				for (int i = 0; i < NUM_SAMPLES; i++)
+				float dx = 640.0f / PerfTimer::NUM_SAMPLES;
+				for (int i = 0; i < PerfTimer::NUM_SAMPLES; i++)
 				{
 					glVertex3f(x, sample_y[band][i], 0);
 					glVertex3f(x+dx, sample_y[band][i], 0);
@@ -4723,21 +4784,18 @@ void RunState()
 		if (PROFILER_OUTPUTPRINT)
 		{
 			DebugPrint("C=%d S=%d P=%d U=%d R=%d O=%d D=%d\n",
-				int(1000000 * control_time[profile_index] / perf_freq.QuadPart),
-				int(1000000 * simulate_time[profile_index] / perf_freq.QuadPart),
-				int(1000000 * collide_time[profile_index] / perf_freq.QuadPart),
-				int(1000000 * update_time[profile_index] / perf_freq.QuadPart),
-				int(1000000 * render_time[profile_index] / perf_freq.QuadPart),
-				int(1000000 * overlay_time[profile_index] / perf_freq.QuadPart),
-				int(1000000 * display_time[profile_index] / perf_freq.QuadPart));
+				control_timer.Microseconds(),
+				simulate_timer.Microseconds(),
+				collide_timer.Microseconds(),
+				update_timer.Microseconds(),
+				render_timer.Microseconds(),
+				overlay_timer.Microseconds(),
+				display_timer.Microseconds());
 		}
 #endif
 
 		// update frame timer
-		LARGE_INTEGER perf_thisframe;
-		QueryPerformanceCounter(&perf_thisframe);
-		total_time[profile_index] = perf_thisframe.QuadPart - perf_lastframe.QuadPart;
-		perf_lastframe = perf_thisframe;
+		total_timer.Stamp();
 
 #if defined(PRINT_PERFORMANCE_FRAMERATE) || defined(DRAW_PERFORMANCE_FRAMERATE)
 		if (FRAMERATE_OUTPUTSCREEN || FRAMERATE_OUTPUTPRINT)
@@ -4747,22 +4805,22 @@ void RunState()
 			LONGLONG total_max = LLONG_MIN;
 			LONGLONG total_sum = 0;
 			LONGLONG total_samples = 0;
-			int i = profile_index;
+			int i = PerfTimer::mIndex;
 			do
 			{
-				total_min = std::min(total_min, total_time[i]);
-				total_max = std::max(total_max, total_time[i]);
-				total_sum += total_time[i];
+				total_min = std::min(total_min, total_timer.mHistory[i]);
+				total_max = std::max(total_max, total_timer.mHistory[i]);
+				total_sum += total_timer.mHistory[i];
 				++total_samples;
-				i = (i > 0) ? i - 1 : NUM_SAMPLES - 1;
+				i = (i > 0) ? i - 1 : PerfTimer::NUM_SAMPLES - 1;
 			}
-			while (total_sum <= perf_freq.QuadPart && i != profile_index && total_samples != profile_count);
+			while (total_sum <= PerfTimer::mFrequency && i != PerfTimer::mIndex && total_samples != PerfTimer::mCount);
 			total_sum /= total_samples;
 
 			// compute frame rates
-			double rate_max = (double)perf_freq.QuadPart / total_min;
-			double rate_avg = (double)perf_freq.QuadPart / total_sum;
-			double rate_min = (double)perf_freq.QuadPart / total_max;
+			double rate_max = (double)PerfTimer::mFrequency / total_min;
+			double rate_avg = (double)PerfTimer::mFrequency / total_sum;
+			double rate_min = (double)PerfTimer::mFrequency / total_max;
 
 #if defined(DRAW_PERFORMANCE_FRAMERATE)
 			if (FRAMERATE_OUTPUTSCREEN)

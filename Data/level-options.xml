@@ -393,15 +393,15 @@
 	<import name="template/multiple2.xml" />
 	<import name="template/multiple3.xml" />
 	<import name="template/multiple4.xml" />
-	<!-- player ship explosion -->
-	<import name="template/playershipexplosion.xml" />
-	<!-- player ship death -->
-	<import name="template/playershipdeath.xml" />
 	<!-- player ship -->
 	<import name="template/playership.xml" />
 	<import name="template/playership-options.xml" />
 	<import name="template/playershipinvulnerable.xml" />
 	<import name="template/playershipwarp.xml" />
+	<!-- player ship death -->
+	<import name="template/playershipdeath.xml" />
+	<!-- player ship explosion -->
+	<import name="template/playershipexplosion.xml" />
 	<!-- friend bullseye targets -->
 	<import name="template/friendtarget.xml" />
 	<import name="template/friendtargetappear.xml" />

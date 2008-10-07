@@ -96,7 +96,14 @@
 		</drawlist>
 	</renderable>
 	<link name="turret" secondary="enemywarriorturret" updateangle="0" />
-	<aimer range="256" attack="0" leading="0" wanderside="0.5" wandersiderate="0.125" wanderfront="0.5" wanderfrontrate="0.125" evade="1" close="64" category="4" bit2="0" bit3="0" bit4="0" />
+	<!--aimer range="256" attack="0" leading="0" wanderside="0.5" wandersiderate="0.125" wanderfront="0.5" wanderfrontrate="0.125" evade="1" close="64" category="4" bit2="0" bit3="0" bit4="0" /-->
+	<aimer>
+		<wander side="0.5" siderate="0.125" front="0.5" frontrate="0.125" />
+		<target range="256" category="4" bit2="0" bit3="0" bit4="0" />
+		<pursue strength="1" leading="0" />
+		<evade strength="1" />
+		<close range="64" />
+	</aimer>
 	<ship maxveloc="60" maxaccel="120" minaccel="10" maxomega="0.0" />
 	<damagable health="15" spawnondeath="enemyexplosion" />
 	<team name="red" />

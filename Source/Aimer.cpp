@@ -84,35 +84,68 @@ namespace Database
 	}
 }
 
+WanderBehaviorTemplate::WanderBehaviorTemplate()
+: mSide(0.0f)
+, mSideRate(0.0f)
+, mFront(0.0f)
+, mFrontRate(0.0f)
+, mTurn(0.0f)
+, mTurnRate(0.0f)
+{
+}
 
-AimerTemplate::AimerTemplate(void)
+TargetBehaviorTemplate::TargetBehaviorTemplate()
 : mPeriod(1.0f)
 , mRange(0.0f)
 , mFocus(1.0f)
 , mFilter(Collidable::GetDefaultFilter())
-, mDrift(0.0f)
-, mWanderSide(0.0f)
-, mWanderSideRate(0.0f)
-, mWanderFront(0.0f)
-, mWanderFrontRate(0.0f)
-, mWanderTurn(0.0f)
-, mWanderTurnRate(0.0f)
-, mAim(1.0f)
-, mLeading(0.0f)
-, mPursue(1.0f)
-, mEvade(0.0f)
-, mClose(0.0f)
-, mCloseDistScale(1.0f/16.0f)
-, mCloseSpeedScale(0.0f)
-, mFar(FLT_MAX)
-, mFarDistScale(1.0f/64.0f)
-, mFarSpeedScale(0.0f)
 {
-	for (int i = 0; i < Controller::FIRE_CHANNELS; ++i)
-	{
-		mAttack[i] = 0.0f;
-		mAngle[i] = 0.95f;
-	}
+}
+
+PursueBehaviorTemplate::PursueBehaviorTemplate()
+: mStrength(0.0f)
+, mLeading(0.0f)
+{
+}
+
+AimBehaviorTemplate::AimBehaviorTemplate()
+: mStrength(0.0f)
+, mLeading(0.0f)
+{
+}
+
+FireBehaviorTemplate::FireBehaviorTemplate()
+: mRange(0.0f)
+, mDirection(0.0f)
+, mAngle(0.3f)
+, mChannel(-1)
+{
+}
+
+EvadeBehaviorTemplate::EvadeBehaviorTemplate()
+: mStrength(0.0f)
+{
+}
+
+CloseBehaviorTemplate::CloseBehaviorTemplate()
+: mRange(-FLT_MAX)
+, mScaleDist(1.0f/16.0f)
+, mScaleSpeed(0.0f)
+{
+}
+
+FarBehaviorTemplate::FarBehaviorTemplate()
+: mRange(FLT_MAX)
+, mScaleDist(1.0f/64.0f)
+, mScaleSpeed(0.0f)
+{
+}
+
+AimerTemplate::AimerTemplate(void)
+: mDrift(0.0f)
+, mFire(NULL)
+, mFireCount(0)
+{
 }
 
 AimerTemplate::~AimerTemplate(void)
@@ -121,67 +154,109 @@ AimerTemplate::~AimerTemplate(void)
 
 bool AimerTemplate::Configure(const TiXmlElement *element)
 {
-	// targeting
-	element->QueryFloatAttribute("period", &mPeriod);
-	element->QueryFloatAttribute("range", &mRange);
-	element->QueryFloatAttribute("focus", &mFocus);
-
-	int category = 0;
-	if (element->QueryIntAttribute("category", &category) == TIXML_SUCCESS)
-		mFilter.categoryBits = (category >= 0) ? (1<<category) : 0;
-
-	char buf[16];
-	for (int i = 0; i < 16; i++)
+	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
-		sprintf(buf, "bit%d", i);
-		int bit = 0;
-		if (element->QueryIntAttribute(buf, &bit) == TIXML_SUCCESS)
+		switch (Hash(child->Value()))
 		{
-			if (bit)
-				mFilter.maskBits |= (1 << i);
-			else
-				mFilter.maskBits &= ~(1 << i);
+		case 0x2e87eea4 /* "drift" */:
+			{
+				child->QueryFloatAttribute("strength", &mDrift);
+			}
+			break;
+
+		case 0xf23b7114 /* "wander" */:
+			{
+				child->QueryFloatAttribute("wanderside", &mWander.mSide);
+				child->QueryFloatAttribute("wandersiderate", &mWander.mSideRate);
+				child->QueryFloatAttribute("wanderfront", &mWander.mFront);
+				child->QueryFloatAttribute("wanderfrontrate", &mWander.mFrontRate);
+				child->QueryFloatAttribute("wanderturn", &mWander.mTurn);
+				child->QueryFloatAttribute("wanderturnrate", &mWander.mTurnRate);
+			}
+			break;
+
+		case 0x32608848 /* "target" */:
+			{
+				child->QueryFloatAttribute("period", &mTarget.mPeriod);
+				child->QueryFloatAttribute("range", &mTarget.mRange);
+				child->QueryFloatAttribute("focus", &mTarget.mFocus);
+
+				int category = 0;
+				if (child->QueryIntAttribute("category", &category) == TIXML_SUCCESS)
+					mTarget.mFilter.categoryBits = (category >= 0) ? (1<<category) : 0;
+
+				char buf[16];
+				for (int i = 0; i < 16; i++)
+				{
+					sprintf(buf, "bit%d", i);
+					int bit = 0;
+					if (child->QueryIntAttribute(buf, &bit) == TIXML_SUCCESS)
+					{
+						if (bit)
+							mTarget.mFilter.maskBits |= (1 << i);
+						else
+							mTarget.mFilter.maskBits &= ~(1 << i);
+					}
+				}
+
+				int group = mTarget.mFilter.groupIndex;
+				child->QueryIntAttribute("group", &group);
+				mTarget.mFilter.groupIndex = short(group);
+			}
+			break;
+
+		case 0x0297228f /* "pursue" */:
+			{
+				child->QueryFloatAttribute("strength", &mPursue.mStrength);
+				child->QueryFloatAttribute("leading", &mPursue.mLeading);
+			}
+			break;
+
+		case 0x383251f6 /* "aim" */:
+			{
+				child->QueryFloatAttribute("strength", &mAim.mStrength);
+				child->QueryFloatAttribute("leading", &mAim.mLeading);
+			}
+			break;
+
+		case 0x8eab16d9 /* "fire" */:
+			{
+				mFire = static_cast<FireBehaviorTemplate *>(realloc(mFire, (mFireCount + 1) * sizeof(FireBehaviorTemplate)));
+				new (&mFire[mFireCount]) FireBehaviorTemplate();
+				if (child->QueryIntAttribute("channel", &mFire[mFireCount].mChannel) == TIXML_SUCCESS)
+					--mFire[mFireCount].mChannel;
+				child->QueryFloatAttribute("range", &mFire[mFireCount].mRange);
+				if (child->QueryFloatAttribute("direction", &mFire[mFireCount].mDirection) == TIXML_SUCCESS)
+					mFire[mFireCount].mDirection *= float(M_PI) / 180.0f;
+				if (child->QueryFloatAttribute("angle", &mFire[mFireCount].mAngle) == TIXML_SUCCESS)
+					mFire[mFireCount].mAngle *= float(M_PI) / 180.0f;
+				++mFireCount;
+			}
+			break;
+
+		case 0x3cf27f66 /* "evade" */:
+			{
+				child->QueryFloatAttribute("strength", &mEvade.mStrength);
+			}
+			break;
+
+		case 0x27cb3b23 /* "close" */:
+			{
+				child->QueryFloatAttribute("range", &mClose.mRange);
+				child->QueryFloatAttribute("scaledist", &mClose.mScaleDist);
+				child->QueryFloatAttribute("scalespeed", &mClose.mScaleSpeed);
+			}
+			break;
+
+		case 0xbcf819ee /* "far" */:
+			{
+				child->QueryFloatAttribute("range", &mFar.mRange);
+				child->QueryFloatAttribute("scaledist", &mFar.mScaleDist);
+				child->QueryFloatAttribute("scalespeed", &mFar.mScaleSpeed);
+			}
+			break;
 		}
 	}
-
-	int group = mFilter.groupIndex;
-	element->QueryIntAttribute("group", &group);
-	mFilter.groupIndex = short(group);
-
-	// attack
-	for (int i = 0; i < Controller::FIRE_CHANNELS; ++i)
-	{
-		char label[16];
-
-		element->QueryFloatAttribute("attack", &mAttack[i]);
-		sprintf(label, "attack%d", i+1);
-		element->QueryFloatAttribute(label, &mAttack[i]);
-
-		if (element->QueryFloatAttribute("angle", &mAngle[i]) == TIXML_SUCCESS)
-			mAngle[i] = cosf(mAngle[i] * float(M_PI) / 180.0f);
-		sprintf(label, "angle%d", i+1);
-		if (element->QueryFloatAttribute(label, &mAngle[i]) == TIXML_SUCCESS)
-			mAngle[i] = cosf(mAngle[i] * float(M_PI) / 180.0f);
-	}
-
-	// aiming
-	element->QueryFloatAttribute("drift", &mDrift);
-	element->QueryFloatAttribute("wanderside", &mWanderSide);
-	element->QueryFloatAttribute("wandersiderate", &mWanderSideRate);
-	element->QueryFloatAttribute("wanderfront", &mWanderFront);
-	element->QueryFloatAttribute("wanderfrontrate", &mWanderFrontRate);
-	element->QueryFloatAttribute("wanderturn", &mWanderTurn);
-	element->QueryFloatAttribute("wanderturnrate", &mWanderTurnRate);
-	element->QueryFloatAttribute("aim", &mAim);
-	element->QueryFloatAttribute("leading", &mLeading);
-	element->QueryFloatAttribute("pursue", &mPursue);
-	element->QueryFloatAttribute("evade", &mEvade);
-	element->QueryFloatAttribute("close", &mClose);
-	element->QueryFloatAttribute("closedistscale", &mCloseDistScale);
-	element->QueryFloatAttribute("closespeedscale", &mCloseSpeedScale);
-	element->QueryFloatAttribute("far", &mFar);
-	element->QueryFloatAttribute("fardistscale", &mFarDistScale);
-	element->QueryFloatAttribute("farspeedscale", &mFarSpeedScale);
 	return true;
 }
 
@@ -190,7 +265,7 @@ Aimer::Aimer(const AimerTemplate &aTemplate, unsigned int aId)
 : Controller(aId)
 , mTarget(0)
 , mOffset(0, 0)
-, mDelay(aTemplate.mPeriod * aId / UINT_MAX)
+, mDelay(aTemplate.mTarget.mPeriod * aId / UINT_MAX)
 , mWanderSidePhase(RandFloat() * 2.0f * float(M_PI))
 , mWanderFrontPhase(RandFloat() * 2.0f * float(M_PI))
 , mWanderTurnPhase(RandFloat() * 2.0f * float(M_PI))
@@ -202,13 +277,13 @@ Aimer::~Aimer(void)
 {
 }
 
-Vector2 Aimer::LeadTarget(float bulletSpeed, const Vector2 &targetPosition, const Vector2 &targetVelocity)
+Vector2 Aimer::Intercept(float aLeading, const Vector2 &aPosition, const Vector2 &aVelocity)
 {
 #if 1
 	// compute quadratic formula coefficients
-	float a = targetVelocity.Dot(targetVelocity) - bulletSpeed * bulletSpeed;
-	float b = targetPosition.Dot(targetVelocity);		// divided by 2
-	float c = targetPosition.Dot(targetPosition);
+	float a = aVelocity.Dot(aVelocity) - aLeading * aLeading;
+	float b = aPosition.Dot(aVelocity);		// divided by 2
+	float c = aPosition.Dot(aPosition);
 
 	// compute the discriminant
 	float d = b * b - a * c;
@@ -229,258 +304,298 @@ Vector2 Aimer::LeadTarget(float bulletSpeed, const Vector2 &targetPosition, cons
 		t = 0.0f;
 
 	// return intersection position
-	return targetPosition + t * targetVelocity;
+	return aPosition + t * aVelocity;
 #else
 	// extremely simple leading based on distance
-	return targetPosition + targetVelocity * targetPosition.Length() / bulletSpeed;
+	return aPosition + aVelocity * aPosition.Length() / aLeading;
 #endif
 }
 
-// Aimer Control
-void Aimer::Control(float aStep)
+Vector2 Aimer::TargetDir(float aLeading, const Entity *aEntity, const Entity *aTargetEntity)
 {
-	// get parent entity
-	Entity *entity = Database::entity.Get(mId);
+	// direction to target
+	Vector2 targetDir(aTargetEntity->GetTransform().Transform(mOffset) - aEntity->GetPosition());
 
-	// get front vector
-	const Matrix2 transform(entity->GetTransform());
-
-	// get aimer template
-	const AimerTemplate &aimer = Database::aimertemplate.Get(mId);
-
-	// set default controls
-	mMove = aimer.mDrift * transform.y;
-	mTurn = 0;
-	memset(mFire, 0, sizeof(mFire));
-
-	// apply wander
-	if (aimer.mWanderSide)
+	// get target lead position
+	if (aLeading != 0.0f)
 	{
-		mMove.x += aimer.mWanderSide * sinf(mWanderSidePhase);
-		mWanderSidePhase += RandFloat() * aimer.mWanderSideRate * 2.0f * float(M_PI) * sim_step;
+		targetDir = Intercept(aLeading, targetDir, aTargetEntity->GetVelocity() - aEntity->GetVelocity());
+	}
+
+	// return direction
+	return targetDir;
+}
+
+
+// wander behavior
+void Aimer::Wander(float aStep, Entity *entity, const AimerTemplate &aimer)
+{
+	// apply side wander
+	if (aimer.mWander.mSide)
+	{
+		mMove.x += aimer.mWander.mSide * sinf(mWanderSidePhase);
+		mWanderSidePhase += RandFloat() * aimer.mWander.mSideRate * 2.0f * float(M_PI) * sim_step;
 		if (mWanderSidePhase > 2.0f * float(M_PI))
 			mWanderSidePhase -= 2.0f * float(M_PI);
 	}
-	if (aimer.mWanderFront)
+
+	// apply front wander
+	if (aimer.mWander.mFront)
 	{
-		mMove.y += aimer.mWanderFront * sinf(mWanderFrontPhase);
-		mWanderFrontPhase += RandFloat() * aimer.mWanderFrontRate * 2.0f * float(M_PI) * sim_step;
+		mMove.y += aimer.mWander.mFront * sinf(mWanderFrontPhase);
+		mWanderFrontPhase += RandFloat() * aimer.mWander.mFrontRate * 2.0f * float(M_PI) * sim_step;
 		if (mWanderFrontPhase > 2.0f * float(M_PI))
 			mWanderFrontPhase -= 2.0f * float(M_PI);
 	}
-	if (aimer.mWanderTurn)
+
+	// apply turn wander
+	if (aimer.mWander.mTurn)
 	{
-		mTurn += aimer.mWanderTurn * sinf(mWanderTurnPhase);
-		mWanderTurnPhase += RandFloat() * aimer.mWanderTurnRate * 2.0f * float(M_PI) * sim_step;
+		mTurn += aimer.mWander.mTurn * sinf(mWanderTurnPhase);
+		mWanderTurnPhase += RandFloat() * aimer.mWander.mTurnRate * 2.0f * float(M_PI) * sim_step;
 		if (mWanderTurnPhase > 2.0f * float(M_PI))
 			mWanderTurnPhase -= 2.0f * float(M_PI);
 	}
+}
 
+// target behavior
+void Aimer::Target(float aStep, Entity *entity, const AimerTemplate &aimer)
+{
 	// if ready to search...
 	mDelay -= aStep;
-	if (mDelay <= 0.0f)
+	if (mDelay > 0.0f)
+		return;
+
+	// update the timer
+	mDelay += aimer.mTarget.mPeriod;
+
+	// get transform
+	const Transform2 &transform = entity->GetTransform();
+
+	// get the collision world
+	b2World *world = Collidable::GetWorld();
+
+	// get nearby shapes
+	b2AABB aabb;
+	const float lookRadius = aimer.mTarget.mRange;
+	aabb.lowerBound.Set(entity->GetPosition().x - lookRadius, entity->GetPosition().y - lookRadius);
+	aabb.upperBound.Set(entity->GetPosition().x + lookRadius, entity->GetPosition().y + lookRadius);
+	b2Shape* shapes[b2_maxProxies];
+	int32 count = world->Query(aabb, shapes, b2_maxProxies);
+
+	// get team affiliation
+	unsigned int aTeam = Database::team.Get(mId);
+
+	// no target yet
+	unsigned int bestTargetId = 0;
+	Vector2 bestTargetPos(0, 0);
+	float bestRange = FLT_MAX;
+
+	// for each shape...
+	for (int32 i = 0; i < count; ++i)
 	{
-		// update the timer
-		mDelay += aimer.mPeriod;
+		// skip unhittable shapes
+		if (shapes[i]->IsSensor())
+			continue;
+		if (!Collidable::CheckFilter(shapes[i]->GetFilterData(), aimer.mTarget.mFilter))
+			continue;
 
-		// get the collision world
-		b2World *world = Collidable::GetWorld();
+		// get the parent body
+		b2Body* body = shapes[i]->GetBody();
 
-		// get nearby shapes
-		b2AABB aabb;
-		const float lookRadius = aimer.mRange;
-		aabb.lowerBound.Set(entity->GetPosition().x - lookRadius, entity->GetPosition().y - lookRadius);
-		aabb.upperBound.Set(entity->GetPosition().x + lookRadius, entity->GetPosition().y + lookRadius);
-		b2Shape* shapes[b2_maxProxies];
-		int32 count = world->Query(aabb, shapes, b2_maxProxies);
+		// get local position
+		b2Vec2 localPos;
+		switch (shapes[i]->GetType())
+		{
+		case e_circleShape:		localPos = static_cast<b2CircleShape *>(shapes[i])->GetLocalPosition();	break;
+		case e_polygonShape:	localPos = static_cast<b2PolygonShape *>(shapes[i])->GetCentroid(); break;
+		default:				localPos = Vector2(0, 0); break;
+		}
+		Vector2 shapePos(body->GetWorldPoint(localPos));
+
+		// get the collidable identifier
+		unsigned int targetId = reinterpret_cast<unsigned int>(body->GetUserData());
+
+		// skip non-entity
+		if (targetId == 0)
+			continue;
+
+		// skip self
+		if (targetId == mId)
+			continue;
 
 		// get team affiliation
-		unsigned int aTeam = Database::team.Get(mId);
+		unsigned int targetTeam = Database::team.Get(targetId);
 
-		// no target yet
-		unsigned int bestTargetId = 0;
-		Vector2 bestTargetPos(0, 0);
-		float bestRange = FLT_MAX;
+		// skip neutral
+		if (targetTeam == 0)
+			continue;
 
-		// for each shape...
-		for (int32 i = 0; i < count; ++i)
+		// skip teammate
+		if (targetTeam == aTeam)
+			continue;
+
+		// skip indestructible
+		if (!Database::damagable.Find(targetId))
+			continue;
+
+		// get range
+		Vector2 dir(transform.Untransform(shapePos));
+		float range = dir.Length() - 0.5f * shapes[i]->GetSweepRadius();
+
+		// skip if out of range
+		if (range > aimer.mTarget.mRange)
+			continue;
+
+		// if not the current target...
+		if (targetId != mTarget)
 		{
-			// skip unhittable shapes
-			if (shapes[i]->IsSensor())
-				continue;
-			if (!Collidable::CheckFilter(shapes[i]->GetFilterData(), aimer.mFilter))
-				continue;
-
-			// get the parent body
-			b2Body* body = shapes[i]->GetBody();
-
-			// get local position
-			b2Vec2 localPos;
-			switch (shapes[i]->GetType())
-			{
-			case e_circleShape:		localPos = static_cast<b2CircleShape *>(shapes[i])->GetLocalPosition();	break;
-			case e_polygonShape:	localPos = static_cast<b2PolygonShape *>(shapes[i])->GetCentroid(); break;
-			default:				localPos = Vector2(0, 0); break;
-			}
-			Vector2 shapePos(body->GetWorldPoint(localPos));
-
-			// get the collidable identifier
-			unsigned int targetId = reinterpret_cast<unsigned int>(body->GetUserData());
-
-			// skip non-entity
-			if (targetId == 0)
-				continue;
-
-			// skip self
-			if (targetId == mId)
-				continue;
-
-			// get team affiliation
-			unsigned int targetTeam = Database::team.Get(targetId);
-
-			// skip neutral
-			if (targetTeam == 0)
-				continue;
-
-			// skip teammate
-			if (targetTeam == aTeam)
-				continue;
-
-			// skip indestructible
-			if (!Database::damagable.Find(targetId))
-				continue;
-
-			// get range
-			Vector2 dir(transform.Untransform(shapePos));
-			float range = dir.Length() - 0.5f * shapes[i]->GetSweepRadius();
-
-			// skip if out of range
-			if (range > aimer.mRange)
-				continue;
-
-			// if not the current target...
-			if (targetId != mTarget)
-			{
-				// bias range
-				range *= aimer.mFocus;
-			}
-
-			// if better than the current range
-			if (bestRange > range)
-			{
-				// use the new target
-				bestRange = range;
-				bestTargetId = targetId;
-				bestTargetPos = localPos;
-			}
+			// bias range
+			range *= aimer.mTarget.mFocus;
 		}
 
-		// use the new target
-		mTarget = bestTargetId;
-		mOffset = bestTargetPos;
+		// if better than the current range
+		if (bestRange > range)
+		{
+			// use the new target
+			bestRange = range;
+			bestTargetId = targetId;
+			bestTargetPos = localPos;
+		}
 	}
 
-	// if tracking a target...
-	if (mTarget)
+	// use the new target
+	mTarget = bestTargetId;
+	mOffset = bestTargetPos;
+}
+
+// pursue behavior
+void Aimer::Pursue(float aStep, Entity *entity, const AimerTemplate &aimer, Entity *targetEntity)
+{
+	if (aimer.mPursue.mStrength == 0.0f)
+		return;
+
+	// direction to target
+	Vector2 targetDir(TargetDir(aimer.mPursue.mLeading, entity, targetEntity));
+
+	// save range
+	float distSq = targetDir.LengthSq();
+
+	// normalize direction
+	targetDir *= InvSqrt(distSq);
+
+	// move towards target
+	mMove += aimer.mPursue.mStrength * targetDir;
+}
+
+// aim behavior
+void Aimer::Aim(float aStep, Entity *entity, const AimerTemplate &aimer, Entity *targetEntity)
+{
+	if (aimer.mAim.mStrength == 0.0f && aimer.mFireCount == 0)
+		return;
+
+	// get transform
+	const Transform2 &transform = entity->GetTransform();
+
+	// direction to target
+	Vector2 targetDir(TargetDir(aimer.mAim.mLeading, entity, targetEntity));
+
+	// save range
+	float distSq = targetDir.LengthSq();
+
+	// normalize direction
+	targetDir *= InvSqrt(distSq);
+
+	// local direction
+	Vector2 localDir = transform.Unrotate(targetDir);
+
+	// angle to target
+	float aimAngle = -atan2f(localDir.x, localDir.y);
+
+	// if aiming...
+	if (aimer.mAim.mStrength != 0)
 	{
-		// get the target entity
-		Entity *targetEntity = Database::entity.Get(mTarget);
-		if (targetEntity)
+		// turn towards target direction
+		const ShipTemplate &ship = Database::shiptemplate.Get(mId);	// <-- hack!
+		if (ship.mMaxOmega != 0.0f)
 		{
-			// target entity transform
-			Matrix2 targetTransform(targetEntity->GetTransform());
-
-			// direction to target
-			Vector2 targetDir;
-
-			// get target lead position
-			Vector2 targetPos = targetTransform.Transform(mOffset);
-			if (aimer.mLeading != 0.0f)
-			{
-				targetDir = LeadTarget(aimer.mLeading,
-					targetPos - entity->GetPosition(),
-					targetEntity->GetVelocity() - entity->GetVelocity()
-					);
-			}
-			else
-			{
-				targetDir = targetPos - entity->GetPosition();
-			}
-
-			// save range
-			float distSq = targetDir.LengthSq();
-
-			// normalize direction
-			targetDir *= InvSqrt(distSq);
-
-			// move towards target
-			mMove += aimer.mPursue * targetDir;
-
-			// local target direction
-			Vector2 localDir = transform.Unrotate(targetDir);
-
-			// if aiming
-			if (aimer.mAim)
-			{
-				// turn towards target direction
-				const ShipTemplate &ship = Database::shiptemplate.Get(mId);	// <-- hack!
-				if (ship.mMaxOmega != 0.0f)
-				{
-					float aim_angle = -atan2f(localDir.x, localDir.y);
-					mTurn += aimer.mAim * Clamp(aim_angle / (ship.mMaxOmega * aStep), -1.0f, 1.0f);
-				}
-			}
-
-			// if evading...
-			if (aimer.mEvade)
-			{
-				// evade target's front vector
-				Vector2 local(targetTransform.Untransform(entity->GetPosition()));
-				if (local.y > 0)
-				{
-					local *= InvSqrt(local.LengthSq());
-					float dir = local.x > 0 ? 1.0f : -1.0f;
-					mMove += aimer.mEvade * dir * local.y * local.y * local.y * targetTransform.Rotate(Vector2(local.y, -local.x));
-				}
-			}
-
-			// if checking range...
-			if (aimer.mClose > 0 || aimer.mFar > FLT_MAX)
-			{
-				// get direction and distance to target
-				Vector2 dir = targetEntity->GetPosition() - entity->GetPosition();
-				float dist = dir.Length();
-				dir /= dist;
-
-				// get target relative speed
-				Vector2 vel = targetEntity->GetVelocity() - entity->GetVelocity();
-				float speed = vel.Dot(dir);
-
-				// apply close-repel force
-				float repel = (dist - aimer.mClose) * aimer.mCloseDistScale + speed * aimer.mCloseSpeedScale;
-				if (repel < 0.0f)
-				{
-					mMove += dir * repel;
-				}
-
-				// apply far-attract force
-				float attract = (dist - aimer.mFar) * aimer.mFarDistScale + speed * aimer.mFarSpeedScale;
-				if (attract > 0.0f)
-				{
-					mMove += dir * attract;
-				}
-			}
-
-			// for each fire channel
-			for (int i = 0; i < Controller::FIRE_CHANNELS; ++i)
-			{
-				// fire if lined up and within attack range
-				mFire[i] = 
-					(distSq < aimer.mAttack[i] * aimer.mAttack[i]) &&
-					(localDir.y > aimer.mAngle[i]);
-			}
+			mTurn += aimer.mAim.mStrength * Clamp(aimAngle / (ship.mMaxOmega * aStep), -1.0f, 1.0f);
 		}
 	}
+
+	// for each fire channel
+	memset(mFire, 0, sizeof(mFire));
+	for (int i = 0; i < aimer.mFireCount; ++i)
+	{
+		// if not set to fire and target is in range...
+		if (!mFire[aimer.mFire[i].mChannel] &&
+			distSq <= aimer.mFire[i].mRange * aimer.mFire[i].mRange)
+		{
+			float localAngle = aimAngle - aimer.mFire[i].mDirection;
+			if (localAngle > float(M_PI))
+				localAngle -= float(M_PI)*2.0f;
+			else if (localAngle < -float(M_PI))
+				localAngle += float(M_PI)*2.0f;
+			if (fabsf(localAngle) <= aimer.mFire[i].mAngle)
+				mFire[aimer.mFire[i].mChannel] = true;
+		}
+	}
+}
+
+// evade behavior
+void Aimer::Evade(float aStep, Entity *entity, const AimerTemplate &aimer, Entity *targetEntity)
+{
+	if (aimer.mEvade.mStrength == 0.0f)
+		return;
+
+	// target entity transform
+	const Transform2 &targetTransform = targetEntity->GetTransform();
+
+	// evade target's front vector
+	Vector2 local(targetTransform.Untransform(entity->GetPosition()));
+	if (local.y > 0)
+	{
+		local *= InvSqrt(local.LengthSq());
+		float dir = local.x > 0 ? 1.0f : -1.0f;
+		mMove += aimer.mEvade.mStrength * dir * local.y * local.y * local.y * targetTransform.Rotate(Vector2(local.y, -local.x));
+	}
+}
+
+// range behavior
+void Aimer::Range(float aStep, Entity *entity, const AimerTemplate &aimer, Entity *targetEntity)
+{
+	if (aimer.mClose.mRange <= -FLT_MAX && aimer.mFar.mRange >= FLT_MAX)
+		return;
+
+	// get direction and distance to target
+	Vector2 dir = targetEntity->GetPosition() - entity->GetPosition();
+	float dist = dir.Length();
+	dir /= dist;
+
+	// get target relative speed
+	Vector2 vel = targetEntity->GetVelocity() - entity->GetVelocity();
+	float speed = vel.Dot(dir);
+
+	// apply close-repel force
+	float repel = (dist - aimer.mClose.mRange) * aimer.mClose.mScaleDist + speed * aimer.mClose.mScaleSpeed;
+	if (repel < 0.0f)
+	{
+		mMove += dir * repel;
+	}
+
+	// apply far-attract force
+	float attract = (dist - aimer.mFar.mRange) * aimer.mFar.mScaleDist + speed * aimer.mFar.mScaleSpeed;
+	if (attract > 0.0f)
+	{
+		mMove += dir * attract;
+	}
+}
+
+// edge behavior
+void Aimer::Edge(float aStep, Entity *entity, const AimerTemplate &aimer)
+{
+	// get transform
+	const Transform2 &transform = entity->GetTransform();
 
 	// push away from the edges of the world (HACK)
 	b2AABB edge(Collidable::GetBoundary());
@@ -500,8 +615,58 @@ void Aimer::Control(float aStep)
 	if (push.x || push.y)
 	{
 		mMove += push;
-		mTurn += transform.y.Cross(push) > 0 ? push.Length() : -push.Length();
+		push = transform.Unrotate(push);
+		mTurn += push.x < 0 ? push.Length() : -push.Length();
 	}
+}
+
+
+// Aimer Control
+void Aimer::Control(float aStep)
+{
+	// get parent entity
+	Entity *entity = Database::entity.Get(mId);
+
+	// get transform
+	const Transform2 &transform = entity->GetTransform();
+
+	// get aimer template
+	const AimerTemplate &aimer = Database::aimertemplate.Get(mId);
+
+	// set default controls
+	mMove = transform.Rotate(Vector2(0, aimer.mDrift));
+	mTurn = 0;
+	memset(mFire, 0, sizeof(mFire));
+
+	// apply wander behavior
+	Wander(aStep, entity, aimer);
+
+	// apply target behavior
+	Target(aStep, entity, aimer);
+
+	// if tracking a target...
+	if (mTarget)
+	{
+		// get the target entity
+		Entity *targetEntity = Database::entity.Get(mTarget);
+		if (targetEntity)
+		{
+			// apply pursue behavior
+			Pursue(aStep, entity, aimer, targetEntity);
+
+			// apply aim behavior
+			Aim(aStep, entity, aimer, targetEntity);
+
+			// apply evade behavior
+			Evade(aStep, entity, aimer, targetEntity);
+
+			// apply range behavior
+			Range(aStep, entity, aimer, targetEntity);
+		}
+	}
+
+	// push away from the edges of the world (HACK)
+	Edge(aStep, entity, aimer);
 
 #ifdef AIMER_OBSTACLE_AVOIDANCE
 	// obstacle avoidance
