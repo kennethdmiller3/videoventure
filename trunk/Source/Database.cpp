@@ -35,21 +35,33 @@ namespace Database
 	Untyped::Untyped(unsigned int aId, size_t aStride, size_t aBits)
 		: mId(aId), mStride(aStride), mShift(0), mBits(aBits), mLimit(1 << mBits), mCount(0), mMask((2 << mBits) - 1)
 	{
-		// adjust block shift
-		for (mShift = 0; mShift < mBits; ++mShift)
+		// if allocating...
+		if (signed(aBits) >= 0)
 		{
-			if ((mStride << mShift) >= 1024)
-				break;
+			// adjust block shift
+			for (mShift = 0; mShift < mBits; ++mShift)
+			{
+				if ((mStride << mShift) >= 1024)
+					break;
+			}
+
+			// allocate memory
+			Alloc();
+
+			// fill with empty values
+			memset(mMap, EMPTY, mLimit * 2 * sizeof(size_t));
+			memset(mKey, 0, mLimit * sizeof(Key));
+			memset(mPool, 0, (mLimit >> mShift) * sizeof(void *));
+			memset(mNil, 0, mStride);
 		}
-
-		mMap = static_cast<size_t *>(malloc(mLimit * 2 * sizeof(size_t)));
-		memset(mMap, EMPTY, mLimit * 2 * sizeof(size_t));
-
-		mKey = static_cast<Key *>(malloc(mLimit * sizeof(Key)));
-		memset(mKey, 0, mLimit * sizeof(Key));
-
-		mPool = static_cast<void **>(malloc((mLimit >> mShift) * sizeof(void *)));
-		memset(mPool, 0, (mLimit >> mShift) * sizeof(void *));
+		else
+		{
+			// clear pointers
+			mMap = NULL;
+			mKey = NULL;
+			mPool = NULL;
+			mNil = NULL;
+		}
 
 		if (mId)
 			GetDatabases().Put(mId, this);
@@ -61,11 +73,33 @@ namespace Database
 		if (mId)
 			GetDatabases().Delete(mId);
 
-		free(mMap);
-		free(mKey);
-		for (size_t slot = 0; slot < mLimit >> mShift; ++slot)
-			free(mPool[slot]);
-		free(mPool);
+		Free();
+	}
+
+	// allocate pools
+	void Untyped::Alloc()
+	{
+		mMap = static_cast<size_t *>(malloc(mLimit * 2 * sizeof(size_t)));
+		mKey = static_cast<Key *>(malloc(mLimit * sizeof(Key)));
+		mPool = static_cast<void **>(malloc((mLimit >> mShift) * sizeof(void *)));
+		mNil = malloc(mStride);
+	}
+
+	// free pools
+	void Untyped::Free()
+	{
+		if (mMap)
+			free(mMap);
+		if (mKey)
+			free(mKey);
+		if (mPool)
+		{
+			for (size_t slot = 0; slot < mLimit >> mShift; ++slot)
+				free(mPool[slot]);
+			free(mPool);
+		}
+		if (mNil)
+			free(mNil);
 	}
 
 	// clear all records
@@ -123,28 +157,26 @@ namespace Database
 	// copy a source database
 	void Untyped::Copy(const Untyped &aSource)
 	{
-		// clear existing pool
-		Clear();
+		// free existing arrays
+		Free();
 
 		// copy counts
+		mShift = aSource.mShift;
 		mBits = aSource.mBits;
 		mMask = aSource.mMask;
 		mLimit = aSource.mLimit;
 		mCount = aSource.mCount;
 
+		// create new arrays
+		Alloc();
+
 		// copy map
-		free(mMap);
-		mMap = static_cast<size_t *>(malloc(mLimit * 2 * sizeof(size_t)));
 		memcpy(mMap, aSource.mMap, mLimit * 2 * sizeof(size_t));
 
 		// copy keys
-		free(mKey);
-		mKey = static_cast<Key *>(malloc(mLimit * sizeof(size_t)));
 		memcpy(mKey, aSource.mKey, mLimit * sizeof(size_t));
 
 		// copy pools
-		free(mPool);
-		mPool = static_cast<void **>(malloc((mLimit >> mShift) * sizeof(size_t)));
 		memset(mPool, 0, (mLimit >> mShift) * sizeof(void *));
 		for (size_t slot = 0; slot < mCount; ++slot)
 		{
@@ -154,6 +186,9 @@ namespace Database
 			}
 			CreateRecord(GetRecord(slot), aSource.GetRecord(slot));
 		}
+
+		// copy default
+		CreateRecord(mNil, aSource.mNil);
 	}
 
 	// find the record for a specified key
@@ -177,6 +212,29 @@ namespace Database
 
 		// not found
 		return NULL;
+	}
+
+	// get the record for a specified key (or default if not found)
+	const void *Untyped::Get(Key aKey) const
+	{
+		// convert key to a slot
+		// (HACK: assume key is already a hash)
+		size_t slot = FindSlot(aKey);
+
+		// if the slot is not empty...
+		if (slot != EMPTY)
+		{
+			// return the record
+			return GetRecord(slot);
+		}
+
+		// check parent
+		if (this != &parent)
+			if (Key aParentKey = parent.Get(aKey))
+				return Get(aParentKey);
+
+		// not found
+		return mNil;
 	}
 
 	// create or update a record for a specified key

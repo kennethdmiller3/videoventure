@@ -62,26 +62,10 @@ public:
 	void GotKill(unsigned int aId, unsigned int aKillId);
 };
 
-// player controller
-class PlayerController : 
-	public Controller
-{
-public:
-	// constructor
-	PlayerController(unsigned int aId = 0);
-
-	// destructor
-	~PlayerController(void);
-
-	// control
-	void Control(float aStep);
-};
-
 namespace Database
 {
 	extern Typed<fastdelegate::FastDelegate<void (unsigned int)> > playerjoin;
 	extern Typed<fastdelegate::FastDelegate<void (unsigned int)> > playerquit;
 	extern Typed<PlayerTemplate> playertemplate;
 	extern Typed<Player *> player;
-	extern Typed<PlayerController *> playercontroller;
 }

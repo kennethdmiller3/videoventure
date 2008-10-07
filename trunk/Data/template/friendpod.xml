@@ -82,7 +82,14 @@
 			<rotate angle="90" />
 		</repeat>
 	</renderable>
-	<aimer range="256" attack="0" drift="0.5" wanderturn="1" wanderturnrate="0.25" pursue="0.25" leading="30" category="1" bit1="0" bit2="0" />
+	<!--aimer range="256" attack="0" drift="0.5" wanderturn="1" wanderturnrate="0.25" pursue="0.25" leading="30" category="1" bit1="0" bit2="0" /-->
+	<aimer>
+		<drift strength="0.5" />
+		<wander turn="1" turnrate="0.25" />
+		<target range="256" category="3" bit2="0" bit3="0" bit4="0" />
+		<aim strength="1" leading="30" />
+		<pursue strength="0.25" leading="30" />
+	</aimer>
 	<ship maxveloc="30" maxaccel="30" minaccel="10" maxomega="0.5" />
 	<bullet damage="1" ricochet="1" spawnondeath="friendpodexplosion" />
 	<damagable health="5" spawnondeath="friendpodexplosion" />

@@ -57,7 +57,11 @@
 	<expire time="6" switchonexpire="friendbulletexplosion" />
 	<bullet damage="3" spawnondeath="friendfireballexplosion" />
 	<damagable health="1" spawnondeath="friendfireballexplosion" />
-	<aimer range="512" leading="0" category="1" bit1="0" bit2="0" />
+	<!--aimer range="512" leading="0" category="1" bit1="0" bit2="0" /-->
+	<aimer>
+		<target range="512" leading="0" category="1" bit1="0" bit2="0" />
+		<aim strength="1" leading="0" />
+	</aimer>
 	<ship forwardveloc="120" neutralveloc="120" reverseveloc="120" strafeveloc="0" maxaccel="360" minaccel="360" maxomega="6" />
 	<team name="blue" />
 	<soundcue>

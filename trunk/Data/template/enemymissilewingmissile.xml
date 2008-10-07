@@ -91,7 +91,11 @@
 	<expire time="1.5" switchonexpire="enemybulletexplosion" />
 	<bullet damage="1" spawnondeath="enemyfireballexplosion" />
 	<damagable health="1" spawnondeath="enemyfireballexplosion" />
-	<aimer period="0.2" range="256" focus="2" leading="0" category="3" bit2="0" bit3="0" bit4="0" />
+	<!--aimer period="0.2" range="256" focus="2" leading="0" category="3" bit2="0" bit3="0" bit4="0" /-->
+	<aimer>
+		<target period="0.2" range="256" focus="2" category="3" bit2="0" bit3="0" bit4="0" />
+		<aim strength="1" leading="0" />
+	</aimer>
 	<ship forwardveloc="180" neutralveloc="180" reverseveloc="180" strafeveloc="0" maxaccel="240" minaccel="240" maxomega="3" />
 	<!-- spawner>
 			<offset x="0" y="0"/>

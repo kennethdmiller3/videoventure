@@ -16,7 +16,17 @@
 			<calllist name="ship" />
 		</drawlist>
 	</renderable>
-	<aimer range="256" attack="128" drift="0.5" wanderturn="0.25" wanderturnrate="0.25" leading="240" angle="30" evade="1" close="64" category="4" bit2="0" bit3="0" bit4="0" />
+	<!--aimer range="256" attack="128" drift="0.5" wanderturn="0.25" wanderturnrate="0.25" leading="240" angle="30" evade="1" close="64" category="4" bit2="0" bit3="0" bit4="0" /-->
+	<aimer>
+		<drift strength="0.5" />
+		<wander turn="0.25" turnrate="0.25" />
+		<target range="256" category="4" bit2="0" bit3="0" bit4="0" />
+		<aim strength="1" leading="240" />
+		<pursue strength="1" leading="0" />
+		<fire channel="1" range="128" angle="30" />
+		<evade strength="1" />
+		<close range="64" />
+	</aimer>
 	<ship maxveloc="60" maxaccel="60" minaccel="10" maxomega="1" />
 	<damagable health="10" spawnondeath="enemyexplosion" />
 	<link name="lgun" secondary="enemyshipweapon">

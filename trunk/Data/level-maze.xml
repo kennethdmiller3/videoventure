@@ -171,10 +171,6 @@
 	<import name="template/playerlaserbeamimpact.xml" />
 	<import name="template/playerlaserbeam.xml" />
 	<import name="template/playerlaserweapon.xml" />
-	<!-- player ship explosion -->
-	<import name="template/playershipexplosion.xml" />
-	<!-- player ship death -->
-	<import name="template/playershipdeath.xml" />
 	<!-- player ship -->
 	<import name="template/playership.xml" />
 	<template name="playership">
@@ -183,6 +179,10 @@
 	<import name="template/playership-beam.xml" />
 	<import name="template/playershipinvulnerable.xml" />
 	<import name="template/playershipwarp.xml" />
+	<!-- player ship death -->
+	<import name="template/playershipdeath.xml" />
+	<!-- player ship explosion -->
+	<import name="template/playershipexplosion.xml" />
 	<!-- wall tile -->
 	<template name="wall">
 		<collidable>

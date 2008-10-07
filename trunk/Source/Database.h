@@ -21,8 +21,11 @@ namespace Database
 		size_t *mMap;		// map key to database records (2x maximum)
 		Key *mKey;			// database record key pool
 		void **mPool;		// database record data pool
+		void *mNil;			// database default record
 
 	protected:
+		void Alloc(void);
+		void Free(void);
 		void Grow(void);
 		void Copy(const Untyped &aSource);
 
@@ -103,11 +106,7 @@ namespace Database
 
 	public:
 		Untyped(unsigned int aId, size_t aStride, size_t aBits);
-		Untyped(const Untyped &aSource)
-			: mId(0)
-		{
-			assert(false);
-		}
+		Untyped(const Untyped &aSource);
 		virtual ~Untyped();
 
 		const Untyped &operator=(const Untyped &aSource)
@@ -140,11 +139,26 @@ namespace Database
 		}
 
 		const void *Find(Key aKey) const;
+		const void *Get(Key aKey) const;
 		void Put(Key aKey, const void *aValue);
 		void *Open(Key aKey);
 		void Close(Key aKey);
 		void *Alloc(Key aKey);
 		void Delete(Key aKey);
+
+		const void *GetDefault(void) const
+		{
+			return mNil;
+		}
+
+		void *OpenDefault(void)
+		{
+			return mNil;
+		}
+
+		void CloseDefault(void)
+		{
+		}
 
 		class Iterator
 		{
@@ -221,8 +235,6 @@ namespace Database
 	template <typename T> class Typed : public Untyped
 	{
 	protected:
-		const T mNil;
-
 		virtual void CreateRecord(void *aDest, const void *aSource = NULL)
 		{
 			if (aSource)
@@ -241,12 +253,13 @@ namespace Database
 
 	public:
 		Typed(unsigned int aId = 0, const T& aNil = T())
-			: Untyped(aId, sizeof(T), aId ? 8 : 4), mNil(aNil)
+			: Untyped(aId, sizeof(T), aId ? 8 : 4)
 		{
+			CreateRecord(mNil, &aNil);
 		}
 
 		Typed(const Typed &aDatabase)
-			: Untyped(aDatabase.mId, sizeof(T), aDatabase.mBits), mNil(aDatabase.mNil)
+			: Untyped(aDatabase.mId, sizeof(T), ~0U)
 		{
 			Copy(aDatabase);
 		}
@@ -254,20 +267,22 @@ namespace Database
 		virtual ~Typed()
 		{
 			Clear();
+			DeleteRecord(mNil);
 		}
 
 		const T &GetDefault(void) const
 		{
-			return mNil;
+			return *static_cast<const T *>(Untyped::GetDefault());
 		}
 
 		T &OpenDefault(void)
 		{
-			return const_cast<T &>(mNil);
+			return *static_cast<T *>(Untyped::OpenDefault());
 		}
 
 		void CloseDefault(void)
 		{
+			Untyped::CloseDefault();
 		}
 
 		const T *Find(Key aKey) const
@@ -277,8 +292,7 @@ namespace Database
 
 		const T &Get(Key aKey) const
 		{
-			const T *t = static_cast<const T *>(Untyped::Find(aKey));
-			return t ? *t : mNil;
+			return *static_cast<const T *>(Untyped::Get(aKey));
 		}
 
 		void Put(Key aKey, const T &aValue)
@@ -303,6 +317,7 @@ namespace Database
 
 		const Typed &operator=(const Typed &aSource)
 		{
+			DeleteRecord(mNil);
 			Copy(aSource);
 			return *this;
 		}
@@ -323,8 +338,7 @@ namespace Database
 			// get the iterator value
 			const T &GetValue(void)
 			{
-				const T *t = static_cast<const T *>(Untyped::Iterator::GetValue());
-				return t ? *t : static_cast<const Typed *>(mDatabase)->mNil;
+				return *static_cast<const T *>(Untyped::Iterator::GetValue());
 			}
 		};
 	};

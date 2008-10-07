@@ -77,7 +77,17 @@
 			</triangle_strip>
 		</drawlist>
 	</renderable>
-	<aimer range="512" attack1="192" attack2="256" angle1="90" angle2="180" drift="0.5" wanderturn="0.25" wanderturnrate="0.25" leading="0" close="96" />
+	<!--aimer range="512" attack1="192" attack2="256" angle1="90" angle2="180" drift="0.5" wanderturn="0.25" wanderturnrate="0.25" leading="0" close="96" /-->
+	<aimer>
+		<drift strength="0.5" />
+		<wander turn="0.25" turnrate="0.25" />
+		<target range="512" category="1" bit1="0" bit2="0" bit4="0" />
+		<pursue strength="1" leading="0" />
+		<aim strength="1" leading="0" />
+		<fire channel="1" range="192" angle="90" />
+		<fire channel="2" range="256" angle="180" />
+		<close range="96" />
+	</aimer>
 	<ship maxveloc="90" maxaccel="10" minaccel="10" maxomega="0.1" />
 	<damagable health="200" spawnondeath="friendcarrierexplosion" />
 	<link name="lgun" secondary="friendweaponmissile">

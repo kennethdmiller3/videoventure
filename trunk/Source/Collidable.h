@@ -17,12 +17,12 @@ public:
 
 #ifndef COLLIDABLE_SHAPE_DATABASE
 	// shape definitions
-	std::vector<b2ShapeDef *> shapes;
+	Database::Typed<b2ShapeDef *> shapes;
 #endif
 
 #ifndef COLLIDABLE_JOINT_DATABASE
 	// joint definitions
-	std::vector<b2JointDef *> joints;
+	Database::Typed<b2JointDef *> joints;
 #endif
 
 public:
@@ -131,7 +131,7 @@ public:
 	static void CollideAll(float aStep);
 
 protected:
-	bool CreateJoint(b2JointDef &joint) const;
+	bool CreateJoint(const b2JointDef &joint) const;
 };
 
 namespace Database

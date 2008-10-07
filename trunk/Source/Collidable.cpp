@@ -118,9 +118,9 @@ CollidableTemplate::CollidableTemplate(const CollidableTemplate &aTemplate)
 {
 #ifndef COLLIDABLE_SHAPE_DATABASE
 	// deep-copy the shape list
-	for (std::vector<b2ShapeDef *>::const_iterator itor = aTemplate.shapes.begin(); itor != aTemplate.shapes.end(); ++itor)
+	for (Database::Typed<b2ShapeDef *>::Iterator itor(&aTemplate.shapes); itor.IsValid(); ++itor)
 	{
-		const b2ShapeDef *shapesource = *itor;
+		const b2ShapeDef *shapesource = itor.GetValue();
 		b2ShapeDef *shapedef;
 		switch(shapesource->type)
 		{
@@ -129,16 +129,16 @@ CollidableTemplate::CollidableTemplate(const CollidableTemplate &aTemplate)
 		default:				shapedef = NULL; DebugPrint("unsupported shape type %d", shapesource->type); break;
 		}
 		if (shapedef)
-			shapes.push_back(shapedef);
+			shapes.Put(itor.GetKey(), shapedef);
 	}
 #endif
 
 #ifndef COLLIDABLE_JOINT_DATABASE
 	// deep-copy the joint list
 	// TO DO: update collidable id in each descriptor
-	for (std::vector<b2JointDef *>::const_iterator itor = aTemplate.joints.begin(); itor != aTemplate.joints.end(); ++itor)
+	for (Database::Typed<b2JointDef *>::Iterator itor(&aTemplate.joints); itor.IsValid(); ++itor)
 	{
-		const b2JointDef *jointsource = *itor;
+		const b2JointDef *jointsource = itor.GetValue();
 		b2JointDef *jointdef;
 		switch (jointsource->type)
 		{
@@ -150,7 +150,7 @@ CollidableTemplate::CollidableTemplate(const CollidableTemplate &aTemplate)
 		default:				jointdef = NULL; DebugPrint("unsupported joint type %d", jointsource->type); break;
 		}
 		if (jointdef)
-			joints.push_back(jointdef);
+			joints.Put(itor.GetKey(), jointdef);
 	}
 #endif
 }
@@ -159,18 +159,18 @@ CollidableTemplate::~CollidableTemplate(void)
 {
 #ifndef COLLIDABLE_SHAPE_DATABASE
 	// free the shape list
-	for (std::vector<b2ShapeDef *>::const_iterator itor = shapes.begin(); itor != shapes.end(); ++itor)
+	for (Database::Typed<b2ShapeDef *>::Iterator itor(&shapes); itor.IsValid(); ++itor)
 	{
-		b2ShapeDef *shapedef = *itor;
+		b2ShapeDef *shapedef = itor.GetValue();
 		shapedef->~b2ShapeDef();
 		shapepool.free(shapedef);
 	}
 #endif
 #ifndef COLLIDABLE_JOINT_DATABASE
 	// free the joint list
-	for (std::vector<b2JointDef *>::const_iterator itor = joints.begin(); itor != joints.end(); ++itor)
+	for (Database::Typed<b2JointDef *>::Iterator itor(&joints); itor.IsValid(); ++itor)
 	{
-		b2JointDef *jointdef = *itor;
+		b2JointDef *jointdef = itor.GetValue();
 		jointdef->~b2JointDef();
 		jointpool.free(jointdef);
 	}
@@ -373,9 +373,12 @@ bool CollidableTemplate::ProcessBodyItem(const TiXmlElement *element, b2BodyDef 
 			shapes.Close(shapeid);
 			Database::collidabletemplatecircle.Close(id);
 #else
-			b2CircleDef &shape = *new(shapepool.malloc()) b2CircleDef();
-			shapes.push_back(&shape);
-			ConfigureCircle(element, shape);
+			b2CircleDef *shape = new(shapepool.malloc()) b2CircleDef();
+			if (const char *name = element->Attribute("name"))
+				shapes.Put(Hash(name), shape);
+			else
+				shapes.Put(shapes.GetCount() + 1, shape);
+			ConfigureCircle(element, *shape);
 #endif
 		}
 		return true;
@@ -389,9 +392,12 @@ bool CollidableTemplate::ProcessBodyItem(const TiXmlElement *element, b2BodyDef 
 			ConfigureBox(element, shape);
 			Database::collidabletemplatepolygon.Close(id);
 #else
-			b2PolygonDef &shape = *new(shapepool.malloc()) b2PolygonDef();
-			shapes.push_back(&shape);
-			ConfigureBox(element, shape);
+			b2PolygonDef *shape = new(shapepool.malloc()) b2PolygonDef();
+			if (const char *name = element->Attribute("name"))
+				shapes.Put(Hash(name), shape);
+			else
+				shapes.Put(shapes.GetCount() + 1, shape);
+			ConfigureBox(element, *shape);
 #endif
 		}
 		return true;
@@ -405,9 +411,12 @@ bool CollidableTemplate::ProcessBodyItem(const TiXmlElement *element, b2BodyDef 
 			ConfigurePoly(element, shape);
 			Database::collidabletemplatepolygon.Close(id);
 #else
-			b2PolygonDef &shape = *new(shapepool.malloc()) b2PolygonDef();
-			shapes.push_back(&shape);
-			ConfigurePoly(element, shape);
+			b2PolygonDef *shape = new(shapepool.malloc()) b2PolygonDef();
+			if (const char *name = element->Attribute("name"))
+				shapes.Put(Hash(name), shape);
+			else
+				shapes.Put(shapes.GetCount() + 1, shape);
+			ConfigurePoly(element, *shape);
 #endif
 		}
 		return true;
@@ -707,7 +716,10 @@ bool CollidableTemplate::Configure(const TiXmlElement *element, unsigned int id)
 				Database::collidabletemplaterevolute.Close(id);
 #else
 				b2RevoluteJointDef *joint = new(jointpool.malloc()) b2RevoluteJointDef();
-				joints.push_back(joint);
+				if (const char *name = child->Attribute("name"))
+					joints.Put(Hash(name), joint);
+				else
+					joints.Put(joints.GetCount() + 1, joint);
 				CollidableTemplate::ConfigureRevoluteJoint(child, *joint);
 #endif
 			}
@@ -724,7 +736,10 @@ bool CollidableTemplate::Configure(const TiXmlElement *element, unsigned int id)
 				Database::collidabletemplaterevolute.Close(id);
 #else
 				b2PrismaticJointDef *joint = new(jointpool.malloc()) b2PrismaticJointDef();
-				joints.push_back(joint);
+				if (const char *name = child->Attribute("name"))
+					joints.Put(Hash(name), joint);
+				else
+					joints.Put(joints.GetCount() + 1, joint);
 				CollidableTemplate::ConfigurePrismaticJoint(child, *joint);
 #endif
 			}
@@ -741,7 +756,10 @@ bool CollidableTemplate::Configure(const TiXmlElement *element, unsigned int id)
 				Database::collidabletemplaterevolute.Close(id);
 #else
 				b2DistanceJointDef *joint = new(jointpool.malloc()) b2DistanceJointDef();
-				joints.push_back(joint);
+				if (const char *name = child->Attribute("name"))
+					joints.Put(Hash(name), joint);
+				else
+					joints.Put(joints.GetCount() + 1, joint);
 				CollidableTemplate::ConfigureDistanceJoint(child, *joint);
 #endif
 			}
@@ -758,7 +776,10 @@ bool CollidableTemplate::Configure(const TiXmlElement *element, unsigned int id)
 				Database::collidabletemplaterevolute.Close(id);
 #else
 				b2PulleyJointDef *joint = new(jointpool.malloc()) b2PulleyJointDef();
-				joints.push_back(joint);
+				if (const char *name = child->Attribute("name"))
+					joints.Put(Hash(name), joint);
+				else
+					joints.Put(joints.GetCount() + 1, joint);
 				CollidableTemplate::ConfigurePulleyJoint(child, *joint);
 #endif
 			}
@@ -775,7 +796,10 @@ bool CollidableTemplate::Configure(const TiXmlElement *element, unsigned int id)
 				Database::collidabletemplaterevolute.Close(id);
 #else
 				b2MouseJointDef *joint = new(jointpool.malloc()) b2MouseJointDef();
-				joints.push_back(joint);
+				if (const char *name = child->Attribute("name"))
+					joints.Put(Hash(name), joint);
+				else
+					joints.Put(joints.GetCount() + 1, joint);
 				CollidableTemplate::ConfigureMouseJoint(child, *joint);
 #endif
 			}
@@ -818,7 +842,7 @@ bool CollidableTemplate::SetupLinkJoint(const LinkTemplate &linktemplate, unsign
 #else
 	// add a revolute joint to the linked template (HACK)
 	b2RevoluteJointDef *joint = new(jointpool.malloc()) b2RevoluteJointDef();
-	joints.push_back(joint);
+	joints.Put(aSecondary, joint);
 	
 	// configure the joint definition
 	joint->body1 = reinterpret_cast<b2Body *>(aId);
@@ -1057,8 +1081,10 @@ Collidable::~Collidable(void)
 {
 }
 
-bool Collidable::CreateJoint(b2JointDef &joint) const
+bool Collidable::CreateJoint(const b2JointDef &jointtemplate) const
 {
+	b2JointDef &joint = *reinterpret_cast<b2JointDef *>(_alloca(jointsize));
+	memcpy(&joint, &jointtemplate, jointsize);
 	unsigned int id1 = reinterpret_cast<unsigned int>(joint.body1);
 	joint.userData = NULL;
 	Collidable *coll1 = Database::collidable.Get(id1 ? id1 : id);
@@ -1114,26 +1140,12 @@ void Collidable::AddToWorld(void)
 		body->CreateShape(&polygon);
 	}
 #else
-	for (std::vector<b2ShapeDef *>::const_iterator itor = collidable.shapes.begin(); itor != collidable.shapes.end(); ++itor)
+	for (Database::Typed<b2ShapeDef *>::Iterator itor(&collidable.shapes); itor.IsValid(); ++itor)
 	{
-		const b2ShapeDef *shapesource = *itor;
-		switch (shapesource->type)
-		{
-		case e_circleShape:
-			{
-				b2CircleDef circle(*static_cast<const b2CircleDef *>(shapesource));
-				circle.userData = reinterpret_cast<void *>(id);
-				body->CreateShape(&circle);
-			}
-			break;
-		case e_polygonShape:
-			{
-				b2PolygonDef polygon(*static_cast<const b2PolygonDef *>(shapesource));
-				polygon.userData = reinterpret_cast<void *>(id);
-				body->CreateShape(&polygon);
-			}
-			break;
-		}
+		b2ShapeDef &shapedef = *reinterpret_cast<b2ShapeDef *>(_alloca(shapesize));
+		memcpy(&shapedef, itor.GetValue(), shapesize);
+		shapedef.userData = reinterpret_cast<void *>(id);
+		body->CreateShape(&shapedef);
 	}
 #endif
 
@@ -1150,76 +1162,23 @@ void Collidable::AddToWorld(void)
 	// for each joint...
 	const Database::Typed<b2RevoluteJointDef> &revolutes = Database::collidabletemplaterevolute.Get(id);
 	for (Database::Typed<b2RevoluteJointDef>::Iterator revoluteitor(&revolutes); revoluteitor.IsValid(); ++revoluteitor)
-	{
-		b2RevoluteJointDef joint(revoluteitor.GetValue());
-		CreateJoint(joint);
-	}
+		CreateJoint(revoluteitor.GetValue());
 	const Database::Typed<b2PrismaticJointDef> &prismatics = Database::collidabletemplateprismatic.Get(id);
 	for (Database::Typed<b2PrismaticJointDef>::Iterator prismaticitor(&prismatics); prismaticitor.IsValid(); ++prismaticitor)
-	{
-		b2PrismaticJointDef joint(prismaticitor.GetValue());
-		CreateJoint(joint);
-	}
+		CreateJoint(prismaticitor.GetValue());
 	const Database::Typed<b2DistanceJointDef> &distances = Database::collidabletemplatedistance.Get(id);
 	for (Database::Typed<b2DistanceJointDef>::Iterator distanceitor(&distances); distanceitor.IsValid(); ++distanceitor)
-	{
-		b2DistanceJointDef joint(distanceitor.GetValue());
-		CreateJoint(joint);
-	}
+		CreateJoint(distanceitor.GetValue());
 	const Database::Typed<b2PulleyJointDef> &pulleys = Database::collidabletemplatepulley.Get(id);
 	for (Database::Typed<b2PulleyJointDef>::Iterator pulleyitor(&pulleys); pulleyitor.IsValid(); ++pulleyitor)
-	{
-		b2PulleyJointDef joint(pulleyitor.GetValue());
-		CreateJoint(joint);
-	}
+		CreateJoint(pulleyitor.GetValue());
 	const Database::Typed<b2MouseJointDef> &mouses = Database::collidabletemplatemouse.Get(id);
 	for (Database::Typed<b2MouseJointDef>::Iterator mouseitor(&mouses); mouseitor.IsValid(); ++mouseitor)
-	{
-		b2MouseJointDef joint(mouseitor.GetValue());
-		CreateJoint(joint);
-	}
+		CreateJoint(mouseitor.GetValue());
 #else
 	// for each joint...
-	for (std::vector<b2JointDef *>::const_iterator itor = collidable.joints.begin(); itor != collidable.joints.end(); ++itor)
-	{
-		// duplicate the joint definition because CreateJoint modifies it
-		const b2JointDef *jointsource = *itor;
-		switch (jointsource->type)
-		{
-		case e_revoluteJoint:
-			{
-				b2RevoluteJointDef joint(*static_cast<const b2RevoluteJointDef *>(jointsource));
-				CreateJoint(joint);
-			}
-			break;
-		case e_prismaticJoint:
-			{
-				b2PrismaticJointDef joint(*static_cast<const b2PrismaticJointDef *>(jointsource));
-				CreateJoint(joint);
-			}
-			break;
-		case e_distanceJoint:
-			{
-				b2DistanceJointDef joint(*static_cast<const b2DistanceJointDef *>(jointsource));
-				CreateJoint(joint);
-			}
-			break;
-		case e_pulleyJoint:
-			{
-				b2PulleyJointDef joint(*static_cast<const b2PulleyJointDef *>(jointsource));
-				CreateJoint(joint);
-			}
-			break;
-		case e_mouseJoint:
-			{
-				b2MouseJointDef joint(*static_cast<const b2MouseJointDef *>(jointsource));
-				CreateJoint(joint);
-			}
-			break;
-		default:
-			break;
-		}
-	}
+	for (Database::Typed<b2JointDef *>::Iterator itor(&collidable.joints); itor.IsValid(); ++itor)
+		CreateJoint(*itor.GetValue());
 #endif
 }
 

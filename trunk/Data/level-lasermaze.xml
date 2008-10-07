@@ -2,6 +2,23 @@
 <!-- Test Level -->
 <world xmin="-512" ymin="-256" xmax="512" ymax="256">
 
+
+	<!-- sounds -->
+	<import name="sound/stargate-warpin.xml" />
+	<import name="sound/stargate-playershot.xml" />
+	<import name="sound/stargate-playershipidle.xml" />
+	<import name="sound/stargate-playershipthrust.xml" />
+	<import name="sound/stargate-explosion.xml" />
+	<import name="sound/stargate-bigexplosion.xml" />
+	<import name="sound/stargate-playershipdeath.xml" />
+	<import name="sound/stargate-smartbomb.xml" />
+	<import name="sound/stargate-landerkill.xml" />
+	<import name="sound/stargate-enemykill.xml" />
+	<import name="sound/stargate-anotherenemykill.xml" />
+	<import name="sound/stargate-spaceguppyshot.xml" />
+	<import name="sound/stargate-humanoidcatch.xml" />
+
+
 	<!-- players -->
 
 	<entity name="1P">
@@ -13,278 +30,25 @@
 
 
 	<!-- draw lists -->
-
-	<drawlist name="square">
-		<!-- 4 vertex square -->
-		<polygon>
-			<vertex x="1.000000" y="1.000000"/>
-			<vertex x="-1.000000" y="1.000000"/>
-			<vertex x="-1.000000" y="-1.00000"/>
-			<vertex x="1.000000" y="-1.00000"/>
-		</polygon>
-	</drawlist>
-
-	<drawlist name="diamond">
-		<!-- 4 vertex diamond -->
-		<polygon>
-			<vertex x="1.000000" y="0.000000"/>
-			<vertex x="0.000000" y="1.000000"/>
-			<vertex x="-1.000000" y="0.00000"/>
-			<vertex x="0.000000" y="-1.00000"/>
-		</polygon>
-	</drawlist>
-
-	<drawlist name="circle8">
-		<!-- 8 vertex circle -->
-		<polygon>
-			<vertex x="1.000000" y="0.000000"/>
-			<vertex x="0.707107" y="0.707107"/>
-			<vertex x="0.000000" y="1.000000"/>
-			<vertex x="-0.707107" y="0.707107"/>
-			<vertex x="-1.000000" y="0.00000"/>
-			<vertex x="-0.707107" y="-0.707107"/>
-			<vertex x="0.000000" y="-1.00000"/>
-			<vertex x="0.707107" y="-0.707107"/>
-		</polygon>
-	</drawlist>
-
-	<drawlist name="circle12">
-		<!-- 12 vertex circle -->
-		<polygon>
-			<vertex x="1.000000" y="0.000000"/>
-			<vertex x="0.866025" y="0.500000"/>
-			<vertex x="0.500000" y="0.866025"/>
-			<vertex x="0.000000" y="1.000000"/>
-			<vertex x="-0.500000" y="0.866025"/>
-			<vertex x="-0.866025" y="0.500000"/>
-			<vertex x="-1.000000" y="0.00000"/>
-			<vertex x="-0.866025" y="-0.500000"/>
-			<vertex x="-0.500000" y="-0.866025"/>
-			<vertex x="0.000000" y="-1.00000"/>
-			<vertex x="0.500000" y="-0.866025"/>
-			<vertex x="0.866025" y="-0.500000"/>
-		</polygon>
-	</drawlist>
-
-	<drawlist name="circle16">
-		<!-- 16 vertex circle -->
-		<polygon>
-			<vertex x="1.000000" y="0.000000"/>
-			<vertex x="0.923880" y="0.382683"/>
-			<vertex x="0.707107" y="0.707107"/>
-			<vertex x="0.382683" y="0.923880"/>
-			<vertex x="0.000000" y="1.000000"/>
-			<vertex x="-0.382683" y="0.923880"/>
-			<vertex x="-0.707107" y="0.707107"/>
-			<vertex x="-0.923880" y="0.382683"/>
-			<vertex x="-1.000000" y="0.00000"/>
-			<vertex x="-0.923880" y="-0.382683"/>
-			<vertex x="-0.707107" y="-0.707107"/>
-			<vertex x="-0.382683" y="-0.923880"/>
-			<vertex x="0.000000" y="-1.00000"/>
-			<vertex x="0.382683" y="-0.923880"/>
-			<vertex x="0.707107" y="-0.707107"/>
-			<vertex x="0.923880" y="-0.382683"/>
-		</polygon>
-	</drawlist>
-
-	<drawlist name="circle32">
-		<!-- 32 vertex circle -->
-		<polygon>
-			<vertex x="1.000000" y="0.000000"/>
-			<vertex x="0.980785" y="0.195090"/>
-			<vertex x="0.923880" y="0.382683"/>
-			<vertex x="0.831470" y="0.555570"/>
-			<vertex x="0.707107" y="0.707107"/>
-			<vertex x="0.555570" y="0.831470"/>
-			<vertex x="0.382683" y="0.923880"/>
-			<vertex x="0.195090" y="0.980785"/>
-			<vertex x="0.000000" y="1.000000"/>
-			<vertex x="-0.195090" y="0.980785"/>
-			<vertex x="-0.382683" y="0.923880"/>
-			<vertex x="-0.555570" y="0.831470"/>
-			<vertex x="-0.707107" y="0.707107"/>
-			<vertex x="-0.831470" y="0.555570"/>
-			<vertex x="-0.923880" y="0.382683"/>
-			<vertex x="-0.980785" y="0.195090"/>
-			<vertex x="-1.000000" y="0.00000"/>
-			<vertex x="-0.980785" y="-0.195090"/>
-			<vertex x="-0.923880" y="-0.382683"/>
-			<vertex x="-0.831470" y="-0.555570"/>
-			<vertex x="-0.707107" y="-0.707107"/>
-			<vertex x="-0.555570" y="-0.831470"/>
-			<vertex x="-0.382683" y="-0.923880"/>
-			<vertex x="-0.195090" y="-0.980785"/>
-			<vertex x="0.000000" y="-1.00000"/>
-			<vertex x="0.195090" y="-0.980785"/>
-			<vertex x="0.382683" y="-0.923880"/>
-			<vertex x="0.555570" y="-0.831470"/>
-			<vertex x="0.707107" y="-0.707107"/>
-			<vertex x="0.831470" y="-0.555570"/>
-			<vertex x="0.923880" y="-0.382683"/>
-			<vertex x="0.980785" y="-0.195090"/>
-		</polygon>
-	</drawlist>
-
-	<drawlist name="ship">
-		<triangle_strip>
-			<vertex x="8" y="-8"/>
-			<vertex x="8" y="-5.5"/>
-			<vertex x="2.5" y="-8"/>
-			<vertex x="3" y="-3"/>
-			<vertex x="2" y="-6.5"/>
-			<vertex x="3" y="0.5"/>
-			<vertex x="1.5" y="-6.5"/>
-			<vertex x="1.5" y="2"/>
-			<vertex x="1" y="-8"/>
-			<vertex x="1" y="8"/>
-			<vertex x="0" y="-8"/>
-			<vertex x="-1" y="8"/>
-			<vertex x="-1" y="-8"/>
-			<vertex x="-1.5" y="2"/>
-			<vertex x="-1.5" y="-6.5"/>
-			<vertex x="-3" y="0.5"/>
-			<vertex x="-2" y="-6.5"/>
-			<vertex x="-3" y="-3"/>
-			<vertex x="-2.5" y="-8"/>
-			<vertex x="-8" y="-5.5"/>
-			<vertex x="-8" y="-8"/>
-		</triangle_strip>
-	</drawlist>
-
+	
+	<import name="drawlist/square.xml" />
+	<import name="drawlist/diamond.xml" />
+	<import name="drawlist/circle8.xml" />
+	<import name="drawlist/circle12.xml" />
+	<import name="drawlist/circle16.xml" />
+	<import name="drawlist/circle32.xml" />
+	<import name="drawlist/ship.xml" />
+	<import name="drawlist/shipsmall.xml" />
+	<import name="drawlist/shiptiny.xml" />
 
 	<!-- reticule -->
+	
+	<import name="drawlist/reticule.xml" />
 
-	<drawlist name="reticule">
-		<quads>
-			<color r="0.4" g="0.5" b="1.0" a="1.0"/>
-
-			<vertex x="-10" y="-8"/>
-			<vertex x="-4" y="-8"/>
-			<vertex x="-4" y="-10"/>
-			<vertex x="-10" y="-10"/>
-
-			<vertex x="-8" y="-10"/>
-			<vertex x="-10" y="-10"/>
-			<vertex x="-10" y="-4"/>
-			<vertex x="-8" y="-4"/>
-
-			<vertex x="+10" y="-8"/>
-			<vertex x="+4" y="-8"/>
-			<vertex x="+4" y="-10"/>
-			<vertex x="+10" y="-10"/>
-
-			<vertex x="+8" y="-10"/>
-			<vertex x="+10" y="-10"/>
-			<vertex x="+10" y="-4"/>
-			<vertex x="+8" y="-4"/>
-
-			<vertex x="-10" y="+8"/>
-			<vertex x="-4" y="+8"/>
-			<vertex x="-4" y="+10"/>
-			<vertex x="-10" y="+10"/>
-
-			<vertex x="-8" y="+10"/>
-			<vertex x="-10" y="+10"/>
-			<vertex x="-10" y="+4"/>
-			<vertex x="-8" y="+4"/>
-
-			<vertex x="+10" y="+8"/>
-			<vertex x="+4" y="+8"/>
-			<vertex x="+4" y="+10"/>
-			<vertex x="+10" y="+10"/>
-
-			<vertex x="+8" y="+10"/>
-			<vertex x="+10" y="+10"/>
-			<vertex x="+10" y="+4"/>
-			<vertex x="+8" y="+4"/>
-
-			<color r="0.4" g="0.5" b="1.0" a="0.25"/>
-
-			<vertex x="-1" y="-480"/>
-			<vertex x="+1" y="-480"/>
-			<vertex x="+1" y="-8"/>
-			<vertex x="-1" y="-8"/>
-
-			<vertex x="-1" y="+8"/>
-			<vertex x="+1" y="+8"/>
-			<vertex x="+1" y="480"/>
-			<vertex x="-1" y="480"/>
-
-			<vertex x="-640" y="-1"/>
-			<vertex x="-8" y="-1"/>
-			<vertex x="-8" y="+1"/>
-			<vertex x="-640" y="+1"/>
-
-			<vertex x="+8" y="-1"/>
-			<vertex x="640" y="-1"/>
-			<vertex x="640" y="+1"/>
-			<vertex x="+8" y="+1"/>
-		</quads>
-	</drawlist>
-
-
-	<!-- background shapes -->
-
-	<!-- clouds -->
-	<!--
-	<entity name="clouds">
-		<renderable radius="16384">
-			<drawlist>
-				<set name="d" type="translate" x="0" y="0" z="256"/>
-				<quads>
-					<repeat count="64">
-						<color rand="1" r_avg="0.125" r_var="0.0625" g_avg="0.125" g_var="0.0625" b_avg="0.125" b_var="0.0625" a_avg="0.75" a_var="0"/>
-						<set name="p0" type="position" rand="1" x_avg="0" x_var="512" y_avg="0" y_var="512" z_avg="0" z_var="0"/>
-						<set name="w" type="translate" rand="1" x_avg="128" x_var="96" y_avg="0" y_var="0" z_avg="0" z_var="0"/>
-						<set name="h" type="translate" rand="1" x_avg="0" x_var="0" y_avg="128" y_var="96" z_avg="0" z_var="0"/>
-						<add name="p0" type="translate" variable="d"/>
-						<sub name="p0" type="translate" variable="w"/>
-						<sub name="p0" type="translate" variable="h"/>
-						<add name="w" type="translate" variable="w"/>
-						<add name="h" type="translate" variable="h"/>
-						<vertex variable="p0"/>
-						<add name="p0" type="translate" variable="w"/>
-						<vertex variable="p0"/>
-						<add name="p0" type="translate" variable="h"/>
-						<vertex variable="p0"/>
-						<sub name="p0" type="translate" variable="w"/>
-						<vertex variable="p0"/>
-						<add name="d" type="translate" x="0" y="0" z="6"/>
-					</repeat>
-				</quads>
-				<clear name="p0"/>
-				<clear name="w"/>
-				<clear name="h"/>
-				<clear name="d"/>
-			</drawlist>
-		</renderable>
-	</entity>
-	-->
 
 	<!-- starfield -->
-	<template name="starfield">
-		<renderable radius="768">
-			<drawlist>
-				<quads>
-					<repeat count="128">
-						<color rand="1" r_avg="0.75" r_var="0.25" g_avg="0.75" g_var="0.25" b_avg="0.75" b_var="0.25" a_avg="1" a_var="0"/>
-						<set name="p0" type="position" rand="1" x_avg="0" x_var="256" y_avg="0" y_var="256" z_avg="640" z_var="384"/>
-						<add name="p0" type="translate" x="-1" y="-1"/>
-						<vertex variable="p0"/>
-						<add name="p0" type="translate" x="2" y="0"/>
-						<vertex variable="p0"/>
-						<add name="p0" type="translate" x="0" y="2"/>
-						<vertex variable="p0"/>
-						<add name="p0" type="translate" x="-2" y="0"/>
-						<vertex variable="p0"/>
-					</repeat>
-				</quads>
-				<clear name="p0"/>
-			</drawlist>
-		</renderable>
-	</template>
-
+	
+	<import name="template/starfield.xml" />
 	<tilemap x="768" y="768" dx="-512" dy="-512">
 		<tile name="*" spawn="starfield"/>
 		<row data="****"/>
@@ -367,774 +131,49 @@
 
 	<!-- player bullet explosion -->
 
-	<template name="playerbulletexplosion">
-		<expire time="0.5"/>
-		<renderable radius="8">
-			<block length="0.1">
-				<pushmatrix>
-					<color>
-						<key time="0.0" r="1.0" g="1.0" b="1.0" a="1.0"/>
-						<key time="0.1" r="1.0" g="1.0" b="1.0" a="0.0"/>
-					</color>
-					<scale>
-						<key time="0.0" x="4.0" y="4.0"/>
-						<key time="0.1" x="0.0" y="0.0"/>
-					</scale>
-					<calllist name="circle16"/>
-				</pushmatrix>
-				<pushmatrix>
-					<color>
-						<key time="0.0" r="1.0" g="1.0" b="1.0" a="0.1"/>
-						<key time="0.1" r="1.0" g="1.0" b="1.0" a="0.0"/>
-					</color>
-					<scale>
-						<key time="0.0" x="4.0" y="4.0"/>
-						<key time="0.1" x="16.0" y="16.0"/>
-					</scale>
-					<calllist name="circle16"/>
-				</pushmatrix>
-			</block>
-			<block length="0.5">
-				<pushmatrix>
-					<color>
-						<key time="0.0" r="0.9" g="0.8" b="1.0" a="1.0"/>
-						<key time="0.5" r="0.5" g="0.0" b="1.0" a="0.0"/>
-					</color>
-					<scale>
-						<key time="0.0" x="3.0" y="3.0"/>
-						<key time="0.5" x="0.0" y="0.0"/>
-					</scale>
-					<calllist name="circle16"/>
-				</pushmatrix>
-			</block>
-			<block length="0.3">
-				<pushmatrix>
-					<color>
-						<key time="0.0" r="0.7" g="0.4" b="1.0" a="0.5"/>
-						<key time="0.3" r="0.0" g="0.0" b="1.0" a="0.0"/>
-					</color>
-					<scale>
-						<key time="0.0" x="4.0" y="4.0"/>
-						<key time="0.3" x="8.0" y="8.0"/>
-					</scale>
-					<calllist name="circle16"/>
-				</pushmatrix>
-			</block>
-		</renderable>
-	</template>
-
-
-	<!-- player bullet -->
-
-	<template name="playerbullet">
-		<expire time="0.05"/>
-		<beam damage="1" range="384" category="2" bit1="0" bit2="0" bit4="0" spawnonimpact="playerbulletexplosion"/>
-		<renderable radius="384">
-			<quad_strip>
-				<set name="p" type="position">
-					<key time="0.00" x="0.50"/>
-					<key time="0.05" x="0.25"/>
-				</set>
-				<color>
-					<key time="0.00" r="1.0" g="1.0" b="1.0" a="1.0"/>
-					<key time="0.05" r="0.7" g="0.4" b="1.0" a="0.0"/>
-				</color>
-				<vertex variable="p"/>
-				<mul name="p" type="scale" x="-1"/>
-				<vertex variable="p"/>
-				<mul name="p" type="scale" x="-1"/>
-				<color>
-					<key time="0.00" r="0.9" g="0.8" b="1.0" a="1.0"/>
-					<key time="0.05" r="0.5" g="0.0" b="1.0" a="0.0"/>
-				</color>
-				<add name="p" type="translate" y="8"/>
-				<vertex variable="p"/>
-				<mul name="p" type="scale" x="-1"/>
-				<vertex variable="p"/>
-				<mul name="p" type="scale" x="-1"/>
-				<sub name="p" type="translate" y="8"/>
-				<add name="p" type="translate" variable="beamend"/>
-				<vertex variable="p"/>
-				<mul name="p" type="scale" x="-1"/>
-				<vertex variable="p"/>
-			</quad_strip>
-			<quad_strip>
-				<set name="p" type="position">
-					<key time="0.00" x="1.00"/>
-					<key time="0.05" x="2.00"/>
-				</set>
-				<color>
-					<key time="0.00" r="0.7" g="0.4" b="1.0" a="0.5"/>
-					<key time="0.05" r="0.5" g="0.0" b="1.0" a="0.0"/>
-				</color>
-				<vertex variable="p"/>
-				<mul name="p" type="scale" x="-1"/>
-				<vertex variable="p"/>
-				<mul name="p" type="scale" x="-1"/>
-				<color>
-					<key time="0.00" r="0.5" g="0.0" b="1.0" a="0.5"/>
-					<key time="0.05" r="0.0" g="0.0" b="1.0" a="0.0"/>
-				</color>
-				<add name="p" type="translate" y="8"/>
-				<vertex variable="p"/>
-				<mul name="p" type="scale" x="-1"/>
-				<vertex variable="p"/>
-				<mul name="p" type="scale" x="-1"/>
-				<sub name="p" type="translate" y="8"/>
-				<add name="p" type="translate" variable="beamend"/>
-				<vertex variable="p"/>
-				<mul name="p" type="scale" x="-1"/>
-				<vertex variable="p"/>
-			</quad_strip>
-		</renderable>
-	</template>
-
-
-	<!-- player ship weapon -->
-
-	<template name="playershipweapon">
-		<weapon>
-			<flash name="playerbullet"/>
-			<shot delay="0.1"/>
-		</weapon>
-		<sound volume="0.25">
-			<file name="robotron-playershot.wav"/>
-		</sound>
-		<soundcue>
-			<cue name="fire" sound="playershipweapon"/>
-		</soundcue>
-	</template>
-
-
-	<!-- player ship explosion -->
-
-	<template name="playershipexplosion">
-		<renderable radius="1000">
-			<block length="1.0">
-				<pushmatrix>
-					<color>
-						<key time="0.0" r="1.0" g="1.0" b="1.0" a="1.0"/>
-						<key time="1.0" r="1.0" g="1.0" b="1.0" a="0.0"/>
-					</color>
-					<scale>
-						<key time="0.0" x="30.0" y="30.0"/>
-						<key time="1.0" x="0.0" y="0.0"/>
-					</scale>
-					<calllist name="circle32"/>
-				</pushmatrix>
-			</block>
-			<block length="0.2">
-				<pushmatrix>
-					<color>
-						<key time="0.0" r="1.0" g="1.0" b="1.0" a="0.1"/>
-						<key time="0.2" r="1.0" g="1.0" b="1.0" a="0.0"/>
-					</color>
-					<scale>
-						<key time="0.0" x="30.0" y="30.0"/>
-						<key time="0.2" x="300.0" y="300.0"/>
-					</scale>
-					<calllist name="circle32"/>
-				</pushmatrix>
-			</block>
-			<block length="4.0">
-				<pushmatrix>
-					<color>
-						<key time="0.0" r="0.8" g="0.9" b="1.0" a="1.0"/>
-						<key time="2.0" r="0.0" g="0.5" b="1.0" a="0.25"/>
-						<key time="4.0" r="0.0" g="0.0" b="1.0" a="0.0"/>
-					</color>
-					<scale>
-						<key time="0.0" x="20.0" y="20.0"/>
-						<key time="4.0" x="0.0" y="0.0"/>
-					</scale>
-					<calllist name="circle32"/>
-				</pushmatrix>
-			</block>
-			<block length="3.0">
-				<pushmatrix>
-					<color>
-						<key time="0.0" r="0.4" g="0.7" b="1.0" a="0.5"/>
-						<key time="3.0" r="0.0" g="0.0" b="1.0" a="0.0"/>
-					</color>
-					<repeat count="6">
-						<repeat count="12">
-							<pushmatrix>
-								<translate>
-									<key time="0.0" x="0" y="0"/>
-									<key time="3.0" x="1000" y="0"/>
-								</translate>
-								<scale>
-									<key time="0.0" x="15.0" y="1.0"/>
-									<key time="3.0" x="1.0" y="1.0"/>
-								</scale>
-								<calllist name="circle16"/>
-							</pushmatrix>
-							<rotate angle="30"/>
-						</repeat>
-						<scale x="0.8" y="0.8"/>
-						<rotate angle="18"/>
-					</repeat>
-				</pushmatrix>
-			</block>
-			<block start="0.0" length="1.0">
-				<pushmatrix>
-					<color>
-						<key time="0.0" r="0.4" g="0.7" b="1.0" a="0.375"/>
-						<key time="1.0" r="0.0" g="0.0" b="1.0" a="0.0"/>
-					</color>
-					<scale>
-						<key time="0.0" x="20.0" y="20.0"/>
-						<key time="1.0" x="120.0" y="120.0"/>
-					</scale>
-					<calllist name="circle32"/>
-				</pushmatrix>
-			</block>
-			<block start="0.25" length="1.0">
-				<pushmatrix>
-					<color>
-						<key time="0.0" r="0.4" g="0.7" b="1.0" a="0.25"/>
-						<key time="1.0" r="0.0" g="0.0" b="1.0" a="0.0"/>
-					</color>
-					<scale>
-						<key time="0.0" x="20.0" y="20.0"/>
-						<key time="1.0" x="120.0" y="120.0"/>
-					</scale>
-					<calllist name="circle32"/>
-				</pushmatrix>
-			</block>
-			<block start="0.5" length="1.0">
-				<pushmatrix>
-					<color>
-						<key time="0.0" r="0.4" g="0.7" b="1.0" a="0.125"/>
-						<key time="1.0" r="0.0" g="0.0" b="1.0" a="0.0"/>
-					</color>
-					<scale>
-						<key time="0.0" x="20.0" y="20.0"/>
-						<key time="1.0" x="120.0" y="120.0"/>
-					</scale>
-					<calllist name="circle32"/>
-				</pushmatrix>
-			</block>
-		</renderable>
-		<expire time="3.0"/>
-		<sound volume="4">
-			<file name="stargate-playershipexplosion.wav"/>
-		</sound>
-		<playercontroller/>
-	</template>
-
-
-	<!-- player ship death -->
-
-	<template name="playershipdeath">
-		<collidable>
-			<body name="main">
-				<circle radius="8">
-					<density value="1"/>
-					<friction value="0.5"/>
-					<restitution value="0.5"/>
-					<category value="1"/>
-					<mask bit2="0" bit4="0"/>
-				</circle>
-				<damping linear="5.0" angular="5.0"/>
-			</body>
-		</collidable>
-		<renderable radius="8" period="0.05">
-			<color>
-				<key time="0.000000" r="1.0" g="1.0" b="1.0" a="1.0"/>
-				<key time="0.033333" r="1.0" g="1.0" b="1.0" a="1.0"/>
-				<key time="0.033333" r="0.0" g="0.0" b="0.0" a="1.0"/>
-				<key time="0.050000" r="0.0" g="0.0" b="0.0" a="1.0"/>
-			</color>
-			<calllist name="ship"/>
-		</renderable>
-		<expire time="0.3" spawnonexpire="playershipexplosion"/>
-		<sound volume="4">
-			<file name="stargate-playershipdeath.wav"/>
-		</sound>
-		<playercontroller/>
-	</template>
+	<import name="template/playerlaserbeamimpact.xml" />
+	<import name="template/playerlaserbeam.xml" />
+	<import name="template/playerlaserweapon.xml" />
 
 
 	<!-- player ship -->
-
-	<sound name="extralife" volume="2" repeat="0">
-		<file name="stargate-extralife.wav"/>
-	</sound>
-	<sound name="playershipidle" volume="0.125" repeat="1">
-		<file name="stargate-idle.wav"/>
-	</sound>
-	<sound name="playershipthrust" volume="0.125" repeat="1">
-		<file name="stargate-thrust.wav"/>
-	</sound>
-
-
+	
+	<import name="template/playership.xml" />
 	<template name="playership">
-		<collidable>
-			<body name="main">
-				<circle radius="8">
-					<density value="1"/>
-					<friction value="0.5"/>
-					<restitution value="0.5"/>
-					<category value="1"/>
-					<mask bit2="0" bit4="0"/>
-					<group value="-1"/>
-				</circle>
-				<box w="3" h="5">
-					<position x="0" y="-4"/>
-					<density value="0"/>
-					<friction value="0.5"/>
-					<restitution value="0.5"/>
-					<category value="1"/>
-					<mask bit2="0"/>
-					<group value="-1"/>
-				</box>
-			</body>
-		</collidable>
-		<renderable radius="8">
-			<color r="0.4" g="0.5" b="1.0" a="1.0"/>
-			<calllist name="ship"/>
-		</renderable>
-		<playercontroller/>
-		<ship maxveloc="120" maxaccel="480" minaccel="30" maxomega="20"/>
-		<damagable health="10" spawnondeath="playershipdeath"/>
-		<soundcue>
-			<cue name="idle" sound="playershipidle"/>
-			<cue name="thrust" sound="playershipthrust"/>
-			<cue name="extralife" sound="extralife"/>
-		</soundcue>
-		<link name="lgun" secondary="playershipweapon">
-			<offset x="2" y="0" angle="0"/>
-		</link>
-		<link name="rgun" secondary="playershipweapon">
-			<offset x="-2" y="0" angle="0"/>
-		</link>
-		<team name="blue"/>
+		<ship maxveloc="120" maxaccel="960" minaccel="120" />
 	</template>
-
-	<template name="playershipwarp">
-		<renderable radius="2048">
-			<block start="0.8" length="0.2">
-				<pushmatrix>
-					<color>
-						<key time="0.0" r="0.0" g="0.0" b="1.0" a="0.0"/>
-						<key time="0.2" r="1.0" g="1.0" b="1.0" a="1.0"/>
-					</color>
-					<scale>
-						<key time="0.0" x="0.0" y="0.0"/>
-						<key time="0.2" x="1.0" y="1.0"/>
-					</scale>
-					<calllist name="ship"/>
-				</pushmatrix>
-			</block>
-			<block start="0.6" length="0.4">
-				<pushmatrix>
-					<color>
-						<key time="0.0" r="0.0" g="0.0" b="1.0" a="0.0"/>
-						<key time="0.4" r="0.4" g="0.7" b="1.0" a="0.5"/>
-					</color>
-					<scale>
-						<key time="0.0" x="0.0" y="0.0"/>
-						<key time="0.4" x="10.0" y="10.0"/>
-					</scale>
-					<calllist name="circle16"/>
-				</pushmatrix>
-			</block>
-			<block start="0.4" length="0.6">
-				<pushmatrix>
-					<color>
-						<key time="0.0" r="0.0" g="0.0" b="1.0" a="0.0"/>
-						<key time="0.6" r="0.0" g="0.5" b="1.0" a="0.25"/>
-					</color>
-					<scale>
-						<key time="0.0" x="0.0" y="0.0"/>
-						<key time="0.6" x="16.0" y="16.0"/>
-					</scale>
-					<calllist name="circle16"/>
-				</pushmatrix>
-			</block>
-			<pushmatrix>
-				<color>
-					<key time="0.0" r="0.0" g="0.0" b="1.0" a="0.0"/>
-					<key time="1.0" r="0.4" g="0.7" b="1.0" a="0.5"/>
-				</color>
-				<repeat count="6">
-					<repeat count="12">
-						<pushmatrix>
-							<translate>
-								<key time="0.0" x="256" y="0"/>
-								<key time="1.0" x="0" y="0"/>
-							</translate>
-							<scale>
-								<key time="0.0" x="1.0" y="1.0"/>
-								<key time="1.0" x="8.0" y="1.0"/>
-							</scale>
-							<calllist name="circle16"/>
-						</pushmatrix>
-						<rotate angle="30"/>
-					</repeat>
-					<scale x="0.8" y="0.8"/>
-					<rotate angle="18"/>
-				</repeat>
-			</pushmatrix>
-		</renderable>
-		<expire time="1.0" spawnonexpire="playership"/>
-		<playercontroller/>
-		<sound>
-			<file name="stargate-warpin.wav"/>
-		</sound>
-	</template>
+	<import name="template/playership-beam.xml" />
+	<import name="template/playershipinvulnerable.xml" />
+	<import name="template/playershipwarp.xml" />
+	<import name="template/playershipdeath.xml" />
+	<import name="template/playershipexplosion.xml" />
 
 
 	<!-- small friend explosion -->
 
-	<template name="friendexplosionsmall">
-		<expire time="2.0"/>
-		<sound>
-			<file name="stargate-enemykill.wav"/>
-		</sound>
-		<renderable radius="200">
-			<block length="0.3">
-				<pushmatrix>
-					<color>
-						<key time="0.0" r="1.0" g="1.0" b="1.0" a="1.0"/>
-						<key time="0.3" r="1.0" g="1.0" b="1.0" a="0.0"/>
-					</color>
-					<scale>
-						<key time="0.0" x="20.0" y="20.0"/>
-						<key time="0.3" x="0.0" y="0.0"/>
-					</scale>
-					<calllist name="circle16"/>
-				</pushmatrix>
-			</block>
-			<block length="0.2">
-				<pushmatrix>
-					<color>
-						<key time="0.0" r="1.0" g="1.0" b="1.0" a="0.1"/>
-						<key time="0.2" r="1.0" g="1.0" b="1.0" a="0.0"/>
-					</color>
-					<scale>
-						<key time="0.0" x="20.0" y="20.0"/>
-						<key time="0.2" x="100.0" y="100.0"/>
-					</scale>
-					<calllist name="circle32"/>
-				</pushmatrix>
-			</block>
-			<block length="2.0">
-				<pushmatrix>
-					<color>
-						<key time="0.0" r="0.8" g="0.9" b="1.0" a="1.0"/>
-						<key time="1.0" r="0.0" g="0.5" b="1.0" a="0.25"/>
-						<key time="2.0" r="0.0" g="0.0" b="1.0" a="0.0"/>
-					</color>
-					<scale>
-						<key time="0.0" x="10.0" y="10.0"/>
-						<key time="2.0" x="0.0" y="0.0"/>
-					</scale>
-					<calllist name="circle16"/>
-				</pushmatrix>
-			</block>
-			<block length="0.5">
-				<pushmatrix>
-					<color>
-						<key time="0.0" r="0.4" g="0.7" b="1.0" a="0.5"/>
-						<key time="0.5" r="0.0" g="0.0" b="1.0" a="0.0"/>
-					</color>
-					<repeat count="6">
-						<repeat count="6">
-							<pushmatrix>
-								<translate>
-									<key time="0.0" x="0" y="0"/>
-									<key time="0.5" x="200" y="0"/>
-								</translate>
-								<scale>
-									<key time="0.0" x="15.0" y="1.0"/>
-									<key time="0.5" x="1.0" y="1.0"/>
-								</scale>
-								<calllist name="circle16"/>
-							</pushmatrix>
-							<rotate angle="60"/>
-						</repeat>
-						<scale x="0.8" y="0.8"/>
-						<rotate angle="20"/>
-					</repeat>
-				</pushmatrix>
-			</block>
-			<block length="1.0">
-				<pushmatrix>
-					<color>
-						<key time="0.0" r="0.4" g="0.7" b="1.0" a="0.5"/>
-						<key time="1.0" r="0.0" g="0.0" b="1.0" a="0.0"/>
-					</color>
-					<scale>
-						<key time="0.0" x="10.0" y="10.0"/>
-						<key time="1.0" x="30.0" y="30.0"/>
-					</scale>
-					<calllist name="circle32"/>
-				</pushmatrix>
-			</block>
-		</renderable>
-	</template>
+	<import name="template/friendexplosion.xml" />
 	
 	
 	<!-- friend bullseye targets -->
 
+	<import name="template/friendtarget.xml" />
 	<template name="friendtarget">
-		<collidable>
-			<body name="main">
-				<circle radius="5">
-					<density value="1"/>
-					<friction value="0.5"/>
-					<restitution value="0.5"/>
-					<category value="1"/>
-				</circle>
-				<damping linear="5.0" angular="5.0"/>
-			</body>
-		</collidable>
-		<renderable radius="5">
-			<drawlist>
-				<color r="0.1" g="0.2" b="1.0" a="1.0"/>
-				<pushmatrix>
-					<scale x="2" y="2"/>
-					<calllist name="circle8"/>
-				</pushmatrix>
-				<color r="1.0" g="1.0" b="1.0" a="1.0"/>
-				<pushmatrix>
-					<scale x="3.5" y="3.5"/>
-					<calllist name="circle12"/>
-				</pushmatrix>
-				<color r="0.1" g="0.2" b="1.0" a="1.0"/>
-				<pushmatrix>
-					<scale x="5" y="5"/>
-					<calllist name="circle16"/>
-				</pushmatrix>
-			</drawlist>
-		</renderable>
-		<damagable health="10" spawnondeath="friendexplosionsmall"/>
-		<team name="blue"/>
-		<points value="100"/>
+		<damagable spawnondeath="friendexplosion" />
 	</template>
-
-	<template name="friendtargetappear">
-		<expire time="0.25" spawnonexpire="friendtarget"/>
-		<renderable radius="20">
-			<pushmatrix>
-				<color>
-					<key time="0.00" r="1.0" g="1.0" b="1.0" a="0.0"/>
-					<key time="0.25" r="1.0" g="1.0" b="1.0" a="1.0"/>
-				</color>
-				<scale>
-					<key time="0.00" x="1.0" y="1.0"/>
-					<key time="0.25" x="5.0" y="5.0"/>
-				</scale>
-				<calllist name="circle16"/>
-			</pushmatrix>
-			<pushmatrix>
-				<color>
-					<key time="0.0" r="0.1" g="0.2" b="1.0" a="0.0"/>
-					<key time="0.25" r="0.1" g="0.2" b="1.0" a="0.5"/>
-				</color>
-				<scale>
-					<key time="0.00" x="20.0" y="20.0"/>
-					<key time="0.25" x="5.0" y="5.0"/>
-				</scale>
-				<calllist name="circle16"/>
-			</pushmatrix>
-		</renderable>
-	</template>
+	<import name="template/friendtargetappear.xml" />
 
 
 	<!-- health powerup -->
 
-	<template name="healthupexplosion">
-		<expire time="1.0"/>
-		<sound>
-			<file name="stargate-humanoidcatch.wav"/>
-		</sound>
-		<renderable radius="45">
-			<pushmatrix>
-				<color>
-					<key time="0.0" r="0.9" g="1.0" b="0.8" a="1.0"/>
-					<key time="0.5" r="0.5" g="1.0" b="0.0" a="0.0"/>
-				</color>
-				<scale>
-					<key time="0.0" x="6.0" y="6.0"/>
-					<key time="0.5" x="3.0" y="3.0"/>
-				</scale>
-				<calllist name="circle16"/>
-			</pushmatrix>
-			<pushmatrix>
-				<color>
-					<key time="0.0" r="0.7" g="1.0" b="0.4" a="0.5"/>
-					<key time="1.0"  r="0.0" g="1.0" b="0.0" a="0.0"/>
-				</color>
-				<rotate>
-					<key time="0.0" angle="0"/>
-					<key time="1.0" angle="120"/>
-				</rotate>
-				<repeat count="3">
-					<repeat count="6">
-						<pushmatrix>
-							<translate>
-								<key time="0.0" x="40" y="10"/>
-								<key time="0.5" x="15" y="10"/>
-								<key time="1.0" x="0" y="10"/>
-							</translate>
-							<scale>
-								<key time="0.0" x="2.0" y="2.0"/>
-								<key time="0.5" x="15.0" y="1.0"/>
-								<key time="1.0" x="1.0" y="1.0"/>
-							</scale>
-							<calllist name="circle16"/>
-						</pushmatrix>
-						<rotate angle="60"/>
-					</repeat>
-					<rotate angle="-30"/>
-					<scale x="0.75" y="0.75"/>
-				</repeat>
-			</pushmatrix>
-			<pushmatrix>
-				<color>
-					<key time="0.00" r="0.7" g="1.0" b="0.4" a="0.5"/>
-					<key time="0.25" r="0.0" g="1.0" b="0.0" a="0.0"/>
-				</color>
-				<scale>
-					<key time="0.00" x="8.0" y="8.0"/>
-					<key time="0.25" x="16.0" y="16.0"/>
-				</scale>
-				<calllist name="circle16"/>
-			</pushmatrix>
-		</renderable>
-	</template>
-
-	<template name="healthup">
-		<collidable>
-			<body name="main">
-				<circle radius="4">
-					<friction value="0.5"/>
-					<restitution value="0.5"/>
-					<density value="1"/>
-					<category value="0"/>
-					<mask bit2="0" bit4="0"/>
-				</circle>
-				<damping linear="5.0" angular="5.0"/>
-			</body>
-		</collidable>
-		<renderable radius="4">
-			<drawlist>
-				<color r="1.0" g="1.0" b="1.0" a="1.0"/>
-				<quads>
-					<vertex x="1" y="3"/>
-					<vertex x="-1" y="3"/>
-					<vertex x="-1" y="-3"/>
-					<vertex x="1" y="-3"/>
-					<vertex x="3" y="1"/>
-					<vertex x="3" y="-1"/>
-					<vertex x="-3" y="-1"/>
-					<vertex x="-3" y="1"/>
-				</quads>
-				<color r="0.2" g="1.0" b="0.1" a="1.0"/>
-				<pushmatrix>
-					<scale x="4" y="4"/>
-					<calllist name="circle16"/>
-				</pushmatrix>
-			</drawlist>
-		</renderable>
-		<bullet damage="-3" ricochet="1" spawnondeath="healthupexplosion"/>
-	</template>
-
-	<template name="healthupappear">
-		<expire time="0.25" spawnonexpire="healthup"/>
-		<renderable radius="20">
-			<pushmatrix>
-				<color>
-					<key time="0.00" r="1.0" g="1.0" b="1.0" a="0.0"/>
-					<key time="0.25" r="1.0" g="1.0" b="1.0" a="1.0"/>
-				</color>
-				<scale>
-					<key time="0.0" x="1.0" y="1.0"/>
-					<key time="0.25" x="4.0" y="4.0"/>
-				</scale>
-				<calllist name="circle16"/>
-			</pushmatrix>
-			<pushmatrix>
-				<color>
-					<key time="0.0" r="0.2" g="1.0" b="0.1" a="0.0"/>
-					<key time="0.25" r="0.2" g="1.0" b="0.1" a="0.5"/>
-				</color>
-				<scale>
-					<key time="0.0" x="20.0" y="20.0"/>
-					<key time="0.25" x="4.0" y="4.0"/>
-				</scale>
-				<calllist name="circle16"/>
-			</pushmatrix>
-		</renderable>
-	</template>
-
-	<template name="healthupspawner">
-		<spawner>
-			<spawn name="healthupappear" start="0" cycle="10" track="1"/>
-		</spawner>
-	</template>
+	<import name="template/health3collect.xml" />
+	<import name="template/health3.xml" />
+	<import name="template/health3appear.xml" />
+	<import name="template/health3spawner.xml" />
 	
 	
 	<!-- enemy bullet explosion -->
 
-	<template name="enemybulletexplosion">
-		<expire time="0.5"/>
-		<renderable radius="16">
-			<block length="0.1">
-				<pushmatrix>
-					<color>
-						<key time="0.0" r="1.0" g="1.0" b="1.0" a="1.0"/>
-						<key time="0.1" r="1.0" g="1.0" b="1.0" a="0.0"/>
-					</color>
-					<scale>
-						<key time="0.0" x="4.0" y="4.0"/>
-						<key time="0.1" x="0.0" y="0.0"/>
-					</scale>
-					<calllist name="circle16"/>
-				</pushmatrix>
-				<pushmatrix>
-					<color>
-						<key time="0.0" r="1.0" g="1.0" b="1.0" a="0.1"/>
-						<key time="0.1" r="1.0" g="1.0" b="1.0" a="0.0"/>
-					</color>
-					<scale>
-						<key time="0.0" x="4.0" y="4.0"/>
-						<key time="0.1" x="16.0" y="16.0"/>
-					</scale>
-					<calllist name="circle16"/>
-				</pushmatrix>
-			</block>
-			<block length="0.5">
-				<pushmatrix>
-					<color>
-						<key time="0.0" r="1.0" g="0.9" b="0.8" a="1.0"/>
-						<key time="0.5" r="1.0" g="0.5" b="0.0" a="0.0"/>
-					</color>
-					<scale>
-						<key time="0.0" x="3.0" y="3.0"/>
-						<key time="0.5" x="0.0" y="0.0"/>
-					</scale>
-					<calllist name="circle16"/>
-				</pushmatrix>
-			</block>
-			<block length="0.3">
-				<pushmatrix>
-					<color>
-						<key time="0.0" r="1.0" g="0.7" b="0.4" a="0.5"/>
-						<key time="0.3" r="1.0" g="0.0" b="0.0" a="0.0"/>
-					</color>
-					<scale>
-						<key time="0.0" x="4.0" y="4.0"/>
-						<key time="0.3" x="8.0" y="8.0"/>
-					</scale>
-					<calllist name="circle16"/>
-				</pushmatrix>
-			</block>
-		</renderable>
-	</template>
+	<import name="template/enemybulletexplosion.xml" />
 	
 	
 	<!-- enemy zap ship beam -->
@@ -1181,420 +220,48 @@
 
 	<!-- small enemy explosion -->
 
-	<template name="enemyexplosionsmall">
-		<expire time="2.0"/>
-		<sound>
-			<file name="stargate-enemykill.wav"/>
-		</sound>
-		<renderable radius="200">
-			<block length="0.3">
-				<pushmatrix>
-					<color>
-						<key time="0.0" r="1.0" g="1.0" b="1.0" a="1.0"/>
-						<key time="0.3" r="1.0" g="1.0" b="1.0" a="0.0"/>
-					</color>
-					<scale>
-						<key time="0.0" x="20.0" y="20.0"/>
-						<key time="0.3" x="0.0" y="0.0"/>
-					</scale>
-					<calllist name="circle16"/>
-				</pushmatrix>
-			</block>
-			<block length="0.2">
-				<pushmatrix>
-					<color>
-						<key time="0.0" r="1.0" g="1.0" b="1.0" a="0.1"/>
-						<key time="0.2" r="1.0" g="1.0" b="1.0" a="0.0"/>
-					</color>
-					<scale>
-						<key time="0.0" x="20.0" y="20.0"/>
-						<key time="0.2" x="100.0" y="100.0"/>
-					</scale>
-					<calllist name="circle32"/>
-				</pushmatrix>
-			</block>
-			<block length="2.0">
-				<pushmatrix>
-					<color>
-						<key time="0.0" r="1.0" g="0.9" b="0.8" a="1.0"/>
-						<key time="1.0" r="1.0" g="0.5" b="0.0" a="0.25"/>
-						<key time="2.0" r="1.0" g="0.0" b="0.0" a="0.0"/>
-					</color>
-					<scale>
-						<key time="0.0" x="10.0" y="10.0"/>
-						<key time="2.0" x="0.0" y="0.0"/>
-					</scale>
-					<calllist name="circle16"/>
-				</pushmatrix>
-			</block>
-			<block length="0.5">
-				<pushmatrix>
-					<color>
-						<key time="0.0" r="1.0" g="0.7" b="0.4" a="0.5"/>
-						<key time="0.5" r="1.0" g="0.0" b="0.0" a="0.0"/>
-					</color>
-					<repeat count="6">
-						<repeat count="6">
-							<pushmatrix>
-								<translate>
-									<key time="0.0" x="0" y="0"/>
-									<key time="0.5" x="200" y="0"/>
-								</translate>
-								<scale>
-									<key time="0.0" x="15.0" y="1.0"/>
-									<key time="0.5" x="1.0" y="1.0"/>
-								</scale>
-								<calllist name="circle16"/>
-							</pushmatrix>
-							<rotate angle="60"/>
-						</repeat>
-						<scale x="0.8" y="0.8"/>
-						<rotate angle="20"/>
-					</repeat>
-				</pushmatrix>
-			</block>
-			<block length="1.0">
-				<pushmatrix>
-					<color>
-						<key time="0.0" r="1.0" g="0.7" b="0.4" a="0.5"/>
-						<key time="1.0" r="1.0" g="0.0" b="0.0" a="0.0"/>
-					</color>
-					<scale>
-						<key time="0.0" x="10.0" y="10.0"/>
-						<key time="1.0" x="30.0" y="30.0"/>
-					</scale>
-					<calllist name="circle32"/>
-				</pushmatrix>
-			</block>
-		</renderable>
-	</template>
+	<import name="template/enemyexplosionsmall.xml" />
 	
 	
 	<!-- enemy zap ship -->
 
-	<template name="enemyzapship">
-		<collidable>
-			<body name="main">
-				<circle radius="3">
-					<density value="1"/>
-					<friction value="0.5"/>
-					<restitution value="0.5"/>
-					<category value="3"/>
-				</circle>
-			</body>
-		</collidable>
-		<renderable radius="3" period="1.0">
-			<color>
-				<key time="0.0" r="1.0" g="0.3" b="0.1" a="1.0"/>
-				<key time="0.5" r="1.0" g="0.9" b="0.1" a="1.0"/>
-				<key time="1.0" r="1.0" g="0.3" b="0.1" a="1.0"/>
-			</color>
-			<drawlist>
-				<quads>
-					<vertex x="0.5" y="0.5"/>
-					<vertex x="0.5" y="-1"/>
-					<vertex x="2" y="-0.5"/>
-					<vertex x="2" y="0"/>
-					<vertex x="-0.5" y="0.5"/>
-					<vertex x="-0.5" y="-1"/>
-					<vertex x="-2" y="-0.5"/>
-					<vertex x="-2" y="0"/>
-				</quads>
-				<color r="1.0" g="0.2" b="0.1" a="1.0"/>
-				<triangle_strip>
-					<vertex x="3" y="-1"/>
-					<vertex x="3" y="0"/>
-					<vertex x="1" y="-2"/>
-					<vertex x="1.5" y="1.5"/>
-					<vertex x="0.75" y="-2"/>
-					<vertex x="0.5" y="3"/>
-					<vertex x="0" y="-2"/>
-					<vertex x="-0.5" y="3"/>
-					<vertex x="-0.75" y="-2"/>
-					<vertex x="-1.5" y="1.5"/>
-					<vertex x="-1" y="-2"/>
-					<vertex x="-3" y="0"/>
-					<vertex x="-3" y="-1"/>
-				</triangle_strip>
-			</drawlist>
-		</renderable>
-		<aimer range="512" focus="1" attack="64" leading="0" angle="30" evade="1" close="32" closedistscale="0.0625" closespeedscale="0.015625" category="4" bit2="0" bit3="0" bit4="0"/>
+	<import name="template/enemyswarmer.xml" />
+	<template name="enemyzapship" type="enemyswarmer">
+		<!--aimer range="512" focus="1" attack="64" leading="0" angle="30" evade="1" close="32" closedistscale="0.0625" closespeedscale="0.015625" category="4" bit2="0" bit3="0" bit4="0"/-->
+		<aimer>
+			<target range="512" category="4" bit2="0" bit3="0" bit4="0" />
+			<aim strength="1" leading="0" />
+			<pursue strength="1" leading="0" />
+			<fire channel="1" range="64" angle="30" />
+			<close range="32" scaledist="0.0625" scalespeed="0.015625" />
+		</aimer>
 		<ship maxveloc="64" maxaccel="128" minaccel="32" maxomega="2"/>
-		<damagable health="1" spawnondeath="enemyexplosionsmall"/>
+		<damagable spawnondeath="enemyexplosionsmall" />
 		<weapon>
 			<offset x="0" y="2" angle="0"/>
 			<flash name="enemyzapshipbeam"/>
 			<shot delay="0.2"/>
 		</weapon>
-		<sound>
-			<file name="stargate-spaceguppyshot.wav"/>
-		</sound>
 		<soundcue>
-			<cue name="fire" sound="enemyzapship"/>
+			<cue name="fire" sound="stargate-spaceguppyshot"/>
 		</soundcue>
-		<team name="red"/>
 		<points value="100"/>
 	</template>
 	
 	
 	<!-- enemy explosion -->
 
-	<template name="enemyexplosion">
-		<expire time="3.0"/>
-		<sound>
-			<file name="stargate-landerkill.wav"/>
-		</sound>
-		<renderable radius="320">
-			<block length="0.4">
-				<pushmatrix>
-					<color>
-						<key time="0.0" r="1.0" g="1.0" b="1.0" a="1.0"/>
-						<key time="0.4" r="1.0" g="1.0" b="1.0" a="0.0"/>
-					</color>
-					<scale>
-						<key time="0.0" x="30.0" y="30.0"/>
-						<key time="0.4" x="0.0" y="0.0"/>
-					</scale>
-					<calllist name="circle32"/>
-				</pushmatrix>
-			</block>
-			<block length="0.2">
-				<pushmatrix>
-					<color>
-						<key time="0.0" r="1.0" g="1.0" b="1.0" a="0.1"/>
-						<key time="0.2" r="1.0" g="1.0" b="1.0" a="0.0"/>
-					</color>
-					<scale>
-						<key time="0.0" x="30.0" y="30.0"/>
-						<key time="0.2" x="150.0" y="150.0"/>
-					</scale>
-					<calllist name="circle32"/>
-				</pushmatrix>
-			</block>
-			<block length="3.0">
-				<pushmatrix>
-					<color>
-						<key time="0.0" r="1.0" g="0.9" b="0.8" a="1.0"/>
-						<key time="1.5" r="1.0" g="0.5" b="0.0" a="0.25"/>
-						<key time="3.0" r="1.0" g="0.0" b="0.0" a="0.0"/>
-					</color>
-					<scale>
-						<key time="0.0" x="10.0" y="10.0"/>
-						<key time="3.0" x="0.0" y="0.0"/>
-					</scale>
-					<calllist name="circle16"/>
-				</pushmatrix>
-			</block>
-			<block length="0.8">
-				<pushmatrix>
-					<color>
-						<key time="0.0" r="1.0" g="0.7" b="0.4" a="0.5"/>
-						<key time="0.8" r="1.0" g="0.0" b="0.0" a="0.0"/>
-					</color>
-					<repeat count="6">
-						<repeat count="6">
-							<pushmatrix>
-								<translate>
-									<key time="0.0" x="0" y="0"/>
-									<key time="0.8" x="320" y="0"/>
-								</translate>
-								<scale>
-									<key time="0.0" x="15.0" y="1.0"/>
-									<key time="0.8" x="1.0" y="1.0"/>
-								</scale>
-								<calllist name="circle16"/>
-							</pushmatrix>
-							<rotate angle="60"/>
-						</repeat>
-						<scale x="0.8" y="0.8"/>
-						<rotate angle="20"/>
-					</repeat>
-				</pushmatrix>
-			</block>
-			<block length="1.0">
-				<pushmatrix>
-					<color>
-						<key time="0.0" r="1.0" g="0.7" b="0.4" a="0.5"/>
-						<key time="1.0" r="1.0" g="0.0" b="0.0" a="0.0"/>
-					</color>
-					<scale>
-						<key time="0.0" x="15.0" y="15.0"/>
-						<key time="1.0" x="50.0" y="50.0"/>
-					</scale>
-					<calllist name="circle32"/>
-				</pushmatrix>
-			</block>
-		</renderable>
-	</template>
+	<import name="template/enemyexplosion.xml" />
 
 	
 	<!-- enemy fireball explosion -->
 
-	<template name="enemyfireballexplosion">
-		<expire time="1.0"/>
-		<sound>
-			<file name="stargate-fireballkill.wav"/>
-		</sound>
-		<renderable radius="100">
-			<block length="0.1">
-				<pushmatrix>
-					<color>
-						<key time="0.0" r="1.0" g="1.0" b="1.0" a="1.0"/>
-						<key time="0.1" r="1.0" g="1.0" b="1.0" a="0.0"/>
-					</color>
-					<scale>
-						<key time="0.0" x="16.0" y="16.0"/>
-						<key time="0.1" x="0.0" y="0.0"/>
-					</scale>
-					<calllist name="circle16"/>
-				</pushmatrix>
-				<pushmatrix>
-					<color>
-						<key time="0.0" r="1.0" g="1.0" b="1.0" a="0.1"/>
-						<key time="0.1" r="1.0" g="1.0" b="1.0" a="0.0"/>
-					</color>
-					<scale>
-						<key time="0.0" x="16.0" y="16.0"/>
-						<key time="0.1" x="80.0" y="80.0"/>
-					</scale>
-					<calllist name="circle32"/>
-				</pushmatrix>
-			</block>
-			<block length="1.0">
-				<pushmatrix>
-					<color>
-						<key time="0.0" r="1.0" g="0.9" b="0.8" a="1.0"/>
-						<key time="1.0" r="1.0" g="0.5" b="0.0" a="0.0"/>
-					</color>
-					<scale>
-						<key time="0.0" x="12.0" y="12.0"/>
-						<key time="1.0" x="0.0" y="0.0"/>
-					</scale>
-					<calllist name="circle16"/>
-				</pushmatrix>
-			</block>
-			<block length="0.4">
-				<pushmatrix>
-					<color>
-						<key time="0.0" r="1.0" g="0.7" b="0.4" a="0.5"/>
-						<key time="0.4" r="1.0" g="0.0" b="0.0" a="0.0"/>
-					</color>
-					<repeat count="3">
-						<repeat count="6">
-							<pushmatrix>
-								<translate>
-									<key time="0.0" x="0" y="0"/>
-									<key time="0.4" x="100" y="0"/>
-								</translate>
-								<scale>
-									<key time="0.0" x="12.0" y="1.0"/>
-									<key time="0.4" x="1.0" y="1.0"/>
-								</scale>
-								<calllist name="circle16"/>
-							</pushmatrix>
-							<rotate angle="60"/>
-						</repeat>
-						<scale x="0.8" y="0.8"/>
-						<rotate angle="20"/>
-					</repeat>
-				</pushmatrix>
-			</block>
-			<block length="0.3">
-				<pushmatrix>
-					<color>
-						<key time="0.0" r="1.0" g="0.7" b="0.4" a="0.5"/>
-						<key time="0.3"   r="1.0" g="0.0" b="0.0" a="0.0"/>
-					</color>
-					<scale>
-						<key time="0.0" x="16.0" y="16.0"/>
-						<key time="0.3" x="32.0" y="32.0"/>
-					</scale>
-					<calllist name="circle32"/>
-				</pushmatrix>
-			</block>
-		</renderable>
-	</template>
+	<import name="template/enemyfireballexplosion.xml" />
 	
 	
 	<!-- enemy laser ship beam -->
 
-	<template name="enemylasershipbeam">
-		<expire time="0.5"/>
-		<beam damage="10" range="256" category="4" bit2="0" bit3="0" bit4="0" spawnonimpact="enemyfireballexplosion"/>
-		<renderable radius="256">
-			<quads>
-				<block length="0.1">
-					<color>
-						<key time="0.0" r="1.0" g="1.0" b="1.0" a="1.0"/>
-						<key time="0.1" r="1.0" g="1.0" b="1.0" a="0.0"/>
-					</color>
-					<set name="p" type="position">
-						<key time="0.0" x="2.0"/>
-						<key time="0.1" x="0.0"/>
-					</set>
-					<vertex variable="p"/>
-					<mul name="p" type="scale" x="-1"/>
-					<vertex variable="p"/>
-					<add name="p" type="translate" variable="beamend"/>
-					<vertex variable="p"/>
-					<mul name="p" type="scale" x="-1"/>
-					<vertex variable="p"/>
-					<color>
-						<key time="0.0" r="1.0" g="1.0" b="1.0" a="0.2"/>
-						<key time="0.1" r="1.0" g="1.0" b="1.0" a="0.0"/>
-					</color>
-					<set name="p" type="position">
-						<key time="0.0" x="2.0"/>
-						<key time="0.1" x="8.0"/>
-					</set>
-					<vertex variable="p"/>
-					<mul name="p" type="scale" x="-1"/>
-					<vertex variable="p"/>
-					<add name="p" type="translate" variable="beamend"/>
-					<vertex variable="p"/>
-					<mul name="p" type="scale" x="-1"/>
-					<vertex variable="p"/>
-				</block>
-				<block length="0.3">
-					<color>
-						<key time="0.0" r="1.0" g="0.8" b="0.1" a="1.0"/>
-						<key time="0.3" r="1.0" g="0.5" b="0.0" a="0.0"/>
-					</color>
-					<set name="p" type="position">
-						<key time="0.0" x="1.00"/>
-						<key time="0.3" x="0.25"/>
-					</set>
-					<vertex variable="p"/>
-					<mul name="p" type="scale" x="-1"/>
-					<vertex variable="p"/>
-					<add name="p" type="translate" variable="beamend"/>
-					<vertex variable="p"/>
-					<mul name="p" type="scale" x="-1"/>
-					<vertex variable="p"/>
-				</block>
-				<block length="0.2">
-					<color>
-						<key time="0.0" r="1.0" g="0.5" b="0.0" a="0.5"/>
-						<key time="0.2" r="1.0" g="0.0" b="0.0" a="0.0"/>
-					</color>
-					<set name="p" type="position">
-						<key time="0.0" x="2.0"/>
-						<key time="0.2" x="4.0"/>
-					</set>
-					<vertex variable="p"/>
-					<mul name="p" type="scale" x="-1"/>
-					<vertex variable="p"/>
-					<add name="p" type="translate" variable="beamend"/>
-					<vertex variable="p"/>
-					<mul name="p" type="scale" x="-1"/>
-					<vertex variable="p"/>
-				</block>
-			</quads>
-		</renderable>
-		<sound volume="4.0">
-			<file name="stargate-anotherenemykill.wav"/>
-		</sound>
-	</template>
+	<import name="template/enemylasershipbeam.xml" />
 
 	
 	<!-- enemy laser ship tracer -->
@@ -1624,89 +291,24 @@
 	</template>
 
 
-	<!-- enemy laser ship weapon -->
-
-	<template name="enemylasershipweapon">
-		<weapon>
-			<flash name="enemylasershiptracer"/>
-			<shot delay="5.0"/>
-		</weapon>
-	</template>
-
-	
 	<!-- enemy laser ship -->
 
+	<import name="template/enemylasership.xml" />
 	<template name="enemylasership">
-		<collidable>
-			<body name="main">
-				<circle radius="6">
-					<density value="1"/>
-					<friction value="0.5"/>
-					<restitution value="0.5"/>
-					<category value="3"/>
-				</circle>
-			</body>
-		</collidable>
-		<renderable radius="6">
-			<drawlist>
-				<color r="1.0" g="0.8" b="0.1" a="1.0"/>
-				<quads>
-					<vertex x="0.75" y="2"/>
-					<vertex x="-0.75" y="2"/>
-					<vertex x="-0.5" y="6"/>
-					<vertex x="0.5" y="6"/>
-				</quads>
-				<color r="0.5" g="0.6" b="0.7" a="1.0"/>
-				<triangle_strip>
-					<vertex x="1.5" y="-5"/>
-					<vertex x="-1.5" y="-5"/>
-					<vertex x="1.5" y="-3.5"/>
-					<vertex x="-1.5" y="-3.5"/>
-					<vertex x="0.5" y="-2.5"/>
-					<vertex x="-0.5" y="-2.5"/>
-					<vertex x="0.75" y="-1"/>
-					<vertex x="-0.75" y="-1"/>
-					<vertex x="3.5" y="-1"/>
-					<vertex x="-3.5" y="-1"/>
-					<vertex x="3.5" y="1"/>
-					<vertex x="-3.5" y="1"/>
-					<vertex x="1.5" y="2"/>
-					<vertex x="-1.5" y="2"/>
-					<vertex x="1.0" y="3"/>
-					<vertex x="-1.0" y="3"/>
-				</triangle_strip>
-				<color r="1.0" g="0.2" b="0.1" a="1.0"/>
-				<triangle_strip>
-					<vertex x="2.5" y="-3"/>
-					<vertex x="5.5" y="-3"/>
-					<vertex x="2.5" y="-2.5"/>
-					<vertex x="5.5" y="-2.5"/>
-					<vertex x="3.5" y="-1.5"/>
-					<vertex x="4.5" y="-1.5"/>
-					<vertex x="3.5" y="3"/>
-					<vertex x="4.5" y="3"/>
-					<vertex x="4" y="3.5"/>
-				</triangle_strip>
-				<triangle_strip>
-					<vertex x="-2.5" y="-3"/>
-					<vertex x="-5.5" y="-3"/>
-					<vertex x="-2.5" y="-2.5"/>
-					<vertex x="-5.5" y="-2.5"/>
-					<vertex x="-3.5" y="-1.5"/>
-					<vertex x="-4.5" y="-1.5"/>
-					<vertex x="-3.5" y="3"/>
-					<vertex x="-4.5" y="3"/>
-					<vertex x="-4" y="3.5"/>
-				</triangle_strip>
-			</drawlist>
-		</renderable>
-		<aimer range="512" focus="5" attack="128" leading="0" angle="30" evade="1" close="64" closedistscale="0.0625" closespeedscale="0.015625" category="4" bit2="0" bit3="0" bit4="0"/>
+		<!--aimer range="512" focus="5" attack="128" leading="0" angle="30" evade="1" close="64" closedistscale="0.0625" closespeedscale="0.015625" category="4" bit2="0" bit3="0" bit4="0"/-->
+		<aimer>
+			<target range="512" focus="" category="4" bit2="0" bit3="0" bit4="0" />
+			<aim strength="1" leading="0" />
+			<pursue strength="1" leading="0" />
+			<fire channel="1" range="64" angle="30" />
+			<evade strength="1" />
+			<close range="32" scaledist="0.0625" scalespeed="0.015625" />
+		</aimer>
 		<ship maxveloc="48" maxaccel="128" minaccel="32" maxomega="1"/>
 		<damagable health="3" spawnondeath="enemyexplosion"/>
-		<link name="gun" secondary="enemylasershipweapon">
-			<offset x="0" y="5" angle="0"/>
-		</link>
-		<team name="red"/>
+		<weapon>
+			<shot delay="5.0"/>
+		</weapon>
 		<points value="300"/>
 	</template>
 
@@ -1804,7 +406,7 @@
 		<tile name="7" spawn="enemyzapshipspawn7"/>
 		<tile name="8" spawn="enemyzapshipspawn8"/>
 		<tile name="o" spawn="friendtargetappear"/>
-		<tile name="+" spawn="healthupspawner"/>
+		<tile name="+" spawn="health3spawner"/>
 		<row data="########################################"/>
 		<row data="#1       3       7 ## 8       4       2#"/>
 		<row data="#                  ##                  #"/>

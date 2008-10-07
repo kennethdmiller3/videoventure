@@ -14,7 +14,17 @@
 		<color r="0.1" g="0.2" b="1.0" a="1.0" />
 		<calllist name="shiptiny" />
 	</renderable>
-	<aimer range="128" attack="64" drift="0.5" wanderturn="0.25" wanderturnrate="0.25" leading="240" evade="1" close="32" category="2" bit1="0" bit2="0" bit4="0" />
+	<!--aimer range="128" attack="64" drift="0.5" wanderturn="0.25" wanderturnrate="0.25" leading="240" evade="1" close="32" category="2" bit1="0" bit2="0" bit4="0" /-->
+	<aimer>
+		<drift strength="0.5" />
+		<wander turn="0.25" turnrate="0.25" />
+		<target range="128" category="2" bit1="0" bit2="0" bit4="0" />
+		<aim strength="1" leading="240" />
+		<pursue strength="1" leading="0" />
+		<fire channel="1" range="64" />
+		<evade strength="1" />
+		<close range="32" />
+	</aimer>
 	<ship maxveloc="120" maxaccel="120" minaccel="10" maxomega="2" />
 	<damagable health="1" spawnondeath="friendfireballexplosion" />
 	<link name="gun" secondary="friendweapon">

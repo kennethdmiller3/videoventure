@@ -45,8 +45,18 @@
 			</drawlist>
 		</pushmatrix>
 	</renderable>
-	<aimer range="256" attack1="128" attack2="128" angle2="180" drift="0.25" wanderturn="0.5" wanderturnrate="0.25" leading="240" evade="1" close="64" />
-	<ship maxveloc="45" maxaccel="90" minaccel="10" maxomega="2.0" />
+	<!--aimer range="256" attack1="128" attack2="128" angle2="180" drift="0.25" wanderturn="0.5" wanderturnrate="0.25" leading="240" evade="1" close="64" /-->
+	<aimer>
+		<drift strength="0.25" />
+		<wander turn="0.5" turnrate="0.25" />
+		<target range="256" category="3" bit2="0" bit3="0" bit4="0" />
+		<fire channel="1" range="128" angle="20" />
+		<fire channel="2" range="128" angle="180" />
+		<pursue strength="1" leading="0" />
+		<aim strength="1" leading="240" />
+		<evade strength="1" />
+		<close range="64" />
+	</aimer>	<ship maxveloc="45" maxaccel="90" minaccel="10" maxomega="2.0" />
 	<damagable health="10" spawnondeath="friendexplosion" />
 	<link name="gun" secondary="friendweapon">
 		<offset x="0" y="4" angle="0" />
