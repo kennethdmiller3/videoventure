@@ -6,8 +6,8 @@
 				<density value="2"/>
 				<friction value="0.5"/>
 				<restitution value="0.5"/>
-				<category value="1"/>
-				<mask bit2="0" bit4="0"/>
+				<filter name="blueunit"/>
+				<mask bit4="0"/>
 				<group value="-1"/>
 			</box>
 			<box w="2" h="3">
@@ -15,8 +15,7 @@
 				<density value="0"/>
 				<friction value="0.5"/>
 				<restitution value="0.5"/>
-				<category value="1"/>
-				<mask bit2="0"/>
+				<filter name="blueunit"/>
 				<group value="-1"/>
 			</box>
 		</body>
@@ -107,8 +106,7 @@
 					<density value="1"/>
 					<friction value="0.5"/>
 					<restitution value="0.5"/>
-					<category value="1"/>
-					<group value="-1"/>
+					<filter name="inert"/>
 				</circle>
 			</body>
 		</collidable>

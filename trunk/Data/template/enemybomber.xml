@@ -6,7 +6,7 @@
 				<density value="1" />
 				<friction value="0.5" />
 				<restitution value="0.5" />
-				<category value="3" />
+				<filter name="redunit" />
 			</circle>
 		</body>
 	</collidable>
@@ -92,11 +92,11 @@
 			<calllist name="diamond" />
 		</pushmatrix>
 	</renderable>
-	<!--aimer range="128" attack="128" leading="15" angle="180" drift="1" wanderturn="1" wanderturnrate="0.25" pursue="0" evade="0" close="32" category="4" bit2="0" bit3="0" bit4="0" /-->
+	<!--aimer range="128" attack="128" leading="15" angle="180" drift="1" wanderturn="1" wanderturnrate="0.25" pursue="0" evade="0" close="32" filter="redbullet" /-->
 	<aimer>
 		<drift strength="1" />
 		<wander turn="1" turnrate="0.25" />
-		<target range="128" category="4" bit2="0" bit3="0" bit4="0" />
+		<target range="128" filter="redbullet" />
 		<aim strength="1" leading="15" />
 		<fire channel="1" range="128" angle="180" />
 		<close range="32" />

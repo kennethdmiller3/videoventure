@@ -3,7 +3,7 @@
 	<collidable>
 		<body name="main">
 			<box w="8" h="8">
-				<category value="0" />
+				<filter name="environment" />
 			</box>
 		</body>
 	</collidable>

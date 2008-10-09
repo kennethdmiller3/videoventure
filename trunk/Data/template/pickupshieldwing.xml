@@ -13,9 +13,9 @@
 				<density value="0" />
 				<friction value="0.5" />
 				<restitution value="0.5" />
-				<category value="1" />
-				<sensor value="1" />
+				<filter name="blueunit" />
 				<mask bit2="0" bit3="0" bit4="0" />
+				<sensor value="1" />
 			</box>
 			<damping linear="1" angular="1" />
 		</body>

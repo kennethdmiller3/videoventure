@@ -1,7 +1,7 @@
 <?xml version="1.0" ?>
 <template name="enemymineexplosion">
 	<expire time="1.0" />
-	<explosion life="0.15" category="4" bit2="0" bit3="0" bit4="0">
+	<explosion life="0.15" filter="redbullet">
 		<radius>
 			<key time="0.00" inner="16" outer="32" />
 			<key time="0.15" inner="32" outer="64" />

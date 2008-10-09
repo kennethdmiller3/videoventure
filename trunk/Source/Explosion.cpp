@@ -106,27 +106,7 @@ bool ExplosionTemplate::Configure(const TiXmlElement *element, unsigned int id)
 	if (element->QueryFloatAttribute("damage", &mDamageInner) == TIXML_SUCCESS)
 		mDamageOuter = 0.0f;
 
-	int category = 0;
-	if (element->QueryIntAttribute("category", &category) == TIXML_SUCCESS)
-		mFilter.categoryBits = (category >= 0) ? (1<<category) : 0;
-
-	char buf[16];
-	for (int i = 0; i < 16; i++)
-	{
-		sprintf(buf, "bit%d", i);
-		int bit = 0;
-		if (element->QueryIntAttribute(buf, &bit) == TIXML_SUCCESS)
-		{
-			if (bit)
-				mFilter.maskBits |= (1 << i);
-			else
-				mFilter.maskBits &= ~(1 << i);
-		}
-	}
-
-	int group = 0;
-	element->QueryIntAttribute("group", &group);
-	mFilter.groupIndex = short(group);
+	ConfigureFilterData(mFilter, element);
 
 	if (element->FirstChildElement())
 	{

@@ -7,7 +7,7 @@
 				<friction value="1" />
 				<restitution value="0" />
 				<density value="1.0" />
-				<category value="2" />
+				<filter name="bluebullet" />
 				<mask bit1="0" bit2="0" bit3="0" bit4="0" />
 			</circle>
 			<fixedrotation value="1" />

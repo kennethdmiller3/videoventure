@@ -6,7 +6,7 @@
 				<density value="1" />
 				<friction value="0.5" />
 				<restitution value="0.5" />
-				<category value="3" />
+				<filter name="redunit" />
 			</circle>
 		</body>
 	</collidable>
@@ -35,9 +35,9 @@
 			</pushmatrix>
 		</drawlist>
 	</renderable>
-	<!--aimer range="512" attack="192" leading="240" category="4" bit2="0" bit3="0" bit4="0" /-->
+	<!--aimer range="512" attack="192" leading="240" filter="redbullet" /-->
 	<aimer>
-		<target range="256" category="4" bit2="0" bit3="0" bit4="0" />
+		<target range="256" filter="redbullet" />
 		<aim strength="1" leading="240" />
 		<fire channel="1" range="192" />
 	</aimer>

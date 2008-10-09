@@ -1,7 +1,7 @@
 <?xml version="1.0" ?>
 <template name="friendlasershipbeam">
 	<expire time="0.5" />
-	<beam damage="10" range="256" category="2" bit1="0" bit2="0" bit4="0" spawnonimpact="friendfireballexplosion" />
+	<beam damage="10" range="256" filter="bluebullet" spawnonimpact="friendfireballexplosion" />
 	<renderable radius="256">
 		<quads>
 			<block length="0.1">

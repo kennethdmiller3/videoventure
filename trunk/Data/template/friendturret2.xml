@@ -6,9 +6,9 @@
 	<link name="rgun" secondary="friendcannon1">
 		<offset x="-2" y="0" angle="0" />
 	</link>
-	<!--aimer range="256" attack="128" leading="240" category="2" bit1="0" bit2="0" bit4="0" /-->
+	<!--aimer range="256" attack="128" leading="240" filter="bluebullet" /-->
 	<aimer>
-		<targer range="256" category="2" bit1="0" bit2="0" bit4="0" />
+		<target range="256" filter="bluebullet" />
 		<aim strength="1" leading="240" />
 		<fire channel="1" range="128" />
 	</aimer>

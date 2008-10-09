@@ -5,7 +5,7 @@
 	</link>
 	<!--aimer range="256" attack="128" leading="0" category="3" bit3="0" bit4="0" /-->
 	<aimer>
-		<targer range="256" category="4" bit2="0" bit3="0" bit4="0" />
+		<target range="256" filter="redmissile" />
 		<aim strength="1" leading="0" />
 		<fire channel="1" range="128" />
 	</aimer>

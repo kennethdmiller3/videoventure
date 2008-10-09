@@ -11,7 +11,7 @@
 		<scale x="256" y="256" />
 		<calllist name="circle32" />
 	</renderable>
-	<explosion category="2" bit1="0" bit2="0" bit4="0">
+	<explosion filter="bluebullet">
 		<radius inner="256" outer="256" />
 		<damage inner="10" outer="10" />
 	</explosion>

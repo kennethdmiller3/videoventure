@@ -55,6 +55,6 @@
 		<offset x="256" y="8" />
 	</link>
 	<link name="enemycarrierspawn" secondary="enemycarrierspawn">
-		<offset x="0" y="0" />
+		<offset x="0" y="56" />
 	</link>
 </template>

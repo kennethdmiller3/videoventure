@@ -6,15 +6,13 @@
 				<friction value="0.5" />
 				<restitution value="0.5" />
 				<density value="0" />
-				<category value="3" />
-				<mask bit3="0" bit4="0" />
+				<filter name="redmissile" />
 			</circle>
 			<circle radius="8">
 				<friction value="0" />
 				<restitution value="1" />
 				<density value="0" />
-				<category value="3" />
-				<mask bit3="0" bit4="0" />
+				<filter name="redmissile" />
 				<sensor value="1" />
 			</circle>
 			<fixedrotation value="1" />

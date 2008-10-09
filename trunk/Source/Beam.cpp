@@ -103,27 +103,7 @@ bool BeamTemplate::Configure(const TiXmlElement *element, unsigned int id)
 	if (const char *spawn = element->Attribute("spawnonimpact"))
 		mSpawnOnImpact = Hash(spawn);
 
-	int category = 0;
-	if (element->QueryIntAttribute("category", &category) == TIXML_SUCCESS)
-		mFilter.categoryBits = (category >= 0) ? (1<<category) : 0;
-
-	char buf[16];
-	for (int i = 0; i < 16; i++)
-	{
-		sprintf(buf, "bit%d", i);
-		int bit = 0;
-		if (element->QueryIntAttribute(buf, &bit) == TIXML_SUCCESS)
-		{
-			if (bit)
-				mFilter.maskBits |= (1 << i);
-			else
-				mFilter.maskBits &= ~(1 << i);
-		}
-	}
-
-	int group = mFilter.groupIndex;
-	element->QueryIntAttribute("group", &group);
-	mFilter.groupIndex = short(group);
+	ConfigureFilterData(mFilter, element);
 
 	if (element->FirstChildElement())
 	{

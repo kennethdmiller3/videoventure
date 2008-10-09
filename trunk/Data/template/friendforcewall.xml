@@ -3,8 +3,8 @@
 	<collidable>
 		<body name="main">
 			<box w="8" h="3">
-				<category value="1" />
-				<mask bit1="0" />
+				<filter name="environment" />
+				<mask bit1="0" bit2="0" />
 			</box>
 		</body>
 	</collidable>

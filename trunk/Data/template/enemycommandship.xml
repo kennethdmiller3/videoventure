@@ -6,7 +6,7 @@
 				<density value="1" />
 				<friction value="0.5" />
 				<restitution value="0.5" />
-				<category value="3" />
+				<filter name="redunit" />
 			</circle>
 		</body>
 	</collidable>

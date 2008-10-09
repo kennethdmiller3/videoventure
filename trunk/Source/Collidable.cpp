@@ -38,6 +38,7 @@ static boost::pool<boost::default_user_allocator_malloc_free> jointpool(jointsiz
 
 namespace Database
 {
+	Typed<b2FilterData> collidablefilter(0x5224d988 /* "collidablefilter" */);
 	Typed<CollidableTemplate> collidabletemplate(0xa7380c00 /* "collidabletemplate" */);
 #ifdef COLLIDABLE_SHAPE_DATABASE
 	Typed<Typed<b2CircleDef> > collidabletemplatecircle(0xa72cf124 /* "collidabletemplatecircle" */);
@@ -56,6 +57,29 @@ namespace Database
 
 	namespace Loader
 	{
+		class FilterLoader
+		{
+		public:
+			FilterLoader()
+			{
+				AddConfigure(0x5224d988 /* "collidablefilter" */, Entry(this, &FilterLoader::Configure));
+
+				b2FilterData &filter = Database::collidablefilter.OpenDefault();
+				filter = Collidable::GetDefaultFilter();
+				Database::collidablefilter.CloseDefault();
+			}
+
+			void Configure(unsigned int aId, const TiXmlElement *element)
+			{
+				if (!Database::collidablefilter.Find(aId))
+					Database::collidablefilter.Put(aId, Collidable::GetDefaultFilter());
+				b2FilterData &filter = Database::collidablefilter.Open(aId);
+				ConfigureFilterData(filter, element);
+				Database::collidablefilter.Close(aId);
+			}
+		}
+		filterloader;
+
 		class CollidableLoader
 		{
 		public:
@@ -105,6 +129,65 @@ namespace Database
 			}
 		}
 		collidableinitializer;
+	}
+}
+
+static void ConfigureFilterCategory(b2FilterData &aFilter, const TiXmlElement *element, const char *name)
+{
+	int category = 0;
+	if (element->QueryIntAttribute(name, &category) == TIXML_SUCCESS)
+		aFilter.categoryBits = (category >= 0) ? (1<<category) : 0;
+}
+
+static void ConfigureFilterMask(b2FilterData &aFilter, const TiXmlElement *element)
+{
+	char buf[16];
+	for (int i = 0; i < 16; i++)
+	{
+		sprintf(buf, "bit%d", i);
+		int bit = 0;
+		if (element->QueryIntAttribute(buf, &bit) == TIXML_SUCCESS)
+		{
+			if (bit)
+				aFilter.maskBits |= (1 << i);
+			else
+				aFilter.maskBits &= ~(1 << i);
+		}
+	}
+}
+
+static void ConfigureFilterGroup(b2FilterData &aFilter, const TiXmlElement *element, const char *name)
+{
+	int group = aFilter.groupIndex;
+	element->QueryIntAttribute(name, &group);
+	aFilter.groupIndex = short(group);
+}
+
+void ConfigureFilterData(b2FilterData &aFilter, const TiXmlElement *element)
+{
+	if (const char *name = (Hash(element->Value()) == 0xc7e16877 /* "filter" */) ? element->Attribute("name") : element->Attribute("filter"))
+		aFilter = Database::collidablefilter.Get(Hash(name));
+
+	ConfigureFilterCategory(aFilter, element, "category");
+	ConfigureFilterMask(aFilter, element);
+	ConfigureFilterGroup(aFilter, element, "group");
+
+	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+	{
+		switch(Hash(child->Value()))
+		{
+		case 0xcf2f4271 /* "category" */:
+			ConfigureFilterCategory(aFilter, child, "value");
+			break;
+
+		case 0xe7774569 /* "mask" */:
+			ConfigureFilterMask(aFilter, child);
+			break;
+
+		case 0x5fb91e8c /* "group" */:
+			ConfigureFilterGroup(aFilter, child, "value");
+			break;
+		}
 	}
 }
 
@@ -194,36 +277,20 @@ bool CollidableTemplate::ProcessShapeItem(const TiXmlElement *element, b2ShapeDe
 		element->QueryFloatAttribute("value", &shape.density);
 		return true;
 
+	case 0xc7e16877 /* "filter" */:
+		ConfigureFilterData(shape.filter, element);
+		return true;
+
 	case 0xcf2f4271 /* "category" */:
-		{
-			int category = 0;
-			element->QueryIntAttribute("value", &category);
-			shape.filter.categoryBits = (category >= 0) ? (1<<category) : 0;
-		}
+		ConfigureFilterCategory(shape.filter, element, "value");
 		return true;
 
 	case 0xe7774569 /* "mask" */:
-		{
-			char buf[16];
-			for (int i = 0; i < 16; i++)
-			{
-				sprintf(buf, "bit%d", i);
-				int bit = (shape.filter.maskBits & (1 << i)) != 0;
-				element->QueryIntAttribute(buf, &bit);
-				if (bit)
-					shape.filter.maskBits |= (1 << i);
-				else
-					shape.filter.maskBits &= ~(1 << i);
-			}
-		}
+		ConfigureFilterMask(shape.filter, element);
 		return true;
 
 	case 0x5fb91e8c /* "group" */:
-		{
-			int group = shape.filter.groupIndex;
-			element->QueryIntAttribute("value", &group);
-			shape.filter.groupIndex = short(group);
-		}
+		ConfigureFilterGroup(shape.filter, element, "value");
 		return true;
 
 	case 0x83b6367b /* "sensor" */:

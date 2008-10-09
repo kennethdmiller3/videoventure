@@ -5,7 +5,7 @@
 	</link>
 	<!--aimer range="256" attack="256" leading="0" category="1" bit1="0" bit2="0" /-->
 	<aimer>
-		<targer range="256" category="1" bit1="0" bit2="0" />
+		<target range="256" category="1" bit1="0" bit2="0" />
 		<aim strength="1" leading="0" />
 		<fire channel="1" range="256" />
 	</aimer>
