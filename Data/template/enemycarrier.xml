@@ -14,7 +14,7 @@
 				<density value="5" />
 				<friction value="0.5" />
 				<restitution value="0.5" />
-				<category value="3" />
+				<filter name="redunit" />
 				<mask bit2="0" bit4="0" />
 			</poly>
 			<poly>
@@ -29,7 +29,7 @@
 				<density value="1" />
 				<friction value="0.5" />
 				<restitution value="0.5" />
-				<category value="3" />
+				<filter name="redunit" />
 			</poly>
 		</body>
 	</collidable>
@@ -81,7 +81,7 @@
 	<aimer>
 		<drift strength="0.5" />
 		<wander turn="0.25" turnrate="0.25" />
-		<target range="512" category="3" bit2="0" bit3="0" bit4="0" />
+		<target range="512" filter="redmissile" />
 		<pursue strength="1" leading="0" />
 		<aim strength="1" leading="0" />
 		<fire channel="1" range="192" angle="90" />

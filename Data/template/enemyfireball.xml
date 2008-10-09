@@ -7,8 +7,7 @@
 				<friction value="1" />
 				<restitution value="0" />
 				<density value="1.0" />
-				<category value="3" />
-				<mask bit3="0" bit4="0" />
+				<filter name="redmissile" />
 			</circle>
 			<fixedrotation value="1" />
 		</body>

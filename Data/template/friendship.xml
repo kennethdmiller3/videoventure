@@ -6,21 +6,19 @@
 				<density value="1" />
 				<friction value="0.5" />
 				<restitution value="0.5" />
-				<category value="1" />
+				<filter name="blueunit" />
 			</circle>
 		</body>
 	</collidable>
 	<renderable radius="8">
-		<drawlist>
-			<color r="0.1" g="0.2" b="1.0" a="1.0" />
-			<calllist name="ship" />
-		</drawlist>
+		<color r="0.1" g="0.2" b="1.0" a="1.0" />
+		<calllist name="ship" />
 	</renderable>
-	<!--aimer range="256" attack="128" drift="0.5" wanderturn="0.25" wanderturnrate="0.25" leading="240" angle="30" evade="1" close="64" category="2" bit1="0" bit2="0" bit4="0" /-->
+	<!--aimer range="256" attack="128" drift="0.5" wanderturn="0.25" wanderturnrate="0.25" leading="240" angle="30" evade="1" close="64" filter="bluebullet" /-->
 	<aimer>
 		<drift strength="0.5" />
 		<wander turn="0.25" turnrate="0.25" />
-		<target range="256" category="2" bit1="0" bit2="0" bit4="0" />
+		<target range="256" filter="bluebullet" />
 		<aim strength="1" leading="240" />
 		<pursue strength="1" leading="0" />
 		<fire channel="1" range="128" angle="30" />

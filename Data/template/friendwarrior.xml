@@ -6,7 +6,7 @@
 				<density value="1" />
 				<friction value="0.5" />
 				<restitution value="0.5" />
-				<category value="1" />
+				<filter name="blueunit" />
 			</circle>
 			<fixedrotation value="1" />
 		</body>
@@ -96,10 +96,10 @@
 		</drawlist>
 	</renderable>
 	<link name="turret" secondary="friendwarriorturret" updateangle="0" />
-	<!--aimer range="256" attack="0" leading="0" wanderside="0.5" wandersiderate="0.125" wanderfront="0.5" wanderfrontrate="0.125" evade="1" close="64" category="2" bit1="0" bit2="0" bit4="0" /-->
+	<!--aimer range="256" attack="0" leading="0" wanderside="0.5" wandersiderate="0.125" wanderfront="0.5" wanderfrontrate="0.125" evade="1" close="64" filter="bluebullet" /-->
 	<aimer>
 		<wander side="0.5" siderate="0.125" front="0.5" frontrate="0.125" />
-		<target range="256" category="2" bit1="0" bit2="0" bit4="0" />
+		<target range="256" filter="bluebullet" />
 		<pursue strength="1" leading="0" />
 		<evade strength="1" />
 		<close range="64" />

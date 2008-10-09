@@ -6,7 +6,7 @@
 				<friction value="0" />
 				<restitution value="1" />
 				<density value="1.0" />
-				<category value="3" />
+				<filter name="redunit" />
 				<mask bit4="0" />
 			</circle>
 		</body>

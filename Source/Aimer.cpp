@@ -181,27 +181,7 @@ bool AimerTemplate::Configure(const TiXmlElement *element)
 				child->QueryFloatAttribute("range", &mTarget.mRange);
 				child->QueryFloatAttribute("focus", &mTarget.mFocus);
 
-				int category = 0;
-				if (child->QueryIntAttribute("category", &category) == TIXML_SUCCESS)
-					mTarget.mFilter.categoryBits = (category >= 0) ? (1<<category) : 0;
-
-				char buf[16];
-				for (int i = 0; i < 16; i++)
-				{
-					sprintf(buf, "bit%d", i);
-					int bit = 0;
-					if (child->QueryIntAttribute(buf, &bit) == TIXML_SUCCESS)
-					{
-						if (bit)
-							mTarget.mFilter.maskBits |= (1 << i);
-						else
-							mTarget.mFilter.maskBits &= ~(1 << i);
-					}
-				}
-
-				int group = mTarget.mFilter.groupIndex;
-				child->QueryIntAttribute("group", &group);
-				mTarget.mFilter.groupIndex = short(group);
+				ConfigureFilterData(mTarget.mFilter, child);
 			}
 			break;
 

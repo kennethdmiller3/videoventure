@@ -1,7 +1,7 @@
 <?xml version="1.0" ?>
 <template name="playerblastcannonbeam">
 	<expire time="0.2" />
-	<beam damage="10" range="256" category="2" bit1="0" bit2="0" bit4="0" spawnonimpact="playerblastcannonhit" />
+	<beam damage="10" range="256" filter="bluebullet" spawnonimpact="playerblastcannonhit" />
 	<renderable radius="256">
 		<quads>
 			<block length="0.05">

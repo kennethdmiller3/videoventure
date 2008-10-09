@@ -1,7 +1,7 @@
 <?xml version="1.0" ?>
 <template name="friendmineexplosion">
 	<expire time="1.0" />
-	<explosion life="0.15" category="2" bit1="0" bit2="0" bit4="0">
+	<explosion life="0.15" filter="bluebullet">
 		<radius>
 			<key time="0.00" inner="16" outer="32" />
 			<key time="0.15" inner="32" outer="64" />

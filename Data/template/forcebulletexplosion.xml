@@ -1,7 +1,7 @@
 <?xml version="1.0" ?>
 <template name="forcebulletexplosion">
 	<expire time="1.0" />
-	<explosion life="0.1" category="2" bit1="0" bit2="0" bit4="0">
+	<explosion life="0.1" filter="bluebullet">
 		<radius>
 			<key time="0.0" inner="16" outer="32.0" />
 			<key time="0.1" inner="64" outer="64.0" />

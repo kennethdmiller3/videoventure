@@ -6,8 +6,7 @@
 				<friction value="0" />
 				<restitution value="1" />
 				<density value="0" />
-				<category value="3" />
-				<mask bit2="0" bit3="0" bit4="0" />
+				<filter name="redbullet" />
 				<sensor value="1" />
 			</circle>
 			<fixedrotation value="1" />

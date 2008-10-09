@@ -6,6 +6,8 @@ const int COLLISION_LAYERS = 32;
 
 class LinkTemplate;
 
+extern void ConfigureFilterData(b2FilterData &aFilter, const TiXmlElement *element);
+
 class CollidableTemplate
 {
 public:

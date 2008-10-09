@@ -6,8 +6,7 @@
 				<friction value="0" />
 				<restitution value="1" />
 				<density value="1.0" />
-				<category value="1" />
-				<mask bit2="0" />
+				<filter name="blueunit" />
 			</circle>
 			<preventrotation value="1" />
 		</body>

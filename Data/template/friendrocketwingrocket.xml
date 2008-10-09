@@ -12,8 +12,7 @@
 				<friction value="1" />
 				<restitution value="0" />
 				<density value="1.0" />
-				<category value="1" />
-				<mask bit1="0" bit2="0" />
+				<filter name="bluemissile" />
 			</poly>
 		</body>
 	</collidable>

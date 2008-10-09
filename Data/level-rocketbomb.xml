@@ -168,6 +168,35 @@
 			</drawlist>
 		</renderable>
 	</entity>
+	<!-- collidable filters -->
+	<collidablefilter name="inert">
+		<category value="-1" />
+	</collidablefilter>
+	<collidablefilter name="environment">
+		<category value="0" />
+	</collidablefilter>
+	<collidablefilter name="blueunit">
+		<category value="1" />
+	</collidablefilter>
+	<collidablefilter name="bluemissile">
+		<category value="1" />
+		<mask bit1="0" bit2="0" />
+	</collidablefilter>
+	<collidablefilter name="bluebullet">
+		<category value="2" />
+		<mask bit1="0" bit2="0" bit4="0" />
+	</collidablefilter>
+	<collidablefilter name="redunit">
+		<category value="3" />
+	</collidablefilter>
+	<collidablefilter name="redmissile">
+		<category value="3" />
+		<mask bit3="0" bit4="0" />
+	</collidablefilter>
+	<collidablefilter name="redbullet">
+		<category value="4" />
+		<mask bit2="0" bit3="0" bit4="0" />
+	</collidablefilter>
 	<!-- enemy bullseye targets -->
 	<import name="template/enemytarget.xml" />
 	<template name="enemytarget">

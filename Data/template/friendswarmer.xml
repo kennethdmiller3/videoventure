@@ -6,7 +6,7 @@
 				<density value="1" />
 				<friction value="0.5" />
 				<restitution value="0.5" />
-				<category value="1" />
+				<filter name="blueunit" />
 			</circle>
 		</body>
 	</collidable>
@@ -45,11 +45,11 @@
 			</triangle_strip>
 		</drawlist>
 	</renderable>
-	<!--aimer range="256" attack="128" leading="180" drift="0.25" wanderside="1" wandersiderate="1" pursue="0.5" evade="0.25" close="32" category="2" bit1="0" bit2="0" bit4="0" /-->
+	<!--aimer range="256" attack="128" leading="180" drift="0.25" wanderside="1" wandersiderate="1" pursue="0.5" evade="0.25" close="32" filter="bluebullet" /-->
 	<aimer>
 		<drift strength="0.25" />
 		<wander side="1" siderate="1" />
-		<target range="256" category="2" bit1="0" bit2="0" bit4="0" />
+		<target range="256" filter="bluebullet" />
 		<aim strength="1" leading="180" />
 		<pursue strength="0.5" leading="0" />
 		<fire channel="1" range="128" />
