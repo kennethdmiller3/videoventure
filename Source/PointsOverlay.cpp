@@ -50,8 +50,7 @@ void PointsOverlay::Render(unsigned int aId, float aTime, float aPosX, float aPo
 	extern int SCREEN_HEIGHT;
 	extern int SCREEN_WIDTH;
 	extern Vector2 camerapos[2];
-	extern float frame_time;
-
+	
 	// set projection
 	glMatrixMode( GL_PROJECTION );
 	glPushMatrix();

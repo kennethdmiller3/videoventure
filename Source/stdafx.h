@@ -75,6 +75,9 @@ extern float sim_step;
 extern unsigned int sim_turn;
 extern float sim_fraction;
 
+// frame values
+extern float frame_time;
+
 // fast reciprocal square root
 inline float InvSqrt(float x)
 {

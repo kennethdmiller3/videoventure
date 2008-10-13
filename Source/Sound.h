@@ -68,6 +68,9 @@ public:
 	// update
 	void Update(float aStep);
 
+public:
+	static Vector2 listenerpos;
+
 	// mix
 	static void Mix(void *userdata, unsigned char *stream, int len);
 };

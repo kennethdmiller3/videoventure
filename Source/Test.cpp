@@ -5,21 +5,16 @@
 #include "oglconsole.h"
 #include "World.h"
 #include "Player.h"
-#include "Aimer.h"
-#include "Ship.h"
-#include "Gunner.h"
-#include "Weapon.h"
-#include "Bullet.h"
-#include "Explosion.h"
-#include "Damagable.h"
-#include "Spawner.h"
-#include "Link.h"
-#include "Interpolator.h"
-#include "Drawlist.h"
+#include "PlayerCamera.h"
+#include "PlayerHUD.h"
 #include "Sound.h"
-#include "Overlay.h"
-#include "Resource.h"
 #include "Variable.h"
+
+#include "Collidable.h"
+#include "Simulatable.h"
+#include "Renderable.h"
+#include "Drawlist.h"
+#include "Overlay.h"
 
 #ifdef USE_PATHING
 #include "Pathing.h"
@@ -131,14 +126,8 @@ unsigned long randlongseed = 0x92D68CA2;
 // camera position (HACK)
 Vector2 camerapos[2];
 
-// listener position (HACK)
-Vector2 listenerpos;
-
 // reticule handle (HACK)
 GLuint reticule_handle;
-GLuint score_handle;
-GLuint lives_handle;
-GLuint ammo_handle;
 
 // forward declaration
 int ProcessCommand( unsigned int aCommand, char *aParam[], int aCount );
@@ -565,7 +554,7 @@ bool init()
 	fmt.channels = 2;
 	fmt.samples = Uint16(AUDIO_FREQUENCY / SIMULATION_RATE);
 	fmt.callback = Sound::Mix;
-	fmt.userdata = &listenerpos;
+	fmt.userdata = &Sound::listenerpos;
 
 	/* Open the audio device and start playing sound! */
 	if ( SDL_OpenAudio(&fmt, NULL) < 0 ) {
@@ -3385,506 +3374,14 @@ void RenderEscapeOptions(unsigned int aId, float aTime, float aPosX, float aPosY
 }
 
 
-// drain values
-static const float DRAIN_DELAY = 1.0f;
-static const float DRAIN_RATE = 0.5f;
-
-// flash values
-static const int MAX_FLASH = 16;
-static const float FLASH_RATE = 2.0f;
-
-template<typename T> struct Rect
-{
-	T x;
-	T y;
-	T w;
-	T h;
-};
-
-// health gauge
-static const Rect<float> healthrect =
-{
-	8, 8, 128, 8
-};
-static const Color4 healthcolor[3][2] =
-{
-	{ Color4( 1.0f, 0.0f, 0.0f, 1.0f ),  Color4( 1.0f, 1.0f, 1.0f, 1.0f ) },
-	{ Color4( 1.0f, 1.0f, 0.0f, 0.75f ), Color4( 1.0f, 1.0f, 0.3f, 0.75f ) },
-	{ Color4( 0.0f, 1.0f, 0.0f, 0.5f ),  Color4( 0.2f, 1.0f, 0.2f, 0.5f ) },
-};
-
-
-class PlayerHUD : public Updatable, public Overlay
-{
-public:
-	// fill values
-	float fill;
-
-	// drain values
-	float drain;
-	float draindelay;
-
-	// flash values
-	struct Flash
-	{
-		float left;
-		float right;
-		float fade;
-	};
-	Flash flash[MAX_FLASH];
-	int flashcount;
-
-	// camera values
-	unsigned int trackid;
-	Vector2 trackpos[2];
-	Vector2 trackaim;
-
-	// reticule values
-	Vector2 aimpos[2];
-
-public:
-	PlayerHUD(unsigned int aPlayerId);
-	~PlayerHUD();
-
-	void Update(float aStep);
-	void Render(unsigned int aId, float aTime, float aPosX, float aPosY, float aAngle);
-};
-
-PlayerHUD::PlayerHUD(unsigned int aPlayerId = 0)
-	: Updatable(aPlayerId)
-	, Overlay(aPlayerId)
-	, fill(0)
-	, drain(0)
-	, draindelay(0)
-	, flashcount(0)
-{
-	trackid = 0;
-	trackpos[0] = Vector2(0, 0);
-	trackpos[1] = Vector2(0, 0);
-	trackaim = Vector2(0, 0);
-	aimpos[0] = Vector2(0, 0);
-	aimpos[1] = Vector2(0, 0);
-
-	Updatable::SetAction(Updatable::Action(this, &PlayerHUD::Update));
-	Overlay::SetAction(Overlay::Action(this, &PlayerHUD::Render));
-}
-
-PlayerHUD::~PlayerHUD()
-{
-}
-
-void PlayerHUD::Update(float aStep)
-{
-	// get the player
-	Player *player = Database::player.Get(Updatable::mId);
-
-	// get the attached entity identifier
-	unsigned int id = player->mAttach;
-	if (id)
-	{
-		// get the entity
-		if (Entity *entity = Database::entity.Get(id))
-		{
-			// track player position
-			trackpos[0] = trackpos[1];
-			trackpos[1] = entity->GetPosition();
-
-			// update target aim position
-			aimpos[0] = aimpos[1];
-			aimpos[1] = Vector2(input[Input::AIM_HORIZONTAL], input[Input::AIM_VERTICAL]);
-
-			// set listener position
-			listenerpos = trackpos[1];
-
-			// if applying view aim
-			if (VIEW_AIM)
-			{
-				Vector2 trackdelta;
-				if (Database::ship.Get(id))
-					trackdelta = aimpos[1] - trackaim;
-				else
-					trackdelta = -trackaim;
-				if (trackdelta.LengthSq() > FLT_EPSILON)
-					trackaim += VIEW_AIM_FILTER * sim_step * trackdelta;
-				trackpos[1] += trackaim * VIEW_AIM;
-			}
-		}
-	}
-
-	// if the tracked identifier changes...
-	if (trackid != id)
-	{
-		// snap position
-		trackid = id;
-		aimpos[0] = aimpos[1];
-		trackpos[0] = trackpos[1];
-		trackaim = Vector2(0, 0);
-	}
-
-	// set camera position
-	camerapos[0] = trackpos[0];
-	camerapos[1] = trackpos[1];
-
-#ifdef TEST_PATHING
-	Pathing(entity->GetPosition(), trackpos[1] + aimpos[1] * 120 * VIEW_SIZE / 320, 4.0f);
-#endif
-}
-
-void PlayerHUD::Render(unsigned int aId, float aTime, float aPosX, float aPosY, float aAngle)
-{
-	// get the player
-	Player *player = Database::player.Get(aId);
-
-	// get the attached entity identifier
-	unsigned int id = player->mAttach;
-
-	// draw player health (HACK)
-	float health = 0.0f;
-	Damagable *damagable = Database::damagable.Get(id);
-	if (damagable)
-	{
-		// get health ratio
-		const DamagableTemplate &damagabletemplate = Database::damagabletemplate.Get(id);
-		if (damagabletemplate.mHealth > 0)
-		{
-			health = damagable->GetHealth() / damagabletemplate.mHealth;
-		}
-	}
-
-	// if health is greater than the gauge fill...
-	if (fill < health - FLT_EPSILON)
-	{
-		// raise the fill
-		fill = health;
-		if (drain < fill)
-			drain = fill;
-	}
-	// else if health is lower than the gauge fill...
-	else if (fill > health + FLT_EPSILON)
-	{
-		// add a flash
-		if (flashcount == MAX_FLASH)
-			--flashcount;
-		for (int i = flashcount; i > 0; --i)
-			flash[i] = flash[i-1];
-		Flash &flashinfo = flash[0];
-		flashinfo.left = health;
-		flashinfo.right = fill;
-		flashinfo.fade = 1.0f;
-		++flashcount;
-
-		// lower the fill
-		fill = health;
-
-		// reset the drain delay
-		draindelay = DRAIN_DELAY;
-	}
-
-	// update pulse
-	static float pulsetimer = 0.0f;
-	pulsetimer += frame_time * (1.0f + (1.0f - health) * (1.0f - health) * 4.0f);
-	while (pulsetimer >= 1.0f)
-		pulsetimer -= 1.0f;
-	float pulse = sinf(pulsetimer * float(M_PI));
-	pulse *= pulse;
-	pulse *= pulse;
-	pulse *= pulse;
-
-	// set color based on health and pulse
-
-	int band = (health > 0.5f);
-	float ratio = health * 2.0f - band;
-
-	Color4 fillcolor;
-	for (int i = 0; i < 4; i++)
-		fillcolor[i] = Lerp(Lerp(healthcolor[band][0][i], healthcolor[band+1][0][i], ratio), Lerp(healthcolor[band][1][i], healthcolor[band+1][1][i], ratio), pulse);
-
-	// begin drawing
-	glBegin(GL_QUADS);
-
-	// background
-	glColor4f(0.3f, 0.3f, 0.3f, 0.5f);
-	glVertex2f(healthrect.x, healthrect.y);
-	glVertex2f(healthrect.x + healthrect.w, healthrect.y);
-	glVertex2f(healthrect.x + healthrect.w, healthrect.y + healthrect.h);
-	glVertex2f(healthrect.x, healthrect.y + healthrect.h);
-
-	// drain
-	glColor4f(1.0f, 0.0f, 0.0f, 0.5f);
-	glVertex2f(healthrect.x + healthrect.w * fill, healthrect.y);
-	glVertex2f(healthrect.x + healthrect.w * drain, healthrect.y);
-	glVertex2f(healthrect.x + healthrect.w * drain, healthrect.y + healthrect.h);
-	glVertex2f(healthrect.x + healthrect.w * fill, healthrect.y + healthrect.h);
-
-	// flash
-	for (int i = 0; i < flashcount; ++i)
-	{
-		Flash &flashinfo = flash[i];
-		glColor4f(1.0f, 1.0f, 1.0f, flashinfo.fade);
-		glVertex2f(healthrect.x + healthrect.w * flashinfo.left, healthrect.y - 2 * flashinfo.fade);
-		glVertex2f(healthrect.x + healthrect.w * flashinfo.right, healthrect.y - 2 * flashinfo.fade);
-		glVertex2f(healthrect.x + healthrect.w * flashinfo.right, healthrect.y + healthrect.h + 2 * flashinfo.fade);
-		glVertex2f(healthrect.x + healthrect.w * flashinfo.left, healthrect.y + healthrect.h + 2 * flashinfo.fade);
-	}
-
-	// fill gauge
-	glColor4fv(fillcolor);
-	glVertex2f(healthrect.x, healthrect.y);
-	glVertex2f(healthrect.x + healthrect.w * fill, healthrect.y);
-	glVertex2f(healthrect.x + healthrect.w * fill, healthrect.y + healthrect.h);
-	glVertex2f(healthrect.x, healthrect.y + healthrect.h);
-
-	glEnd();
-
-	// if the drain delay elapsed...
-	draindelay -= frame_time;
-	if (draindelay <= 0)
-	{
-		// update drain
-		drain -= DRAIN_RATE * frame_time;
-		if (drain < fill)
-			drain = fill;
-	}
-
-	// count down flash timers
-	for (int i = 0; i < flashcount; ++i)
-	{
-		Flash &flashinfo = flash[i];
-		flashinfo.fade -= FLASH_RATE * frame_time;
-		if (flashinfo.fade <= 0.0f)
-		{
-			flashcount = i;
-			break;
-		}
-	}
-
-	// get player score
-	static int cur_score = -1;
-	int new_score = player->mScore;
-
-	// if the score has not changed...
-	if (new_score == cur_score && !wasreset)
-	{
-		// call the existing draw list
-		glCallList(score_handle);
-	}
-	else
-	{
-		// update score
-		cur_score = new_score;
-
-		// start a new draw list list
-		glNewList(score_handle, GL_COMPILE_AND_EXECUTE);
-
-		// draw player score (HACK)
-		char score[9];
-		sprintf(score, "%08d", new_score);
-		bool leading = true;
-
-		glEnable(GL_TEXTURE_2D);
-		glBindTexture(GL_TEXTURE_2D, OGLCONSOLE_glFontHandle);
-		glBegin(GL_QUADS);
-
-		float x = 8;
-		float y = 32;
-		float z = 0;
-		float w = 16;
-		float h = -16;
-		static const float textcolor[2][3] =
-		{
-			{ 0.4f, 0.5f, 1.0f },
-			{ 0.3f, 0.3f, 0.3f }
-		};
-
-		for (char *s = score; *s != '\0'; ++s)
-		{
-			char c = *s;
-			if (c != '0')
-				leading = false;
-			glColor3fv(textcolor[leading]);
-			OGLCONSOLE_DrawCharacter(c, x, y, w, h, z);
-			x += w;
-		}
-
-		glEnd();
-
-		glDisable(GL_TEXTURE_2D);
-
-		glEndList();
-	}
-
-	int cur_lives = -1;
-	int new_lives = player->mLives;
-	if (new_lives < INT_MAX)
-	{
-		// if the lives has not changed...
-		if (new_lives == cur_lives && !wasreset)
-		{
-			// call the existing draw list
-			glCallList(lives_handle);
-		}
-		else
-		{
-			// update lives
-			cur_lives = new_lives;
-
-			// start a new draw list list
-			glNewList(lives_handle, GL_COMPILE_AND_EXECUTE);
-
-			// draw the player ship
-			glColor4f(0.4f, 0.5f, 1.0f, 1.0f);
-			glPushMatrix();
-			glTranslatef(healthrect.x + healthrect.w + 8, healthrect.y + 4, 0.0f);
-			glScalef(-0.5, -0.5, 1);
-			glCallList(Database::drawlist.Get(0xeec1dafa /* "playership" */));
-			glPopMatrix();
-
-			// draw remaining lives
-			char lives[16];
-			sprintf(lives, "x%d", cur_lives);
-
-			glEnable(GL_TEXTURE_2D);
-			glBindTexture(GL_TEXTURE_2D, OGLCONSOLE_glFontHandle);
-
-			glColor4f(0.4f, 0.5f, 1.0f, 1.0f);
-			glBegin(GL_QUADS);
-			float w = 8;
-			float h = -8;
-			float x = healthrect.x + healthrect.w + 16;
-			float y = healthrect.y + 4 - 0.5f * h;
-			float z = 0;
-			OGLCONSOLE_DrawString(lives, x, y, w, h, z);
-
-			glEnd();
-
-			glDisable(GL_TEXTURE_2D);
-
-			glEndList();
-		}
-	}
-
-	// get "special" ammo resource (HACK)
-
-	int cur_ammo = -1;
-	int new_ammo = INT_MAX;
-	if (Resource *specialammo = Database::resource.Get(aId).Get(0xd940d530 /* "special" */))
-	{
-		new_ammo = xs_FloorToInt(specialammo->GetValue());
-	}
-	if (new_ammo < INT_MAX)
-	{
-		// if the ammo has not changed...
-		if (new_ammo == cur_ammo && !wasreset)
-		{
-			// call the existing draw list
-			glCallList(ammo_handle);
-		}
-		else
-		{
-			// update ammo
-			cur_ammo = new_ammo;
-
-			// start a new draw list list
-			glNewList(ammo_handle, GL_COMPILE_AND_EXECUTE);
-
-			// draw the special ammo
-			glColor4f(0.4f, 0.5f, 1.0f, 1.0f);
-			glPushMatrix();
-			glTranslatef(healthrect.x + healthrect.w + 8, healthrect.y + 16, 0.0f);
-			glScalef(4, 4, 1);
-			glCallList(Database::drawlist.Get(0x8cdedbba /* "circle16" */));
-			glPopMatrix();
-
-			// draw remaining ammo
-			char ammo[16];
-			sprintf(ammo, "x%d", cur_ammo);
-
-			glEnable(GL_TEXTURE_2D);
-			glBindTexture(GL_TEXTURE_2D, OGLCONSOLE_glFontHandle);
-
-			glColor4f(0.4f, 0.5f, 1.0f, 1.0f);
-
-			glBegin(GL_QUADS);
-			float w = 8;
-			float h = -8;
-			float x = healthrect.x + healthrect.w + 16;
-			float y = healthrect.y + 16 - 0.5f * h;
-			float z = 0;
-			OGLCONSOLE_DrawString(ammo, x, y, w, h, z);
-
-			glEnd();
-
-			glDisable(GL_TEXTURE_2D);
-
-			glEndList();
-		}
-	}
-
-	static float gameovertimer = 0.0f;
-
-	// if tracking an active controller...
-	Controller *controller = Database::controller.Get(id);
-	if (controller)
-	{
-		// draw reticule
-		float x = 320 - 240 * Lerp(aimpos[0].x, aimpos[1].x, sim_fraction);
-		float y = 240 - 240 * Lerp(aimpos[0].y, aimpos[1].y, sim_fraction);
-
-		glPushMatrix();
-		glTranslatef(x, y, 0.0f);
-		glCallList(reticule_handle);
-		glPopMatrix();
-
-		gameovertimer = 0.0f;
-	}
-	else if (cur_lives <= 0 && player->mTimer <= 0.0f)
-	{
-		// display game over
-		gameovertimer += frame_time;
-		if (gameovertimer > 1.0f)
-			gameovertimer = 1.0f;
-
-		glEnable(GL_TEXTURE_2D);
-		glBindTexture(GL_TEXTURE_2D, OGLCONSOLE_glFontHandle);
-
-
-		glBegin(GL_QUADS);
-
-		static char *text = "GAME OVER";
-		const float w = Lerp<float>(96, 48, gameovertimer);
-		const float h = Lerp<float>(-64, -32, gameovertimer);
-		const float x = 320 - 0.5f * w * strlen(text);
-		const float y = 240 - 0.5f * h;
-		const float z = 0;
-		const float a = gameovertimer * gameovertimer;
-
-		glColor4f(0.1f, 0.1f, 0.1f, a);
-		OGLCONSOLE_DrawString(text, x - 2, y - 2, w, h, z);
-		OGLCONSOLE_DrawString(text, x    , y - 2, w, h, z);
-		OGLCONSOLE_DrawString(text, x + 2, y - 2, w, h, z);
-		OGLCONSOLE_DrawString(text, x - 2, y    , w, h, z);
-		OGLCONSOLE_DrawString(text, x + 2, y    , w, h, z);
-		OGLCONSOLE_DrawString(text, x - 2, y + 2, w, h, z);
-		OGLCONSOLE_DrawString(text, x    , y + 2, w, h, z);
-		OGLCONSOLE_DrawString(text, x + 2, y + 2, w, h, z);
-
-		glColor4f(1.0f, 0.2f, 0.1f, a);
-		OGLCONSOLE_DrawString(text, x, y, w, h, z);
-
-		glEnd();
-
-		glDisable(GL_TEXTURE_2D);
-	}
-}
-
-namespace Database
-{
-	Typed<PlayerHUD *> playerhud(0x8e522e29 /* "playerhud" */);
-}
-
 // player join
 void PlayerJoinListener(unsigned int aId)
 {
+	// create player camera
+	PlayerCamera *playercamera = new PlayerCamera(aId);
+	Database::playercamera.Put(aId, playercamera);
+	playercamera->Activate();
+
 	// create player hud overlay
 	PlayerHUD *playerhud = new PlayerHUD(aId);
 	Database::playerhud.Put(aId, playerhud);
@@ -3900,6 +3397,13 @@ void PlayerQuitListener(unsigned int aId)
 		// remove player hud overlay
 		delete playerhud;
 		Database::playerhud.Delete(aId);
+	}
+
+	if (PlayerCamera *playercamera = Database::playercamera.Get(aId))
+	{
+		// remove player camera
+		delete playercamera;
+		Database::playercamera.Delete(aId);
 	}
 }
 
@@ -3980,12 +3484,6 @@ void EnterPlayState()
 	Overlay *escape = new Overlay(0x9e212406 /* "escape" */);
 	Database::overlay.Put(0x9e212406 /* "escape" */, escape);
 	escape->SetAction(Overlay::Action(RenderEscapeOptions));
-
-	// allocate score draw list
-	score_handle = glGenLists(1);
-
-	// allocate lives draw list
-	lives_handle = glGenLists(1);
 
 	// set to runtime mode
 	runtime = true;
