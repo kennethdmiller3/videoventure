@@ -7,6 +7,11 @@
 #ifdef USE_POOL_ALLOCATOR
 #include <boost/pool/pool.hpp>
 
+
+// sound listener position
+Vector2 Sound::listenerpos;
+
+
 // sound pool
 static boost::pool<boost::default_user_allocator_malloc_free> pool(sizeof(Sound));
 void *Sound::operator new(size_t aSize)
@@ -1839,7 +1844,6 @@ void Sound::Stop(void)
 }
 
 // hack!
-extern Vector2 listenerpos;
 void Sound::Update(float aStep)
 {
 	if (!mRepeat && mOffset >= mLength)

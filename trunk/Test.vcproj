@@ -278,7 +278,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Source\PlayerCamera.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\Source\PlayerController.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\PlayerHUD.cpp"
 				>
 			</File>
 			<File
@@ -468,7 +476,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Source\PlayerCamera.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Source\PlayerController.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\PlayerHUD.h"
 				>
 			</File>
 			<File
