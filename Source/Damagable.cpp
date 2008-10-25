@@ -2,6 +2,8 @@
 #include "Damagable.h"
 #include "Entity.h"
 #include "Updatable.h"
+#include "Link.h"
+
 
 #ifdef USE_POOL_ALLOCATOR
 #include <boost/pool/pool.hpp>
@@ -84,7 +86,7 @@ namespace Database
 
 
 DamagableTemplate::DamagableTemplate(void)
-: mHealth(0), mSpawnOnDeath(0), mSwitchOnDeath(0)
+: mHealth(0), mSpawnOnDeath(0), mSwitchOnDeath(0), mPropagateScale(0), mPropagateDeath(0)
 {
 }
 
@@ -99,6 +101,8 @@ bool DamagableTemplate::Configure(const TiXmlElement *element)
 		mSpawnOnDeath = Hash(spawn);
 	if (const char *spawn = element->Attribute("switchondeath"))
 		mSwitchOnDeath = Hash(spawn);
+	element->QueryFloatAttribute("propagatescale", &mPropagateScale);
+	element->QueryFloatAttribute("propagatedeath", &mPropagateDeath);
 	return true;
 }
 
@@ -161,10 +165,26 @@ void Damagable::Damage(unsigned int aSourceId, float aDamage)
 	if (mHealth <= 0)
 		return;
 
+	const DamagableTemplate &damagable = Database::damagabletemplate.Get(mId);
+
 	// notify all damage listeners
 	for (Database::Typed<DamageListener>::Iterator itor(Database::damagelistener.Find(mId)); itor.IsValid(); ++itor)
 	{
 		itor.GetValue()(mId, aSourceId, aDamage);
+	}
+
+	// if propagating damage...
+	if (damagable.mPropagateScale)
+	{
+		// get backlink
+		unsigned int aBackId = Database::backlink.Get(mId);
+
+		// if the backlinked instance is damagable...
+		if (Damagable *backdamagable = Database::damagable.Get(aBackId))
+		{
+			// propagate scaled damage
+			backdamagable->Damage(aSourceId, damagable.mPropagateScale * aDamage);
+		}
 	}
 
 	// deduct damage from health
@@ -191,6 +211,20 @@ void Damagable::Damage(unsigned int aSourceId, float aDamage)
 		int &combo = Database::hitcombo.Open(mId);
 		combo = std::max<int>(combo, Database::hitcombo.Get(aSourceId) + 1);
 		Database::hitcombo.Close(mId);
+
+		// if propagating death damage...
+		if (damagable.mPropagateDeath)
+		{
+			// get backlink
+			unsigned int aBackId = Database::backlink.Get(mId);
+
+			// if the backlinked instance is damagable...
+			if (Damagable *backdamagable = Database::damagable.Get(aBackId))
+			{
+				// propagate death damage
+				backdamagable->Damage(aSourceId, damagable.mPropagateDeath);
+			}
+		}
 
 		// register a kill update
 		new DamagableKillUpdate(mId);

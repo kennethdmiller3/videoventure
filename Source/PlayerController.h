@@ -2,6 +2,38 @@
 
 #include "Controller.h"
 
+// player controller template
+class PlayerControllerTemplate
+{
+public:
+	enum ControlType
+	{
+		NONE,
+		MOVELOCAL,
+		MOVEWORLD,
+		AIMLOCAL,
+		AIMWORLD,
+		LEFT,
+		RIGHT,
+		UP,
+		DOWN,
+		NUM_TYPES
+	};
+	ControlType mMove;
+	ControlType mAim;
+	Transform2 mScale;
+	Transform2 mAdd;
+
+public:
+	PlayerControllerTemplate()
+		: mMove(MOVEWORLD)
+		, mAim(AIMWORLD)
+		, mScale(1, Vector2(1, 1))
+		, mAdd(0, Vector2(0, 0))
+	{
+	}
+};
+
 // player controller
 class PlayerController : 
 	public Controller
@@ -19,5 +51,6 @@ public:
 
 namespace Database
 {
+	extern Typed<PlayerControllerTemplate> playercontrollertemplate;
 	extern Typed<PlayerController *> playercontroller;
 }

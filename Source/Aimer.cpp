@@ -517,7 +517,7 @@ void Aimer::Aim(float aStep, Entity *entity, const AimerTemplate &aimer, Entity 
 			else if (localAngle < -float(M_PI))
 				localAngle += float(M_PI)*2.0f;
 			if (fabsf(localAngle) <= aimer.mFire[i].mAngle)
-				mFire[aimer.mFire[i].mChannel] = true;
+				mFire[aimer.mFire[i].mChannel] = sqrtf(distSq) / aimer.mFire[i].mRange; // encode range into fire (HACK)
 		}
 	}
 }

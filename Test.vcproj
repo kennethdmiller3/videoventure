@@ -266,6 +266,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Source\Particle.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\Source\Pathing.cpp"
 				>
 			</File>
@@ -303,6 +307,10 @@
 			</File>
 			<File
 				RelativePath=".\Source\Resource.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Session5.cpp"
 				>
 			</File>
 			<File

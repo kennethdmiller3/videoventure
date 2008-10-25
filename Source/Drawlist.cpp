@@ -1139,6 +1139,24 @@ void ProcessDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buf
 		}
 		break;
 
+	case 0x23e2c68e /* "calldynamiclist" */:
+		{
+			// hacktastic!
+			const char *name = element->Attribute("name");
+			if (name)
+			{
+				const std::vector<unsigned int> &drawlist = Database::dynamicdrawlist.Get(Hash(name));
+				if (drawlist.size())
+				{
+					for (int i = 0; i < drawlist.size(); ++i)
+					{
+						buffer.push_back(drawlist[i]);
+					}
+				}
+			}
+		}
+		break;
+
 	case 0xc98b019b /* "drawlist" */:
 		{
 			// create a new draw list

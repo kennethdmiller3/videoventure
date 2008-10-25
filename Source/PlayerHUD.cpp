@@ -1,10 +1,10 @@
 #include "StdAfx.h"
-#include "PlayerHUD.h"
 #include "Player.h"
+#include "PlayerHUD.h"
+#include "PlayerController.h"
 #include "Damagable.h"
 #include "Drawlist.h"
 #include "Resource.h"
-
 
 extern bool wasreset;
 
@@ -375,14 +375,17 @@ void PlayerHUD::Render(unsigned int aId, float aTime, float aPosX, float aPosY, 
 	Controller *controller = Database::controller.Get(id);
 	if (controller)
 	{
-		// draw reticule
-		float x = 320 - 240 * Lerp(aimpos[0].x, aimpos[1].x, sim_fraction);
-		float y = 240 - 240 * Lerp(aimpos[0].y, aimpos[1].y, sim_fraction);
+		if (Database::playercontrollertemplate.Get(id).mAim == PlayerControllerTemplate::AIMWORLD)
+		{
+			// draw reticule
+			float x = 320 - 240 * Lerp(aimpos[0].x, aimpos[1].x, sim_fraction);
+			float y = 240 - 240 * Lerp(aimpos[0].y, aimpos[1].y, sim_fraction);
 
-		glPushMatrix();
-		glTranslatef(x, y, 0.0f);
-		glCallList(reticule_handle);
-		glPopMatrix();
+			glPushMatrix();
+			glTranslatef(x, y, 0.0f);
+			glCallList(reticule_handle);
+			glPopMatrix();
+		}
 
 		gameovertimer = 0.0f;
 	}
