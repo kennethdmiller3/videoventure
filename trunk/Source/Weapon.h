@@ -37,7 +37,7 @@ public:
 	~WeaponTemplate(void);
 
 	// configure
-	bool Configure(const TiXmlElement *element);
+	bool Configure(const TiXmlElement *element, unsigned int aId);
 };
 
 class Weapon

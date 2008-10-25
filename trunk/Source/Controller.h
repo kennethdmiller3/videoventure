@@ -24,7 +24,7 @@ public:
 	// controls
 	Vector2 mMove;
 	float mTurn;
-	bool mFire[FIRE_CHANNELS];
+	float mFire[FIRE_CHANNELS];
 
 public:
 	Controller(unsigned int aId);

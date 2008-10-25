@@ -7,6 +7,7 @@
 #include "Renderable.h"
 #include "Sound.h"
 #include "Resource.h"
+#include "Interpolator.h"
 
 
 #ifdef USE_POOL_ALLOCATOR
@@ -65,6 +66,7 @@ namespace Database
 	Typed<WeaponTemplate> weapontemplate(0xb1050fa7 /* "weapontemplate" */);
 	Typed<Weapon *> weapon(0x6f332041 /* "weapon" */);
 	Typed<WeaponTracker> weapontracker(0x49c0728f /* "weapontracker" */);
+	Typed<Typed<std::vector<unsigned int> > > weaponproperty(0x5abbb61c /* "weaponproperty" */);
 
 	namespace Loader
 	{
@@ -79,7 +81,7 @@ namespace Database
 			void Configure(unsigned int aId, const TiXmlElement *element)
 			{
 				WeaponTemplate &weapon = Database::weapontemplate.Open(aId);
-				weapon.Configure(element);
+				weapon.Configure(element, aId);
 				Database::weapontemplate.Close(aId);
 			}
 		}
@@ -153,13 +155,13 @@ WeaponTemplate::~WeaponTemplate(void)
 {
 }
 
-bool WeaponTemplate::Configure(const TiXmlElement *element)
+bool WeaponTemplate::Configure(const TiXmlElement *element, unsigned int aId)
 {
 	// process child elements
 	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
-		const char *label = child->Value();
-		switch (Hash(label))
+		unsigned int aPropId = Hash(child->Value());
+		switch (aPropId)
 		{
 		case 0x14c8d3ca /* "offset" */:
 			{
@@ -194,6 +196,19 @@ bool WeaponTemplate::Configure(const TiXmlElement *element)
 					mVelocity.a *= float(M_PI) / 180.0f;
 				child->QueryFloatAttribute("x", &mVelocity.p.x);
 				child->QueryFloatAttribute("y", &mVelocity.p.y);
+
+				// if the property has keyframes...
+				// (TO DO: handle this in a smarter way)
+				if (child->FirstChildElement())
+				{
+					// process the interpolator item
+					Database::Typed<std::vector<unsigned int> > &properties = Database::weaponproperty.Open(aId);
+					std::vector<unsigned int> &buffer = properties.Open(aPropId);
+					const char *names[] = { "angle", "x", "y" };
+					ProcessInterpolatorItem(child, buffer, sizeof(mVelocity)/sizeof(float), names, (float *)(&mVelocity));
+					properties.Close(aPropId);
+					Database::weaponproperty.Close(aId);
+				}
 			}
 			break;
 
@@ -420,9 +435,20 @@ void Weapon::Update(float aStep)
 					velocity.p.y *= weapon.mInherit.p.y;
 
 					// apply velocity add
-					velocity.a += weapon.mVelocity.a;
-					velocity.p.x += weapon.mVelocity.p.x;
-					velocity.p.y += weapon.mVelocity.p.y;
+					// (TO DO: make this more straightforward)
+					Transform2 aVelocity(weapon.mVelocity);
+					if (const Database::Typed<std::vector<unsigned int> > *properties = Database::weaponproperty.Find(mId))
+					{
+						const std::vector<unsigned int> &velocitybuffer = properties->Get(0x32741c32 /* "velocity" */);
+						if (!velocitybuffer.empty())
+						{
+							int index = 0;
+							ApplyInterpolator(reinterpret_cast<float * __restrict>(&aVelocity), sizeof(aVelocity)/sizeof(float), velocitybuffer[0], reinterpret_cast<const float * __restrict>(&velocitybuffer[1]), controller->mFire[mChannel], index);
+						}
+					}
+					velocity.a += aVelocity.a;
+					velocity.p.x += aVelocity.p.x;
+					velocity.p.y += aVelocity.p.y;
 
 					// apply velocity variance
 					if (weapon.mVariance.a)

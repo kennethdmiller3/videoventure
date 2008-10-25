@@ -141,6 +141,10 @@ static void ConfigureFilterCategory(b2FilterData &aFilter, const TiXmlElement *e
 
 static void ConfigureFilterMask(b2FilterData &aFilter, const TiXmlElement *element)
 {
+	int defvalue = 1;
+	if (element->QueryIntAttribute("default", &defvalue) == TIXML_SUCCESS)
+		aFilter.maskBits = defvalue ? 0xFFFF : 0x0000;
+
 	char buf[16];
 	for (int i = 0; i < 16; i++)
 	{
@@ -972,6 +976,11 @@ public:
 			itor.GetValue()(id1, id2, 0.0f /*shape1->GetBody()->m_sweep.t0*/, *point);
 		for (Database::Typed<Collidable::Listener>::Iterator itor(Database::collidablecontactremove.Find(id2)); itor.IsValid(); ++itor)
 			itor.GetValue()(id2, id1, 0.0f /*shape2->GetBody()->m_sweep.t0*/, *point);
+	}
+
+	// Called after a contact is resolved (?)
+	virtual void Result(const b2ContactResult* result)
+	{
 	}
 }
 contactListener;

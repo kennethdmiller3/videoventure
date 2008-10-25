@@ -25,7 +25,7 @@ void Pickup::operator delete(void *aPtr)
 
 namespace Database
 {
-	Typed<Typed<Typed<unsigned int> > > pickupgrant(0x18e2ce2d /* "pickupgrant" */);
+	Typed<Typed<Typed<LinkTemplate> > > pickupgrant(0x18e2ce2d /* "pickupgrant" */);
 	Typed<PickupTemplate> pickuptemplate(0x01ebaacb /* "pickuptemplate" */);
 	Typed<Pickup *> pickup(0x6958f085 /* "pickup" */);
 
@@ -113,16 +113,15 @@ bool PickupTemplate::Configure(const TiXmlElement *element, unsigned int aId)
 						case 0x0ddb0669 /* "link" */:
 							if (const char *linkname = param->Attribute("name"))
 							{
-								if (const char *grantname = param->Attribute("grant"))
-								{
-									Database::Typed<Database::Typed<unsigned int> > &grants = Database::pickupgrant.Open(aId);
-									unsigned int teamhash = Hash(teamname);
-									Database::Typed<unsigned int> &grant = grants.Open(teamhash);
-									unsigned int linkhash = Hash(linkname);
-									grant.Put(linkhash, Hash(grantname));
-									grants.Close(teamhash);
-									Database::pickupgrant.Close(aId);
-								}
+								Database::Typed<Database::Typed<LinkTemplate> > &teamgrants = Database::pickupgrant.Open(aId);
+								unsigned int aTeamId = Hash(teamname);
+								Database::Typed<LinkTemplate> &grants = teamgrants.Open(aTeamId);
+								unsigned int aSubId = Hash(linkname);
+								LinkTemplate &grant = grants.Open(aSubId);
+								grant.Configure(param, aId, aSubId);
+								grants.Close(aSubId);
+								teamgrants.Close(aTeamId);
+								Database::pickupgrant.Close(aId);
 							}
 							break;
 						}
@@ -226,8 +225,11 @@ public:
 #endif
 		for (Database::Typed<LinkTemplate>::Iterator itor(Database::linktemplate.Find(mHitId)); itor.IsValid(); ++itor)
 		{
+			// get the grant link template
+			const LinkTemplate &grant = Database::pickupgrant.Get(mId).Get(aHitTeam).Get(itor.GetKey());
+
 			// if the pickup grants an item...
-			if (unsigned int grant = Database::pickupgrant.Get(mId).Get(aHitTeam).Get(itor.GetKey()))
+			if (grant.mSecondary)
 			{
 				// open link templates for the hit entity
 				Database::Typed<LinkTemplate> &linktemplates = Database::linktemplate.Open(mHitId);
@@ -296,12 +298,9 @@ public:
 				// link name
 				unsigned int name = itor.GetKey();
 
-				// get the link template
-				LinkTemplate &linktemplate = linktemplates.Open(name);
-
 				// set link template based on grant
-				DebugPrint("%s link %08x: %s -> %s\n", Database::name.Get(mHitId).c_str(), name, Database::name.Get(linktemplate.mSecondary).c_str(), Database::name.Get(grant).c_str());
-				linktemplate.mSecondary = grant;
+				DebugPrint("%s link %08x: %s -> %s\n", Database::name.Get(mHitId).c_str(), name, Database::name.Get(linktemplates.Get(name).mSecondary).c_str(), Database::name.Get(grant.mSecondary).c_str());
+				linktemplates.Put(name, grant);
 #endif
 
 #ifdef PICKUP_CASCADE_LINK_CHAIN
@@ -346,9 +345,14 @@ void Pickup::Collide(unsigned int aId, unsigned int aHitId, float aFraction, con
 	// get team affiliation
 	unsigned int aHitTeam = Database::team.Get(aHitId);
 
+	// for each link template...
 	for (Database::Typed<LinkTemplate>::Iterator itor(Database::linktemplate.Find(aHitId)); itor.IsValid(); ++itor)
 	{
-		if (Database::pickupgrant.Get(mId).Get(aHitTeam).Get(itor.GetKey()))
+		// get the grant link template
+		const LinkTemplate &grant = Database::pickupgrant.Get(mId).Get(aHitTeam).Get(itor.GetKey());
+
+		// if the pickup grants an item...
+		if (grant.mSecondary)
 		{
 			mDestroy = true;
 			break;

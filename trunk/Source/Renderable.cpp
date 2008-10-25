@@ -93,6 +93,7 @@ namespace Database
 
 RenderableTemplate::RenderableTemplate(void)
 : mRadius(0)
+, mDepth(0)
 , mPeriod(FLT_MAX)
 {
 }
@@ -107,10 +108,13 @@ bool RenderableTemplate::Configure(const TiXmlElement *element, unsigned int aId
 	// animation period
 	element->QueryFloatAttribute("period", &mPeriod);
 
-	// bounds
+	// bounding radius
 //	element->QueryFloatAttribute("x", &mBounds.p.x);
 //	element->QueryFloatAttribute("y", &mBounds.p.y);
 	element->QueryFloatAttribute("radius", &mRadius);
+
+	// sorting depth
+	element->QueryFloatAttribute("depth", &mDepth);
 
 	return true;
 }
@@ -126,6 +130,7 @@ Renderable::Renderable(void)
 , mActive(false)
 , mAction()
 , mRadius(0)
+, mDepth(0)
 , mStart(sim_turn)
 , mFraction(sim_fraction)
 {
@@ -138,6 +143,7 @@ Renderable::Renderable(const RenderableTemplate &aTemplate, unsigned int aId)
 , mActive(false)
 , mAction()
 , mRadius(aTemplate.mRadius)
+, mDepth(aTemplate.mDepth)
 , mStart(sim_turn)
 , mFraction(sim_fraction)
 {
@@ -152,20 +158,18 @@ void Renderable::Show(void)
 {
 	if (!mActive)
 	{
-		Renderable *aParent = NULL;
-		bool below = false;
-		for (unsigned int id = mId, creator = Database::creator.Get(mId); creator != 0; id = creator, creator = Database::creator.Get(creator))
-		{
-			below = Database::below.Get(id);
-			aParent = Database::renderable.Get(creator);
-			if (aParent)
-				break;
-		}
+		Renderable *aParent;
+
+		// TO DO: make this go faster
+		for (aParent = sHead; aParent != NULL; aParent = aParent->mNext)
 #ifdef DRAW_FRONT_TO_BACK
-		if (!below)
+			if (mDepth <= aParent->mDepth)
 #else
-		if (below)
+			if (mDepth >= aParent->mDepth)
 #endif
+				break;
+
+#ifdef DRAW_FRONT_TO_BACK
 		{
 			if (aParent)
 			{
@@ -178,7 +182,8 @@ void Renderable::Show(void)
 				mPrev = NULL;
 			}
 		}
-		else
+#else
+//		else
 		{
 			mNext = aParent;
 			if (aParent)
@@ -192,6 +197,7 @@ void Renderable::Show(void)
 				mPrev = sTail;
 			}
 		}
+#endif
 
 		if (mNext)
 			mNext->mPrev = this;

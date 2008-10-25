@@ -9,6 +9,9 @@ public:
 	unsigned int mSpawnOnDeath;
 	unsigned int mSwitchOnDeath;
 
+	float mPropagateScale;
+	float mPropagateDeath;
+
 public:
 	DamagableTemplate(void);
 	~DamagableTemplate(void);

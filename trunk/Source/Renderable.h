@@ -6,6 +6,9 @@ public:
 	// bounding radius
 	float mRadius;
 
+	// sorting depth
+	float mDepth;
+
 	// period
 	float mPeriod;
 
@@ -41,6 +44,9 @@ private:
 
 	// bounding radius
 	float mRadius;
+
+	// sorting depth
+	float mDepth;
 
 protected:
 	// creation turn

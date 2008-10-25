@@ -1,5 +1,7 @@
 #include "StdAfx.h"
 #include "Entity.h"
+#include "Link.h"
+#include "Collidable.h"
 
 struct Tile
 {
@@ -36,16 +38,19 @@ public:
 class Tilemap
 {
 public:
+	unsigned int mId;
 	unsigned int *mInstance;
 	size_t mCount;
 
 	Tilemap(void)
-		: mInstance(NULL)
+		: mId(0)
+		, mInstance(NULL)
 		, mCount(0)
 	{
 	}
 
 	Tilemap(const TilemapTemplate &aTemplate, unsigned int aId)
+		: mId(aId)
 	{
 		Entity *entity = Database::entity.Get(aId);
 		Transform2 transform = entity ? entity->GetTransform() : Transform2(0, Vector2(0, 0));
@@ -57,7 +62,46 @@ public:
 		{
 			const Tile &tile = aTemplate.mMap[i];
 			const Transform2 spawn(tile.mOffset * transform);
-			mInstance[i] = Database::Instantiate(tile.mSpawn, aId, aId, spawn.a, spawn.p);
+
+			mInstance[i] = Database::Instantiate(tile.mSpawn, mId, mId, spawn.a, spawn.p);
+
+			if (mId)
+			{
+				// link it (HACK)
+				Database::Typed<LinkTemplate> &linktemplates = Database::linktemplate.Open(mId);
+				LinkTemplate &linktemplate = linktemplates.Open(mInstance[i]);
+				linktemplate.mOffset = tile.mOffset;
+				linktemplate.mSub = mInstance[i];
+				linktemplate.mSecondary = mInstance[i];
+				Link *link = new Link(linktemplate, mId);
+				linktemplates.Close(mInstance[i]);
+				Database::linktemplate.Close(mId);
+				Database::Typed<Link *> &links = Database::link.Open(mId);
+				links.Put(mInstance[i], link);
+				Database::link.Close(mId);
+
+#if 0
+				// if linking two collidables
+				if (Database::collidabletemplate.Find(mId) &&
+					Database::collidabletemplate.Find(mInstance[i]))
+				{
+					// if updating position
+					if (linktemplate.mUpdatePosition)
+					{
+						// add a revolute joint to the linked template (HACK)
+						CollidableTemplate &collidable = Database::collidabletemplate.Open(mInstance[i]);
+						collidable.SetupLinkJoint(linktemplate, aId, mInstance[i]);
+						Database::collidabletemplate.Close(mInstance[i]);
+					}
+				}
+				// else if updating angle or position...
+				else if (linktemplate.mUpdateAngle || linktemplate.mUpdatePosition)
+#endif
+				{
+					// activate link update
+					link->Activate();
+				}
+			}
 		}
 	}
 
