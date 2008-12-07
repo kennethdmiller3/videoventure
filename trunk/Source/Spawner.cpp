@@ -260,11 +260,11 @@ void Spawner::Update(float aStep)
 
 			// apply transform scatter
 			if (spawner.mScatter.a)
-				transform.a += RandValue(0.0f, spawner.mScatter.a);
+				transform.a += Random::Value(0.0f, spawner.mScatter.a);
 			if (spawner.mScatter.p.x)
-				transform.p.x += RandValue(0.0f, spawner.mScatter.p.x);
+				transform.p.x += Random::Value(0.0f, spawner.mScatter.p.x);
 			if (spawner.mScatter.p.y)
-				transform.p.y += RandValue(0.0f, spawner.mScatter.p.y);
+				transform.p.y += Random::Value(0.0f, spawner.mScatter.p.y);
 
 			// get local velocity
 			Transform2 velocity(entity->GetOmega(), transform.Unrotate(entity->GetVelocity()));
@@ -281,11 +281,11 @@ void Spawner::Update(float aStep)
 
 			// apply velocity variance
 			if (spawner.mVariance.a)
-				velocity.a += RandValue(0.0f, spawner.mVariance.a);
+				velocity.a += Random::Value(0.0f, spawner.mVariance.a);
 			if (spawner.mVariance.p.x)
-				velocity.p.x += RandValue(0.0f, spawner.mVariance.p.x);
+				velocity.p.x += Random::Value(0.0f, spawner.mVariance.p.x);
 			if (spawner.mVariance.p.y)
-				velocity.p.y += RandValue(0.0f, spawner.mVariance.p.y);
+				velocity.p.y += Random::Value(0.0f, spawner.mVariance.p.y);
 
 			// get world velocity
 			velocity.p = transform.Rotate(velocity.p);

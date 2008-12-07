@@ -39,6 +39,9 @@ public:
 	bool ConfigureBox(const TiXmlElement *element, b2PolygonDef &shape);
 	bool ProcessPolyItem(const TiXmlElement *element, b2PolygonDef &shape);
 	bool ConfigurePoly(const TiXmlElement *element, b2PolygonDef &shape);
+#ifdef B2_EDGE_SHAPE_H
+	bool ConfigureEdge(const TiXmlElement *element, b2EdgeChainDef &shape);
+#endif
 	bool ProcessBodyItem(const TiXmlElement *element, b2BodyDef &body);
 	bool ConfigureBody(const TiXmlElement *element, b2BodyDef &body);
 	bool ProcessJointItem(const TiXmlElement *element, b2JointDef &joint);

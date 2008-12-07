@@ -1861,9 +1861,6 @@ void Sound::Update(float aStep)
 
 // AUDIO MIXER
 
-extern int SOUND_CHANNELS;
-extern float SOUND_VOLUME;
-
 static const float timestep = 1.0f / AUDIO_FREQUENCY;
 static float average0 = 0.0f, average1 = 0.0f;
 static const float averagefilter = 1.0f * timestep;

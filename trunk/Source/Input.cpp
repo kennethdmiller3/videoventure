@@ -1,6 +1,20 @@
 #include "StdAfx.h"
 #include "Input.h"
 
+// input names
+static const char *logicalname[Input::NUM_LOGICAL] =
+{
+	"move_x",	// MOVE_HORIZONTAL,
+	"move_y",	// MOVE_VERTICAL,
+	"aim_x",	// AIM_HORIZONTAL,
+	"aim_y",	// AIM_VERTICAL,
+	"fire1",	// FIRE_PRIMARY,
+	"fire2",	// FIRE_SECONDARY,
+	"fire3",	// FIRE_CHANNEL3,
+	"fire4",	// FIRE_CHANNEL4,
+};
+
+
 Input::Input(void)
 {
 	Clear();
@@ -63,6 +77,23 @@ void Input::Update(void)
 	output[FIRE_SECONDARY] = Clamp(value[FIRE_SECONDARY], -1.0f, 1.0f);
 	output[FIRE_CHANNEL3] = Clamp(value[FIRE_CHANNEL3], -1.0f, 1.0f);
 	output[FIRE_CHANNEL4] = Clamp(value[FIRE_CHANNEL4], -1.0f, 1.0f);
+}
+
+void Input::Playback(const TiXmlElement *element)
+{
+	// update the control values
+	for (int i = 0; i < Input::NUM_LOGICAL; ++i)
+		element->QueryIntAttribute(logicalname[i], reinterpret_cast<int *>(&output[i]));
+}
+
+void Input::Record(TiXmlElement *element, float prev[])
+{
+	// add changed control values
+	for (int i = 0; i < Input::NUM_LOGICAL; ++i)
+	{
+		if (output[i] != prev[i])
+			element->SetAttribute(logicalname[i], *reinterpret_cast<int *>(&output[i]));
+	}
 }
 
 // step inputs
@@ -187,7 +218,7 @@ void Input::ProcessItem(const TiXmlElement *element)
 			float maximum = FLT_MAX;
 			element->QueryFloatAttribute("max", &maximum);
 
-			input.Bind(logical, inputtype, device, control, deadzone, scale, minimum, maximum);
+			Bind(logical, inputtype, device, control, deadzone, scale, minimum, maximum);
 		}
 		break;
 	}

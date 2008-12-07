@@ -224,6 +224,7 @@ struct TextureTemplate
 };
 
 
+#ifdef MAGIC
 // http://aggregate.org/MAGIC/
 
 inline float fast_fabs(register float x)
@@ -350,6 +351,7 @@ inline unsigned int log2(register unsigned int x)
 	x |= (x >> 16);
 	return(count_ones(x) - 1 - y);
 }
+#endif
 
 namespace Database
 {
@@ -1148,7 +1150,7 @@ void ProcessDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buf
 				const std::vector<unsigned int> &drawlist = Database::dynamicdrawlist.Get(Hash(name));
 				if (drawlist.size())
 				{
-					for (int i = 0; i < drawlist.size(); ++i)
+					for (size_t i = 0; i < drawlist.size(); ++i)
 					{
 						buffer.push_back(drawlist[i]);
 					}
@@ -1582,7 +1584,7 @@ size_t ExecuteDrawData(const unsigned int buffer[], size_t count, int width, flo
 				// accumulate value
 				float value = 0.0f;
 				for (int c = 0; c < count; ++c)
-					value += 2.0f * RandFloat() - 1.0f;
+					value += 2.0f * Random::Float() - 1.0f;
 
 				// rescale value
 				float average = *reinterpret_cast<const float * __restrict>(itor++);

@@ -6,9 +6,6 @@
 #include "Sound.h"
 
 
-extern float VIEW_AIM;
-extern float VIEW_AIM_FILTER;
-
 extern Vector2 camerapos[2];
 
 static Vector2 trackoffset(0, 0);

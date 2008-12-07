@@ -17,10 +17,10 @@ public:
 	// logical inputs
 	enum LOGICAL
 	{
-		MOVE_VERTICAL,
 		MOVE_HORIZONTAL,
-		AIM_VERTICAL,
+		MOVE_VERTICAL,
 		AIM_HORIZONTAL,
+		AIM_VERTICAL,
 		FIRE_PRIMARY,
 		FIRE_SECONDARY,
 		FIRE_CHANNEL3,
@@ -57,6 +57,12 @@ public:
 
 	// update inputs
 	void Update(void);
+
+	// playback inputs
+	void Playback(const TiXmlElement *element);
+
+	// record inputs
+	void Record(TiXmlElement *element, float prev[]);
 
 	// step inputs
 	void Step(void);

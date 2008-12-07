@@ -119,6 +119,7 @@ LinkTemplate::LinkTemplate(void)
 : mOffset(0, Vector2(0, 0))
 , mSub(0)
 , mSecondary(0)
+, mType(0)
 , mUpdateAngle(true)
 , mUpdatePosition(true)
 , mBelow(false)
@@ -137,6 +138,10 @@ bool LinkTemplate::Configure(const TiXmlElement *element, unsigned int aId, unsi
 	// set linked template
 	if (const char *secondary = element->Attribute("secondary"))
 		mSecondary = Hash(secondary);
+
+	// set type identifier
+	if (const char *type = element->Attribute("type"))
+		mType = Hash(type);
 
 	// update linked angle?
 	int updateangle = mUpdateAngle;

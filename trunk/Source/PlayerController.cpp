@@ -229,8 +229,6 @@ void PlayerController::Control(float aStep)
 	case PlayerControllerTemplate::AIMWORLD:
 		{
 			// get world reticule position
-			extern Vector2 camerapos[];
-			extern float VIEW_SIZE;
 			Vector2 mAim(camerapos[1] + Vector2(input[Input::AIM_HORIZONTAL], input[Input::AIM_VERTICAL]) * 120 * VIEW_SIZE / 320);
 
 			// turn towards direction

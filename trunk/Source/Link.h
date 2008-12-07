@@ -14,6 +14,9 @@ public:
 	// secondary
 	unsigned int mSecondary;
 
+	// type-id
+	unsigned int mType;
+
 	// update flags
 	bool mUpdateAngle;
 	bool mUpdatePosition;
