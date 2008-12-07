@@ -246,9 +246,9 @@ Aimer::Aimer(const AimerTemplate &aTemplate, unsigned int aId)
 , mTarget(0)
 , mOffset(0, 0)
 , mDelay(aTemplate.mTarget.mPeriod * aId / UINT_MAX)
-, mWanderSidePhase(RandFloat() * 2.0f * float(M_PI))
-, mWanderFrontPhase(RandFloat() * 2.0f * float(M_PI))
-, mWanderTurnPhase(RandFloat() * 2.0f * float(M_PI))
+, mWanderSidePhase(Random::Float() * 2.0f * float(M_PI))
+, mWanderFrontPhase(Random::Float() * 2.0f * float(M_PI))
+, mWanderTurnPhase(Random::Float() * 2.0f * float(M_PI))
 {
 	SetAction(Action(this, &Aimer::Control));
 }
@@ -314,7 +314,7 @@ void Aimer::Wander(float aStep, Entity *entity, const AimerTemplate &aimer)
 	if (aimer.mWander.mSide)
 	{
 		mMove.x += aimer.mWander.mSide * sinf(mWanderSidePhase);
-		mWanderSidePhase += RandFloat() * aimer.mWander.mSideRate * 2.0f * float(M_PI) * sim_step;
+		mWanderSidePhase += Random::Float() * aimer.mWander.mSideRate * 2.0f * float(M_PI) * sim_step;
 		if (mWanderSidePhase > 2.0f * float(M_PI))
 			mWanderSidePhase -= 2.0f * float(M_PI);
 	}
@@ -323,7 +323,7 @@ void Aimer::Wander(float aStep, Entity *entity, const AimerTemplate &aimer)
 	if (aimer.mWander.mFront)
 	{
 		mMove.y += aimer.mWander.mFront * sinf(mWanderFrontPhase);
-		mWanderFrontPhase += RandFloat() * aimer.mWander.mFrontRate * 2.0f * float(M_PI) * sim_step;
+		mWanderFrontPhase += Random::Float() * aimer.mWander.mFrontRate * 2.0f * float(M_PI) * sim_step;
 		if (mWanderFrontPhase > 2.0f * float(M_PI))
 			mWanderFrontPhase -= 2.0f * float(M_PI);
 	}
@@ -332,7 +332,7 @@ void Aimer::Wander(float aStep, Entity *entity, const AimerTemplate &aimer)
 	if (aimer.mWander.mTurn)
 	{
 		mTurn += aimer.mWander.mTurn * sinf(mWanderTurnPhase);
-		mWanderTurnPhase += RandFloat() * aimer.mWander.mTurnRate * 2.0f * float(M_PI) * sim_step;
+		mWanderTurnPhase += Random::Float() * aimer.mWander.mTurnRate * 2.0f * float(M_PI) * sim_step;
 		if (mWanderTurnPhase > 2.0f * float(M_PI))
 			mWanderTurnPhase -= 2.0f * float(M_PI);
 	}

@@ -69,6 +69,9 @@
 	<points value="50" />
 	<spawner>
 		<offset x="0" y="0" />
+		<scatter x="1" angle="180" />
+		<inherit x="0" y="0" />
+		<variance x="4" y="4" />
 		<spawn name="missiletrail" start="0" cycle="0.016667" track="0" />
 	</spawner>
 </template>

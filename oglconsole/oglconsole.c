@@ -861,7 +861,7 @@ int OGLCONSOLE_SDLEvent(SDL_Event *e)
         {  
             // TODO: Fetch values from OS?
             // TODO: Expose them to the program
-            SDL_EnableKeyRepeat(250, 30);
+            //SDL_EnableKeyRepeat(250, 30);
             userConsole->visibility += SLIDE_STEPS;
             return 1;
         }
@@ -882,7 +882,7 @@ int OGLCONSOLE_SDLEvent(SDL_Event *e)
             userConsole->visibility -= SLIDE_STEPS;
 
             /* Disable key repeat */
-            SDL_EnableKeyRepeat(0, 0);
+            //SDL_EnableKeyRepeat(0, 0);
             return 1;
         }
         

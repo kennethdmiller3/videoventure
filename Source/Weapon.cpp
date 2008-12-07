@@ -420,11 +420,11 @@ void Weapon::Update(float aStep)
 				{
 					// apply transform scatter
 					if (weapon.mScatter.a)
-						transform.a += RandValue(0.0f, weapon.mScatter.a);
+						transform.a += Random::Value(0.0f, weapon.mScatter.a);
 					if (weapon.mScatter.p.x)
-						transform.p.x += RandValue(0.0f, weapon.mScatter.p.x);
+						transform.p.x += Random::Value(0.0f, weapon.mScatter.p.x);
 					if (weapon.mScatter.p.y)
-						transform.p.y += RandValue(0.0f, weapon.mScatter.p.y);
+						transform.p.y += Random::Value(0.0f, weapon.mScatter.p.y);
 
 					// get local velocity
 					Transform2 velocity(entity->GetOmega(), transform.Unrotate(entity->GetVelocity()));
@@ -452,11 +452,11 @@ void Weapon::Update(float aStep)
 
 					// apply velocity variance
 					if (weapon.mVariance.a)
-						velocity.a += RandValue(0.0f, weapon.mVariance.a);
+						velocity.a += Random::Value(0.0f, weapon.mVariance.a);
 					if (weapon.mVariance.p.x)
-						velocity.p.x += RandValue(0.0f, weapon.mVariance.p.x);
+						velocity.p.x += Random::Value(0.0f, weapon.mVariance.p.x);
 					if (weapon.mVariance.p.y)
-						velocity.p.y += RandValue(0.0f, weapon.mVariance.p.y);
+						velocity.p.y += Random::Value(0.0f, weapon.mVariance.p.y);
 
 					// get world velocity
 					velocity.p = transform.Rotate(velocity.p);

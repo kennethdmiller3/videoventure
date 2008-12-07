@@ -49,7 +49,9 @@
 		<color r="0.4" g="0.5" b="1.0" a="1.0" />
 		<calllist name="playership" />
 	</renderable>
-	<playercontroller />
+	<playercontroller>
+		<scale turn="0.05"/>
+	</playercontroller>
 	<ship maxveloc="150" maxaccel="1200" minaccel="150" maxomega="20" />
 	<damagable health="10" spawnondeath="playershipdeath" />
 	<soundcue>

@@ -46,11 +46,6 @@ void PointsOverlay::AddItem(const Vector2 &aPosition, int aValue, int aCombo)
 // render
 void PointsOverlay::Render(unsigned int aId, float aTime, float aPosX, float aPosY, float aAngle)
 {
-	extern float VIEW_SIZE;
-	extern int SCREEN_HEIGHT;
-	extern int SCREEN_WIDTH;
-	extern Vector2 camerapos[2];
-	
 	// set projection
 	glMatrixMode( GL_PROJECTION );
 	glPushMatrix();

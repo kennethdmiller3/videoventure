@@ -214,6 +214,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Source\Command.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\Source\Controller.cpp"
 				>
 			</File>
@@ -302,6 +306,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Source\Preferences.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\Source\Renderable.cpp"
 				>
 			</File>
@@ -311,6 +319,10 @@
 			</File>
 			<File
 				RelativePath=".\Source\Session5.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Shell.cpp"
 				>
 			</File>
 			<File
@@ -366,6 +378,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Source\Title.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\Source\Updatable.cpp"
 				>
 			</File>
@@ -413,6 +429,10 @@
 			</File>
 			<File
 				RelativePath=".\Source\Collidable.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Command.h"
 				>
 			</File>
 			<File
@@ -504,11 +524,19 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Source\Preferences.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Source\Renderable.h"
 				>
 			</File>
 			<File
 				RelativePath=".\Source\Resource.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Shell.h"
 				>
 			</File>
 			<File

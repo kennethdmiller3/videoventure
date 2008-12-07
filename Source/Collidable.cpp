@@ -19,7 +19,14 @@ void Collidable::operator delete(void *aPtr)
 
 #ifndef COLLIDABLE_SHAPE_DATABASE
 static const size_t shapesize =
-	std::max(sizeof(b2CircleDef), sizeof(b2PolygonDef));
+	std::max(sizeof(b2CircleDef),
+#ifdef B2_EDGE_SHAPE_H
+	std::max(sizeof(b2PolygonDef),
+	sizeof(b2EdgeChainDef))
+#else
+	sizeof(b2PolygonDef)
+#endif
+	);
 static boost::pool<boost::default_user_allocator_malloc_free> shapepool(shapesize);
 #endif
 
@@ -43,6 +50,9 @@ namespace Database
 #ifdef COLLIDABLE_SHAPE_DATABASE
 	Typed<Typed<b2CircleDef> > collidabletemplatecircle(0xa72cf124 /* "collidabletemplatecircle" */);
 	Typed<Typed<b2PolygonDef> > collidabletemplatepolygon(0x8ce45056 /* "collidabletemplatepolygon" */);
+#ifdef B2_EDGE_SHAPE_H
+	Typed<Typed<b2EdgeChainDef> > collidabletemplateedgechain(0x24789e46 /* "collidabletemplateedgechain" */);
+#endif
 #endif
 #ifdef COLLIDABLE_JOINT_DATABASE
 	Typed<Typed<b2RevoluteJointDef> > collidabletemplaterevolute(0x8c99420e /* "collidabletemplaterevolute" */);
@@ -213,6 +223,9 @@ CollidableTemplate::CollidableTemplate(const CollidableTemplate &aTemplate)
 		{
 		case e_circleShape:		shapedef = new(shapepool.malloc()) b2CircleDef(*static_cast<const b2CircleDef *>(shapesource)); break;
 		case e_polygonShape:	shapedef = new(shapepool.malloc()) b2PolygonDef(*static_cast<const b2PolygonDef *>(shapesource)); break;
+#ifdef B2_EDGE_SHAPE_H
+		case e_edgeShape:		shapedef = new(shapepool.malloc()) b2EdgeChainDef(*static_cast<const b2EdgeChainDef *>(shapesource)); break;
+#endif
 		default:				shapedef = NULL; DebugPrint("unsupported shape type %d", shapesource->type); break;
 		}
 		if (shapedef)
@@ -249,6 +262,8 @@ CollidableTemplate::~CollidableTemplate(void)
 	for (Database::Typed<b2ShapeDef *>::Iterator itor(&shapes); itor.IsValid(); ++itor)
 	{
 		b2ShapeDef *shapedef = itor.GetValue();
+		if (shapedef->type == e_edgeShape)
+			free(static_cast<b2EdgeChainDef *>(shapedef)->vertices);
 		shapedef->~b2ShapeDef();
 		shapepool.free(shapedef);
 	}
@@ -384,6 +399,28 @@ bool CollidableTemplate::ConfigurePoly(const TiXmlElement *element, b2PolygonDef
 	return true;
 }
 
+#ifdef B2_EDGE_SHAPE_H
+bool CollidableTemplate::ConfigureEdge(const TiXmlElement *element, b2EdgeChainDef &shape)
+{
+	int isaloop = shape.isALoop;
+	element->QueryIntAttribute("loop", &isaloop);
+	shape.isALoop = isaloop != 0;
+
+	const char *name = element->Value();
+	switch (Hash(name))
+	{
+	case 0x945367a7 /* "vertex" */:
+		shape.vertices = static_cast<b2Vec2 *>(realloc(shape.vertices, (shape.vertexCount + 1) * sizeof(b2Vec2)));
+		element->QueryFloatAttribute("x", &shape.vertices[shape.vertexCount].x);
+		element->QueryFloatAttribute("y", &shape.vertices[shape.vertexCount].y);
+		++shape.vertexCount;
+		return true;
+
+	default:
+		return ProcessShapeItem(element, shape);
+	}
+}
+#endif
 
 bool CollidableTemplate::ProcessBodyItem(const TiXmlElement *element, b2BodyDef &body)
 {
@@ -491,6 +528,27 @@ bool CollidableTemplate::ProcessBodyItem(const TiXmlElement *element, b2BodyDef 
 #endif
 		}
 		return true;
+
+#ifdef B2_EDGE_SHAPE_H
+	case 0x56f6d83c /* "edge" */:
+		{
+#ifdef COLLIDABLE_SHAPE_DATABASE
+			Database::Typed<b2EdgeChainDef> &shapes = Database::collidabletemplateedge.Open(id);
+			int shapeid = shapes.GetCount()+1;
+			b2EdgeChainDef &shape = shapes.Open(shapeid);
+			ConfigureEdge(element, shape);
+			Database::collidabletemplateedge.Close(id);
+#else
+			b2EdgeChainDef *shape = new(shapepool.malloc()) b2EdgeChainDef();
+			if (const char *name = element->Attribute("name"))
+				shapes.Put(Hash(name), shape);
+			else
+				shapes.Put(shapes.GetCount() + 1, shape);
+			ConfigureEdge(element, *shape);
+#endif
+		}
+		return true;
+#endif
 
 	default:
 		return false;
@@ -1275,8 +1333,13 @@ void Collidable::WorldInit(float aMinX, float aMinY, float aMaxX, float aMaxY)
 
 	// create physics world
 	b2AABB aabb;
+#ifdef B2_EDGE_SHAPE_H
+	aabb.lowerBound.Set(aMinX, aMinY);
+	aabb.upperBound.Set(aMaxX, aMaxY);
+#else
 	aabb.lowerBound.Set(aMinX - 32, aMinY - 32);
 	aabb.upperBound.Set(aMaxX + 32, aMaxY + 32);
+#endif
 	b2Vec2 gravity;
 	gravity.Set(0.0f, 0.0f);
 	bool doSleep = true;
@@ -1291,10 +1354,25 @@ void Collidable::WorldInit(float aMinX, float aMinY, float aMaxX, float aMaxY)
 	debugDraw.SetFlags(~0U);
 #endif
 
-	// create perimeter walls
+	// create perimeter wall
 	b2BodyDef bodydef;
 	b2Body *body = world->CreateBody(&bodydef);
 
+#ifdef B2_EDGE_SHAPE_H
+	b2Vec2 vertex[4] =
+	{
+		b2Vec2(aMaxX * (1.0f - FLT_EPSILON), aMaxY * (1.0f - FLT_EPSILON)),
+		b2Vec2(aMaxX * (1.0f - FLT_EPSILON), aMinY * (1.0f - FLT_EPSILON)),
+		b2Vec2(aMinX * (1.0f - FLT_EPSILON), aMinY * (1.0f - FLT_EPSILON)),
+		b2Vec2(aMinX * (1.0f - FLT_EPSILON), aMaxY * (1.0f - FLT_EPSILON))
+	};
+
+	b2EdgeChainDef edge;
+	edge.vertexCount = SDL_arraysize(vertex);
+	edge.vertices = vertex;
+	edge.isALoop = true;
+	body->CreateShape(&edge);
+#else
 	b2PolygonDef top;
 	top.SetAsBox(0.5f * (aMaxX - aMinX) + 32, 16, b2Vec2(0.5f * (aMaxX + aMinX), aMinY - 16), 0);
 	body->CreateShape(&top);
@@ -1310,6 +1388,7 @@ void Collidable::WorldInit(float aMinX, float aMinY, float aMaxX, float aMaxY)
 	b2PolygonDef right;
 	right.SetAsBox(16, 0.5f * (aMaxY - aMinY) + 32, b2Vec2(aMaxX + 16, 0.5f * (aMaxY + aMinY)), 0);
 	body->CreateShape(&right);
+#endif
 
 	body->SetMassFromShapes();
 }
