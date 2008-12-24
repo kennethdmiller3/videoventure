@@ -1,5 +1,6 @@
 #include "StdAfx.h"
 #include "Explosion.h"
+#include "Entity.h"
 #include "Collidable.h"
 #include "Damagable.h"
 #include "Team.h"
@@ -7,8 +8,6 @@
 
 
 #ifdef USE_POOL_ALLOCATOR
-#include <boost/pool/pool.hpp>
-
 // explosion pool
 static boost::pool<boost::default_user_allocator_malloc_free> pool(sizeof(Explosion));
 void *Explosion::operator new(size_t aSize)

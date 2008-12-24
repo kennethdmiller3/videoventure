@@ -11,6 +11,8 @@
 
 #ifdef WIN32
 #define NOMINMAX
+#define WIN32_LEAN_AND_MEAN
+#define VC_EXTRALEAN
 #include <windows.h>
 #endif
 
@@ -295,3 +297,8 @@ extern void OnTurn(unsigned int aTurn, float aFraction, fastdelegate::FastDelega
 //#define COLLIDABLE_DEBUG_DRAW
 
 const int AUDIO_FREQUENCY = 48000;
+
+
+#ifdef USE_POOL_ALLOCATOR
+#include <boost/pool/pool.hpp>
+#endif

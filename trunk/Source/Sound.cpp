@@ -5,8 +5,6 @@
 #include "Interpolator.h"
 
 #ifdef USE_POOL_ALLOCATOR
-#include <boost/pool/pool.hpp>
-
 
 // sound listener position
 Vector2 Sound::listenerpos;

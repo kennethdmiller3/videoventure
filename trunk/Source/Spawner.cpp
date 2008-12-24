@@ -6,8 +6,6 @@
 
 
 #ifdef USE_POOL_ALLOCATOR
-#include <boost/pool/pool.hpp>
-
 // spawner pool
 static boost::pool<boost::default_user_allocator_malloc_free> pool(sizeof(Spawner));
 void *Spawner::operator new(size_t aSize)

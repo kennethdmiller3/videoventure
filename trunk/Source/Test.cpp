@@ -14,6 +14,7 @@
 #include "Command.h"
 
 #include "Collidable.h"
+#include "Controller.h"
 #include "Simulatable.h"
 #include "Renderable.h"
 #include "Drawlist.h"

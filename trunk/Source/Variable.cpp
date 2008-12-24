@@ -2,8 +2,6 @@
 #include "Variable.h"
 
 #ifdef USE_POOL_ALLOCATOR
-#include <boost/pool/pool.hpp>
-
 // collidable pool
 static boost::pool<boost::default_user_allocator_malloc_free> varcommandpool(sizeof(VarCommand));
 void *VarCommand::operator new(size_t aSize)

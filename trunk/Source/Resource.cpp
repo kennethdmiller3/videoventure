@@ -4,8 +4,6 @@
 #include "Updatable.h"
 
 #ifdef USE_POOL_ALLOCATOR
-#include <boost/pool/pool.hpp>
-
 // resource pool
 static boost::pool<boost::default_user_allocator_malloc_free> pool(sizeof(Resource));
 void *Resource::operator new(size_t aSize)

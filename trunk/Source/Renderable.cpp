@@ -6,8 +6,6 @@
 #include "Link.h"
 
 #ifdef USE_POOL_ALLOCATOR
-#include <boost/pool/pool.hpp>
-
 // renderable pool
 static boost::pool<boost::default_user_allocator_malloc_free> pool(sizeof(Renderable));
 void *Renderable::operator new(size_t aSize)

@@ -1,8 +1,6 @@
 #pragma once
 
-#include "Entity.h"
 #include "Updatable.h"
-#include "Renderable.h"
 
 class BeamTemplate
 {

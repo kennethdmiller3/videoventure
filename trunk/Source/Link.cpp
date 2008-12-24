@@ -6,8 +6,6 @@
 
 
 #ifdef USE_POOL_ALLOCATOR
-#include <boost/pool/pool.hpp>
-
 // link pool
 static boost::pool<boost::default_user_allocator_malloc_free> pool(sizeof(Link));
 void *Link::operator new(size_t aSize)

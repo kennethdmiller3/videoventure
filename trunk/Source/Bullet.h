@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Simulatable.h"
-#include "Collidable.h"
 
 class BulletTemplate
 {

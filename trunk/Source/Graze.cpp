@@ -8,8 +8,6 @@
 
 
 #ifdef USE_POOL_ALLOCATOR
-#include <boost/pool/pool.hpp>
-
 // graze pool
 static boost::pool<boost::default_user_allocator_malloc_free> pool(sizeof(Graze));
 void *Graze::operator new(size_t aSize)

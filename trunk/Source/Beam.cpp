@@ -1,15 +1,15 @@
 #include "StdAfx.h"
 #include "Beam.h"
+#include "Entity.h"
 #include "Collidable.h"
 #include "Damagable.h"
 #include "Team.h"
+#include "Renderable.h"
 #include "Drawlist.h"
 #include "Interpolator.h"
 
 
 #ifdef USE_POOL_ALLOCATOR
-#include <boost/pool/pool.hpp>
-
 // beam pool
 static boost::pool<boost::default_user_allocator_malloc_free> pool(sizeof(Beam));
 void *Beam::operator new(size_t aSize)

@@ -1,16 +1,16 @@
 #include "StdAfx.h"
 #include "Capture.h"
+#include "Entity.h"
 #include "Controller.h"
 #include "Collidable.h"
 #include "Capturable.h"
 #include "Link.h"
 #include "Team.h"
+#include "Renderable.h"
 #include "Sound.h"
 
 
 #ifdef USE_POOL_ALLOCATOR
-#include <boost/pool/pool.hpp>
-
 // capture pool
 static boost::pool<boost::default_user_allocator_malloc_free> pool(sizeof(Capture));
 void *Capture::operator new(size_t aSize)
