@@ -1,14 +1,13 @@
 #include "StdAfx.h"
 #include "Pickup.h"
+#include "Entity.h"
+#include "Collidable.h"
 #include "Link.h"
 #include "Team.h"
 #include "Renderable.h"
-#include "Entity.h"
 
 
 #ifdef USE_POOL_ALLOCATOR
-#include <boost/pool/pool.hpp>
-
 
 // pickup pool
 static boost::pool<boost::default_user_allocator_malloc_free> pool(sizeof(Pickup));

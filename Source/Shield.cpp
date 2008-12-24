@@ -7,8 +7,6 @@
 
 
 #ifdef USE_POOL_ALLOCATOR
-#include <boost/pool/pool.hpp>
-
 // shield pool
 static boost::pool<boost::default_user_allocator_malloc_free> pool(sizeof(Shield));
 void *Shield::operator new(size_t aSize)

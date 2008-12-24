@@ -1,7 +1,7 @@
 #include "StdAfx.h"
 #include "Aimer.h"
-#include "Collidable.h"
 #include "Entity.h"
+#include "Collidable.h"
 #include "Link.h"
 #include "Weapon.h"
 #include "Damagable.h"
@@ -10,8 +10,6 @@
 #include "Ship.h"
 
 #ifdef USE_POOL_ALLOCATOR
-#include <boost/pool/pool.hpp>
-
 // aimer pool
 static boost::pool<boost::default_user_allocator_malloc_free> pool(sizeof(Aimer));
 void *Aimer::operator new(size_t aSize)

@@ -4,6 +4,7 @@
 #include "Entity.h"
 #include "Controller.h"
 #include "Link.h"
+#include "Collidable.h"
 #include "Renderable.h"
 #include "Sound.h"
 #include "Resource.h"
@@ -11,8 +12,6 @@
 
 
 #ifdef USE_POOL_ALLOCATOR
-#include <boost/pool/pool.hpp>
-
 // weapon pool
 static boost::pool<boost::default_user_allocator_malloc_free> pool(sizeof(Weapon));
 void *Weapon::operator new(size_t aSize)
