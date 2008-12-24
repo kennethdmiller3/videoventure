@@ -10,8 +10,8 @@
 				<mask bit4="0" />
 				<group value="-1" />
 			</circle>
-			<box w="2" h="3">
-				<position x="0" y="-4" />
+			<box w="1" h="1">
+				<position x="0" y="-2" />
 				<density value="0" />
 				<friction value="0.5" />
 				<restitution value="0.5" />

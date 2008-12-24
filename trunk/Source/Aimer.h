@@ -9,12 +9,12 @@ class Entity;
 class WanderBehaviorTemplate
 {
 public:
-	float mSide;
-	float mSideRate;
-	float mFront;
-	float mFrontRate;
-	float mTurn;
-	float mTurnRate;
+	float mSide;		// side strength
+	float mSideRate;	// side frequency
+	float mFront;		// front strength
+	float mFrontRate;	// front frequency
+	float mTurn;		// turn strength
+	float mTurnRate;	// turn frequency
 
 public:
 	WanderBehaviorTemplate();
@@ -24,10 +24,13 @@ public:
 class TargetBehaviorTemplate
 {
 public:
-	float mPeriod;
-	float mRange;
-	float mFocus;
-	b2FilterData mFilter;
+	float mPeriod;		// time between scans
+	float mRange;		// maximum range
+	float mDirection;	// direction angle
+	float mAngle;		// cone angle
+	float mFocus;		// weight factor for current target
+	float mAlign;		// weight factor for angle alignment
+	b2FilterData mFilter;	// collision filtering
 
 public:
 	TargetBehaviorTemplate();

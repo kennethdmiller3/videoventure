@@ -97,7 +97,10 @@ WanderBehaviorTemplate::WanderBehaviorTemplate()
 TargetBehaviorTemplate::TargetBehaviorTemplate()
 : mPeriod(1.0f)
 , mRange(0.0f)
+, mDirection(0.0f)
+, mAngle(float(M_PI)*2.0f)
 , mFocus(1.0f)
+, mAlign(0.0f)
 , mFilter(Collidable::GetDefaultFilter())
 {
 }
@@ -166,12 +169,12 @@ bool AimerTemplate::Configure(const TiXmlElement *element)
 
 		case 0xf23b7114 /* "wander" */:
 			{
-				child->QueryFloatAttribute("wanderside", &mWander.mSide);
-				child->QueryFloatAttribute("wandersiderate", &mWander.mSideRate);
-				child->QueryFloatAttribute("wanderfront", &mWander.mFront);
-				child->QueryFloatAttribute("wanderfrontrate", &mWander.mFrontRate);
-				child->QueryFloatAttribute("wanderturn", &mWander.mTurn);
-				child->QueryFloatAttribute("wanderturnrate", &mWander.mTurnRate);
+				child->QueryFloatAttribute("side", &mWander.mSide);
+				child->QueryFloatAttribute("siderate", &mWander.mSideRate);
+				child->QueryFloatAttribute("front", &mWander.mFront);
+				child->QueryFloatAttribute("frontrate", &mWander.mFrontRate);
+				child->QueryFloatAttribute("turn", &mWander.mTurn);
+				child->QueryFloatAttribute("turnrate", &mWander.mTurnRate);
 			}
 			break;
 
@@ -179,8 +182,10 @@ bool AimerTemplate::Configure(const TiXmlElement *element)
 			{
 				child->QueryFloatAttribute("period", &mTarget.mPeriod);
 				child->QueryFloatAttribute("range", &mTarget.mRange);
+				child->QueryFloatAttribute("direction", &mTarget.mDirection);
+				child->QueryFloatAttribute("angle", &mTarget.mAngle);
 				child->QueryFloatAttribute("focus", &mTarget.mFocus);
-
+				child->QueryFloatAttribute("align", &mTarget.mAlign);
 				ConfigureFilterData(mTarget.mFilter, child);
 			}
 			break;
@@ -419,19 +424,46 @@ void Aimer::Target(float aStep, Entity *entity, const AimerTemplate &aimer)
 		if (!Database::damagable.Find(targetId))
 			continue;
 
-		// get range
-		Vector2 dir(transform.Untransform(shapePos));
-		float range = dir.Length() - 0.5f * shapes[i]->GetSweepRadius();
+		// get local direction
+		Vector2 localDir(transform.Untransform(shapePos));
+
+		// get range to target
+		float range = localDir.Length() - 0.5f * shapes[i]->GetSweepRadius();
 
 		// skip if out of range
 		if (range > aimer.mTarget.mRange)
 			continue;
 
-		// if not the current target...
-		if (targetId != mTarget)
+		// if using a cone angle or angle scale
+		if (aimer.mTarget.mAngle < float(M_PI)*2.0f || aimer.mTarget.mAlign != 0.0f)
 		{
-			// bias range
-			range *= aimer.mTarget.mFocus;
+			// get angle to target
+			float aimAngle = -atan2f(localDir.x, localDir.y);
+
+			// get local angle
+			float localAngle = aimAngle - aimer.mTarget.mDirection;
+			if (localAngle > float(M_PI))
+				localAngle -= float(M_PI)*2.0f;
+			else if (localAngle < -float(M_PI))
+				localAngle += float(M_PI)*2.0f;
+
+			// skip if outside angle
+			if (fabsf(localAngle) > aimer.mTarget.mAngle)
+				continue;
+
+			// if using angle scale...
+			if (aimer.mTarget.mAlign != 0.0f)
+			{
+				// apply angle scale
+				range *= 1.0f + fabsf(localAngle) * aimer.mTarget.mAlign;
+			}
+		}
+
+		// if the current target...
+		if (targetId == mTarget)
+		{
+			// apply focus scale
+			range /= aimer.mTarget.mFocus;
 		}
 
 		// if better than the current range
