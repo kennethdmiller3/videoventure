@@ -302,7 +302,7 @@ Weapon::Weapon(const WeaponTemplate &aTemplate, unsigned int aId)
 		for (unsigned int aId = mId; aId; aId = Database::backlink.Get(aId))
 		{
 			// if the entity has a matching resource...
-			if (Database::resource.Get(aId).Get(aTemplate.mType))
+			if (Database::resourcetemplate.Get(aId).Find(aTemplate.mType))
 			{
 				// use that
 				mAmmo = aId;
@@ -316,7 +316,7 @@ Weapon::Weapon(const WeaponTemplate &aTemplate, unsigned int aId)
 			unsigned int owner = Database::owner.Get(mId);
 
 			// if the owner has a matching resource...
-			if (Database::resource.Get(owner).Get(aTemplate.mType))
+			if (Database::resourcetemplate.Get(owner).Find(aTemplate.mType))
 			{
 				// use that
 				mAmmo = owner;
