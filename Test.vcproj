@@ -246,6 +246,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Source\Graze.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\Source\Gunner.cpp"
 				>
 			</File>
@@ -461,6 +465,10 @@
 			</File>
 			<File
 				RelativePath=".\Source\Explosion.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Graze.h"
 				>
 			</File>
 			<File

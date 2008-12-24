@@ -32,16 +32,40 @@ template<typename T> struct Rect
 	T h;
 };
 
+// score properties
+static const Rect<float> scorerect =
+{
+	8, 8, 16, 16
+};
+
 // health gauge
 static const Rect<float> healthrect =
 {
-	8, 8, 128, 8
+	8, 24, 128, 8
 };
+static const Color4 healthbackground(0.3f, 0.3f, 0.3f, 0.5f);
+static const Color4 healthdrain(1.0f, 0.0f, 0.0f, 0.5f);
 static const Color4 healthcolor[3][2] =
 {
-	{ Color4( 1.0f, 0.0f, 0.0f, 1.0f ),  Color4( 1.0f, 1.0f, 1.0f, 1.0f ) },
-	{ Color4( 1.0f, 1.0f, 0.0f, 0.75f ), Color4( 1.0f, 1.0f, 0.3f, 0.75f ) },
-	{ Color4( 0.0f, 1.0f, 0.0f, 0.5f ),  Color4( 0.2f, 1.0f, 0.2f, 0.5f ) },
+	{ Color4( 1.0f, 0.0f, 0.0f, 1.0f ), Color4( 1.0f, 1.0f, 1.0f, 1.0f ) },	// critical health
+	{ Color4( 1.0f, 1.0f, 0.0f, 1.0f ), Color4( 1.0f, 1.0f, 0.3f, 1.0f ) },	// warning health
+	{ Color4( 0.0f, 1.0f, 0.0f, 1.0f ), Color4( 0.2f, 1.0f, 0.2f, 1.0f ) },	// normal health
+};
+
+// ammo gauge
+static const Rect<float> ammorect =
+{
+	8, 34, 128, 8
+};
+static const Color4 ammocolor[] =
+{
+	Color4( 0.3f, 0.3f, 0.3f, 0.5f),	// level 0
+	Color4( 0.0f, 0.0f, 1.0f, 1.0f),	// level 1
+	Color4( 0.7f, 0.0f, 1.0f, 1.0f),	// level 2
+	Color4( 1.0f, 0.0f, 1.0f, 1.0f),	// level 3
+	Color4( 1.0f, 0.7f, 1.0f, 1.0f),	// level 4
+	Color4( 1.0f, 1.0f, 1.0f, 1.0f),	// level 5
+	Color4( 1.0f, 1.0f, 1.0f, 1.0f),	// level max
 };
 
 
@@ -87,8 +111,60 @@ void PlayerHUD::Render(unsigned int aId, float aTime, float aPosX, float aPosY, 
 	// get the attached entity identifier
 	unsigned int id = player->mAttach;
 
+	// get player score
+	static int cur_score = -1;
+	int new_score = player->mScore;
+
+	// if the score has not changed...
+	if (new_score == cur_score && !wasreset)
+	{
+		// call the existing draw list
+		glCallList(score_handle);
+	}
+	else
+	{
+		// update score
+		cur_score = new_score;
+
+		// start a new draw list list
+		glNewList(score_handle, GL_COMPILE_AND_EXECUTE);
+
+		// draw player score (HACK)
+		char score[9];
+		sprintf(score, "%08d", new_score);
+		bool leading = true;
+
+		glEnable(GL_TEXTURE_2D);
+		glBindTexture(GL_TEXTURE_2D, OGLCONSOLE_glFontHandle);
+		glBegin(GL_QUADS);
+
+		static const float textcolor[2][3] =
+		{
+			{ 0.4f, 0.5f, 1.0f },
+			{ 0.3f, 0.3f, 0.3f }
+		};
+
+		for (char *s = score; *s != '\0'; ++s)
+		{
+			char c = *s;
+			if (c != '0')
+				leading = false;
+			glColor3fv(textcolor[leading]);
+			OGLCONSOLE_DrawCharacter(c,
+				scorerect.x + scorerect.w * (s - score), scorerect.y + scorerect.h,
+				scorerect.w, -scorerect.h, 0);
+		}
+
+		glEnd();
+
+		glDisable(GL_TEXTURE_2D);
+
+		glEndList();
+	}
+
 	// draw player health (HACK)
 	float health = 0.0f;
+	float maxhealth = 0;
 	Damagable *damagable = Database::damagable.Get(id);
 	if (damagable)
 	{
@@ -96,7 +172,8 @@ void PlayerHUD::Render(unsigned int aId, float aTime, float aPosX, float aPosY, 
 		const DamagableTemplate &damagabletemplate = Database::damagabletemplate.Get(id);
 		if (damagabletemplate.mHealth > 0)
 		{
-			health = damagable->GetHealth() / damagabletemplate.mHealth;
+			maxhealth = damagabletemplate.mHealth;
+			health = damagable->GetHealth() / maxhealth;
 		}
 	}
 
@@ -152,18 +229,21 @@ void PlayerHUD::Render(unsigned int aId, float aTime, float aPosX, float aPosY, 
 	glBegin(GL_QUADS);
 
 	// background
-	glColor4f(0.3f, 0.3f, 0.3f, 0.5f);
+	glColor4fv(healthbackground);
 	glVertex2f(healthrect.x, healthrect.y);
 	glVertex2f(healthrect.x + healthrect.w, healthrect.y);
 	glVertex2f(healthrect.x + healthrect.w, healthrect.y + healthrect.h);
 	glVertex2f(healthrect.x, healthrect.y + healthrect.h);
 
 	// drain
-	glColor4f(1.0f, 0.0f, 0.0f, 0.5f);
-	glVertex2f(healthrect.x + healthrect.w * fill, healthrect.y);
-	glVertex2f(healthrect.x + healthrect.w * drain, healthrect.y);
-	glVertex2f(healthrect.x + healthrect.w * drain, healthrect.y + healthrect.h);
-	glVertex2f(healthrect.x + healthrect.w * fill, healthrect.y + healthrect.h);
+	if (fill < drain)
+	{
+		glColor4fv(healthdrain);
+		glVertex2f(healthrect.x + healthrect.w * fill, healthrect.y);
+		glVertex2f(healthrect.x + healthrect.w * drain, healthrect.y);
+		glVertex2f(healthrect.x + healthrect.w * drain, healthrect.y + healthrect.h);
+		glVertex2f(healthrect.x + healthrect.w * fill, healthrect.y + healthrect.h);
+	}
 
 	// flash
 	for (int i = 0; i < flashcount; ++i)
@@ -207,59 +287,20 @@ void PlayerHUD::Render(unsigned int aId, float aTime, float aPosX, float aPosY, 
 		}
 	}
 
-	// get player score
-	static int cur_score = -1;
-	int new_score = player->mScore;
-
-	// if the score has not changed...
-	if (new_score == cur_score && !wasreset)
+	if (maxhealth > 1)
 	{
-		// call the existing draw list
-		glCallList(score_handle);
-	}
-	else
-	{
-		// update score
-		cur_score = new_score;
+		glBegin(GL_LINES);
+		glColor4f(0.0f, 0.0f, 0.0f, 0.125f);
 
-		// start a new draw list list
-		glNewList(score_handle, GL_COMPILE_AND_EXECUTE);
-
-		// draw player score (HACK)
-		char score[9];
-		sprintf(score, "%08d", new_score);
-		bool leading = true;
-
-		glEnable(GL_TEXTURE_2D);
-		glBindTexture(GL_TEXTURE_2D, OGLCONSOLE_glFontHandle);
-		glBegin(GL_QUADS);
-
-		float x = 8;
-		float y = 32;
-		float z = 0;
-		float w = 16;
-		float h = -16;
-		static const float textcolor[2][3] =
+		// tick marks
+		for (int i = 1; i < xs_FloorToInt(maxhealth); ++i)
 		{
-			{ 0.4f, 0.5f, 1.0f },
-			{ 0.3f, 0.3f, 0.3f }
-		};
-
-		for (char *s = score; *s != '\0'; ++s)
-		{
-			char c = *s;
-			if (c != '0')
-				leading = false;
-			glColor3fv(textcolor[leading]);
-			OGLCONSOLE_DrawCharacter(c, x, y, w, h, z);
-			x += w;
+			float x = healthrect.x + i * healthrect.w / maxhealth;
+			glVertex2f(x, healthrect.y);
+			glVertex2f(x, healthrect.y + healthrect.h);
 		}
 
 		glEnd();
-
-		glDisable(GL_TEXTURE_2D);
-
-		glEndList();
 	}
 
 	int cur_lives = -1;
@@ -283,8 +324,8 @@ void PlayerHUD::Render(unsigned int aId, float aTime, float aPosX, float aPosY, 
 			// draw the player ship
 			glColor4f(0.4f, 0.5f, 1.0f, 1.0f);
 			glPushMatrix();
-			glTranslatef(healthrect.x + healthrect.w + 8, healthrect.y + 4, 0.0f);
-			glScalef(-0.5, -0.5, 1);
+			glTranslatef(healthrect.x + healthrect.w + 8, healthrect.y + healthrect.h * 0.5f, 0.0f);
+			glScalef(-0.5f, -0.5f, 1);
 			glCallList(Database::drawlist.Get(0xeec1dafa /* "playership" */));
 			glPopMatrix();
 
@@ -312,9 +353,100 @@ void PlayerHUD::Render(unsigned int aId, float aTime, float aPosX, float aPosY, 
 		}
 	}
 
+	// draw player ammo (HACK)
+	Resource *ammoresource = Database::resource.Get(id).Get(0x5b9b0daf /* "ammo" */);
+	if (ammoresource)
+	{
+		// get ammo ratio
+		float ammo = 0.0f;
+		const ResourceTemplate &ammoresourcetemplate = Database::resourcetemplate.Get(id).Get(0x5b9b0daf /* "ammo" */);
+		if (ammoresourcetemplate.mMaximum > 0)
+		{
+			ammo = ammoresource->GetValue() / ammoresourcetemplate.mMaximum;
+		}
+		
+		// get level
+		int level = 1;
+		Resource *levelresource = Database::resource.Get(id).Get(0x9b99e7dd /* "level" */);
+		if (levelresource)
+		{
+			level = xs_FloorToInt(levelresource->GetValue());
+		}
+
+		glBegin(GL_QUADS);
+
+		// background
+		glColor4fv(ammocolor[level-1]);
+		glVertex2f(ammorect.x, ammorect.y);
+		glVertex2f(ammorect.x + ammorect.w, ammorect.y);
+		glVertex2f(ammorect.x + ammorect.w, ammorect.y + ammorect.h);
+		glVertex2f(ammorect.x, ammorect.y + ammorect.h);
+
+		// fill gauge
+		glColor4fv(ammocolor[level]);
+		glVertex2f(ammorect.x, ammorect.y);
+		glVertex2f(ammorect.x + ammorect.w * ammo, ammorect.y);
+		glVertex2f(ammorect.x + ammorect.w * ammo, ammorect.y + ammorect.h);
+		glVertex2f(ammorect.x, ammorect.y + ammorect.h);
+
+		glEnd();
+
+		if (levelresource)
+		{
+			static int cur_ammo = -1;
+			int new_ammo = level;
+
+			// if the ammo has not changed...
+			if (new_ammo == cur_ammo && !wasreset)
+			{
+				// call the existing draw list
+				glCallList(ammo_handle);
+			}
+			else
+			{
+				// update ammo
+				cur_ammo = new_ammo;
+
+				// start a new draw list list
+				glNewList(ammo_handle, GL_COMPILE_AND_EXECUTE);
+
+				// draw the special ammo
+				glColor4f(0.4f, 0.5f, 1.0f, 1.0f);
+				glPushMatrix();
+				glTranslatef(healthrect.x + healthrect.w + 8, healthrect.y + 16, 0.0f);
+				glScalef(4, 4, 1);
+				glCallList(Database::drawlist.Get(0x8cdedbba /* "circle16" */));
+				glPopMatrix();
+
+				// draw remaining ammo
+				char ammo[16];
+				sprintf(ammo, "x%d", cur_ammo);
+
+				glEnable(GL_TEXTURE_2D);
+				glBindTexture(GL_TEXTURE_2D, OGLCONSOLE_glFontHandle);
+
+				glColor4f(0.4f, 0.5f, 1.0f, 1.0f);
+
+				glBegin(GL_QUADS);
+				float w = 8;
+				float h = -8;
+				float x = healthrect.x + healthrect.w + 16;
+				float y = healthrect.y + 16 - 0.5f * h;
+				float z = 0;
+				OGLCONSOLE_DrawString(ammo, x, y, w, h, z);
+
+				glEnd();
+
+				glDisable(GL_TEXTURE_2D);
+			}
+
+			glEndList();
+		}
+	}
+
 	// get "special" ammo resource (HACK)
 
-	int cur_ammo = -1;
+	static int cur_ammo = -1;
 	int new_ammo = INT_MAX;
 	if (Resource *specialammo = Database::resource.Get(aId).Get(0xd940d530 /* "special" */))
 	{

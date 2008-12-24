@@ -2,6 +2,6 @@
 <template name="enemyshipsmallspawn">
 	<spawner>
 		<velocity x="0" y="60" />
-		<spawn name="enemyshipsmallwarp" start="0" cycle="10" track="8" />
+		<spawn name="enemyshipsmallwarp" start="0" cycle="10" track="4" />
 	</spawner>
 </template>
