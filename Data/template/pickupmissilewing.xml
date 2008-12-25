@@ -70,12 +70,12 @@
 	</renderable>
 	<pickup spawnoncollect="health3collect">
 		<team name="blue">
-			<link name="lwing" grant="friendmissilewing_l" />
-			<link name="rwing" grant="friendmissilewing_r" />
+			<link name="lwing" secondary="friendmissilewing_l" />
+			<link name="rwing" secondary="friendmissilewing_r" />
 		</team>
 		<team name="red">
-			<link name="lwing" grant="enemymissilewing_l" />
-			<link name="rwing" grant="enemymissilewing_r" />
+			<link name="lwing" secondary="enemymissilewing_l" />
+			<link name="rwing" secondary="enemymissilewing_r" />
 		</team>
 	</pickup>
 </template>

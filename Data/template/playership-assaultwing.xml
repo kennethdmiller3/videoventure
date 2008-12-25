@@ -90,7 +90,11 @@
 		<calllist name="circle12"/>
 	</renderable>
 	<damagable health="10" spawnondeath="playershipdeath"/>
-	<playercontroller alignmove="1"/>
+	<playercontroller>
+		<scale turn="1"/>
+		<aim type="moveworld"/>
+		<move type="moveworld"/>
+	</playercontroller>
 	<team name="blue"/>
 	<ship forwardveloc="150" neutralveloc="0" reverseveloc="-120" strafeveloc="120" maxaccel="600" minaccel="120" maxomega="6"/>
 	<soundcue>
@@ -277,7 +281,11 @@
 				<trigger channel="1"/>
 			</weapon>
 		</link>
-		<playercontroller/>
+		<playercontroller>
+			<scale turn="0.05"/>
+			<aim type="aimworld"/>
+			<move type="none"/>
+		</playercontroller>
 		<team name="blue"/>
 	</link>
 	<link name="lgun" secondary="playermachinegun">
