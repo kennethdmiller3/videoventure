@@ -337,7 +337,7 @@ static float BlockHue(int col, int row)
 }
 
 // draw title
-void ShellTitle::Render(unsigned int aId, float aTime, float aPosX, float aPosY, float aAngle)
+void ShellTitle::Render(unsigned int aId, float aTime, const Transform2 &aTransform)
 {
 //#define USE_TITLE_VERTEX_ARRAY
 #ifdef USE_TITLE_VERTEX_ARRAY

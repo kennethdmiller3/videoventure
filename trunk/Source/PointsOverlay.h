@@ -22,7 +22,7 @@ public:
 
 	void AddItem(const Vector2 &aPosition, int aValue, int aCombo);
 
-	void Render(unsigned int aId, float aTime, float aPosX, float aPosY, float aAngle);
+	void Render(unsigned int aId, float aTime, const Transform2 &aTransform);
 };
 
 namespace Database

@@ -279,7 +279,7 @@ void Renderable::RenderAll(const AlignedBox2 &aView)
 			float t = fmodf((int(sim_turn - itor->mStart) + sim_fraction - itor->mFraction) * sim_step, renderable.mPeriod);
 
 			// render
-			(itor->mAction)(itor->mId, t, position.x, position.y, angle);
+			(itor->mAction)(itor->mId, t, Transform2(angle, position));
 
 #ifdef RENDER_STATS
 			++drawn;

@@ -94,4 +94,9 @@ public:
 		return Matrix2(a, p);
 	}
 
+	static const Transform2 &Identity()
+	{
+		static const Transform2 identity(0, Vector2(0, 0));
+		return identity;
+	}
 };

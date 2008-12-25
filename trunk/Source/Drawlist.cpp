@@ -2115,7 +2115,7 @@ void RebuildDrawlists(void)
 	}
 }
 
-void RenderDrawlist(unsigned int aId, float aTime, float aPosX, float aPosY, float aAngle)
+void RenderDrawlist(unsigned int aId, float aTime, const Transform2 &aTransform)
 {
 	// skip if not visible
 	if (aTime < 0)
@@ -2132,8 +2132,8 @@ void RenderDrawlist(unsigned int aId, float aTime, float aPosX, float aPosY, flo
 	glPushMatrix();
 
 	// load matrix
-	glTranslatef(aPosX, aPosY, 0);
-	glRotatef(aAngle*180/float(M_PI), 0.0f, 0.0f, 1.0f);
+	glTranslatef(aTransform.p.x, aTransform.p.y, 0);
+	glRotatef(aTransform.a*180/float(M_PI), 0.0f, 0.0f, 1.0f);
 
 	// execute the deferred draw list
 	ExecuteDrawItems(&buffer[0], buffer.size(), aTime, aId);

@@ -103,7 +103,7 @@ void PlayerHUD::Update(float aStep)
 	aimpos[1] = Vector2(input[Input::AIM_HORIZONTAL], input[Input::AIM_VERTICAL]);
 }
 
-void PlayerHUD::Render(unsigned int aId, float aTime, float aPosX, float aPosY, float aAngle)
+void PlayerHUD::Render(unsigned int aId, float aTime, const Transform2 &aTransform)
 {
 	// get the player
 	Player *player = Database::player.Get(aId);
