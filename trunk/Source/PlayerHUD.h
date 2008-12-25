@@ -37,6 +37,15 @@ public:
 
 	void Update(float aStep);
 	void Render(unsigned int aId, float aTime, const Transform2 &aTransform);
+
+protected:
+	void RenderScore(const Player *player);
+	void RenderHealth(const Player *player);
+	void RenderLives(const Player *player);
+	void RenderAmmo(const Player *player);
+	void RenderLevel(const Player *player);
+	void RenderSpecial(const Player *player);
+	void RenderGameOver(const Player *player);
 };
 
 

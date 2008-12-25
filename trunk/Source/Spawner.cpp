@@ -250,6 +250,8 @@ void Spawner::Update(float aStep)
 		Entity *entity = Database::entity.Get(mId);
 		if (entity)
 		{
+			// TO DO: consolidate this with similar spawn patterns (Graze, Weapon)
+
 			// interpolated transform
 			Transform2 transform(entity->GetInterpolatedTransform(mTimer / aStep));
 

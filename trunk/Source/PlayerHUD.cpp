@@ -108,9 +108,18 @@ void PlayerHUD::Render(unsigned int aId, float aTime, const Transform2 &aTransfo
 	// get the player
 	Player *player = Database::player.Get(aId);
 
-	// get the attached entity identifier
-	unsigned int id = player->mAttach;
+	// render individual items
+	RenderScore(player);
+	RenderHealth(player);
+	RenderLives(player);
+	RenderAmmo(player);
+	RenderLevel(player);
+	RenderSpecial(player);
+	RenderGameOver(player);
+}
 
+void PlayerHUD::RenderScore(const Player *player)
+{
 	// get player score
 	static int cur_score = -1;
 	int new_score = player->mScore;
@@ -161,6 +170,12 @@ void PlayerHUD::Render(unsigned int aId, float aTime, const Transform2 &aTransfo
 
 		glEndList();
 	}
+}
+
+void PlayerHUD::RenderHealth(const Player *player)
+{
+	// get the attached entity identifier
+	unsigned int id = player->mAttach;
 
 	// draw player health (HACK)
 	float health = 0.0f;
@@ -302,7 +317,10 @@ void PlayerHUD::Render(unsigned int aId, float aTime, const Transform2 &aTransfo
 
 		glEnd();
 	}
+}
 
+void PlayerHUD::RenderLives(const Player *player)
+{
 	int cur_lives = -1;
 	int new_lives = player->mLives;
 	if (new_lives < INT_MAX)
@@ -352,6 +370,12 @@ void PlayerHUD::Render(unsigned int aId, float aTime, const Transform2 &aTransfo
 			glEndList();
 		}
 	}
+}
+
+void PlayerHUD::RenderAmmo(const Player *player)
+{
+	// get the attached entity identifier
+	unsigned int id = player->mAttach;
 
 	// draw player ammo (HACK)
 	Resource *ammoresource = Database::resource.Get(id).Get(0x5b9b0daf /* "ammo" */);
@@ -390,65 +414,82 @@ void PlayerHUD::Render(unsigned int aId, float aTime, const Transform2 &aTransfo
 		glVertex2f(ammorect.x, ammorect.y + ammorect.h);
 
 		glEnd();
-
-		if (levelresource)
-		{
-			static int cur_ammo = -1;
-			int new_ammo = level;
-
-			// if the ammo has not changed...
-			if (new_ammo == cur_ammo && !wasreset)
-			{
-				// call the existing draw list
-				glCallList(ammo_handle);
-			}
-			else
-			{
-				// update ammo
-				cur_ammo = new_ammo;
-
-				// start a new draw list list
-				glNewList(ammo_handle, GL_COMPILE_AND_EXECUTE);
-
-				// draw the special ammo
-				glColor4f(0.4f, 0.5f, 1.0f, 1.0f);
-				glPushMatrix();
-				glTranslatef(healthrect.x + healthrect.w + 8, healthrect.y + 16, 0.0f);
-				glScalef(4, 4, 1);
-				glCallList(Database::drawlist.Get(0x8cdedbba /* "circle16" */));
-				glPopMatrix();
-
-				// draw remaining ammo
-				char ammo[16];
-				sprintf(ammo, "x%d", cur_ammo);
-
-				glEnable(GL_TEXTURE_2D);
-				glBindTexture(GL_TEXTURE_2D, OGLCONSOLE_glFontHandle);
-
-				glColor4f(0.4f, 0.5f, 1.0f, 1.0f);
-
-				glBegin(GL_QUADS);
-				float w = 8;
-				float h = -8;
-				float x = healthrect.x + healthrect.w + 16;
-				float y = healthrect.y + 16 - 0.5f * h;
-				float z = 0;
-				OGLCONSOLE_DrawString(ammo, x, y, w, h, z);
-
-				glEnd();
-
-				glDisable(GL_TEXTURE_2D);
-			}
-
-			glEndList();
-		}
 	}
+}
+
+void PlayerHUD::RenderLevel(const Player *player)
+{
+	// get the attached entity identifier
+	unsigned int id = player->mAttach;
+
+	// get level
+	int level = 1;
+	Resource *levelresource = Database::resource.Get(id).Get(0x9b99e7dd /* "level" */);
+	if (levelresource)
+	{
+		level = xs_FloorToInt(levelresource->GetValue());
+
+		static int cur_ammo = -1;
+		int new_ammo = level;
+
+		// if the ammo has not changed...
+		if (new_ammo == cur_ammo && !wasreset)
+		{
+			// call the existing draw list
+			glCallList(ammo_handle);
+		}
+		else
+		{
+			// update ammo
+			cur_ammo = new_ammo;
+
+			// start a new draw list list
+			glNewList(ammo_handle, GL_COMPILE_AND_EXECUTE);
+
+			// draw the special ammo
+			glColor4f(0.4f, 0.5f, 1.0f, 1.0f);
+			glPushMatrix();
+			glTranslatef(healthrect.x + healthrect.w + 8, healthrect.y + 16, 0.0f);
+			glScalef(4, 4, 1);
+			glCallList(Database::drawlist.Get(0x8cdedbba /* "circle16" */));
+			glPopMatrix();
+
+			// draw remaining ammo
+			char ammo[16];
+			sprintf(ammo, "x%d", cur_ammo);
+
+			glEnable(GL_TEXTURE_2D);
+			glBindTexture(GL_TEXTURE_2D, OGLCONSOLE_glFontHandle);
+
+			glColor4f(0.4f, 0.5f, 1.0f, 1.0f);
+
+			glBegin(GL_QUADS);
+			float w = 8;
+			float h = -8;
+			float x = healthrect.x + healthrect.w + 16;
+			float y = healthrect.y + 16 - 0.5f * h;
+			float z = 0;
+			OGLCONSOLE_DrawString(ammo, x, y, w, h, z);
+
+			glEnd();
+
+			glDisable(GL_TEXTURE_2D);
+		}
+
+		glEndList();
+	}
+}
+
+void PlayerHUD::RenderSpecial(const Player *player)
+{
+	// get the player entity (HACK)
+	unsigned int id = player->GetId();
 
 	// get "special" ammo resource (HACK)
 
 	static int cur_ammo = -1;
 	int new_ammo = INT_MAX;
-	if (Resource *specialammo = Database::resource.Get(aId).Get(0xd940d530 /* "special" */))
+	if (Resource *specialammo = Database::resource.Get(id).Get(0xd940d530 /* "special" */))
 	{
 		new_ammo = xs_FloorToInt(specialammo->GetValue());
 	}
@@ -500,8 +541,15 @@ void PlayerHUD::Render(unsigned int aId, float aTime, const Transform2 &aTransfo
 			glEndList();
 		}
 	}
+}
 
+void PlayerHUD::RenderGameOver(const Player *player)
+{
+	// timer
 	static float gameovertimer = 0.0f;
+
+	// get the attached entity identifier
+	unsigned int id = player->mAttach;
 
 	// if tracking an active controller...
 	Controller *controller = Database::controller.Get(id);
@@ -521,7 +569,7 @@ void PlayerHUD::Render(unsigned int aId, float aTime, const Transform2 &aTransfo
 
 		gameovertimer = 0.0f;
 	}
-	else if (cur_lives <= 0 && player->mTimer <= 0.0f)
+	else if (player->mLives <= 0 && player->mTimer <= 0.0f)
 	{
 		// display game over
 		gameovertimer += frame_time;

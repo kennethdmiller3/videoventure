@@ -297,30 +297,8 @@ Weapon::Weapon(const WeaponTemplate &aTemplate, unsigned int aId)
 	// if the weapon uses ammo...
 	if (aTemplate.mCost)
 	{
-		// check the weapon and backlinks
-		for (unsigned int aId = mId; aId; aId = Database::backlink.Get(aId))
-		{
-			// if the entity has a matching resource...
-			if (Database::resourcetemplate.Get(aId).Find(aTemplate.mType))
-			{
-				// use that
-				mAmmo = aId;
-			}
-		}
-
-		// if no ammo found
-		if (!mAmmo)
-		{
-			// get the owner (player)
-			unsigned int owner = Database::owner.Get(mId);
-
-			// if the owner has a matching resource...
-			if (Database::resourcetemplate.Get(owner).Find(aTemplate.mType))
-			{
-				// use that
-				mAmmo = owner;
-			}
-		}
+		// find the specified resource
+		mAmmo = FindResource(aId, aTemplate.mType);
 	}
 }
 
@@ -417,6 +395,8 @@ void Weapon::Update(float aStep)
 
 				if (weapon.mOrdnance)
 				{
+					// TO DO: consolidate this with similar spawn patterns (Graze, Spawner)
+
 					// apply transform scatter
 					if (weapon.mScatter.a)
 						transform.a += Random::Value(0.0f, weapon.mScatter.a);
