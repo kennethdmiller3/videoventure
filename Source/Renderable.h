@@ -23,7 +23,7 @@ public:
 class Renderable
 {
 public:
-	typedef fastdelegate::FastDelegate<void (unsigned int, float, float, float, float)> Action;
+	typedef fastdelegate::FastDelegate<void (unsigned int, float, const Transform2 &)> Action;
 
 protected:
 	// identifier
@@ -89,7 +89,7 @@ public:
 };
 
 // render geometry
-void RenderGeometry(float aTime, unsigned int aId, float aPosX, float aPosY, float aAngle);
+void RenderGeometry(float aTime, unsigned int aId, const Transform2 &aTransform);
 
 namespace Database
 {

@@ -36,7 +36,7 @@ public:
 	~PlayerHUD();
 
 	void Update(float aStep);
-	void Render(unsigned int aId, float aTime, float aPosX, float aPosY, float aAngle);
+	void Render(unsigned int aId, float aTime, const Transform2 &aTransform);
 };
 
 

@@ -90,7 +90,7 @@ struct ShellMenuItem
 	int mValue;
 
 	// render the button
-	void Render(unsigned int aId, float aTime, float aPosX, float aPosY, float aAngle)
+	void Render(unsigned int aId, float aTime, const Transform2 &aTransform)
 	{
 		unsigned int state = mState;
 		if (VarItem *item = Database::varitem.Get(mVariable))
@@ -1114,7 +1114,7 @@ ShellMenu shellmenu =
 };
 
 // draw options
-void RenderOptions(ShellMenu &menu, unsigned int aId, float aTime, float aPosX, float aPosY, float aAngle)
+void RenderOptions(ShellMenu &menu, unsigned int aId, float aTime, const Transform2 &aTransform)
 {
 	// cursor position
 	float cursor_x = 320 - 240 * input.value[Input::AIM_HORIZONTAL];
@@ -1167,7 +1167,7 @@ void RenderOptions(ShellMenu &menu, unsigned int aId, float aTime, float aPosX, 
 		}
 
 		// render the option
-		option.Render(aId, aTime, aPosX, aPosY, aAngle);
+		option.Render(aId, aTime, aTransform);
 	}
 
 	// draw reticule (HACK)
@@ -1178,9 +1178,9 @@ void RenderOptions(ShellMenu &menu, unsigned int aId, float aTime, float aPosX, 
 }
 
 // render shell options
-void RenderShellOptions(unsigned int aId, float aTime, float aPosX, float aPosY, float aAngle)
+void RenderShellOptions(unsigned int aId, float aTime, const Transform2 &aTransform)
 {
-	RenderOptions(shellmenu, aId, aTime, aPosX, aPosY, aAngle);
+	RenderOptions(shellmenu, aId, aTime, aTransform);
 }
 
 
@@ -1349,7 +1349,7 @@ ShellMenuPage escapemenumainpage =
 };
 
 // render shell options
-void RenderEscapeOptions(unsigned int aId, float aTime, float aPosX, float aPosY, float aAngle)
+void RenderEscapeOptions(unsigned int aId, float aTime, const Transform2 &aTransform)
 {
 	// darken the screen
 	glColor4f(0.0f, 0.0f, 0.0f, 0.5f);
@@ -1361,7 +1361,7 @@ void RenderEscapeOptions(unsigned int aId, float aTime, float aPosX, float aPosY
 	glEnd();
 
 	// render options
-	RenderOptions(shellmenu, aId, aTime, aPosX, aPosY, aAngle);
+	RenderOptions(shellmenu, aId, aTime, aTransform);
 }
 
 

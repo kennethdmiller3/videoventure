@@ -84,4 +84,10 @@ public:
 		*this = *this * m;
 		return *this;
 	}
+
+	static const Matrix2 &Identity()
+	{
+		static const Matrix2 identity(Vector2(1, 0), Vector2(0, 1), Vector2(0, 0));
+		return identity;
+	}
 };

@@ -17,7 +17,7 @@ public:
 class Overlay
 {
 public:
-	typedef fastdelegate::FastDelegate<void (unsigned int, float, float, float, float)> Action;
+	typedef fastdelegate::FastDelegate<void (unsigned int, float, const Transform2 &)> Action;
 
 protected:
 	// identifier

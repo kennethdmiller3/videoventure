@@ -44,7 +44,7 @@ void PointsOverlay::AddItem(const Vector2 &aPosition, int aValue, int aCombo)
 }
 
 // render
-void PointsOverlay::Render(unsigned int aId, float aTime, float aPosX, float aPosY, float aAngle)
+void PointsOverlay::Render(unsigned int aId, float aTime, const Transform2 &aTransform)
 {
 	// set projection
 	glMatrixMode( GL_PROJECTION );

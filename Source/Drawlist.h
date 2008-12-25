@@ -5,7 +5,7 @@ extern void ProcessDrawItems(const TiXmlElement *element, std::vector<unsigned i
 extern void ExecuteDrawItems(const unsigned int buffer[], size_t count, float param, unsigned int id);
 extern void RebuildTextures(void);
 extern void RebuildDrawlists(void);
-extern void RenderDrawlist(unsigned int aId, float aTime, float aPosX, float aPosY, float aAngle);
+extern void RenderDrawlist(unsigned int aId, float aTime, const Transform2 &aTransform);
 
 namespace Database
 {
