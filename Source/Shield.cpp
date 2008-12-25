@@ -127,47 +127,26 @@ Shield::Shield(const ShieldTemplate &aTemplate, unsigned int aId)
 	// if the shield uses ammo...
 	if (aTemplate.mCost)
 	{
-		// check the shield and backlinks
-		for (unsigned int aId = mId; aId; aId = Database::backlink.Get(aId))
+		// find the specified resource
+		mAmmo = FindResource(aId, aTemplate.mType);
+
+		// if found...
+		if (mAmmo)
 		{
-			// if the entity has a matching resource...
-			if (Database::resourcetemplate.Get(aId).Find(aTemplate.mType))
-			{
-				// use that
-				mAmmo = aId;
-			}
+			// get resource template
+			const ResourceTemplate &resourcetemplate = Database::resourcetemplate.Get(mAmmo).Get(aTemplate.mType);
+
+			// save ratio into variables
+			Database::Typed<float> &variables = Database::variable.Open(mId);
+			variables.Put(0x337519b0 /* "shield" */, resourcetemplate.mInitial / resourcetemplate.mMaximum);
+
+			// add a resource listener
+			Database::Typed<Database::Typed<Resource::ChangeListener> > &changelisteners = Database::resourcechangelistener.Open(mAmmo);
+			Database::Typed<Resource::ChangeListener> &changelistener = changelisteners.Open(aTemplate.mType);
+			changelistener.Put(0x337519b0 /* "shield" */, Resource::ChangeListener(this, &Shield::Change));
+			changelisteners.Close(aTemplate.mType);
+			Database::resourcechangelistener.Close(mAmmo);
 		}
-
-		// if no ammo found
-		if (!mAmmo)
-		{
-			// get the owner (player)
-			unsigned int owner = Database::owner.Get(mId);
-
-			// if the owner has a matching resource...
-			if (Database::resourcetemplate.Get(owner).Find(aTemplate.mType))
-			{
-				// use that
-				mAmmo = owner;
-			}
-		}
-	}
-
-	if (mAmmo)
-	{
-		// get resource template
-		const ResourceTemplate &resourcetemplate = Database::resourcetemplate.Get(mAmmo).Get(aTemplate.mType);
-
-		// save ratio into variables
-		Database::Typed<float> &variables = Database::variable.Open(mId);
-		variables.Put(0x337519b0 /* "shield" */, resourcetemplate.mInitial / resourcetemplate.mMaximum);
-
-		// add a resource listener
-		Database::Typed<Database::Typed<Resource::ChangeListener> > &changelisteners = Database::resourcechangelistener.Open(mAmmo);
-		Database::Typed<Resource::ChangeListener> &changelistener = changelisteners.Open(aTemplate.mType);
-		changelistener.Put(0x337519b0 /* "shield" */, Resource::ChangeListener(this, &Shield::Change));
-		changelisteners.Close(aTemplate.mType);
-		Database::resourcechangelistener.Close(mAmmo);
 	}
 }
 

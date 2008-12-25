@@ -32,6 +32,12 @@ public:
 	void Activate(void);
 	void Deactivate(void);
 
+	// get identifier
+	unsigned int GetId() const
+	{
+		return mId;
+	}
+
 	// is active?
 	bool IsActive(void)
 	{

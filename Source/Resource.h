@@ -3,6 +3,11 @@
 #include "Database.h"
 #include "Updatable.h"
 
+// find the specified resource,
+// starting with the specified identifier
+// and backtracking through the link chain
+extern unsigned int FindResource(unsigned int aId, unsigned int aSubId);
+
 class ResourceTemplate
 {
 public:

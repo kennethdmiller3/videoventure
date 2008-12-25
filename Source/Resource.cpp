@@ -2,6 +2,8 @@
 #include "Resource.h"
 #include "Entity.h"
 #include "Updatable.h"
+#include "Link.h"
+
 
 #ifdef USE_POOL_ALLOCATOR
 // resource pool
@@ -312,4 +314,37 @@ void Resource::Add(unsigned int aSourceId, float aAdd)
 {
 	// set the value
 	Set(aSourceId, mValue + aAdd);
+}
+
+
+
+unsigned int FindResource(unsigned int aId, unsigned int aSubId)
+{
+	// skip unnamed resource
+	if (!aSubId)
+		return 0;
+
+	// for each entry in the backlink chain...
+	for (unsigned int id = aId; id; id = Database::backlink.Get(id))
+	{
+		// if the entry has a matching resource...
+		if (Database::resourcetemplate.Get(id).Find(aSubId))
+		{
+			// return the entry
+			return id;
+		}
+	}
+
+	// get the owner (player)
+	unsigned int owner = Database::owner.Get(aId);
+
+	// if the owner has a matching resource...
+	if (Database::resourcetemplate.Get(owner).Find(aSubId))
+	{
+		// return the owner
+		return owner;
+	}
+
+	// not found
+	return 0;
 }

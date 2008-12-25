@@ -197,30 +197,8 @@ Graze::Graze(const GrazeTemplate &aTemplate, unsigned int aId)
 	// if the graze collects ammo...
 	if (aTemplate.mType)
 	{
-		// check the graze and backlinks
-		for (unsigned int aId = mId; aId; aId = Database::backlink.Get(aId))
-		{
-			// if the entity has a matching resource...
-			if (Database::resourcetemplate.Get(aId).Find(aTemplate.mType))
-			{
-				// use that
-				mAmmo = aId;
-			}
-		}
-
-		// if no ammo found
-		if (!mAmmo)
-		{
-			// get the owner (player)
-			unsigned int owner = Database::owner.Get(mId);
-
-			// if the owner has a matching resource...
-			if (Database::resourcetemplate.Get(owner).Find(aTemplate.mType))
-			{
-				// use that
-				mAmmo = owner;
-			}
-		}
+		// find the specified resource
+		mAmmo = FindResource(aId, aTemplate.mType);
 	}
 }
 
@@ -332,6 +310,8 @@ void Graze::Update(float aStep)
 
 void Graze::Spark(const GrazeTemplate &graze, unsigned int aId)
 {
+	// TO DO: consolidate this with similar spawn patterns (Spawner, Weapon)
+
 	// get the source
 	Entity *entity = Database::entity.Get(aId);
 
