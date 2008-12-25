@@ -5,10 +5,10 @@
 			<fast value="1" />
 			<poly>
 				<vertex x="0" y="6" />
-				<vertex x="-0.5" y="5" />
-				<vertex x="-0.5" y="0" />
-				<vertex x="0.5" y="0" />
-				<vertex x="0.5" y="5" />
+				<vertex x="-1" y="5" />
+				<vertex x="-1" y="0" />
+				<vertex x="1" y="0" />
+				<vertex x="1" y="5" />
 				<friction value="1" />
 				<restitution value="0" />
 				<density value="1.0" />

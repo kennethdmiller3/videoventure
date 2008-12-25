@@ -297,9 +297,19 @@ public:
 				// link name
 				unsigned int name = itor.GetKey();
 
+				// get baseline version
+				unsigned int parent = Database::parent.Get(mHitId);
+				const LinkTemplate &linktemplatebase = Database::linktemplate.Get(parent).Get(name);
+
+				// merge templates (HACK)
+				// TO DO: figure out how to determine template overrides
+				LinkTemplate merge(linktemplatebase);
+				merge.mSecondary = grant.mSecondary;
+				merge.mOffset = grant.mOffset * linktemplatebase.mOffset;
+
 				// set link template based on grant
 				DebugPrint("%s link %08x: %s -> %s\n", Database::name.Get(mHitId).c_str(), name, Database::name.Get(linktemplates.Get(name).mSecondary).c_str(), Database::name.Get(grant.mSecondary).c_str());
-				linktemplates.Put(name, grant);
+				linktemplates.Put(name, merge);
 #endif
 
 #ifdef PICKUP_CASCADE_LINK_CHAIN
