@@ -7,9 +7,8 @@
 
 #include "targetver.h"
 
-#define _USE_MATH_DEFINES
 
-#ifdef WIN32
+#if defined(WIN32) && !defined(USE_SDL)
 #define NOMINMAX
 #define WIN32_LEAN_AND_MEAN
 #define VC_EXTRALEAN
@@ -17,15 +16,15 @@
 #endif
 
 // standard C library includes
-#include <stdio.h>
+#define _USE_MATH_DEFINES
 #include <math.h>
+#include <stdio.h>
 #include <malloc.h>
 
 // STL includes
 #include <vector>
 #include <deque>
 #include <algorithm>
-#include <cstdarg>
 
 // Fast floating-point
 #include "xs_Float.h"
@@ -135,6 +134,9 @@ extern bool playback;
 // runtime
 extern bool runtime;
 
+// device was reset (HACK)
+extern bool wasreset;
+
 // input system
 extern Input input;
 
@@ -151,21 +153,9 @@ extern float sim_fraction;
 // camera position
 extern Vector2 camerapos[2];
 
+// reticule handle (HACK)
+extern GLuint reticule_handle;
 
-// TO DO: implement game state machine as an actual state machine
-
-// game state machine (HACK)
-enum GameStateType
-{
-	STATE_NONE,
-	STATE_SHELL,
-	STATE_PLAY,
-	STATE_RELOAD,
-	STATE_QUIT,
-	NUM_GAME_STATES
-};
-extern GameStateType curgamestate;
-extern GameStateType setgamestate;
 
 
 // UTILITY

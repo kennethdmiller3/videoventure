@@ -247,6 +247,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Source\GameState.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\Source\Graze.cpp"
 				>
 			</File>
@@ -283,7 +287,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Source\PerfTimer.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\Source\Pickup.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Play.cpp"
 				>
 			</File>
 			<File
@@ -320,6 +332,10 @@
 			</File>
 			<File
 				RelativePath=".\Source\Resource.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Run.cpp"
 				>
 			</File>
 			<File
@@ -384,6 +400,10 @@
 			</File>
 			<File
 				RelativePath=".\Source\Title.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\TurnAction.cpp"
 				>
 			</File>
 			<File
@@ -469,6 +489,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Source\GameState.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Source\Graze.h"
 				>
 			</File>
@@ -502,6 +526,10 @@
 			</File>
 			<File
 				RelativePath=".\Source\Overlay.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\PerfTimer.h"
 				>
 			</File>
 			<File
@@ -586,6 +614,10 @@
 			</File>
 			<File
 				RelativePath=".\Source\Transform2.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\TurnAction.h"
 				>
 			</File>
 			<File

@@ -1,5 +1,7 @@
 #include "StdAfx.h"
 
+#include "Shell.h"
+#include "GameState.h"
 #include "Variable.h"
 #include "oglconsole.h"
 #include "Title.h"

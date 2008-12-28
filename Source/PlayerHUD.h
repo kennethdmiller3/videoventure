@@ -3,6 +3,8 @@
 #include "Updatable.h"
 #include "Overlay.h"
 
+class Player;
+
 class PlayerHUD : public Updatable, public Overlay
 {
 public:
