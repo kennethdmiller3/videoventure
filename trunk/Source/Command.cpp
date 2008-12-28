@@ -3,6 +3,7 @@
 #include "oglconsole.h"
 #include "World.h"
 #include "Sound.h"
+#include "GameState.h"
 
 
 // console
