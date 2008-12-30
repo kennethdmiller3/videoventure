@@ -60,10 +60,6 @@ bool FIXED_STEP = false;
 int MOTIONBLUR_STEPS = 1;
 float MOTIONBLUR_TIME = 1.0f/60.0f;
 
-// sound attributes
-int SOUND_CHANNELS = 8;
-float SOUND_VOLUME = 1.0f;
-
 // default input configuration
 std::string INPUT_CONFIG = "input/default.xml";
 
@@ -407,20 +403,8 @@ bool init()
 #endif
 #endif
 
-#if defined(USE_SDL)
-	SDL_AudioSpec fmt;
-	fmt.freq = AUDIO_FREQUENCY;
-	fmt.format = AUDIO_S16SYS;
-	fmt.channels = 2;
-	fmt.samples = Uint16(AUDIO_FREQUENCY / SIMULATION_RATE);
-	fmt.callback = Sound::Mix;
-	fmt.userdata = &Sound::listenerpos;
-
-	/* Open the audio device and start playing sound! */
-	if ( SDL_OpenAudio(&fmt, NULL) < 0 ) {
-		DebugPrint("Unable to open audio: %s\n", SDL_GetError());
-	}
-#endif
+	// initialize sound system
+	Sound::Init();
 
 	// success!
 	return true;    
@@ -431,9 +415,10 @@ void clean_up()
     /* clean up oglconsole */                                                                        
     OGLCONSOLE_Quit();
 
-#if defined(USE_SDL)
+	// clean up sound system
+	Sound::Done();
 
-	SDL_CloseAudio();
+#if defined(USE_SDL)
 
 	// quit SDL
 	SDL_Quit();

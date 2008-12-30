@@ -10,6 +10,7 @@
 #include "Drawlist.h"
 #include "Renderable.h"
 #include "Overlay.h"
+#include "Sound.h"
 
 #include "oglconsole.h"
 
@@ -109,9 +110,15 @@ void KeyCallback(int aIndex, int aState)
 				paused = !paused;
 			}
 			if (paused)
+			{
 				glfwEnable(GLFW_MOUSE_CURSOR);
+				Sound::Pause();
+			}
 			else
+			{
 				glfwDisable(GLFW_MOUSE_CURSOR);
+				Sound::Resume();
+			}
 			break;
 		}
 	}
@@ -265,9 +272,18 @@ void RunState()
 					{
 						paused = !paused;
 					}
-					SDL_ShowCursor(paused || !reticule_handle ? SDL_ENABLE : SDL_DISABLE);
-					SDL_WM_GrabInput(paused ? SDL_GRAB_OFF : SDL_GRAB_ON);
-					SDL_PauseAudio(paused);
+					if (paused)
+					{
+						SDL_ShowCursor(SDL_ENABLE);
+						SDL_WM_GrabInput(SDL_GRAB_OFF);
+						Sound::Pause();
+					}
+					else
+					{
+						SDL_ShowCursor(reticule_handle ? SDL_DISABLE : SDL_ENABLE);
+						SDL_WM_GrabInput(SDL_GRAB_ON);
+						Sound::Resume();
+					}
 					break;
 				}
 				break;
@@ -354,8 +370,16 @@ void RunState()
 						paused = !paused;
 					}
 					window.ShowMouseCursor(paused);
-					//SDL_WM_GrabInput(paused ? SDL_GRAB_OFF : SDL_GRAB_ON);
-					//SDL_PauseAudio(paused);
+					if (paused)
+					{
+						//SDL_WM_GrabInput(SDL_GRAB_OFF);
+						Sound::Pause();
+					}
+					else
+					{
+						//SDL_WM_GrabInput(SDL_GRAB_ON);
+						Sound::Resume();
+					}
 					break;
 				}
 				break;
