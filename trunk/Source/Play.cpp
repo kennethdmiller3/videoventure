@@ -221,10 +221,8 @@ void EnterPlayState()
 	if (!InitLevel(LEVEL_CONFIG.c_str()))
 		setgamestate = STATE_SHELL;
 
-#if defined(USE_SDL)
 	// start audio
-	SDL_PauseAudio(0);
-#endif
+	Sound::Resume();
 
 	// create escape overlay
 	Overlay *escape = new Overlay(0x9e212406 /* "escape" */);
@@ -243,10 +241,8 @@ void ExitPlayState()
 {
 	DebugPrint("Quitting...\n");
 
-#if defined(USE_SDL)
 	// stop audio
-	SDL_PauseAudio(1);
-#endif
+	Sound::Pause();
 
 	// stop any startup sound (HACK)
 	StopSoundCue(0x94326baa /* "startup" */);

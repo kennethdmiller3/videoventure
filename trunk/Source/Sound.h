@@ -5,7 +5,7 @@
 class SoundTemplate
 {
 public:
-	short *mData;		// data buffer
+	void *mData;		// data buffer
 	size_t mSize;		// data buffer size in bytes
 	size_t mLength;		// sound length
 	float mVolume;
@@ -31,13 +31,13 @@ private:
 	Sound *mPrev;
 
 public:
-    short *mData;
+    void *mData;
 	size_t mLength;
     size_t mOffset;
 	float mVolume;
 	int mRepeat;
 	Vector2 mPosition;
-	bool mPlaying;
+	int mPlaying;
 
 public:
 #ifdef USE_POOL_ALLOCATOR
@@ -71,8 +71,19 @@ public:
 public:
 	static Vector2 listenerpos;
 
-	// mix
-	static void Mix(void *userdata, unsigned char *stream, int len);
+	// initialize
+	static void Init(void);
+
+	// deinitialize
+	static void Done(void);
+
+	// pause
+	static void Pause(void);
+
+	// resume
+	static void Resume(void);
+
+	friend void MixSound(void *userdata, unsigned char *stream, int len);
 };
 
 namespace Database

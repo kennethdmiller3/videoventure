@@ -4,12 +4,25 @@
 
 #include "Interpolator.h"
 
-#ifdef USE_POOL_ALLOCATOR
+//#define USE_SDL_MIXER
+
+#if defined(USE_SDL_MIXER)
+
+#include "SDL_Mixer.h"
+
+#endif
+
+
+// sound attributes
+int SOUND_CHANNELS = 8;
+float SOUND_VOLUME = 1.0f;
+
 
 // sound listener position
 Vector2 Sound::listenerpos;
 
 
+#ifdef USE_POOL_ALLOCATOR
 // sound pool
 static boost::pool<boost::default_user_allocator_malloc_free> pool(sizeof(Sound));
 void *Sound::operator new(size_t aSize)
@@ -126,7 +139,6 @@ namespace Database
 
 			void Activate(unsigned int aId)
 			{
-#if defined(USE_SDL)
 #ifdef SOUND_VALIDATE_CUE
 				for (Typed<unsigned int>::Iterator itor(soundcue.Find(aId)); itor.IsValid(); ++itor)
 				{
@@ -144,7 +156,6 @@ namespace Database
 				}
 #endif
 				PlaySoundCue(aId, 0);
-#endif
 			}
 
 			void Deactivate(unsigned int aId)
@@ -176,7 +187,7 @@ SoundTemplate::SoundTemplate(void)
 }
 
 SoundTemplate::SoundTemplate(const SoundTemplate &aTemplate)
-: mData(static_cast<short *>(malloc(aTemplate.mSize)))
+: mData(malloc(aTemplate.mSize))
 , mSize(aTemplate.mSize)
 , mLength(aTemplate.mLength)
 , mVolume(aTemplate.mVolume)
@@ -204,7 +215,25 @@ bool SoundTemplate::ConfigureFile(const TiXmlElement *element, unsigned int id)
 	if (name == NULL)
 		return false;
 
-#if defined(USE_SDL)
+#if defined(USE_SDL_MIXER)
+	// load sound file
+	Mix_Chunk *loadchunk = Mix_LoadWAV(name);
+	if (!loadchunk)
+	{
+		DebugPrint("error loading sound file \"%s\": %s\n", name, Mix_GetError());
+		return false;
+	}
+
+	// copy sound data
+	mSize = mLength * sizeof(short) + loadchunk->alen;
+	mData = realloc(mData, mSize);
+	memcpy(static_cast<short *>(mData) + mLength, loadchunk->abuf, loadchunk->alen);
+	mLength = mSize / sizeof(short);
+
+	// free loaded data
+	Mix_FreeChunk(loadchunk);
+
+#elif defined(USE_SDL)
 	// load wave file data
 	SDL_AudioSpec wave;
 	Uint8 *data;
@@ -222,16 +251,16 @@ bool SoundTemplate::ConfigureFile(const TiXmlElement *element, unsigned int id)
 
 	// append sound data
 	mSize = mLength * sizeof(short) + dlen * cvt.len_mult;
-	mData = static_cast<short *>(realloc(mData, mSize));
-	memcpy(mData + mLength, data, dlen);
-	cvt.buf = reinterpret_cast<unsigned char *>(mData + mLength);
+	mData = realloc(mData, mSize);
+	memcpy(static_cast<short *>(mData) + mLength, data, dlen);
+	cvt.buf = reinterpret_cast<unsigned char *>(static_cast<short *>(mData) + mLength);
 	cvt.len = dlen;
 
 	// convert to final format
 	SDL_ConvertAudio(&cvt);
 	mLength += cvt.len_cvt / sizeof(short);
 	mSize = mLength * sizeof(short);
-	mData = static_cast<short *>(realloc(mData, mSize));
+	mData = realloc(mData, mSize);
 
 	// release wave file data
 	SDL_FreeWAV(data);
@@ -254,7 +283,7 @@ bool SoundTemplate::ConfigureSynth(const TiXmlElement *element, unsigned int id)
 
 	// append sound data
 	mSize = (mLength + samples) * sizeof(short);
-	mData = static_cast<short *>(realloc(mData, mSize));
+	mData = realloc(mData, mSize);
 
 	// initialize timer
 	float time = 0.0f;
@@ -292,7 +321,7 @@ bool SoundTemplate::ConfigureSample(const TiXmlElement *element, unsigned int id
 
 	// append sound data
 	mSize = (mLength + samples) * sizeof(short);
-	mData = static_cast<short *>(realloc(mData, mSize));
+	mData = realloc(mData, mSize);
 
 	// clock frequency
 	int frequency = 0;
@@ -360,7 +389,7 @@ bool SoundTemplate::ConfigureSample(const TiXmlElement *element, unsigned int id
 
 		// append sample
 		short sample = short(Clamp(xs_RoundToInt(accum * 32767.0f / oversample), SHRT_MIN, SHRT_MAX));
-		mData[mLength++] = sample;
+		static_cast<short *>(mData)[mLength++] = sample;
 	}
 
 	return true;
@@ -425,7 +454,7 @@ bool SoundTemplate::ConfigurePokey(const TiXmlElement *element, unsigned int id)
 
 	// append sound data
 	mSize = (mLength + samples) * sizeof(short);
-	mData = static_cast<short *>(realloc(mData, mSize));
+	mData = realloc(mData, mSize);
 
 	// clock frequency
 	int frequency = 0;
@@ -653,7 +682,7 @@ bool SoundTemplate::ConfigurePokey(const TiXmlElement *element, unsigned int id)
 
 		// append sample
 		short sample = short(Clamp(xs_RoundToInt(accum * 32767.0f / oversample), SHRT_MIN, SHRT_MAX));
-		mData[mLength++] = sample;
+		static_cast<short *>(mData)[mLength++] = sample;
 	}
 
 	return true;
@@ -672,11 +701,11 @@ static float OutputPulse(SoundTemplate *self, int ticks, float samplespertick, f
 		if (self->mSize < newsize)
 		{
 			self->mSize = newsize;
-			self->mData = static_cast<short *>(realloc(self->mData, self->mSize));
+			self->mData = realloc(self->mData, self->mSize);
 		}
 		for (int i = 0; i < count; ++i)
 		{
-			self->mData[self->mLength++] = sample;
+			static_cast<short *>(self->mData)[self->mLength++] = sample;
 		}
 	}
 	return samples;
@@ -1639,8 +1668,8 @@ bool SoundTemplate::Configure(const TiXmlElement *element, unsigned int id)
 				{
 					// append sound data
 					mSize = (mLength + sound.mLength) * sizeof(short);
-					mData = static_cast<short *>(realloc(mData, mSize));
-					memcpy(mData + mLength, sound.mData, sound.mLength * sizeof(short));
+					mData = realloc(mData, mSize);
+					memcpy(static_cast<short *>(mData) + mLength, sound.mData, sound.mLength * sizeof(short));
 				}
 			}
 			break;
@@ -1774,7 +1803,11 @@ Sound::Sound(const SoundTemplate &aTemplate, unsigned int aId)
 : Updatable(aId)
 , mNext(NULL)
 , mPrev(NULL)
+#if defined(USE_SDL_MIXER)
+, mData(Mix_QuickLoad_RAW(static_cast<unsigned char *>(aTemplate.mData), aTemplate.mSize))
+#else
 , mData(aTemplate.mData)
+#endif
 , mLength(aTemplate.mLength)
 , mOffset(0)
 , mVolume(aTemplate.mVolume)
@@ -1795,7 +1828,10 @@ void Sound::Play(unsigned int aOffset)
 {
 	if (!mPlaying)
 	{
-#if defined(USE_SDL)
+#if defined(USE_SDL_MIXER)
+		mPlaying = Mix_PlayChannel(-1, static_cast<Mix_Chunk *>(mData), mRepeat);
+		Update(0.0f);
+#elif defined(USE_SDL)
 		SDL_LockAudio();
 		mPlaying = true;
 		mPrev = sTail;
@@ -1816,9 +1852,11 @@ void Sound::Play(unsigned int aOffset)
 
 void Sound::Stop(void)
 {
+#if defined(USE_SDL_MIXER)
+	Mix_HaltChannel(mPlaying);
+#elif defined(USE_SDL)
 	if (mPlaying)
 	{
-#if defined(USE_SDL)
 		SDL_LockAudio();
 		mPlaying = false;
 		if (sHead == this)
@@ -1834,8 +1872,8 @@ void Sound::Stop(void)
 		mNext = NULL;
 		mPrev = NULL;
 		SDL_UnlockAudio();
-#endif
 	}
+#endif
 
 	// also deactivate
 	Deactivate();
@@ -1854,8 +1892,83 @@ void Sound::Update(float aStep)
 		mPosition = entity->GetPosition();
 	else
 		mPosition = listenerpos;
+
+#if defined(USE_SDL_MIXER)
+	if (mPlaying)
+	{
+		float volume = mVolume * SOUND_VOLUME;
+		if (mId)
+		{
+			// apply sound fall-off
+			volume /= (1.0f + listenerpos.DistSq(mPosition) / 16384.0f);
+		}
+		Mix_Volume(mPlaying, xs_RoundToInt(volume * MIX_MAX_VOLUME));
+	}
+#endif
 }
 
+
+// AUDIO SYSTEM
+
+// initialize
+void Sound::Init(void)
+{
+#if defined(USE_SDL_MIXER)
+	if ( Mix_OpenAudio(AUDIO_FREQUENCY, AUDIO_S16SYS, 1, xs_CeilToInt(AUDIO_FREQUENCY / SIMULATION_RATE) ) < 0 )
+	{
+		DebugPrint("Unable to open audio: %s\n", Mix_GetError());
+		return;
+	}
+	Mix_AllocateChannels(256);
+#elif defined(USE_SDL)
+	SDL_AudioSpec fmt;
+	fmt.freq = AUDIO_FREQUENCY;
+	fmt.format = AUDIO_S16SYS;
+	fmt.channels = 2;
+	fmt.samples = Uint16(AUDIO_FREQUENCY / SIMULATION_RATE);
+	fmt.callback = MixSound;
+	fmt.userdata = &Sound::listenerpos;
+
+	/* Open the audio device and start playing sound! */
+	if ( SDL_OpenAudio(&fmt, NULL) < 0 ) {
+		DebugPrint("Unable to open audio: %s\n", SDL_GetError());
+	}
+#endif
+}
+
+// clean up
+void Sound::Done(void)
+{
+#if defined(USE_SDL_MIXER)
+	Mix_CloseAudio();
+#elif defined(USE_SDL)
+	SDL_CloseAudio();
+#endif
+}
+
+// pause
+void Sound::Pause(void)
+{
+#if defined(USE_SDL_MIXER)
+	Mix_Pause(-1);
+#elif defined(USE_SDL)
+	SDL_PauseAudio(true);
+#endif
+}
+
+// resume
+void Sound::Resume(void)
+{
+#if defined(USE_SDL_MIXER)
+	Mix_Resume(-1);
+#elif defined(USE_SDL)
+	SDL_PauseAudio(false);
+#endif
+}
+
+
+
+#if defined(USE_SDL) && !defined(USE_SDL_MIXER)
 
 // AUDIO MIXER
 
@@ -1867,7 +1980,7 @@ static float level = minlevel;
 static const float levelfilter = 1.0f * timestep;
 static const float postscale = 32767.0f;
 
-void Sound::Mix(void *userdata, unsigned char *stream, int len)
+void MixSound(void *userdata, unsigned char *stream, int len)
 {
 	int samples = len / sizeof(short);
 
@@ -1913,7 +2026,7 @@ void Sound::Mix(void *userdata, unsigned char *stream, int len)
 	for (Sound *sound = sHead; sound != NULL; sound = sound->mNext)
 	{
 		// get sound data
-		const short *data = sound->mData;
+		const short *data = static_cast<short *>(sound->mData);
 		unsigned int offset = sound->mOffset;
 		unsigned int length = sound->mLength;
 		unsigned int repeat = sound->mRepeat;
@@ -2103,6 +2216,9 @@ void Sound::Mix(void *userdata, unsigned char *stream, int len)
 	DebugPrint("mix %d\n", 1000000*(perf1.QuadPart-perf0.QuadPart)/freq.QuadPart);
 #endif
 }
+
+#endif
+
 
 void PlaySoundCue(unsigned int aId, unsigned int aCueId)
 {

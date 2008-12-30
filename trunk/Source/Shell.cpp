@@ -1218,10 +1218,8 @@ void EnterShellState()
 	// level configuration
 	InitLevel("shell.xml");
 
-#if defined(USE_SDL)
 	// start audio
-	SDL_PauseAudio(0);
-#endif
+	Sound::Resume();
 
 	// create title overlay
 	ShellTitle *title = new ShellTitle(0x9865b509 /* "title" */);
@@ -1242,10 +1240,8 @@ void EnterShellState()
 
 void ExitShellState()
 {
-#if defined(USE_SDL)
 	// stop audio
-	SDL_PauseAudio(1);
-#endif
+	Sound::Pause();
 
 	// stop any startup sound (HACK)
 	StopSoundCue(0x94326baa /* "startup" */);
