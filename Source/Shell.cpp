@@ -20,7 +20,7 @@ extern "C" void OGLCONSOLE_Resize(OGLCONSOLE_Console console);
 
 extern bool escape;
 
-extern void InitWindowAction(void);
+extern void UpdateWindowAction(void);
 
 extern unsigned int reticule_handle;
 
@@ -351,30 +351,83 @@ motion blur strength	[-] <blur %> [+]
 
 extern ShellMenuItem shellmenuvideoitems[];
 
-#if defined(USE_SDL)
-SDL_Rect **shellmenuvideoresolutions;
-SDL_Rect **shellmenuvideoresolution;
-#endif
+struct Size
+{
+	unsigned short w;
+	unsigned short h;
+};
+
+Size shellmenuvideoresolutionlist[256];
+int shellmenuvideoresolutioncount;
+int shellmenuvideoresolutionindex;
 char shellmenuvideoresolutiontext[32];
 char shellmenuvideomultisampletext[8];
 char shellmenuvideomotionblurstepstext[8];
 char shellmenuvideomotionblurtimetext[8];
 
-void ShellMenuVideoEnter()
+static void ShellMenuVideoUpdateResolutionText(void)
 {
+	TIXML_SNPRINTF(
+		shellmenuvideoresolutiontext,
+		sizeof(shellmenuvideoresolutiontext),
+		"%dx%d",
+		shellmenuvideoresolutionlist[shellmenuvideoresolutionindex].w,
+		shellmenuvideoresolutionlist[shellmenuvideoresolutionindex].h
+		);
+}
+
+static void ShellMenuVideoUpdateResolutionList(void)
+{
+	shellmenuvideoresolutioncount = 0;
 #if defined(USE_SDL)
-	shellmenuvideoresolutions = SDL_ListModes(NULL, SDL_OPENGL | SDL_FULLSCREEN);
-	shellmenuvideoresolution = shellmenuvideoresolutions;
-	for (SDL_Rect **mode = shellmenuvideoresolutions; *mode != NULL; ++mode)
+	SDL_Rect **modes = SDL_ListModes(NULL, SDL_OPENGL | SDL_FULLSCREEN);
+	for (SDL_Rect **mode = modes; *mode != NULL; ++mode)
 	{
-		if ((*mode)->w <= SCREEN_WIDTH && (*mode)->h <= SCREEN_HEIGHT)
+		shellmenuvideoresolutionlist[shellmenuvideoresolutioncount].w = (*mode)->w;
+		shellmenuvideoresolutionlist[shellmenuvideoresolutioncount].h = (*mode)->h;
+		++shellmenuvideoresolutioncount;
+	}
+#elif defined(USE_SFML)
+	int modecount = sf::VideoMode::GetModesCount();
+	int depth = SCREEN_DEPTH ? SCREEN_DEPTH : 32
+	for (int i = 0; i < modecount; ++i)
+	{
+		sf::VideoMode mode(sf::VideoMode::GetMode(i));
+		if (mode.BitsPerPixel == depth)
 		{
-			shellmenuvideoresolution = mode;
-			break;
+			shellmenuvideoresolutionlist[shellmenuvideoresolutioncount].w = modes[i].Width;
+			shellmenuvideoresolutionlist[shellmenuvideoresolutioncount].h = modes[i].Height;
+			++shellmenuvideoresolutioncount;
 		}
 	}
-	TIXML_SNPRINTF(shellmenuvideoresolutiontext, sizeof(shellmenuvideoresolutiontext), "%dx%d", (*shellmenuvideoresolution)->w, (*shellmenuvideoresolution)->h);
+#elif defined(USE_GLFW)
+	GLFWvidmode *modes = static_cast<GLFWvidmode>(_alloca(256 * sizeof(GLFWvidmode)));
+	int modecount = glfwGetVideoModes(modes, 256);
+	int depth = SCREEN_DEPTH ? SCREEN_DEPTH : 32
+	for (int i = 0; i < modecount; ++i)
+	{
+		if (modes[i].RedBits + modes[i].GreenBits + modes[i].BlueBits == depth)
+		{
+			shellmenuvideoresolutionlist[shellmenuvideoresolutioncount].w = modes[i].Width;
+			shellmenuvideoresolutionlist[shellmenuvideoresolutioncount].h = modes[i].Height;
+			++shellmenuvideoresolutioncount;
+		}
+	}
 #endif
+}
+
+void ShellMenuVideoEnter()
+{
+	ShellMenuVideoUpdateResolutionList();
+
+	shellmenuvideoresolutionindex = 0;
+	for (int i = 0; i < shellmenuvideoresolutioncount; ++i)
+	{
+		if (SCREEN_WIDTH <= shellmenuvideoresolutionlist[i].w &&
+			SCREEN_HEIGHT <= shellmenuvideoresolutionlist[i].h)
+			shellmenuvideoresolutionindex = i;
+	}
+	ShellMenuVideoUpdateResolutionText();
 
 	VarItem::CreateInteger("shell.menu.video.fullscreen", SCREEN_FULLSCREEN, 0, 1);
 	VarItem::CreateInteger("shell.menu.video.verticalsync", OPENGL_SWAPCONTROL, 0, 1);
@@ -391,18 +444,12 @@ void ShellMenuVideoEnter()
 
 void ShellMenuVideoExit()
 {
-#if defined(USE_SDL)
-	shellmenuvideoresolutions = NULL;
-	shellmenuvideoresolution = NULL;
-#endif
 }
 
 void ShellMenuVideoPressAccept()
 {
-#if defined(USE_SDL)
-	SCREEN_WIDTH = (*shellmenuvideoresolution)->w;
-	SCREEN_HEIGHT = (*shellmenuvideoresolution)->h;
-#endif
+	SCREEN_WIDTH = shellmenuvideoresolutionlist[shellmenuvideoresolutionindex].w;
+	SCREEN_HEIGHT = shellmenuvideoresolutionlist[shellmenuvideoresolutionindex].h;
 	SCREEN_FULLSCREEN = VarItem::GetInteger("shell.menu.video.fullscreen") != 0;
 	OPENGL_SWAPCONTROL = VarItem::GetInteger("shell.menu.video.verticalsync") != 0;
 	OPENGL_MULTISAMPLE = VarItem::GetInteger("shell.menu.video.multisample");
@@ -410,7 +457,7 @@ void ShellMenuVideoPressAccept()
 	MOTIONBLUR_TIME = VarItem::GetInteger("shell.menu.video.motionblurtime") / 600.0f;
 
 	WritePreferences("preferences.xml");
-	InitWindowAction();
+	UpdateWindowAction();
 
 	shellmenu.Pop();
 }
@@ -422,24 +469,20 @@ void ShellMenuVideoPressCancel()
 
 void ShellMenuVideoPressResolutionUp()
 {
-#if defined(USE_SDL)
-	if (shellmenuvideoresolution > shellmenuvideoresolutions)
+	if (shellmenuvideoresolutionindex > 0)
 	{
-		--shellmenuvideoresolution;
-		sprintf(shellmenuvideoresolutiontext, "%dx%d", (*shellmenuvideoresolution)->w, (*shellmenuvideoresolution)->h);
+		--shellmenuvideoresolutionindex;
+		ShellMenuVideoUpdateResolutionText();
 	}
-#endif
 }
 
 void ShellMenuVideoPressResolutionDown()
 {
-#if defined(USE_SDL)
-	if (*(shellmenuvideoresolution+1) != NULL)
+	if (shellmenuvideoresolutionindex < shellmenuvideoresolutioncount - 1)
 	{
-		++shellmenuvideoresolution;
-		sprintf(shellmenuvideoresolutiontext, "%dx%d", (*shellmenuvideoresolution)->w, (*shellmenuvideoresolution)->h);
+		++shellmenuvideoresolutionindex;
+		ShellMenuVideoUpdateResolutionText();
 	}
-#endif
 }
 
 void ShellMenuVideoPressFullScreenOff()
@@ -1197,14 +1240,8 @@ void EnterShellState()
 #endif
 		);
 
-#if defined(USE_SDL)
-	// show the screen
-	SDL_GL_SwapBuffers();
-#elif defined(USE_SFML)
-	window.Display();
-#elif defined(USE_GLFW)
-	glfwSwapBuffers();
-#endif
+	// show back buffer
+	Platform::Present();
 
 	// reset simulation timer
 	sim_rate = float(SIMULATION_RATE);

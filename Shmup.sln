@@ -25,6 +25,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GLFW", "..\glfw\support\msv
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Box2D", "..\Box2D\Build\VC9\Box2D.vcproj", "{7A2DFC3D-516A-471D-A215-BD40E5E5AD9A}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Behavior", "Behavior\Behavior.vcproj", "{327039BB-CD1F-4117-8522-701E25AFB03D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -59,6 +61,10 @@ Global
 		{7A2DFC3D-516A-471D-A215-BD40E5E5AD9A}.Debug|Win32.Build.0 = Debug|Win32
 		{7A2DFC3D-516A-471D-A215-BD40E5E5AD9A}.Release|Win32.ActiveCfg = Release|Win32
 		{7A2DFC3D-516A-471D-A215-BD40E5E5AD9A}.Release|Win32.Build.0 = Release|Win32
+		{327039BB-CD1F-4117-8522-701E25AFB03D}.Debug|Win32.ActiveCfg = Debug|Win32
+		{327039BB-CD1F-4117-8522-701E25AFB03D}.Debug|Win32.Build.0 = Debug|Win32
+		{327039BB-CD1F-4117-8522-701E25AFB03D}.Release|Win32.ActiveCfg = Release|Win32
+		{327039BB-CD1F-4117-8522-701E25AFB03D}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -16,8 +16,11 @@ extern "C" void OGLCONSOLE_DrawCharacter(int c, double x, double y, double w, do
 extern "C" void OGLCONSOLE_CreateFont();
 extern "C" void OGLCONSOLE_Resize(OGLCONSOLE_Console console);
 
-// (re)initialize window
-extern bool init_Window();
+// open window
+extern bool OpenWindow(void);
+
+// close window
+extern void CloseWindow(void);
 
 // init input
 extern bool InitInput(const char *config);
@@ -115,10 +118,13 @@ static int ProcessCommandFloat(float &aValue, char *aParam[], int aCount, Proces
 	}
 }
 
-void InitWindowAction()
+void UpdateWindowAction()
 {
 	if (runtime)
-		init_Window();
+	{
+		CloseWindow();
+		OpenWindow();
+	}
 }
 void InitInputAction()
 {
@@ -171,22 +177,22 @@ int ProcessCommand( unsigned int aCommand, char *aParam[], int aCount )
 		return 0;
 
 	case 0x1d215c8f /* "resolution" */:
-		return ProcessCommandInt2(SCREEN_WIDTH, SCREEN_HEIGHT, aParam, aCount, InitWindowAction, "resolution: %dx%d\n"); 
+		return ProcessCommandInt2(SCREEN_WIDTH, SCREEN_HEIGHT, aParam, aCount, UpdateWindowAction, "resolution: %dx%d\n"); 
 
 	case 0xfe759eea /* "depth" */:
-		return ProcessCommandInt(SCREEN_DEPTH, aParam, aCount, InitWindowAction, "depth: %dbpp");
+		return ProcessCommandInt(SCREEN_DEPTH, aParam, aCount, UpdateWindowAction, "depth: %dbpp");
 
 	case 0x5032fb58 /* "fullscreen" */:
-		return ProcessCommandBool(SCREEN_FULLSCREEN, aParam, aCount, InitWindowAction, "fullscreen: %d\n");
+		return ProcessCommandBool(SCREEN_FULLSCREEN, aParam, aCount, UpdateWindowAction, "fullscreen: %d\n");
 
 	case 0x06f8f066 /* "vsync" */:
-		return ProcessCommandBool(OPENGL_SWAPCONTROL, aParam, aCount, InitWindowAction, "vsync: %d\n");
+		return ProcessCommandBool(OPENGL_SWAPCONTROL, aParam, aCount, UpdateWindowAction, "vsync: %d\n");
 
 	case 0x35c8978f /* "antialias" */:
-		return ProcessCommandBool(OPENGL_ANTIALIAS, aParam, aCount, InitWindowAction, "antialias: %d\n");
+		return ProcessCommandBool(OPENGL_ANTIALIAS, aParam, aCount, UpdateWindowAction, "antialias: %d\n");
 
 	case 0x47d0f228 /* "multisample" */:
-		return ProcessCommandInt(OPENGL_MULTISAMPLE, aParam, aCount, InitWindowAction, "multisample: %d\n");
+		return ProcessCommandInt(OPENGL_MULTISAMPLE, aParam, aCount, UpdateWindowAction, "multisample: %d\n");
 
 	case 0x1ae79789 /* "viewsize" */:
 		return ProcessCommandFloat(VIEW_SIZE, aParam, aCount, NULL, "viewsize: %f\n");

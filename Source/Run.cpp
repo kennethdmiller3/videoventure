@@ -25,9 +25,27 @@ extern "C" void OGLCONSOLE_CreateFont();
 extern "C" void OGLCONSOLE_Resize(OGLCONSOLE_Console console);
 
 // forward declaration
-bool init_Window();
-void EscapeMenuExit();
-void EscapeMenuEnter();
+extern bool OpenWindow(void);
+extern void CloseWindow(void);
+extern void EscapeMenuExit(void);
+extern void EscapeMenuEnter(void);
+
+// simulation attributes
+int SIMULATION_RATE = 60;
+float TIME_SCALE = 1.0f;
+bool FIXED_STEP = false;
+
+// rendering attributes
+int MOTIONBLUR_STEPS = 1;
+float MOTIONBLUR_TIME = 1.0f/60.0f;
+
+// visual profiler
+bool PROFILER_OUTPUTSCREEN = false;
+bool PROFILER_OUTPUTPRINT = false;
+
+// frame rate indicator
+bool FRAMERATE_OUTPUTSCREEN = false;
+bool FRAMERATE_OUTPUTPRINT = false;
 
 // input system
 Input input;
@@ -68,6 +86,19 @@ bool escape = false;
 #include "PerfTimer.h"
 #endif
 
+static void Pause(void)
+{
+	Platform::ShowCursor(true);
+	Platform::GrabInput(false);
+	Sound::Pause();
+}
+
+static void Resume(void)
+{
+	Platform::ShowCursor(!reticule_handle);
+	Platform::GrabInput(true);
+	Sound::Resume();
+}
 
 #if defined(USE_GLFW)
 
@@ -86,8 +117,9 @@ void KeyCallback(int aIndex, int aState)
 		case GLFW_KEY_ENTER:
 			if (glfwGetKey(GLFW_KEY_LALT) || glfwGetKey(GLFW_KEY_RALT))
 			{
+				CloseWindow();
 				SCREEN_FULLSCREEN = !SCREEN_FULLSCREEN;
-				init_Window();
+				OpenWindow();
 			}
 			break;
 		case GLFW_KEY_ESC:
@@ -109,16 +141,11 @@ void KeyCallback(int aIndex, int aState)
 			{
 				paused = !paused;
 			}
+
 			if (paused)
-			{
-				glfwEnable(GLFW_MOUSE_CURSOR);
-				Sound::Pause();
-			}
+				Pause();
 			else
-			{
-				glfwDisable(GLFW_MOUSE_CURSOR);
-				Sound::Resume();
-			}
+				Resume();
 			break;
 		}
 	}
@@ -249,8 +276,9 @@ void RunState()
 				case SDLK_RETURN:
 					if (event.key.keysym.mod & KMOD_ALT)
 					{
+						CloseWindow();
 						SCREEN_FULLSCREEN = !SCREEN_FULLSCREEN;
-						init_Window();
+						OpenWindow();
 					}
 					break;
 				case SDLK_ESCAPE:
@@ -272,18 +300,11 @@ void RunState()
 					{
 						paused = !paused;
 					}
+
 					if (paused)
-					{
-						SDL_ShowCursor(SDL_ENABLE);
-						SDL_WM_GrabInput(SDL_GRAB_OFF);
-						Sound::Pause();
-					}
+						Pause();
 					else
-					{
-						SDL_ShowCursor(reticule_handle ? SDL_DISABLE : SDL_ENABLE);
-						SDL_WM_GrabInput(SDL_GRAB_ON);
-						Sound::Resume();
-					}
+						Resume();
 					break;
 				}
 				break;
@@ -346,8 +367,9 @@ void RunState()
 				case sf::Key::Return:
 					if (event.Key.Alt)
 					{
+						CloseWindow();
 						SCREEN_FULLSCREEN = !SCREEN_FULLSCREEN;
-						init_Window();
+						OpenWindow();
 					}
 					break;
 				case sf::Key::Escape:
@@ -369,17 +391,11 @@ void RunState()
 					{
 						paused = !paused;
 					}
-					window.ShowMouseCursor(paused);
+
 					if (paused)
-					{
-						//SDL_WM_GrabInput(SDL_GRAB_OFF);
-						Sound::Pause();
-					}
+						Pause();
 					else
-					{
-						//SDL_WM_GrabInput(SDL_GRAB_ON);
-						Sound::Resume();
-					}
+						Resume();
 					break;
 				}
 				break;
@@ -908,17 +924,11 @@ void RunState()
 		// restore blend mode
 		glPopAttrib();
 
-#if defined(USE_SDL)
 		/* Render our console */
 		OGLCONSOLE_Draw();
 
-		// show the screen
-		SDL_GL_SwapBuffers();
-#elif defined(USE_SFML)
-		window.Display();
-#elif defined(USE_GLFW)
-		glfwSwapBuffers();
-#endif
+		// show the back buffer
+		Platform::Present();
 
 #ifdef GET_PERFORMANCE_DETAILS
 		if (OPENGL_SWAPCONTROL)

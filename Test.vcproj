@@ -42,8 +42,8 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;..\SDL-1.2.13\include&quot;,&quot;tinyxml&quot;,&quot;oglconsole&quot;,&quot;..\Box2D\Include&quot;,&quot;FastDelegate&quot;"
-				PreprocessorDefinitions="WIN32;_DEBUG;_CRT_SECURE_NO_WARNINGS;USE_SDL;OGLCONSOLE_USE_SDL;_HAS_EXCEPTIONS=0"
+				AdditionalIncludeDirectories="&quot;PlatformSDL&quot;,&quot;..\SDL-1.2.13\include&quot;,&quot;tinyxml&quot;,&quot;oglconsole&quot;,&quot;..\Box2D\Include&quot;,&quot;FastDelegate&quot;"
+				PreprocessorDefinitions="WIN32;_DEBUG;_CRT_SECURE_NO_WARNINGS;OGLCONSOLE_USE_SDL;_HAS_EXCEPTIONS=0"
 				StringPooling="true"
 				MinimalRebuild="true"
 				ExceptionHandling="0"
@@ -126,8 +126,8 @@
 				Name="VCCLCompilerTool"
 				Optimization="1"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="&quot;..\SDL-1.2.13\include&quot;,&quot;tinyxml&quot;,&quot;oglconsole&quot;,&quot;..\Box2D\Include&quot;,&quot;FastDelegate&quot;"
-				PreprocessorDefinitions="WIN32;NDEBUG;_CRT_SECURE_NO_WARNINGS;USE_SDL;OGLCONSOLE_USE_SDL;_HAS_EXCEPTIONS=0"
+				AdditionalIncludeDirectories="&quot;PlatformSDL&quot;,&quot;..\SDL-1.2.13\include&quot;,&quot;tinyxml&quot;,&quot;oglconsole&quot;,&quot;..\Box2D\Include&quot;,&quot;FastDelegate&quot;"
+				PreprocessorDefinitions="WIN32;NDEBUG;_CRT_SECURE_NO_WARNINGS;OGLCONSOLE_USE_SDL;_HAS_EXCEPTIONS=0"
 				StringPooling="true"
 				ExceptionHandling="0"
 				RuntimeLibrary="2"
@@ -203,14 +203,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\Source\Capturable.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\Source\Capture.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\Source\Collidable.cpp"
 				>
 			</File>
@@ -251,10 +243,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\Source\Graze.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\Source\Gunner.cpp"
 				>
 			</File>
@@ -271,7 +259,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\PlatformSDL\LoadTexture.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\Source\Noise.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\PlatformSDL\OneTime.cpp"
 				>
 			</File>
 			<File
@@ -327,6 +323,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\PlatformSDL\PrintAttributes.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\Source\Renderable.cpp"
 				>
 			</File>
@@ -339,15 +339,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\Source\Session5.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\Source\Shell.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\Source\Shield.cpp"
 				>
 			</File>
 			<File
@@ -395,6 +387,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Source\Texture.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\Source\Tilemap.cpp"
 				>
 			</File>
@@ -416,6 +412,10 @@
 			</File>
 			<File
 				RelativePath=".\Source\Weapon.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\PlatformSDL\Window.cpp"
 				>
 			</File>
 			<File
@@ -442,14 +442,6 @@
 			</File>
 			<File
 				RelativePath=".\Source\Bullet.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Source\Capturable.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Source\Capture.h"
 				>
 			</File>
 			<File
@@ -493,10 +485,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\Source\Graze.h"
-				>
-			</File>
-			<File
 				RelativePath=".\Source\Gunner.h"
 				>
 			</File>
@@ -534,6 +522,10 @@
 			</File>
 			<File
 				RelativePath=".\Source\Pickup.h"
+				>
+			</File>
+			<File
+				RelativePath=".\PlatformSDL\Platform.h"
 				>
 			</File>
 			<File
@@ -577,10 +569,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\Source\Shield.h"
-				>
-			</File>
-			<File
 				RelativePath=".\Source\Ship.h"
 				>
 			</File>
@@ -610,6 +598,10 @@
 			</File>
 			<File
 				RelativePath=".\Source\Team.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Texture.h"
 				>
 			</File>
 			<File
