@@ -11,6 +11,7 @@
 #include "Variable.h"
 #include "Command.h"
 #include "Drawlist.h"
+#include "Texture.h"
 
 #include <cstdarg>
 
@@ -43,23 +44,6 @@ bool DEBUGPRINT_OUTPUTCONSOLE = false;
 bool DEBUGPRINT_OUTPUTDEBUG = false;
 bool DEBUGPRINT_OUTPUTSTDERR = false;
 
-// visual profiler
-bool PROFILER_OUTPUTSCREEN = false;
-bool PROFILER_OUTPUTPRINT = false;
-
-// frame rate indicator
-bool FRAMERATE_OUTPUTSCREEN = false;
-bool FRAMERATE_OUTPUTPRINT = false;
-
-// simulation attributes
-int SIMULATION_RATE = 60;
-float TIME_SCALE = 1.0f;
-bool FIXED_STEP = false;
-
-// rendering attributes
-int MOTIONBLUR_STEPS = 1;
-float MOTIONBLUR_TIME = 1.0f/60.0f;
-
 // default input configuration
 std::string INPUT_CONFIG = "input/default.xml";
 
@@ -86,20 +70,6 @@ extern "C" void OGLCONSOLE_DrawString(char *s, double x, double y, double w, dou
 extern "C" void OGLCONSOLE_DrawCharacter(int c, double x, double y, double w, double h, double z);
 extern "C" void OGLCONSOLE_CreateFont();
 extern "C" void OGLCONSOLE_Resize(OGLCONSOLE_Console console);
-
-#define TRACE_OPENGL_ATTRIBUTES
-
-// forward declaration
-int ProcessCommand( unsigned int aCommand, char *aParam[], int aCount );
-
-#if defined(USE_GLFW)
-// input callbacks
-extern void KeyCallback(int aIndex, int aState);
-extern void MousePosCallback(int aPosX, int aPosY);
-extern void MouseButtonCallback(int aIndex, int aState);
-extern void MouseWheelCallback(int aPos);
-#endif
-
 
 // debug output
 int DebugPrint(const char *format, ...)
@@ -150,10 +120,13 @@ void cmdCB(OGLCONSOLE_Console console, char *cmd)
 }
 
 
-bool init_GL()
+bool InitOpenGL()
 {	
 	// set clear color
 	glClearColor( 0, 0, 0, 0 );
+
+	// set viewport
+	glViewport( 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT );
 
 	if (OPENGL_ANTIALIAS)
 	{
@@ -218,61 +191,47 @@ bool init_GL()
 	return glGetError() == GL_NO_ERROR;
 }
 
-bool init_Window()
+
+void PrintAttributes(void)
 {
-#if defined(USE_SDL)
-	// set OpenGL attributes
-    SDL_GL_SetAttribute( SDL_GL_RED_SIZE, 8 );
-    SDL_GL_SetAttribute( SDL_GL_GREEN_SIZE, 8 );
-    SDL_GL_SetAttribute( SDL_GL_BLUE_SIZE, 8 );
-#ifdef ENABLE_SRC_ALPHA_SATURATE
-    SDL_GL_SetAttribute( SDL_GL_ALPHA_SIZE, 8 );
-#else
-    SDL_GL_SetAttribute( SDL_GL_ALPHA_SIZE, 0 );
-#endif
-    SDL_GL_SetAttribute( SDL_GL_ACCUM_RED_SIZE, 16 );
-    SDL_GL_SetAttribute( SDL_GL_ACCUM_GREEN_SIZE, 16 );
-    SDL_GL_SetAttribute( SDL_GL_ACCUM_BLUE_SIZE, 16 );
-#ifdef ENABLE_SRC_ALPHA_SATURATE
-    SDL_GL_SetAttribute( SDL_GL_ACCUM_ALPHA_SIZE, 16 );
-#else
-    SDL_GL_SetAttribute( SDL_GL_ACCUM_ALPHA_SIZE, 0 );
-#endif
-#ifndef ENABLE_DEPTH_TEST
-	SDL_GL_SetAttribute( SDL_GL_DEPTH_SIZE, 0 );
-#endif
-	SDL_GL_SetAttribute( SDL_GL_MULTISAMPLEBUFFERS, OPENGL_MULTISAMPLE > 0 );
-	SDL_GL_SetAttribute( SDL_GL_MULTISAMPLESAMPLES, OPENGL_MULTISAMPLE );
-	SDL_GL_SetAttribute( SDL_GL_SWAP_CONTROL, OPENGL_SWAPCONTROL );
+	DebugPrint("\nOpenGL\n");
 
-	// create the window
-	unsigned int flags = SDL_OPENGL;
-	if (SCREEN_FULLSCREEN)
-		flags |= SDL_FULLSCREEN;
-	if( SDL_SetVideoMode( SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_DEPTH, flags ) == NULL )
-		return false;
-#elif defined(USE_SFML)
-	// create the window
-	window.Create(sf::VideoMode(SCREEN_WIDTH, SCREEN_HEIGHT, 32), "Shmup!", SCREEN_FULLSCREEN ? sf::Style::Fullscreen : sf::Style::Close, sf::WindowSettings(32, 0, OPENGL_MULTISAMPLE));
-	window.UseVerticalSync(OPENGL_SWAPCONTROL);
-#elif defined(USE_GLFW)
-	glfwOpenWindowHint(GLFW_ACCUM_RED_BITS, 16);
-	glfwOpenWindowHint(GLFW_ACCUM_GREEN_BITS, 16);
-	glfwOpenWindowHint(GLFW_ACCUM_BLUE_BITS, 16);
-	glfwOpenWindowHint(GLFW_ACCUM_ALPHA_BITS, 16);
-	glfwOpenWindowHint(GLFW_FSAA_SAMPLES, OPENGL_MULTISAMPLE);
-	glfwOpenWindow(SCREEN_WIDTH, SCREEN_HEIGHT, 8, 8, 8, 8, 0, 0, SCREEN_FULLSCREEN ? GLFW_FULLSCREEN : GLFW_WINDOW);
-	glfwSetWindowTitle("Shmup!");
-	glfwSwapInterval( OPENGL_SWAPCONTROL );
-#else
-#error
-#endif
+	// OpenGL attributes
+	DebugPrint( "Vendor     : %s\n", glGetString( GL_VENDOR ) );
+	DebugPrint( "Renderer   : %s\n", glGetString( GL_RENDERER ) );
+	DebugPrint( "Version    : %s\n", glGetString( GL_VERSION ) );
 
+	// OpenGL extensions
+	DebugPrint( "Extensions : \n" );
+	const GLubyte *extensions = glGetString( GL_EXTENSIONS );
+	size_t size = strlen(reinterpret_cast<const char *>(extensions)+1);
+	char *buf = static_cast<char *>(_alloca(size));
+	memcpy(buf, extensions, size);
+
+	char *extension = strtok(buf, " ");
+	do
+	{
+		DebugPrint( "%s\n", extension );
+		extension = strtok(NULL, " ");
+	}
+	while(extension);
+	DebugPrint("\n");
+}
+
+bool OpenWindow(void)
+{
 	// device was reset
 	wasreset = true;
 
+	if (runtime)
+	{
+		// platform-specific open
+		if (!Platform::OpenWindow())
+			return false;
+	}
+
 	// initialize OpenGL
-	if( !init_GL() )
+	if( !InitOpenGL() )
 		return false;    
 
 	if (runtime)
@@ -291,117 +250,37 @@ bool init_Window()
 	return true;
 }
 
-bool init()
+void CloseWindow(void)
 {
-#if defined(USE_SDL)
-	// initialize SDL
-	if( SDL_Init( SDL_INIT_EVERYTHING ) < 0 )
-		return false;    
-
-	// Check for joystick
-	if (SDL_NumJoysticks() > 0)
+	if (runtime)
 	{
-		// Open joystick
-		SDL_Joystick *joy = SDL_JoystickOpen(0);
-		if(joy)
-		{
-			DebugPrint("Opened Joystick 0\n");
-			DebugPrint("Name: %s\n", SDL_JoystickName(0));
-		}
+		// platform-specific close
+		Platform::CloseWindow();
 	}
-#elif defined (USE_GLFW)
-	// initialize GLFW
-	glfwInit();
-#endif
+}
 
-	// initialize the window
-	init_Window();
 
-#if defined(USE_SDL)
+bool Init(void)
+{
+	// platform-specific initialization
+	Platform::Init();
+
+	// create window
+	OpenWindow();
+
 	// hide the mouse cursor
-	SDL_ShowCursor(SDL_DISABLE);
+	Platform::ShowCursor(false);
 
-	// grab the cursor
-	SDL_WM_GrabInput(SDL_GRAB_ON);
+	// grab input
+	Platform::GrabInput(true);
 
-	// set window title
-	SDL_WM_SetCaption( "Shmup!", NULL );
-#elif defined(USE_SFML)
-	// hide the mouse cursor
-	window.ShowMouseCursor(false);
-#elif defined(USE_GLFW)
-	// hide the mouse cursor
-	glfwDisable(GLFW_MOUSE_CURSOR);
-
-	// set callbacks
-	glfwSetKeyCallback(KeyCallback);
-	glfwSetMousePosCallback(MousePosCallback);
-	glfwSetMouseButtonCallback(MouseButtonCallback);
-	glfwSetMouseWheelCallback(MouseWheelCallback);
-#endif
+	// print OpenGL attributes
+	PrintAttributes();
 
     /* Initialize OGLCONSOLE */                                                                      
-    console = OGLCONSOLE_Create();                                                                             
+    console = OGLCONSOLE_Create();
 	OGLCONSOLE_EditConsole(console);
-    OGLCONSOLE_EnterKey(cmdCB);                                                                      
-
-#ifdef TRACE_OPENGL_ATTRIBUTES
-#if defined(USE_SDL)
-	DebugPrint("Screen BPP: %d\n", SDL_GetVideoSurface()->format->BitsPerPixel);
-	DebugPrint("\n");
-#endif
-	DebugPrint( "Vendor     : %s\n", glGetString( GL_VENDOR ) );
-	DebugPrint( "Renderer   : %s\n", glGetString( GL_RENDERER ) );
-	DebugPrint( "Version    : %s\n", glGetString( GL_VERSION ) );
-
-	DebugPrint( "Extensions : \n" );
-	const GLubyte *extensions = glGetString( GL_EXTENSIONS );
-	char buf[4096];
-	strncpy(buf, (const char *)extensions, sizeof(buf));
-	char *extension = strtok(buf, " ");
-	do
-	{
-		DebugPrint( "%s\n", extension );
-		extension = strtok(NULL, " ");
-	}
-	while(extension);
-	DebugPrint("\n");
-
-#if defined(USE_SDL)
-	int value;
-	const char *attrib[] =
-	{
-		"SDL_GL_RED_SIZE",
-		"SDL_GL_GREEN_SIZE",
-		"SDL_GL_BLUE_SIZE",
-		"SDL_GL_ALPHA_SIZE",
-		"SDL_GL_BUFFER_SIZE",
-		"SDL_GL_DOUBLEBUFFER",
-		"SDL_GL_DEPTH_SIZE",
-		"SDL_GL_STENCIL_SIZE",
-		"SDL_GL_ACCUM_RED_SIZE",
-		"SDL_GL_ACCUM_GREEN_SIZE",
-		"SDL_GL_ACCUM_BLUE_SIZE",
-		"SDL_GL_ACCUM_ALPHA_SIZE",
-		"SDL_GL_STEREO",
-		"SDL_GL_MULTISAMPLEBUFFERS",
-		"SDL_GL_MULTISAMPLESAMPLES",
-		"SDL_GL_ACCELERATED_VISUAL",
-		"SDL_GL_SWAP_CONTROL"
-	};
-	for (int i = 0; i < SDL_arraysize(attrib); ++i)
-	{
-		SDL_GL_GetAttribute( SDL_GLattr(i), &value );
-		DebugPrint( "%s: %d\n", attrib[i], value);
-	}
-
-	// get fullscreen resolutions
-	DebugPrint("\nResolutions:\n");
-	SDL_Rect **modes = SDL_ListModes(NULL, SDL_OPENGL | SDL_FULLSCREEN);
-	for (SDL_Rect **mode = modes; *mode != NULL; ++mode)
-		DebugPrint("%dx%d\n", (*mode)->w, (*mode)->h);
-#endif
-#endif
+    OGLCONSOLE_EnterKey(cmdCB);
 
 	// initialize sound system
 	Sound::Init();
@@ -410,7 +289,7 @@ bool init()
 	return true;    
 }
 
-void clean_up()
+void Done(void)
 {
     /* clean up oglconsole */                                                                        
     OGLCONSOLE_Quit();
@@ -418,18 +297,13 @@ void clean_up()
 	// clean up sound system
 	Sound::Done();
 
-#if defined(USE_SDL)
+	// close window
+	CloseWindow();
 
-	// quit SDL
-	SDL_Quit();
-
-#elif defined(USE_GLFW)
-
-	// terminate GLFW
-	glfwTerminate();
-
-#endif
+	// platform-specific cleanup
+	Platform::Done();
 }
+
 
 
 // main
@@ -501,14 +375,14 @@ int main( int argc, char *argv[] )
 	}
 
 	// initialize
-	if( !init() )
+	if( !Init() )
 		return 1;    
 
 	// run game state machine
 	while (GameStateUpdate());
 
 	// clean up
-	clean_up();
+	Done();
 
 	// done
 	return 0;

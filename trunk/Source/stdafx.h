@@ -7,14 +7,6 @@
 
 #include "targetver.h"
 
-
-#if defined(WIN32) && !defined(USE_SDL)
-#define NOMINMAX
-#define WIN32_LEAN_AND_MEAN
-#define VC_EXTRALEAN
-#include <windows.h>
-#endif
-
 // standard C library includes
 #define _USE_MATH_DEFINES
 #include <math.h>
@@ -26,23 +18,11 @@
 #include <deque>
 #include <algorithm>
 
-// Fast floating-point
-#include "xs_Float.h"
+// platform header
+#include "Platform.h"
 
-#if defined(USE_SDL)
-// SDL includes
-#include "SDL.h"
-#include "SDL_opengl.h"
-#elif defined(USE_SFML)
-// SFML includes
-#include <SFML/System.hpp>
-#include <SFML/Window.hpp>
-#include <GL/gl.h>
-#include <GL/glu.h>
-// GLFW includes
-#elif defined(USE_GLFW)
-#include <GL/glfw.h>
-#endif
+// fast floating-point
+#include "xs_Float.h"
 
 // TinyXML includes
 #include "tinyxml.h"

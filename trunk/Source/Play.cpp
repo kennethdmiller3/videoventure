@@ -136,10 +136,8 @@ bool InitLevel(const char *config)
 	// clear the reticule draw list (HACK)
 	reticule_handle = 0;
 
-#if defined(USE_SDL)
 	// show the mouse cursor
-	SDL_ShowCursor(SDL_ENABLE);
-#endif
+	Platform::ShowCursor(true);
 
 	return false;
 
@@ -190,14 +188,8 @@ void EnterPlayState()
 #endif
 		);
 
-#if defined(USE_SDL)
-	// show the screen
-	SDL_GL_SwapBuffers();
-#elif defined(USE_SFML)
-	window.Display();
-#elif defined(USE_GLFW)
-	glfwSwapBuffers();
-#endif
+	// show back buffer
+	Platform::Present();
 
 	// reset camera position
 	camerapos[0] = camerapos[1] = Vector2(0, 0);

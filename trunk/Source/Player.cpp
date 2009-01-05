@@ -3,7 +3,9 @@
 #include "Entity.h"
 #include "Bullet.h"
 #include "Damagable.h"
+#ifdef USE_CAPTURABLE
 #include "Capturable.h"
+#endif
 #include "Team.h"
 #include "Points.h"
 #include "PointsOverlay.h"
@@ -132,20 +134,18 @@ Player::Player(const PlayerTemplate &aTemplate, unsigned int aId)
 	{
 		// add a kill listener
 		Database::Typed<Damagable::KillListener> &listeners = Database::killlistener.Open(mId);
-		Damagable::KillListener &listener = listeners.Open(Database::Key(this));
-		listener.bind(this, &Player::GotKill);
-		listeners.Close(Database::Key(this));
+		listeners.Put(Database::Key(this), Damagable::KillListener(this, &Player::GotKill));
 		Database::killlistener.Close(mId);
 	}
 
+#ifdef USE_CAPTURABLE
 	{
 		// add a capture listener
 		Database::Typed<Capturable::CaptureListener> &listeners = Database::capturelistener.Open(mId);
-		Capturable::CaptureListener &listener = listeners.Open(Database::Key(this));
-		listener.bind(this, &Player::GotKill);
-		listeners.Close(Database::Key(this));
+		listeners.Put(Database::Key(this), Capturable::KillListener(this, &Player::GotKill));
 		Database::capturelistener.Close(mId);
 	}
+#endif
 	
 	// add points overlay
 	Database::pointsoverlay.Put(aId, new PointsOverlay(aId));
@@ -158,12 +158,14 @@ Player::~Player(void)
 	delete Database::pointsoverlay.Get(mId);
 	Database::pointsoverlay.Delete(mId);
 
+#if USE_CAPTURABLE
 	{
 		// remove any capture listener
 		Database::Typed<Capturable::CaptureListener> &listeners = Database::capturelistener.Open(mId);
 		listeners.Delete(Database::Key(this));
 		Database::capturelistener.Close(mId);
 	}
+#endif
 
 	{
 		// remove any kill listener
@@ -223,9 +225,7 @@ void Player::Attach(unsigned int aAttach)
 
 	// add a death listener
 	Database::Typed<Damagable::DeathListener> &listeners = Database::deathlistener.Open(mAttach);
-	Damagable::DeathListener &listener = listeners.Open(Database::Key(this));
-	listener.bind(this, &Player::OnDeath);
-	listeners.Close(Database::Key(this));
+	listeners.Put(Database::Key(this), Damagable::DeathListener(this, &Player::OnDeath));
 	Database::deathlistener.Close(mAttach);
 }
 

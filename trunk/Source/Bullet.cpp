@@ -116,9 +116,7 @@ Bullet::Bullet(const BulletTemplate &aTemplate, unsigned int aId)
 : mId(aId), mDestroy(false)
 {
 	Database::Typed<Collidable::Listener> &listeners = Database::collidablecontactadd.Open(mId);
-	Collidable::Listener &listener = listeners.Open(Database::Key(this));
-	listener.bind(this, &Bullet::Collide);
-	listeners.Close(Database::Key(this));
+	listeners.Put(Database::Key(this), Collidable::Listener(this, &Bullet::Collide));
 	Database::collidablecontactadd.Close(mId);
 }
 

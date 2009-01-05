@@ -137,11 +137,7 @@ void ProcessResourceChange(const TiXmlElement *element, unsigned int aId, unsign
 
 	Database::Typed<Database::Typed<Resource::ChangeListener> > &listenerss = Database::resourcechangelistener.Open(aId);
 	Database::Typed<Resource::ChangeListener> &listeners = listenerss.Open(aSubId);
-
-	Resource::ChangeListener &listener = listeners.Open(0xb5b54664 /* "actions" */);
-	listener.bind(ResourceChangeActions);
-	listeners.Close(0xb5b54664 /* "actions" */);
-
+	listeners.Put(0xb5b54664 /* "actions" */, Resource::ChangeListener(ResourceChangeActions));
 	listenerss.Close(aSubId);
 	Database::resourcechangelistener.Close(aId);
 #endif
@@ -154,11 +150,7 @@ void ProcessResourceEmpty(const TiXmlElement *element, unsigned int aId, unsigne
 
 	Database::Typed<Database::Typed<Resource::EmptyListener> > &listenerss = Database::resourceemptylistener.Open(aId);
 	Database::Typed<Resource::EmptyListener> &listeners = listenerss.Open(aSubId);
-
-	Resource::EmptyListener &listener = listeners.Open(0xb5b54664 /* "actions" */);
-	listener.bind(ResourceEmptyActions);
-	listeners.Close(0xb5b54664 /* "actions" */);
-
+	listeners.Put(0xb5b54664 /* "actions" */, Resource::EmptyListener(ResourceEmptyActions));
 	listenerss.Close(aSubId);
 	Database::resourceemptylistener.Close(aId);
 #endif
@@ -171,9 +163,7 @@ void ProcessResourceFull(const TiXmlElement *element, unsigned int aId, unsigned
 
 	Database::Typed<Database::Typed<Resource::FullListener> > &listenerss = Database::resourcefulllistener.Open(aId);
 	Database::Typed<Resource::FullListener> &listeners = listenerss.Open(aSubId);
-
-	Resource::FullListener &listener = listeners.Open(0xb5b54664 /* "actions" */);
-	listener.bind(ResourceFullActions);
+	listeners.Put(0xb5b54664 /* "actions" */, Resource::FullListener(ResourceFullActions));
 	listeners.Close(0xb5b54664 /* "actions" */);
 
 	listenerss.Close(aSubId);
