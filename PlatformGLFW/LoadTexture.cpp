@@ -13,19 +13,19 @@ namespace Platform
 			return false;
 
 		// components per pixel
-		texture.mComponents = image.BytesPerPixel;
+		aTexture.mComponents = image.BytesPerPixel;
 
 		// texture dimensions
-		texture.mWidth = image.Width;
-		texture.mHeight = image.Height;
+		aTexture.mWidth = image.Width;
+		aTexture.mHeight = image.Height;
 
 		// texture format
-		texture.mFormat = image.Format;
+		aTexture.mFormat = image.Format;
 
 		// copy pixel data
-		size_t count = texture.mWidth * texture.mHeight * texture.mComponents;
-		texture.mPixels = static_cast<unsigned char *>(malloc(count));
-		memcpy(texture.mPixels, image.Data, count);
+		size_t count = aTexture.mWidth * aTexture.mHeight * aTexture.mComponents;
+		aTexture.mPixels = static_cast<unsigned char *>(malloc(count));
+		memcpy(aTexture.mPixels, image.Data, count);
 
 		// free image
 		glfwFreeImage(&image);

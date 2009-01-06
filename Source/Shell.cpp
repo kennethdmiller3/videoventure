@@ -380,11 +380,15 @@ static void ShellMenuVideoUpdateResolutionList(void)
 {
 	shellmenuvideoresolutioncount = 0;
 #if defined(USE_SDL)
+	// SDL returns modes sorted by decreasing resolution (!)
 	SDL_Rect **modes = SDL_ListModes(NULL, SDL_OPENGL | SDL_FULLSCREEN);
+	int modecount = 0;
 	for (SDL_Rect **mode = modes; *mode != NULL; ++mode)
+		++modecount;
+	for (int i = 0; i < modecount; ++i)
 	{
-		shellmenuvideoresolutionlist[shellmenuvideoresolutioncount].w = (*mode)->w;
-		shellmenuvideoresolutionlist[shellmenuvideoresolutioncount].h = (*mode)->h;
+		shellmenuvideoresolutionlist[shellmenuvideoresolutioncount].w = modes[modecount-1-i]->w;
+		shellmenuvideoresolutionlist[shellmenuvideoresolutioncount].h = modes[modecount-1-i]->h;
 		++shellmenuvideoresolutioncount;
 	}
 #elif defined(USE_SFML)
@@ -401,15 +405,16 @@ static void ShellMenuVideoUpdateResolutionList(void)
 		}
 	}
 #elif defined(USE_GLFW)
-	GLFWvidmode *modes = static_cast<GLFWvidmode>(_alloca(256 * sizeof(GLFWvidmode)));
+	// GLFW returns modes sorted by increasing depth, then by increasing resolution
+	GLFWvidmode *modes = static_cast<GLFWvidmode *>(_alloca(256 * sizeof(GLFWvidmode)));
 	int modecount = glfwGetVideoModes(modes, 256);
-	int depth = SCREEN_DEPTH ? SCREEN_DEPTH : 32
+	int depth = SCREEN_DEPTH ? std::min(SCREEN_DEPTH, 24) : 24;		// HACK
 	for (int i = 0; i < modecount; ++i)
 	{
 		if (modes[i].RedBits + modes[i].GreenBits + modes[i].BlueBits == depth)
 		{
-			shellmenuvideoresolutionlist[shellmenuvideoresolutioncount].w = modes[i].Width;
-			shellmenuvideoresolutionlist[shellmenuvideoresolutioncount].h = modes[i].Height;
+			shellmenuvideoresolutionlist[shellmenuvideoresolutioncount].w = static_cast<unsigned short>(modes[i].Width);
+			shellmenuvideoresolutionlist[shellmenuvideoresolutioncount].h = static_cast<unsigned short>(modes[i].Height);
 			++shellmenuvideoresolutioncount;
 		}
 	}
@@ -423,8 +428,8 @@ void ShellMenuVideoEnter()
 	shellmenuvideoresolutionindex = 0;
 	for (int i = 0; i < shellmenuvideoresolutioncount; ++i)
 	{
-		if (SCREEN_WIDTH <= shellmenuvideoresolutionlist[i].w &&
-			SCREEN_HEIGHT <= shellmenuvideoresolutionlist[i].h)
+		if (SCREEN_WIDTH >= shellmenuvideoresolutionlist[i].w &&
+			SCREEN_HEIGHT >= shellmenuvideoresolutionlist[i].h)
 			shellmenuvideoresolutionindex = i;
 	}
 	ShellMenuVideoUpdateResolutionText();
@@ -467,7 +472,7 @@ void ShellMenuVideoPressCancel()
 	shellmenu.Pop();
 }
 
-void ShellMenuVideoPressResolutionUp()
+void ShellMenuVideoPressResolutionDown()
 {
 	if (shellmenuvideoresolutionindex > 0)
 	{
@@ -476,7 +481,7 @@ void ShellMenuVideoPressResolutionUp()
 	}
 }
 
-void ShellMenuVideoPressResolutionDown()
+void ShellMenuVideoPressResolutionUp()
 {
 	if (shellmenuvideoresolutionindex < shellmenuvideoresolutioncount - 1)
 	{
