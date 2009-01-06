@@ -13,8 +13,8 @@ namespace Platform
 		// initialize GLFW
 		glfwInit();
 
-		// initialize the window
-		if (!InitWindow())
+		// open the window
+		if (!OpenWindow())
 			return false;
 
 		// hide the mouse cursor
