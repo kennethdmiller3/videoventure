@@ -1167,8 +1167,8 @@ ShellMenu shellmenu =
 void RenderOptions(ShellMenu &menu, unsigned int aId, float aTime, const Transform2 &aTransform)
 {
 	// cursor position
-	float cursor_x = 320 - 240 * input.value[Input::AIM_HORIZONTAL];
-	float cursor_y = 240 - 240 * input.value[Input::AIM_VERTICAL];
+	float cursor_x = 320 - 240 * input.value[Input::MENU_HORIZONTAL];
+	float cursor_y = 240 - 240 * input.value[Input::MENU_VERTICAL];
 
 	// HACK use the main page
 	ShellMenuPage &page = *menu.mActive;
@@ -1189,7 +1189,7 @@ void RenderOptions(ShellMenu &menu, unsigned int aId, float aTime, const Transfo
 				option.mState |= BUTTON_ROLLOVER;
 
 				// if mouse button pressed...
-				if (input.value[Input::FIRE_PRIMARY])
+				if (input.value[Input::MENU_CLICK])
 				{
 					// mark as selected
 					option.mState |= BUTTON_SELECTED;
@@ -1208,7 +1208,7 @@ void RenderOptions(ShellMenu &menu, unsigned int aId, float aTime, const Transfo
 				// mark as not rollover
 				option.mState &= ~BUTTON_ROLLOVER;
 
-				if (!input.value[Input::FIRE_PRIMARY])
+				if (!input.value[Input::MENU_CLICK])
 				{
 					// mark as not selected
 					option.mState &= ~BUTTON_SELECTED;

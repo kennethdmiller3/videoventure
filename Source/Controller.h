@@ -23,6 +23,7 @@ public:
 
 	// controls
 	Vector2 mMove;
+	Vector2 mAim;
 	float mTurn;
 	float mFire[FIRE_CHANNELS];
 

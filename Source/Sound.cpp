@@ -15,7 +15,7 @@
 
 // sound attributes
 int SOUND_CHANNELS = 8;
-float SOUND_VOLUME = 1.0f;
+float SOUND_VOLUME = 0.5f;
 
 
 // sound listener position
@@ -39,6 +39,9 @@ namespace Database
 {
 	Typed<SoundTemplate> soundtemplate(0x1b5ef1be /* "soundtemplate" */);
 	Typed<Typed<unsigned int> > soundcue(0xf23cbd5f /* "soundcue" */);
+#ifdef USE_SDL_MIXER
+	Typed<Mix_Music *> musictemplate(0x19706bfe /* "musictemplate" */);
+#endif
 	Typed<Typed<Sound *> > sound(0x0e0d9594 /* "sound" */);
 
 	namespace Loader
@@ -124,6 +127,30 @@ namespace Database
 			}
 		}
 		soundcueloader;
+
+#ifdef USE_SDL_MIXER
+		class MusicLoader
+		{
+		public:
+			MusicLoader()
+			{
+				AddConfigure(0x9f9c4fd4 /* "music" */, Entry(this, &MusicLoader::Configure));
+			}
+
+			void Configure(unsigned int aId, const TiXmlElement *element)
+			{
+				if (const char *file = element->Attribute("file"))
+				{
+					Mix_Music *music = Mix_LoadMUS(file);
+					musictemplate.Put(aId, music);
+
+					// HACK
+					Mix_PlayMusic(music, -1);
+				}
+			}
+		}
+		musicloader;
+#endif
 	}
 
 	namespace Initializer
@@ -1813,7 +1840,11 @@ Sound::Sound(const SoundTemplate &aTemplate, unsigned int aId)
 , mVolume(aTemplate.mVolume)
 , mRepeat(aTemplate.mRepeat)
 , mPosition(0, 0)
+#if defined(USE_SDL_MIXER)
+, mPlaying(-1)
+#else
 , mPlaying(false)
+#endif
 {
 	SetAction(Action(this, &Sound::Update));
 }
@@ -1826,12 +1857,16 @@ Sound::~Sound(void)
 
 void Sound::Play(unsigned int aOffset)
 {
+#if defined(USE_SDL_MIXER)
+	if (mPlaying >= 0)
+	{
+		Mix_HaltChannel(mPlaying);
+	}
+	mPlaying = Mix_PlayChannel(-1, static_cast<Mix_Chunk *>(mData), mRepeat);
+	Update(0.0f);
+#elif defined(USE_SDL)
 	if (!mPlaying)
 	{
-#if defined(USE_SDL_MIXER)
-		mPlaying = Mix_PlayChannel(-1, static_cast<Mix_Chunk *>(mData), mRepeat);
-		Update(0.0f);
-#elif defined(USE_SDL)
 		SDL_LockAudio();
 		mPlaying = true;
 		mPrev = sTail;
@@ -1841,8 +1876,8 @@ void Sound::Play(unsigned int aOffset)
 		if (!sHead)
 			sHead = this;
 		SDL_UnlockAudio();
-#endif
 	}
+#endif
 
 	mOffset = aOffset;
 	
@@ -1853,7 +1888,11 @@ void Sound::Play(unsigned int aOffset)
 void Sound::Stop(void)
 {
 #if defined(USE_SDL_MIXER)
-	Mix_HaltChannel(mPlaying);
+	if (mPlaying >= 0)
+	{
+		Mix_HaltChannel(mPlaying);
+		mPlaying = -1;
+	}
 #elif defined(USE_SDL)
 	if (mPlaying)
 	{
@@ -1894,7 +1933,7 @@ void Sound::Update(float aStep)
 		mPosition = listenerpos;
 
 #if defined(USE_SDL_MIXER)
-	if (mPlaying)
+	if (mPlaying >= 0)
 	{
 		float volume = mVolume * SOUND_VOLUME;
 		if (mId)
@@ -1951,6 +1990,7 @@ void Sound::Pause(void)
 {
 #if defined(USE_SDL_MIXER)
 	Mix_Pause(-1);
+	Mix_PauseMusic();
 #elif defined(USE_SDL)
 	SDL_PauseAudio(true);
 #endif
@@ -1961,6 +2001,7 @@ void Sound::Resume(void)
 {
 #if defined(USE_SDL_MIXER)
 	Mix_Resume(-1);
+	Mix_ResumeMusic();
 #elif defined(USE_SDL)
 	SDL_PauseAudio(false);
 #endif

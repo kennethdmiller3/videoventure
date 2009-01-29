@@ -248,75 +248,83 @@ void Spawner::Update(float aStep)
 	{
 		// get the spawner entity
 		Entity *entity = Database::entity.Get(mId);
-		if (entity)
+		if (!entity)
+			return;
+
+		// TO DO: consolidate this with similar spawn patterns (Graze, Weapon)
+
+		// interpolated transform
+		Transform2 transform(entity->GetInterpolatedTransform(mTimer / aStep));
+
+		// apply transform offset
+		transform = spawner.mOffset * transform;
+
+		// apply transform scatter
+		if (spawner.mScatter.a)
+			transform.a += Random::Value(0.0f, spawner.mScatter.a);
+		if (spawner.mScatter.p.x)
+			transform.p.x += Random::Value(0.0f, spawner.mScatter.p.x);
+		if (spawner.mScatter.p.y)
+			transform.p.y += Random::Value(0.0f, spawner.mScatter.p.y);
+
+		// get local velocity
+		Transform2 velocity(entity->GetOmega(), transform.Unrotate(entity->GetVelocity()));
+
+		// apply velocity inherit
+		velocity.a *= spawner.mInherit.a;
+		velocity.p.x *= spawner.mInherit.p.x;
+		velocity.p.y *= spawner.mInherit.p.y;
+
+		// apply velocity add
+		velocity.a += spawner.mVelocity.a;
+		velocity.p.x += spawner.mVelocity.p.x;
+		velocity.p.y += spawner.mVelocity.p.y;
+
+		// apply velocity variance
+		if (spawner.mVariance.a)
+			velocity.a += Random::Value(0.0f, spawner.mVariance.a);
+		if (spawner.mVariance.p.x)
+			velocity.p.x += Random::Value(0.0f, spawner.mVariance.p.x);
+		if (spawner.mVariance.p.y)
+			velocity.p.y += Random::Value(0.0f, spawner.mVariance.p.y);
+
+		// get world velocity
+		velocity.p = transform.Rotate(velocity.p);
+
+		// instantiate the spawn entity
+		unsigned int spawnId = Database::Instantiate(spawner.mSpawn, Database::owner.Get(mId), mId, transform.a, transform.p, velocity.p, velocity.a, false);
+
+		// if the spawner has a team...
+		unsigned int team = Database::team.Get(mId);
+		if (team)
 		{
-			// TO DO: consolidate this with similar spawn patterns (Graze, Weapon)
+			// propagate team to spawned item
+			Database::team.Put(spawnId, team);
+		}
 
-			// interpolated transform
-			Transform2 transform(entity->GetInterpolatedTransform(mTimer / aStep));
+		// activate
+		Database::Activate(spawnId);
 
-			// apply transform offset
-			transform = spawner.mOffset * transform;
+		// set fractional turn
+		if (Renderable *renderable = Database::renderable.Get(spawnId))
+			renderable->SetFraction(mTimer / aStep);
 
-			// apply transform scatter
-			if (spawner.mScatter.a)
-				transform.a += Random::Value(0.0f, spawner.mScatter.a);
-			if (spawner.mScatter.p.x)
-				transform.p.x += Random::Value(0.0f, spawner.mScatter.p.x);
-			if (spawner.mScatter.p.y)
-				transform.p.y += Random::Value(0.0f, spawner.mScatter.p.y);
-
-			// get local velocity
-			Transform2 velocity(entity->GetOmega(), transform.Unrotate(entity->GetVelocity()));
-
-			// apply velocity inherit
-			velocity.a *= spawner.mInherit.a;
-			velocity.p.x *= spawner.mInherit.p.x;
-			velocity.p.y *= spawner.mInherit.p.y;
-
-			// apply velocity add
-			velocity.a += spawner.mVelocity.a;
-			velocity.p.x += spawner.mVelocity.p.x;
-			velocity.p.y += spawner.mVelocity.p.y;
-
-			// apply velocity variance
-			if (spawner.mVariance.a)
-				velocity.a += Random::Value(0.0f, spawner.mVariance.a);
-			if (spawner.mVariance.p.x)
-				velocity.p.x += Random::Value(0.0f, spawner.mVariance.p.x);
-			if (spawner.mVariance.p.y)
-				velocity.p.y += Random::Value(0.0f, spawner.mVariance.p.y);
-
-			// get world velocity
-			velocity.p = transform.Rotate(velocity.p);
-
-			// instantiate the spawn entity
-			unsigned int spawnId = Database::Instantiate(spawner.mSpawn, Database::owner.Get(mId), mId, transform.a, transform.p, velocity.p, velocity.a, false);
-
-			// if the spawner has a team...
-			unsigned int team = Database::team.Get(mId);
-			if (team)
-			{
-				// propagate team to spawned item
-				Database::team.Put(spawnId, team);
-			}
-
-			// activate
-			Database::Activate(spawnId);
-
-			// set fractional turn
-			if (Renderable *renderable = Database::renderable.Get(spawnId))
-				renderable->SetFraction(mTimer / aStep);
-
-			// if tracking....
-			if (spawner.mTrack)
-			{
-				// add a tracker
-				Database::spawnertracker.Put(spawnId, SpawnerTracker(mId));
-			}
+		// if tracking....
+		if (spawner.mTrack)
+		{
+			// add a tracker
+			Database::spawnertracker.Put(spawnId, SpawnerTracker(mId));
 		}
 
 		// set the timer
 		mTimer -= spawner.mCycle;
+
+		// if tracking....
+		if (spawner.mTrack)
+		{
+			// stop if out of slots
+			if (mTrack >= spawner.mTrack)
+				break;
+		}
 	}
 }

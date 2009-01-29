@@ -517,10 +517,10 @@ void Aimer::Aim(float aStep, Entity *entity, const AimerTemplate &aimer, Entity 
 	targetDir *= InvSqrt(distSq);
 
 	// local direction
-	Vector2 localDir = transform.Unrotate(targetDir);
+	mAim = transform.Unrotate(targetDir);
 
 	// angle to target
-	float aimAngle = -atan2f(localDir.x, localDir.y);
+	float aimAngle = -atan2f(mAim.x, mAim.y);
 
 	// if aiming...
 	if (aimer.mAim.mStrength != 0)
@@ -645,6 +645,7 @@ void Aimer::Control(float aStep)
 
 	// set default controls
 	mMove = transform.Rotate(Vector2(0, aimer.mDrift));
+	mAim = Vector2(0, 0);
 	mTurn = 0;
 	memset(mFire, 0, sizeof(mFire));
 

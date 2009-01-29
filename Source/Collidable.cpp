@@ -398,12 +398,8 @@ bool CollidableTemplate::ConfigurePoly(const TiXmlElement *element, b2PolygonDef
 }
 
 #ifdef B2_EDGE_SHAPE_H
-bool CollidableTemplate::ConfigureEdge(const TiXmlElement *element, b2EdgeChainDef &shape)
+bool CollidableTemplate::ProcessEdgeItem(const TiXmlElement *element, b2EdgeChainDef &shape)
 {
-	int isaloop = shape.isALoop;
-	element->QueryIntAttribute("loop", &isaloop);
-	shape.isALoop = isaloop != 0;
-
 	const char *name = element->Value();
 	switch (Hash(name))
 	{
@@ -417,6 +413,20 @@ bool CollidableTemplate::ConfigureEdge(const TiXmlElement *element, b2EdgeChainD
 	default:
 		return ProcessShapeItem(element, shape);
 	}
+}
+
+bool CollidableTemplate::ConfigureEdge(const TiXmlElement *element, b2EdgeChainDef &shape)
+{
+	int isaloop = shape.isALoop;
+	element->QueryIntAttribute("loop", &isaloop);
+	shape.isALoop = isaloop != 0;
+
+	// process child elements
+	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+	{
+		ProcessEdgeItem(child, shape);
+	}
+	return true;
 }
 #endif
 
@@ -1041,6 +1051,42 @@ public:
 }
 contactListener;
 
+/// This is called when a body's shape passes outside of the world boundary.
+class BoundaryListener : public b2BoundaryListener, public Updatable
+{
+public:
+	BoundaryListener(void)
+		: Updatable(0x725d4407 /* "boundarylistener" */)
+	{
+		SetAction(Updatable::Action(this, &BoundaryListener::Update));
+	}
+	virtual ~BoundaryListener() {}
+
+	/// This is called for each body that leaves the world boundary.
+	/// @warning you can't modify the world inside this callback.
+	virtual void Violation(b2Body* body)
+	{
+		Database::Key id = reinterpret_cast<Database::Key>(body->GetUserData());
+		if (mList.empty())
+			Activate();
+		mList.push_back(id);
+	}
+
+	void Update(float aStep)
+	{
+		for (std::vector<Database::Key>::iterator itor = mList.begin(); itor != mList.end(); ++itor)
+			Database::Delete(*itor);
+		mList.clear();
+		Deactivate();
+	}
+
+private:
+	std::vector<Database::Key> mList;
+}
+boundaryListener;
+
+
+
 
 #ifdef COLLIDABLE_DEBUG_DRAW
 // This class implements debug drawing callbacks that are invoked
@@ -1323,7 +1369,7 @@ void Collidable::RemoveFromWorld(void)
 
 
 // create collision world
-void Collidable::WorldInit(float aMinX, float aMinY, float aMaxX, float aMaxY)
+void Collidable::WorldInit(float aMinX, float aMinY, float aMaxX, float aMaxY, bool aWall)
 {
 	// save boundary extents
 	boundary.lowerBound.Set(aMinX, aMinY);
@@ -1346,49 +1392,52 @@ void Collidable::WorldInit(float aMinX, float aMinY, float aMaxX, float aMaxY)
 	// set contact listener
 	world->SetContactListener(&contactListener);
 
+	// set boundary listener
+	world->SetBoundaryListener(&boundaryListener);
+
 #ifdef COLLIDABLE_DEBUG_DRAW
 	// set debug render
 	world->SetDebugDraw(&debugDraw);
 	debugDraw.SetFlags(~0U);
 #endif
 
-	// create perimeter wall
-	b2BodyDef bodydef;
-	b2Body *body = world->CreateBody(&bodydef);
+	if (aWall)
+	{
+		// create perimeter wall
+		b2Body *body = world->GetGroundBody();
 
 #ifdef B2_EDGE_SHAPE_H
-	b2Vec2 vertex[4] =
-	{
-		b2Vec2(aMaxX * (1.0f - FLT_EPSILON), aMaxY * (1.0f - FLT_EPSILON)),
-		b2Vec2(aMaxX * (1.0f - FLT_EPSILON), aMinY * (1.0f - FLT_EPSILON)),
-		b2Vec2(aMinX * (1.0f - FLT_EPSILON), aMinY * (1.0f - FLT_EPSILON)),
-		b2Vec2(aMinX * (1.0f - FLT_EPSILON), aMaxY * (1.0f - FLT_EPSILON))
-	};
+		b2Vec2 vertex[4] =
+		{
+			b2Vec2(aMaxX * (1.0f - FLT_EPSILON), aMaxY * (1.0f - FLT_EPSILON)),
+			b2Vec2(aMaxX * (1.0f - FLT_EPSILON), aMinY * (1.0f - FLT_EPSILON)),
+			b2Vec2(aMinX * (1.0f - FLT_EPSILON), aMinY * (1.0f - FLT_EPSILON)),
+			b2Vec2(aMinX * (1.0f - FLT_EPSILON), aMaxY * (1.0f - FLT_EPSILON))
+		};
 
-	b2EdgeChainDef edge;
-	edge.vertexCount = SDL_arraysize(vertex);
-	edge.vertices = vertex;
-	edge.isALoop = true;
-	body->CreateShape(&edge);
+		b2EdgeChainDef edge;
+		edge.vertexCount = SDL_arraysize(vertex);
+		edge.vertices = vertex;
+		edge.isALoop = true;
+		body->CreateShape(&edge);
 #else
-	b2PolygonDef top;
-	top.SetAsBox(0.5f * (aMaxX - aMinX) + 32, 16, b2Vec2(0.5f * (aMaxX + aMinX), aMinY - 16), 0);
-	body->CreateShape(&top);
+		b2PolygonDef top;
+		top.SetAsBox(0.5f * (aMaxX - aMinX) + 32, 16, b2Vec2(0.5f * (aMaxX + aMinX), aMinY - 16), 0);
+		body->CreateShape(&top);
 
-	b2PolygonDef bottom;
-	bottom.SetAsBox(0.5f * (aMaxX - aMinX) + 32, 16, b2Vec2(0.5f * (aMaxX + aMinX), aMaxY + 16), 0);
-	body->CreateShape(&bottom);
+		b2PolygonDef bottom;
+		bottom.SetAsBox(0.5f * (aMaxX - aMinX) + 32, 16, b2Vec2(0.5f * (aMaxX + aMinX), aMaxY + 16), 0);
+		body->CreateShape(&bottom);
 
-	b2PolygonDef left;
-	left.SetAsBox(16, 0.5f * (aMaxY - aMinY) + 32, b2Vec2(aMinX - 16, 0.5f * (aMaxY + aMinY)), 0);
-	body->CreateShape(&left);
+		b2PolygonDef left;
+		left.SetAsBox(16, 0.5f * (aMaxY - aMinY) + 32, b2Vec2(aMinX - 16, 0.5f * (aMaxY + aMinY)), 0);
+		body->CreateShape(&left);
 
-	b2PolygonDef right;
-	right.SetAsBox(16, 0.5f * (aMaxY - aMinY) + 32, b2Vec2(aMaxX + 16, 0.5f * (aMaxY + aMinY)), 0);
-	body->CreateShape(&right);
+		b2PolygonDef right;
+		right.SetAsBox(16, 0.5f * (aMaxY - aMinY) + 32, b2Vec2(aMaxX + 16, 0.5f * (aMaxY + aMinY)), 0);
+		body->CreateShape(&right);
 #endif
-
-	body->SetMassFromShapes();
+	}
 }
 
 void Collidable::WorldDone(void)

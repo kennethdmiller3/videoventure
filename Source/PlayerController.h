@@ -9,10 +9,14 @@ public:
 	enum ControlType
 	{
 		NONE,
+		MOVESTEER,
 		MOVELOCAL,
 		MOVEWORLD,
+		MOVECURSOR,
+		AIMSTEER,
 		AIMLOCAL,
 		AIMWORLD,
+		AIMCURSOR,
 		LEFT,
 		RIGHT,
 		UP,
@@ -27,7 +31,7 @@ public:
 public:
 	PlayerControllerTemplate()
 		: mMove(MOVEWORLD)
-		, mAim(AIMWORLD)
+		, mAim(AIMCURSOR)
 		, mScale(1, Vector2(1, 1))
 		, mAdd(0, Vector2(0, 0))
 	{
