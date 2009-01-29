@@ -1,0 +1,63 @@
+<?xml version="1.0" ?>
+<template name="enemyspacehum">
+	<collidable>
+		<body name="main">
+			<circle radius="3">
+				<friction value="0" />
+				<restitution value="1" />
+				<density value="1.0" />
+				<filter name="redunit" />
+				<mask bit4="0" />
+				<group value="-2" />
+			</circle>
+		</body>
+	</collidable>
+	<renderable radius="4" period="0.1">
+		<pushmatrix>
+			<color r="0.2" g="0.2" b="0.2" a="1.0" />
+			<scale>
+				<key time="0.000000" x="0.0" y="0.0" />
+				<key time="0.033333" x="2.5" y="2.5" />
+				<key time="0.066667" x="2.5" y="2.5" />
+				<key time="0.100000" x="0.0" y="0.0" />
+			</scale>
+			<calllist name="diamond" />
+		</pushmatrix>
+		<pushmatrix>
+			<color r="1.0" g="1.0" b="1.0" a="1.0" />
+			<scale>
+				<key time="0.000000" x="1.5" y="1.5" />
+				<key time="0.033333" x="4.0" y="4.0" />
+				<key time="0.066667" x="4.0" y="4.0" />
+				<key time="0.100000" x="1.5" y="1.5" />
+			</scale>
+			<calllist name="diamond" />
+		</pushmatrix>
+		<color r="1.0" g="0.2" b="0.1" a="1.0" />
+		<pushmatrix>
+			<scale x="1.5" y="4" />
+			<calllist name="diamond" />
+		</pushmatrix>
+		<pushmatrix>
+			<scale x="4" y="1.5" />
+			<calllist name="diamond" />
+		</pushmatrix>
+	</renderable>
+	<expire time="30" switchonexpire="enemybulletexplosion" />
+	<bullet damage="1" ricochet="1" spawnondeath="enemyfireballexplosion" />
+	<damagable health="1" spawnondeath="enemyfireballexplosion" />
+	<aimer>
+		<wander side="0.5" siderate="0.5" front="0.5" frontrate="0.5" />
+		<target range="512" category="3" bit2="0" bit3="0" bit4="0" />
+		<pursue strength="1" leading="0" />
+	</aimer>
+	<ship maxveloc="90" maxaccel="180" minaccel="10" maxomega="0" />
+	<team name="red" />
+	<points value="100" />
+	<capturable resistance="1" spawnoncapture="friendspacehum" />
+	<spawner>
+		<inherit x="0" y="0" />
+		<velocity x="0" y="-120" />
+		<spawn name="enemyspacehumtrail" start="0" cycle="0.1" track="0" />
+	</spawner>
+</template>
