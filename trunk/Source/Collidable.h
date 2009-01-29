@@ -40,6 +40,7 @@ public:
 	bool ProcessPolyItem(const TiXmlElement *element, b2PolygonDef &shape);
 	bool ConfigurePoly(const TiXmlElement *element, b2PolygonDef &shape);
 #ifdef B2_EDGE_SHAPE_H
+	bool ProcessEdgeItem(const TiXmlElement *element, b2EdgeChainDef &shape);
 	bool ConfigureEdge(const TiXmlElement *element, b2EdgeChainDef &shape);
 #endif
 	bool ProcessBodyItem(const TiXmlElement *element, b2BodyDef &body);
@@ -100,7 +101,7 @@ public:
 	}
 
 	// collision world
-	static void WorldInit(float aMinX, float aMinY, float aMaxX, float aMaxY);
+	static void WorldInit(float aMinX, float aMinY, float aMaxX, float aMaxY, bool aWall);
 	static void WorldDone(void);
 	static b2World *GetWorld(void)
 	{

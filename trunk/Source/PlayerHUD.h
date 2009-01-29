@@ -32,6 +32,7 @@ public:
 
 	// reticule values
 	Vector2 aimpos[2];
+	int showreticule;
 
 public:
 	PlayerHUD(unsigned int aPlayerId);
@@ -39,6 +40,15 @@ public:
 
 	void Update(float aStep);
 	void Render(unsigned int aId, float aTime, const Transform2 &aTransform);
+
+	void ShowReticule(void)
+	{
+		++showreticule;
+	}
+	void HideReticule(void)
+	{
+		--showreticule;
+	}
 
 protected:
 	void RenderScore(const Player *player);

@@ -12,6 +12,9 @@ static const char *logicalname[Input::NUM_LOGICAL] =
 	"fire2",	// FIRE_SECONDARY,
 	"fire3",	// FIRE_CHANNEL3,
 	"fire4",	// FIRE_CHANNEL4,
+	"menu_x",	// MENU_HORIZONTAL
+	"menu_y",	// MENU_VERTICAL
+	"click",	// MENU_CLICK
 };
 
 
@@ -77,6 +80,11 @@ void Input::Update(void)
 	output[FIRE_SECONDARY] = Clamp(value[FIRE_SECONDARY], -1.0f, 1.0f);
 	output[FIRE_CHANNEL3] = Clamp(value[FIRE_CHANNEL3], -1.0f, 1.0f);
 	output[FIRE_CHANNEL4] = Clamp(value[FIRE_CHANNEL4], -1.0f, 1.0f);
+
+	// limit magnitude of menu controls to 1
+	output[MENU_HORIZONTAL] = Clamp(value[MENU_HORIZONTAL], -1.0f, 1.0f);
+	output[MENU_VERTICAL] = Clamp(value[MENU_VERTICAL], -1.0f, 1.0f);
+	output[MENU_CLICK] = Clamp(value[MENU_CLICK], -1.0f, 1.0f);
 }
 
 void Input::Playback(const TiXmlElement *element)
@@ -176,19 +184,14 @@ void Input::ProcessItem(const TiXmlElement *element)
 		{
 			// map logical name
 			const char *name = element->Attribute("name");
-			LOGICAL logical;
-			switch(Hash(name))
+			LOGICAL logical = NUM_LOGICAL;
+			for (int i = 0; i < NUM_LOGICAL; ++i)
 			{
-			case 0x2f7d674b /* "move_x" */:	logical = MOVE_HORIZONTAL; break;
-			case 0x2e7d65b8 /* "move_y" */:	logical = MOVE_VERTICAL; break;
-			case 0x28e0ac09 /* "aim_x" */:	logical = AIM_HORIZONTAL; break;
-			case 0x27e0aa76 /* "aim_y" */:	logical = AIM_VERTICAL; break;
-			case 0x8eab16d9 /* "fire" */:
-			case 0x7f550f38 /* "fire1" */:	logical = FIRE_PRIMARY; break;
-			case 0x825513f1 /* "fire2" */:	logical = FIRE_SECONDARY; break;
-			case 0x8155125e /* "fire3" */:	logical = FIRE_CHANNEL3; break;
-			case 0x84551717 /* "fire4" */:	logical = FIRE_CHANNEL4; break;
-			default:						logical = NUM_LOGICAL; break;
+				if (Hash(name) == Hash(logicalname[i]))
+				{
+					logical = LOGICAL(i);
+					break;
+				}
 			}
 
 			// map input type

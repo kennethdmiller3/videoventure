@@ -777,6 +777,20 @@ void ProcessDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buf
 		}
 		break;
 
+	case 0xdf3cf9c0 /* "dynamicdrawlist" */:
+		{
+			const char *name = element->Attribute("name");
+			if (name)
+			{
+				// process draw items
+				unsigned int id = Hash(name);
+				std::vector<unsigned int> &drawlist = Database::dynamicdrawlist.Open(id);
+				ProcessDrawItems(element, drawlist);
+				Database::dynamicdrawlist.Close(id);
+			}
+		}
+		break;
+
 	case 0xc98b019b /* "drawlist" */:
 		{
 			// create a new draw list

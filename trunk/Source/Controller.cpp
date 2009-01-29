@@ -18,6 +18,7 @@ Controller::Controller(unsigned int aId)
 , mActive(false)
 , mAction()
 , mMove(0, 0)
+, mAim(0, 0)
 , mTurn(0)
 {
 	memset(mFire, 0, sizeof(mFire));

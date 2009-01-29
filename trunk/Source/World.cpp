@@ -19,11 +19,13 @@ namespace Database
 			{
 				// set up the collidable world
 				float aMinX = -2048, aMinY = -2048, aMaxX = 2048, aMaxY = 2048;
+				int aWall = 1;
 				element->QueryFloatAttribute("xmin", &aMinX);
 				element->QueryFloatAttribute("ymin", &aMinY);
 				element->QueryFloatAttribute("xmax", &aMaxX);
 				element->QueryFloatAttribute("ymax", &aMaxY);
-				Collidable::WorldInit(aMinX, aMinY, aMaxX, aMaxY);
+				element->QueryIntAttribute("wall", &aWall);
+				Collidable::WorldInit(aMinX, aMinY, aMaxX, aMaxY, aWall != 0);
 
 				// recurse on children
 				ProcessWorldItems(element);

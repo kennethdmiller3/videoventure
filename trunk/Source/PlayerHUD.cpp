@@ -82,12 +82,16 @@ PlayerHUD::PlayerHUD(unsigned int aPlayerId = 0)
 	, drain(0)
 	, draindelay(0)
 	, flashcount(0)
+	, showreticule(0)
 {
 	// allocate score draw list
 	score_handle = glGenLists(1);
 
 	// allocate lives draw list
 	lives_handle = glGenLists(1);
+
+	// clear aim position
+	aimpos[0] = aimpos[1] = Vector2(0, 0);
 
 	Updatable::SetAction(Updatable::Action(this, &PlayerHUD::Update));
 	Overlay::SetAction(Overlay::Action(this, &PlayerHUD::Render));
@@ -555,7 +559,7 @@ void PlayerHUD::RenderGameOver(const Player *player)
 	Controller *controller = Database::controller.Get(id);
 	if (controller)
 	{
-		if (Database::playercontrollertemplate.Get(id).mAim == PlayerControllerTemplate::AIMWORLD)
+		if (showreticule > 0)
 		{
 			// draw reticule
 			float x = 320 - 240 * Lerp(aimpos[0].x, aimpos[1].x, sim_fraction);

@@ -1,5 +1,6 @@
 #include "StdAfx.h"
 #include "PlayerController.h"
+#include "PlayerHUD.h"
 #include "Player.h"
 #include "Entity.h"
 #include "Ship.h"
@@ -31,10 +32,14 @@ namespace Database
 						switch(Hash(child->Attribute("type")))
 						{
 						case 0xada7afdb /* "none" */: playercontroller.mAim = PlayerControllerTemplate::NONE; break;
+						case 0xa73b0f65 /* "movesteer" */: playercontroller.mAim = PlayerControllerTemplate::MOVESTEER; break;
 						case 0xa4219fff /* "movelocal" */: playercontroller.mAim = PlayerControllerTemplate::MOVELOCAL; break;
 						case 0x55b3fdb0 /* "moveworld" */: playercontroller.mAim = PlayerControllerTemplate::MOVEWORLD; break;
+						case 0x49cd54a6 /* "movecursor" */: playercontroller.mAim = PlayerControllerTemplate::MOVECURSOR; break;
+						case 0x3b8907cb /* "aimsteer" */: playercontroller.mAim = PlayerControllerTemplate::AIMSTEER; break;
 						case 0x631798dd /* "aimlocal" */: playercontroller.mAim = PlayerControllerTemplate::AIMLOCAL; break;
 						case 0xaee0ceba /* "aimworld" */: playercontroller.mAim = PlayerControllerTemplate::AIMWORLD; break;
+						case 0xe9ec1504 /* "aimcursor" */: playercontroller.mAim = PlayerControllerTemplate::AIMCURSOR; break;
 						case 0x124aec70 /* "left" */: playercontroller.mAim = PlayerControllerTemplate::LEFT; break;
 						case 0x78e32de5 /* "right" */: playercontroller.mAim = PlayerControllerTemplate::RIGHT; break;
 						case 0x43430b20 /* "up" */: playercontroller.mAim = PlayerControllerTemplate::UP; break;
@@ -123,11 +128,36 @@ PlayerController::PlayerController(unsigned int aId)
 	{
 		player->Attach(mId);
 	}
+
+	// hacktastic!
+	unsigned int aOwnerId = Database::owner.Get(mId);
+	if (PlayerHUD *hud = Database::playerhud.Get(aOwnerId))
+	{
+		// get player controller template
+		const PlayerControllerTemplate &controllertemplate = Database::playercontrollertemplate.Get(mId);
+
+		// show reticule if using world aim
+		if (controllertemplate.mAim == PlayerControllerTemplate::MOVECURSOR ||
+			controllertemplate.mAim == PlayerControllerTemplate::AIMCURSOR)
+			hud->ShowReticule();
+	}
 }
 
 // player controller destructor
 PlayerController::~PlayerController(void)
 {
+	// hacktastic!
+	unsigned int aOwnerId = Database::owner.Get(mId);
+	if (PlayerHUD *hud = Database::playerhud.Get(aOwnerId))
+	{
+		// get player controller template
+		const PlayerControllerTemplate &controllertemplate = Database::playercontrollertemplate.Get(mId);
+
+		// hide reticule if using world aim
+		if (controllertemplate.mAim == PlayerControllerTemplate::AIMWORLD)
+			hud->HideReticule();
+	}
+
 	unsigned int aCreatorId = Database::creator.Get(mId);
 	if (Player *player = Database::player.Get(aCreatorId))
 	{
@@ -208,48 +238,74 @@ void PlayerController::Control(float aStep)
 	switch(controllertemplate.mAim)
 	{
 	case PlayerControllerTemplate::NONE:
+		mAim.x = mAim.y = 0;
 		mTurn = 0;
 		break;
 
-	case PlayerControllerTemplate::MOVELOCAL:
+	case PlayerControllerTemplate::MOVESTEER:
+		mAim.x = mAim.y = 0;
 		mTurn = -input[Input::MOVE_HORIZONTAL];
 		break;
 
-	case PlayerControllerTemplate::MOVEWORLD:
-		{
-			Vector2 mAim(input[Input::MOVE_HORIZONTAL], input[Input::MOVE_VERTICAL]);
-			mTurn = TurnLocal(transform.Unrotate(mAim));
-		}
+	case PlayerControllerTemplate::MOVELOCAL:
+		mAim.x = input[Input::MOVE_HORIZONTAL];
+		mAim.y = input[Input::MOVE_VERTICAL];
+		mTurn = TurnLocal(mAim) / aStep;
 		break;
 
-	case PlayerControllerTemplate::AIMLOCAL:
+	case PlayerControllerTemplate::MOVEWORLD:
+		mAim.x = input[Input::MOVE_HORIZONTAL];
+		mAim.y = input[Input::MOVE_VERTICAL];
+		mAim = transform.Unrotate(mAim);
+		mTurn = TurnLocal(mAim) / aStep;
+		break;
+
+	case PlayerControllerTemplate::MOVECURSOR:
+		mAim = transform.Untransform(camerapos[1] + Vector2(input[Input::MOVE_HORIZONTAL], input[Input::MOVE_VERTICAL]) * 120 * VIEW_SIZE / 320);
+		mTurn = TurnLocal(mAim) / aStep;
+		break;
+
+	case PlayerControllerTemplate::AIMSTEER:
+		mAim.x = mAim.y = 0;
 		mTurn = -input[Input::AIM_HORIZONTAL];
 		break;
 
-	case PlayerControllerTemplate::AIMWORLD:
-		{
-			// get world reticule position
-			Vector2 mAim(camerapos[1] + Vector2(input[Input::AIM_HORIZONTAL], input[Input::AIM_VERTICAL]) * 120 * VIEW_SIZE / 320);
+	case PlayerControllerTemplate::AIMLOCAL:
+		mAim.x = input[Input::AIM_HORIZONTAL];
+		mAim.y = input[Input::AIM_VERTICAL];
+		mTurn = TurnLocal(mAim) / aStep;
+		break;
 
-			// turn towards direction
-			mTurn = TurnLocal(transform.Untransform(mAim)) / aStep;
-		}
+	case PlayerControllerTemplate::AIMWORLD:
+		mAim.x = input[Input::AIM_HORIZONTAL];
+		mAim.y = input[Input::AIM_VERTICAL];
+		mAim = transform.Unrotate(mAim);
+		mTurn = TurnLocal(mAim) / aStep;
+		break;
+
+	case PlayerControllerTemplate::AIMCURSOR:
+		mAim = transform.Untransform(camerapos[1] + Vector2(input[Input::AIM_HORIZONTAL], input[Input::AIM_VERTICAL]) * 120 * VIEW_SIZE / 320);
+		mTurn = TurnLocal(mAim) / aStep;
 		break;
 
 	case PlayerControllerTemplate::LEFT:
-		mTurn = TurnLocal(transform.Unrotate(Vector2(1, 0))) / aStep;
+		mAim = transform.Unrotate(Vector2(1, 0));
+		mTurn = TurnLocal(mAim) / aStep;
 		break;
 
 	case PlayerControllerTemplate::RIGHT:
-		mTurn = TurnLocal(transform.Unrotate(Vector2(-1, 0))) / aStep;
+		mAim = transform.Unrotate(Vector2(-1, 0));
+		mTurn = TurnLocal(mAim) / aStep;
 		break;
 
 	case PlayerControllerTemplate::UP:
-		mTurn = TurnLocal(transform.Unrotate(Vector2(0, 1))) / aStep;
+		mAim = transform.Unrotate(Vector2(0, 1));
+		mTurn = TurnLocal(mAim) / aStep;
 		break;
 
 	case PlayerControllerTemplate::DOWN:
-		mTurn = TurnLocal(transform.Unrotate(Vector2(0, -1))) / aStep;
+		mAim = transform.Unrotate(Vector2(0, -1));
+		mTurn = TurnLocal(mAim) / aStep;
 		break;
 	}
 

@@ -24,4 +24,9 @@
 	<bind name="fire3" type="joystick_button" device="0" control="4" scale="1"/>
 	<bind name="fire4" type="joystick_button" device="0" control="6" scale="1"/>
 
+	<!-- menu -->
+	<bind name="menu_x" type="mouse_axis" device="0" control="0" scale="-1"/>
+	<bind name="menu_y" type="mouse_axis" device="0" control="1" scale="-1"/>
+	<bind name="click" type="mouse_button" device="0" control="1" scale="1"/>
+	
 </input>
