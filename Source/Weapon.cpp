@@ -137,6 +137,7 @@ WeaponTemplate::WeaponTemplate(void)
 , mInherit(0, Vector2(1, 1))
 , mVelocity(0, Vector2(0, 0))
 , mVariance(0, Vector2(0, 0))
+, mAim(0, 0)
 , mRecoil(0)
 , mOrdnance(0)
 , mFlash(0)
@@ -145,6 +146,9 @@ WeaponTemplate::WeaponTemplate(void)
 , mPhase(0)
 , mCycle(1)
 , mTrack(0)
+, mBurstLength(1)
+, mBurstDelay(0.0f)
+, mSalvoShots(1)
 , mType(0U)
 , mCost(0.0f)
 {
@@ -211,6 +215,13 @@ bool WeaponTemplate::Configure(const TiXmlElement *element, unsigned int aId)
 			}
 			break;
 
+		case 0x383251f6 /* "aim" */:
+			{
+				element->QueryFloatAttribute("x", &mAim.x);
+				element->QueryFloatAttribute("y", &mAim.y);
+			}
+			break;
+
 		case 0x0dd0b0be /* "variance" */:
 			{
 				if (child->QueryFloatAttribute("angle", &mVariance.a) == TIXML_SUCCESS)
@@ -257,6 +268,19 @@ bool WeaponTemplate::Configure(const TiXmlElement *element, unsigned int aId)
 			}
 			break;
 
+		case 0xfd3600a1 /* "burst" */:
+			{
+				child->QueryIntAttribute("length", &mBurstLength);
+				child->QueryFloatAttribute("delay", &mBurstDelay);
+			}
+			break;
+
+		case 0x8ac0eddc /* "salvo" */:
+			{
+				child->QueryIntAttribute("shots", &mSalvoShots);
+			}
+			break;
+
 		case 0x5b9b0daf /* "ammo" */:
 			{
 				if (const char *type = child->Attribute("type"))
@@ -276,6 +300,7 @@ Weapon::Weapon(void)
 , mControlId(0)
 , mChannel(0)
 , mTrack(0)
+, mBurst(0)
 , mTimer(0.0f)
 , mPhase(0)
 , mAmmo(0)
@@ -288,6 +313,7 @@ Weapon::Weapon(const WeaponTemplate &aTemplate, unsigned int aId)
 , mControlId(0)
 , mChannel(aTemplate.mChannel)
 , mTrack(0)
+, mBurst(0)
 , mTimer(0.0f)
 , mPhase(aTemplate.mPhase)
 , mAmmo(0)
@@ -317,147 +343,41 @@ void Weapon::Update(float aStep)
 	// advance fire timer
 	mTimer += aStep;
 
+	// get template data
+	const WeaponTemplate &weapon = Database::weapontemplate.Get(mId);
+
 	// if triggered...
 	if (controller->mFire[mChannel])
 	{
-		// get template data
-		const WeaponTemplate &weapon = Database::weapontemplate.Get(mId);
-
-		// if ready to fire...
-		while (mTimer > 0.0f && (!weapon.mTrack || mTrack < weapon.mTrack))
+		// if not busy
+		if (mBurst <= 0 && mTimer > 0.0f && (!weapon.mTrack || mTrack < weapon.mTrack))
 		{
-			Resource *resource = NULL;
-
-			// if using ammo
-			if (weapon.mCost)
-			{
-				// ammo resource (if any)
-				resource = Database::resource.Get(mAmmo).Get(weapon.mType);
-			}
-
-			// don't fire if out of ammo
-			if (resource && weapon.mCost > resource->GetValue())
-				break;
-
 			// if firing on this phase...
 			if (mPhase == 0)
 			{
-				// deduct ammo
-				if (resource)
-					resource->Add(mId, -weapon.mCost);
+				Resource *resource = NULL;
 
-				// get the entity
-				Entity *entity = Database::entity.Get(mId);
-
-				// start the sound cue
-				PlaySoundCue(mId, 0x8eab16d9 /* "fire" */);
-
-				// interpolated transform
-				Transform2 transform(entity->GetInterpolatedTransform(mTimer / aStep));
-
-				// apply transform offset
-				transform = weapon.mOffset * transform;
-
-				if (weapon.mRecoil)
+				// if using ammo
+				if (weapon.mCost)
 				{
-					// apply recoil force
-					for (unsigned int id = mId; id != 0; id = Database::backlink.Get(id))
-					{
-						if (Collidable *collidable = Database::collidable.Get(id))
-						{
-							collidable->GetBody()->ApplyImpulse(transform.Rotate(Vector2(0, -weapon.mRecoil)), transform.p);
-							break;
-						}
-					}
+					// ammo resource (if any)
+					resource = Database::resource.Get(mAmmo).Get(weapon.mType);
 				}
 
-				if (weapon.mFlash)
+				// if enough ammo...
+				if (!resource || weapon.mCost <= resource->GetValue())
 				{
-					// instantiate a flash
-					unsigned int flashId = Database::Instantiate(weapon.mFlash, Database::owner.Get(mId), mId,
-						transform.Angle(), transform.p, entity->GetVelocity(), entity->GetOmega());
+					// deduct ammo
+					if (resource)
+						resource->Add(mId, -weapon.mCost);
 
-					// set fractional turn
-					if (Renderable *renderable = Database::renderable.Get(flashId))
-						renderable->SetFraction(mTimer / aStep);
-
-					// link it (HACK)
-					LinkTemplate linktemplate;
-					linktemplate.mOffset = weapon.mOffset;
-					linktemplate.mSub = flashId;
-					linktemplate.mSecondary = flashId;
-					Link *link = new Link(linktemplate, mId);
-					Database::Typed<Link *> &links = Database::link.Open(mId);
-					links.Put(flashId, link);
-					Database::link.Close(mId);
-					link->Activate();
+					// start a new burst
+					mBurst = weapon.mBurstLength;
 				}
-
-				if (weapon.mOrdnance)
+				else
 				{
-					// TO DO: consolidate this with similar spawn patterns (Graze, Spawner)
-
-					// apply transform scatter
-					if (weapon.mScatter.a)
-						transform.a += Random::Value(0.0f, weapon.mScatter.a);
-					if (weapon.mScatter.p.x)
-						transform.p.x += Random::Value(0.0f, weapon.mScatter.p.x);
-					if (weapon.mScatter.p.y)
-						transform.p.y += Random::Value(0.0f, weapon.mScatter.p.y);
-
-					// get local velocity
-					Transform2 velocity(entity->GetOmega(), transform.Unrotate(entity->GetVelocity()));
-
-					// apply velocity inherit
-					velocity.a *= weapon.mInherit.a;
-					velocity.p.x *= weapon.mInherit.p.x;
-					velocity.p.y *= weapon.mInherit.p.y;
-
-					// apply velocity add
-					// (TO DO: make this more straightforward)
-					Transform2 aVelocity(weapon.mVelocity);
-					if (const Database::Typed<std::vector<unsigned int> > *properties = Database::weaponproperty.Find(mId))
-					{
-						const std::vector<unsigned int> &velocitybuffer = properties->Get(0x32741c32 /* "velocity" */);
-						if (!velocitybuffer.empty())
-						{
-							int index = 0;
-							ApplyInterpolator(reinterpret_cast<float * __restrict>(&aVelocity), sizeof(aVelocity)/sizeof(float), velocitybuffer[0], reinterpret_cast<const float * __restrict>(&velocitybuffer[1]), controller->mFire[mChannel], index);
-						}
-					}
-					velocity.a += aVelocity.a;
-					velocity.p.x += aVelocity.p.x;
-					velocity.p.y += aVelocity.p.y;
-
-					// apply velocity variance
-					if (weapon.mVariance.a)
-						velocity.a += Random::Value(0.0f, weapon.mVariance.a);
-					if (weapon.mVariance.p.x)
-						velocity.p.x += Random::Value(0.0f, weapon.mVariance.p.x);
-					if (weapon.mVariance.p.y)
-						velocity.p.y += Random::Value(0.0f, weapon.mVariance.p.y);
-
-					// get world velocity
-					velocity.p = transform.Rotate(velocity.p);
-
-					// instantiate a bullet
-					unsigned int ordId = Database::Instantiate(weapon.mOrdnance, Database::owner.Get(mId), mId, transform.a, transform.p, velocity.p, velocity.a);
-#ifdef DEBUG_WEAPON_CREATE_ORDNANCE
-					DebugPrint("ordnance=\"%s\" owner=\"%s\"\n",
-						Database::name.Get(ordId).c_str(),
-						Database::name.Get(Database::owner.Get(ordId)).c_str());
-#endif
-
-					// set fractional turn
-					if (Renderable *renderable = Database::renderable.Get(ordId))
-						renderable->SetFraction(mTimer / aStep);
-
-					// if tracking....
-					if (weapon.mTrack)
-					{
-						// add a tracker
-						Database::weapontracker.Put(ordId, WeaponTracker(mId));
-					}
+					// start "empty" sound cue
+					PlaySoundCue(mId, 0x18a7beee /* "empty" */);
 				}
 
 				// wrap around
@@ -467,18 +387,139 @@ void Weapon::Update(float aStep)
 			{
 				// advance phase
 				--mPhase;
-			}
 
-			// update weapon delay
-			mTimer -= weapon.mDelay / weapon.mCycle;
+				// wait for next phase
+				mTimer -= weapon.mDelay / weapon.mCycle;
+			}
 		}
 	}
-	else
+
+	// if ready to fire...
+	while (mBurst > 0 && mTimer > 0.0f && (!weapon.mTrack || mTrack < weapon.mTrack))
 	{
-		if (mTimer > 0.0f)
+		// deduct a burst
+		--mBurst;
+
+		// get the entity
+		Entity *entity = Database::entity.Get(mId);
+
+		// start the "fire" sound cue
+		PlaySoundCue(mId, 0x8eab16d9 /* "fire" */);
+
+		// interpolated transform
+		Transform2 basetransform(entity->GetInterpolatedTransform(mTimer / aStep));
+
+		for (int salvo = 0; salvo < weapon.mSalvoShots; ++salvo)
 		{
-			// clamp fire delay
-			mTimer = 0.0f;
+			// get local position
+			Transform2 position(weapon.mOffset);
+
+			// apply transform offset
+			Transform2 transform(position * basetransform);
+
+			if (weapon.mRecoil)
+			{
+				// apply recoil force
+				for (unsigned int id = mId; id != 0; id = Database::backlink.Get(id))
+				{
+					if (Collidable *collidable = Database::collidable.Get(id))
+					{
+						collidable->GetBody()->ApplyImpulse(transform.Rotate(Vector2(0, -weapon.mRecoil)), transform.p);
+						break;
+					}
+				}
+			}
+
+			if (weapon.mFlash)
+			{
+				// instantiate a flash
+				unsigned int flashId = Database::Instantiate(weapon.mFlash, Database::owner.Get(mId), mId,
+					transform.Angle(), transform.p, entity->GetVelocity(), entity->GetOmega());
+
+				// set fractional turn
+				if (Renderable *renderable = Database::renderable.Get(flashId))
+					renderable->SetFraction(mTimer / aStep);
+
+				// link it (HACK)
+				LinkTemplate linktemplate;
+				linktemplate.mOffset = weapon.mOffset;
+				linktemplate.mSub = flashId;
+				linktemplate.mSecondary = flashId;
+				Link *link = new Link(linktemplate, mId);
+				Database::Typed<Link *> &links = Database::link.Open(mId);
+				links.Put(flashId, link);
+				Database::link.Close(mId);
+				link->Activate();
+			}
+
+			if (weapon.mOrdnance)
+			{
+				// TO DO: consolidate this with similar spawn patterns (Graze, Spawner)
+
+				// apply position scatter
+				position.a += Random::Value(0.0f, weapon.mScatter.a);
+				position.p.x += Random::Value(0.0f, weapon.mScatter.p.x);
+				position.p.y += Random::Value(0.0f, weapon.mScatter.p.y);
+
+				// get world position
+				position *= basetransform;
+
+				// get local velocity
+				Transform2 velocity(entity->GetOmega(), position.Unrotate(entity->GetVelocity()));
+
+				// apply velocity inherit
+				velocity.a *= weapon.mInherit.a;
+				velocity.p.x *= weapon.mInherit.p.x;
+				velocity.p.y *= weapon.mInherit.p.y;
+
+				// apply velocity add
+				velocity.a += weapon.mVelocity.a;
+				velocity.p.x += weapon.mVelocity.p.x;
+				velocity.p.y += weapon.mVelocity.p.y;
+
+				// apply velocity variance
+				velocity.a += Random::Value(0.0f, weapon.mVariance.a);
+				velocity.p.x += Random::Value(0.0f, weapon.mScatter.p.x);
+				velocity.p.y += Random::Value(0.0f, weapon.mScatter.p.y);
+
+				// apply velocity aim
+				velocity.p.x += controller->mAim.x * weapon.mAim.x;
+				velocity.p.y += controller->mAim.y * weapon.mAim.y;
+
+				// get world velocity
+				velocity.p = position.Rotate(velocity.p);
+
+				// instantiate a bullet
+				unsigned int ordId = Database::Instantiate(weapon.mOrdnance, Database::owner.Get(mId), mId, position.a, position.p, velocity.p, velocity.a);
+#ifdef DEBUG_WEAPON_CREATE_ORDNANCE
+				DebugPrint("ordnance=\"%s\" owner=\"%s\"\n",
+					Database::name.Get(ordId).c_str(),
+					Database::name.Get(Database::owner.Get(ordId)).c_str());
+#endif
+
+				// set fractional turn
+				if (Renderable *renderable = Database::renderable.Get(ordId))
+					renderable->SetFraction(mTimer / aStep);
+
+				// if tracking....
+				if (weapon.mTrack)
+				{
+					// add a tracker
+					Database::weapontracker.Put(ordId, WeaponTracker(mId));
+				}
+			}
 		}
+
+		// update weapon delay
+		if (mBurst > 0)
+			mTimer -= weapon.mBurstDelay;
+		else
+			mTimer -= (weapon.mDelay - weapon.mBurstDelay * (weapon.mBurstLength - 1)) / weapon.mCycle;
+	}
+
+	if (mTimer > 0.0f)
+	{
+		// clamp fire delay
+		mTimer = 0.0f;
 	}
 }

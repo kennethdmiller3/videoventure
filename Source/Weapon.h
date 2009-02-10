@@ -11,6 +11,7 @@ public:
 	Transform2 mInherit;
 	Transform2 mVelocity;
 	Transform2 mVariance;
+	Vector2 mAim;
 	float mRecoil;
 
 	// ordnance
@@ -27,6 +28,13 @@ public:
 	int mPhase;
 	int mCycle;
 	int mTrack;
+
+	// burst
+	int mBurstLength;
+	float mBurstDelay;
+
+	// salvo
+	int mSalvoShots;
 
 	// ammo
 	unsigned int mType;
@@ -52,6 +60,7 @@ protected:
 
 	// fire timer
 	int mTrack;
+	int mBurst;
 	float mTimer;
 	int mPhase;
 
