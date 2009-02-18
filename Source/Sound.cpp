@@ -5,6 +5,7 @@
 #include "Interpolator.h"
 
 //#define USE_SDL_MIXER
+#define USE_DISTANCE_FALLOFF
 
 #if defined(USE_SDL_MIXER)
 
@@ -2134,6 +2135,7 @@ void MixSound(void *userdata, unsigned char *stream, int len)
 		// get intrinsic volume
 		float volume = sound->mVolume;
 
+#if defined(USE_DISTANCE_FALLOFF)
 		// if associated with an identifier
 		if (sound->mId)
 		{
@@ -2142,6 +2144,7 @@ void MixSound(void *userdata, unsigned char *stream, int len)
 			if (volume < 1.0f/256.0f)
 				continue;
 		}
+#endif
 
 		// weight sound based on volume
 		float weight = volume;
