@@ -305,6 +305,7 @@ void Link::Update(float aStep)
 		}
 		if (Collidable *collidable = Database::collidable.Get(mSecondary))
 		{
+			collidable->GetBody()->WakeUp();
 			collidable->GetBody()->SetXForm(transform.p, transform.a);
 			collidable->GetBody()->SetLinearVelocity(entity->GetVelocity());
 			collidable->GetBody()->SetAngularVelocity(entity->GetOmega());
