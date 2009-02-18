@@ -74,7 +74,8 @@ protected:
 	b2Body *body;
 
 public:
-	typedef fastdelegate::FastDelegate<void (unsigned int, unsigned int, float, const b2ContactPoint &)> Listener;
+	typedef fastdelegate::FastDelegate<void (unsigned int, unsigned int, float, const b2ContactPoint &)> ContactListener;
+	typedef fastdelegate::FastDelegate<void (unsigned int)> BoundaryListener;
 
 public:
 #ifdef USE_POOL_ALLOCATOR
@@ -144,6 +145,7 @@ namespace Database
 {
 	extern Typed<CollidableTemplate> collidabletemplate;
 	extern Typed<Collidable *> collidable;
-	extern Typed<Typed<Collidable::Listener> > collidablecontactadd;
-	extern Typed<Typed<Collidable::Listener> > collidablecontactremove;
+	extern Typed<Typed<Collidable::ContactListener> > collidablecontactadd;
+	extern Typed<Typed<Collidable::ContactListener> > collidablecontactremove;
+	extern Typed<Typed<Collidable::BoundaryListener> > collidableboundaryviolation;
 }

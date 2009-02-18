@@ -59,7 +59,7 @@ public:
 	}
 
 	// get transform
-	const Transform2 GetTransform() const
+	const Transform2 &GetTransform() const
 	{
 		return trans[1];
 	}

@@ -424,18 +424,36 @@ namespace Database
 			static Typed<Entry> onactivate;
 			return onactivate;
 		}
-		void AddActivate(unsigned int aDatabaseId, Entry aActivate)
+		void AddActivate(unsigned int aDatabaseId, Entry aEntry)
 		{
-			GetActivate().Put(aDatabaseId, aActivate);
+			GetActivate().Put(aDatabaseId, aEntry);
+		}
+		Typed<Entry> &GetPostActivate()
+		{
+			static Typed<Entry> onpostactivate;
+			return onpostactivate;
+		}
+		void AddPostActivate(unsigned int aDatabaseId, Entry aEntry)
+		{
+			GetPostActivate().Put(aDatabaseId, aEntry);
+		}
+		Typed<Entry> &GetPreDeactivate()
+		{
+			static Typed<Entry> onpredeactivate;
+			return onpredeactivate;
+		}
+		void AddPreDeactivate(unsigned int aDatabaseId, Entry aEntry)
+		{
+			GetPreDeactivate().Put(aDatabaseId, aEntry);
 		}
 		Typed<Entry> &GetDeactivate()
 		{
 			static Typed<Entry> ondeactivate;
 			return ondeactivate;
 		}
-		void AddDeactivate(unsigned int aDatabaseId, Entry aDeactivate)
+		void AddDeactivate(unsigned int aDatabaseId, Entry aEntry)
 		{
-			GetDeactivate().Put(aDatabaseId, aDeactivate);
+			GetDeactivate().Put(aDatabaseId, aEntry);
 		}
 	}
 
@@ -556,6 +574,17 @@ namespace Database
 				entity->Step();
 			}
 
+			// for each post-activation initializer...
+			for (Typed<Initializer::Entry>::Iterator itor(&Initializer::GetPostActivate()); itor.IsValid(); ++itor)
+			{
+				// if the corresponding database has a record...
+				if (GetDatabases().Get(itor.GetKey())->Find(aId))
+				{
+					// call the initializer
+					itor.GetValue()(aId);
+				}
+			}
+
 			// remove from the queue
 			activatequeue.pop_front();
 		}
@@ -576,6 +605,17 @@ namespace Database
 		{
 			// get the first entry
 			unsigned int aId = deactivatequeue.front();
+
+			// for each pre-deactivation initializer...
+			for (Typed<Initializer::Entry>::Iterator itor(&Initializer::GetPreDeactivate()); itor.IsValid(); ++itor)
+			{
+				// if the corresponding database has a record...
+				if (GetDatabases().Get(itor.GetKey())->Find(aId))
+				{
+					// call the initializer
+					itor.GetValue()(aId);
+				}
+			}
 
 			// for each deactivation initializer...
 			for (Typed<Initializer::Entry>::Iterator itor(&Initializer::GetDeactivate()); itor.IsValid(); ++itor)

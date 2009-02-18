@@ -93,5 +93,9 @@ namespace Database
 	extern Typed<Typed<Sound *> > sound;
 }
 
+// update sound volume
+void UpdateSoundVolume(void);
+
+// play/stop sound cues
 void PlaySoundCue(unsigned int aId, unsigned int aCueId = 0);
 void StopSoundCue(unsigned int aId, unsigned int aCueId = 0);

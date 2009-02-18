@@ -47,6 +47,12 @@ public:
 		return mActive;
 	}
 
+	// get identifier
+	unsigned int GetId() const
+	{
+		return mId;
+	}
+
 	// configure
 	virtual bool Configure(const TiXmlElement *element) { return false; }
 

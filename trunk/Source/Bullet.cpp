@@ -115,14 +115,14 @@ Bullet::Bullet(void)
 Bullet::Bullet(const BulletTemplate &aTemplate, unsigned int aId)
 : mId(aId), mDestroy(false)
 {
-	Database::Typed<Collidable::Listener> &listeners = Database::collidablecontactadd.Open(mId);
-	listeners.Put(Database::Key(this), Collidable::Listener(this, &Bullet::Collide));
+	Database::Typed<Collidable::ContactListener> &listeners = Database::collidablecontactadd.Open(mId);
+	listeners.Put(Database::Key(this), Collidable::ContactListener(this, &Bullet::Collide));
 	Database::collidablecontactadd.Close(mId);
 }
 
 Bullet::~Bullet(void)
 {
-	Database::Typed<Collidable::Listener> &listeners = Database::collidablecontactadd.Open(mId);
+	Database::Typed<Collidable::ContactListener> &listeners = Database::collidablecontactadd.Open(mId);
 	listeners.Delete(Database::Key(this));
 	Database::collidablecontactadd.Close(mId);
 }

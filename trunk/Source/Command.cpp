@@ -256,8 +256,11 @@ int ProcessCommand( unsigned int aCommand, char *aParam[], int aCount )
 	case 0x61e734dc /* "soundchannels" */:
 		return ProcessCommandInt(SOUND_CHANNELS, aParam, aCount, NULL, "soundchannels: %d\n");
 
-	case 0x2ac3f7e6 /* "soundvolume" */:
-		return ProcessCommandFloat(SOUND_VOLUME, aParam, aCount, NULL, "soundvolume: %f\n");
+	case 0xff4838bb /* "soundvolumeeffect" */:
+		return ProcessCommandFloat(SOUND_VOLUME_EFFECT, aParam, aCount, UpdateSoundVolume, "soundvolume: %f\n");
+		
+	case 0x689fc51d /* "soundvolumemusic" */:
+		return ProcessCommandFloat(SOUND_VOLUME_MUSIC, aParam, aCount, UpdateSoundVolume, "soundvolume: %f\n");
 		
 	case 0x94c716fd /* "outputconsole" */:
 		return ProcessCommandBool(DEBUGPRINT_OUTPUTCONSOLE, aParam, aCount, NULL, "outputconsole: %d\n");

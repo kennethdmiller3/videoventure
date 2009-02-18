@@ -123,6 +123,21 @@ bool ShipTemplate::Configure(const TiXmlElement *element)
 		{
 		case 0x0e0d9594 /* "sound" */:
 			Database::Loader::GetConfigure(0x0e0d9594 /* "sound" */);
+
+		case 0xde1ed562 /* "veloc" */:
+			element->QueryFloatAttribute("forward", &mForwardVeloc);
+			element->QueryFloatAttribute("neutral", &mNeutralVeloc);
+			element->QueryFloatAttribute("reverse", &mReverseVeloc);
+			element->QueryFloatAttribute("strafe", &mStrafeVeloc);
+			break;
+
+		case 0x4db6f71f /* "maxaccel" */:
+			element->QueryFloatAttribute("value", &mMaxAccel);
+			break;
+
+		case 0xe03a69d9 /* "minaccel" */:
+			element->QueryFloatAttribute("value", &mMinAccel);
+			break;
 		}
 	}
 

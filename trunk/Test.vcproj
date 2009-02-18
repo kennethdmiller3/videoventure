@@ -355,6 +355,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Source\Spawn.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\Source\Spawner.cpp"
 				>
 			</File>
@@ -408,6 +412,10 @@
 			</File>
 			<File
 				RelativePath=".\Source\Variable.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\WaveSequence.cpp"
 				>
 			</File>
 			<File
@@ -581,6 +589,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Source\Spawn.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Source\Spawner.h"
 				>
 			</File>
@@ -625,6 +637,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Source\WaveSequence.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Source\Weapon.h"
 				>
 			</File>
@@ -646,6 +662,118 @@
 			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav"
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
+		</Filter>
+		<Filter
+			Name="Behavior"
+			>
+			<File
+				RelativePath=".\Source\Behavior\AimBehavior.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Behavior\AimBehavior.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Behavior\Behavior.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Behavior\BotUtilities.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Behavior\BotUtilities.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Behavior\Brain.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Behavior\EdgeBehavior.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Behavior\EdgeBehavior.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Behavior\EvadeBehavior.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Behavior\EvadeBehavior.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Behavior\Parallel.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Behavior\PursueBehavior.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Behavior\PursueBehavior.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Behavior\RangeBehavior.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Behavior\RangeBehavior.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Behavior\Scheduler.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Behavior\Scheduler.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Behavior\Selector.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Behavior\Sequence.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Behavior\Tag.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Behavior\Tag.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Behavior\TargetBehavior.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Behavior\TargetBehavior.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Behavior\Task.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Behavior\Task.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Behavior\WanderBehavior.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Behavior\WanderBehavior.h"
+				>
+			</File>
 		</Filter>
 		<File
 			RelativePath=".\ReadMe.txt"

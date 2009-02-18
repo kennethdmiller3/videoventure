@@ -346,15 +346,17 @@ namespace Database
 	namespace Loader
 	{
 		typedef fastdelegate::FastDelegate<void (unsigned int, const TiXmlElement *)> Entry;
-		void AddConfigure(unsigned int aTagId, Entry aConfigure);
+		void AddConfigure(unsigned int aTagId, Entry aEntry);
 		const Entry &GetConfigure(unsigned int aTagId);
 	}
 
 	namespace Initializer
 	{
 		typedef fastdelegate::FastDelegate<void (unsigned int)> Entry;
-		void AddActivate(unsigned int aDatabaseId, Entry aActivate);
-		void AddDeactivate(unsigned int aDatabaseId, Entry aDeactivate);
+		void AddActivate(unsigned int aDatabaseId, Entry aEntry);
+		void AddPostActivate(unsigned int aDatabaseId, Entry aEntry);
+		void AddPreDeactivate(unsigned int aDatabaseId, Entry aEntry);
+		void AddDeactivate(unsigned int aDatabaseId, Entry aEntry);
 	}
 
 	// get database of databases

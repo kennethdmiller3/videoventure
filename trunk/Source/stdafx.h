@@ -95,7 +95,8 @@ extern float MOTIONBLUR_TIME;
 
 // sound attributes
 extern int SOUND_CHANNELS;
-extern float SOUND_VOLUME;
+extern float SOUND_VOLUME_EFFECT;
+extern float SOUND_VOLUME_MUSIC;
 
 // simulation attributes
 extern int SIMULATION_RATE;

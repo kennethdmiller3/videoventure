@@ -6,6 +6,8 @@
 #include "Drawlist.h"
 #include "Resource.h"
 
+#include "GameState.h"
+
 extern bool wasreset;
 
 // text display (HACK)
@@ -577,8 +579,6 @@ void PlayerHUD::RenderGameOver(const Player *player)
 	{
 		// display game over
 		gameovertimer += frame_time;
-		if (gameovertimer > 1.0f)
-			gameovertimer = 1.0f;
 
 		glEnable(GL_TEXTURE_2D);
 		glBindTexture(GL_TEXTURE_2D, OGLCONSOLE_glFontHandle);
@@ -586,13 +586,14 @@ void PlayerHUD::RenderGameOver(const Player *player)
 
 		glBegin(GL_QUADS);
 
+		float lerp = std::min(gameovertimer, 1.0f);
 		static char *text = "GAME OVER";
-		const float w = Lerp<float>(96, 48, gameovertimer);
-		const float h = Lerp<float>(-64, -32, gameovertimer);
+		const float w = Lerp<float>(96, 48, lerp);
+		const float h = Lerp<float>(-64, -32, lerp);
 		const float x = 320 - 0.5f * w * strlen(text);
 		const float y = 240 - 0.5f * h;
 		const float z = 0;
-		const float a = gameovertimer * gameovertimer;
+		const float a = lerp * lerp;
 
 		glColor4f(0.1f, 0.1f, 0.1f, a);
 		OGLCONSOLE_DrawString(text, x - 2, y - 2, w, h, z);
@@ -610,5 +611,9 @@ void PlayerHUD::RenderGameOver(const Player *player)
 		glEnd();
 
 		glDisable(GL_TEXTURE_2D);
+
+		// HACK: this should not be done right nere
+		if (gameovertimer > 5)
+			setgamestate = STATE_SHELL;
 	}
 }

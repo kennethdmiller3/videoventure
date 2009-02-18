@@ -136,9 +136,6 @@ SpawnerTemplate::~SpawnerTemplate(void)
 // spawner template configure
 bool SpawnerTemplate::Configure(const TiXmlElement *element)
 {
-	if (Hash(element->Value()) != 0x4936726f /* "spawner" */)
-		return false;
-
 	// process child elements
 	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{

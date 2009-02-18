@@ -136,7 +136,7 @@ PlayerController::PlayerController(unsigned int aId)
 		// get player controller template
 		const PlayerControllerTemplate &controllertemplate = Database::playercontrollertemplate.Get(mId);
 
-		// show reticule if using world aim
+		// show reticule if using move or aim cursor
 		if (controllertemplate.mAim == PlayerControllerTemplate::MOVECURSOR ||
 			controllertemplate.mAim == PlayerControllerTemplate::AIMCURSOR)
 			hud->ShowReticule();
@@ -153,8 +153,9 @@ PlayerController::~PlayerController(void)
 		// get player controller template
 		const PlayerControllerTemplate &controllertemplate = Database::playercontrollertemplate.Get(mId);
 
-		// hide reticule if using world aim
-		if (controllertemplate.mAim == PlayerControllerTemplate::AIMWORLD)
+		// show reticule if using move or aim cursor
+		if (controllertemplate.mAim == PlayerControllerTemplate::MOVECURSOR ||
+			controllertemplate.mAim == PlayerControllerTemplate::AIMCURSOR)
 			hud->HideReticule();
 	}
 

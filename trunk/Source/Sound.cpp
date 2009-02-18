@@ -14,8 +14,9 @@
 
 
 // sound attributes
-int SOUND_CHANNELS = 8;
-float SOUND_VOLUME = 0.5f;
+int SOUND_CHANNELS = 8;				// effect mixer channels
+float SOUND_VOLUME_EFFECT = 0.5f;	// effects volume
+float SOUND_VOLUME_MUSIC = 0.5f;	// music volume
 
 
 // sound listener position
@@ -39,10 +40,11 @@ namespace Database
 {
 	Typed<SoundTemplate> soundtemplate(0x1b5ef1be /* "soundtemplate" */);
 	Typed<Typed<unsigned int> > soundcue(0xf23cbd5f /* "soundcue" */);
-#ifdef USE_SDL_MIXER
-	Typed<Mix_Music *> musictemplate(0x19706bfe /* "musictemplate" */);
-#endif
 	Typed<Typed<Sound *> > sound(0x0e0d9594 /* "sound" */);
+	Typed<std::string> musictemplate(0x19706bfe /* "musictemplate" */);
+#ifdef USE_SDL_MIXER
+	Typed<Mix_Music *> music(0x9f9c4fd4 /* "music" */);
+#endif
 
 	namespace Loader
 	{
@@ -128,7 +130,6 @@ namespace Database
 		}
 		soundcueloader;
 
-#ifdef USE_SDL_MIXER
 		class MusicLoader
 		{
 		public:
@@ -140,17 +141,10 @@ namespace Database
 			void Configure(unsigned int aId, const TiXmlElement *element)
 			{
 				if (const char *file = element->Attribute("file"))
-				{
-					Mix_Music *music = Mix_LoadMUS(file);
-					musictemplate.Put(aId, music);
-
-					// HACK
-					Mix_PlayMusic(music, -1);
-				}
+					musictemplate.Put(aId, file);
 			}
 		}
 		musicloader;
-#endif
 	}
 
 	namespace Initializer
@@ -161,6 +155,7 @@ namespace Database
 			SoundInitializer()
 			{
 				AddActivate(0xf23cbd5f /* "soundcue" */, Entry(this, &SoundInitializer::Activate));
+				AddPostActivate(0xf23cbd5f /* "soundcue" */, Entry(this, &SoundInitializer::PostActivate));
 				AddDeactivate(0xf23cbd5f /* "soundcue" */, Entry(this, &SoundInitializer::Deactivate));
 			}
 
@@ -182,6 +177,10 @@ namespace Database
 					}
 				}
 #endif
+			}
+
+			void PostActivate(unsigned int aId)
+			{
 				PlaySoundCue(aId, 0);
 			}
 
@@ -201,6 +200,38 @@ namespace Database
 			}
 		}
 		soundinitializer;
+
+#if defined(USE_SDL_MIXER)
+		class MusicInitializer
+		{
+		public:
+			MusicInitializer()
+			{
+				AddActivate(0x19706bfe /* "musictemplate" */, Entry(this, &MusicInitializer::Activate));
+				AddDeactivate(0x19706bfe /* "musictemplate" */, Entry(this, &MusicInitializer::Deactivate));
+			}
+
+			void Activate(unsigned int aId)
+			{
+				// HACK
+				const std::string &music = Database::musictemplate.Get(aId);
+				Mix_Music *musicdata = Mix_LoadMUS(music.c_str());
+				Mix_PlayMusic(musicdata, -1);
+				Database::music.Put(aId, musicdata);
+			}
+
+			void Deactivate(unsigned int aId)
+			{
+				if (Mix_Music *musicdata = Database::music.Get(aId))
+				{
+					Mix_HaltMusic();
+					Mix_FreeMusic(musicdata);
+					Database::music.Delete(aId);
+				}
+			}
+		}
+		musicinitializer;
+#endif
 	}
 }
 
@@ -1927,20 +1958,24 @@ void Sound::Update(float aStep)
 		return;
 	}
 
+#if defined(USE_DISTANCE_FALLOFF)
 	if (Entity *entity = Database::entity.Get(mId))
 		mPosition = entity->GetPosition();
 	else
 		mPosition = listenerpos;
+#endif
 
 #if defined(USE_SDL_MIXER)
 	if (mPlaying >= 0)
 	{
-		float volume = mVolume * SOUND_VOLUME;
+		float volume = mVolume * SOUND_VOLUME_EFFECT;
+#if defined(USE_DISTANCE_FALLOFF)
 		if (mId)
 		{
 			// apply sound fall-off
 			volume /= (1.0f + listenerpos.DistSq(mPosition) / 16384.0f);
 		}
+#endif
 		Mix_Volume(mPlaying, xs_RoundToInt(volume * MIX_MAX_VOLUME));
 	}
 #endif
@@ -1959,6 +1994,7 @@ void Sound::Init(void)
 		return;
 	}
 	Mix_AllocateChannels(256);
+	UpdateSoundVolume();
 #elif defined(USE_SDL)
 	SDL_AudioSpec fmt;
 	fmt.freq = AUDIO_FREQUENCY;
@@ -2163,7 +2199,7 @@ void MixSound(void *userdata, unsigned char *stream, int len)
 	for (int channel = 0; channel < channel_count; ++channel)
 	{
 		// get starting offset
-		float volume = channel_info[channel].volume * SOUND_VOLUME;
+		float volume = channel_info[channel].volume * SOUND_VOLUME_EFFECT;
 		const short *data = channel_info[channel].data;
 		unsigned int length = channel_info[channel].length;
 		unsigned int offset = channel_info[channel].offset;
@@ -2260,6 +2296,12 @@ void MixSound(void *userdata, unsigned char *stream, int len)
 
 #endif
 
+void UpdateSoundVolume(void)
+{
+#ifdef USE_SDL_MIXER
+	Mix_VolumeMusic(xs_CeilToInt(SOUND_VOLUME_MUSIC * MIX_MAX_VOLUME));
+#endif
+}
 
 void PlaySoundCue(unsigned int aId, unsigned int aCueId)
 {

@@ -131,8 +131,8 @@ enum DrawlistOp
 	DO_glStencilFunc, //(GLenum func, GLint ref, GLuint mask)
 	DO_glStencilMask, //(GLuint mask)
 	DO_glStencilOp, //(GLenum fail, GLenum zfail, GLenum zpass)
-	DO_glTexCoord4f, //(GLfloat s, GLfloat t, GLfloat r, GLfloat q)
-	DO_glTexCoord4fv, //(const GLfloat *v)
+	DO_glTexCoord2f, //(GLfloat s, GLfloat t)
+	DO_glTexCoord2fv, //(const GLfloat *v)
 	DO_glTexCoordPointer, //(GLint size, GLenum type, GLsizei stride, const GLvoid *pointer)
 	DO_glTexEnvf, //(GLenum target, GLenum pname, GLfloat param)
 	DO_glTexEnvfv, //(GLenum target, GLenum pname, const GLfloat *params)
@@ -145,8 +145,8 @@ enum DrawlistOp
 	DO_glTexSubImage1D, //(GLenum target, GLint level, GLint xoffset, GLsizei width, GLenum format, GLenum type, const GLvoid *pixels)
 	DO_glTexSubImage2D, //(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid *pixels)
 	DO_glTranslatef, //(GLfloat x, GLfloat y, GLfloat z)
-	DO_glVertex4f, //(GLfloat x, GLfloat y, GLfloat z, GLfloat w)
-	DO_glVertex4fv, //(const GLfloat *v)
+	DO_glVertex3f, //(GLfloat x, GLfloat y, GLfloat z)
+	DO_glVertex3fv, //(const GLfloat *v)
 	DO_glVertexPointer, //(GLint size, GLenum type, GLsizei stride, const GLvoid *pointer)
 	DO_glViewport, //(GLint x, GLint y, GLsizei width, GLsizei height)
 
@@ -178,34 +178,41 @@ enum DrawlistDatatype
 };
 
 // attribute names
-static const char * sPositionNames[] = { "x", "y", "z", "w" };
-static const float sPositionDefault[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+static const char * sPositionNames[] = { "x", "y", "z" };
+static const float sPositionDefault[] = { 0.0f, 0.0f, 0.0f };
+static const int sPositionWidth = 3;
 static const char * sRotationNames[] = { "angle", "x", "y", "z" };
 static const float sRotationDefault[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+static const int sRotationWidth = 4;
 static const char * sScaleNames[] = { "x", "y", "z" };
 static const float sScaleDefault[] = { 1.0f, 1.0f, 1.0f };
+static const int sScaleWidth = 3;
 static const char * sColorNames[] = { "r", "g", "b", "a" };
 static const float sColorDefault[] = { 0.0f, 0.0f, 0.0f, 1.0f };
-static const char * sTexCoordNames[] = { "s", "t", "r", "q" };
-static const float sTexCoordDefault[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+static const int sColorWidth = 4;
+static const char * sTexCoordNames[] = { "s", "t" };
+static const float sTexCoordDefault[] = { 0.0f, 0.0f };
+static const int sTexCoordWidth = 2;
 static const char * sIndexNames[] = { "c" };
 static const float sIndexDefault[] = { 0.0f };
+static const int sIndexWidth = 1;
 static const char * sMatrixNames[] = { "m0", "m1", "m2", "m3", "m4", "m5", "m6", "m7", "m8", "m9", "m10", "m11", "m12", "m13", "m14", "m15" };
 static const float sMatrixDefault[] = { 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f };
+static const int sMatrixWidth = 16;
 
 void GetTypeData(unsigned int type, int &width, const char **&names, const float *&data)
 {
 	switch (type)
 	{
 	default:
-	case 0x934f4e0a /* "position" */:	names = sPositionNames; data = sPositionDefault; width = 4; break;
-	case 0x21ac415f /* "rotation" */:	names = sRotationNames; data = sRotationDefault; width = 4; break;
-	case 0xad0ecfd5 /* "translate" */:	names = sPositionNames, data = sPositionDefault; width = 3; break;
-	case 0x82971c71 /* "scale" */:		names = sScaleNames; data = sScaleDefault; width = 3; break;
-	case 0x3d7e6258 /* "color" */:		names = sColorNames; data = sColorDefault; width = 4; break;
-	case 0xdd612dd3 /* "texcoord" */:	names = sTexCoordNames; data = sTexCoordDefault; width = 4; break;
-	case 0x090aa9ab /* "index" */:		names = sIndexNames; data = sIndexDefault; width = 1; break;
-	case 0x15c2f8ec /* "matrix" */:		names = sMatrixNames; data = sMatrixDefault; width = 16; break;
+	case 0x934f4e0a /* "position" */:	names = sPositionNames; data = sPositionDefault; width = sPositionWidth; break;
+	case 0x21ac415f /* "rotation" */:	names = sRotationNames; data = sRotationDefault; width = sRotationWidth; break;
+	case 0xad0ecfd5 /* "translate" */:	names = sPositionNames, data = sPositionDefault; width = sPositionWidth; break;
+	case 0x82971c71 /* "scale" */:		names = sScaleNames; data = sScaleDefault; width = sScaleWidth; break;
+	case 0x3d7e6258 /* "color" */:		names = sColorNames; data = sColorDefault; width = sColorWidth; break;
+	case 0xdd612dd3 /* "texcoord" */:	names = sTexCoordNames; data = sTexCoordDefault; width = sTexCoordWidth; break;
+	case 0x090aa9ab /* "index" */:		names = sIndexNames; data = sIndexDefault; width = sIndexWidth; break;
+	case 0x15c2f8ec /* "matrix" */:		names = sMatrixNames; data = sMatrixDefault; width = sMatrixWidth; break;
 	}
 }
 
@@ -529,21 +536,21 @@ void ProcessDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buf
 	case 0xad0ecfd5 /* "translate" */:
 		{
 			buffer.push_back(DO_glTranslatef);
-			ProcessDrawData(element, buffer, 3, sPositionNames, sPositionDefault);
+			ProcessDrawData(element, buffer, sPositionWidth, sPositionNames, sPositionDefault);
 		}
 		break;
 
 	case 0xa5f4fd0a /* "rotate" */:
 		{
 			buffer.push_back(DO_glRotatef);
-			ProcessDrawData(element, buffer, 4, sRotationNames, sRotationDefault);
+			ProcessDrawData(element, buffer, sRotationWidth, sRotationNames, sRotationDefault);
 		}
 		break;
 
 	case 0x82971c71 /* "scale" */:
 		{
 			buffer.push_back(DO_glScalef);
-			ProcessDrawData(element, buffer, 3, sScaleNames, sScaleDefault);
+			ProcessDrawData(element, buffer, sScaleWidth, sScaleNames, sScaleDefault);
 		}
 		break;
 
@@ -583,35 +590,35 @@ void ProcessDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buf
 
 	case 0x945367a7 /* "vertex" */:
 		{
-			buffer.push_back(DO_glVertex4fv);
-			ProcessDrawData(element, buffer, 4, sPositionNames, sPositionDefault);
+			buffer.push_back(DO_glVertex3fv);
+			ProcessDrawData(element, buffer, sPositionWidth, sPositionNames, sPositionDefault);
 		}
 		break;
 	case 0xe68b9c52 /* "normal" */:
 		{
 			buffer.push_back(DO_glNormal3fv);
-			ProcessDrawData(element, buffer, 3, sPositionNames, sPositionDefault);
+			ProcessDrawData(element, buffer, sPositionWidth, sPositionNames, sPositionDefault);
 		}
 		break;
 
 	case 0x3d7e6258 /* "color" */:
 		{
 			buffer.push_back(DO_glColor4fv);
-			ProcessDrawData(element, buffer, 4, sColorNames, sColorDefault);
+			ProcessDrawData(element, buffer, sColorWidth, sColorNames, sColorDefault);
 		}
 		break;
 
 	case 0x090aa9ab /* "index" */:
 		{
 			buffer.push_back(DO_glIndexf);
-			ProcessDrawData(element, buffer, 1, sIndexNames, sIndexDefault);
+			ProcessDrawData(element, buffer, sIndexWidth, sIndexNames, sIndexDefault);
 		}
 		break;
 
 	case 0xdd612dd3 /* "texcoord" */:
 		{
-			buffer.push_back(DO_glTexCoord4fv);
-			ProcessDrawData(element, buffer, 4, sTexCoordNames, sTexCoordDefault);
+			buffer.push_back(DO_glTexCoord2fv);
+			ProcessDrawData(element, buffer, sTexCoordWidth, sTexCoordNames, sTexCoordDefault);
 		}
 		break;
 
@@ -1408,7 +1415,7 @@ void ExecuteDrawItems(const unsigned int buffer[], size_t count, float param, un
 			break;
 
 		case DO_glColor4fv:
-			itor += ExecuteDrawData(itor, buffer + count - itor, 4, data, param, id);
+			itor += ExecuteDrawData(itor, buffer + count - itor, sColorWidth, data, param, id);
 			glColor4fv(data);
 			break;
 
@@ -1474,7 +1481,7 @@ void ExecuteDrawItems(const unsigned int buffer[], size_t count, float param, un
 			break;
 
 		case DO_glIndexf:
-			itor += ExecuteDrawData(itor, buffer + count - itor, 1, data, param, id);
+			itor += ExecuteDrawData(itor, buffer + count - itor, sIndexWidth, data, param, id);
 			glIndexf(data[0]);
 			break;
 
@@ -1502,7 +1509,7 @@ void ExecuteDrawItems(const unsigned int buffer[], size_t count, float param, un
 			break;
 
 		case DO_glNormal3fv:
-			itor += ExecuteDrawData(itor, buffer + count - itor, 3, data, param, id);
+			itor += ExecuteDrawData(itor, buffer + count - itor, sPositionWidth, data, param, id);
 			glNormal3fv(data);
 			break;
 
@@ -1540,18 +1547,18 @@ void ExecuteDrawItems(const unsigned int buffer[], size_t count, float param, un
 			break;
 
 		case DO_glRotatef:
-			itor += ExecuteDrawData(itor, buffer + count - itor, 4, data, param, id);
+			itor += ExecuteDrawData(itor, buffer + count - itor, sRotationWidth, data, param, id);
 			glRotatef(data[0], data[1], data[2], data[3]);
 			break;
 
 		case DO_glScalef:
-			itor += ExecuteDrawData(itor, buffer + count - itor, 3, data, param, id);
+			itor += ExecuteDrawData(itor, buffer + count - itor, sScaleWidth, data, param, id);
 			glScalef(data[0], data[1], data[2]);
 			break;
 
-		case DO_glTexCoord4fv:
-			itor += ExecuteDrawData(itor, buffer + count - itor, 4, data, param, id);
-			glTexCoord4fv(data);
+		case DO_glTexCoord2fv:
+			itor += ExecuteDrawData(itor, buffer + count - itor, sTexCoordWidth, data, param, id);
+			glTexCoord2fv(data);
 			break;
 
 		case DO_glTexCoordPointer:
@@ -1565,13 +1572,13 @@ void ExecuteDrawItems(const unsigned int buffer[], size_t count, float param, un
 			break;
 
 		case DO_glTranslatef:
-			itor += ExecuteDrawData(itor, buffer + count - itor, 3, data, param, id);
+			itor += ExecuteDrawData(itor, buffer + count - itor, sPositionWidth, data, param, id);
 			glTranslatef(data[0], data[1], data[2]);
 			break;
 
-		case DO_glVertex4fv:
-			itor += ExecuteDrawData(itor, buffer + count - itor, 4, data, param, id);
-			glVertex4fv(data);
+		case DO_glVertex3fv:
+			itor += ExecuteDrawData(itor, buffer + count - itor, sPositionWidth, data, param, id);
+			glVertex3fv(data);
 			break;
 
 		case DO_glVertexPointer:
