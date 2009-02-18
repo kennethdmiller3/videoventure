@@ -1,0 +1,100 @@
+<?xml version="1.0" ?>
+<template name="powercoredanger" type="powercorebase">
+	<renderable radius="7" depth="1" period="0.2">
+		<pushmatrix>
+			<rotate>
+				<key time="0.0" angle="0"/>
+				<key time="0.2" angle="120"/>
+			</rotate>
+			<repeat count="6">
+				<pushmatrix>
+					<translate x="5" />
+					<pushmatrix>
+						<scale x="0.5" y="0.5" />
+						<color>
+							<key time="0.0" r="1.0" g="1.0" b="1.0" a="1.0" />
+							<key time="0.1" r="1.0" g="0.4" b="0.0" a="1.0" />
+							<key time="0.2" r="1.0" g="1.0" b="1.0" a="1.0" />
+						</color>
+						<calllist name="diamond" />
+					</pushmatrix>
+					<pushmatrix>
+						<scale x="1.0" y="1.0" />
+						<color>
+							<key time="0.0" r="1.0" g="1.0" b="1.0" a="0.5" />
+							<key time="0.1" r="1.0" g="0.2" b="0.0" a="0.5" />
+							<key time="0.2" r="1.0" g="1.0" b="1.0" a="0.5" />
+						</color>
+						<calllist name="diamond" />
+					</pushmatrix>
+				</pushmatrix>
+				<rotate angle="60"/>
+			</repeat>
+		</pushmatrix>
+		<pushmatrix>
+			<rotate>
+				<key time="0.0" angle="0"/>
+				<key time="0.2" angle="-60"/>
+			</rotate>
+			<color r="0.0" g="0.5" b="1.0" a="1.0" />
+			<repeat count="6">
+				<pushmatrix>
+					<translate x="6" />
+					<pushmatrix>
+						<scale x="0.3" y="0.3" />
+						<color>
+							<key time="0.0" r="1.0" g="1.0" b="1.0" a="1.0" />
+							<key time="0.1" r="1.0" g="0.3" b="0.0" a="1.0" />
+							<key time="0.2" r="1.0" g="1.0" b="1.0" a="1.0" />
+						</color>
+						<calllist name="diamond" />
+					</pushmatrix>
+					<pushmatrix>
+						<scale x="0.6" y="0.6" />
+						<color>
+							<key time="0.0" r="1.0" g="1.0" b="1.0" a="0.5" />
+							<key time="0.1" r="1.0" g="0.1" b="0.0" a="0.5" />
+							<key time="0.2" r="1.0" g="1.0" b="1.0" a="0.5" />
+						</color>
+						<calllist name="diamond" />
+					</pushmatrix>
+				</pushmatrix>
+				<rotate angle="-60"/>
+			</repeat>
+		</pushmatrix>
+		<pushmatrix>
+			<scale>
+				<key time="0.00" x="1.0" y="1.0"/>
+				<key time="0.05" x="1.5" y="1.5"/>
+				<key time="0.10" x="1.0" y="1.0"/>
+				<key time="0.15" x="2.0" y="2.0"/>
+				<key time="0.20" x="1.0" y="1.0"/>
+			</scale>
+			<pushmatrix>
+				<color r="1.0" g="1.0" b="1.0" a="1.0" />
+				<scale x="2.5" y="2.5" />
+				<calllist name="circle16" />
+			</pushmatrix>
+			<pushmatrix>
+				<color>
+					<key time="0.0" r="1.0" g="1.0" b="1.0" a="0.5" />
+					<key time="0.1" r="1.0" g="0.7" b="0.4" a="0.5" />
+					<key time="0.2" r="1.0" g="1.0" b="1.0" a="0.5" />
+				</color>
+				<scale x="3.5" y="3.5" />
+				<calllist name="circle16" />
+			</pushmatrix>
+			<pushmatrix>
+				<color>
+					<key time="0.0" r="1.0" g="1.0" b="1.0" a="0.25" />
+					<key time="0.1" r="1.0" g="0.5" b="0.2" a="0.25" />
+					<key time="0.2" r="1.0" g="1.0" b="1.0" a="0.25" />
+				</color>
+				<scale x="5.0" y="5.0" />
+				<calllist name="circle16" />
+			</pushmatrix>
+		</pushmatrix>
+	</renderable>
+	<damagable spawnondeath="powercoredeath" />
+	<expire time="9" switchonexpire="powercorewarning" />
+</template>

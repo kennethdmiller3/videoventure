@@ -1,0 +1,1068 @@
+<?xml version="1.0" standalone="no"?>
+<world xmin="-215" ymin="-165" xmax="215" ymax="165" wall="0">
+
+	<!-- level perimeter -->
+	<entity name="perimeter">
+		<collidable>
+			<body>
+				<edge loop="1">
+					<vertex x="-200" y="150"/>
+					<vertex x="200" y="150"/>
+					<vertex x="200" y="-150"/>
+					<vertex x="-200" y="-150"/>
+					<restitution value="0"/>
+					<friction value="0"/>
+					<category value="0"/>
+					<mask default="0" bit1="1" bit2="1"/>
+				</edge>
+			</body>
+		</collidable>
+	</entity>
+	
+	
+	<!-- player camera -->
+	<playercamera>
+		<aim scale="0" filter="0"/>
+		<scale x="0.25" y="0.25"/>
+	</playercamera>
+
+	
+	<!-- sounds -->
+	<import name="sound/stargate-warpin.xml" />
+	<import name="sound/stargate-playershot.xml" />
+	<import name="sound/stargate-playershipidle.xml" />
+	<import name="sound/stargate-playershipthrust.xml" />
+	<import name="sound/stargate-explosion.xml" />
+	<import name="sound/stargate-bigexplosion.xml" />
+	<import name="sound/stargate-playershipdeath.xml" />
+	<import name="sound/stargate-smartbomb.xml" />
+	<import name="sound/stargate-landerfire.xml" />
+	<import name="sound/stargate-landerkill.xml" />
+
+
+	<!-- players -->
+
+	<entity name="1P">
+		<position x="0" y="0" />
+		<player name="playershipwarp" start="1.5" cycle="2" />
+		<team name="blue" />
+	</entity>
+
+
+	<!-- draw lists -->
+	
+	<import name="drawlist/square.xml" />
+	<import name="drawlist/diamond.xml" />
+	<import name="drawlist/circle8.xml" />
+	<import name="drawlist/circle12.xml" />
+	<import name="drawlist/circle16.xml" />
+	<import name="drawlist/circle32.xml" />
+	<import name="drawlist/ship.xml" />
+	<import name="drawlist/shipsmall.xml" />
+	<import name="drawlist/shiptiny.xml" />
+
+	<!-- reticule -->
+	
+	<import name="drawlist/reticule.xml" />
+
+
+	<!-- starfield -->
+	
+	<import name="template/starfield.xml" />
+	<tilemap x="768" y="768" dx="-512" dy="-512">
+		<tile name="*" spawn="starfield"/>
+		<row data="****"/>
+		<row data="****"/>
+		<row data="****"/>
+		<row data="****"/>
+	</tilemap>
+
+
+	<!-- reference grid -->
+	
+	<entity name="playfield">
+		<renderable radius="512">
+			<drawlist>
+				<color r="1.0" g="1.0" b="1.0" a="1.0" />
+				<line_loop>
+					<!-- perimeter -->
+					<vertex x="-200" y="-150" />
+					<vertex x="200" y="-150" />
+					<vertex x="200" y="150" />
+					<vertex x="-200" y="150" />
+				</line_loop>
+			</drawlist>
+		</renderable>
+	</entity>
+	
+	
+	<!-- music -->
+
+	<entity name="soundtrack">
+		<music file="4mat-thunderstar.mod"/>
+	</entity>
+
+
+	<!-- collidable filters -->
+	
+	<collidablefilter name="inert">
+		<category value="-1" />
+	</collidablefilter>
+	<collidablefilter name="environment">
+		<category value="0" />
+	</collidablefilter>
+	<collidablefilter name="blueunit">
+		<category value="1" />
+	</collidablefilter>
+	<collidablefilter name="bluemissile">
+		<category value="1" />
+		<mask bit1="0" bit2="0" />
+	</collidablefilter>
+	<collidablefilter name="bluebullet">
+		<category value="2" />
+		<mask bit1="0" bit2="0" bit4="0" />
+	</collidablefilter>
+	<collidablefilter name="redunit">
+		<category value="3" />
+	</collidablefilter>
+	<collidablefilter name="redmissile">
+		<category value="3" />
+		<mask bit3="0" bit4="0" />
+	</collidablefilter>
+	<collidablefilter name="redbullet">
+		<category value="4" />
+		<mask bit2="0" bit3="0" bit4="0" />
+	</collidablefilter>
+	
+	
+	<!-- player weapon -->
+
+	<import name="template/playerbulletexplosion.xml" />
+	<import name="template/playerbullet.xml" />
+	<import name="template/playershipweapon.xml" />
+	<template name="playershipweapon">
+		<weapon>
+			<inherit x="0" y="0" />
+		</weapon>
+	</template>
+
+	<!-- player ship -->
+	
+	<import name="template/playership.xml" />
+	<import name="template/playershipwarp.xml" />
+	<import name="template/playershipdeath.xml" />
+	<import name="template/playershipexplosion.xml" />
+
+	
+	<!-- power core -->
+
+	<import name="template/powercorebase.xml" />
+	<import name="template/powercore.xml" />
+	<import name="template/powercorewarning.xml" />
+	<import name="template/powercorewarningflash.xml" />
+	<import name="template/powercoredanger.xml" />
+	<import name="template/powercoredangerflash.xml" />
+	<import name="template/powercoredeath.xml" />
+	<import name="template/powercoreexplosion.xml" />
+
+	<entity name="powercore1" type="powercore">
+		<position x="16" y="0"/>
+	</entity>
+	<entity name="powercore2" type="powercore">
+		<position x="0" y="16"/>
+	</entity>
+	<entity name="powercore3" type="powercore">
+		<position x="-16" y="0"/>
+	</entity>
+	<entity name="powercore4" type="powercore">
+		<position x="0" y="-16"/>
+	</entity>
+	<entity name="powercore5" type="powercore">
+		<position x="20" y="20"/>
+	</entity>
+	<entity name="powercore6" type="powercore">
+		<position x="-20" y="20"/>
+	</entity>
+	<entity name="powercore7" type="powercore">
+		<position x="-20" y="-20"/>
+	</entity>
+	<entity name="powercore8" type="powercore">
+		<position x="20" y="-20"/>
+	</entity>
+	<entity name="powercore9" type="powercore">
+		<position x="32" y="0"/>
+	</entity>
+	<entity name="powercore10" type="powercore">
+		<position x="0" y="32"/>
+	</entity>
+	<entity name="powercore11" type="powercore">
+		<position x="-32" y="0"/>
+	</entity>
+	<entity name="powercore12" type="powercore">
+		<position x="0" y="-32"/>
+	</entity>
+
+	<!-- enemy warp-in -->
+	<import name="template/enemywarpin.xml" />
+	
+	<!-- enemy bullet explosion -->
+	<import name="template/enemybulletexplosion.xml" />
+
+	<!-- enemy bullet -->
+	<import name="template/enemyraiderbeam.xml" />
+
+	<!-- enemy raider weapon -->
+	<import name="template/enemyraiderweapon.xml" />
+
+	<!-- small enemy explosion -->
+	<import name="template/enemyexplosionsmall.xml" />
+
+
+	<!-- enemy raider ship -->
+	<import name="template/enemyraider.xml" />
+	<template name="enemyraider1" type="enemyraider">
+		<ship forwardveloc="45" reverseveloc="-5" strafeveloc="0" maxaccel="180" minaccel="180" maxomega="2.0" />
+		<aimer>
+			<ripoff targettag="stealable">
+				<attack radius="30"/>
+			</ripoff>
+		</aimer>
+		<points value="10" />
+	</template>
+	<template name="enemyraider2" type="enemyraider">
+		<ship forwardveloc="60" reverseveloc="-5" strafeveloc="0" maxaccel="240" minaccel="240" maxomega="2.25" />
+		<aimer>
+			<ripoff targettag="stealable">
+				<attack radius="45"/>
+			</ripoff>
+		</aimer>
+		<points value="20" />
+	</template>
+	<template name="enemyraider3" type="enemyraider">
+		<ship forwardveloc="75" reverseveloc="-5" strafeveloc="0" maxaccel="300" minaccel="300" maxomega="2.5" />
+		<aimer>
+			<ripoff targettag="stealable">
+				<attack radius="60"/>
+			</ripoff>
+		</aimer>
+		<points value="30" />
+	</template>
+	<template name="enemyraider4" type="enemyraider">
+		<ship forwardveloc="90" reverseveloc="-5" strafeveloc="0" maxaccel="360" minaccel="360" maxomega="2.75" />
+		<aimer>
+			<ripoff targettag="stealable">
+				<attack radius="75"/>
+			</ripoff>
+		</aimer>
+		<points value="40" />
+	</template>
+	<template name="enemyraider5" type="enemyraider">
+		<ship forwardveloc="105" reverseveloc="-5" strafeveloc="0" maxaccel="420" minaccel="420" maxomega="3.0" />
+		<aimer>
+			<ripoff targettag="stealable">
+				<attack radius="90"/>
+			</ripoff>
+		</aimer>
+		<points value="50" />
+	</template>
+	<template name="enemyraider6" type="enemyraider">
+		<ship forwardveloc="120" reverseveloc="-5" strafeveloc="0" maxaccel="480" minaccel="480" maxomega="3.25" />
+		<aimer>
+			<ripoff targettag="stealable">
+				<attack radius="105"/>
+			</ripoff>
+		</aimer>
+		<points value="60" />
+	</template>
+	<template name="enemyraider7" type="enemyraider">
+		<ship forwardveloc="135" reverseveloc="-5" strafeveloc="0" maxaccel="540" minaccel="540" maxomega="3.5" />
+		<aimer>
+			<ripoff targettag="stealable">
+				<attack radius="120"/>
+			</ripoff>
+		</aimer>
+		<points value="70" />
+	</template>
+	<template name="enemyraider8" type="enemyraider">
+		<ship forwardveloc="150" reverseveloc="-5" strafeveloc="0" maxaccel="600" minaccel="600" maxomega="3.75" />
+		<aimer>
+			<ripoff targettag="stealable">
+				<attack radius="135"/>
+			</ripoff>
+		</aimer>
+		<points value="80" />
+	</template>
+	<template name="enemyraider9" type="enemyraider">
+		<ship forwardveloc="150" reverseveloc="-5" strafeveloc="0" maxaccel="660" minaccel="660" maxomega="4.0" />
+		<aimer>
+			<ripoff targettag="stealable">
+				<attack radius="150"/>
+			</ripoff>
+		</aimer>
+		<points value="90" />
+	</template>
+	<template name="enemyraider10" type="enemyraider">
+		<ship forwardveloc="150" reverseveloc="-5" strafeveloc="0" maxaccel="660" minaccel="660" maxomega="4.0" />
+		<aimer>
+			<ripoff targettag="stealable">
+				<attack radius="150"/>
+			</ripoff>
+		</aimer>
+		<points value="90" />
+	</template>
+
+	<!-- enemy raider ship warp-->
+	<template name="enemyraiderwarp1" type="enemywarpin">
+		<expire switchonexpire="enemyraider1" />
+	</template>
+	<template name="enemyraiderwarp2" type="enemywarpin">
+		<expire switchonexpire="enemyraider2" />
+	</template>
+	<template name="enemyraiderwarp3" type="enemywarpin">
+		<expire switchonexpire="enemyraider3" />
+	</template>
+	<template name="enemyraiderwarp4" type="enemywarpin">
+		<expire switchonexpire="enemyraider4" />
+	</template>
+	<template name="enemyraiderwarp5" type="enemywarpin">
+		<expire switchonexpire="enemyraider5" />
+	</template>
+	<template name="enemyraiderwarp6" type="enemywarpin">
+		<expire switchonexpire="enemyraider6" />
+	</template>
+	<template name="enemyraiderwarp7" type="enemywarpin">
+		<expire switchonexpire="enemyraider7" />
+	</template>
+	<template name="enemyraiderwarp8" type="enemywarpin">
+		<expire switchonexpire="enemyraider8" />
+	</template>
+	<template name="enemyraiderwarp9" type="enemywarpin">
+		<expire switchonexpire="enemyraider9" />
+	</template>
+	<template name="enemyraiderwarp10" type="enemywarpin">
+		<expire switchonexpire="enemyraider10" />
+	</template>
+
+	<entity name="wavesequence">
+		<wavesequence predelay="5">
+			<!-- first series -->
+			<wave name="wave1" postdelay="3">
+				<entry name="entry1">
+					<offset x="0" y="128" angle="180"/>
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp1" />
+				</entry>
+				<entry name="entry2">
+					<offset x="0" y="-128" angle="0"/>
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp1" />
+				</entry>
+			</wave>
+			<wave name="wave2" postdelay="3">
+				<entry name="entry1">
+					<offset x="0" y="128" angle="180"/>
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp2" />
+				</entry>
+				<entry name="entry2">
+					<offset x="0" y="-128" angle="0"/>
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp2" />
+				</entry>
+			</wave>
+			<wave name="wave3" postdelay="3">
+				<entry name="entry1">
+					<offset x="0" y="128" angle="180"/>
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp3" />
+				</entry>
+				<entry name="entry2">
+					<offset x="0" y="-128" angle="0"/>
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp3" />
+				</entry>
+			</wave>
+			<wave name="wave4" postdelay="3">
+				<entry name="entry1">
+					<offset x="0" y="128" angle="180"/>
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp4" />
+				</entry>
+				<entry name="entry2">
+					<offset x="0" y="-128" angle="0"/>
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp4" />
+				</entry>
+			</wave>
+			<wave name="wave5" postdelay="3">
+				<entry name="entry1">
+					<offset x="0" y="128" angle="180"/>
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp5" />
+				</entry>
+				<entry name="entry2">
+					<offset x="0" y="-128" angle="0"/>
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp5" />
+				</entry>
+			</wave>
+			<wave name="wave6" postdelay="3">
+				<entry name="entry1">
+					<offset x="0" y="128" angle="180"/>
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp6" />
+				</entry>
+				<entry name="entry2">
+					<offset x="0" y="-128" angle="0"/>
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp6" />
+				</entry>
+			</wave>
+			<!-- second series -->
+			<wave name="wave7" postdelay="3">
+				<entry name="entry1" time="0">
+					<offset x="0" y="128" angle="180"/>
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp2" />
+				</entry>
+				<entry name="entry2" time="0">
+					<offset x="0" y="-128" angle="0"/>
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp2" />
+				</entry>
+				<entry name="entry3" time="0">
+					<offset x="0" y="-128" angle="0"/>
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp2" />
+				</entry>
+			</wave>
+			<wave name="wave8" postdelay="3">
+				<entry name="entry1" time="0">
+					<offset x="0" y="128" angle="180"/>
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp3" />
+				</entry>
+				<entry name="entry2">
+					<offset x="0" y="-128" angle="0"/>
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp3" />
+				</entry>
+				<entry name="entry3">
+					<offset x="0" y="128" angle="180"/>
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp3" />
+				</entry>
+			</wave>
+			<wave name="wave9" postdelay="3">
+				<entry name="entry1" time="0">
+					<offset x="0" y="128" angle="180"/>
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp4" />
+				</entry>
+				<entry name="entry2">
+					<offset x="0" y="-128" angle="0"/>
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp4" />
+				</entry>
+				<entry name="entry3">
+					<offset x="0" y="-128" angle="0"/>
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp4" />
+				</entry>
+			</wave>
+			<wave name="wave10" postdelay="3">
+				<entry name="entry1" time="0">
+					<offset x="0" y="128" angle="180"/>
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp5" />
+				</entry>
+				<entry name="entry2">
+					<offset x="0" y="-128" angle="0"/>
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp5" />
+				</entry>
+				<entry name="entry3">
+					<offset x="0" y="128" angle="0"/>
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp5" />
+				</entry>
+			</wave>
+			<wave name="wave11" postdelay="3">
+				<entry name="entry1" time="0">
+					<offset x="0" y="128" angle="180"/>
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp6" />
+				</entry>
+				<entry name="entry2">
+					<offset x="0" y="-128" angle="0"/>
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp6" />
+				</entry>
+				<entry name="entry3">
+					<offset x="0" y="-128" angle="0"/>
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp6" />
+				</entry>
+			</wave>
+			<wave name="wave12" postdelay="3">
+				<entry name="entry1" time="0">
+					<offset x="0" y="128" angle="180"/>
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp7" />
+				</entry>
+				<entry name="entry2">
+					<offset x="0" y="-128" angle="0"/>
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp7" />
+				</entry>
+				<entry name="entry3">
+					<offset x="0" y="128" angle="0"/>
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp7" />
+				</entry>
+			</wave>
+			<!-- third series -->
+			<wave name="wave13" postdelay="3">
+				<entry name="entry1" time="0">
+					<offset x="0" y="128" angle="180"/>
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp3" />
+				</entry>
+				<entry name="entry2" time="0">
+					<offset x="0" y="-128" angle="0"/>
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp3" />
+				</entry>
+				<entry name="entry3" time="0">
+					<offset x="0" y="128" angle="0"/>
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp3" />
+				</entry>
+				<entry name="entry4" time="0">
+					<offset x="0" y="-128" angle="0"/>
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp3" />
+				</entry>
+			</wave>
+			<wave name="wave14" postdelay="3">
+				<entry name="entry1" time="0">
+					<offset x="0" y="128" angle="180"/>
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp4" />
+				</entry>
+				<entry name="entry2">
+					<offset x="0" y="-128" angle="0"/>
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp4" />
+				</entry>
+				<entry name="entry3">
+					<offset x="0" y="128" angle="180"/>
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp4" />
+				</entry>
+				<entry name="entry4">
+					<offset x="0" y="-128" angle="180"/>
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp4" />
+				</entry>
+			</wave>
+			<wave name="wave15" postdelay="3">
+				<entry name="entry1" time="0">
+					<offset x="0" y="128" angle="180"/>
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp5" />
+				</entry>
+				<entry name="entry2">
+					<offset x="0" y="-128" angle="0"/>
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp5" />
+				</entry>
+				<entry name="entry3">
+					<offset x="0" y="128" angle="0"/>
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp5" />
+				</entry>
+				<entry name="entry4">
+					<offset x="0" y="-128" angle="0"/>
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp5" />
+				</entry>
+			</wave>
+			<wave name="wave16" postdelay="3">
+				<entry name="entry1" time="0">
+					<offset x="0" y="128" angle="180"/>
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp6" />
+				</entry>
+				<entry name="entry2">
+					<offset x="0" y="-128" angle="0"/>
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp6" />
+				</entry>
+				<entry name="entry3">
+					<offset x="0" y="128" angle="0"/>
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp6" />
+				</entry>
+				<entry name="entry4">
+					<offset x="0" y="-128" angle="0"/>
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp6" />
+				</entry>
+			</wave>
+			<wave name="wave17" postdelay="3">
+				<entry name="entry1" time="0">
+					<offset x="0" y="128" angle="180"/>
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp7" />
+				</entry>
+				<entry name="entry2">
+					<offset x="0" y="-128" angle="0"/>
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp7" />
+				</entry>
+				<entry name="entry3">
+					<offset x="0" y="128" angle="0"/>
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp7" />
+				</entry>
+				<entry name="entry4">
+					<offset x="0" y="-128" angle="0"/>
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp7" />
+				</entry>
+			</wave>
+			<wave name="wave18" postdelay="3">
+				<entry name="entry1" time="0">
+					<offset x="0" y="128" angle="180"/>
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp8" />
+				</entry>
+				<entry name="entry2">
+					<offset x="0" y="-128" angle="0"/>
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp8" />
+				</entry>
+				<entry name="entry3">
+					<offset x="0" y="128" angle="0"/>
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp8" />
+				</entry>
+				<entry name="entry4">
+					<offset x="0" y="-128" angle="0"/>
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp8" />
+				</entry>
+			</wave>
+			<!-- fourth series -->
+			<wave name="wave19" postdelay="3">
+				<entry name="entry1" time="0">
+					<offset x="0" y="128" angle="180"/>
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp4" />
+				</entry>
+				<entry name="entry2">
+					<offset x="0" y="-128" angle="0"/>
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp4" />
+				</entry>
+				<entry name="entry3">
+					<offset x="0" y="128" angle="180"/>
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp4" />
+				</entry>
+				<entry name="entry4">
+					<offset x="0" y="-128" angle="180"/>
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp4" />
+				</entry>
+				<entry name="entry5">
+					<offset x="0" y="128" angle="180"/>
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp4" />
+				</entry>
+			</wave>
+			<wave name="wave20" postdelay="3">
+				<entry name="entry1" time="0">
+					<offset x="0" y="128" angle="180"/>
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp5" />
+				</entry>
+				<entry name="entry2">
+					<offset x="0" y="-128" angle="0"/>
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp5" />
+				</entry>
+				<entry name="entry3">
+					<offset x="0" y="128" angle="0"/>
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp5" />
+				</entry>
+				<entry name="entry4">
+					<offset x="0" y="-128" angle="0"/>
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp5" />
+				</entry>
+				<entry name="entry5">
+					<offset x="0" y="-128" angle="0"/>
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp5" />
+				</entry>
+			</wave>
+			<wave name="wave21" postdelay="3">
+				<entry name="entry1" time="0">
+					<offset x="0" y="128" angle="180"/>
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp6" />
+				</entry>
+				<entry name="entry2">
+					<offset x="0" y="-128" angle="0"/>
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp6" />
+				</entry>
+				<entry name="entry3">
+					<offset x="0" y="128" angle="0"/>
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp6" />
+				</entry>
+				<entry name="entry4">
+					<offset x="0" y="-128" angle="0"/>
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp6" />
+				</entry>
+				<entry name="entry5">
+					<offset x="0" y="128" angle="0"/>
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp6" />
+				</entry>
+			</wave>
+			<wave name="wave22" postdelay="3">
+				<entry name="entry1" time="0">
+					<offset x="0" y="128" angle="180"/>
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp7" />
+				</entry>
+				<entry name="entry2">
+					<offset x="0" y="-128" angle="0"/>
+					<velocity x="0" y="0" />
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp7" />
+				</entry>
+				<entry name="entry3">
+					<offset x="0" y="128" angle="0"/>
+					<velocity x="0" y="0" />
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp7" />
+				</entry>
+				<entry name="entry4">
+					<offset x="0" y="-128" angle="0"/>
+					<velocity x="0" y="0" />
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp7" />
+				</entry>
+				<entry name="entry5">
+					<offset x="0" y="-128" angle="0"/>
+					<velocity x="0" y="0" />
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp7" />
+				</entry>
+			</wave>
+			<wave name="wave23" postdelay="3">
+				<entry name="entry1" time="0">
+					<offset x="0" y="128" angle="180"/>
+					<velocity x="0" y="0" />
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp8" />
+				</entry>
+				<entry name="entry2">
+					<offset x="0" y="-128" angle="0"/>
+					<velocity x="0" y="0" />
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp8" />
+				</entry>
+				<entry name="entry3">
+					<offset x="0" y="128" angle="0"/>
+					<velocity x="0" y="0" />
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp8" />
+				</entry>
+				<entry name="entry4">
+					<offset x="0" y="-128" angle="0"/>
+					<velocity x="0" y="0" />
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp8" />
+				</entry>
+				<entry name="entry5">
+					<offset x="0" y="128" angle="0"/>
+					<velocity x="0" y="0" />
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp8" />
+				</entry>
+			</wave>
+			<wave name="wave24" postdelay="3">
+				<entry name="entry1" time="0">
+					<offset x="0" y="128" angle="180"/>
+					<velocity x="0" y="0" />
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp9" />
+				</entry>
+				<entry name="entry2" time="0">
+					<offset x="0" y="-128" angle="0"/>
+					<velocity x="0" y="0" />
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp9" />
+				</entry>
+				<entry name="entry3" time="0">
+					<offset x="0" y="128" angle="0"/>
+					<velocity x="0" y="0" />
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp9" />
+				</entry>
+				<entry name="entry4" time="0">
+					<offset x="0" y="-128" angle="0"/>
+					<velocity x="0" y="0" />
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp9" />
+				</entry>
+				<entry name="entry5" time="0">
+					<offset x="0" y="-128" angle="0"/>
+					<velocity x="0" y="0" />
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp9" />
+				</entry>
+			</wave>
+			<!-- fifth series -->
+			<wave name="wave25" postdelay="3">
+				<entry name="entry1" time="0">
+					<offset x="0" y="128" angle="180"/>
+					<velocity x="0" y="0" />
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp5" />
+				</entry>
+				<entry name="entry2">
+					<offset x="0" y="-128" angle="0"/>
+					<velocity x="0" y="0" />
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp5" />
+				</entry>
+				<entry name="entry3">
+					<offset x="0" y="128" angle="0"/>
+					<velocity x="0" y="0" />
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp5" />
+				</entry>
+				<entry name="entry4">
+					<offset x="0" y="-128" angle="0"/>
+					<velocity x="0" y="0" />
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp5" />
+				</entry>
+				<entry name="entry5">
+					<offset x="0" y="128" angle="0"/>
+					<velocity x="0" y="0" />
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp5" />
+				</entry>
+				<entry name="entry6">
+					<offset x="0" y="-128" angle="0"/>
+					<velocity x="0" y="0" />
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp5" />
+				</entry>
+			</wave>
+			<wave name="wave26" postdelay="3">
+				<entry name="entry1" time="0">
+					<offset x="0" y="128" angle="180"/>
+					<velocity x="0" y="0" />
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp6" />
+				</entry>
+				<entry name="entry2">
+					<offset x="0" y="-128" angle="0"/>
+					<velocity x="0" y="0" />
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp6" />
+				</entry>
+				<entry name="entry3">
+					<offset x="0" y="128" angle="0"/>
+					<velocity x="0" y="0" />
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp6" />
+				</entry>
+				<entry name="entry4">
+					<offset x="0" y="-128" angle="0"/>
+					<velocity x="0" y="0" />
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp6" />
+				</entry>
+				<entry name="entry5">
+					<offset x="0" y="128" angle="0"/>
+					<velocity x="0" y="0" />
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp6" />
+				</entry>
+				<entry name="entry6">
+					<offset x="0" y="-128" angle="0"/>
+					<velocity x="0" y="0" />
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp6" />
+				</entry>
+			</wave>
+			<wave name="wave27" postdelay="3">
+				<entry name="entry1" time="0">
+					<offset x="0" y="128" angle="180"/>
+					<velocity x="0" y="0" />
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp7" />
+				</entry>
+				<entry name="entry2">
+					<offset x="0" y="-128" angle="0"/>
+					<velocity x="0" y="0" />
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp7" />
+				</entry>
+				<entry name="entry3">
+					<offset x="0" y="128" angle="0"/>
+					<velocity x="0" y="0" />
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp7" />
+				</entry>
+				<entry name="entry4">
+					<offset x="0" y="-128" angle="0"/>
+					<velocity x="0" y="0" />
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp7" />
+				</entry>
+				<entry name="entry5">
+					<offset x="0" y="128" angle="0"/>
+					<velocity x="0" y="0" />
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp7" />
+				</entry>
+				<entry name="entry6">
+					<offset x="0" y="-128" angle="0"/>
+					<velocity x="0" y="0" />
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp7" />
+				</entry>
+			</wave>
+			<wave name="wave28" postdelay="3">
+				<entry name="entry1" time="0">
+					<offset x="0" y="128" angle="180"/>
+					<velocity x="0" y="0" />
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp8" />
+				</entry>
+				<entry name="entry2">
+					<offset x="0" y="-128" angle="0"/>
+					<velocity x="0" y="0" />
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp8" />
+				</entry>
+				<entry name="entry3">
+					<offset x="0" y="128" angle="0"/>
+					<velocity x="0" y="0" />
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp8" />
+				</entry>
+				<entry name="entry4">
+					<offset x="0" y="-128" angle="0"/>
+					<velocity x="0" y="0" />
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp8" />
+				</entry>
+				<entry name="entry5">
+					<offset x="0" y="128" angle="0"/>
+					<velocity x="0" y="0" />
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp8" />
+				</entry>
+				<entry name="entry6">
+					<offset x="0" y="-128" angle="0"/>
+					<velocity x="0" y="0" />
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp8" />
+				</entry>
+			</wave>
+			<wave name="wave29" postdelay="3">
+				<entry name="entry1" time="0">
+					<offset x="0" y="128" angle="180"/>
+					<velocity x="0" y="0" />
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp9" />
+				</entry>
+				<entry name="entry2" time="0">
+					<offset x="0" y="-128" angle="0"/>
+					<velocity x="0" y="0" />
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp9" />
+				</entry>
+				<entry name="entry3" time="0">
+					<offset x="0" y="128" angle="0"/>
+					<velocity x="0" y="0" />
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp9" />
+				</entry>
+				<entry name="entry4" time="0">
+					<offset x="0" y="-128" angle="0"/>
+					<velocity x="0" y="0" />
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp9" />
+				</entry>
+				<entry name="entry5" time="0">
+					<offset x="0" y="128" angle="0"/>
+					<velocity x="0" y="0" />
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp9" />
+				</entry>
+				<entry name="entry6" time="0">
+					<offset x="0" y="-128" angle="0"/>
+					<velocity x="0" y="0" />
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp9" />
+				</entry>
+			</wave>
+			<wave name="wave30" postdelay="3">
+				<entry name="entry1" time="0">
+					<offset x="0" y="128" angle="180"/>
+					<velocity x="0" y="0" />
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp10" />
+				</entry>
+				<entry name="entry2" time="0">
+					<offset x="0" y="-128" angle="0"/>
+					<velocity x="0" y="0" />
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp10" />
+				</entry>
+				<entry name="entry3" time="0">
+					<offset x="0" y="128" angle="0"/>
+					<velocity x="0" y="0" />
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp10" />
+				</entry>
+				<entry name="entry4" time="0">
+					<offset x="0" y="-128" angle="0"/>
+					<velocity x="0" y="0" />
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp10" />
+				</entry>
+				<entry name="entry5" time="0">
+					<offset x="0" y="128" angle="0"/>
+					<velocity x="0" y="0" />
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp10" />
+				</entry>
+				<entry name="entry6" time="0">
+					<offset x="0" y="-128" angle="0"/>
+					<velocity x="0" y="0" />
+					<scatter x="128" y="0" angle="90" />
+					<spawn name="enemyraiderwarp10" />
+				</entry>
+			</wave>
+			<repeat name="wave25">
+			</repeat>
+		</wavesequence>
+	</entity>
+	
+</world>
