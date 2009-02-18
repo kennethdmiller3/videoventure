@@ -60,8 +60,9 @@ namespace Database
 	Typed<Typed<b2MouseJointDef> > collidabletemplatemouse(0x92dbc29b /* "collidabletemplatemouse" */);
 #endif
 	Typed<Collidable *> collidable(0x74e9dbae /* "collidable" */);
-	Typed<Typed<Collidable::Listener> > collidablecontactadd(0x7cf2c45d /* "collidablecontactadd" */);
-	Typed<Typed<Collidable::Listener> > collidablecontactremove(0x95ed5aba /* "collidablecontactremove" */);
+	Typed<Typed<Collidable::ContactListener> > collidablecontactadd(0x7cf2c45d /* "collidablecontactadd" */);
+	Typed<Typed<Collidable::ContactListener> > collidablecontactremove(0x95ed5aba /* "collidablecontactremove" */);
+	Typed<Typed<Collidable::BoundaryListener> > collidableboundaryviolation(0x1544aaaf /* "collidableboundaryviolation" */);
 
 	namespace Loader
 	{
@@ -1018,9 +1019,9 @@ public:
 		b2Shape *shape2 = point->shape2;
 		Database::Key id1 = reinterpret_cast<Database::Key>(shape1->GetUserData());
 		Database::Key id2 = reinterpret_cast<Database::Key>(shape2->GetUserData());
-		for (Database::Typed<Collidable::Listener>::Iterator itor(Database::collidablecontactadd.Find(id1)); itor.IsValid(); ++itor)
+		for (Database::Typed<Collidable::ContactListener>::Iterator itor(Database::collidablecontactadd.Find(id1)); itor.IsValid(); ++itor)
 			itor.GetValue()(id1, id2, 0.0f /*shape1->GetBody()->m_sweep.t0*/, *point);
-		for (Database::Typed<Collidable::Listener>::Iterator itor(Database::collidablecontactadd.Find(id2)); itor.IsValid(); ++itor)
+		for (Database::Typed<Collidable::ContactListener>::Iterator itor(Database::collidablecontactadd.Find(id2)); itor.IsValid(); ++itor)
 			itor.GetValue()(id2, id1, 0.0f /*shape2->GetBody()->m_sweep.t0*/, *point);
 	};
 
@@ -1038,9 +1039,9 @@ public:
 		b2Shape *shape2 = point->shape2;
 		Database::Key id1 = reinterpret_cast<Database::Key>(shape1->GetUserData());
 		Database::Key id2 = reinterpret_cast<Database::Key>(shape2->GetUserData());
-		for (Database::Typed<Collidable::Listener>::Iterator itor(Database::collidablecontactremove.Find(id1)); itor.IsValid(); ++itor)
+		for (Database::Typed<Collidable::ContactListener>::Iterator itor(Database::collidablecontactremove.Find(id1)); itor.IsValid(); ++itor)
 			itor.GetValue()(id1, id2, 0.0f /*shape1->GetBody()->m_sweep.t0*/, *point);
-		for (Database::Typed<Collidable::Listener>::Iterator itor(Database::collidablecontactremove.Find(id2)); itor.IsValid(); ++itor)
+		for (Database::Typed<Collidable::ContactListener>::Iterator itor(Database::collidablecontactremove.Find(id2)); itor.IsValid(); ++itor)
 			itor.GetValue()(id2, id1, 0.0f /*shape2->GetBody()->m_sweep.t0*/, *point);
 	}
 
@@ -1067,6 +1068,8 @@ public:
 	virtual void Violation(b2Body* body)
 	{
 		Database::Key id = reinterpret_cast<Database::Key>(body->GetUserData());
+		for (Database::Typed<Collidable::BoundaryListener>::Iterator itor(Database::collidableboundaryviolation.Find(id)); itor.IsValid(); ++itor)
+			itor.GetValue()(id);
 		if (mList.empty())
 			Activate();
 		mList.push_back(id);

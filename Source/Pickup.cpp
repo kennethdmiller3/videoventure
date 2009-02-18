@@ -143,14 +143,14 @@ Pickup::Pickup(void)
 Pickup::Pickup(const PickupTemplate &aTemplate, unsigned int aId)
 : mId(aId), mDestroy(false)
 {
-	Database::Typed<Collidable::Listener> &listeners = Database::collidablecontactadd.Open(mId);
-	listeners.Put(Database::Key(this), Collidable::Listener(this, &Pickup::Collide));
+	Database::Typed<Collidable::ContactListener> &listeners = Database::collidablecontactadd.Open(mId);
+	listeners.Put(Database::Key(this), Collidable::ContactListener(this, &Pickup::Collide));
 	Database::collidablecontactadd.Close(mId);
 }
 
 Pickup::~Pickup(void)
 {
-	Database::Typed<Collidable::Listener> &listeners = Database::collidablecontactadd.Open(mId);
+	Database::Typed<Collidable::ContactListener> &listeners = Database::collidablecontactadd.Open(mId);
 	listeners.Delete(Database::Key(this));
 	Database::collidablecontactadd.Close(mId);
 }

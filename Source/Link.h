@@ -20,9 +20,8 @@ public:
 	// update flags
 	bool mUpdateAngle;
 	bool mUpdatePosition;
-
-	// relative depth
-	bool mBelow;
+	bool mUpdateTeam;
+	bool mDeleteSecondary;
 
 public:
 	LinkTemplate(void);

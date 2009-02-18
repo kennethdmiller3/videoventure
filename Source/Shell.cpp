@@ -19,6 +19,7 @@ extern "C" void OGLCONSOLE_CreateFont();
 extern "C" void OGLCONSOLE_Resize(OGLCONSOLE_Console console);
 
 extern bool escape;
+extern bool paused;
 
 extern void UpdateWindowAction(void);
 
@@ -906,20 +907,25 @@ ShellMenuItem shellmenuvideoitems[] =
 
 /*
 channels				[-] <channels> [+]
-volume					[-] <volume %> [+]
+effects volume			[-] <volume %> [+]
+music volume			[-] <volume %> [+]
 test					[-] <sound> [+]
 */
 
 char shellmenuaudiosoundchannelstext[8];
-char shellmenuaudiosoundvolumetext[8];
+char shellmenuaudiosoundvolumeeffecttext[8];
+char shellmenuaudiosoundvolumemusictext[8];
 
 void ShellMenuAudioEnter()
 {
 	VarItem *varsoundchannels = VarItem::CreateInteger("shell.menu.audio.channels", SOUND_CHANNELS, 1);
 	TIXML_SNPRINTF(shellmenuaudiosoundchannelstext, sizeof(shellmenuaudiosoundchannelstext), "%d", varsoundchannels->GetInteger());
 
-	VarItem *varsoundvolume = VarItem::CreateInteger("shell.menu.audio.volume", xs_RoundToInt(SOUND_VOLUME * 10), 0, 20);
-	TIXML_SNPRINTF(shellmenuaudiosoundvolumetext, sizeof(shellmenuaudiosoundvolumetext), "%d%%", varsoundvolume->GetInteger() * 10);
+	VarItem *varsoundvolumeeffect = VarItem::CreateInteger("shell.menu.audio.volume.effect", xs_RoundToInt(SOUND_VOLUME_EFFECT * 10), 0, 20);
+	TIXML_SNPRINTF(shellmenuaudiosoundvolumeeffecttext, sizeof(shellmenuaudiosoundvolumeeffecttext), "%d%%", varsoundvolumeeffect->GetInteger() * 10);
+
+	VarItem *varsoundvolumemusic = VarItem::CreateInteger("shell.menu.audio.volume.music", xs_RoundToInt(SOUND_VOLUME_MUSIC * 10), 0, 20);
+	TIXML_SNPRINTF(shellmenuaudiosoundvolumemusictext, sizeof(shellmenuaudiosoundvolumemusictext), "%d%%", varsoundvolumemusic->GetInteger() * 10);
 }
 
 void ShellMenuAudioExit()
@@ -929,7 +935,8 @@ void ShellMenuAudioExit()
 void ShellMenuAudioPressAccept()
 {
 	SOUND_CHANNELS = VarItem::GetInteger("shell.menu.audio.channels");
-	SOUND_VOLUME = VarItem::GetInteger("shell.menu.audio.volume") / 10.0f;
+	SOUND_VOLUME_EFFECT = VarItem::GetInteger("shell.menu.audio.volume.effect") / 10.0f;
+	SOUND_VOLUME_MUSIC = VarItem::GetInteger("shell.menu.audio.volume.music") / 10.0f;
 
 	WritePreferences("preferences.xml");
 
@@ -960,24 +967,41 @@ void ShellMenuAudioPressSoundChannelsDown()
 	}
 }
 
-void ShellMenuAudioPressSoundVolumeUp()
+void ShellMenuAudioPressSoundVolumeEffectUp()
 {
-	if (VarItem *item = Database::varitem.Get(0xf97c9992 /* "shell.menu.audio.volume" */))
+	if (VarItem *item = Database::varitem.Get(0x686112dd /* "shell.menu.audio.volume.effect" */))
 	{
 		item->SetInteger(item->GetInteger() + 1);
-		sprintf(shellmenuaudiosoundvolumetext, "%d%%", item->GetInteger() * 10);
+		sprintf(shellmenuaudiosoundvolumeeffecttext, "%d%%", item->GetInteger() * 10);
 	}
 }
 
-void ShellMenuAudioPressSoundVolumeDown()
+void ShellMenuAudioPressSoundVolumeEffectDown()
 {
-	if (VarItem *item = Database::varitem.Get(0xf97c9992 /* "shell.menu.audio.volume" */))
+	if (VarItem *item = Database::varitem.Get(0x686112dd /* "shell.menu.audio.volume.effect" */))
 	{
 		item->SetInteger(item->GetInteger() - 1);
-		sprintf(shellmenuaudiosoundvolumetext, "%d%%", item->GetInteger() * 10);
+		sprintf(shellmenuaudiosoundvolumeeffecttext, "%d%%", item->GetInteger() * 10);
 	}
 }
 
+void ShellMenuAudioPressSoundVolumeMusicUp()
+{
+	if (VarItem *item = Database::varitem.Get(0xea502ecf /* "shell.menu.audio.volume.music" */))
+	{
+		item->SetInteger(item->GetInteger() + 1);
+		sprintf(shellmenuaudiosoundvolumemusictext, "%d%%", item->GetInteger() * 10);
+	}
+}
+
+void ShellMenuAudioPressSoundVolumeMusicDown()
+{
+	if (VarItem *item = Database::varitem.Get(0xea502ecf /* "shell.menu.audio.volume.music" */))
+	{
+		item->SetInteger(item->GetInteger() - 1);
+		sprintf(shellmenuaudiosoundvolumemusictext, "%d%%", item->GetInteger() * 10);
+	}
+}
 
 ShellMenuItem shellmenuaudioitems[] = 
 {
@@ -1050,7 +1074,7 @@ ShellMenuItem shellmenuaudioitems[] =
 		Vector2( 320 - 20 - 240, 220 + 32 * 1 ),
 		Vector2( 240, 24 ),
 		NULL,
-		"Mixer Volume",
+		"Effects Volume",
 		Vector2( 240 - 8, 12 ),
 		Vector2( 1.0f, 0.5f ),
 		Vector2( 16, 16 ),
@@ -1070,13 +1094,13 @@ ShellMenuItem shellmenuaudioitems[] =
 		optionbordercolor,
 		optionlabelcolor,
 		BUTTON_NORMAL,
-		ShellMenuAudioPressSoundVolumeDown,
+		ShellMenuAudioPressSoundVolumeEffectDown,
 	},
 	{
 		Vector2( 320 + 20 + 30 + 10, 220 + 32 * 1 ),
 		Vector2( 160, 24 ),
 		NULL,
-		shellmenuaudiosoundvolumetext,
+		shellmenuaudiosoundvolumeeffecttext,
 		Vector2( 80, 12 ),
 		Vector2( 0.5f, 0.5f ),
 		Vector2( 16, 16 ),
@@ -1096,7 +1120,59 @@ ShellMenuItem shellmenuaudioitems[] =
 		optionbordercolor,
 		optionlabelcolor,
 		BUTTON_NORMAL,
-		ShellMenuAudioPressSoundVolumeUp,
+		ShellMenuAudioPressSoundVolumeEffectUp,
+	},
+	{
+		Vector2( 320 - 20 - 240, 220 + 32 * 2 ),
+		Vector2( 240, 24 ),
+		NULL,
+		"Music Volume",
+		Vector2( 240 - 8, 12 ),
+		Vector2( 1.0f, 0.5f ),
+		Vector2( 16, 16 ),
+		inertbordercolor,
+		inertlabelcolor,
+		BUTTON_NORMAL,
+		NULL,
+	},
+	{
+		Vector2( 320 + 20, 220 + 32 * 2 ),
+		Vector2( 30, 24 ),
+		optionbackcolor,
+		"-",
+		Vector2( 15, 12 ),
+		Vector2( 0.5f, 0.5f ),
+		Vector2( 16, 16 ),
+		optionbordercolor,
+		optionlabelcolor,
+		BUTTON_NORMAL,
+		ShellMenuAudioPressSoundVolumeMusicDown,
+	},
+	{
+		Vector2( 320 + 20 + 30 + 10, 220 + 32 * 2 ),
+		Vector2( 160, 24 ),
+		NULL,
+		shellmenuaudiosoundvolumemusictext,
+		Vector2( 80, 12 ),
+		Vector2( 0.5f, 0.5f ),
+		Vector2( 16, 16 ),
+		inertbordercolor,
+		inertlabelcolor,
+		BUTTON_NORMAL,
+		NULL,
+	},
+	{
+		Vector2( 320 + 20 + 30 + 10 + 160, 220 + 32 * 2 ),
+		Vector2( 30, 24 ),
+		optionbackcolor,
+		"+",
+		Vector2( 15, 12 ),
+		Vector2( 0.5f, 0.5f ),
+		Vector2( 16, 16 ),
+		optionbordercolor,
+		optionlabelcolor,
+		BUTTON_NORMAL,
+		ShellMenuAudioPressSoundVolumeMusicUp,
 	},
 	{
 		Vector2( 40, 460 - 32 ),
@@ -1417,11 +1493,15 @@ void EscapeMenuEnter(void)
 		shellmenu.Push(&escapemenumainpage);
 		overlay->Show();
 	}
+	if (!paused)
+		Sound::Pause();
 }
 
 // exit escape menu
 void EscapeMenuExit(void)
 {
+	if (!paused)
+		Sound::Resume();
 	if (Overlay *overlay = Database::overlay.Get(0x9e212406 /* "escape" */))
 	{
 		for (Database::Typed<PlayerHUD *>::Iterator itor(&Database::playerhud); itor.IsValid(); ++itor)

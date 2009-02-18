@@ -49,8 +49,12 @@ bool ReadPreferences(const char *config)
 
 			case 0x0e0d9594 /* "sound" */:
 				element->QueryIntAttribute("channels", &SOUND_CHANNELS);
-				if (element->QueryFloatAttribute("volume", &SOUND_VOLUME) == TIXML_SUCCESS)
-					SOUND_VOLUME /= 100;
+				if (element->QueryFloatAttribute("volume", &SOUND_VOLUME_EFFECT) == TIXML_SUCCESS)
+					SOUND_VOLUME_MUSIC = SOUND_VOLUME_EFFECT /= 100;
+				if (element->QueryFloatAttribute("effectvolume", &SOUND_VOLUME_EFFECT) == TIXML_SUCCESS)
+					SOUND_VOLUME_EFFECT /= 100;
+				if (element->QueryFloatAttribute("musicvolume", &SOUND_VOLUME_MUSIC) == TIXML_SUCCESS)
+					SOUND_VOLUME_MUSIC /= 100;
 				break;
 			}
 		}
@@ -97,7 +101,8 @@ bool WritePreferences(const char *config)
 
 	TiXmlElement *sound = new TiXmlElement("sound");
 	sound->SetAttribute("channels", SOUND_CHANNELS);
-	sound->SetAttribute("volume", xs_RoundToInt(SOUND_VOLUME*100));
+	sound->SetAttribute("effectvolume", xs_RoundToInt(SOUND_VOLUME_EFFECT*100));
+	sound->SetAttribute("musicvolume", xs_RoundToInt(SOUND_VOLUME_MUSIC*100));
 	preferences->LinkEndChild(sound);
 
 	document.SaveFile();

@@ -95,6 +95,7 @@ namespace Database
 			WeaponInitializer()
 			{
 				AddActivate(0xb1050fa7 /* "weapontemplate" */, Entry(this, &WeaponInitializer::Activate));
+				AddPostActivate(0xb1050fa7 /* "weapontemplate" */, Entry(this, &WeaponInitializer::PostActivate));
 				AddDeactivate(0xb1050fa7 /* "weapontemplate" */, Entry(this, &WeaponInitializer::Deactivate));
 			}
 
@@ -103,9 +104,12 @@ namespace Database
 				const WeaponTemplate &weapontemplate = Database::weapontemplate.Get(aId);
 				Weapon *weapon = new Weapon(weapontemplate, aId);
 				Database::weapon.Put(aId, weapon);
-
-				// TO DO: check to make sure this does not have an order dependency
 				weapon->SetControl(aId);
+			}
+
+			void PostActivate(unsigned int aId)
+			{
+				Weapon *weapon = Database::weapon.Get(aId);
 				for (unsigned int aControlId = aId; aControlId != 0; aControlId = Database::backlink.Get(aControlId))
 				{
 					if (Database::controller.Find(aControlId))
