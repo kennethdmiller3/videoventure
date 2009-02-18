@@ -1,0 +1,41 @@
+﻿<?xml version="1.0" ?>
+<template name="enemyraiderbeam">
+	<beam damage="1" range="48" filter="redbullet" spawnonimpact="enemybulletexplosion"/>
+	<expire time="0.2"/>
+	<renderable radius="48">
+		<triangles>
+			<set name="p" type="position">
+				<key time="0.0" x="1.0"/>
+				<key time="0.2" x="0.5"/>
+			</set>
+			<color>
+				<key time="0.0" r="1.0" g="0.8" b="0.0" a="1.0"/>
+				<key time="0.2" r="1.0" g="0.4" b="0.0" a="0.0"/>
+			</color>
+			<vertex variable="p"/>
+			<mul name="p" type="scale" x="-1"/>
+			<vertex variable="p"/>
+			<color>
+				<key time="0.0" r="1.0" g="1.0" b="0.0" a="1.0"/>
+				<key time="0.2" r="1.0" g="0.7" b="0.0" a="1.0"/>
+			</color>
+			<vertex variable="beamend"/>
+			<set name="p" type="position">
+				<key time="0.0" x="1.0"/>
+				<key time="0.2" x="2.0"/>
+			</set>
+			<color>
+				<key time="0.0" r="1.0" g="0.4" b="0.0" a="0.5"/>
+				<key time="0.2" r="1.0" g="0.2" b="0.0" a="0.0"/>
+			</color>
+			<vertex variable="p"/>
+			<mul name="p" type="scale" x="-1"/>
+			<vertex variable="p"/>
+			<color>
+				<key time="0.0" r="1.0" g="0.7" b="0.0" a="0.5"/>
+				<key time="0.2" r="1.0" g="0.4" b="0.0" a="0.5"/>
+			</color>
+			<vertex variable="beamend"/>
+		</triangles>
+	</renderable>
+</template>
