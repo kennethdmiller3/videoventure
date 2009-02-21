@@ -34,6 +34,16 @@ public:
 		return b2Vec2(x, y);
 	}
 
+	float &operator [](int index)
+	{
+		return (&x)[index];
+	}
+
+	const float &operator [](int index) const
+	{
+		return (&x)[index];
+	}
+
 	friend const Vector2 operator+(const Vector2 &v1, const Vector2 &v2)
 	{
 		return Vector2(v1.x + v2.x, v1.y + v2.y);

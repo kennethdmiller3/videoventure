@@ -239,6 +239,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Source\Expression.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\Source\GameState.cpp"
 				>
 			</File>
@@ -457,6 +461,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Source\Color4.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Source\Command.h"
 				>
 			</File>
@@ -634,6 +642,10 @@
 			</File>
 			<File
 				RelativePath=".\Source\Vector2.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Vector3.h"
 				>
 			</File>
 			<File
