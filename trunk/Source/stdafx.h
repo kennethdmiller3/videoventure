@@ -40,6 +40,12 @@
 #include "Transform2.h"
 #include "AlignedBox2.h"
 
+// 3d math
+#include "Vector3.h"
+
+// color
+#include "Color4.h"
+
 // utility includes
 #include "Hash.h"
 #include "Database.h"
@@ -63,8 +69,6 @@ extern bool SCREEN_FULLSCREEN;
 
 // view attributes
 extern float VIEW_SIZE;
-extern float VIEW_AIM;
-extern float VIEW_AIM_FILTER;
 
 // opengl attributes
 extern bool OPENGL_SWAPCONTROL;
@@ -215,32 +219,6 @@ namespace Random
 }
 
 // color typedef (HACK)
-struct Color4
-{
-	float r;
-	float g;
-	float b;
-	float a;
-
-	Color4()
-	{
-	}
-
-	Color4(float r, float g, float b, float a)
-		: r(r), g(g), b(b), a(a)
-	{
-	}
-
-	operator float *()
-	{
-		return static_cast<float *>(&r);
-	}
-
-	operator const float *() const
-	{
-		return static_cast<const float *>(&r);
-	}
-};
 typedef Color4 Color4_2[2];
 
 

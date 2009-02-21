@@ -6,9 +6,10 @@ class PlayerCamera : public Updatable
 {
 public:
 	// camera values
-	unsigned int trackid;
-	Vector2 trackpos[2];
-	Vector2 trackaim;
+	unsigned int mTrackId;
+	Vector2 mTrackPos0;
+	Vector2 mTrackPos1;
+	Vector2 mTrackAim;
 
 public:
 	PlayerCamera(unsigned int aPlayerId);

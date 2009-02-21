@@ -4,6 +4,39 @@
 #include "Interpolator.h"
 #include "Noise.h"
 
+#include "Expression.h"
+
+struct Array4
+{
+	float v0, v1, v2, v3;
+
+	Array4()
+	{
+	}
+
+	Array4(const float v0, const float v1, const float v2, const float v3)
+		: v0(v0), v1(v1), v2(v2), v3(v3)
+	{
+	}
+
+	friend const Array4 operator+(const Array4 &a, const Array4 &b)
+	{
+		return Array4(a.v0+b.v0, a.v1+b.v1, a.v2+b.v2, a.v3+b.v3);
+	}
+	friend const Array4 operator-(const Array4 &a, const Array4 &b)
+	{
+		return Array4(a.v0-b.v0, a.v1-b.v1, a.v2-b.v2, a.v3-b.v3);
+	}
+	friend const Array4 operator*(const Array4 &a, const Array4 &b)
+	{
+		return Array4(a.v0*b.v0, a.v1*b.v1, a.v2*b.v2, a.v3*b.v3);
+	}
+	friend const Array4 operator/(const Array4 &a, const Array4 &b)
+	{
+		return Array4(a.v0/b.v0, a.v1/b.v1, a.v2/b.v2, a.v3/b.v3);
+	}
+};
+
 enum DrawlistOp
 {
 	DO_glAccum, //(GLenum op, GLfloat value)
@@ -169,21 +202,13 @@ enum DrawlistOp
 #endif
 };
 
-enum DrawlistDatatype
-{
-	DD_Literal,
-	DD_Variable,
-	DD_Interpolator,
-	DD_Random,
-};
-
 // attribute names
 static const char * sPositionNames[] = { "x", "y", "z" };
 static const float sPositionDefault[] = { 0.0f, 0.0f, 0.0f };
 static const int sPositionWidth = 3;
-static const char * sRotationNames[] = { "angle", "x", "y", "z" };
-static const float sRotationDefault[] = { 0.0f, 0.0f, 0.0f, 1.0f };
-static const int sRotationWidth = 4;
+static const char * sRotationNames[] = { "angle" };
+static const float sRotationDefault[] = { 0.0f };
+static const int sRotationWidth = 1;
 static const char * sScaleNames[] = { "x", "y", "z" };
 static const float sScaleDefault[] = { 1.0f, 1.0f, 1.0f };
 static const int sScaleWidth = 3;
@@ -333,48 +358,206 @@ static const unsigned int sHashToAttribMask[][2] =
 };
 #endif
 
-void ProcessDrawData(const TiXmlElement *element, std::vector<unsigned int> &buffer, int width, const char *names[], const float data[])
+template<typename T> void ProcessExpression(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char *names[], const float data[]);
+
+// draw item context
+// (extends expression context)
+struct DrawItemContext : public Expression::Context
+{
+	float mParam;
+	unsigned int mId;
+};
+
+// evaluate a draw data variable
+void EvaluateVariable(float value[], int width, DrawItemContext &aContext)
+{
+	unsigned int name = *aContext.mStream++;
+	const Database::Typed<float> &variables = Database::variable.Get(aContext.mId);
+	for (int i = 0; i < width; ++i)
+		value[i] = variables.Get(name+i);
+}
+template <typename T> static T EvaluateVariable(DrawItemContext &aContext)
+{
+	// TO DO: get the global value
+	T value = T();
+	EvaluateVariable(reinterpret_cast<float * __restrict>(&value), sizeof(T)/sizeof(float), aContext);
+	return value;
+}
+
+// evaluate a draw data interpolator
+void EvaluateInterpolator(float value[], int width, DrawItemContext &aContext)
+{
+	// data size
+	unsigned int size = *aContext.mStream++;
+
+	// get interpolator value
+	const int count = *aContext.mStream;
+	const float * __restrict keys = reinterpret_cast<const float * __restrict>(aContext.mStream+1);
+	int dummy = 0;
+	ApplyInterpolator(value, width, count, keys, aContext.mParam, dummy);
+
+	// advance stream
+	aContext.mStream += size;
+
+}
+template <typename T> static T EvaluateInterpolator(DrawItemContext &aContext)
+{
+	T value = T();
+	EvaluateInterpolator(reinterpret_cast<float * __restrict>(&value), sizeof(T)/sizeof(float), aContext);
+	return value;
+}
+
+// random
+float Rand(void)
+{
+	return Random::Value(0.0f, 1.0f);
+}
+
+// various constructors
+namespace Expression
+{
+	template<typename T> const T Construct(Context &aContext)
+	{
+		return T();
+	}
+	template<> const float Construct<float>(Context &aContext)
+	{
+		return Evaluate<float>(aContext);
+	}
+	template<> const Vector2 Construct<Vector2>(Context &aContext)
+	{
+		float arg1(Evaluate<float>(aContext));
+		float arg2(Evaluate<float>(aContext));
+		return Vector2(arg1, arg2);
+	}
+	template<> const Vector3 Construct<Vector3>(Context &aContext)
+	{
+		float arg1(Evaluate<float>(aContext));
+		float arg2(Evaluate<float>(aContext));
+		float arg3(Evaluate<float>(aContext));
+		return Vector3(arg1, arg2, arg3);
+	}
+	template<> const Color4 Construct<Color4>(Context &aContext)
+	{
+		float arg1(Evaluate<float>(aContext));
+		float arg2(Evaluate<float>(aContext));
+		float arg3(Evaluate<float>(aContext));
+		float arg4(Evaluate<float>(aContext));
+		return Color4(arg1, arg2, arg3, arg4);
+	}
+	template<> const Array4 Construct<Array4>(Context &aContext)
+	{
+		float arg1(Evaluate<float>(aContext));
+		float arg2(Evaluate<float>(aContext));
+		float arg3(Evaluate<float>(aContext));
+		float arg4(Evaluate<float>(aContext));
+		return Array4(arg1, arg2, arg3, arg4);
+	}
+
+	// binary operators
+	template <typename R, typename A1, typename A2> R Add(Context &aContext)
+	{
+		A1 arg1(Evaluate<A1>(aContext));
+		A2 arg2(Evaluate<A2>(aContext));
+		return arg1 + arg2;
+	}
+	template <typename R, typename A1, typename A2> R Sub(Context &aContext)
+	{
+		A1 arg1(Evaluate<A1>(aContext));
+		A2 arg2(Evaluate<A2>(aContext));
+		return arg1 - arg2;
+	}
+	template <typename R, typename A1, typename A2> R Mul(Context &aContext)
+	{
+		A1 arg1(Evaluate<A1>(aContext));
+		A2 arg2(Evaluate<A2>(aContext));
+		return arg1 * arg2;
+	}
+	template <typename R, typename A1, typename A2> R Div(Context &aContext)
+	{
+		A1 arg1(Evaluate<A1>(aContext));
+		A2 arg2(Evaluate<A2>(aContext));
+		return arg1 / arg2;
+	}
+}
+
+// process expression data
+template<typename T> void ProcessExpression(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char *names[], const float data[])
 {
 	if (const char *name = element->Attribute("variable"))
 	{
 		// push a reference to a variable value
-		buffer.push_back(DD_Variable);
-		buffer.push_back(Hash(name));
+		Expression::Append(buffer, EvaluateVariable<T>, Hash(name));
 	}
 	else if (element->FirstChildElement())
 	{
 		// push an interpolator
-		buffer.push_back(DD_Interpolator);
+		Expression::Append(buffer, EvaluateInterpolator<T>);
 		buffer.push_back(0);
 		int start = buffer.size();
-		ProcessInterpolatorItem(element, buffer, width, names, data);
+		ProcessInterpolatorItem(element, buffer, sizeof(T)/sizeof(float), names, data);
 		buffer[start - 1] = buffer.size() - start;
 	}
 	else if (element->Attribute("rand"))
 	{
-		buffer.push_back(DD_Random);
+		// get random count
 		int count;
 		element->QueryIntAttribute("rand", &count);
-		buffer.push_back(count);
-		for (int i = 0; i < width; i++)
+
+		if (count > 0)
+		{
+			// push add
+			Expression::Append(buffer, Expression::Add<T, T, T>);
+		}
+
+		// push average
+		Expression::Append(buffer, Expression::Constant<T>);
+		for (int i = 0; i < sizeof(T)/sizeof(float); i++)
 		{
 			char label[64];
 			sprintf(label, "%s_avg", names[i]);
 			float average = data[i];
 			element->QueryFloatAttribute(label, &average);
 			buffer.push_back(*reinterpret_cast<unsigned int *>(&average));
-			sprintf(label, "%s_var", names[i]);
-			float variance = 0.0f;
-			element->QueryFloatAttribute(label, &variance);
-			variance /= count;
-			buffer.push_back(*reinterpret_cast<unsigned int *>(&variance));
+		}
+
+		if (count > 0)
+		{
+			// push multiply
+			Expression::Append(buffer, Expression::Mul<T, T, T>);
+
+			// push variance
+			Expression::Append(buffer, Expression::Constant<T>);
+			for (int i = 0; i < sizeof(T)/sizeof(float); i++)
+			{
+				char label[64];
+				sprintf(label, "%s_var", names[i]);
+				float variance = 0.0f;
+				element->QueryFloatAttribute(label, &variance);
+				variance /= count;
+				buffer.push_back(*reinterpret_cast<unsigned int *>(&variance));
+			}
+
+			for (int i = 0; i < count; ++i)
+			{
+				if (count > 1 && i < count - 1)
+				{
+					// push add
+					Expression::Append(buffer, Expression::Add<T, T, T>);
+				}
+
+				// push randoms
+				Expression::Append(buffer, Expression::Construct<T>);
+				for (int w = 0; w < sizeof(T)/sizeof(float); ++w)
+					Expression::Append(buffer, Expression::Nullary<float, Rand>);
+			}
 		}
 	}
 	else
 	{
 		// push literal data
-		buffer.push_back(DD_Literal);
-		for (int i = 0; i < width; i++)
+		Expression::Append(buffer, Expression::Constant<T>);
+		for (int i = 0; i < sizeof(T)/sizeof(float); i++)
 		{
 			float value = data[i];
 			element->QueryFloatAttribute(names[i], &value);
@@ -412,7 +595,7 @@ void ProcessVariableOperator(const TiXmlElement *element, std::vector<unsigned i
 	buffer.push_back(name);
 	buffer.push_back(width);
 	if (drawdata)
-		ProcessDrawData(element, buffer, width, names, data);
+		ProcessExpression<Array4>(element, buffer, names, data);
 }
 
 void ProcessPrimitive(const TiXmlElement *element, std::vector<unsigned int> &buffer, GLenum mode)
@@ -536,21 +719,21 @@ void ProcessDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buf
 	case 0xad0ecfd5 /* "translate" */:
 		{
 			buffer.push_back(DO_glTranslatef);
-			ProcessDrawData(element, buffer, sPositionWidth, sPositionNames, sPositionDefault);
+			ProcessExpression<Vector3>(element, buffer, sPositionNames, sPositionDefault);
 		}
 		break;
 
 	case 0xa5f4fd0a /* "rotate" */:
 		{
 			buffer.push_back(DO_glRotatef);
-			ProcessDrawData(element, buffer, sRotationWidth, sRotationNames, sRotationDefault);
+			ProcessExpression<float>(element, buffer, sRotationNames, sRotationDefault);
 		}
 		break;
 
 	case 0x82971c71 /* "scale" */:
 		{
 			buffer.push_back(DO_glScalef);
-			ProcessDrawData(element, buffer, sScaleWidth, sScaleNames, sScaleDefault);
+			ProcessExpression<Vector3>(element, buffer, sScaleNames, sScaleDefault);
 		}
 		break;
 
@@ -591,34 +774,34 @@ void ProcessDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buf
 	case 0x945367a7 /* "vertex" */:
 		{
 			buffer.push_back(DO_glVertex3fv);
-			ProcessDrawData(element, buffer, sPositionWidth, sPositionNames, sPositionDefault);
+			ProcessExpression<Vector3>(element, buffer, sPositionNames, sPositionDefault);
 		}
 		break;
 	case 0xe68b9c52 /* "normal" */:
 		{
 			buffer.push_back(DO_glNormal3fv);
-			ProcessDrawData(element, buffer, sPositionWidth, sPositionNames, sPositionDefault);
+			ProcessExpression<Vector3>(element, buffer, sPositionNames, sPositionDefault);
 		}
 		break;
 
 	case 0x3d7e6258 /* "color" */:
 		{
 			buffer.push_back(DO_glColor4fv);
-			ProcessDrawData(element, buffer, sColorWidth, sColorNames, sColorDefault);
+			ProcessExpression<Color4>(element, buffer, sColorNames, sColorDefault);
 		}
 		break;
 
 	case 0x090aa9ab /* "index" */:
 		{
 			buffer.push_back(DO_glIndexf);
-			ProcessDrawData(element, buffer, sIndexWidth, sIndexNames, sIndexDefault);
+			ProcessExpression<float>(element, buffer, sIndexNames, sIndexDefault);
 		}
 		break;
 
 	case 0xdd612dd3 /* "texcoord" */:
 		{
 			buffer.push_back(DO_glTexCoord2fv);
-			ProcessDrawData(element, buffer, sTexCoordWidth, sTexCoordNames, sTexCoordDefault);
+			ProcessExpression<Vector2>(element, buffer, sTexCoordNames, sTexCoordDefault);
 		}
 		break;
 
@@ -1175,74 +1358,6 @@ void ProcessDrawItems(const TiXmlElement *element, std::vector<unsigned int> &bu
 	}
 }
 
-#pragma optimize( "t", on )
-size_t ExecuteDrawData(const unsigned int buffer[], size_t count, int width, float data[], float param, int id)
-{
-	const unsigned int * __restrict itor = buffer;
-	switch(*itor++)
-	{
-	case DD_Literal:
-		{
-			// get literal value
-			for (int i = 0; i < width; i++)
-				reinterpret_cast<unsigned int * __restrict>(data)[i] = *itor++;
-		}
-		break;
-
-	case DD_Variable:
-		{
-			// TO DO: get the global value
-			unsigned int name = *itor++;
-			const Database::Typed<float> &variables = Database::variable.Get(id);
-			for (int i = 0; i < width; i++)
-				data[i] = variables.Get(name+i);
-		}
-		break;
-
-	case DD_Interpolator:
-		{
-			unsigned int size = *itor++;
-
-			// get interpolator value
-			const int count = *itor;
-			const float * __restrict keys = reinterpret_cast<const float * __restrict>(itor+1);
-			int dummy = 0;
-			if (!ApplyInterpolator(data, width, count, keys, param, dummy))
-				memset(data, 0, width*sizeof(float));
-
-			itor += size;
-		}
-		break;
-
-	case DD_Random:
-		{
-			// generate random value
-			int count = *itor++;
-			for (int i = 0; i < width; i++)
-			{
-				// accumulate value
-				float value = 0.0f;
-				for (int c = 0; c < count; ++c)
-					value += 2.0f * Random::Float() - 1.0f;
-
-				// rescale value
-				float average = *reinterpret_cast<const float * __restrict>(itor++);
-				float variance = *reinterpret_cast<const float * __restrict>(itor++);
-				data[i] = value * variance + average;
-			}
-		}
-		break;
-
-	default:
-		DebugPrint("Unrecognized drawlist datatype 0x%08x at index %d\n", *(itor-1), itor-buffer);
-		break;
-	}
-
-	return itor - buffer;
-}
-#pragma optimize("", on)
-
-
 #ifdef DRAWLIST_EMITTER
 float Determinant4f(const float m[16])
 {
@@ -1320,18 +1435,17 @@ void MultiplyMatrix4f(float m[16], float a[16], float b[16])
 
 typedef void (* VariableOperator)(Database::Typed<float> &, unsigned int, float);
 
-size_t ExecuteVariableOperator(const unsigned int buffer[], size_t count, float param, unsigned int id, VariableOperator op)
+bool EvaluateVariableOperator(DrawItemContext &aContext, VariableOperator op)
 {
-	const unsigned int * __restrict itor = buffer;
-	unsigned int name = *itor++;
-	int width = *itor++;
-	float *data = static_cast<float *>(_alloca(width*sizeof(float)));
-	itor += ExecuteDrawData(itor, buffer + count - itor, width, data, param, id);
-	Database::Typed<float> &variables = Database::variable.Open(id);
+	unsigned int name = *aContext.mStream++;
+	int width = *aContext.mStream++;
+	assert(width <= 4);
+	Array4 value(Expression::Evaluate<Array4>(aContext));
+	Database::Typed<float> &variables = Database::variable.Open(aContext.mId);
 	for (int i = 0; i < width; i++)
-		op(variables, name+i, data[i]);
-	Database::variable.Close(id);
-	return itor - buffer;
+		op(variables, name+i, (&value.v0)[i]);
+	Database::variable.Close(aContext.mId);
+	return true;
 }
 
 void VariableOperatorSet(Database::Typed<float> &variables, unsigned int name, float data)
@@ -1385,95 +1499,101 @@ void VariableOperatorMax(Database::Typed<float> &variables, unsigned int name, f
 #pragma optimize( "t", on )
 void ExecuteDrawItems(const unsigned int buffer[], size_t count, float param, unsigned int id)
 {
-	GLfloat data[4];
-
-	const unsigned int * __restrict itor = buffer;
-	while (itor < buffer + count)
+	DrawItemContext context;
+	context.mStart = buffer;
+	context.mStream = buffer;
+	context.mParam = param;
+	context.mId = id;
+	
+	// HACK: 
+	while (context.mStream < buffer + count)
 	{
-		switch (*itor++)
+		switch (*context.mStream++)
 		{
 		case DO_glArrayElement:
-			glArrayElement(*itor++);
+			glArrayElement(*context.mStream++);
 			break;
 
 		case DO_glBegin:
-			glBegin(GLenum(*itor++));
+			glBegin(GLenum(*context.mStream++));
 			break;
 
 		case DO_glBindTexture:
-			glBindTexture(itor[0], itor[1]);
-			itor += 2;
+			glBindTexture(context.mStream[0], context.mStream[1]);
+			context.mStream += 2;
 			break;
 
 		case DO_glBlendFunc:
-			glBlendFunc(itor[0], itor[1]);
-			itor += 2;
+			glBlendFunc(context.mStream[0], context.mStream[1]);
+			context.mStream += 2;
 			break;
 
 		case DO_glCallList:
-			glCallList(GLuint(*itor++));
+			glCallList(GLuint(*context.mStream++));
 			break;
 
 		case DO_glColor4fv:
-			itor += ExecuteDrawData(itor, buffer + count - itor, sColorWidth, data, param, id);
-			glColor4fv(data);
+			{
+				Color4 value(Expression::Evaluate<Color4>(context));
+				glColor4fv(&value.r);
+			}
 			break;
 
 		case DO_glColorPointer:
 			{
-				GLint size = *itor++;
-				GLsizei stride = *itor++;
-				size_t count = *itor++;
-				glColorPointer(size, GL_FLOAT, stride, &*itor);
-				itor += count;
+				GLint size = *context.mStream++;
+				GLsizei stride = *context.mStream++;
+				size_t count = *context.mStream++;
+				glColorPointer(size, GL_FLOAT, stride, &*context.mStream);
+				context.mStream += count;
 			}
 			break;
 
 		case DO_glDisable:
-			glDisable(*itor++);
+			glDisable(*context.mStream++);
 			break;
 
 		case DO_glDisableClientState:
-			glDisableClientState(GLenum(*itor++));
+			glDisableClientState(GLenum(*context.mStream++));
 			break;
 
 		case DO_glDrawArrays:
 			{
-				GLenum mode = *itor++;
-				GLint first = *itor++;
-				size_t count = *itor++;
+				GLenum mode = *context.mStream++;
+				GLint first = *context.mStream++;
+				size_t count = *context.mStream++;
 				glDrawArrays(mode, first, count);
 			}
 			break;
 
 		case DO_glDrawElements:
 			{
-				GLenum mode = *itor++;
-				GLsizei count = *itor++;
-				glDrawElements(mode, count, GL_UNSIGNED_SHORT, &*itor);
-				itor += count*sizeof(unsigned short)/sizeof(unsigned int);
+				GLenum mode = *context.mStream++;
+				GLsizei count = *context.mStream++;
+				glDrawElements(mode, count, GL_UNSIGNED_SHORT, &*context.mStream);
+				context.mStream += count*sizeof(unsigned short)/sizeof(unsigned int);
 			}
 			break;
 
 		case DO_glEdgeFlag:
-			glEdgeFlag(*itor++ != 0);
+			glEdgeFlag(*context.mStream++ != 0);
 			break;
 
 		case DO_glEdgeFlagPointer:
 			{
-				GLsizei stride = *itor++;
-				size_t count = *itor++;
-				glEdgeFlagPointer(stride, &*itor);
-				itor += count*sizeof(bool)/sizeof(unsigned int);
+				GLsizei stride = *context.mStream++;
+				size_t count = *context.mStream++;
+				glEdgeFlagPointer(stride, &*context.mStream);
+				context.mStream += count*sizeof(bool)/sizeof(unsigned int);
 			}
 			break;
 
 		case DO_glEnable:
-			glEnable(*itor++);
+			glEnable(*context.mStream++);
 			break;
 
 		case DO_glEnableClientState:
-			glEnableClientState(GLenum(*itor++));
+			glEnableClientState(GLenum(*context.mStream++));
 			break;
 
 		case DO_glEnd:
@@ -1481,16 +1601,18 @@ void ExecuteDrawItems(const unsigned int buffer[], size_t count, float param, un
 			break;
 
 		case DO_glIndexf:
-			itor += ExecuteDrawData(itor, buffer + count - itor, sIndexWidth, data, param, id);
-			glIndexf(data[0]);
+			{
+				float value(Expression::Evaluate<float>(context));
+				glIndexf(value);
+			}
 			break;
 
 		case DO_glIndexPointer:
 			{
-				GLsizei stride = *itor++;
-				size_t count = *itor++;
-				glIndexPointer(GL_FLOAT, stride, &*itor);
-				itor += count;
+				GLsizei stride = *context.mStream++;
+				size_t count = *context.mStream++;
+				glIndexPointer(GL_FLOAT, stride, &*context.mStream);
+				context.mStream += count;
 			}
 			break;
 
@@ -1499,26 +1621,28 @@ void ExecuteDrawItems(const unsigned int buffer[], size_t count, float param, un
 			break;
 
 		case DO_glLoadMatrixf:
-			glLoadMatrixf(reinterpret_cast<const GLfloat *>(&*itor));
-			itor+=16;
+			glLoadMatrixf(reinterpret_cast<const GLfloat *>(&*context.mStream));
+			context.mStream+=16;
 			break;
 
 		case DO_glMultMatrixf:
-			glMultMatrixf(reinterpret_cast<const GLfloat *>(&*itor));
-			itor+=16;
+			glMultMatrixf(reinterpret_cast<const GLfloat *>(&*context.mStream));
+			context.mStream+=16;
 			break;
 
 		case DO_glNormal3fv:
-			itor += ExecuteDrawData(itor, buffer + count - itor, sPositionWidth, data, param, id);
-			glNormal3fv(data);
+			{
+				Vector3 value(Expression::Evaluate<Vector3>(context));
+				glNormal3fv(&value.x);
+			}
 			break;
 
 		case DO_glNormalPointer:
 			{
-				GLsizei stride = *itor++;
-				size_t count = *itor++;
-				glNormalPointer(GL_FLOAT, stride, &*itor);
-				itor += count;
+				GLsizei stride = *context.mStream++;
+				size_t count = *context.mStream++;
+				glNormalPointer(GL_FLOAT, stride, &*context.mStream);
+				context.mStream += count;
 			}
 			break;
 
@@ -1535,11 +1659,11 @@ void ExecuteDrawItems(const unsigned int buffer[], size_t count, float param, un
 			break;
 
 		case DO_glPushAttrib:
-			glPushAttrib(GLbitfield(*itor++));
+			glPushAttrib(GLbitfield(*context.mStream++));
 			break;
 
 		case DO_glPushClientAttrib:
-			glPushClientAttrib(GLbitfield(*itor++));
+			glPushClientAttrib(GLbitfield(*context.mStream++));
 			break;
 
 		case DO_glPushMatrix:
@@ -1547,67 +1671,77 @@ void ExecuteDrawItems(const unsigned int buffer[], size_t count, float param, un
 			break;
 
 		case DO_glRotatef:
-			itor += ExecuteDrawData(itor, buffer + count - itor, sRotationWidth, data, param, id);
-			glRotatef(data[0], data[1], data[2], data[3]);
+			{
+				float value(Expression::Evaluate<float>(context));
+				glRotatef(value, 0, 0, 1);
+			}
 			break;
 
 		case DO_glScalef:
-			itor += ExecuteDrawData(itor, buffer + count - itor, sScaleWidth, data, param, id);
-			glScalef(data[0], data[1], data[2]);
+			{
+				Vector3 value(Expression::Evaluate<Vector3>(context));
+				glScalef(value.x, value.y, value.z);
+			}
 			break;
 
 		case DO_glTexCoord2fv:
-			itor += ExecuteDrawData(itor, buffer + count - itor, sTexCoordWidth, data, param, id);
-			glTexCoord2fv(data);
+			{
+				Vector2 value(Expression::Evaluate<Vector2>(context));
+				glTexCoord2fv(&value.x);
+			}
 			break;
 
 		case DO_glTexCoordPointer:
 			{
-				GLint size = *itor++;
-				GLsizei stride = *itor++;
-				size_t count = *itor++;
-				glTexCoordPointer(size, GL_FLOAT, stride, &*itor);
-				itor += count;
+				GLint size = *context.mStream++;
+				GLsizei stride = *context.mStream++;
+				size_t count = *context.mStream++;
+				glTexCoordPointer(size, GL_FLOAT, stride, &*context.mStream);
+				context.mStream += count;
 			}
 			break;
 
 		case DO_glTranslatef:
-			itor += ExecuteDrawData(itor, buffer + count - itor, sPositionWidth, data, param, id);
-			glTranslatef(data[0], data[1], data[2]);
+			{
+				Vector3 value(Expression::Evaluate<Vector3>(context));
+				glTranslatef(value.x, value.y, value.z);
+			}
 			break;
 
 		case DO_glVertex3fv:
-			itor += ExecuteDrawData(itor, buffer + count - itor, sPositionWidth, data, param, id);
-			glVertex3fv(data);
+			{
+				Vector3 value(Expression::Evaluate<Vector3>(context));
+				glVertex3fv(&value[0]);
+			}
 			break;
 
 		case DO_glVertexPointer:
 			{
-				GLint size = *itor++;
-				GLsizei stride = *itor++;
-				size_t count = *itor++;
-				glVertexPointer(size, GL_FLOAT, stride, &*itor);
-				itor += count;
+				GLint size = *context.mStream++;
+				GLsizei stride = *context.mStream++;
+				size_t count = *context.mStream++;
+				glVertexPointer(size, GL_FLOAT, stride, &*context.mStream);
+				context.mStream += count;
 			}
 			break;
 
 		case DO_Repeat:
 			{
-				int repeat = *itor++;
-				size_t size = *itor++;
+				int repeat = *context.mStream++;
+				size_t size = *context.mStream++;
 				for (int i = 0; i < repeat; i++)
-					ExecuteDrawItems(itor, size, param, id);
-				itor += size;
+					ExecuteDrawItems(context.mStream, size, param, id);
+				context.mStream += size;
 			}
 			break;
 
 		case DO_Block:
 			{
-				float start = *reinterpret_cast<const float *>(itor++);
-				float length = *reinterpret_cast<const float *>(itor++);
-				float scale = *reinterpret_cast<const float *>(itor++);
-				int repeat = *reinterpret_cast<const int *>(itor++);
-				unsigned int size = *itor++;
+				float start = *reinterpret_cast<const float *>(context.mStream++);
+				float length = *reinterpret_cast<const float *>(context.mStream++);
+				float scale = *reinterpret_cast<const float *>(context.mStream++);
+				int repeat = *reinterpret_cast<const int *>(context.mStream++);
+				unsigned int size = *context.mStream++;
 				float t = param - start;
 				if (t >= 0.0f && length > 0.0f)
 				{
@@ -1616,49 +1750,49 @@ void ExecuteDrawItems(const unsigned int buffer[], size_t count, float param, un
 					{
 						t -= loop * length;
 						t *= scale;
-						ExecuteDrawItems(itor, size, t, id);
+						ExecuteDrawItems(context.mStream, size, t, id);
 					}
 				}
-				itor += size;
+				context.mStream += size;
 			}
 			break;
 
 		case DO_Set:
-			itor += ExecuteVariableOperator(itor, buffer + count - itor, param, id, VariableOperatorSet);
+			EvaluateVariableOperator(context, VariableOperatorSet);
 			break;
 
 		case DO_Add:
-			itor += ExecuteVariableOperator(itor, buffer + count - itor, param, id, VariableOperatorAdd);
+			EvaluateVariableOperator(context, VariableOperatorAdd);
 			break;
 
 		case DO_Sub:
-			itor += ExecuteVariableOperator(itor, buffer + count - itor, param, id, VariableOperatorSub);
+			EvaluateVariableOperator(context, VariableOperatorSub);
 			break;
 
 		case DO_Mul:
-			itor += ExecuteVariableOperator(itor, buffer + count - itor, param, id, VariableOperatorMul);
+			EvaluateVariableOperator(context, VariableOperatorMul);
 			break;
 
 		case DO_Div:
-			itor += ExecuteVariableOperator(itor, buffer + count - itor, param, id, VariableOperatorDiv);
+			EvaluateVariableOperator(context, VariableOperatorDiv);
 			break;
 
 		case DO_Min:
-			itor += ExecuteVariableOperator(itor, buffer + count - itor, param, id, VariableOperatorMin);
+			EvaluateVariableOperator(context, VariableOperatorMin);
 			break;
 
 		case DO_Max:
-			itor += ExecuteVariableOperator(itor, buffer + count - itor, param, id, VariableOperatorMax);
+			EvaluateVariableOperator(context, VariableOperatorMax);
 			break;
 
 		case DO_Swizzle:
 			{
-				unsigned int name = *itor++;
-				int width = *itor++;
+				unsigned int name = *context.mStream++;
+				int width = *context.mStream++;
 				Database::Typed<float> &variables = Database::variable.Open(id);
 				float *temp = static_cast<float *>(_alloca(width * sizeof(float)));
 				for (int i = 0; i < width; i++)
-					temp[i] = variables.Get(name + *itor++);
+					temp[i] = variables.Get(name + *context.mStream++);
 				for (int i = 0; i < width; i++)
 					variables.Put(name + i, temp[i]);
 				Database::variable.Close(id);
@@ -1667,8 +1801,8 @@ void ExecuteDrawItems(const unsigned int buffer[], size_t count, float param, un
 
 		case DO_Clear:
 			{
-				unsigned int name = *itor++;
-				int width = *itor++;
+				unsigned int name = *context.mStream++;
+				int width = *context.mStream++;
 				Database::Typed<float> &variables = Database::variable.Open(id);
 				for (int i = 0; i < width; i++)
 					variables.Delete(name+i);
@@ -1679,11 +1813,11 @@ void ExecuteDrawItems(const unsigned int buffer[], size_t count, float param, un
 #ifdef DRAWLIST_LOOP
 		case DO_Loop:
 			{
-				unsigned int name = *itor++;
-				float from = *reinterpret_cast<const float *>(itor++);
-				float to   = *reinterpret_cast<const float *>(itor++);
-				float by   = *reinterpret_cast<const float *>(itor++);
-				size_t size = *itor++;
+				unsigned int name = *context.mStream++;
+				float from = *reinterpret_cast<const float *>(context.mStream++);
+				float to   = *reinterpret_cast<const float *>(context.mStream++);
+				float by   = *reinterpret_cast<const float *>(context.mStream++);
+				size_t size = *context.mStream++;
 
 				Database::Typed<float> &variables = Database::variable.Open(id);
 				if (by > 0)
@@ -1691,7 +1825,7 @@ void ExecuteDrawItems(const unsigned int buffer[], size_t count, float param, un
 					for (float value = from; value <= to; value += by)
 					{
 						variables.Put(name, value);
-						ExecuteDrawItems(itor, size, param, id);
+						ExecuteDrawItems(context.mStream, size, param, id);
 					}
 				}
 				else
@@ -1699,13 +1833,13 @@ void ExecuteDrawItems(const unsigned int buffer[], size_t count, float param, un
 					for (float value = from; value >= to; value += by)
 					{
 						variables.Put(name, value);
-						ExecuteDrawItems(itor, size, param, id);
+						ExecuteDrawItems(context.mStream, size, param, id);
 					}
 				}
 				variables.Delete(name);
 				Database::variable.Close(id);
 
-				itor += size;
+				context.mStream += size;
 			}
 			break;
 #endif
@@ -1713,14 +1847,14 @@ void ExecuteDrawItems(const unsigned int buffer[], size_t count, float param, un
 #ifdef DRAWLIST_EMITTER
 		case DO_Emitter:
 			{
-				unsigned int name = Hash(&itor, sizeof(itor));
-				int repeat = *itor++;
-				float period = *reinterpret_cast<const float *>(itor++);
-				float offsetx = *reinterpret_cast<const float *>(itor++);
-				float offsety = *reinterpret_cast<const float *>(itor++);
-				float offseta = *reinterpret_cast<const float *>(itor++);
+				unsigned int name = Hash(&context.mStream, sizeof(context.mStream));
+				int repeat = *context.mStream++;
+				float period = *reinterpret_cast<const float *>(context.mStream++);
+				float offsetx = *reinterpret_cast<const float *>(context.mStream++);
+				float offsety = *reinterpret_cast<const float *>(context.mStream++);
+				float offseta = *reinterpret_cast<const float *>(context.mStream++);
 				Matrix2 offset(offseta, Vector2(offsetx, offsety));
-				size_t size = *itor++;
+				size_t size = *context.mStream++;
 
 				// get the curent model matrix
 				float m1[16];
@@ -1790,7 +1924,7 @@ void ExecuteDrawItems(const unsigned int buffer[], size_t count, float param, un
 						glPushMatrix();
 						glTranslatef(variables.Get(subid+0), variables.Get(subid+1), 0.0f);
 						glRotatef(variables.Get(subid+2)*180.0f/float(M_PI), 0, 0, 1);
-						ExecuteDrawItems(itor, size, t, id);
+						ExecuteDrawItems(context.mStream, size, t, id);
 						glPopMatrix();
 					}
 				}
@@ -1803,13 +1937,13 @@ void ExecuteDrawItems(const unsigned int buffer[], size_t count, float param, un
 				glLoadMatrixf(m1);
 
 				// advance data pointer
-				itor += size;
+				context.mStream += size;
 			}
 			break;
 #endif
 
 		default:
-			DebugPrint("Unrecognized drawlist operation 0x%08x at index %d\n", *(itor-1), itor-buffer);
+			DebugPrint("Unrecognized drawlist operation 0x%08x at index %d\n", *(context.mStream-1), context.mStream-buffer);
 			break;
 		}
 	}

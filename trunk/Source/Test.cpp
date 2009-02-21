@@ -31,8 +31,6 @@ bool SCREEN_FULLSCREEN = true;
 
 // view attributes
 float VIEW_SIZE = 320;
-float VIEW_AIM = 80;
-float VIEW_AIM_FILTER = 2.0f;
 
 // opengl attributes
 bool OPENGL_SWAPCONTROL = true;
