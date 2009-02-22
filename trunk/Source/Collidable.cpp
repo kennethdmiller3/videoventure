@@ -278,7 +278,7 @@ CollidableTemplate::~CollidableTemplate(void)
 #endif
 }
 
-bool CollidableTemplate::ProcessShapeItem(const TiXmlElement *element, b2ShapeDef &shape)
+bool CollidableTemplate::ConfigureShapeItem(const TiXmlElement *element, b2ShapeDef &shape)
 {
 	const char *name = element->Value();
 	switch (Hash(name))
@@ -329,7 +329,7 @@ bool CollidableTemplate::ConfigureShape(const TiXmlElement *element, b2ShapeDef 
 	// process child elements
 	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
-		ProcessShapeItem(child, shape);
+		ConfigureShapeItem(child, shape);
 	}
 	return true;
 }
@@ -372,7 +372,7 @@ bool CollidableTemplate::ConfigureBox(const TiXmlElement *element, b2PolygonDef 
 	return true;
 }
 
-bool CollidableTemplate::ProcessPolyItem(const TiXmlElement *element, b2PolygonDef &shape)
+bool CollidableTemplate::ConfigurePolyItem(const TiXmlElement *element, b2PolygonDef &shape)
 {
 	const char *name = element->Value();
 	switch (Hash(name))
@@ -384,7 +384,7 @@ bool CollidableTemplate::ProcessPolyItem(const TiXmlElement *element, b2PolygonD
 		return true;
 
 	default:
-		return ProcessShapeItem(element, shape);
+		return ConfigureShapeItem(element, shape);
 	}
 }
 
@@ -393,13 +393,13 @@ bool CollidableTemplate::ConfigurePoly(const TiXmlElement *element, b2PolygonDef
 	// process child elements
 	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
-		ProcessPolyItem(child, shape);
+		ConfigurePolyItem(child, shape);
 	}
 	return true;
 }
 
 #ifdef B2_EDGE_SHAPE_H
-bool CollidableTemplate::ProcessEdgeItem(const TiXmlElement *element, b2EdgeChainDef &shape)
+bool CollidableTemplate::ConfigureEdgeItem(const TiXmlElement *element, b2EdgeChainDef &shape)
 {
 	const char *name = element->Value();
 	switch (Hash(name))
@@ -412,7 +412,7 @@ bool CollidableTemplate::ProcessEdgeItem(const TiXmlElement *element, b2EdgeChai
 		return true;
 
 	default:
-		return ProcessShapeItem(element, shape);
+		return ConfigureShapeItem(element, shape);
 	}
 }
 
@@ -425,13 +425,13 @@ bool CollidableTemplate::ConfigureEdge(const TiXmlElement *element, b2EdgeChainD
 	// process child elements
 	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
-		ProcessEdgeItem(child, shape);
+		ConfigureEdgeItem(child, shape);
 	}
 	return true;
 }
 #endif
 
-bool CollidableTemplate::ProcessBodyItem(const TiXmlElement *element, b2BodyDef &body)
+bool CollidableTemplate::ConfigureBodyItem(const TiXmlElement *element, b2BodyDef &body)
 {
 	const char *name = element->Value();
 	switch (Hash(name))
@@ -569,12 +569,12 @@ bool CollidableTemplate::ConfigureBody(const TiXmlElement *element, b2BodyDef &b
 	// process child elements
 	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
-		ProcessBodyItem(child, body);
+		ConfigureBodyItem(child, body);
 	}
 	return true;
 }
 
-bool CollidableTemplate::ProcessJointItem(const TiXmlElement *element, b2JointDef &joint)
+bool CollidableTemplate::ConfigureJointItem(const TiXmlElement *element, b2JointDef &joint)
 {
 	const char *name = element->Value();
 	switch (Hash(name))
@@ -606,7 +606,7 @@ bool CollidableTemplate::ProcessJointItem(const TiXmlElement *element, b2JointDe
 	}
 }
 
-bool CollidableTemplate::ProcessRevoluteJointItem(const TiXmlElement *element, b2RevoluteJointDef &joint)
+bool CollidableTemplate::ConfigureRevoluteJointItem(const TiXmlElement *element, b2RevoluteJointDef &joint)
 {
 	const char *name = element->Value();
 	switch (Hash(name))
@@ -642,7 +642,7 @@ bool CollidableTemplate::ProcessRevoluteJointItem(const TiXmlElement *element, b
 		return true;
 
 	default:
-		return ProcessJointItem(element, joint);
+		return ConfigureJointItem(element, joint);
 	}
 }
 
@@ -651,12 +651,12 @@ bool CollidableTemplate::ConfigureRevoluteJoint(const TiXmlElement *element, b2R
 	// process child elements
 	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
-		ProcessRevoluteJointItem(child, joint);
+		ConfigureRevoluteJointItem(child, joint);
 	}
 	return true;
 }
 
-bool CollidableTemplate::ProcessPrismaticJointItem(const TiXmlElement *element, b2PrismaticJointDef &joint)
+bool CollidableTemplate::ConfigurePrismaticJointItem(const TiXmlElement *element, b2PrismaticJointDef &joint)
 {
 	const char *name = element->Value();
 	switch (Hash(name))
@@ -694,7 +694,7 @@ bool CollidableTemplate::ProcessPrismaticJointItem(const TiXmlElement *element, 
 		return true;
 
 	default:
-		return ProcessJointItem(element, joint);
+		return ConfigureJointItem(element, joint);
 	}
 }
 
@@ -703,12 +703,12 @@ bool CollidableTemplate::ConfigurePrismaticJoint(const TiXmlElement *element, b2
 	// process child elements
 	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
-		ProcessPrismaticJointItem(child, joint);
+		ConfigurePrismaticJointItem(child, joint);
 	}
 	return true;
 }
 
-bool CollidableTemplate::ProcessDistanceJointItem(const TiXmlElement *element, b2DistanceJointDef &joint)
+bool CollidableTemplate::ConfigureDistanceJointItem(const TiXmlElement *element, b2DistanceJointDef &joint)
 {
 	const char *name = element->Value();
 	switch (Hash(name))
@@ -724,7 +724,7 @@ bool CollidableTemplate::ProcessDistanceJointItem(const TiXmlElement *element, b
 		return true;
 
 	default:
-		return ProcessJointItem(element, joint);
+		return ConfigureJointItem(element, joint);
 	}
 }
 
@@ -733,12 +733,12 @@ bool CollidableTemplate::ConfigureDistanceJoint(const TiXmlElement *element, b2D
 	// process child elements
 	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
-		ProcessDistanceJointItem(child, joint);
+		ConfigureDistanceJointItem(child, joint);
 	}
 	return true;
 }
 
-bool CollidableTemplate::ProcessPulleyJointItem(const TiXmlElement *element, b2PulleyJointDef &joint)
+bool CollidableTemplate::ConfigurePulleyJointItem(const TiXmlElement *element, b2PulleyJointDef &joint)
 {
 	const char *name = element->Value();
 	switch (Hash(name))
@@ -776,7 +776,7 @@ bool CollidableTemplate::ProcessPulleyJointItem(const TiXmlElement *element, b2P
 		return true;
 
 	default:
-		return ProcessJointItem(element, joint);
+		return ConfigureJointItem(element, joint);
 	}
 }
 
@@ -785,12 +785,12 @@ bool CollidableTemplate::ConfigurePulleyJoint(const TiXmlElement *element, b2Pul
 	// process child elements
 	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
-		ProcessPulleyJointItem(child, joint);
+		ConfigurePulleyJointItem(child, joint);
 	}
 	return true;
 }
 
-bool CollidableTemplate::ProcessMouseJointItem(const TiXmlElement *element, b2MouseJointDef &joint)
+bool CollidableTemplate::ConfigureMouseJointItem(const TiXmlElement *element, b2MouseJointDef &joint)
 {
 	const char *name = element->Value();
 	switch (Hash(name))
@@ -810,7 +810,7 @@ bool CollidableTemplate::ProcessMouseJointItem(const TiXmlElement *element, b2Mo
 		return true;
 
 	default:
-		return ProcessJointItem(element, joint);
+		return ConfigureJointItem(element, joint);
 	}
 }
 
@@ -819,7 +819,7 @@ bool CollidableTemplate::ConfigureMouseJoint(const TiXmlElement *element, b2Mous
 	// process child elements
 	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
-		ProcessMouseJointItem(child, joint);
+		ConfigureMouseJointItem(child, joint);
 	}
 	return true;
 }

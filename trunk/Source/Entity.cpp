@@ -22,7 +22,7 @@ namespace Database
 
 	namespace Loader
 	{
-		static void ProcessTemplateItem(const TiXmlElement *element, unsigned int aId)
+		static void ConfigureTemplateItem(const TiXmlElement *element, unsigned int aId)
 		{
 			const char *value = element->Value();
 			const Database::Loader::Entry &configure = Database::Loader::GetConfigure(Hash(value));
@@ -61,7 +61,7 @@ namespace Database
 				for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 				{
 					// process the template item
-					ProcessTemplateItem(child, aId);
+					ConfigureTemplateItem(child, aId);
 				}
 			}
 		}
@@ -106,7 +106,7 @@ namespace Database
 						continue;
 
 					// process the template item
-					ProcessTemplateItem(child, aId);
+					ConfigureTemplateItem(child, aId);
 				}
 
 				// activate the instance

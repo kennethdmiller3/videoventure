@@ -114,7 +114,7 @@ bool BeamTemplate::Configure(const TiXmlElement *element, unsigned int id)
 			std::vector<unsigned int> &buffer = properties.Open(propId);
 			const char *names[1] = { "value" };
 			const float data[1] = { 0.0f };
-			ProcessInterpolatorItem(child, buffer, 1, names, data);
+			ConfigureInterpolatorItem(child, buffer, 1, names, data);
 			properties.Close(propId);
 		}
 		Database::beamproperty.Close(id);

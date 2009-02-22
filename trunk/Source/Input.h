@@ -82,6 +82,6 @@ public:
 	}
 
 	// configure input
-	void ProcessItem(const TiXmlElement *element);
+	void ConfigureItem(const TiXmlElement *element);
 	void Configure(const TiXmlElement *element);
 };

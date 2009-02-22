@@ -212,7 +212,7 @@ bool WeaponTemplate::Configure(const TiXmlElement *element, unsigned int aId)
 					Database::Typed<std::vector<unsigned int> > &properties = Database::weaponproperty.Open(aId);
 					std::vector<unsigned int> &buffer = properties.Open(aPropId);
 					const char *names[] = { "angle", "x", "y" };
-					ProcessInterpolatorItem(child, buffer, sizeof(mVelocity)/sizeof(float), names, (float *)(&mVelocity));
+					ConfigureInterpolatorItem(child, buffer, sizeof(mVelocity)/sizeof(float), names, (float *)(&mVelocity));
 					properties.Close(aPropId);
 					Database::weaponproperty.Close(aId);
 				}

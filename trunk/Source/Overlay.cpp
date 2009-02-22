@@ -129,7 +129,7 @@ namespace Database
 
 				// process child elements
 				std::vector<unsigned int> &buffer = Database::dynamicdrawlist.Open(aId);
-				ProcessDrawItems(element, buffer);
+				ConfigureDrawItems(element, buffer);
 				Database::dynamicdrawlist.Close(aId);
 			}
 		}

@@ -28,7 +28,7 @@ namespace Database
 				Collidable::WorldInit(aMinX, aMinY, aMaxX, aMaxY, aWall != 0);
 
 				// recurse on children
-				ProcessWorldItems(element);
+				ConfigureWorldItems(element);
 			}
 		}
 		worldloader;
@@ -51,7 +51,7 @@ namespace Database
 
 				// process child elements
 				if (const TiXmlElement *root = document.FirstChildElement())
-					ProcessWorldItem(root);
+					ConfigureWorldItem(root);
 			}
 		}
 		importloader;
@@ -128,7 +128,7 @@ namespace Database
 	}
 }
 
-void ProcessWorldItem(const TiXmlElement *element)
+void ConfigureWorldItem(const TiXmlElement *element)
 {
 	const char *value = element->Value();
 	const char *name = element->Attribute("name");
@@ -144,10 +144,10 @@ void ProcessWorldItem(const TiXmlElement *element)
 		DebugPrint("Unrecognized tag \"%s\"\n", value);
 }
 
-void ProcessWorldItems(const TiXmlElement *element)
+void ConfigureWorldItems(const TiXmlElement *element)
 {
 	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
-		ProcessWorldItem(child);
+		ConfigureWorldItem(child);
 	}
 }

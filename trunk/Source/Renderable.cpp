@@ -47,7 +47,7 @@ namespace Database
 				std::vector<unsigned int> &buffer = Database::dynamicdrawlist.Open(aId);
 				if (!inherit)
 					buffer.clear();
-				ProcessDrawItems(element, buffer);
+				ConfigureDrawItems(element, buffer);
 				Database::dynamicdrawlist.Close(aId);
 			}
 		}

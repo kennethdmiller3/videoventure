@@ -497,6 +497,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Source\Expression.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Source\GameState.h"
 				>
 			</File>
