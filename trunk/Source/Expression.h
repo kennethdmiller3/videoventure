@@ -101,47 +101,114 @@ namespace Expression
 		}
 	};
 
-	// componentwise nullary operator adapter
-	// requres that T support operator[]
-	template <typename T> struct ComponentNullary
+	// ternary operator adapter
+	template <typename T, typename A1, typename A2, typename A3> struct Ternary
 	{
+		template <typename OR, typename O1, typename O2, typename O3, OR Op(O1, O2, O3)> static const T Evaluate(Context &aContext)
+		{
+			A1 arg1(Expression::Evaluate<A1>(aContext));
+			A2 arg2(Expression::Evaluate<A2>(aContext));
+			A3 arg3(Expression::Evaluate<A3>(aContext));
+			return Op(arg1, arg2, arg3);
+		}
+	};
+
+	// componentwise nullary operator adapter
+	template <typename T, int W> struct ComponentNullary
+	{
+		// requres that T support operator[]
 		template <typename OR, OR Op()> static const T Evaluate(Context &aContext)
 		{
 			T value = T();
-			for (int i = 0; i < sizeof(T)/sizeof(float); ++i)
+			for (int i = 0; i < W; ++i)
 				value[i] = Op();
 			return value;
 		}
 	};
+	template <typename T> struct ComponentNullary<T, 0>
+	{
+		// specialization for scalar type
+		template <typename OR, OR Op()> static const T Evaluate(Context &aContext)
+		{
+			return Op();
+		}
+	};
 
 	// componentwise unary operator adapter
-	// requres that T support operator[]
-	template <typename T> struct ComponentUnary
+	template <typename T, int W> struct ComponentUnary
 	{
+		// requres that T support operator[]
 		template <typename OR, typename O1, OR Op(O1)> static const T Evaluate(Context &aContext)
 		{
 			T arg1(Expression::Evaluate<T>(aContext));
 			T value = T();
-			for (int i = 0; i < sizeof(T)/sizeof(float); ++i)
+			for (int i = 0; i < W; ++i)
 				value[i] = Op(arg1[i]);
 			return value;
 		}
 	};
+	template <typename T> struct ComponentUnary<T, 0>
+	{
+		// specialization for scalar type
+		template <typename OR, typename O1, OR Op(O1)> static const T Evaluate(Context &aContext)
+		{
+			T arg1(Expression::Evaluate<T>(aContext));
+			return Op(arg1);
+		}
+	};
 
 	// componentwise binary operator adapter
-	// requres that T support operator[]
-	template <typename T> struct ComponentBinary
+	template <typename T, int W> struct ComponentBinary
 	{
+		// requres that T support operator[]
 		template <typename OR, typename O1, typename O2, OR Op(O1, O2)> static const T Evaluate(Context &aContext)
 		{
 			T arg1(Expression::Evaluate<T>(aContext));
 			T arg2(Expression::Evaluate<T>(aContext));
 			T value = T();
-			for (int i = 0; i < sizeof(T)/sizeof(float); ++i)
+			for (int i = 0; i < W; ++i)
 				value[i] = Op(arg1[i], arg2[i]);
 			return value;
 		}
 	};
+	template <typename T> struct ComponentBinary<T, 0>
+	{
+		// specialization for scalar type
+		template <typename OR, typename O1, typename O2, OR Op(O1, O2)> static const T Evaluate(Context &aContext)
+		{
+			T arg1(Expression::Evaluate<T>(aContext));
+			T arg2(Expression::Evaluate<T>(aContext));
+			return Op(arg1, arg2);
+		}
+	};
+
+	// componentwise ternary operator adapter
+	template <typename T, int W> struct ComponentTernary
+	{
+		// requres that T support operator[]
+		template <typename OR, typename O1, typename O2, typename O3, OR Op(O1, O2, O3)> static const T Evaluate(Context &aContext)
+		{
+			T arg1(Expression::Evaluate<T>(aContext));
+			T arg2(Expression::Evaluate<T>(aContext));
+			T arg3(Expression::Evaluate<T>(aContext));
+			T value = T();
+			for (int i = 0; i < W; ++i)
+				value[i] = Op(arg1[i], arg2[i], arg3[i]);
+			return value;
+		}
+	};
+	template <typename T> struct ComponentTernary<T, 0>
+	{
+		// specialization for scalar type
+		template <typename OR, typename O1, typename O2, typename O3, OR Op(O1, O2, O3)> static const T Evaluate(Context &aContext)
+		{
+			T arg1(Expression::Evaluate<T>(aContext));
+			T arg2(Expression::Evaluate<T>(aContext));
+			T arg3(Expression::Evaluate<T>(aContext));
+			return Op(arg1, arg2, arg3);
+		}
+	};
+
 
 	// construction expression
 	template <typename T, typename A1> const T Construct(Context &aContext)

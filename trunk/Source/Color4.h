@@ -47,6 +47,11 @@ struct Color4
 		return *this;
 	}
 
+	friend const Color4 operator-(const Color4 &c)
+	{
+		return Color4(-c.r, -c.g, -c.b, -c.a);
+	}
+
 	friend const Color4 operator-(const Color4 &c1, const Color4 &c2)
 	{
 		return Color4(c1.r-c2.r, c1.g-c2.g, c1.b-c2.b, c1.a-c2.a);
