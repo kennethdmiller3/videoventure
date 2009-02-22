@@ -172,6 +172,9 @@ enum DrawlistOp
 };
 
 // attribute names
+static const char * const sScalarNames[] = { "value" };
+static const float sScalarDefault[] = { 0.0f };
+static const int sScalarWidth = 1;
 static const char * const sPositionNames[] = { "x", "y", "z" };
 static const float sPositionDefault[] = { 0.0f, 0.0f, 0.0f };
 static const int sPositionWidth = 3;
@@ -339,11 +342,16 @@ struct DrawItemContext : public Expression::Context
 
 namespace Expression
 {
+	// component counts
+	template <typename T> struct ComponentCount { };
+	template <> struct ComponentCount<float> { enum { VALUE = 0 }; };
+	template <> struct ComponentCount<Vector2> { enum { VALUE = 2 }; };
+	template <> struct ComponentCount<Vector3> { enum { VALUE = 3 }; };
+	template <> struct ComponentCount<Vector4> { enum { VALUE = 4 }; };
+	template <> struct ComponentCount<Color4> { enum { VALUE = 4 }; };
+
 	// various constructors
-	template<typename T> const T Construct(Context &aContext)
-	{
-		return T();
-	}
+	template<typename T> const T Construct(Context &aContext);
 	template<> const float Construct<float>(Context &aContext)
 	{
 		return Evaluate<float>(aContext);
@@ -378,47 +386,241 @@ namespace Expression
 		return Vector4(arg1, arg2, arg3, arg4);
 	}
 
-	// binary operators
-	template <typename R, typename A1, typename A2> R Add(Context &aContext)
+	// extend a scalar
+	template<typename T, typename A> const T Extend(Context &aContext);
+	template<> const float Extend<float, float>(Context &aContext)
 	{
-		A1 arg1(Evaluate<A1>(aContext));
-		A2 arg2(Evaluate<A2>(aContext));
-		return arg1 + arg2;
+		return Evaluate<float>(aContext);
 	}
-	template <typename R, typename A1, typename A2> R Sub(Context &aContext)
+	template<> const Vector2 Extend<Vector2, float>(Context &aContext)
 	{
-		A1 arg1(Evaluate<A1>(aContext));
-		A2 arg2(Evaluate<A2>(aContext));
-		return arg1 - arg2;
+		float arg(Evaluate<float>(aContext));
+		return Vector2(arg, arg);
 	}
-	template <typename R, typename A1, typename A2> R Mul(Context &aContext)
+	template<> const Vector3 Extend<Vector3, float>(Context &aContext)
 	{
-		A1 arg1(Evaluate<A1>(aContext));
-		A2 arg2(Evaluate<A2>(aContext));
-		return arg1 * arg2;
+		float arg(Evaluate<float>(aContext));
+		return Vector3(arg, arg, arg);
 	}
-	template <typename R, typename A1, typename A2> R Div(Context &aContext)
+	template<> const Vector4 Extend<Vector4, float>(Context &aContext)
 	{
-		A1 arg1(Evaluate<A1>(aContext));
-		A2 arg2(Evaluate<A2>(aContext));
-		return arg1 / arg2;
+		float arg(Evaluate<float>(aContext));
+		return Vector4(arg, arg, arg, arg);
+	}
+	template<> const Color4 Extend<Color4, float>(Context &aContext)
+	{
+		float arg(Evaluate<float>(aContext));
+		return Color4(arg, arg, arg, arg);
 	}
 
+	// aritmetic operators
+	template <typename T> T Add(Context &aContext)
+	{
+		T arg1(Evaluate<T>(aContext));
+		T arg2(Evaluate<T>(aContext));
+		return arg1 + arg2;
+	}
+	template <typename T> T Sub(Context &aContext)
+	{
+		T arg1(Evaluate<T>(aContext));
+		T arg2(Evaluate<T>(aContext));
+		return arg1 - arg2;
+	}
+	template <typename T> T Mul(Context &aContext)
+	{
+		T arg1(Evaluate<T>(aContext));
+		T arg2(Evaluate<T>(aContext));
+		return arg1 * arg2;
+	}
+	template <typename T> T Div(Context &aContext)
+	{
+		T arg1(Evaluate<T>(aContext));
+		T arg2(Evaluate<T>(aContext));
+		return arg1 / arg2;
+	}
+	template <typename T> T Neg(Context &aContext)
+	{
+		T arg1(Evaluate<T>(aContext));
+		return -arg1;
+	}
+	float Rcp(float v) { return 1.0f / v; };
+	template <typename T> T Rcp(Context &aContext)
+	{
+		return ComponentUnary<T, ComponentCount<T>::VALUE>::Evaluate<float, float, Rcp>(aContext);
+	}
+	float Inc(float v) { return v + 1.0f; };
+	template <typename T> T Inc(Context &aContext)
+	{
+		return ComponentUnary<T, ComponentCount<T>::VALUE>::Evaluate<float, float, Inc>(aContext);
+	}
+	float Dec(float v) { return v - 1.0f; };
+	template <typename T> T Dec(Context &aContext)
+	{
+		return ComponentUnary<T, ComponentCount<T>::VALUE>::Evaluate<float, float, Dec>(aContext);
+	}
+	
+	// relational operators
+	template <typename T> bool Greater(Context &aContext)
+	{
+		T arg1(Evaluate<T>)(aContext);
+		T arg2(Evaluate<T>)(aContext);
+		return arg1 > arg2;
+	}
+	template <typename T> bool GreaterEqual(Context &aContext)
+	{
+		T arg1(Evaluate<T>)(aContext);
+		T arg2(Evaluate<T>)(aContext);
+		return arg1 >= arg2;
+	}
+	template <typename T> bool Less(Context &aContext)
+	{
+		T arg1(Evaluate<T>)(aContext);
+		T arg2(Evaluate<T>)(aContext);
+		return arg1 < arg2;
+	}
+	template <typename T> bool LessEqual(Context &aContext)
+	{
+		T arg1(Evaluate<T>)(aContext);
+		T arg2(Evaluate<T>)(aContext);
+		return arg1 <= arg2;
+	}
+	template <typename T> bool Equal(Context &aContext)
+	{
+		T arg1(Evaluate<T>)(aContext);
+		T arg2(Evaluate<T>)(aContext);
+		return arg1 == arg2;
+	}
+	template <typename T> bool NotEqual(Context &aContext)
+	{
+		T arg1(Evaluate<T>)(aContext);
+		T arg2(Evaluate<T>)(aContext);
+		return arg1 != arg2;
+	}
+
+	// trigonometric functions
+	template <typename T> T Sin(Context &aContext)
+	{
+		return ComponentUnary<T, ComponentCount<T>::VALUE>::Evaluate<float, float, sinf>(aContext);
+	}
+	template <typename T> T Cos(Context &aContext)
+	{
+		return ComponentUnary<T, ComponentCount<T>::VALUE>::Evaluate<float, float, cosf>(aContext);
+	}
+	template <typename T> T Tan(Context &aContext)
+	{
+		return ComponentUnary<T, ComponentCount<T>::VALUE>::Evaluate<float, float, tanf>(aContext);
+	}
+	template <typename T> T Asin(Context &aContext)
+	{
+		return ComponentUnary<T, ComponentCount<T>::VALUE>::Evaluate<float, float, asinf>(aContext);
+	}
+	template <typename T> T Acos(Context &aContext)
+	{
+		return ComponentUnary<T, ComponentCount<T>::VALUE>::Evaluate<float, float, acosf>(aContext);
+	}
+	template <typename T> T Atan(Context &aContext)
+	{
+		return ComponentUnary<T, ComponentCount<T>::VALUE>::Evaluate<float, float, atanf>(aContext);
+	}
+	template <typename T> T Atan2(Context &aContext)
+	{
+		return ComponentBinary<T, ComponentCount<T>::VALUE>::Evaluate<float, float, float, atan2f>(aContext);
+	}
+
+	// hyperbolic functions
+	template <typename T> T Sinh(Context &aContext)
+	{
+		return ComponentUnary<T, ComponentCount<T>::VALUE>::Evaluate<float, float, sinhf>(aContext);
+	}
+	template <typename T> T Cosh(Context &aContext)
+	{
+		return ComponentUnary<T, ComponentCount<T>::VALUE>::Evaluate<float, float, coshf>(aContext);
+	}
+	template <typename T> T Tanh(Context &aContext)
+	{
+		return ComponentUnary<T, ComponentCount<T>::VALUE>::Evaluate<float, float, tanhf>(aContext);
+	}
+
+	// exponential functions
+	template <typename T> T Pow(Context &aContext)
+	{
+		return ComponentBinary<T, ComponentCount<T>::VALUE>::Evaluate<float, float, float, powf>(aContext);
+	}
+	template <typename T> T Exp(Context &aContext)
+	{
+		return ComponentUnary<T, ComponentCount<T>::VALUE>::Evaluate<float, float, expf>(aContext);
+	}
+	template <typename T> T Log(Context &aContext)
+	{
+		return ComponentUnary<T, ComponentCount<T>::VALUE>::Evaluate<float, float, logf>(aContext);
+	}
+	template <typename T> T Sqrt(Context &aContext)
+	{
+		return ComponentUnary<T, ComponentCount<T>::VALUE>::Evaluate<float, float, sqrtf>(aContext);
+	}
+	template <typename T> T InvSqrt(Context &aContext)
+	{
+		return ComponentUnary<T, ComponentCount<T>::VALUE>::Evaluate<float, float, ::InvSqrt>(aContext);
+	}
+
+	// common functions
+	template <typename T> T Abs(Context &aContext)
+	{
+		return ComponentUnary<T, ComponentCount<T>::VALUE>::Evaluate<float, float, fabsf>(aContext);
+	}
+	float Sign(float v) { return (v == 0) ? (0.0f) : ((v > 0) ? (1.0f) : (-1.0f)); }
+	template <typename T> T Sign(Context &aContext)
+	{
+		return ComponentUnary<T, ComponentCount<T>::VALUE>::Evaluate<float, float, Sign>(aContext);
+	}
+	template <typename T> T Floor(Context &aContext)
+	{
+		return ComponentUnary<T, ComponentCount<T>::VALUE>::Evaluate<float, float, floorf>(aContext);
+	}
+	template <typename T> T Ceil(Context &aContext)
+	{
+		return ComponentUnary<T, ComponentCount<T>::VALUE>::Evaluate<float, float, ceilf>(aContext);
+	}
+	float Frac(float v) { return v - floor(v); }
+	template <typename T> T Frac(Context &aContext)
+	{
+		return ComponentUnary<T, ComponentCount<T>::VALUE>::Evaluate<float, float, Frac>(aContext);
+	}
+	template <typename T> T Mod(Context &aContext)
+	{
+		return ComponentBinary<T, ComponentCount<T>::VALUE>::Evaluate<float, float, float, fmodf>(aContext);
+	}
 	template <typename T> T Min(Context &aContext)
 	{
-		return ComponentBinary<T>::Evaluate<const float &, const float &, const float &, std::min<float> >(aContext);
-	}
-	template <> float Min<float>(Context &aContext)
-	{
-		return Binary<float, float, float>::Evaluate<const float &, const float &, const float &, std::min<float> >(aContext);
+		return ComponentBinary<T, ComponentCount<T>::VALUE>::Evaluate<const float &, const float &, const float &, std::min<float> >(aContext);
 	}
 	template <typename T> T Max(Context &aContext)
 	{
-		return ComponentBinary<T>::Evaluate<const float &, const float &, const float &, std::max<float> >(aContext);
+		return ComponentBinary<T, ComponentCount<T>::VALUE>::Evaluate<const float &, const float &, const float &, std::max<float> >(aContext);
 	}
-	template <> float Max<float>(Context &aContext)
+	template <typename T> T Clamp(Context &aContext)
 	{
-		return Binary<float, float, float>::Evaluate<const float &, const float &, const float &, std::max<float> >(aContext);
+		return ComponentTernary<T, ComponentCount<T>::VALUE>::Evaluate<const float, const float, const float, const float, ::Clamp<float> >(aContext);
+	}
+	template <typename T> T Lerp(Context &aContext)
+	{
+		return Ternary<T, T, T, float>::Evaluate<const T, const T, const T, float, ::Lerp<T> >(aContext);
+	}
+	float Step(float e, float v) { return v < e ? 0.0f : 1.0f; }
+	template <typename T> T Step(Context &aContext)
+	{
+		return ComponentBinary<T, ComponentCount<T>::VALUE>::Evaluate<float, float, float, Step >(aContext);
+	}
+	float SmoothStep(float e0, float e1, float v)
+	{
+		if (v <= e0) return 0.0f;
+		if (v >= e1) return 1.0f;
+		float t = (v - e0) / (e1 - e0);
+		return t * t * (3 - 2 * t);
+	}
+	template <typename T> T SmoothStep(Context &aContext)
+	{
+		return ComponentBinary<T, ComponentCount<T>::VALUE>::Evaluate<float, float, float, Step >(aContext);
 	}
 }
 
@@ -558,13 +760,13 @@ template<typename T> void ConfigureRandom(const TiXmlElement *element, std::vect
 	const int width = (sizeof(T)+sizeof(float)-1)/sizeof(float);
 
 	// get random count
-	int count;
+	int count = 1;
 	element->QueryIntAttribute("rand", &count);
 
 	if (count > 0)
 	{
 		// push add
-		Expression::Append(buffer, Expression::Add<T, T, T>);
+		Expression::Append(buffer, Expression::Add<T>);
 	}
 
 	// push average
@@ -581,7 +783,7 @@ template<typename T> void ConfigureRandom(const TiXmlElement *element, std::vect
 	if (count > 0)
 	{
 		// push multiply
-		Expression::Append(buffer, Expression::Mul<T, T, T>);
+		Expression::Append(buffer, Expression::Mul<T>);
 
 		// push variance
 		Expression::Append(buffer, Expression::Constant<T>);
@@ -600,7 +802,7 @@ template<typename T> void ConfigureRandom(const TiXmlElement *element, std::vect
 			if (count > 1 && i < count - 1)
 			{
 				// push add
-				Expression::Append(buffer, Expression::Add<T, T, T>);
+				Expression::Append(buffer, Expression::Add<T>);
 			}
 
 			// push randoms
@@ -611,6 +813,183 @@ template<typename T> void ConfigureRandom(const TiXmlElement *element, std::vect
 	}
 }
 
+//
+// TIME EXPRESSION
+//
+
+float EvaluateTime(DrawItemContext &aContext)
+{
+	return aContext.mParam;
+}
+
+
+//
+// TYPE CONVERSION
+//
+template<typename T, typename A> struct Convert
+{
+	static void Append(std::vector<unsigned int> &buffer)
+	{
+		Expression::Append(buffer, Expression::Construct<T, A>);
+	}
+};
+template<typename T> struct Convert<T, T>
+{
+	static void Append(std::vector<unsigned int> &buffer)
+	{
+	}
+};
+template<> struct Convert<Vector2, float>
+{
+	static void Append(std::vector<unsigned int> &buffer)
+	{
+		Expression::Append(buffer, Expression::Extend<Vector2, float>);
+	}
+};
+template<> struct Convert<Vector3, float>
+{
+	static void Append(std::vector<unsigned int> &buffer)
+	{
+		Expression::Append(buffer, Expression::Extend<Vector3, float>);
+	}
+};
+template<> struct Convert<Vector4, float>
+{
+	static void Append(std::vector<unsigned int> &buffer)
+	{
+		Expression::Append(buffer, Expression::Extend<Vector4, float>);
+	}
+};
+template<> struct Convert<Color4, float>
+{
+	static void Append(std::vector<unsigned int> &buffer)
+	{
+		Expression::Append(buffer, Expression::Extend<Color4, float>);
+	}
+};
+template<typename T, typename A> void ConfigureConvert(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
+{
+	const TiXmlElement *arg1 = element->FirstChildElement();
+	if (!arg1)
+	{
+		// no first argument: treat element as a literal (HACK)
+		assert(!"no argument for type conversion");
+		ConfigureLiteral<T>(element, buffer, names, defaults);
+		return;
+	}
+
+	// append the operator
+	Convert<T, A>::Append(buffer);
+
+	// append first argument
+	ConfigureExpression<A>(arg1, buffer, names, defaults);
+}
+
+
+//
+// UNARY EXPRESSION
+// return the result of an expression taking one parameter
+//
+template<typename T, typename A, typename C> void ConfigureUnary(T (expr)(C), const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
+{
+	const TiXmlElement *arg1 = element->FirstChildElement();
+	if (!arg1)
+	{
+		// no first argument: treat element as a literal (HACK)
+		assert(!"no argument for unary operator");
+		ConfigureLiteral<T>(element, buffer, names, defaults);
+		return;
+	}
+
+	// append the operator
+	Expression::Append(buffer, expr);
+
+	// append first argument
+	ConfigureExpression<A>(arg1, buffer, names, defaults);
+}
+
+
+//
+// BINARY EXPRESSION
+// return the result of an expression taking two parameters
+//
+template<typename T, typename A1, typename A2, typename C> void ConfigureBinary(T (expr)(C), const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
+{
+	const TiXmlElement *arg1 = element->FirstChildElement();
+	if (!arg1)
+	{
+		// no first argument: treat element as a literal (HACK)
+		assert(!"no first argument for binary operator");
+		ConfigureLiteral<T>(element, buffer, names, defaults);
+		return;
+	}
+
+	const TiXmlElement *arg2 = arg1->NextSiblingElement();
+	if (!arg2)
+	{
+		// no second argument: treat element as a literal (HACK)
+		assert(!"no second argument for binary operator");
+		ConfigureLiteral<T>(element, buffer, names, defaults);
+		return;
+	}
+
+	// append the operator
+	Expression::Append(buffer, expr);
+
+	// append first argument
+	ConfigureExpression<A1>(arg1, buffer, names, defaults);
+
+	// append second argument
+	ConfigureExpression<A2>(arg2, buffer, names, defaults);
+}
+
+
+//
+// TERNARY EXPRESSION
+// return the result of an expression taking three parameters
+//
+template<typename T, typename A1, typename A2, typename A3, typename C> void ConfigureTernary(T (expr)(C), const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
+{
+	const TiXmlElement *arg1 = element->FirstChildElement();
+	if (!arg1)
+	{
+		// no first argument: treat element as a literal (HACK)
+		assert(!"no first argument for ternary operator");
+		ConfigureLiteral<T>(element, buffer, names, defaults);
+		return;
+	}
+
+	const TiXmlElement *arg2 = arg1->NextSiblingElement();
+	if (!arg2)
+	{
+		// no second argument: treat element as a literal (HACK)
+		assert(!"no second argument for ternary operator");
+		ConfigureLiteral<T>(element, buffer, names, defaults);
+		return;
+	}
+
+	const TiXmlElement *arg3 = arg1->NextSiblingElement();
+	if (!arg3)
+	{
+		// no third argument: treat element as a literal (HACK)
+		assert(!"no third argument for ternary operator");
+		ConfigureLiteral<T>(element, buffer, names, defaults);
+		return;
+	}
+
+	// append the operator
+	Expression::Append(buffer, expr);
+
+	// append first argument
+	ConfigureExpression<A1>(arg1, buffer, names, defaults);
+
+	// append second argument
+	ConfigureExpression<A2>(arg2, buffer, names, defaults);
+
+	// append third argument
+	ConfigureExpression<A3>(arg3, buffer, names, defaults);
+}
+
 
 //
 // VARIADIC EXPRESSION
@@ -618,17 +997,28 @@ template<typename T> void ConfigureRandom(const TiXmlElement *element, std::vect
 //
 
 // configure typed variadic
-template<typename T, typename C> void ConfigureVariadic(T (expr)(C), const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
+template<typename T, typename A, typename C> void ConfigureVariadic(T (expr)(C), const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
 {
 	const TiXmlElement *arg1 = element->FirstChildElement();
 	if (!arg1)
 	{
 		// no first argument: treat element as a literal (HACK)
+		DebugPrint("no first argument for variadic operator");
 		ConfigureLiteral<T>(element, buffer, names, defaults);
 		return;
 	}
 
-	const TiXmlElement *arg2 = arg1;
+	const TiXmlElement *arg2 = arg1->NextSiblingElement();
+	if (!arg2)
+	{
+		// no second argument: convert type of first argument (HACK)
+		DebugPrint("no second argument for variadic operator: performing type conversion");
+		ConfigureConvert<T, A>(arg1, buffer, names, defaults);
+		return;
+	}
+
+	// rewind
+	arg2 = arg1;
 	do
 	{
 		// get next argument
@@ -643,7 +1033,7 @@ template<typename T, typename C> void ConfigureVariadic(T (expr)(C), const TiXml
 		}
 
 		// append first argument
-		ConfigureExpression<T>(arg1, buffer, names, defaults);
+		ConfigureExpression<A>(arg1, buffer, names, defaults);
 	}
 	while (arg2);
 }
@@ -674,49 +1064,55 @@ template<typename T> void ConfigureExpression(const TiXmlElement *element, std::
 	// configure based on tag name
 	switch(Hash(element->Value()))
 	{
-	case 0x425ed3ca /* "value" */:
-		ConfigureLiteral<T>(element, buffer, names, data);
-		return;
+	case 0x425ed3ca /* "value" */:			ConfigureLiteral<T>(element, buffer, names, data); return;
+	case 0x19385305 /* "variable" */:		ConfigureVariable<T>(element, buffer, names, data); return;
+	case 0x83588fd4 /* "interpolator" */:	ConfigureInterpolator<T>(element, buffer, names, data); return;
+	case 0xa19b8cd6 /* "rand" */:			ConfigureRandom<T>(element, buffer, names, data); return;
 
-	case 0x19385305 /* "variable" */:
-		ConfigureVariable<T>(element, buffer, names, data);
-		return;
+	case 0xaa7d7949 /* "extend" */:			ConfigureUnary<const T, float, Expression::Context &>(Expression::Extend<T, float>, element, buffer, sScalarNames, sScalarDefault); return;
+//	case 0x40c09172 /* "construct" */:		ConfigureConstruct<T>(element, buffer, names, data); return;
+	case 0x5d3c9be4 /* "time" */:			Expression::Append(buffer, EvaluateTime); return;
 
-	case 0x83588fd4 /* "interpolator" */:
-		ConfigureInterpolator<T>(element, buffer, names, data);
-		return;
-
-	case 0xa19b8cd6 /* "rand" */:
-		ConfigureRandom<T>(element, buffer, names, data);
-		return;
-
-	case 0x3b391274 /* "add" */:
-		ConfigureVariadic<T>(Expression::Add<T, T, T>, element, buffer, names, data);
-		return;
-
-	case 0xdc4e3915 /* "sub" */:
-		ConfigureVariadic<T>(Expression::Sub<T, T, T>, element, buffer, names, data);
-		return;
-
-	case 0xeb84ed81 /* "mul" */:
-		ConfigureVariadic<T>(Expression::Mul<T, T, T>, element, buffer, names, data);
-		return;
-
-	case 0xe562ab48 /* "div" */:
-		ConfigureVariadic<T>(Expression::Div<T, T, T>, element, buffer, names, data);
-		return;
-
-	case 0xc98f4557 /* "min" */:
-		ConfigureVariadic<T>(Expression::Min<T>, element, buffer, names, data);
-		return;
-
-	case 0xd7a2e319 /* "max" */:
-		ConfigureVariadic<T>(Expression::Max<T>, element, buffer, names, data);
-		return;
-
-	default:
-		assert(false);
-		return;
+	case 0x3b391274 /* "add" */:			ConfigureVariadic<T, T>(Expression::Add<T>, element, buffer, names, data); return;
+	case 0xdc4e3915 /* "sub" */:			ConfigureVariadic<T, T>(Expression::Sub<T>, element, buffer, names, data); return;
+	case 0xeb84ed81 /* "mul" */:			ConfigureVariadic<T, T>(Expression::Mul<T>, element, buffer, names, data); return;
+	case 0xe562ab48 /* "div" */:			ConfigureVariadic<T, T>(Expression::Div<T>, element, buffer, names, data); return;
+	case 0x3899af41 /* "neg" */:			ConfigureUnary<T, T>(Expression::Neg<T>, element, buffer, names, data); return;
+	case 0x31037236 /* "rcp" */:			ConfigureUnary<T, T>(Expression::Rcp<T>, element, buffer, names, data); return;
+	case 0xa8e99c47 /* "inc" */:			ConfigureUnary<T, T>(Expression::Inc<T>, element, buffer, names, data); return;
+	case 0xc25979d3 /* "dec" */:			ConfigureUnary<T, T>(Expression::Dec<T>, element, buffer, names, data); return;
+									
+	case 0xe0302a4d /* "sin" */:			ConfigureUnary<T, T>(Expression::Sin<T>, element, buffer, names, data); return;
+	case 0xfb8de29c /* "cos" */:			ConfigureUnary<T, T>(Expression::Cos<T>, element, buffer, names, data); return;
+	case 0x9cf73498 /* "tan" */:			ConfigureUnary<T, T>(Expression::Tan<T>, element, buffer, names, data); return;
+	case 0xfeae7ea6 /* "asin" */:			ConfigureUnary<T, T>(Expression::Asin<T>, element, buffer, names, data); return;
+	case 0x3c01df1f /* "acos" */:			ConfigureUnary<T, T>(Expression::Acos<T>, element, buffer, names, data); return;
+	case 0x0678cabf /* "atan" */:			ConfigureUnary<T, T>(Expression::Atan<T>, element, buffer, names, data); return;
+	case 0xbd26dbf7 /* "atan2" */:			ConfigureBinary<T, T, T>(Expression::Atan2<T>, element, buffer, names, data); return;
+									
+	case 0x10d2583f /* "sinh" */:			ConfigureUnary<T, T>(Expression::Sinh<T>, element, buffer, names, data); return;
+	case 0xf45c461c /* "cosh" */:			ConfigureUnary<T, T>(Expression::Cosh<T>, element, buffer, names, data); return;
+	case 0x092855d0 /* "tanh" */:			ConfigureUnary<T, T>(Expression::Tanh<T>, element, buffer, names, data); return;
+									
+	case 0x58336ad5 /* "pow" */:			ConfigureBinary<T, T, T>(Expression::Pow<T>, element, buffer, names, data); return;
+	case 0x72a68728 /* "exp" */:			ConfigureUnary<T, T>(Expression::Exp<T>, element, buffer, names, data); return;
+	case 0x3f515151 /* "log" */:			ConfigureUnary<T, T>(Expression::Log<T>, element, buffer, names, data); return;
+	case 0x7dee3bcf /* "sqrt" */:			ConfigureUnary<T, T>(Expression::Sqrt<T>, element, buffer, names, data); return;
+	case 0x0a6a5946 /* "invsqrt" */:		ConfigureUnary<T, T>(Expression::InvSqrt<T>, element, buffer, names, data); return;
+									
+	case 0x2a48023b /* "abs" */:			ConfigureUnary<T, T>(Expression::Abs<T>, element, buffer, names, data); return;
+	case 0x0cbc8ba4 /* "sign" */:			ConfigureUnary<T, T>(Expression::Sign<T>, element, buffer, names, data); return;
+	case 0xb8e70c1d /* "floor" */:			ConfigureUnary<T, T>(Expression::Floor<T>, element, buffer, names, data); return;
+	case 0x62e4e208 /* "ceil" */:			ConfigureUnary<T, T>(Expression::Ceil<T>, element, buffer, names, data); return;
+	case 0x87aad829 /* "frac" */:			ConfigureUnary<T, T>(Expression::Frac<T>, element, buffer, names, data); return;
+	case 0xdf9e7283 /* "mod" */:			ConfigureBinary<T, T, T>(Expression::Mod<T>, element, buffer, names, data); return;
+	case 0xc98f4557 /* "min" */:			ConfigureVariadic<T, T>(Expression::Min<T>, element, buffer, names, data); return;
+	case 0xd7a2e319 /* "max" */:			ConfigureVariadic<T, T>(Expression::Max<T>, element, buffer, names, data); return;
+	case 0xa82efcbc /* "clamp" */:			ConfigureTernary<T, T, T, T>(Expression::Clamp<T>, element, buffer, names, data); return;
+	case 0x1e691468 /* "lerp" */:			ConfigureTernary<T, T, T, T>(Expression::Lerp<T>, element, buffer, names, data); return;
+	case 0xc7441a0f /* "step" */:			ConfigureBinary<T, T, T>(Expression::Step<T>, element, buffer, names, data); return;
+	case 0x95964e7d /* "smoothstep" */:		ConfigureTernary<T, T, T, T>(Expression::SmoothStep<T>, element, buffer, names, data); return;
+	default:								assert(false); return;
 	}
 }
 
