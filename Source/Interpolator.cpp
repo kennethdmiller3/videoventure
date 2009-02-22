@@ -26,7 +26,7 @@ float *InterpolatorTemplate::AddKey(float aParam)
 	return data;
 }
 
-static float ProcessInterpolatorKeyItem(const TiXmlElement *element, InterpolatorTemplate &interpolator, float time, float scale, const char *names[], const float values[])
+static float ConfigureInterpolatorKeyItem(const TiXmlElement *element, InterpolatorTemplate &interpolator, float time, float scale, const char * const names[], const float values[])
 {
 	// get local time value
 	float frame = 0.0f;
@@ -46,7 +46,7 @@ static float ProcessInterpolatorKeyItem(const TiXmlElement *element, Interpolato
 	return time + frame * scale;
 }
 
-static float ProcessInterpolatorKeyItems(const TiXmlElement *element, InterpolatorTemplate &interpolator, float time, float scale, const char *names[], const float values[])
+static float ConfigureInterpolatorKeyItems(const TiXmlElement *element, InterpolatorTemplate &interpolator, float time, float scale, const char * const names[], const float values[])
 {
 	// get default duration
 	float duration = 0.0f;
@@ -58,27 +58,27 @@ static float ProcessInterpolatorKeyItems(const TiXmlElement *element, Interpolat
 #if 0
 		case 0x652b04df /* "start" */:
 			{
-				ProcessInterpolatorKeyItem(child, interpolator, time, scale, names, values);
+				ConfigureInterpolatorKeyItem(child, interpolator, time, scale, names, values);
 			}
 			break;
 
 		case 0x6a8e75aa /* "end" */:
 			{
 				element->QueryFloatAttribute("time", &duration);
-				ProcessInterpolatorKeyItem(child, interpolator, time + duration, scale, names, values);
+				ConfigureInterpolatorKeyItem(child, interpolator, time + duration, scale, names, values);
 			}
 			break;
 #endif
 
 		case 0x6815c86c /* "key" */:
 			{
-				duration = std::max(duration, ProcessInterpolatorKeyItem(child, interpolator, time, scale, names, values) - time);
+				duration = std::max(duration, ConfigureInterpolatorKeyItem(child, interpolator, time, scale, names, values) - time);
 			}
 			break;
 
 		case 0xc7441a0f /* "step" */:
 			{
-				ProcessInterpolatorKeyItem(child, interpolator, time, 0, names, values);
+				ConfigureInterpolatorKeyItem(child, interpolator, time, 0, names, values);
 				element->QueryFloatAttribute("time", &duration);
 				time += duration;
 			}
@@ -90,7 +90,7 @@ static float ProcessInterpolatorKeyItems(const TiXmlElement *element, Interpolat
 	return time + duration;
 }
 
-bool ProcessInterpolatorItem(const TiXmlElement *element, std::vector<unsigned int> &buffer, int width, const char *names[], const float data[])
+bool ConfigureInterpolatorItem(const TiXmlElement *element, std::vector<unsigned int> &buffer, int width, const char * const names[], const float data[])
 {
 	if (!element->FirstChildElement())
 		return false;
@@ -123,7 +123,7 @@ bool ProcessInterpolatorItem(const TiXmlElement *element, std::vector<unsigned i
 		case 0xd00594c0 /* "linear" */:
 			{
 				// process linear interpolator
-				time = ProcessInterpolatorKeyItems(child, interpolator, time, scale, names, data);
+				time = ConfigureInterpolatorKeyItems(child, interpolator, time, scale, names, data);
 			}
 			break;
 
@@ -135,13 +135,13 @@ bool ProcessInterpolatorItem(const TiXmlElement *element, std::vector<unsigned i
 
 		case 0x6815c86c /* "key" */:
 			{
-				ProcessInterpolatorKeyItem(child, interpolator, time, scale, names, data);
+				ConfigureInterpolatorKeyItem(child, interpolator, time, scale, names, data);
 			}
 			break;
 
 		case 0xc7441a0f /* "step" */:
 			{
-				ProcessInterpolatorKeyItem(child, interpolator, time, 0, names, data);
+				ConfigureInterpolatorKeyItem(child, interpolator, time, 0, names, data);
 				float duration = 0.0f;
 				if (child->QueryFloatAttribute("time", &duration) == TIXML_SUCCESS)
 					time += duration * scale;

@@ -174,8 +174,8 @@ void Input::OnRelease(int aType, int aDevice, int aControl)
 	}
 }
 
-// process a configuration item
-void Input::ProcessItem(const TiXmlElement *element)
+// configure an item
+void Input::ConfigureItem(const TiXmlElement *element)
 {
 	const char *value = element->Value();
 	switch (Hash(value))
@@ -232,6 +232,6 @@ void Input::Configure(const TiXmlElement *element)
 {
 	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
-		ProcessItem(child);
+		ConfigureItem(child);
 	}
 }

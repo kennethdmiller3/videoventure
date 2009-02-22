@@ -213,7 +213,7 @@ int ProcessCommand( unsigned int aCommand, char *aParam[], int aCount )
 
 			// process child element
 			if (const TiXmlElement *root = document.FirstChildElement())
-				ProcessWorldItem(root);
+				ConfigureWorldItem(root);
 			return 1;
 		}
 		return 0;

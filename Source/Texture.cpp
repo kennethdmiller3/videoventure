@@ -127,7 +127,7 @@ namespace Database
 							child->QueryFloatAttribute("seed", &seed);
 
 							std::vector<unsigned int> buffer;
-							ProcessInterpolatorItem(child, buffer, SDL_arraysize(sColorNames), sColorNames, sColorDefault);
+							ConfigureInterpolatorItem(child, buffer, SDL_arraysize(sColorNames), sColorNames, sColorDefault);
 
 							texture.mPixels = static_cast<unsigned char *>(malloc(texture.mWidth * texture.mHeight * texture.mComponents));
 

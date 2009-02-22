@@ -584,7 +584,15 @@ void RunState()
 						input.Update();
 
 						// if any controls have changed...
-						if (memcmp(prev, input.output, sizeof(prev)) != 0)
+						bool changed = false;
+						for (int i = 0; i < Input::NUM_LOGICAL; ++i)
+						{
+							if (input.output[i] != prev[i])
+							{
+								changed = true; break;
+							}
+						}
+						if (changed)
 						{
 							// create an input turn entry
 							TiXmlElement item( "input" );

@@ -1,4 +1,4 @@
 #pragma once
 
-void ProcessWorldItem(const TiXmlElement *element);
-void ProcessWorldItems(const TiXmlElement *element);
+void ConfigureWorldItem(const TiXmlElement *element);
+void ConfigureWorldItems(const TiXmlElement *element);

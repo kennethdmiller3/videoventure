@@ -122,7 +122,7 @@ bool InitLevel(const char *config)
 	if (const TiXmlElement *root = document.FirstChildElement("world"))
 	{
 		// process the world
-		ProcessWorldItem(root);
+		ConfigureWorldItem(root);
 
 		// get the reticule draw list (HACK)
 		reticule_handle = Database::drawlist.Get(0x170e4c58 /* "reticule" */);

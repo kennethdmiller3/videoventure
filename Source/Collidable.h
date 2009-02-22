@@ -33,28 +33,28 @@ public:
 	~CollidableTemplate(void);
 
 	// configure
-	bool ProcessShapeItem(const TiXmlElement *element, b2ShapeDef &shape);
+	bool ConfigureShapeItem(const TiXmlElement *element, b2ShapeDef &shape);
 	bool ConfigureShape(const TiXmlElement *element, b2ShapeDef &shape);
 	bool ConfigureCircle(const TiXmlElement *element, b2CircleDef &shape);
 	bool ConfigureBox(const TiXmlElement *element, b2PolygonDef &shape);
-	bool ProcessPolyItem(const TiXmlElement *element, b2PolygonDef &shape);
+	bool ConfigurePolyItem(const TiXmlElement *element, b2PolygonDef &shape);
 	bool ConfigurePoly(const TiXmlElement *element, b2PolygonDef &shape);
 #ifdef B2_EDGE_SHAPE_H
-	bool ProcessEdgeItem(const TiXmlElement *element, b2EdgeChainDef &shape);
+	bool ConfigureEdgeItem(const TiXmlElement *element, b2EdgeChainDef &shape);
 	bool ConfigureEdge(const TiXmlElement *element, b2EdgeChainDef &shape);
 #endif
-	bool ProcessBodyItem(const TiXmlElement *element, b2BodyDef &body);
+	bool ConfigureBodyItem(const TiXmlElement *element, b2BodyDef &body);
 	bool ConfigureBody(const TiXmlElement *element, b2BodyDef &body);
-	bool ProcessJointItem(const TiXmlElement *element, b2JointDef &joint);
-	bool ProcessRevoluteJointItem(const TiXmlElement *element, b2RevoluteJointDef &joint);
+	bool ConfigureJointItem(const TiXmlElement *element, b2JointDef &joint);
+	bool ConfigureRevoluteJointItem(const TiXmlElement *element, b2RevoluteJointDef &joint);
 	bool ConfigureRevoluteJoint(const TiXmlElement *element, b2RevoluteJointDef &joint);
-	bool ProcessPrismaticJointItem(const TiXmlElement *element, b2PrismaticJointDef &joint);
+	bool ConfigurePrismaticJointItem(const TiXmlElement *element, b2PrismaticJointDef &joint);
 	bool ConfigurePrismaticJoint(const TiXmlElement *element, b2PrismaticJointDef &joint);
-	bool ProcessDistanceJointItem(const TiXmlElement *element, b2DistanceJointDef &joint);
+	bool ConfigureDistanceJointItem(const TiXmlElement *element, b2DistanceJointDef &joint);
 	bool ConfigureDistanceJoint(const TiXmlElement *element, b2DistanceJointDef &joint);
-	bool ProcessPulleyJointItem(const TiXmlElement *element, b2PulleyJointDef &joint);
+	bool ConfigurePulleyJointItem(const TiXmlElement *element, b2PulleyJointDef &joint);
 	bool ConfigurePulleyJoint(const TiXmlElement *element, b2PulleyJointDef &joint);
-	bool ProcessMouseJointItem(const TiXmlElement *element, b2MouseJointDef &joint);
+	bool ConfigureMouseJointItem(const TiXmlElement *element, b2MouseJointDef &joint);
 	bool ConfigureMouseJoint(const TiXmlElement *element, b2MouseJointDef &joint);
 	bool Configure(const TiXmlElement *element, unsigned int id);
 

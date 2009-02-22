@@ -136,7 +136,7 @@ bool ExplosionTemplate::Configure(const TiXmlElement *element, unsigned int id)
 				std::vector<unsigned int> &buffer = properties.Open(propId);
 				const char *names[2] = { "inner", "outer" };
 				const float data[2] = { 0.0f, 0.0f };
-				ProcessInterpolatorItem(child, buffer, 2, names, data);
+				ConfigureInterpolatorItem(child, buffer, 2, names, data);
 				properties.Close(propId);
 			}
 		}

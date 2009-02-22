@@ -5,7 +5,7 @@
 #include "Interpolator.h"
 
 //#define USE_SDL_MIXER
-#define USE_DISTANCE_FALLOFF
+#define DISTANCE_FALLOFF(volume, distsq) ((volume) / (1.0f + (distsq) / 16384.0f))
 
 #if defined(USE_SDL_MIXER)
 
@@ -407,7 +407,7 @@ bool SoundTemplate::ConfigureSample(const TiXmlElement *element, unsigned int id
 	std::vector<unsigned int> samplekey;
 	const char *names[1] = { "value" };
 	ApplyInterpolatorFunc samplefunc = ApplyConstant;
-	if (ProcessInterpolatorItem(element, samplekey, 1, names, &sample))
+	if (ConfigureInterpolatorItem(element, samplekey, 1, names, &sample))
 	{
 		int interpolate = 1;
 		element->QueryIntAttribute("interpolate", &interpolate);
@@ -553,7 +553,7 @@ bool SoundTemplate::ConfigurePokey(const TiXmlElement *element, unsigned int id)
 			{
 				child->QueryFloatAttribute("value", &divider);
 				child->QueryFloatAttribute("quantize", &dividerquant);
-				if (ProcessInterpolatorItem(child, dividerkey, 1, names, &divider))
+				if (ConfigureInterpolatorItem(child, dividerkey, 1, names, &divider))
 				{
 					int interpolate = 1;
 					child->QueryIntAttribute("interpolate", &interpolate);
@@ -569,7 +569,7 @@ bool SoundTemplate::ConfigurePokey(const TiXmlElement *element, unsigned int id)
 				int interpolate = 1;
 				child->QueryIntAttribute("interpolate", &interpolate);
 				amplitudefunc = interpolate ? ApplyInterpolator : ApplyInterpolatorConstant;
-				ProcessInterpolatorItem(child, amplitudekey, 1, names, &amplitude);
+				ConfigureInterpolatorItem(child, amplitudekey, 1, names, &amplitude);
 			}
 			break;
 
@@ -580,7 +580,7 @@ bool SoundTemplate::ConfigurePokey(const TiXmlElement *element, unsigned int id)
 				int interpolate = 1;
 				child->QueryIntAttribute("interpolate", &interpolate);
 				offsetfunc = interpolate ? ApplyInterpolator : ApplyInterpolatorConstant;
-				ProcessInterpolatorItem(child, offsetkey, 1, names, &offset);
+				ConfigureInterpolatorItem(child, offsetkey, 1, names, &offset);
 			}
 			break;
 
@@ -852,7 +852,7 @@ static bool ConfigureTriangleNoise(SoundTemplate *self, const TiXmlElement *elem
 			}
 
 			// target value 8:8
-			unsigned short target = random << 8;
+			unsigned short target = (random << 8) & 0xFFFF;
 
 			// if the current value is less than or equal to the target value...
 			if (value <= target)
@@ -1258,8 +1258,8 @@ bool ConfigurePulseLoop(SoundTemplate *self, const TiXmlElement *element, unsign
 			prevticks = nextticks;
 
 			// update pulse delays
-			pulse1 += pulse1innerdelta;
-			pulse2 += pulse2innerdelta;
+			pulse1 = (pulse1 + pulse1innerdelta) & 0xFF;
+			pulse2 = (pulse2 + pulse2innerdelta) & 0xFF;
 		}
 
 
@@ -1269,8 +1269,8 @@ bool ConfigurePulseLoop(SoundTemplate *self, const TiXmlElement *element, unsign
 		prevticks = nextticks;
 
 		// update pulse delays
-		pulse1delay += pulse1outerdelta;
-		pulse2delay += pulse2outerdelta;
+		pulse1delay = (pulse1delay + pulse1outerdelta) & 0xFF;
+		pulse2delay = (pulse2delay + pulse2outerdelta) & 0xFF;
 	}
 
 	return true;
@@ -1959,7 +1959,7 @@ void Sound::Update(float aStep)
 		return;
 	}
 
-#if defined(USE_DISTANCE_FALLOFF)
+#if defined(DISTANCE_FALLOFF)
 	if (Entity *entity = Database::entity.Get(mId))
 		mPosition = entity->GetPosition();
 	else
@@ -1970,11 +1970,11 @@ void Sound::Update(float aStep)
 	if (mPlaying >= 0)
 	{
 		float volume = mVolume * SOUND_VOLUME_EFFECT;
-#if defined(USE_DISTANCE_FALLOFF)
+#if defined(DISTANCE_FALLOFF)
 		if (mId)
 		{
 			// apply sound fall-off
-			volume /= (1.0f + listenerpos.DistSq(mPosition) / 16384.0f);
+			volume = DISTANCE_FALLOFF(volume, listenerpos.DistSq(mPosition));
 		}
 #endif
 		Mix_Volume(mPlaying, xs_RoundToInt(volume * MIX_MAX_VOLUME));
@@ -2058,6 +2058,12 @@ static float level = minlevel;
 static const float levelfilter = 1.0f * timestep;
 static const float postscale = 32767.0f;
 
+inline float SoftClamp(float x)
+{
+	float exp2x(expf(x+x));
+	return (exp2x - 1) / (exp2x + 1);
+}
+
 void MixSound(void *userdata, unsigned char *stream, int len)
 {
 	int samples = len / sizeof(short);
@@ -2135,12 +2141,12 @@ void MixSound(void *userdata, unsigned char *stream, int len)
 		// get intrinsic volume
 		float volume = sound->mVolume;
 
-#if defined(USE_DISTANCE_FALLOFF)
+#if defined(DISTANCE_FALLOFF)
 		// if associated with an identifier
 		if (sound->mId)
 		{
 			// apply sound fall-off
-			volume /= (1.0f + listenerpos.DistSq(sound->mPosition) / 16384.0f);
+			volume = DISTANCE_FALLOFF(volume, listenerpos.DistSq(sound->mPosition));
 			if (volume < 1.0f/256.0f)
 				continue;
 		}
@@ -2278,8 +2284,8 @@ void MixSound(void *userdata, unsigned char *stream, int len)
 			if (level < minlevel)
 				level = minlevel;
 			float prescale = InvSqrt(level);
-			*dst++ = short(tanhf(mix0 * prescale) * postscale);
-			*dst++ = short(tanhf(mix1 * prescale) * postscale);
+			*dst++ = short(SoftClamp(mix0 * prescale) * postscale);
+			*dst++ = short(SoftClamp(mix1 * prescale) * postscale);
 		}
 	}
 	else

@@ -6,37 +6,6 @@
 
 #include "Expression.h"
 
-struct Array4
-{
-	float v0, v1, v2, v3;
-
-	Array4()
-	{
-	}
-
-	Array4(const float v0, const float v1, const float v2, const float v3)
-		: v0(v0), v1(v1), v2(v2), v3(v3)
-	{
-	}
-
-	friend const Array4 operator+(const Array4 &a, const Array4 &b)
-	{
-		return Array4(a.v0+b.v0, a.v1+b.v1, a.v2+b.v2, a.v3+b.v3);
-	}
-	friend const Array4 operator-(const Array4 &a, const Array4 &b)
-	{
-		return Array4(a.v0-b.v0, a.v1-b.v1, a.v2-b.v2, a.v3-b.v3);
-	}
-	friend const Array4 operator*(const Array4 &a, const Array4 &b)
-	{
-		return Array4(a.v0*b.v0, a.v1*b.v1, a.v2*b.v2, a.v3*b.v3);
-	}
-	friend const Array4 operator/(const Array4 &a, const Array4 &b)
-	{
-		return Array4(a.v0/b.v0, a.v1/b.v1, a.v2/b.v2, a.v3/b.v3);
-	}
-};
-
 enum DrawlistOp
 {
 	DO_glAccum, //(GLenum op, GLfloat value)
@@ -203,29 +172,29 @@ enum DrawlistOp
 };
 
 // attribute names
-static const char * sPositionNames[] = { "x", "y", "z" };
+static const char * const sPositionNames[] = { "x", "y", "z" };
 static const float sPositionDefault[] = { 0.0f, 0.0f, 0.0f };
 static const int sPositionWidth = 3;
-static const char * sRotationNames[] = { "angle" };
+static const char * const sRotationNames[] = { "angle" };
 static const float sRotationDefault[] = { 0.0f };
 static const int sRotationWidth = 1;
-static const char * sScaleNames[] = { "x", "y", "z" };
+static const char * const sScaleNames[] = { "x", "y", "z" };
 static const float sScaleDefault[] = { 1.0f, 1.0f, 1.0f };
 static const int sScaleWidth = 3;
-static const char * sColorNames[] = { "r", "g", "b", "a" };
+static const char * const sColorNames[] = { "r", "g", "b", "a" };
 static const float sColorDefault[] = { 0.0f, 0.0f, 0.0f, 1.0f };
 static const int sColorWidth = 4;
-static const char * sTexCoordNames[] = { "s", "t" };
+static const char * const sTexCoordNames[] = { "s", "t" };
 static const float sTexCoordDefault[] = { 0.0f, 0.0f };
 static const int sTexCoordWidth = 2;
-static const char * sIndexNames[] = { "c" };
+static const char * const sIndexNames[] = { "c" };
 static const float sIndexDefault[] = { 0.0f };
 static const int sIndexWidth = 1;
-static const char * sMatrixNames[] = { "m0", "m1", "m2", "m3", "m4", "m5", "m6", "m7", "m8", "m9", "m10", "m11", "m12", "m13", "m14", "m15" };
+static const char * const sMatrixNames[] = { "m0", "m1", "m2", "m3", "m4", "m5", "m6", "m7", "m8", "m9", "m10", "m11", "m12", "m13", "m14", "m15" };
 static const float sMatrixDefault[] = { 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f };
 static const int sMatrixWidth = 16;
 
-void GetTypeData(unsigned int type, int &width, const char **&names, const float *&data)
+void GetTypeData(unsigned int type, int &width, const char * const *&names, const float *&data)
 {
 	switch (type)
 	{
@@ -260,7 +229,7 @@ namespace Database
 			void Configure(unsigned int aId, const TiXmlElement *element)
 			{
 				std::vector<unsigned int> &buffer = Database::dynamicdrawlist.Open(aId);
-				ProcessDrawItems(element, buffer);
+				ConfigureDrawItems(element, buffer);
 				Database::dynamicdrawlist.Close(aId);
 			}
 		}
@@ -289,7 +258,7 @@ namespace Database
 
 				// process draw items
 				std::vector<unsigned int> &drawlist = Database::dynamicdrawlist.Open(handle);
-				ProcessDrawItems(element, drawlist);
+				ConfigureDrawItems(element, drawlist);
 				ExecuteDrawItems(&drawlist[0], drawlist.size(), param, aId);
 				Database::dynamicdrawlist.Close(handle);
 
@@ -314,7 +283,7 @@ namespace Database
 				unsigned int name = Hash(element->Attribute("name"));
 				unsigned int type = Hash(element->Attribute("type"));
 				int width;
-				const char **names;
+				const char * const *names;
 				const float *data;
 				GetTypeData(type, width, names, data);
 				for (int i = 0; i < width; i++)
@@ -358,7 +327,7 @@ static const unsigned int sHashToAttribMask[][2] =
 };
 #endif
 
-template<typename T> void ProcessExpression(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char *names[], const float data[]);
+template<typename T> void ConfigureExpression(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float data[]);
 
 // draw item context
 // (extends expression context)
@@ -368,54 +337,9 @@ struct DrawItemContext : public Expression::Context
 	unsigned int mId;
 };
 
-// evaluate a draw data variable
-void EvaluateVariable(float value[], int width, DrawItemContext &aContext)
-{
-	unsigned int name = *aContext.mStream++;
-	const Database::Typed<float> &variables = Database::variable.Get(aContext.mId);
-	for (int i = 0; i < width; ++i)
-		value[i] = variables.Get(name+i);
-}
-template <typename T> static T EvaluateVariable(DrawItemContext &aContext)
-{
-	// TO DO: get the global value
-	T value = T();
-	EvaluateVariable(reinterpret_cast<float * __restrict>(&value), sizeof(T)/sizeof(float), aContext);
-	return value;
-}
-
-// evaluate a draw data interpolator
-void EvaluateInterpolator(float value[], int width, DrawItemContext &aContext)
-{
-	// data size
-	unsigned int size = *aContext.mStream++;
-
-	// get interpolator value
-	const int count = *aContext.mStream;
-	const float * __restrict keys = reinterpret_cast<const float * __restrict>(aContext.mStream+1);
-	int dummy = 0;
-	ApplyInterpolator(value, width, count, keys, aContext.mParam, dummy);
-
-	// advance stream
-	aContext.mStream += size;
-
-}
-template <typename T> static T EvaluateInterpolator(DrawItemContext &aContext)
-{
-	T value = T();
-	EvaluateInterpolator(reinterpret_cast<float * __restrict>(&value), sizeof(T)/sizeof(float), aContext);
-	return value;
-}
-
-// random
-float Rand(void)
-{
-	return Random::Value(0.0f, 1.0f);
-}
-
-// various constructors
 namespace Expression
 {
+	// various constructors
 	template<typename T> const T Construct(Context &aContext)
 	{
 		return T();
@@ -445,13 +369,13 @@ namespace Expression
 		float arg4(Evaluate<float>(aContext));
 		return Color4(arg1, arg2, arg3, arg4);
 	}
-	template<> const Array4 Construct<Array4>(Context &aContext)
+	template<> const Vector4 Construct<Vector4>(Context &aContext)
 	{
 		float arg1(Evaluate<float>(aContext));
 		float arg2(Evaluate<float>(aContext));
 		float arg3(Evaluate<float>(aContext));
 		float arg4(Evaluate<float>(aContext));
-		return Array4(arg1, arg2, arg3, arg4);
+		return Vector4(arg1, arg2, arg3, arg4);
 	}
 
 	// binary operators
@@ -479,94 +403,379 @@ namespace Expression
 		A2 arg2(Evaluate<A2>(aContext));
 		return arg1 / arg2;
 	}
+
+	template <typename T> T Min(Context &aContext)
+	{
+		return ComponentBinary<T>::Evaluate<const float &, const float &, const float &, std::min<float> >(aContext);
+	}
+	template <> float Min<float>(Context &aContext)
+	{
+		return Binary<float, float, float>::Evaluate<const float &, const float &, const float &, std::min<float> >(aContext);
+	}
+	template <typename T> T Max(Context &aContext)
+	{
+		return ComponentBinary<T>::Evaluate<const float &, const float &, const float &, std::max<float> >(aContext);
+	}
+	template <> float Max<float>(Context &aContext)
+	{
+		return Binary<float, float, float>::Evaluate<const float &, const float &, const float &, std::max<float> >(aContext);
+	}
 }
 
-// process expression data
-template<typename T> void ProcessExpression(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char *names[], const float data[])
+
+//
+// LITERAL EXPRESSION
+// returns an embedded constant value
+//
+
+// float[width] literal
+void ConfigureLiteral(const TiXmlElement *element, std::vector<unsigned int> &buffer, int width, const char * const names[], const float defaults[])
 {
-	if (const char *name = element->Attribute("variable"))
+	// process literal data
+	for (int i = 0; i < width; ++i)
 	{
-		// push a reference to a variable value
-		Expression::Append(buffer, EvaluateVariable<T>, Hash(name));
+		float value = defaults[i];
+		element->QueryFloatAttribute(names[i], &value);
+		buffer.push_back(*reinterpret_cast<unsigned int *>(&value));
 	}
-	else if (element->FirstChildElement())
+}
+
+// typed literal
+template<typename T> void ConfigureLiteral(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
+{
+	// append a constant expression
+	Expression::Append(buffer, Expression::Constant<T>);
+	ConfigureLiteral(element, buffer, sizeof(T)/sizeof(float), names, defaults);
+
+}
+
+
+//
+// VARIABLE EXPRESSION
+// returns the value of a named variable
+//
+
+// evaluate float[width] variable
+void EvaluateVariable(float value[], int width, DrawItemContext &aContext)
+{
+	unsigned int name = Expression::Read<unsigned int>(aContext);
+	const Database::Typed<float> &variables = Database::variable.Get(aContext.mId);
+	for (int i = 0; i < width; ++i)
+		value[i] = variables.Get(name+i);
+}
+
+// evaluate typed variable
+template <typename T> static const T EvaluateVariable(DrawItemContext &aContext)
+{
+	T value = T();
+	EvaluateVariable(reinterpret_cast<float * __restrict>(&value), sizeof(T)/sizeof(float), aContext);
+	return value;
+}
+
+// typed variable: attribute-inlined version
+template<typename T> void ConfigureInlineVariable(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
+{
+	// append a variable expression
+	Expression::Append(buffer, EvaluateVariable<T>, Hash(element->Attribute("variable")));
+}
+
+// typed variable: normal version
+template<typename T> void ConfigureVariable(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
+{
+	// append a variable expression
+	Expression::Append(buffer, EvaluateVariable<T>, Hash(element->Attribute("name")));
+}
+
+
+//
+// INTERPOLATOR EXPRESSION
+// returns interpolated value based on parameter
+//
+
+// evaluate float[width] interpolator
+void EvaluateInterpolator(float value[], int width, DrawItemContext &aContext)
+{
+	// data size
+	unsigned int size = Expression::Read<unsigned int>(aContext);
+
+	// end of data
+	const unsigned int *end = aContext.mStream + size;
+
+	// get interpolator value
+	const int count = Expression::Read<int>(aContext);
+	const float * __restrict keys = reinterpret_cast<const float * __restrict>(aContext.mStream);
+	int dummy = 0;
+	ApplyInterpolator(value, width, count, keys, aContext.mParam, dummy);
+
+	// advance stream
+	aContext.mStream = end;
+}
+
+// evaluate typed interpolator
+template <typename T> static const T EvaluateInterpolator(DrawItemContext &aContext)
+{
+	T value = T();
+	EvaluateInterpolator(reinterpret_cast<float * __restrict>(&value), sizeof(T)/sizeof(float), aContext);
+	return value;
+}
+
+// configure float[width] interpolator
+static void ConfigureInterpolator(const TiXmlElement *element, std::vector<unsigned int> &buffer, int width, const char * const names[], const float defaults[])
+{
+	// process interpolator data
+	buffer.push_back(0);
+	int start = buffer.size();
+	ConfigureInterpolatorItem(element, buffer, width, names, defaults);
+	buffer[start - 1] = buffer.size() - start;
+}
+
+// configure typed interpolator
+template<typename T> void ConfigureInterpolator(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
+{
+	// append an interpolator expression
+	Expression::Append(buffer, EvaluateInterpolator<T>);
+	ConfigureInterpolator(element, buffer, sizeof(T)/sizeof(float), names, defaults);
+}
+
+
+//
+// RANDOM EXPRESSION
+// returns a random value: average + variance * rand[-1..1]
+//
+
+// random [-1..1]
+float Rand(void)
+{
+	return Random::Value(0.0f, 1.0f);
+}
+
+// TO DO: float[width] random
+
+// configure typed random
+template<typename T> void ConfigureRandom(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
+{
+	// width in floats (HACK)
+	const int width = (sizeof(T)+sizeof(float)-1)/sizeof(float);
+
+	// get random count
+	int count;
+	element->QueryIntAttribute("rand", &count);
+
+	if (count > 0)
 	{
-		// push an interpolator
-		Expression::Append(buffer, EvaluateInterpolator<T>);
-		buffer.push_back(0);
-		int start = buffer.size();
-		ProcessInterpolatorItem(element, buffer, sizeof(T)/sizeof(float), names, data);
-		buffer[start - 1] = buffer.size() - start;
+		// push add
+		Expression::Append(buffer, Expression::Add<T, T, T>);
 	}
-	else if (element->Attribute("rand"))
+
+	// push average
+	Expression::Append(buffer, Expression::Constant<T>);
+	for (int i = 0; i < width; i++)
 	{
-		// get random count
-		int count;
-		element->QueryIntAttribute("rand", &count);
+		char label[64];
+		sprintf(label, "%s_avg", names[i]);
+		float average = defaults[i];
+		element->QueryFloatAttribute(label, &average);
+		buffer.push_back(*reinterpret_cast<unsigned int *>(&average));
+	}
 
-		if (count > 0)
-		{
-			// push add
-			Expression::Append(buffer, Expression::Add<T, T, T>);
-		}
+	if (count > 0)
+	{
+		// push multiply
+		Expression::Append(buffer, Expression::Mul<T, T, T>);
 
-		// push average
+		// push variance
 		Expression::Append(buffer, Expression::Constant<T>);
 		for (int i = 0; i < sizeof(T)/sizeof(float); i++)
 		{
 			char label[64];
-			sprintf(label, "%s_avg", names[i]);
-			float average = data[i];
-			element->QueryFloatAttribute(label, &average);
-			buffer.push_back(*reinterpret_cast<unsigned int *>(&average));
+			sprintf(label, "%s_var", names[i]);
+			float variance = 0.0f;
+			element->QueryFloatAttribute(label, &variance);
+			variance /= count;
+			buffer.push_back(*reinterpret_cast<unsigned int *>(&variance));
 		}
 
-		if (count > 0)
+		for (int i = 0; i < count; ++i)
 		{
-			// push multiply
-			Expression::Append(buffer, Expression::Mul<T, T, T>);
-
-			// push variance
-			Expression::Append(buffer, Expression::Constant<T>);
-			for (int i = 0; i < sizeof(T)/sizeof(float); i++)
+			if (count > 1 && i < count - 1)
 			{
-				char label[64];
-				sprintf(label, "%s_var", names[i]);
-				float variance = 0.0f;
-				element->QueryFloatAttribute(label, &variance);
-				variance /= count;
-				buffer.push_back(*reinterpret_cast<unsigned int *>(&variance));
+				// push add
+				Expression::Append(buffer, Expression::Add<T, T, T>);
 			}
 
-			for (int i = 0; i < count; ++i)
-			{
-				if (count > 1 && i < count - 1)
-				{
-					// push add
-					Expression::Append(buffer, Expression::Add<T, T, T>);
-				}
-
-				// push randoms
-				Expression::Append(buffer, Expression::Construct<T>);
-				for (int w = 0; w < sizeof(T)/sizeof(float); ++w)
-					Expression::Append(buffer, Expression::Nullary<float, Rand>);
-			}
-		}
-	}
-	else
-	{
-		// push literal data
-		Expression::Append(buffer, Expression::Constant<T>);
-		for (int i = 0; i < sizeof(T)/sizeof(float); i++)
-		{
-			float value = data[i];
-			element->QueryFloatAttribute(names[i], &value);
-			buffer.push_back(*reinterpret_cast<unsigned int *>(&value));
+			// push randoms
+			Expression::Append(buffer, Expression::Construct<T>);
+			for (int w = 0; w < sizeof(T)/sizeof(float); ++w)
+				Expression::Append(buffer, Expression::Nullary<float>::Evaluate<float, Rand>);
 		}
 	}
 }
 
-void ProcessFloatData(const TiXmlElement *element, std::vector<unsigned int> &buffer)
+
+//
+// VARIADIC EXPRESSION
+// binary-to-variadic adapter
+//
+
+// configure typed variadic
+template<typename T, typename C> void ConfigureVariadic(T (expr)(C), const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
+{
+	const TiXmlElement *arg1 = element->FirstChildElement();
+	if (!arg1)
+	{
+		// no first argument: treat element as a literal (HACK)
+		ConfigureLiteral<T>(element, buffer, names, defaults);
+		return;
+	}
+
+	const TiXmlElement *arg2 = arg1;
+	do
+	{
+		// get next argument
+		arg1 = arg2;
+		arg2 = arg2->NextSiblingElement();
+
+		// if there is a second argument...
+		if (arg2)
+		{
+			// append the operator
+			Expression::Append(buffer, expr);
+		}
+
+		// append first argument
+		ConfigureExpression<T>(arg1, buffer, names, defaults);
+	}
+	while (arg2);
+}
+
+
+//
+// EXPRESSION
+//
+
+// configure an expression
+template<typename T> void ConfigureExpression(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
+{
+	// width in floats (HACK)
+	const int width = (sizeof(T)+sizeof(float)-1)/sizeof(float);
+
+	// copy defaults
+	float *data = static_cast<float *>(_alloca(width * sizeof(float)));
+	memcpy(data, defaults, width * sizeof(float));
+
+	// read literal values from attributes (if any)
+	bool overrided = false;
+	for (int i = 0; i < width; ++i)
+	{
+		if (element->QueryFloatAttribute(names[i], &data[i]) == TIXML_SUCCESS)
+			overrided = true;
+	}
+
+	// configure based on tag name
+	switch(Hash(element->Value()))
+	{
+	case 0x425ed3ca /* "value" */:
+		ConfigureLiteral<T>(element, buffer, names, data);
+		return;
+
+	case 0x19385305 /* "variable" */:
+		ConfigureVariable<T>(element, buffer, names, data);
+		return;
+
+	case 0x83588fd4 /* "interpolator" */:
+		ConfigureInterpolator<T>(element, buffer, names, data);
+		return;
+
+	case 0xa19b8cd6 /* "rand" */:
+		ConfigureRandom<T>(element, buffer, names, data);
+		return;
+
+	case 0x3b391274 /* "add" */:
+		ConfigureVariadic<T>(Expression::Add<T, T, T>, element, buffer, names, data);
+		return;
+
+	case 0xdc4e3915 /* "sub" */:
+		ConfigureVariadic<T>(Expression::Sub<T, T, T>, element, buffer, names, data);
+		return;
+
+	case 0xeb84ed81 /* "mul" */:
+		ConfigureVariadic<T>(Expression::Mul<T, T, T>, element, buffer, names, data);
+		return;
+
+	case 0xe562ab48 /* "div" */:
+		ConfigureVariadic<T>(Expression::Div<T, T, T>, element, buffer, names, data);
+		return;
+
+	case 0xc98f4557 /* "min" */:
+		ConfigureVariadic<T>(Expression::Min<T>, element, buffer, names, data);
+		return;
+
+	case 0xd7a2e319 /* "max" */:
+		ConfigureVariadic<T>(Expression::Max<T>, element, buffer, names, data);
+		return;
+
+	default:
+		assert(false);
+		return;
+	}
+}
+
+// configure an expression root (the tag hosting the expression)
+template <typename T> void ConfigureExpressionRoot(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
+{
+	// width in floats (HACK)
+	const int width = (sizeof(T)+sizeof(float)-1)/sizeof(float);
+
+	// copy defaults
+	float *data = static_cast<float *>(_alloca(width * sizeof(float)));
+	memcpy(data, defaults, width * sizeof(float));
+
+	// read literal values from attributes (if any)
+	bool overrided = false;
+	for (int i = 0; i < width; ++i)
+	{
+		if (element->QueryFloatAttribute(names[i], &data[i]) == TIXML_SUCCESS)
+			overrided = true;
+	}
+
+	// special case: attribute variable reference
+	if (element->Attribute("variable"))
+	{
+		ConfigureInlineVariable<T>(element, buffer, names, data);
+		return;
+	}
+
+	// special case: attribute random value
+	if (element->Attribute("rand"))
+	{
+		ConfigureRandom<T>(element, buffer, names, data);
+		return;
+	}
+
+	// special case: embedded interpolator keyframes
+	if (element->FirstChildElement("key"))
+	{
+		ConfigureInterpolator<T>(element, buffer, names, data);
+		return;
+	}
+
+	// special case: no child elements
+	if (!element->FirstChildElement())
+	{
+		// push literal data
+		ConfigureLiteral<T>(element, buffer, names, data);
+		return;
+	}
+
+	// for each child node...
+	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+	{
+		// recurse on child
+		ConfigureExpression<T>(child, buffer, names, data);
+	}
+}
+
+void ConfigureFloatData(const TiXmlElement *element, std::vector<unsigned int> &buffer)
 {
 	const char *text = element->GetText();
 	size_t len = strlen(text)+1;
@@ -582,12 +791,12 @@ void ProcessFloatData(const TiXmlElement *element, std::vector<unsigned int> &bu
 	}
 }
 
-void ProcessVariableOperator(const TiXmlElement *element, std::vector<unsigned int> &buffer, DrawlistOp op, bool drawdata)
+void ConfigureVariableOperator(const TiXmlElement *element, std::vector<unsigned int> &buffer, DrawlistOp op, bool drawdata)
 {
 	unsigned int name = Hash(element->Attribute("name"));
 	unsigned int type = Hash(element->Attribute("type"));
 	int width;
-	const char **names;
+	const char * const *names;
 	const float *data;
 	GetTypeData(type, width, names, data);
 
@@ -595,18 +804,26 @@ void ProcessVariableOperator(const TiXmlElement *element, std::vector<unsigned i
 	buffer.push_back(name);
 	buffer.push_back(width);
 	if (drawdata)
-		ProcessExpression<Array4>(element, buffer, names, data);
+	{
+		switch (width)
+		{
+		case 1: ConfigureExpressionRoot<float>(element, buffer, names, data); break;
+		case 2: ConfigureExpressionRoot<Vector2>(element, buffer, names, data); break;
+		case 3: ConfigureExpressionRoot<Vector3>(element, buffer, names, data); break;
+		case 4: ConfigureExpressionRoot<Vector4>(element, buffer, names, data); break;
+		}
+	}
 }
 
-void ProcessPrimitive(const TiXmlElement *element, std::vector<unsigned int> &buffer, GLenum mode)
+void ConfigurePrimitive(const TiXmlElement *element, std::vector<unsigned int> &buffer, GLenum mode)
 {
 	buffer.push_back(DO_glBegin);
 	buffer.push_back(mode);
-	ProcessDrawItems(element, buffer);
+	ConfigureDrawItems(element, buffer);
 	buffer.push_back(DO_glEnd);
 }
 
-void ProcessArray(const TiXmlElement *element, std::vector<unsigned int> &buffer, DrawlistOp op, size_t size, size_t stride)
+void ConfigureArray(const TiXmlElement *element, std::vector<unsigned int> &buffer, DrawlistOp op, size_t size, size_t stride)
 {
 	buffer.push_back(op);
 	if (size)
@@ -615,7 +832,7 @@ void ProcessArray(const TiXmlElement *element, std::vector<unsigned int> &buffer
 
 	buffer.push_back(0);
 	int start = buffer.size();
-	ProcessFloatData(element, buffer);
+	ConfigureFloatData(element, buffer);
 	buffer[start-1] = buffer.size() - start;
 }
 
@@ -637,7 +854,7 @@ GLenum GetPrimitiveMode(const char *mode)
 	}
 }
 
-void ProcessDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buffer)
+void ConfigureDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buffer)
 {
 	const char *label = element->Value();
 	switch (Hash(label))
@@ -645,7 +862,7 @@ void ProcessDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buf
 	case 0x974c9474 /* "pushmatrix" */:
 		{
 			buffer.push_back(DO_glPushMatrix);
-			ProcessDrawItems(element, buffer);
+			ConfigureDrawItems(element, buffer);
 			buffer.push_back(DO_glPopMatrix);
 		}
 		break;
@@ -687,7 +904,7 @@ void ProcessDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buf
 			}
 			buffer.push_back(DO_glPushAttrib);
 			buffer.push_back(mask);
-			ProcessDrawItems(element, buffer);
+			ConfigureDrawItems(element, buffer);
 			buffer.push_back(DO_glPopAttrib);
 		}
 		break;
@@ -711,7 +928,7 @@ void ProcessDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buf
 			}
 			buffer.push_back(DO_glPushClientAttrib);
 			buffer.push_back(mask);
-			ProcessDrawItems(element, buffer);
+			ConfigureDrawItems(element, buffer);
 			buffer.push_back(DO_glPopClientAttrib);
 		}
 		break;
@@ -719,21 +936,21 @@ void ProcessDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buf
 	case 0xad0ecfd5 /* "translate" */:
 		{
 			buffer.push_back(DO_glTranslatef);
-			ProcessExpression<Vector3>(element, buffer, sPositionNames, sPositionDefault);
+			ConfigureExpressionRoot<Vector3>(element, buffer, sPositionNames, sPositionDefault);
 		}
 		break;
 
 	case 0xa5f4fd0a /* "rotate" */:
 		{
 			buffer.push_back(DO_glRotatef);
-			ProcessExpression<float>(element, buffer, sRotationNames, sRotationDefault);
+			ConfigureExpressionRoot<float>(element, buffer, sRotationNames, sRotationDefault);
 		}
 		break;
 
 	case 0x82971c71 /* "scale" */:
 		{
 			buffer.push_back(DO_glScalef);
-			ProcessExpression<Vector3>(element, buffer, sScaleNames, sScaleDefault);
+			ConfigureExpressionRoot<Vector3>(element, buffer, sScaleNames, sScaleDefault);
 		}
 		break;
 
@@ -774,34 +991,35 @@ void ProcessDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buf
 	case 0x945367a7 /* "vertex" */:
 		{
 			buffer.push_back(DO_glVertex3fv);
-			ProcessExpression<Vector3>(element, buffer, sPositionNames, sPositionDefault);
+			ConfigureExpressionRoot<Vector3>(element, buffer, sPositionNames, sPositionDefault);
 		}
 		break;
+
 	case 0xe68b9c52 /* "normal" */:
 		{
 			buffer.push_back(DO_glNormal3fv);
-			ProcessExpression<Vector3>(element, buffer, sPositionNames, sPositionDefault);
+			ConfigureExpressionRoot<Vector3>(element, buffer, sPositionNames, sPositionDefault);
 		}
 		break;
 
 	case 0x3d7e6258 /* "color" */:
 		{
 			buffer.push_back(DO_glColor4fv);
-			ProcessExpression<Color4>(element, buffer, sColorNames, sColorDefault);
+			ConfigureExpressionRoot<Color4>(element, buffer, sColorNames, sColorDefault);
 		}
 		break;
 
 	case 0x090aa9ab /* "index" */:
 		{
 			buffer.push_back(DO_glIndexf);
-			ProcessExpression<float>(element, buffer, sIndexNames, sIndexDefault);
+			ConfigureExpressionRoot<float>(element, buffer, sIndexNames, sIndexDefault);
 		}
 		break;
 
 	case 0xdd612dd3 /* "texcoord" */:
 		{
 			buffer.push_back(DO_glTexCoord2fv);
-			ProcessExpression<Vector2>(element, buffer, sTexCoordNames, sTexCoordDefault);
+			ConfigureExpressionRoot<Vector2>(element, buffer, sTexCoordNames, sTexCoordDefault);
 		}
 		break;
 
@@ -837,61 +1055,61 @@ void ProcessDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buf
 
 	case 0xbc9567c6 /* "points" */:
 		{
-			ProcessPrimitive(element, buffer, GL_POINTS);
+			ConfigurePrimitive(element, buffer, GL_POINTS);
 		}
 		break;
 
 	case 0xe1e4263c /* "lines" */:
 		{
-			ProcessPrimitive(element, buffer, GL_LINES);
+			ConfigurePrimitive(element, buffer, GL_LINES);
 		}
 		break;
 
 	case 0xc2106ab6 /* "line_loop" */:
 		{
-			ProcessPrimitive(element, buffer, GL_LINE_LOOP);
+			ConfigurePrimitive(element, buffer, GL_LINE_LOOP);
 		}
 		break;
 
 	case 0xc6f2fa0e /* "line_strip" */:
 		{
-			ProcessPrimitive(element, buffer, GL_LINE_STRIP);
+			ConfigurePrimitive(element, buffer, GL_LINE_STRIP);
 		}
 		break;
 
 	case 0xd8a57342 /* "triangles" */:
 		{
-			ProcessPrimitive(element, buffer, GL_TRIANGLES);
+			ConfigurePrimitive(element, buffer, GL_TRIANGLES);
 		}
 		break;
 
 	case 0x668b2dd8 /* "triangle_strip" */:
 		{
-			ProcessPrimitive(element, buffer, GL_TRIANGLE_STRIP);
+			ConfigurePrimitive(element, buffer, GL_TRIANGLE_STRIP);
 		}
 		break;
 
 	case 0xcfa6904f /* "triangle_fan" */:
 		{
-			ProcessPrimitive(element, buffer, GL_TRIANGLE_FAN);
+			ConfigurePrimitive(element, buffer, GL_TRIANGLE_FAN);
 		}
 		break;
 
 	case 0x5667b307 /* "quads" */:
 		{
-			ProcessPrimitive(element, buffer, GL_QUADS);
+			ConfigurePrimitive(element, buffer, GL_QUADS);
 		}
 		break;
 
 	case 0xb47cad9b /* "quad_strip" */:
 		{
-			ProcessPrimitive(element, buffer, GL_QUAD_STRIP);
+			ConfigurePrimitive(element, buffer, GL_QUAD_STRIP);
 		}
 		break;
 
 	case 0x051cb889 /* "polygon" */:
 		{
-			ProcessPrimitive(element, buffer, GL_POLYGON);
+			ConfigurePrimitive(element, buffer, GL_POLYGON);
 		}
 		break;
 
@@ -975,7 +1193,7 @@ void ProcessDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buf
 				// process draw items
 				unsigned int id = Hash(name);
 				std::vector<unsigned int> &drawlist = Database::dynamicdrawlist.Open(id);
-				ProcessDrawItems(element, drawlist);
+				ConfigureDrawItems(element, drawlist);
 				Database::dynamicdrawlist.Close(id);
 			}
 		}
@@ -996,7 +1214,7 @@ void ProcessDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buf
 
 			// process draw items
 			std::vector<unsigned int> &drawlist = Database::dynamicdrawlist.Open(handle);
-			ProcessDrawItems(element, drawlist);
+			ConfigureDrawItems(element, drawlist);
 			ExecuteDrawItems(&drawlist[0], drawlist.size(), param, 0);
 			Database::dynamicdrawlist.Close(handle);
 
@@ -1042,7 +1260,7 @@ void ProcessDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buf
 			int stride = 0;
 			element->QueryIntAttribute("stride", &stride);
 
-			ProcessArray(element, buffer, DO_glVertexPointer, size, stride);
+			ConfigureArray(element, buffer, DO_glVertexPointer, size, stride);
 		}
 		break;
 
@@ -1051,7 +1269,7 @@ void ProcessDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buf
 			int stride = 0;
 			element->QueryIntAttribute("stride", &stride);
 
-			ProcessArray(element, buffer, DO_glNormalPointer, 0, stride);
+			ConfigureArray(element, buffer, DO_glNormalPointer, 0, stride);
 		}
 		break;
 
@@ -1063,7 +1281,7 @@ void ProcessDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buf
 			int stride = 0;
 			element->QueryIntAttribute("stride", &stride);
 
-			ProcessArray(element, buffer, DO_glColorPointer, size, stride);
+			ConfigureArray(element, buffer, DO_glColorPointer, size, stride);
 		}
 		break;
 
@@ -1072,7 +1290,7 @@ void ProcessDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buf
 			int stride = 0;
 			element->QueryIntAttribute("stride", &stride);
 
-			ProcessArray(element, buffer, DO_glIndexPointer, 0, stride);
+			ConfigureArray(element, buffer, DO_glIndexPointer, 0, stride);
 		}
 		break;
 
@@ -1084,7 +1302,7 @@ void ProcessDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buf
 			int stride = 0;
 			element->QueryIntAttribute("stride", &stride);
 
-			ProcessArray(element, buffer, DO_glTexCoordPointer, size, stride);
+			ConfigureArray(element, buffer, DO_glTexCoordPointer, size, stride);
 		}
 		break;
 
@@ -1174,7 +1392,7 @@ void ProcessDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buf
 
 			buffer.push_back(0);
 			int start = buffer.size();
-			ProcessDrawItems(element, buffer);
+			ConfigureDrawItems(element, buffer);
 			buffer[start-1] = buffer.size() - start;
 		}
 		break;
@@ -1198,50 +1416,50 @@ void ProcessDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buf
 
 			buffer.push_back(0);
 			int size = buffer.size();
-			ProcessDrawItems(element, buffer);
+			ConfigureDrawItems(element, buffer);
 			buffer[size-1] = buffer.size() - size;
 		}
 		break;
 
 	case 0xc6270703 /* "set" */:
 		{
-			ProcessVariableOperator(element, buffer, DO_Set, true);
+			ConfigureVariableOperator(element, buffer, DO_Set, true);
 		}
 		break;
 
 	case 0x3b391274 /* "add" */:
 		{
-			ProcessVariableOperator(element, buffer, DO_Add, true);
+			ConfigureVariableOperator(element, buffer, DO_Add, true);
 		}
 		break;
 
 	case 0xdc4e3915 /* "sub" */:
 		{
-			ProcessVariableOperator(element, buffer, DO_Sub, true);
+			ConfigureVariableOperator(element, buffer, DO_Sub, true);
 		}
 		break;
 
 	case 0xeb84ed81 /* "mul" */:
 		{
-			ProcessVariableOperator(element, buffer, DO_Mul, true);
+			ConfigureVariableOperator(element, buffer, DO_Mul, true);
 		}
 		break;
 
 	case 0xe562ab48 /* "div" */:
 		{
-			ProcessVariableOperator(element, buffer, DO_Div, true);
+			ConfigureVariableOperator(element, buffer, DO_Div, true);
 		}
 		break;
 
 	case 0xc98f4557 /* "min" */:
 		{
-			ProcessVariableOperator(element, buffer, DO_Min, true);
+			ConfigureVariableOperator(element, buffer, DO_Min, true);
 		}
 		break;
 
 	case 0xd7a2e319 /* "max" */:
 		{
-			ProcessVariableOperator(element, buffer, DO_Max, true);
+			ConfigureVariableOperator(element, buffer, DO_Max, true);
 		}
 		break;
 
@@ -1250,7 +1468,7 @@ void ProcessDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buf
 			unsigned int name = Hash(element->Attribute("name"));
 			unsigned int type = Hash(element->Attribute("type"));
 			int width;
-			const char **names;
+			const char * const *names;
 			const float *data;
 			GetTypeData(type, width, names, data);
 
@@ -1288,7 +1506,7 @@ void ProcessDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buf
 
 	case 0x5c6e1222 /* "clear" */:
 		{
-			ProcessVariableOperator(element, buffer, DO_Clear, false);
+			ConfigureVariableOperator(element, buffer, DO_Clear, false);
 		}
 		break;
 
@@ -1311,7 +1529,7 @@ void ProcessDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buf
 
 			buffer.push_back(0);
 			int start = buffer.size();
-			ProcessDrawItems(element, buffer);
+			ConfigureDrawItems(element, buffer);
 			buffer[start-1] = buffer.size() - start;
 		}
 		break;
@@ -1338,7 +1556,7 @@ void ProcessDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buf
 
 			buffer.push_back(0);
 			int start = buffer.size();
-			ProcessDrawItems(element, buffer);
+			ConfigureDrawItems(element, buffer);
 			buffer[start-1] = buffer.size() - start;
 		}
 		break;
@@ -1349,12 +1567,12 @@ void ProcessDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buf
 	}
 }
 
-void ProcessDrawItems(const TiXmlElement *element, std::vector<unsigned int> &buffer)
+void ConfigureDrawItems(const TiXmlElement *element, std::vector<unsigned int> &buffer)
 {
 	// process child elements
 	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
-		ProcessDrawItem(child, buffer);
+		ConfigureDrawItem(child, buffer);
 	}
 }
 
@@ -1433,66 +1651,65 @@ void MultiplyMatrix4f(float m[16], float a[16], float b[16])
 }
 #endif
 
-typedef void (* VariableOperator)(Database::Typed<float> &, unsigned int, float);
+typedef void (* VariableOperator)(float &, float);
 
 bool EvaluateVariableOperator(DrawItemContext &aContext, VariableOperator op)
 {
 	unsigned int name = *aContext.mStream++;
 	int width = *aContext.mStream++;
 	assert(width <= 4);
-	Array4 value(Expression::Evaluate<Array4>(aContext));
+	Vector4 value;
+	switch(width)
+	{
+	case 1: value = Expression::Evaluate<float>(aContext); break;
+	case 2: value = Expression::Evaluate<Vector2>(aContext); break;
+	case 3: value = Expression::Evaluate<Vector3>(aContext); break;
+	case 4: value = Expression::Evaluate<Vector4>(aContext); break;
+	}
 	Database::Typed<float> &variables = Database::variable.Open(aContext.mId);
 	for (int i = 0; i < width; i++)
-		op(variables, name+i, (&value.v0)[i]);
+	{
+		float &v = variables.Open(name+i);
+		op(v, value[i]);
+		variables.Close(name+i);
+	}
 	Database::variable.Close(aContext.mId);
 	return true;
 }
 
-void VariableOperatorSet(Database::Typed<float> &variables, unsigned int name, float data)
+void VariableOperatorSet(float &v, float data)
 {
-	variables.Put(name, data);
+	v = data;
 }
 
-void VariableOperatorAdd(Database::Typed<float> &variables, unsigned int name, float data)
+void VariableOperatorAdd(float &v, float data)
 {
-	float &v = variables.Open(name);
 	v += data;
-	variables.Close(name);
 }
 
-void VariableOperatorSub(Database::Typed<float> &variables, unsigned int name, float data)
+void VariableOperatorSub(float &v, float data)
 {
-	float &v = variables.Open(name);
 	v -= data;
-	variables.Close(name);
 }
 
-void VariableOperatorMul(Database::Typed<float> &variables, unsigned int name, float data)
+void VariableOperatorMul(float &v, float data)
 {
-	float &v = variables.Open(name);
 	v *= data;
-	variables.Close(name);
 }
 
-void VariableOperatorDiv(Database::Typed<float> &variables, unsigned int name, float data)
+void VariableOperatorDiv(float &v, float data)
 {
-	float &v = variables.Open(name);
 	v /= data;
-	variables.Close(name);
 }
 
-void VariableOperatorMin(Database::Typed<float> &variables, unsigned int name, float data)
+void VariableOperatorMin(float &v, float data)
 {
-	float &v = variables.Open(name);
 	v = std::min(v, data);
-	variables.Close(name);
 }
 
-void VariableOperatorMax(Database::Typed<float> &variables, unsigned int name, float data)
+void VariableOperatorMax(float &v, float data)
 {
-	float &v = variables.Open(name);
 	v = std::max(v, data);
-	variables.Close(name);
 }
 
 
@@ -1500,7 +1717,6 @@ void VariableOperatorMax(Database::Typed<float> &variables, unsigned int name, f
 void ExecuteDrawItems(const unsigned int buffer[], size_t count, float param, unsigned int id)
 {
 	DrawItemContext context;
-	context.mStart = buffer;
 	context.mStream = buffer;
 	context.mParam = param;
 	context.mId = id;

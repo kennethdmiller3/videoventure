@@ -43,6 +43,9 @@
 // 3d math
 #include "Vector3.h"
 
+// vector 4
+#include "Vector4.h"
+
 // color
 #include "Color4.h"
 
