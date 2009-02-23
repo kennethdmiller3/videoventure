@@ -6,6 +6,8 @@
 
 #include "Expression.h"
 
+#define DRAWLIST_LOOP
+
 enum DrawlistOp
 {
 	DO_glAccum, //(GLenum op, GLfloat value)
@@ -688,6 +690,13 @@ template<typename T> void ConfigureVariable(const TiXmlElement *element, std::ve
 	Expression::Append(buffer, EvaluateVariable<T>, Hash(element->Attribute("name")));
 }
 
+// typed variable: tag-named version
+template<typename T> void ConfigureTagVariable(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
+{
+	// append a variable expression
+	Expression::Append(buffer, EvaluateVariable<T>, Hash(element->Value()));
+}
+
 
 //
 // INTERPOLATOR EXPRESSION
@@ -742,14 +751,8 @@ template<typename T> void ConfigureInterpolator(const TiXmlElement *element, std
 
 //
 // RANDOM EXPRESSION
-// returns a random value: average + variance * rand[-1..1]
+// returns a random value
 //
-
-// random [-1..1]
-float Rand(void)
-{
-	return Random::Value(0.0f, 1.0f);
-}
 
 // TO DO: float[width] random
 
@@ -763,38 +766,96 @@ template<typename T> void ConfigureRandom(const TiXmlElement *element, std::vect
 	int count = 1;
 	element->QueryIntAttribute("rand", &count);
 
-	if (count > 0)
-	{
-		// push add
-		Expression::Append(buffer, Expression::Add<T>);
-	}
+	// offset factor
+	float offset[width];
 
-	// push average
-	Expression::Append(buffer, Expression::Constant<T>);
+	// scale factor
+	float scale[width];
+
+	// status flags
+	bool need_offset = false;
+	bool need_scale = false;
+	bool need_rand = false;
+
+	// get component properties
 	for (int i = 0; i < width; i++)
 	{
 		char label[64];
+
+		// default values
+		offset[i] = defaults[i];
+		scale[i] = 0;
+
+		// average
 		sprintf(label, "%s_avg", names[i]);
 		float average = defaults[i];
-		element->QueryFloatAttribute(label, &average);
-		buffer.push_back(*reinterpret_cast<unsigned int *>(&average));
+		if (element->QueryFloatAttribute(label, &average) == TIXML_SUCCESS)
+		{
+			offset[i] = average;
+		}
+
+		// variance
+		sprintf(label, "%s_var", names[i]);
+		float variance = 0.0f;
+		if (element->QueryFloatAttribute(label, &variance) == TIXML_SUCCESS)
+		{
+			offset[i] = average - variance;
+			scale[i] = variance * 2;
+		}
+
+		// minimum
+		sprintf(label, "%s_min", names[i]);
+		float minimum = 0.0f;
+		if (element->QueryFloatAttribute(label, &minimum) == TIXML_SUCCESS)
+		{
+			offset[i] = minimum;
+		}
+
+		// maximum
+		sprintf(label, "%s_max", names[i]);
+		float maximum = 0.0f;
+		if (element->QueryFloatAttribute(label, &maximum) == TIXML_SUCCESS)
+		{
+			scale[i] = maximum - minimum;
+		}
+
+		// update status
+		if (offset[i] != 0.0f)
+			need_offset = true;
+
+		if (count > 0)
+		{
+			// compensate for random count
+			scale[i] /= count;
+
+			if (scale[i] != 0.0f)
+				need_rand = true;
+			if (scale[i] != 1.0f)
+				need_scale = true;
+		}
 	}
 
-	if (count > 0)
+	if (need_offset || !need_rand)
 	{
-		// push multiply
-		Expression::Append(buffer, Expression::Mul<T>);
-
-		// push variance
-		Expression::Append(buffer, Expression::Constant<T>);
-		for (int i = 0; i < sizeof(T)/sizeof(float); i++)
+		if (need_rand)
 		{
-			char label[64];
-			sprintf(label, "%s_var", names[i]);
-			float variance = 0.0f;
-			element->QueryFloatAttribute(label, &variance);
-			variance /= count;
-			buffer.push_back(*reinterpret_cast<unsigned int *>(&variance));
+			// push add
+			Expression::Append(buffer, Expression::Add<T>);
+		}
+
+		// push offset
+		Expression::Append(buffer, Expression::Constant<T>, *reinterpret_cast<const T *>(offset));
+	}
+
+	if (need_rand)
+	{
+		if (need_scale)
+		{
+			// push multiply
+			Expression::Append(buffer, Expression::Mul<T>);
+
+			// push scale
+			Expression::Append(buffer, Expression::Constant<T>, *reinterpret_cast<const T *>(scale));
 		}
 
 		for (int i = 0; i < count; ++i)
@@ -806,9 +867,7 @@ template<typename T> void ConfigureRandom(const TiXmlElement *element, std::vect
 			}
 
 			// push randoms
-			Expression::Append(buffer, Expression::Construct<T>);
-			for (int w = 0; w < sizeof(T)/sizeof(float); ++w)
-				Expression::Append(buffer, Expression::Nullary<float>::Evaluate<float, Rand>);
+			Expression::Append(buffer, Expression::ComponentNullary<T, Expression::ComponentCount<T>::VALUE>::Evaluate<float, Random::Float>);
 		}
 	}
 }
@@ -883,6 +942,35 @@ template<typename T, typename A> void ConfigureConvert(const TiXmlElement *eleme
 
 	// append first argument
 	ConfigureExpression<A>(arg1, buffer, names, defaults);
+}
+
+
+//
+// CONSTRUCT EXPRESSION
+//
+template<typename T> void ConfigureConstruct(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
+{
+	// width in floats (HACK)
+	const int width = (sizeof(T)+sizeof(float)-1)/sizeof(float);
+
+	// append the operator
+	Expression::Append(buffer, Expression::Construct<T>);
+
+	// for each component...
+	for (int i = 0; i < width; ++i)
+	{
+		// if there is a corresponding tag...
+		if (const TiXmlElement *component = element->FirstChildElement(names[i]))
+		{
+			// configure the expression
+			ConfigureExpressionRoot<float>(component, buffer, sScalarNames, &defaults[i]);
+		}
+		else
+		{
+			// use default value
+			Expression::Append(buffer, Expression::Constant<float>, defaults[i]);
+		}
+	}
 }
 
 
@@ -1053,6 +1141,9 @@ template<typename T> void ConfigureExpression(const TiXmlElement *element, std::
 	float *data = static_cast<float *>(_alloca(width * sizeof(float)));
 	memcpy(data, defaults, width * sizeof(float));
 
+	// get hash of tag name
+	unsigned int hash = Hash(element->Value());
+
 	// read literal values from attributes (if any)
 	bool overrided = false;
 	for (int i = 0; i < width; ++i)
@@ -1062,7 +1153,7 @@ template<typename T> void ConfigureExpression(const TiXmlElement *element, std::
 	}
 
 	// configure based on tag name
-	switch(Hash(element->Value()))
+	switch(hash)
 	{
 	case 0x425ed3ca /* "value" */:			ConfigureLiteral<T>(element, buffer, names, data); return;
 	case 0x19385305 /* "variable" */:		ConfigureVariable<T>(element, buffer, names, data); return;
@@ -1070,7 +1161,7 @@ template<typename T> void ConfigureExpression(const TiXmlElement *element, std::
 	case 0xa19b8cd6 /* "rand" */:			ConfigureRandom<T>(element, buffer, names, data); return;
 
 	case 0xaa7d7949 /* "extend" */:			ConfigureUnary<const T, float, Expression::Context &>(Expression::Extend<T, float>, element, buffer, sScalarNames, sScalarDefault); return;
-//	case 0x40c09172 /* "construct" */:		ConfigureConstruct<T>(element, buffer, names, data); return;
+	case 0x40c09172 /* "construct" */:		ConfigureConstruct<T>(element, buffer, names, data); return;
 	case 0x5d3c9be4 /* "time" */:			Expression::Append(buffer, EvaluateTime); return;
 
 	case 0x3b391274 /* "add" */:			ConfigureVariadic<T, T>(Expression::Add<T>, element, buffer, names, data); return;
@@ -1112,7 +1203,8 @@ template<typename T> void ConfigureExpression(const TiXmlElement *element, std::
 	case 0x1e691468 /* "lerp" */:			ConfigureTernary<T, T, T, T>(Expression::Lerp<T>, element, buffer, names, data); return;
 	case 0xc7441a0f /* "step" */:			ConfigureBinary<T, T, T>(Expression::Step<T>, element, buffer, names, data); return;
 	case 0x95964e7d /* "smoothstep" */:		ConfigureTernary<T, T, T, T>(Expression::SmoothStep<T>, element, buffer, names, data); return;
-	default:								assert(false); return;
+
+	default:								ConfigureTagVariable<T>(element, buffer, names, data); return;
 	}
 }
 
@@ -1161,6 +1253,16 @@ template <typename T> void ConfigureExpressionRoot(const TiXmlElement *element, 
 		// push literal data
 		ConfigureLiteral<T>(element, buffer, names, data);
 		return;
+	}
+
+	// special case: component elements
+	for (int i = 0; i < width; ++i)
+	{
+		if (element->FirstChildElement(names[i]))
+		{
+			ConfigureConstruct<T>(element, buffer, names, data);
+			return;
+		}
 	}
 
 	// for each child node...
@@ -1914,8 +2016,14 @@ void ConfigureDrawItem(const TiXmlElement *element, std::vector<unsigned int> &b
 			element->QueryFloatAttribute("from", &from);
 			float to = 0.0f;
 			element->QueryFloatAttribute("to", &to);
-			float by = 0.0f;
+			float by = from < to ? 1.0f : -1.0f;
 			element->QueryFloatAttribute("by", &by);
+
+			if ((to - from) * by <= 0)
+			{
+				DebugPrint("loop name=\"%s\" from=\"%f\" to=\"%f\" by=\"%f\" would never terminate\n");
+				break;
+			}
 
 			buffer.push_back(DO_Loop);
 			buffer.push_back(name);
