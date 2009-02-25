@@ -173,28 +173,61 @@ enum DrawlistOp
 #endif
 };
 
-// attribute names
+//
+// DATA TYPES
+//
+
+typedef float DLScalar;
 static const char * const sScalarNames[] = { "value" };
 static const float sScalarDefault[] = { 0.0f };
 static const int sScalarWidth = 1;
-static const char * const sPositionNames[] = { "x", "y", "z" };
-static const float sPositionDefault[] = { 0.0f, 0.0f, 0.0f };
+
+//typedef Vector3 DLPosition;
+typedef Vector4 DLPosition;
+static const char * const sPositionNames[] = { "x", "y", "z", "w" };
+static const float sPositionDefault[] = { 0.0f, 0.0f, 0.0f, 1.0f };
 static const int sPositionWidth = 3;
+
+//typedef Vector3 DLNormal;
+typedef Vector4 DLNormal;
+static const char * const sNormalNames[] = { "x", "y", "z", "w" };
+static const float sNormalDefault[] = { 0.0f, 0.0f, 0.0f, 0.0f };
+static const int sNormalWidth = 3;
+
+//typedef Vector3 DLTranslation;
+typedef Vector3 DLTranslation;
+static const char * const sTranslationNames[] = { "x", "y", "z", "w" };
+static const float sTranslationDefault[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+static const int sTranslationWidth = 3;
+
+typedef float DLRotation;
 static const char * const sRotationNames[] = { "angle" };
 static const float sRotationDefault[] = { 0.0f };
 static const int sRotationWidth = 1;
-static const char * const sScaleNames[] = { "x", "y", "z" };
-static const float sScaleDefault[] = { 1.0f, 1.0f, 1.0f };
+
+//typedef Vector3 DLScale;
+typedef Vector4 DLScale;
+static const char * const sScaleNames[] = { "x", "y", "z", "w" };
+static const float sScaleDefault[] = { 1.0f, 1.0f, 1.0f, 1.0f };
 static const int sScaleWidth = 3;
+
+//typedef Color4 DLColor;
+typedef Vector4 DLColor;
 static const char * const sColorNames[] = { "r", "g", "b", "a" };
 static const float sColorDefault[] = { 0.0f, 0.0f, 0.0f, 1.0f };
 static const int sColorWidth = 4;
-static const char * const sTexCoordNames[] = { "s", "t" };
-static const float sTexCoordDefault[] = { 0.0f, 0.0f };
+
+//typedef Vector2 DLTexCoord;
+typedef Vector4 DLTexCoord;
+static const char * const sTexCoordNames[] = { "s", "t", "r", "q" };
+static const float sTexCoordDefault[] = { 0.0f, 0.0f, 0.0f, 1.0f };
 static const int sTexCoordWidth = 2;
+
+typedef float DLIndex;
 static const char * const sIndexNames[] = { "c" };
 static const float sIndexDefault[] = { 0.0f };
 static const int sIndexWidth = 1;
+
 static const char * const sMatrixNames[] = { "m0", "m1", "m2", "m3", "m4", "m5", "m6", "m7", "m8", "m9", "m10", "m11", "m12", "m13", "m14", "m15" };
 static const float sMatrixDefault[] = { 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f };
 static const int sMatrixWidth = 16;
@@ -205,8 +238,9 @@ void GetTypeData(unsigned int type, int &width, const char * const *&names, cons
 	{
 	default:
 	case 0x934f4e0a /* "position" */:	names = sPositionNames; data = sPositionDefault; width = sPositionWidth; break;
+	case 0xe68b9c52 /* "normal" */:		names = sNormalNames; data = sNormalDefault; width = sNormalWidth; break;
+	case 0xad0ecfd5 /* "translate" */:	names = sTranslationNames, data = sTranslationDefault; width = sTranslationWidth; break;
 	case 0x21ac415f /* "rotation" */:	names = sRotationNames; data = sRotationDefault; width = sRotationWidth; break;
-	case 0xad0ecfd5 /* "translate" */:	names = sPositionNames, data = sPositionDefault; width = sPositionWidth; break;
 	case 0x82971c71 /* "scale" */:		names = sScaleNames; data = sScaleDefault; width = sScaleWidth; break;
 	case 0x3d7e6258 /* "color" */:		names = sColorNames; data = sColorDefault; width = sColorWidth; break;
 	case 0xdd612dd3 /* "texcoord" */:	names = sTexCoordNames; data = sTexCoordDefault; width = sTexCoordWidth; break;
@@ -332,7 +366,7 @@ static const unsigned int sHashToAttribMask[][2] =
 };
 #endif
 
-template<typename T> void ConfigureExpression(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float data[]);
+template <typename T> void ConfigureExpression(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float data[]);
 
 // draw item context
 // (extends expression context)
@@ -353,25 +387,25 @@ namespace Expression
 	template <> struct ComponentCount<Color4> { enum { VALUE = 4 }; };
 
 	// various constructors
-	template<typename T> const T Construct(Context &aContext);
-	template<> const float Construct<float>(Context &aContext)
+	template <typename T> const T Construct(Context &aContext);
+	template <> const float Construct<float>(Context &aContext)
 	{
 		return Evaluate<float>(aContext);
 	}
-	template<> const Vector2 Construct<Vector2>(Context &aContext)
+	template <> const Vector2 Construct<Vector2>(Context &aContext)
 	{
 		float arg1(Evaluate<float>(aContext));
 		float arg2(Evaluate<float>(aContext));
 		return Vector2(arg1, arg2);
 	}
-	template<> const Vector3 Construct<Vector3>(Context &aContext)
+	template <> const Vector3 Construct<Vector3>(Context &aContext)
 	{
 		float arg1(Evaluate<float>(aContext));
 		float arg2(Evaluate<float>(aContext));
 		float arg3(Evaluate<float>(aContext));
 		return Vector3(arg1, arg2, arg3);
 	}
-	template<> const Color4 Construct<Color4>(Context &aContext)
+	template <> const Color4 Construct<Color4>(Context &aContext)
 	{
 		float arg1(Evaluate<float>(aContext));
 		float arg2(Evaluate<float>(aContext));
@@ -379,7 +413,7 @@ namespace Expression
 		float arg4(Evaluate<float>(aContext));
 		return Color4(arg1, arg2, arg3, arg4);
 	}
-	template<> const Vector4 Construct<Vector4>(Context &aContext)
+	template <> const Vector4 Construct<Vector4>(Context &aContext)
 	{
 		float arg1(Evaluate<float>(aContext));
 		float arg2(Evaluate<float>(aContext));
@@ -389,27 +423,27 @@ namespace Expression
 	}
 
 	// extend a scalar
-	template<typename T, typename A> const T Extend(Context &aContext);
-	template<> const float Extend<float, float>(Context &aContext)
+	template <typename T, typename A> const T Extend(Context &aContext);
+	template <> const float Extend<float, float>(Context &aContext)
 	{
 		return Evaluate<float>(aContext);
 	}
-	template<> const Vector2 Extend<Vector2, float>(Context &aContext)
+	template <> const Vector2 Extend<Vector2, float>(Context &aContext)
 	{
 		float arg(Evaluate<float>(aContext));
 		return Vector2(arg, arg);
 	}
-	template<> const Vector3 Extend<Vector3, float>(Context &aContext)
+	template <> const Vector3 Extend<Vector3, float>(Context &aContext)
 	{
 		float arg(Evaluate<float>(aContext));
 		return Vector3(arg, arg, arg);
 	}
-	template<> const Vector4 Extend<Vector4, float>(Context &aContext)
+	template <> const Vector4 Extend<Vector4, float>(Context &aContext)
 	{
 		float arg(Evaluate<float>(aContext));
 		return Vector4(arg, arg, arg, arg);
 	}
-	template<> const Color4 Extend<Color4, float>(Context &aContext)
+	template <> const Color4 Extend<Color4, float>(Context &aContext)
 	{
 		float arg(Evaluate<float>(aContext));
 		return Color4(arg, arg, arg, arg);
@@ -645,7 +679,7 @@ void ConfigureLiteral(const TiXmlElement *element, std::vector<unsigned int> &bu
 }
 
 // typed literal
-template<typename T> void ConfigureLiteral(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
+template <typename T> void ConfigureLiteral(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
 {
 	// append a constant expression
 	Expression::Append(buffer, Expression::Constant<T>);
@@ -677,21 +711,21 @@ template <typename T> static const T EvaluateVariable(DrawItemContext &aContext)
 }
 
 // typed variable: attribute-inlined version
-template<typename T> void ConfigureInlineVariable(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
+template <typename T> void ConfigureInlineVariable(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
 {
 	// append a variable expression
 	Expression::Append(buffer, EvaluateVariable<T>, Hash(element->Attribute("variable")));
 }
 
 // typed variable: normal version
-template<typename T> void ConfigureVariable(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
+template <typename T> void ConfigureVariable(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
 {
 	// append a variable expression
 	Expression::Append(buffer, EvaluateVariable<T>, Hash(element->Attribute("name")));
 }
 
 // typed variable: tag-named version
-template<typename T> void ConfigureTagVariable(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
+template <typename T> void ConfigureTagVariable(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
 {
 	// append a variable expression
 	Expression::Append(buffer, EvaluateVariable<T>, Hash(element->Value()));
@@ -741,7 +775,7 @@ static void ConfigureInterpolator(const TiXmlElement *element, std::vector<unsig
 }
 
 // configure typed interpolator
-template<typename T> void ConfigureInterpolator(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
+template <typename T> void ConfigureInterpolator(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
 {
 	// append an interpolator expression
 	Expression::Append(buffer, EvaluateInterpolator<T>);
@@ -757,7 +791,7 @@ template<typename T> void ConfigureInterpolator(const TiXmlElement *element, std
 // TO DO: float[width] random
 
 // configure typed random
-template<typename T> void ConfigureRandom(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
+template <typename T> void ConfigureRandom(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
 {
 	// width in floats (HACK)
 	const int width = (sizeof(T)+sizeof(float)-1)/sizeof(float);
@@ -885,48 +919,48 @@ float EvaluateTime(DrawItemContext &aContext)
 //
 // TYPE CONVERSION
 //
-template<typename T, typename A> struct Convert
+template <typename T, typename A> struct Convert
 {
 	static void Append(std::vector<unsigned int> &buffer)
 	{
 		Expression::Append(buffer, Expression::Construct<T, A>);
 	}
 };
-template<typename T> struct Convert<T, T>
+template <typename T> struct Convert<T, T>
 {
 	static void Append(std::vector<unsigned int> &buffer)
 	{
 	}
 };
-template<> struct Convert<Vector2, float>
+template <> struct Convert<Vector2, float>
 {
 	static void Append(std::vector<unsigned int> &buffer)
 	{
 		Expression::Append(buffer, Expression::Extend<Vector2, float>);
 	}
 };
-template<> struct Convert<Vector3, float>
+template <> struct Convert<Vector3, float>
 {
 	static void Append(std::vector<unsigned int> &buffer)
 	{
 		Expression::Append(buffer, Expression::Extend<Vector3, float>);
 	}
 };
-template<> struct Convert<Vector4, float>
+template <> struct Convert<Vector4, float>
 {
 	static void Append(std::vector<unsigned int> &buffer)
 	{
 		Expression::Append(buffer, Expression::Extend<Vector4, float>);
 	}
 };
-template<> struct Convert<Color4, float>
+template <> struct Convert<Color4, float>
 {
 	static void Append(std::vector<unsigned int> &buffer)
 	{
 		Expression::Append(buffer, Expression::Extend<Color4, float>);
 	}
 };
-template<typename T, typename A> void ConfigureConvert(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
+template <typename T, typename A> void ConfigureConvert(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
 {
 	const TiXmlElement *arg1 = element->FirstChildElement();
 	if (!arg1)
@@ -948,7 +982,7 @@ template<typename T, typename A> void ConfigureConvert(const TiXmlElement *eleme
 //
 // CONSTRUCT EXPRESSION
 //
-template<typename T> void ConfigureConstruct(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
+template <typename T> void ConfigureConstruct(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
 {
 	// width in floats (HACK)
 	const int width = (sizeof(T)+sizeof(float)-1)/sizeof(float);
@@ -963,7 +997,7 @@ template<typename T> void ConfigureConstruct(const TiXmlElement *element, std::v
 		if (const TiXmlElement *component = element->FirstChildElement(names[i]))
 		{
 			// configure the expression
-			ConfigureExpressionRoot<float>(component, buffer, sScalarNames, &defaults[i]);
+			ConfigureExpressionRoot<DLScalar>(component, buffer, sScalarNames, &defaults[i]);
 		}
 		else
 		{
@@ -978,7 +1012,7 @@ template<typename T> void ConfigureConstruct(const TiXmlElement *element, std::v
 // UNARY EXPRESSION
 // return the result of an expression taking one parameter
 //
-template<typename T, typename A, typename C> void ConfigureUnary(T (expr)(C), const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
+template <typename T, typename A, typename C> void ConfigureUnary(T (expr)(C), const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
 {
 	const TiXmlElement *arg1 = element->FirstChildElement();
 	if (!arg1)
@@ -1001,7 +1035,7 @@ template<typename T, typename A, typename C> void ConfigureUnary(T (expr)(C), co
 // BINARY EXPRESSION
 // return the result of an expression taking two parameters
 //
-template<typename T, typename A1, typename A2, typename C> void ConfigureBinary(T (expr)(C), const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
+template <typename T, typename A1, typename A2, typename C> void ConfigureBinary(T (expr)(C), const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
 {
 	const TiXmlElement *arg1 = element->FirstChildElement();
 	if (!arg1)
@@ -1036,7 +1070,7 @@ template<typename T, typename A1, typename A2, typename C> void ConfigureBinary(
 // TERNARY EXPRESSION
 // return the result of an expression taking three parameters
 //
-template<typename T, typename A1, typename A2, typename A3, typename C> void ConfigureTernary(T (expr)(C), const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
+template <typename T, typename A1, typename A2, typename A3, typename C> void ConfigureTernary(T (expr)(C), const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
 {
 	const TiXmlElement *arg1 = element->FirstChildElement();
 	if (!arg1)
@@ -1085,7 +1119,7 @@ template<typename T, typename A1, typename A2, typename A3, typename C> void Con
 //
 
 // configure typed variadic
-template<typename T, typename A, typename C> void ConfigureVariadic(T (expr)(C), const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
+template <typename T, typename A, typename C> void ConfigureVariadic(T (expr)(C), const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
 {
 	const TiXmlElement *arg1 = element->FirstChildElement();
 	if (!arg1)
@@ -1132,7 +1166,7 @@ template<typename T, typename A, typename C> void ConfigureVariadic(T (expr)(C),
 //
 
 // configure an expression
-template<typename T> void ConfigureExpression(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
+template <typename T> void ConfigureExpression(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
 {
 	// width in floats (HACK)
 	const int width = (sizeof(T)+sizeof(float)-1)/sizeof(float);
@@ -1306,8 +1340,8 @@ void ConfigureVariableOperator(const TiXmlElement *element, std::vector<unsigned
 		switch (width)
 		{
 		case 1: ConfigureExpressionRoot<float>(element, buffer, names, data); break;
-		case 2: ConfigureExpressionRoot<Vector2>(element, buffer, names, data); break;
-		case 3: ConfigureExpressionRoot<Vector3>(element, buffer, names, data); break;
+		case 2: //ConfigureExpressionRoot<Vector2>(element, buffer, names, data); break;
+		case 3: //ConfigureExpressionRoot<Vector3>(element, buffer, names, data); break;
 		case 4: ConfigureExpressionRoot<Vector4>(element, buffer, names, data); break;
 		}
 	}
@@ -1434,21 +1468,21 @@ void ConfigureDrawItem(const TiXmlElement *element, std::vector<unsigned int> &b
 	case 0xad0ecfd5 /* "translate" */:
 		{
 			buffer.push_back(DO_glTranslatef);
-			ConfigureExpressionRoot<Vector3>(element, buffer, sPositionNames, sPositionDefault);
+			ConfigureExpressionRoot<DLTranslation>(element, buffer, sPositionNames, sPositionDefault);
 		}
 		break;
 
 	case 0xa5f4fd0a /* "rotate" */:
 		{
 			buffer.push_back(DO_glRotatef);
-			ConfigureExpressionRoot<float>(element, buffer, sRotationNames, sRotationDefault);
+			ConfigureExpressionRoot<DLRotation>(element, buffer, sRotationNames, sRotationDefault);
 		}
 		break;
 
 	case 0x82971c71 /* "scale" */:
 		{
 			buffer.push_back(DO_glScalef);
-			ConfigureExpressionRoot<Vector3>(element, buffer, sScaleNames, sScaleDefault);
+			ConfigureExpressionRoot<DLScale>(element, buffer, sScaleNames, sScaleDefault);
 		}
 		break;
 
@@ -1489,35 +1523,35 @@ void ConfigureDrawItem(const TiXmlElement *element, std::vector<unsigned int> &b
 	case 0x945367a7 /* "vertex" */:
 		{
 			buffer.push_back(DO_glVertex3fv);
-			ConfigureExpressionRoot<Vector3>(element, buffer, sPositionNames, sPositionDefault);
+			ConfigureExpressionRoot<DLPosition>(element, buffer, sPositionNames, sPositionDefault);
 		}
 		break;
 
 	case 0xe68b9c52 /* "normal" */:
 		{
 			buffer.push_back(DO_glNormal3fv);
-			ConfigureExpressionRoot<Vector3>(element, buffer, sPositionNames, sPositionDefault);
+			ConfigureExpressionRoot<DLNormal>(element, buffer, sPositionNames, sPositionDefault);
 		}
 		break;
 
 	case 0x3d7e6258 /* "color" */:
 		{
 			buffer.push_back(DO_glColor4fv);
-			ConfigureExpressionRoot<Color4>(element, buffer, sColorNames, sColorDefault);
+			ConfigureExpressionRoot<DLColor>(element, buffer, sColorNames, sColorDefault);
 		}
 		break;
 
 	case 0x090aa9ab /* "index" */:
 		{
 			buffer.push_back(DO_glIndexf);
-			ConfigureExpressionRoot<float>(element, buffer, sIndexNames, sIndexDefault);
+			ConfigureExpressionRoot<DLIndex>(element, buffer, sIndexNames, sIndexDefault);
 		}
 		break;
 
 	case 0xdd612dd3 /* "texcoord" */:
 		{
 			buffer.push_back(DO_glTexCoord2fv);
-			ConfigureExpressionRoot<Vector2>(element, buffer, sTexCoordNames, sTexCoordDefault);
+			ConfigureExpressionRoot<DLTexCoord>(element, buffer, sTexCoordNames, sTexCoordDefault);
 		}
 		break;
 
@@ -2166,8 +2200,8 @@ bool EvaluateVariableOperator(DrawItemContext &aContext, VariableOperator op)
 	switch(width)
 	{
 	case 1: value = Expression::Evaluate<float>(aContext); break;
-	case 2: value = Expression::Evaluate<Vector2>(aContext); break;
-	case 3: value = Expression::Evaluate<Vector3>(aContext); break;
+	case 2: //value = Expression::Evaluate<Vector2>(aContext); break;
+	case 3: //value = Expression::Evaluate<Vector3>(aContext); break;
 	case 4: value = Expression::Evaluate<Vector4>(aContext); break;
 	}
 	Database::Typed<float> &variables = Database::variable.Open(aContext.mId);
@@ -2254,8 +2288,8 @@ void ExecuteDrawItems(const unsigned int buffer[], size_t count, float param, un
 
 		case DO_glColor4fv:
 			{
-				Color4 value(Expression::Evaluate<Color4>(context));
-				glColor4fv(&value.r);
+				DLColor value(Expression::Evaluate<DLColor>(context));
+				glColor4fv(&value[0]);
 			}
 			break;
 
@@ -2322,7 +2356,7 @@ void ExecuteDrawItems(const unsigned int buffer[], size_t count, float param, un
 
 		case DO_glIndexf:
 			{
-				float value(Expression::Evaluate<float>(context));
+				float value(Expression::Evaluate<DLIndex>(context));
 				glIndexf(value);
 			}
 			break;
@@ -2352,8 +2386,8 @@ void ExecuteDrawItems(const unsigned int buffer[], size_t count, float param, un
 
 		case DO_glNormal3fv:
 			{
-				Vector3 value(Expression::Evaluate<Vector3>(context));
-				glNormal3fv(&value.x);
+				DLNormal value(Expression::Evaluate<DLNormal>(context));
+				glNormal3fv(&value[0]);
 			}
 			break;
 
@@ -2392,22 +2426,22 @@ void ExecuteDrawItems(const unsigned int buffer[], size_t count, float param, un
 
 		case DO_glRotatef:
 			{
-				float value(Expression::Evaluate<float>(context));
+				float value(Expression::Evaluate<DLRotation>(context));
 				glRotatef(value, 0, 0, 1);
 			}
 			break;
 
 		case DO_glScalef:
 			{
-				Vector3 value(Expression::Evaluate<Vector3>(context));
+				DLScale value(Expression::Evaluate<DLScale>(context));
 				glScalef(value.x, value.y, value.z);
 			}
 			break;
 
 		case DO_glTexCoord2fv:
 			{
-				Vector2 value(Expression::Evaluate<Vector2>(context));
-				glTexCoord2fv(&value.x);
+				DLTexCoord value(Expression::Evaluate<DLTexCoord>(context));
+				glTexCoord2fv(&value[0]);
 			}
 			break;
 
@@ -2423,14 +2457,14 @@ void ExecuteDrawItems(const unsigned int buffer[], size_t count, float param, un
 
 		case DO_glTranslatef:
 			{
-				Vector3 value(Expression::Evaluate<Vector3>(context));
+				DLTranslation value(Expression::Evaluate<DLTranslation>(context));
 				glTranslatef(value.x, value.y, value.z);
 			}
 			break;
 
 		case DO_glVertex3fv:
 			{
-				Vector3 value(Expression::Evaluate<Vector3>(context));
+				DLPosition value(Expression::Evaluate<DLPosition>(context));
 				glVertex3fv(&value[0]);
 			}
 			break;
