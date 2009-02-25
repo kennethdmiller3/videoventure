@@ -8,170 +8,6 @@
 
 #define DRAWLIST_LOOP
 
-enum DrawlistOp
-{
-	DO_glAccum, //(GLenum op, GLfloat value)
-	DO_glAlphaFunc, //(GLenum func, GLclampf ref)
-	DO_glArrayElement, //(GLint i)
-	DO_glBegin, //(GLenum mode)
-	DO_glBindTexture, //(GLenum target, GLuint texture)
-	DO_glBitmap, //(GLsizei width, GLsizei height, GLfloat xorig, GLfloat yorig, GLfloat xmove, GLfloat ymove, const GLubyte *bitmap)
-	DO_glBlendFunc, //(GLenum sfactor, GLenum dfactor)
-	DO_glCallList, //(GLuint list)
-	DO_glCallLists, //(GLsizei n, GLenum type, const GLvoid *lists)
-	DO_glClear, //(GLbitfield mask)
-	DO_glClearAccum, //(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha)
-	DO_glClearColor, //(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha)
-	DO_glClearDepth, //(GLclampd depth)
-	DO_glClearIndex, //(GLfloat c)
-	DO_glClearStencil, //(GLint s)
-	DO_glClipPlane, //(GLenum plane, const GLdouble *equation)
-//	DO_glColor4f, //(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha)
-	DO_glColor4fv, //(const GLfloat *v)
-	DO_glColorMask, //(GLboolean red, GLboolean green, GLboolean blue, GLboolean alpha)
-	DO_glColorMaterial, //(GLenum face, GLenum mode)
-	DO_glColorPointer, //(GLint size, GLenum type, GLsizei stride, const GLvoid *pointer)
-	DO_glCopyPixels, //(GLint x, GLint y, GLsizei width, GLsizei height, GLenum type)
-	DO_glCopyTexImage1D, //(GLenum target, GLint level, GLenum internalFormat, GLint x, GLint y, GLsizei width, GLint border)
-	DO_glCopyTexImage2D, //(GLenum target, GLint level, GLenum internalFormat, GLint x, GLint y, GLsizei width, GLsizei height, GLint border)
-	DO_glCopyTexSubImage1D, //(GLenum target, GLint level, GLint xoffset, GLint x, GLint y, GLsizei width)
-	DO_glCopyTexSubImage2D, //(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint x, GLint y, GLsizei width, GLsizei height)
-	DO_glCullFace, //(GLenum mode)
-	DO_glDeleteLists, //(GLuint list, GLsizei range)
-	DO_glDeleteTextures, //(GLsizei n, const GLuint *textures)
-	DO_glDepthFunc, //(GLenum func)
-	DO_glDepthMask, //(GLboolean flag)
-	DO_glDepthRange, //(GLclampd zNear, GLclampd zFar)
-	DO_glDisable, //(GLenum cap)
-	DO_glDisableClientState, //(GLenum array)
-	DO_glDrawArrays, //(GLenum mode, GLint first, GLsizei count)
-	DO_glDrawBuffer, //(GLenum mode)
-	DO_glDrawElements, //(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices)
-	DO_glDrawPixels, //(GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid *pixels)
-	DO_glEdgeFlag, //(GLboolean flag)
-	DO_glEdgeFlagPointer, //(GLsizei stride, const GLvoid *pointer)
-	DO_glEdgeFlagv, //(const GLboolean *flag)
-	DO_glEnable, //(GLenum cap)
-	DO_glEnableClientState, //(GLenum array)
-	DO_glEnd, //(void)
-	DO_glEndList, //(void)
-	DO_glEvalCoord1f, //(GLfloat u)
-	DO_glEvalCoord1fv, //(const GLfloat *u)
-	DO_glEvalCoord2f, //(GLfloat u, GLfloat v)
-	DO_glEvalCoord2fv, //(const GLfloat *u)
-	DO_glEvalMesh1, //(GLenum mode, GLint i1, GLint i2)
-	DO_glEvalMesh2, //(GLenum mode, GLint i1, GLint i2, GLint j1, GLint j2)
-	DO_glEvalPoint1, //(GLint i)
-	DO_glEvalPoint2, //(GLint i, GLint j)
-	DO_glFeedbackBuffer, //(GLsizei size, GLenum type, GLfloat *buffer)
-	DO_glFinish, //(void)
-	DO_glFlush, //(void)
-	DO_glFogf, //(GLenum pname, GLfloat param)
-	DO_glFogfv, //(GLenum pname, const GLfloat *params)
-	DO_glFrontFace, //(GLenum mode)
-	DO_glFrustum, //(GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLdouble zNear, GLdouble zFar)
-	DO_glGenLists, //(GLsizei range)
-	DO_glGenTextures, //(GLsizei n, GLuint *textures)
-	DO_glHint, //(GLenum target, GLenum mode)
-	DO_glIndexMask, //(GLuint mask)
-	DO_glIndexPointer, //(GLenum type, GLsizei stride, const GLvoid *pointer)
-	DO_glIndexf, //(GLfloat c)
-	DO_glIndexfv, //(const GLfloat *c)
-	DO_glInitNames, //(void)
-	DO_glInterleavedArrays, //(GLenum format, GLsizei stride, const GLvoid *pointer)
-	DO_glLightModelf, //(GLenum pname, GLfloat param)
-	DO_glLightModelfv, //(GLenum pname, const GLfloat *params)
-	DO_glLightf, //(GLenum light, GLenum pname, GLfloat param)
-	DO_glLightfv, //(GLenum light, GLenum pname, const GLfloat *params)
-	DO_glLineStipple, //(GLint factor, GLushort pattern)
-	DO_glLineWidth, //(GLfloat width)
-	DO_glListBase, //(GLuint base)
-	DO_glLoadIdentity, //(void)
-	DO_glLoadMatrixf, //(const GLfloat *m)
-	DO_glLoadName, //(GLuint name)
-	DO_glLogicOp, //(GLenum opcode)
-	DO_glMap1f, //(GLenum target, GLfloat u1, GLfloat u2, GLint stride, GLint order, const GLfloat *points)
-	DO_glMap2f, //(GLenum target, GLfloat u1, GLfloat u2, GLint ustride, GLint uorder, GLfloat v1, GLfloat v2, GLint vstride, GLint vorder, const GLfloat *points)
-	DO_glMapGrid1f, //(GLint un, GLfloat u1, GLfloat u2)
-	DO_glMapGrid2f, //(GLint un, GLfloat u1, GLfloat u2, GLint vn, GLfloat v1, GLfloat v2)
-	DO_glMaterialf, //(GLenum face, GLenum pname, GLfloat param)
-	DO_glMaterialfv, //(GLenum face, GLenum pname, const GLfloat *params)
-	DO_glMatrixMode, //(GLenum mode)
-	DO_glMultMatrixf, //(const GLfloat *m)
-	DO_glNewList, //(GLuint list, GLenum mode)
-	DO_glNormal3f, //(GLfloat nx, GLfloat ny, GLfloat nz)
-	DO_glNormal3fv, //(const GLfloat *v)
-	DO_glNormalPointer, //(GLenum type, GLsizei stride, const GLvoid *pointer)
-	DO_glOrtho, //(GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLdouble zNear, GLdouble zFar)
-	DO_glPassThrough, //(GLfloat token)
-	DO_glPixelMapfv, //(GLenum map, GLsizei mapsize, const GLfloat *values)
-	DO_glPixelStoref, //(GLenum pname, GLfloat param)
-	DO_glPixelTransferf, //(GLenum pname, GLfloat param)
-	DO_glPixelZoom, //(GLfloat xfactor, GLfloat yfactor)
-	DO_glPointSize, //(GLfloat size)
-	DO_glPolygonMode, //(GLenum face, GLenum mode)
-	DO_glPolygonOffset, //(GLfloat factor, GLfloat units)
-	DO_glPolygonStipple, //(const GLubyte *mask)
-	DO_glPopAttrib, //(void)
-	DO_glPopClientAttrib, //(void)
-	DO_glPopMatrix, //(void)
-	DO_glPopName, //(void)
-	DO_glPrioritizeTextures, //(GLsizei n, const GLuint *textures, const GLclampf *priorities)
-	DO_glPushAttrib, //(GLbitfield mask)
-	DO_glPushClientAttrib, //(GLbitfield mask)
-	DO_glPushMatrix, //(void)
-	DO_glPushName, //(GLuint name)
-	DO_glRasterPos4f, //(GLfloat x, GLfloat y, GLfloat z, GLfloat w)
-	DO_glRasterPos4fv, //(const GLfloat *v)
-	DO_glReadBuffer, //(GLenum mode)
-	DO_glReadPixels, //(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid *pixels)
-	DO_glRectf, //(GLfloat x1, GLfloat y1, GLfloat x2, GLfloat y2)
-	DO_glRectfv, //(const GLfloat *v1, const GLfloat *v2)
-	DO_glRotatef, //(GLfloat anDO_gle, GLfloat x, GLfloat y, GLfloat z)
-	DO_glScalef, //(GLfloat x, GLfloat y, GLfloat z)
-	DO_glScissor, //(GLint x, GLint y, GLsizei width, GLsizei height)
-	DO_glSelectBuffer, //(GLsizei size, GLuint *buffer)
-	DO_glShadeModel, //(GLenum mode)
-	DO_glStencilFunc, //(GLenum func, GLint ref, GLuint mask)
-	DO_glStencilMask, //(GLuint mask)
-	DO_glStencilOp, //(GLenum fail, GLenum zfail, GLenum zpass)
-	DO_glTexCoord2f, //(GLfloat s, GLfloat t)
-	DO_glTexCoord2fv, //(const GLfloat *v)
-	DO_glTexCoordPointer, //(GLint size, GLenum type, GLsizei stride, const GLvoid *pointer)
-	DO_glTexEnvf, //(GLenum target, GLenum pname, GLfloat param)
-	DO_glTexEnvfv, //(GLenum target, GLenum pname, const GLfloat *params)
-	DO_glTexGenf, //(GLenum coord, GLenum pname, GLfloat param)
-	DO_glTexGenfv, //(GLenum coord, GLenum pname, const GLfloat *params)
-	DO_glTexImage1D, //(GLenum target, GLint level, GLint internalformat, GLsizei width, GLint border, GLenum format, GLenum type, const GLvoid *pixels)
-	DO_glTexImage2D, //(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid *pixels)
-	DO_glTexParameterf, //(GLenum target, GLenum pname, GLfloat param)
-	DO_glTexParameterfv, //(GLenum target, GLenum pname, const GLfloat *params)
-	DO_glTexSubImage1D, //(GLenum target, GLint level, GLint xoffset, GLsizei width, GLenum format, GLenum type, const GLvoid *pixels)
-	DO_glTexSubImage2D, //(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid *pixels)
-	DO_glTranslatef, //(GLfloat x, GLfloat y, GLfloat z)
-	DO_glVertex3f, //(GLfloat x, GLfloat y, GLfloat z)
-	DO_glVertex3fv, //(const GLfloat *v)
-	DO_glVertexPointer, //(GLint size, GLenum type, GLsizei stride, const GLvoid *pointer)
-	DO_glViewport, //(GLint x, GLint y, GLsizei width, GLsizei height)
-
-	DO_Repeat,
-	DO_Block,
-	DO_Set,
-	DO_Add,
-	DO_Sub,
-	DO_Mul,
-	DO_Div,
-	DO_Min,
-	DO_Max,
-	DO_Swizzle,
-	DO_Clear,
-#ifdef DRAWLIST_LOOP
-	DO_Loop,
-#endif
-#ifdef DRAWLIST_EMITTER
-	DO_Emitter,
-#endif
-};
 
 //
 // DATA TYPES
@@ -662,6 +498,397 @@ namespace Expression
 
 
 //
+// VARIABLE OPERATOR
+//
+
+// component-level operators
+typedef void (* VariableOperator)(float &, float);
+void VariableOperatorSet(float &v, float data) { v = data; }
+void VariableOperatorAdd(float &v, float data) { v += data; }
+void VariableOperatorSub(float &v, float data) { v -= data; }
+void VariableOperatorMul(float &v, float data) { v *= data; }
+void VariableOperatorDiv(float &v, float data) { v /= data; }
+void VariableOperatorMin(float &v, float data) { v = std::min(v, data); }
+void VariableOperatorMax(float &v, float data) { v = std::max(v, data); }
+
+// evaluate variable operator
+bool EvaluateVariableOperator(DrawItemContext &aContext, VariableOperator op)
+{
+	unsigned int name = *aContext.mStream++;
+	int width = *aContext.mStream++;
+	assert(width <= 4);
+	Vector4 value;
+	switch(width)
+	{
+	case 1: value = Expression::Evaluate<float>(aContext); break;
+	case 2: //value = Expression::Evaluate<Vector2>(aContext); break;
+	case 3: //value = Expression::Evaluate<Vector3>(aContext); break;
+	case 4: value = Expression::Evaluate<Vector4>(aContext); break;
+	}
+	Database::Typed<float> &variables = Database::variable.Open(aContext.mId);
+	for (int i = 0; i < width; i++)
+	{
+		float &v = variables.Open(name+i);
+		op(v, value[i]);
+		variables.Close(name+i);
+	}
+	Database::variable.Close(aContext.mId);
+	return true;
+}
+
+
+
+//
+// DRAWLIST OPERATIONS
+//
+
+void DO_glArrayElement(DrawItemContext &aContext)
+{
+	glArrayElement(Expression::Read<GLint>(aContext));
+}
+
+void DO_glBegin(DrawItemContext &aContext)
+{
+	glBegin(Expression::Read<GLenum>(aContext));
+}
+
+void DO_glBindTexture(DrawItemContext &aContext)
+{
+	GLenum target(Expression::Read<GLenum>(aContext));
+	GLuint texture(Expression::Read<GLuint>(aContext));
+	glBindTexture(target, texture);
+}
+
+void DO_glBlendFunc(DrawItemContext &aContext)
+{
+	GLenum sfactor(Expression::Read<GLenum>(aContext));
+	GLenum dfactor(Expression::Read<GLenum>(aContext));
+	glBlendFunc(sfactor, dfactor);
+}
+
+void DO_glCallList(DrawItemContext &aContext)
+{
+	glCallList(Expression::Read<GLuint>(aContext));
+}
+
+void DO_glColor4fv(DrawItemContext &aContext)
+{
+	DLColor value(Expression::Evaluate<DLColor>(aContext));
+	glColor4fv(&value[0]);
+}
+
+void DO_glColorPointer(DrawItemContext &aContext)
+{
+	GLint size(Expression::Read<GLint>(aContext));
+	GLsizei stride(Expression::Read<GLsizei>(aContext));
+	size_t count(Expression::Read<size_t>(aContext));
+	glColorPointer(size, GL_FLOAT, stride, aContext.mStream);
+	aContext.mStream += (count*sizeof(GLfloat)+sizeof(unsigned int)-1)/sizeof(unsigned int);
+}
+
+void DO_glDisable(DrawItemContext &aContext)
+{
+	glDisable(Expression::Read<GLenum>(aContext));
+}
+
+void DO_glDisableClientState(DrawItemContext &aContext)
+{
+	glDisableClientState(Expression::Read<GLenum>(aContext));
+}
+
+void DO_glDrawArrays(DrawItemContext &aContext)
+{
+	GLenum mode(Expression::Read<GLenum>(aContext));
+	GLint first(Expression::Read<GLint>(aContext));
+	size_t count(Expression::Read<size_t>(aContext));
+	glDrawArrays(mode, first, count);
+}
+
+void DO_glDrawElements(DrawItemContext &aContext)
+{
+	GLenum mode(Expression::Read<GLenum>(aContext));
+	size_t count(Expression::Read<size_t>(aContext));
+	glDrawElements(mode, count, GL_UNSIGNED_SHORT, aContext.mStream);
+	aContext.mStream += (count*sizeof(unsigned short)+sizeof(unsigned int)-1)/sizeof(unsigned int);
+}
+
+void DO_glEdgeFlag(DrawItemContext &aContext)
+{
+	glEdgeFlag(Expression::Read<GLboolean>(aContext));
+}
+
+void DO_glEdgeFlagPointer(DrawItemContext &aContext)
+{
+	GLsizei stride(Expression::Read<GLsizei>(aContext));
+	size_t count(Expression::Read<size_t>(aContext));
+	glEdgeFlagPointer(stride, aContext.mStream);
+	aContext.mStream += (count*sizeof(bool)+sizeof(unsigned int)-1)/sizeof(unsigned int);
+}
+
+void DO_glEnable(DrawItemContext &aContext)
+{
+	glEnable(Expression::Read<GLenum>(aContext));
+}
+
+void DO_glEnableClientState(DrawItemContext &aContext)
+{
+	glEnableClientState(Expression::Read<GLenum>(aContext));
+}
+
+void DO_glEnd(DrawItemContext &aContext)
+{
+	glEnd();
+}
+
+void DO_glIndexf(DrawItemContext &aContext)
+{
+	float value(Expression::Evaluate<DLIndex>(aContext));
+	glIndexf(value);
+}
+
+void DO_glIndexPointer(DrawItemContext &aContext)
+{
+	GLsizei stride(Expression::Read<GLsizei>(aContext));
+	size_t count(Expression::Read<size_t>(aContext));
+	glIndexPointer(GL_FLOAT, stride, aContext.mStream);
+	aContext.mStream += (count*sizeof(GLfloat)+sizeof(unsigned int)-1)/sizeof(unsigned int);
+}
+
+void DO_glLoadIdentity(DrawItemContext &aContext)
+{
+	glLoadIdentity();
+}
+
+void DO_glLoadMatrixf(DrawItemContext &aContext)
+{
+	glLoadMatrixf(reinterpret_cast<const GLfloat *>(aContext.mStream));
+	aContext.mStream += (16*sizeof(GLfloat)+sizeof(unsigned int)-1)/sizeof(unsigned int);
+}
+
+void DO_glMultMatrixf(DrawItemContext &aContext)
+{
+	glMultMatrixf(reinterpret_cast<const GLfloat *>(aContext.mStream));
+	aContext.mStream += (16*sizeof(GLfloat)+sizeof(unsigned int)-1)/sizeof(unsigned int);
+}
+
+void DO_glNormal3fv(DrawItemContext &aContext)
+{
+	DLNormal value(Expression::Evaluate<DLNormal>(aContext));
+	glNormal3fv(&value[0]);
+}
+
+void DO_glNormalPointer(DrawItemContext &aContext)
+{
+	GLsizei stride(Expression::Read<GLsizei>(aContext));
+	size_t count(Expression::Read<size_t>(aContext));
+	glNormalPointer(GL_FLOAT, stride, aContext.mStream);
+	aContext.mStream += (count*sizeof(GLfloat)+sizeof(unsigned int)-1)/sizeof(unsigned int);
+}
+
+void DO_glPopAttrib(DrawItemContext &aContext)
+{
+	glPopAttrib();
+}
+
+void DO_glPopClientAttrib(DrawItemContext &aContext)
+{
+	glPopClientAttrib();
+}
+
+void DO_glPopMatrix(DrawItemContext &aContext)
+{
+	glPopMatrix();
+}
+
+void DO_glPushAttrib(DrawItemContext &aContext)
+{
+	glPushAttrib(Expression::Read<GLbitfield>(aContext));
+}
+
+void DO_glPushClientAttrib(DrawItemContext &aContext)
+{
+	glPushClientAttrib(Expression::Read<GLbitfield>(aContext));
+}
+
+void DO_glPushMatrix(DrawItemContext &aContext)
+{
+	glPushMatrix();
+}
+
+void DO_glRotatef(DrawItemContext &aContext)
+{
+	float value(Expression::Evaluate<DLRotation>(aContext));
+	glRotatef(value, 0, 0, 1);
+}
+
+void DO_glScalef(DrawItemContext &aContext)
+{
+	DLScale value(Expression::Evaluate<DLScale>(aContext));
+	glScalef(value.x, value.y, value.z);
+}
+
+void DO_glTexCoord2fv(DrawItemContext &aContext)
+{
+	DLTexCoord value(Expression::Evaluate<DLTexCoord>(aContext));
+	glTexCoord2fv(&value[0]);
+}
+
+void DO_glTexCoordPointer(DrawItemContext &aContext)
+{
+	GLint size(Expression::Read<GLint>(aContext));
+	GLsizei stride(Expression::Read<GLsizei>(aContext));
+	size_t count(Expression::Read<size_t>(aContext));
+	glTexCoordPointer(size, GL_FLOAT, stride, aContext.mStream);
+	aContext.mStream += (count*sizeof(GLfloat)+sizeof(unsigned int)-1)/sizeof(unsigned int);
+}
+
+void DO_glTranslatef(DrawItemContext &aContext)
+{
+	DLTranslation value(Expression::Evaluate<DLTranslation>(aContext));
+	glTranslatef(value.x, value.y, value.z);
+}
+
+void DO_glVertex3fv(DrawItemContext &aContext)
+{
+	DLPosition value(Expression::Evaluate<DLPosition>(aContext));
+	glVertex3fv(&value[0]);
+}
+
+void DO_glVertexPointer(DrawItemContext &aContext)
+{
+	GLint size(Expression::Read<GLint>(aContext));
+	GLsizei stride(Expression::Read<GLsizei>(aContext));
+	size_t count(Expression::Read<size_t>(aContext));
+	glVertexPointer(size, GL_FLOAT, stride, aContext.mStream);
+	aContext.mStream += (count*sizeof(GLfloat)+sizeof(unsigned int)-1)/sizeof(unsigned int);
+}
+
+void DO_Repeat(DrawItemContext &aContext)
+{
+	int repeat(Expression::Read<int>(aContext));
+	size_t size(Expression::Read<size_t>(aContext));
+	for (int i = 0; i < repeat; i++)
+		ExecuteDrawItems(aContext.mStream, size, aContext.mParam, aContext.mId);
+	aContext.mStream += size;
+}
+
+void DO_Block(DrawItemContext &aContext)
+{
+	float start(Expression::Read<float>(aContext));
+	float length(Expression::Read<float>(aContext));
+	float scale(Expression::Read<float>(aContext));
+	int repeat(Expression::Read<int>(aContext));
+	size_t size(Expression::Read<size_t>(aContext));
+	float t = aContext.mParam - start;
+	if (t >= 0.0f && length > 0.0f)
+	{
+		int loop = xs_FloorToInt(t / length);
+		if (repeat < 0 || loop <= repeat)
+		{
+			t -= loop * length;
+			t *= scale;
+			ExecuteDrawItems(aContext.mStream, size, t, aContext.mId);
+		}
+	}
+	aContext.mStream += size;
+}
+
+void DO_Set(DrawItemContext &aContext)
+{
+	EvaluateVariableOperator(aContext, VariableOperatorSet);
+}
+
+void DO_Add(DrawItemContext &aContext)
+{
+	EvaluateVariableOperator(aContext, VariableOperatorAdd);
+}
+
+void DO_Sub(DrawItemContext &aContext)
+{
+	EvaluateVariableOperator(aContext, VariableOperatorSub);
+}
+
+void DO_Mul(DrawItemContext &aContext)
+{
+	EvaluateVariableOperator(aContext, VariableOperatorMul);
+}
+
+void DO_Div(DrawItemContext &aContext)
+{
+	EvaluateVariableOperator(aContext, VariableOperatorDiv);
+}
+
+void DO_Min(DrawItemContext &aContext)
+{
+	EvaluateVariableOperator(aContext, VariableOperatorMin);
+}
+
+void DO_Max(DrawItemContext &aContext)
+{
+	EvaluateVariableOperator(aContext, VariableOperatorMax);
+}
+
+void DO_Swizzle(DrawItemContext &aContext)
+{
+	unsigned int name(Expression::Read<unsigned int>(aContext));
+	int width(Expression::Read<int>(aContext));
+	Database::Typed<float> &variables = Database::variable.Open(aContext.mId);
+	float *temp = static_cast<float *>(_alloca(width * sizeof(float)));
+	for (int i = 0; i < width; i++)
+		temp[i] = variables.Get(name + Expression::Read<unsigned int>(aContext));
+	for (int i = 0; i < width; i++)
+		variables.Put(name + i, temp[i]);
+	Database::variable.Close(aContext.mId);
+}
+
+void DO_Clear(DrawItemContext &aContext)
+{
+	unsigned int name(Expression::Read<unsigned int>(aContext));
+	int width(Expression::Read<int>(aContext));
+	Database::Typed<float> &variables = Database::variable.Open(aContext.mId);
+	for (int i = 0; i < width; i++)
+		variables.Delete(name+i);
+	Database::variable.Close(aContext.mId);
+}
+
+#ifdef DRAWLIST_LOOP
+void DO_Loop(DrawItemContext &aContext)
+{
+
+	{
+		unsigned int name = Expression::Read<unsigned int>(aContext);
+		float from = Expression::Read<float>(aContext);
+		float to   = Expression::Read<float>(aContext);
+		float by   = Expression::Read<float>(aContext);
+		size_t size = Expression::Read<size_t>(aContext);
+
+		Database::Typed<float> &variables = Database::variable.Open(aContext.mId);
+		if (by > 0)
+		{
+			for (float value = from; value <= to; value += by)
+			{
+				variables.Put(name, value);
+				ExecuteDrawItems(aContext.mStream, size, aContext.mParam, aContext.mId);
+			}
+		}
+		else
+		{
+			for (float value = from; value >= to; value += by)
+			{
+				variables.Put(name, value);
+				ExecuteDrawItems(aContext.mStream, size, aContext.mParam, aContext.mId);
+			}
+		}
+		variables.Delete(name);
+		Database::variable.Close(aContext.mId);
+
+		aContext.mStream += size;
+	}
+}
+#endif
+
+
+//
 // LITERAL EXPRESSION
 // returns an embedded constant value
 //
@@ -750,7 +977,8 @@ void EvaluateInterpolator(float value[], int width, DrawItemContext &aContext)
 	const int count = Expression::Read<int>(aContext);
 	const float * __restrict keys = reinterpret_cast<const float * __restrict>(aContext.mStream);
 	int dummy = 0;
-	ApplyInterpolator(value, width, count, keys, aContext.mParam, dummy);
+	if (!ApplyInterpolator(value, width, count, keys, aContext.mParam, dummy))
+		memset(value, 0, width * sizeof(float));
 
 	// advance stream
 	aContext.mStream = end;
@@ -1323,7 +1551,7 @@ void ConfigureFloatData(const TiXmlElement *element, std::vector<unsigned int> &
 	}
 }
 
-void ConfigureVariableOperator(const TiXmlElement *element, std::vector<unsigned int> &buffer, DrawlistOp op, bool drawdata)
+void ConfigureVariableOperator(const TiXmlElement *element, std::vector<unsigned int> &buffer, void (*op)(DrawItemContext &), bool drawdata)
 {
 	unsigned int name = Hash(element->Attribute("name"));
 	unsigned int type = Hash(element->Attribute("type"));
@@ -1332,9 +1560,9 @@ void ConfigureVariableOperator(const TiXmlElement *element, std::vector<unsigned
 	const float *data;
 	GetTypeData(type, width, names, data);
 
-	buffer.push_back(op);
-	buffer.push_back(name);
-	buffer.push_back(width);
+	Expression::Append(buffer, op);
+	Expression::New<unsigned int>(buffer, name);
+	Expression::New<unsigned int>(buffer, width);
 	if (drawdata)
 	{
 		switch (width)
@@ -1349,18 +1577,16 @@ void ConfigureVariableOperator(const TiXmlElement *element, std::vector<unsigned
 
 void ConfigurePrimitive(const TiXmlElement *element, std::vector<unsigned int> &buffer, GLenum mode)
 {
-	buffer.push_back(DO_glBegin);
-	buffer.push_back(mode);
+	Expression::Append(buffer, DO_glBegin, mode);
 	ConfigureDrawItems(element, buffer);
-	buffer.push_back(DO_glEnd);
+	Expression::Append(buffer, DO_glEnd);
 }
 
-void ConfigureArray(const TiXmlElement *element, std::vector<unsigned int> &buffer, DrawlistOp op, size_t size, size_t stride)
+void ConfigureArray(const TiXmlElement *element, std::vector<unsigned int> &buffer, void (*op)(DrawItemContext &), size_t size, size_t stride)
 {
-	buffer.push_back(op);
-	if (size)
-		buffer.push_back(size);
-	buffer.push_back(stride);
+	Expression::Append(buffer, op);
+	Expression::New<size_t>(buffer, size);
+	Expression::New<size_t>(buffer, stride);
 
 	buffer.push_back(0);
 	int start = buffer.size();
@@ -1386,6 +1612,7 @@ GLenum GetPrimitiveMode(const char *mode)
 	}
 }
 
+
 void ConfigureDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buffer)
 {
 	const char *label = element->Value();
@@ -1393,9 +1620,9 @@ void ConfigureDrawItem(const TiXmlElement *element, std::vector<unsigned int> &b
 	{
 	case 0x974c9474 /* "pushmatrix" */:
 		{
-			buffer.push_back(DO_glPushMatrix);
+			Expression::Append(buffer, DO_glPushMatrix);
 			ConfigureDrawItems(element, buffer);
-			buffer.push_back(DO_glPopMatrix);
+			Expression::Append(buffer, DO_glPopMatrix);
 		}
 		break;
 
@@ -1434,10 +1661,9 @@ void ConfigureDrawItem(const TiXmlElement *element, std::vector<unsigned int> &b
 				else
 					mask &= ~bit;
 			}
-			buffer.push_back(DO_glPushAttrib);
-			buffer.push_back(mask);
+			Expression::Append(buffer, DO_glPushAttrib, mask);
 			ConfigureDrawItems(element, buffer);
-			buffer.push_back(DO_glPopAttrib);
+			Expression::Append(buffer, DO_glPopAttrib);
 		}
 		break;
 
@@ -1458,43 +1684,42 @@ void ConfigureDrawItem(const TiXmlElement *element, std::vector<unsigned int> &b
 				else
 					mask &= ~bit;
 			}
-			buffer.push_back(DO_glPushClientAttrib);
-			buffer.push_back(mask);
+			Expression::Append(buffer, DO_glPushClientAttrib, mask);
 			ConfigureDrawItems(element, buffer);
-			buffer.push_back(DO_glPopClientAttrib);
+			Expression::Append(buffer, DO_glPopClientAttrib);
 		}
 		break;
 
 	case 0xad0ecfd5 /* "translate" */:
 		{
-			buffer.push_back(DO_glTranslatef);
+			Expression::Append(buffer, DO_glTranslatef);
 			ConfigureExpressionRoot<DLTranslation>(element, buffer, sPositionNames, sPositionDefault);
 		}
 		break;
 
 	case 0xa5f4fd0a /* "rotate" */:
 		{
-			buffer.push_back(DO_glRotatef);
+			Expression::Append(buffer, DO_glRotatef);
 			ConfigureExpressionRoot<DLRotation>(element, buffer, sRotationNames, sRotationDefault);
 		}
 		break;
 
 	case 0x82971c71 /* "scale" */:
 		{
-			buffer.push_back(DO_glScalef);
+			Expression::Append(buffer, DO_glScalef);
 			ConfigureExpressionRoot<DLScale>(element, buffer, sScaleNames, sScaleDefault);
 		}
 		break;
 
 	case 0x938fc4f7 /* "loadidentity" */:
 		{
-			buffer.push_back(DO_glLoadIdentity);
+			Expression::Append(buffer, DO_glLoadIdentity);
 		}
 		break;
 
 	case 0x7d22a710 /* "loadmatrix" */:
 		{
-			buffer.push_back(DO_glLoadMatrixf);
+			Expression::Append(buffer, DO_glLoadMatrixf);
 			for (int i = 0; i < 16; i++)
 			{
 				char name[16];
@@ -1508,7 +1733,7 @@ void ConfigureDrawItem(const TiXmlElement *element, std::vector<unsigned int> &b
 
 	case 0x3807cb92 /* "multmatrix" */:
 		{
-			buffer.push_back(DO_glMultMatrixf);
+			Expression::Append(buffer, DO_glMultMatrixf);
 			for (int i = 0; i < 16; i++)
 			{
 				char name[16];
@@ -1522,35 +1747,35 @@ void ConfigureDrawItem(const TiXmlElement *element, std::vector<unsigned int> &b
 
 	case 0x945367a7 /* "vertex" */:
 		{
-			buffer.push_back(DO_glVertex3fv);
+			Expression::Append(buffer, DO_glVertex3fv);
 			ConfigureExpressionRoot<DLPosition>(element, buffer, sPositionNames, sPositionDefault);
 		}
 		break;
 
 	case 0xe68b9c52 /* "normal" */:
 		{
-			buffer.push_back(DO_glNormal3fv);
+			Expression::Append(buffer, DO_glNormal3fv);
 			ConfigureExpressionRoot<DLNormal>(element, buffer, sPositionNames, sPositionDefault);
 		}
 		break;
 
 	case 0x3d7e6258 /* "color" */:
 		{
-			buffer.push_back(DO_glColor4fv);
+			Expression::Append(buffer, DO_glColor4fv);
 			ConfigureExpressionRoot<DLColor>(element, buffer, sColorNames, sColorDefault);
 		}
 		break;
 
 	case 0x090aa9ab /* "index" */:
 		{
-			buffer.push_back(DO_glIndexf);
+			Expression::Append(buffer, DO_glIndexf);
 			ConfigureExpressionRoot<DLIndex>(element, buffer, sIndexNames, sIndexDefault);
 		}
 		break;
 
 	case 0xdd612dd3 /* "texcoord" */:
 		{
-			buffer.push_back(DO_glTexCoord2fv);
+			Expression::Append(buffer, DO_glTexCoord2fv);
 			ConfigureExpressionRoot<DLTexCoord>(element, buffer, sTexCoordNames, sTexCoordDefault);
 		}
 		break;
@@ -1560,7 +1785,7 @@ void ConfigureDrawItem(const TiXmlElement *element, std::vector<unsigned int> &b
 			int flag;
 			if (element->QueryIntAttribute("flag", &flag) == TIXML_SUCCESS)
 			{
-				buffer.push_back(DO_glEdgeFlag);
+				Expression::Append(buffer, DO_glEdgeFlag);
 				buffer.push_back(flag ? GL_TRUE : GL_FALSE);
 			}
 		}
@@ -1575,9 +1800,9 @@ void ConfigureDrawItem(const TiXmlElement *element, std::vector<unsigned int> &b
 				if (texture)
 				{
 					// bind the texture object
-					buffer.push_back(DO_glEnable);
+					Expression::Append(buffer, DO_glEnable);
 					buffer.push_back(GL_TEXTURE_2D);
-					buffer.push_back(DO_glBindTexture);
+					Expression::Append(buffer, DO_glBindTexture);
 					buffer.push_back(GL_TEXTURE_2D);
 					buffer.push_back(texture);
 				}
@@ -1678,7 +1903,7 @@ void ConfigureDrawItem(const TiXmlElement *element, std::vector<unsigned int> &b
 			case 0x1ad7d24f /* "one_minus_dst_alpha" */:	dstfactor = GL_ONE_MINUS_DST_ALPHA; break;
 			}
 
-			buffer.push_back(DO_glBlendFunc);
+			Expression::Append(buffer, DO_glBlendFunc);
 			buffer.push_back(srcfactor);
 			buffer.push_back(dstfactor);
 		}
@@ -1692,7 +1917,7 @@ void ConfigureDrawItem(const TiXmlElement *element, std::vector<unsigned int> &b
 				GLuint drawlist = Database::drawlist.Get(Hash(name));
 				if (drawlist)
 				{
-					buffer.push_back(DO_glCallList);
+					Expression::Append(buffer, DO_glCallList);
 					buffer.push_back(drawlist);
 				}
 			}
@@ -1754,7 +1979,7 @@ void ConfigureDrawItem(const TiXmlElement *element, std::vector<unsigned int> &b
 			glEndList();
 
 			// use the anonymous drawlist
-			buffer.push_back(DO_glCallList);
+			Expression::Append(buffer, DO_glCallList);
 			buffer.push_back(handle);
 		}
 		break;
@@ -1763,7 +1988,6 @@ void ConfigureDrawItem(const TiXmlElement *element, std::vector<unsigned int> &b
 		{
 			for (const TiXmlAttribute *attrib = element->FirstAttribute(); attrib != NULL; attrib = attrib->Next())
 			{
-				unsigned int action = attrib->IntValue() ? DO_glEnableClientState : DO_glDisableClientState;
 				GLenum clientstate;
 				switch (Hash(attrib->Name()))
 				{
@@ -1777,8 +2001,7 @@ void ConfigureDrawItem(const TiXmlElement *element, std::vector<unsigned int> &b
 				}
 				if (clientstate)
 				{
-					buffer.push_back(action);
-					buffer.push_back(clientstate);
+					Expression::Append(buffer, attrib->IntValue() ? DO_glEnableClientState : DO_glDisableClientState, clientstate);
 				}
 			}
 		}
@@ -1856,7 +2079,7 @@ void ConfigureDrawItem(const TiXmlElement *element, std::vector<unsigned int> &b
 				element = strtok(NULL, " \t\n\r,;");
 			}
 
-			buffer.push_back(DO_glEdgeFlagPointer);
+			Expression::Append(buffer, DO_glEdgeFlagPointer);
 			buffer.push_back(stride);
 			buffer.push_back(count);
 			for (size_t i = 0; i < (count+sizeof(unsigned int)/sizeof(bool)-1)/(sizeof(unsigned int)/sizeof(bool)); i++)
@@ -1869,7 +2092,7 @@ void ConfigureDrawItem(const TiXmlElement *element, std::vector<unsigned int> &b
 			int index;
 			if (element->QueryIntAttribute("index", &index) == TIXML_SUCCESS)
 			{
-				buffer.push_back(DO_glArrayElement);
+				Expression::Append(buffer, DO_glArrayElement);
 				buffer.push_back(index);
 			}
 		}
@@ -1882,7 +2105,7 @@ void ConfigureDrawItem(const TiXmlElement *element, std::vector<unsigned int> &b
 			int first = 0, count = 0;
 			element->QueryIntAttribute("first", &first);
 			element->QueryIntAttribute("count", &count);
-			buffer.push_back(DO_glDrawArrays);
+			Expression::Append(buffer, DO_glDrawArrays);
 			buffer.push_back(mode);
 			buffer.push_back(first);
 			buffer.push_back(count);
@@ -1906,7 +2129,7 @@ void ConfigureDrawItem(const TiXmlElement *element, std::vector<unsigned int> &b
 				element = strtok(NULL, " \t\n\r,;");
 			}
 
-			buffer.push_back(DO_glDrawElements);
+			Expression::Append(buffer, DO_glDrawElements);
 			buffer.push_back(mode);
 			buffer.push_back(count);
 			for (size_t i = 0; i < (count+sizeof(unsigned int)/sizeof(unsigned short)-1)/(sizeof(unsigned int)/sizeof(unsigned short)); i++)
@@ -1919,7 +2142,7 @@ void ConfigureDrawItem(const TiXmlElement *element, std::vector<unsigned int> &b
 			int count = 1;
 			element->QueryIntAttribute("count", &count);
 
-			buffer.push_back(DO_Repeat);
+			Expression::Append(buffer, DO_Repeat);
 			buffer.push_back(count);
 
 			buffer.push_back(0);
@@ -1940,7 +2163,7 @@ void ConfigureDrawItem(const TiXmlElement *element, std::vector<unsigned int> &b
 			int repeat = 0;
 			element->QueryIntAttribute("repeat", &repeat);
 
-			buffer.push_back(DO_Block);
+			Expression::Append(buffer, DO_Block);
 			buffer.push_back(*reinterpret_cast<unsigned int *>(&start));
 			buffer.push_back(*reinterpret_cast<unsigned int *>(&length));
 			buffer.push_back(*reinterpret_cast<unsigned int *>(&scale));
@@ -2004,7 +2227,7 @@ void ConfigureDrawItem(const TiXmlElement *element, std::vector<unsigned int> &b
 			const float *data;
 			GetTypeData(type, width, names, data);
 
-			buffer.push_back(DO_Swizzle);
+			Expression::Append(buffer, DO_Swizzle);
 			buffer.push_back(name);
 			buffer.push_back(width);
 
@@ -2059,7 +2282,7 @@ void ConfigureDrawItem(const TiXmlElement *element, std::vector<unsigned int> &b
 				break;
 			}
 
-			buffer.push_back(DO_Loop);
+			Expression::Append(buffer, DO_Loop);
 			buffer.push_back(name);
 			buffer.push_back(*reinterpret_cast<unsigned int *>(&from));
 			buffer.push_back(*reinterpret_cast<unsigned int *>(&to));
@@ -2085,7 +2308,7 @@ void ConfigureDrawItem(const TiXmlElement *element, std::vector<unsigned int> &b
 			element->QueryFloatAttribute("y", &y);
 			element->QueryFloatAttribute("angle", &a);
 
-			buffer.push_back(DO_Emitter);
+			Expression::Append(buffer, DO_Emitter);
 			buffer.push_back(count);
 			buffer.push_back(*reinterpret_cast<unsigned int *>(&period));
 			buffer.push_back(*reinterpret_cast<unsigned int *>(&x));
@@ -2189,68 +2412,6 @@ void MultiplyMatrix4f(float m[16], float a[16], float b[16])
 }
 #endif
 
-typedef void (* VariableOperator)(float &, float);
-
-bool EvaluateVariableOperator(DrawItemContext &aContext, VariableOperator op)
-{
-	unsigned int name = *aContext.mStream++;
-	int width = *aContext.mStream++;
-	assert(width <= 4);
-	Vector4 value;
-	switch(width)
-	{
-	case 1: value = Expression::Evaluate<float>(aContext); break;
-	case 2: //value = Expression::Evaluate<Vector2>(aContext); break;
-	case 3: //value = Expression::Evaluate<Vector3>(aContext); break;
-	case 4: value = Expression::Evaluate<Vector4>(aContext); break;
-	}
-	Database::Typed<float> &variables = Database::variable.Open(aContext.mId);
-	for (int i = 0; i < width; i++)
-	{
-		float &v = variables.Open(name+i);
-		op(v, value[i]);
-		variables.Close(name+i);
-	}
-	Database::variable.Close(aContext.mId);
-	return true;
-}
-
-void VariableOperatorSet(float &v, float data)
-{
-	v = data;
-}
-
-void VariableOperatorAdd(float &v, float data)
-{
-	v += data;
-}
-
-void VariableOperatorSub(float &v, float data)
-{
-	v -= data;
-}
-
-void VariableOperatorMul(float &v, float data)
-{
-	v *= data;
-}
-
-void VariableOperatorDiv(float &v, float data)
-{
-	v /= data;
-}
-
-void VariableOperatorMin(float &v, float data)
-{
-	v = std::min(v, data);
-}
-
-void VariableOperatorMax(float &v, float data)
-{
-	v = std::max(v, data);
-}
-
-
 #pragma optimize( "t", on )
 void ExecuteDrawItems(const unsigned int buffer[], size_t count, float param, unsigned int id)
 {
@@ -2261,446 +2422,7 @@ void ExecuteDrawItems(const unsigned int buffer[], size_t count, float param, un
 	
 	// HACK: 
 	while (context.mStream < buffer + count)
-	{
-		switch (*context.mStream++)
-		{
-		case DO_glArrayElement:
-			glArrayElement(*context.mStream++);
-			break;
-
-		case DO_glBegin:
-			glBegin(GLenum(*context.mStream++));
-			break;
-
-		case DO_glBindTexture:
-			glBindTexture(context.mStream[0], context.mStream[1]);
-			context.mStream += 2;
-			break;
-
-		case DO_glBlendFunc:
-			glBlendFunc(context.mStream[0], context.mStream[1]);
-			context.mStream += 2;
-			break;
-
-		case DO_glCallList:
-			glCallList(GLuint(*context.mStream++));
-			break;
-
-		case DO_glColor4fv:
-			{
-				DLColor value(Expression::Evaluate<DLColor>(context));
-				glColor4fv(&value[0]);
-			}
-			break;
-
-		case DO_glColorPointer:
-			{
-				GLint size = *context.mStream++;
-				GLsizei stride = *context.mStream++;
-				size_t count = *context.mStream++;
-				glColorPointer(size, GL_FLOAT, stride, &*context.mStream);
-				context.mStream += count;
-			}
-			break;
-
-		case DO_glDisable:
-			glDisable(*context.mStream++);
-			break;
-
-		case DO_glDisableClientState:
-			glDisableClientState(GLenum(*context.mStream++));
-			break;
-
-		case DO_glDrawArrays:
-			{
-				GLenum mode = *context.mStream++;
-				GLint first = *context.mStream++;
-				size_t count = *context.mStream++;
-				glDrawArrays(mode, first, count);
-			}
-			break;
-
-		case DO_glDrawElements:
-			{
-				GLenum mode = *context.mStream++;
-				GLsizei count = *context.mStream++;
-				glDrawElements(mode, count, GL_UNSIGNED_SHORT, &*context.mStream);
-				context.mStream += count*sizeof(unsigned short)/sizeof(unsigned int);
-			}
-			break;
-
-		case DO_glEdgeFlag:
-			glEdgeFlag(*context.mStream++ != 0);
-			break;
-
-		case DO_glEdgeFlagPointer:
-			{
-				GLsizei stride = *context.mStream++;
-				size_t count = *context.mStream++;
-				glEdgeFlagPointer(stride, &*context.mStream);
-				context.mStream += count*sizeof(bool)/sizeof(unsigned int);
-			}
-			break;
-
-		case DO_glEnable:
-			glEnable(*context.mStream++);
-			break;
-
-		case DO_glEnableClientState:
-			glEnableClientState(GLenum(*context.mStream++));
-			break;
-
-		case DO_glEnd:
-			glEnd();
-			break;
-
-		case DO_glIndexf:
-			{
-				float value(Expression::Evaluate<DLIndex>(context));
-				glIndexf(value);
-			}
-			break;
-
-		case DO_glIndexPointer:
-			{
-				GLsizei stride = *context.mStream++;
-				size_t count = *context.mStream++;
-				glIndexPointer(GL_FLOAT, stride, &*context.mStream);
-				context.mStream += count;
-			}
-			break;
-
-		case DO_glLoadIdentity:
-			glLoadIdentity();
-			break;
-
-		case DO_glLoadMatrixf:
-			glLoadMatrixf(reinterpret_cast<const GLfloat *>(&*context.mStream));
-			context.mStream+=16;
-			break;
-
-		case DO_glMultMatrixf:
-			glMultMatrixf(reinterpret_cast<const GLfloat *>(&*context.mStream));
-			context.mStream+=16;
-			break;
-
-		case DO_glNormal3fv:
-			{
-				DLNormal value(Expression::Evaluate<DLNormal>(context));
-				glNormal3fv(&value[0]);
-			}
-			break;
-
-		case DO_glNormalPointer:
-			{
-				GLsizei stride = *context.mStream++;
-				size_t count = *context.mStream++;
-				glNormalPointer(GL_FLOAT, stride, &*context.mStream);
-				context.mStream += count;
-			}
-			break;
-
-		case DO_glPopAttrib:
-			glPopAttrib();
-			break;
-
-		case DO_glPopClientAttrib:
-			glPopClientAttrib();
-			break;
-
-		case DO_glPopMatrix:
-			glPopMatrix();
-			break;
-
-		case DO_glPushAttrib:
-			glPushAttrib(GLbitfield(*context.mStream++));
-			break;
-
-		case DO_glPushClientAttrib:
-			glPushClientAttrib(GLbitfield(*context.mStream++));
-			break;
-
-		case DO_glPushMatrix:
-			glPushMatrix();
-			break;
-
-		case DO_glRotatef:
-			{
-				float value(Expression::Evaluate<DLRotation>(context));
-				glRotatef(value, 0, 0, 1);
-			}
-			break;
-
-		case DO_glScalef:
-			{
-				DLScale value(Expression::Evaluate<DLScale>(context));
-				glScalef(value.x, value.y, value.z);
-			}
-			break;
-
-		case DO_glTexCoord2fv:
-			{
-				DLTexCoord value(Expression::Evaluate<DLTexCoord>(context));
-				glTexCoord2fv(&value[0]);
-			}
-			break;
-
-		case DO_glTexCoordPointer:
-			{
-				GLint size = *context.mStream++;
-				GLsizei stride = *context.mStream++;
-				size_t count = *context.mStream++;
-				glTexCoordPointer(size, GL_FLOAT, stride, &*context.mStream);
-				context.mStream += count;
-			}
-			break;
-
-		case DO_glTranslatef:
-			{
-				DLTranslation value(Expression::Evaluate<DLTranslation>(context));
-				glTranslatef(value.x, value.y, value.z);
-			}
-			break;
-
-		case DO_glVertex3fv:
-			{
-				DLPosition value(Expression::Evaluate<DLPosition>(context));
-				glVertex3fv(&value[0]);
-			}
-			break;
-
-		case DO_glVertexPointer:
-			{
-				GLint size = *context.mStream++;
-				GLsizei stride = *context.mStream++;
-				size_t count = *context.mStream++;
-				glVertexPointer(size, GL_FLOAT, stride, &*context.mStream);
-				context.mStream += count;
-			}
-			break;
-
-		case DO_Repeat:
-			{
-				int repeat = *context.mStream++;
-				size_t size = *context.mStream++;
-				for (int i = 0; i < repeat; i++)
-					ExecuteDrawItems(context.mStream, size, param, id);
-				context.mStream += size;
-			}
-			break;
-
-		case DO_Block:
-			{
-				float start = *reinterpret_cast<const float *>(context.mStream++);
-				float length = *reinterpret_cast<const float *>(context.mStream++);
-				float scale = *reinterpret_cast<const float *>(context.mStream++);
-				int repeat = *reinterpret_cast<const int *>(context.mStream++);
-				unsigned int size = *context.mStream++;
-				float t = param - start;
-				if (t >= 0.0f && length > 0.0f)
-				{
-					int loop = xs_FloorToInt(t / length);
-					if (repeat < 0 || loop <= repeat)
-					{
-						t -= loop * length;
-						t *= scale;
-						ExecuteDrawItems(context.mStream, size, t, id);
-					}
-				}
-				context.mStream += size;
-			}
-			break;
-
-		case DO_Set:
-			EvaluateVariableOperator(context, VariableOperatorSet);
-			break;
-
-		case DO_Add:
-			EvaluateVariableOperator(context, VariableOperatorAdd);
-			break;
-
-		case DO_Sub:
-			EvaluateVariableOperator(context, VariableOperatorSub);
-			break;
-
-		case DO_Mul:
-			EvaluateVariableOperator(context, VariableOperatorMul);
-			break;
-
-		case DO_Div:
-			EvaluateVariableOperator(context, VariableOperatorDiv);
-			break;
-
-		case DO_Min:
-			EvaluateVariableOperator(context, VariableOperatorMin);
-			break;
-
-		case DO_Max:
-			EvaluateVariableOperator(context, VariableOperatorMax);
-			break;
-
-		case DO_Swizzle:
-			{
-				unsigned int name = *context.mStream++;
-				int width = *context.mStream++;
-				Database::Typed<float> &variables = Database::variable.Open(id);
-				float *temp = static_cast<float *>(_alloca(width * sizeof(float)));
-				for (int i = 0; i < width; i++)
-					temp[i] = variables.Get(name + *context.mStream++);
-				for (int i = 0; i < width; i++)
-					variables.Put(name + i, temp[i]);
-				Database::variable.Close(id);
-			}
-			break;
-
-		case DO_Clear:
-			{
-				unsigned int name = *context.mStream++;
-				int width = *context.mStream++;
-				Database::Typed<float> &variables = Database::variable.Open(id);
-				for (int i = 0; i < width; i++)
-					variables.Delete(name+i);
-				Database::variable.Close(id);
-			}
-			break;
-
-#ifdef DRAWLIST_LOOP
-		case DO_Loop:
-			{
-				unsigned int name = *context.mStream++;
-				float from = *reinterpret_cast<const float *>(context.mStream++);
-				float to   = *reinterpret_cast<const float *>(context.mStream++);
-				float by   = *reinterpret_cast<const float *>(context.mStream++);
-				size_t size = *context.mStream++;
-
-				Database::Typed<float> &variables = Database::variable.Open(id);
-				if (by > 0)
-				{
-					for (float value = from; value <= to; value += by)
-					{
-						variables.Put(name, value);
-						ExecuteDrawItems(context.mStream, size, param, id);
-					}
-				}
-				else
-				{
-					for (float value = from; value >= to; value += by)
-					{
-						variables.Put(name, value);
-						ExecuteDrawItems(context.mStream, size, param, id);
-					}
-				}
-				variables.Delete(name);
-				Database::variable.Close(id);
-
-				context.mStream += size;
-			}
-			break;
-#endif
-
-#ifdef DRAWLIST_EMITTER
-		case DO_Emitter:
-			{
-				unsigned int name = Hash(&context.mStream, sizeof(context.mStream));
-				int repeat = *context.mStream++;
-				float period = *reinterpret_cast<const float *>(context.mStream++);
-				float offsetx = *reinterpret_cast<const float *>(context.mStream++);
-				float offsety = *reinterpret_cast<const float *>(context.mStream++);
-				float offseta = *reinterpret_cast<const float *>(context.mStream++);
-				Matrix2 offset(offseta, Vector2(offsetx, offsety));
-				size_t size = *context.mStream++;
-
-				// get the curent model matrix
-				float m1[16];
-				glGetFloatv(GL_MODELVIEW_MATRIX, m1);
-
-				// return to parent model space
-				glPopMatrix();
-
-				// get the parent model matrix
-				float m2[16];
-				glGetFloatv(GL_MODELVIEW_MATRIX, m2);
-
-				// compute local matrix
-				float mi[16];
-				InvertMatrix4f(mi, m2);
-				float m[16];
-				MultiplyMatrix4f(m, m1, mi);
-
-				// get local variables
-				Database::Typed<float> &variables = Database::variable.Open(id);
-
-				// open state
-				int state = -1;
-				unsigned int lastid = Hash(&state, sizeof(state), name);
-
-				// get previous state
-				float x0 = variables.Get(lastid+0);
-				float y0 = variables.Get(lastid+1);
-				float a0 = variables.Get(lastid+2);
-				float t0 = variables.Get(lastid+3);
-
-				// get current state
-				float x1 = m[12];
-				float y1 = m[13];
-				float a1 = atan2f(m[1], m[0]);
-				float t1 = param / period;
-
-				// save state
-				variables.Put(lastid+0, x1);
-				variables.Put(lastid+1, y1);
-				variables.Put(lastid+2, a1);
-				variables.Put(lastid+3, t1);
-
-				// emit particles
-				for (float t = ceilf(t0); t < t1; t += 1.0f)
-				{
-					// interpolate emitter position
-					float r = (t - t0) / (t1 - t0);
-					Matrix2 transform(offset * Matrix2(Lerp(a0, a1, r), Vector2(Lerp(x0, x1, r), Lerp(y0, y1, r))));
-
-					// set particle state
-					int i0 = xs_FloorToInt(t) % repeat;
-					unsigned int subid = Hash(&i0, sizeof(i0), name);
-					variables.Put(subid+0, transform.p.x);
-					variables.Put(subid+1, transform.p.y);
-					variables.Put(subid+2, transform.Angle());
-					variables.Put(subid+3, t);
-				}
-
-				// draw particles
-				for (int i = 0; i < repeat; i++)
-				{
-					unsigned int subid = Hash(&i, sizeof(i), name);
-					float t = param - variables.Get(subid+3) * period;
-					if (t >= 0.0f)
-					{
-						glPushMatrix();
-						glTranslatef(variables.Get(subid+0), variables.Get(subid+1), 0.0f);
-						glRotatef(variables.Get(subid+2)*180.0f/float(M_PI), 0, 0, 1);
-						ExecuteDrawItems(context.mStream, size, t, id);
-						glPopMatrix();
-					}
-				}
-
-				// done with local variables
-				Database::variable.Close(id);
-
-				// restore model matrix
-				glPushMatrix();
-				glLoadMatrixf(m1);
-
-				// advance data pointer
-				context.mStream += size;
-			}
-			break;
-#endif
-
-		default:
-			DebugPrint("Unrecognized drawlist operation 0x%08x at index %d\n", *(context.mStream-1), context.mStream-buffer);
-			break;
-		}
-	}
+		Expression::Evaluate<void>(context);
 }
 #pragma optimize( "", on )
 

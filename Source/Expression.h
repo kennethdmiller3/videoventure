@@ -8,52 +8,65 @@ namespace Expression
 		const unsigned int *mStream;
 	};
 
-	// allocate data from a buffer
-	inline void *Alloc(std::vector<unsigned int> &buffer, size_t size)
+	// allocate data from a aBuffer
+	inline void *Alloc(std::vector<unsigned int> &aBuffer, size_t aSize)
 	{
-		size /= sizeof(unsigned int);
-		buffer.resize(buffer.size() + size);
-		return &buffer[buffer.size() - size];
+		aSize = (aSize + sizeof(unsigned int) - 1) / sizeof(unsigned int);
+		aBuffer.resize(aBuffer.size() + aSize);
+		return &aBuffer[aBuffer.size() - aSize];
 	}
 
-	// allocate object from a buffer
-	template <typename T> T *New(std::vector<unsigned int> &buffer)
+	// allocate object from a aBuffer
+	template <typename T> T *New(std::vector<unsigned int> &aBuffer)
 	{
-		return new(Alloc(buffer, sizeof(T))) T();
+		return new(Alloc(aBuffer, sizeof(T))) T();
 	}
-	template <typename T, typename A1> T *New(std::vector<unsigned int> &buffer, A1 arg1)
+	template <typename T, typename A1> T *New(std::vector<unsigned int> &aBuffer, A1 aArg1)
 	{
-		return new(Alloc(buffer, sizeof(T))) T(arg1);
+		return new(Alloc(aBuffer, sizeof(T))) T(aArg1);
 	}
-	template <typename T, typename A1, typename A2> T *New(std::vector<unsigned int> &buffer, A1 arg1, A2 arg2)
+	template <typename T, typename A1, typename A2> T *New(std::vector<unsigned int> &aBuffer, A1 aArg1, A2 aArg2)
 	{
-		return new(Alloc(buffer, sizeof(T))) T(arg1, arg2);
+		return new(Alloc(aBuffer, sizeof(T))) T(aArg1, aArg2);
 	}
-	template <typename T, typename A1, typename A2, typename A3> T *New(std::vector<unsigned int> &buffer, A1 arg1, A2 arg2, A3 arg3)
+	template <typename T, typename A1, typename A2, typename A3> T *New(std::vector<unsigned int> &aBuffer, A1 aArg1, A2 aArg2, A3 aArg3)
 	{
-		return new(Alloc(buffer, sizeof(T))) T(arg1, arg2, arg3);
+		return new(Alloc(aBuffer, sizeof(T))) T(aArg1, aArg2, aArg3);
 	}
-	template <typename T, typename A1, typename A2, typename A3, typename A4> T *New(std::vector<unsigned int> &buffer, A1 arg1, A2 arg2, A3 arg3, A4 arg4)
+	template <typename T, typename A1, typename A2, typename A3, typename A4> T *New(std::vector<unsigned int> &aBuffer, A1 aArg1, A2 aArg2, A3 aArg3, A4 aArg4)
 	{
-		return new(Alloc(buffer, sizeof(T))) T(arg1, arg2, arg3, arg4);
+		return new(Alloc(aBuffer, sizeof(T))) T(aArg1, aArg2, aArg3, aArg4);
 	}
 
-	// append an expression to a buffer
-	template <typename T, typename C> void Append(std::vector<unsigned int> &aBuffer, T (*aFunc)(C))
+	// append an expression to a aBuffer
+	template <typename A1> void Append(std::vector<unsigned int> &aBuffer, A1 aArg1)
 	{
-		New<T (*)(C)>(aBuffer, aFunc);
+		New<A1>(aBuffer, aArg1);
 	}
-	template <typename T, typename C, typename D> void Append(std::vector<unsigned int> &aBuffer, T (*aFunc)(C), const D &aData)
+	template <typename A1, typename A2> void Append(std::vector<unsigned int> &aBuffer, A1 aArg1, A2 aArg2)
 	{
-		New<T (*)(C)>(aBuffer, aFunc);
-		New<D>(aBuffer, aData);
+		New<A1>(aBuffer, aArg1);
+		New<A2>(aBuffer, aArg2);
+	}
+	template <typename A1, typename A2, typename A3> void Append(std::vector<unsigned int> &aBuffer, A1 aArg1, A2 aArg2, A3 aArg3)
+	{
+		New<A1>(aBuffer, aArg1);
+		New<A2>(aBuffer, aArg2);
+		New<A3>(aBuffer, aArg3);
+	}
+	template <typename A1, typename A2, typename A3, typename A4> void Append(std::vector<unsigned int> &aBuffer, A1 aArg1, A2 aArg2, A3 aArg3, A4 aArg4)
+	{
+		New<A1>(aBuffer, aArg1);
+		New<A2>(aBuffer, aArg2);
+		New<A3>(aBuffer, aArg3);
+		New<A4>(aBuffer, aArg3);
 	}
 
 	// read a value from an expression stream
 	template <typename T> const T Read(Context &aContext)
 	{
 		const T &value = *reinterpret_cast<const T *>(aContext.mStream);
-		aContext.mStream += sizeof(T)/sizeof(unsigned int);
+		aContext.mStream += (sizeof(T) + sizeof(unsigned int) - 1) / sizeof(unsigned int);
 		return value;
 	}
 
