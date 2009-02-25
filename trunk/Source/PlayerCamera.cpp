@@ -173,6 +173,6 @@ void PlayerCamera::Update(float aStep)
 	camerapos[1] = mTrackPos1;
 
 #ifdef TEST_PATHING
-	Pathing(entity->GetPosition(), mTrackPos1 + aimpos[1] * 120 * VIEW_SIZE / 320, 4.0f);
+	Pathing(entity->GetPosition(), mTrackPos1 + aimpos[1] * 120 * VIEW_SIZE / 240, 4.0f);
 #endif
 }

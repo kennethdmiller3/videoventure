@@ -262,7 +262,7 @@ void PlayerController::Control(float aStep)
 		break;
 
 	case PlayerControllerTemplate::MOVECURSOR:
-		mAim = transform.Untransform(camerapos[1] + Vector2(input[Input::MOVE_HORIZONTAL], input[Input::MOVE_VERTICAL]) * 120 * VIEW_SIZE / 320);
+		mAim = transform.Untransform(camerapos[1] + Vector2(input[Input::MOVE_HORIZONTAL], input[Input::MOVE_VERTICAL]) * 120 * VIEW_SIZE / 240);
 		mTurn = TurnLocal(mAim) / aStep;
 		break;
 
@@ -285,7 +285,7 @@ void PlayerController::Control(float aStep)
 		break;
 
 	case PlayerControllerTemplate::AIMCURSOR:
-		mAim = transform.Untransform(camerapos[1] + Vector2(input[Input::AIM_HORIZONTAL], input[Input::AIM_VERTICAL]) * 120 * VIEW_SIZE / 320);
+		mAim = transform.Untransform(camerapos[1] + Vector2(input[Input::AIM_HORIZONTAL], input[Input::AIM_VERTICAL]) * 120 * VIEW_SIZE / 240);
 		mTurn = TurnLocal(mAim) / aStep;
 		break;
 

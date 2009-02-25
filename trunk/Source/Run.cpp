@@ -506,7 +506,7 @@ void RunState()
 			// set projection
 			glMatrixMode( GL_PROJECTION );
 			glLoadIdentity();
-			glFrustum( -0.5*VIEW_SIZE, 0.5*VIEW_SIZE, 0.5f*VIEW_SIZE*SCREEN_HEIGHT/SCREEN_WIDTH, -0.5f*VIEW_SIZE*SCREEN_HEIGHT/SCREEN_WIDTH, 256.0f*1.0f, 256.0f*5.0f );
+			glFrustum( -0.5*VIEW_SIZE*SCREEN_WIDTH/SCREEN_HEIGHT, 0.5*VIEW_SIZE*SCREEN_WIDTH/SCREEN_HEIGHT, 0.5f*VIEW_SIZE, -0.5f*VIEW_SIZE, 256.0f*1.0f, 256.0f*5.0f );
 
 			// set base modelview matrix
 			glMatrixMode( GL_MODELVIEW );
@@ -701,10 +701,10 @@ void RunState()
 
 			// calculate view area
 			AlignedBox2 view;
-			view.min.x = viewpos.x - VIEW_SIZE * 0.5f;
-			view.max.x = viewpos.x + VIEW_SIZE * 0.5f;
-			view.min.y = viewpos.y - VIEW_SIZE * 0.5f * SCREEN_HEIGHT / SCREEN_WIDTH;
-			view.max.y = viewpos.y + VIEW_SIZE * 0.5f * SCREEN_HEIGHT / SCREEN_WIDTH;
+			view.min.x = viewpos.x - VIEW_SIZE * 0.5f * SCREEN_WIDTH / SCREEN_HEIGHT;
+			view.max.x = viewpos.x + VIEW_SIZE * 0.5f * SCREEN_WIDTH / SCREEN_HEIGHT;
+			view.min.y = viewpos.y - VIEW_SIZE * 0.5f;
+			view.max.y = viewpos.y + VIEW_SIZE * 0.5f;
 
 			// render all entities
 			// (send interpolation ratio and offset from simulation time)
@@ -938,11 +938,13 @@ void RunState()
 		// show the back buffer
 		Platform::Present();
 
+#if 0
 #ifdef GET_PERFORMANCE_DETAILS
 		if (OPENGL_SWAPCONTROL)
 #endif
 		// wait for rendering to finish
 		glFinish();
+#endif
 
 		// clear device reset flag
 		wasreset = false;

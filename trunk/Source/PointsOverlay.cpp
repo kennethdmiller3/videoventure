@@ -50,7 +50,7 @@ void PointsOverlay::Render(unsigned int aId, float aTime, const Transform2 &aTra
 	glMatrixMode( GL_PROJECTION );
 	glPushMatrix();
 	glLoadIdentity();
-	glFrustum( -0.5*VIEW_SIZE, 0.5*VIEW_SIZE, 0.5f*VIEW_SIZE*SCREEN_HEIGHT/SCREEN_WIDTH, -0.5f*VIEW_SIZE*SCREEN_HEIGHT/SCREEN_WIDTH, 256.0f*1.0f, 256.0f*5.0f );
+	glFrustum( -0.5*VIEW_SIZE*SCREEN_WIDTH/SCREEN_HEIGHT, 0.5*VIEW_SIZE*SCREEN_WIDTH/SCREEN_HEIGHT, 0.5f*VIEW_SIZE, -0.5f*VIEW_SIZE, 256.0f*1.0f, 256.0f*5.0f );
 
 	// set base modelview matrix
 	glMatrixMode( GL_MODELVIEW );
@@ -88,7 +88,7 @@ void PointsOverlay::Render(unsigned int aId, float aTime, const Transform2 &aTra
 
 		// draw point value
 		glColor4f(1.0f, 1.0f, 1.0f, std::min(item.mTime, 1.0f));
-		float w = 4 * VIEW_SIZE / 320;
+		float w = 4 * VIEW_SIZE / 240;
 		OGLCONSOLE_DrawString(buf, item.mPosition.x + w * 0.5f * strlen(buf), item.mPosition.y - w * 0.5f, -w, w, 0);
 
 		// count down time

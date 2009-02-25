@@ -143,7 +143,7 @@ Expire::Expire(const ExpireTemplate &aTemplate, unsigned int aId)
 			extern Vector2 camerapos[];
 			extern float VIEW_SIZE;
 			Vector2 aimdir(input[Input::AIM_HORIZONTAL], input[Input::AIM_VERTICAL]);
-			Vector2 aimpos(camerapos[1] + aimdir * 120 * VIEW_SIZE / 320);
+			Vector2 aimpos(camerapos[1] + aimdir * 120 * VIEW_SIZE / 240);
 			Entity *entity = Database::entity.Get(aId);
 			float aimtime = entity->GetVelocity().Dot(aimpos - entity->GetPosition()) / entity->GetVelocity().LengthSq();
 			aTime = std::min(aTime, aimtime);

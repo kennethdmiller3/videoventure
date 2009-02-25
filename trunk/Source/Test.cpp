@@ -30,7 +30,7 @@ bool SCREEN_FULLSCREEN = true;
 #endif
 
 // view attributes
-float VIEW_SIZE = 320;
+float VIEW_SIZE = 240;
 
 // opengl attributes
 bool OPENGL_SWAPCONTROL = true;
