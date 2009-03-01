@@ -2,7 +2,6 @@
 
 extern void ConfigureDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buffer);
 extern void ConfigureDrawItems(const TiXmlElement *element, std::vector<unsigned int> &buffer);
-extern void ExecuteDrawItems(const unsigned int buffer[], size_t count, float param, unsigned int id);
 extern void RebuildDrawlists(void);
 extern void RenderDrawlist(unsigned int aId, float aTime, const Transform2 &aTransform);
 
