@@ -36,6 +36,7 @@ static void HSV2RGB(float h, float s, float v, float &r, float &g, float &b)
 #endif
 }
 
+#define TITLE_NONE -1
 #define TITLE_DEFAULT 0
 #define TITLE_ROCKETBOMB 3
 #define TITLE_ASSAULTWING 4
@@ -45,7 +46,12 @@ static void HSV2RGB(float h, float s, float v, float &r, float &g, float &b)
 #define TITLE_NOVACORE 9
 #define TITLE_TEXT TITLE_DEFAULT
 
-#if TITLE_TEXT == TITLE_ROCKETBOMB
+#if TITLE_TEXT == TITLE_NONE
+
+static const char titlemap[][1] = { "" };
+static float baralpha[SDL_arraysize(titlemap)] = { 0.0f };
+
+#elif TITLE_TEXT == TITLE_ROCKETBOMB
 
 // title text bitmap
 static const char titlemap[][94+1] = 

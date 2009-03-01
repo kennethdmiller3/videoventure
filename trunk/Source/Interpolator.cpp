@@ -171,12 +171,11 @@ bool ConfigureInterpolatorItem(const TiXmlElement *element, std::vector<unsigned
 }
 
 #pragma optimize( "t", on )
-bool ApplyInterpolatorConstant(float aTarget[], int aWidth, int aCount, const float aKeys[], float aTime, int &aHint)
+
+// binary search
+int FindKeyIndex(const int aStride, const int aCount, const float aKeys[], const float aTime, const int aHint)
 {
 	int i0, i1;
-
-	// get stride
-	const int aStride = aWidth + 1;
 
 	// get time of hint key
 	const float tt = aKeys[aHint * aStride];
@@ -186,8 +185,10 @@ bool ApplyInterpolatorConstant(float aTarget[], int aWidth, int aCount, const fl
 	{
 		// set lower bound to first key
 		i0 = 0;
+
+		// not found if earlier than first key
 		if (aTime < aKeys[i0 * aStride])
-			return false;
+			return -1;
 
 		// set upper bound to hint key
 		i1 = aHint;
@@ -199,8 +200,10 @@ bool ApplyInterpolatorConstant(float aTarget[], int aWidth, int aCount, const fl
 
 		// set upper bound to last key
 		i1 = aCount-1;
+
+		// not found if later than last key
 		if (aTime > aKeys[i1 * aStride])
-			return false;
+			return -1;
 	}
 
 	// while still checking a range of keys...
@@ -229,93 +232,61 @@ bool ApplyInterpolatorConstant(float aTarget[], int aWidth, int aCount, const fl
 			continue;
 		}
 
-		// found!
-		// get first value
-		const float *key0 = &aKeys[iL * aStride + 1];
-		for (int element = 0; element < aWidth; element++)
-		{
-			aTarget[element] = key0[element];
-		}
-		aHint = iL;
-		return true;
+		// return the index
+		return iL;
 	}
 
-	// not found...
-	return false;
+	// not found
+	return -1;
+}
+
+bool ApplyInterpolatorConstant(float aTarget[], int aWidth, int aCount, const float aKeys[], float aTime, int &aHint)
+{
+	// get stride
+	const int aStride = aWidth + 1;
+
+	// get the key index
+	int index = FindKeyIndex(aStride, aCount, aKeys, aTime, aHint);
+	if (index < 0)
+		return false;
+
+	// update hint index
+	aHint = index;
+
+	// use the first value
+	const float * __restrict key = aKeys + index * aStride;
+	const float * __restrict data0 = &key[1];
+	for (int element = 0; element < aWidth; element++)
+	{
+		aTarget[element] = data0[element];
+	}
+	return true;
 }
 
 bool ApplyInterpolator(float aTarget[], int aWidth, int aCount, const float aKeys[], float aTime, int &aHint)
 {
-	int i0, i1;
-
 	// get stride
 	const int aStride = aWidth + 1;
 
-	// get time of hint key
-	const float tt = aKeys[aHint * aStride];
+	// get the key index
+	int index = FindKeyIndex(aStride, aCount, aKeys, aTime, aHint);
+	if (index < 0)
+		return false;
 
-	// if requested time is earlier...
-	if (aTime < tt)
+	// update hint index
+	aHint = index;
+
+	// interpolate the value
+	const float * __restrict key = aKeys + index * aStride;
+	const float time0 = key[0];
+	const float * __restrict data0 = &key[1];
+	const float time1 = key[aStride];
+	const float * __restrict data1 = &key[aStride + 1];
+	const float t = (aTime - time0) / (time1 - time0 + FLT_EPSILON);
+	for (int element = 0; element < aWidth; element++)
 	{
-		// set lower bound to first key
-		i0 = 0;
-		if (aTime < aKeys[i0 * aStride])
-			return false;
-
-		// set upper bound to hint key
-		i1 = aHint;
+		aTarget[element] = Lerp(data0[element], data1[element], t);
 	}
-	else
-	{
-		// set lower bound to hint key
-		i0 = aHint;
-
-		// set upper bound to last key
-		i1 = aCount-1;
-		if (aTime > aKeys[i1 * aStride])
-			return false;
-	}
-
-	// while still checking a range of keys...
-	while (i0 <= i1)
-	{
-		// get midpoint
-		const int im = (i0 + i1) >> 1;
-
-		// if time is before segment start...
-		const int iL = im;
-		const float tL = aKeys[iL * aStride];
-		if (aTime < tL - FLT_EPSILON)
-		{
-			// set upper bound to segment start
-			i1 = iL;
-			continue;
-		}
-
-		// if time is after segment end...
-		const int iH = im + 1;
-		const float tH = aKeys[iH * aStride];
-		if (aTime > tH + FLT_EPSILON)
-		{
-			// set lower bound to segment end
-			i0 = iH;
-			continue;
-		}
-
-		// found!
-		// interpolate the value
-		const float *key0 = &aKeys[iL * aStride + 1];
-		const float *key1 = &aKeys[iH * aStride + 1];
-		const float t = (aTime - tL) / (tH - tL + FLT_EPSILON);
-		for (int element = 0; element < aWidth; element++)
-		{
-			aTarget[element] = Lerp(key0[element], key1[element], t);
-		}
-		aHint = iL;
-		return true;
-	}
-
-	// not found...
-	return false;
+	return true;
 }
 #pragma optimize( "", on )
