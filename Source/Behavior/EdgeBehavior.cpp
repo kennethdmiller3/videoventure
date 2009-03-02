@@ -9,6 +9,62 @@
 namespace Database
 {
 	Typed<EdgeBehaviorTemplate> edgebehaviortemplate(0xae05bb20 /* "edgebehaviortemplate" */);
+	Typed<EdgeBehavior *> edgebehavior(0x7be01fce /* "edgebehavior" */);
+}
+
+namespace BehaviorDatabase
+{
+	namespace Loader
+	{
+		class EdgeBehaviorLoader
+		{
+		public:
+			EdgeBehaviorLoader()
+			{
+				AddConfigure(0x56f6d83c /* "edge" */, Entry(this, &EdgeBehaviorLoader::Configure));
+			}
+
+			unsigned int Configure(unsigned int aId, const TiXmlElement *element)
+			{
+				EdgeBehaviorTemplate &edge = Database::edgebehaviortemplate.Open(aId);
+				edge.Configure(element, aId);
+				Database::edgebehaviortemplate.Close(aId);
+				return 0xae05bb20 /* "edgebehaviortemplate" */;
+			}
+		}
+		edgebehaviorloader;
+	}
+
+	namespace Initializer
+	{
+		class EdgeBehaviorInitializer
+		{
+		public:
+			EdgeBehaviorInitializer()
+			{
+				AddActivate(0xae05bb20 /* "edgebehaviortemplate" */, ActivateEntry(this, &EdgeBehaviorInitializer::Activate));
+				AddDeactivate(0xae05bb20 /* "edgebehaviortemplate" */, DeactivateEntry(this, &EdgeBehaviorInitializer::Deactivate));
+			}
+
+			Behavior *Activate(unsigned int aId, Controller *aController)
+			{
+				const EdgeBehaviorTemplate &edgebehaviortemplate = Database::edgebehaviortemplate.Get(aId);
+				EdgeBehavior *edgebehavior = new EdgeBehavior(aId, edgebehaviortemplate, aController);
+				Database::edgebehavior.Put(aId, edgebehavior);
+				return edgebehavior;
+			}
+
+			void Deactivate(unsigned int aId)
+			{
+				if (EdgeBehavior *edgebehavior = Database::edgebehavior.Get(aId))
+				{
+					delete edgebehavior;
+					Database::edgebehavior.Delete(aId);
+				}
+			}
+		}
+		edgebehaviorinitializer;
+	}
 }
 
 EdgeBehaviorTemplate::EdgeBehaviorTemplate()
@@ -25,7 +81,7 @@ bool EdgeBehaviorTemplate::Configure(const TiXmlElement *element, unsigned int a
 	return true;
 }
 
-EdgeBehavior::EdgeBehavior(unsigned int aId, Controller *aController)
+EdgeBehavior::EdgeBehavior(unsigned int aId, const EdgeBehaviorTemplate &aTemplate, Controller *aController)
 : Behavior(aId, aController)
 {
 	bind(this, &EdgeBehavior::Execute);

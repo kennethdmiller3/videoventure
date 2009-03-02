@@ -12,6 +12,7 @@ class AimerTemplate
 {
 public:
 	float mDrift;
+	std::vector<unsigned int> mBehaviors;
 
 public:
 	AimerTemplate(void);
@@ -25,9 +26,6 @@ public:
 class Aimer :
 	public Controller, public Brain
 {
-protected:
-	std::vector<Behavior *> mBehaviors;
-
 public:
 #ifdef USE_POOL_ALLOCATOR
 	// allocation

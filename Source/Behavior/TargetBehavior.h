@@ -35,7 +35,7 @@ public:
 	float mDelay;
 
 public:
-	TargetBehavior(unsigned int aId, const TargetBehaviorTemplate &aTemplate, Aimer *aController);
+	TargetBehavior(unsigned int aId, const TargetBehaviorTemplate &aTemplate, Controller *aController);
 
 	Status Execute(void);
 };
