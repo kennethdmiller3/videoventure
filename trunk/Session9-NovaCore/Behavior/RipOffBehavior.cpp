@@ -32,6 +32,61 @@ Sequence
 namespace Database
 {
 	Typed<RipOffBehaviorTemplate> ripoffbehaviortemplate(0x574b0d09 /* "ripoffbehaviortemplate" */);
+	Typed<RipOffBehavior *> ripoffbehavior(0x65e2609b /* "ripoffbehavior" */);
+}
+
+namespace BehaviorDatabase
+{
+	namespace Loader
+	{
+		class RipOffBehaviorLoader
+		{
+		public:
+			RipOffBehaviorLoader()
+			{
+				AddConfigure(0xc4fc7791 /* "ripoff" */, Entry(this, &RipOffBehaviorLoader::Configure));
+			}
+
+			unsigned int Configure(unsigned int aId, const TiXmlElement *element)
+			{
+				RipOffBehaviorTemplate &ripoff = Database::ripoffbehaviortemplate.Open(aId);
+				ripoff.Configure(element, aId);
+				Database::ripoffbehaviortemplate.Close(aId);
+				return 0x574b0d09 /* "ripoffbehaviortemplate" */;
+			}
+		}
+		ripoffbehaviorloader;
+	}
+
+	namespace Initializer
+	{
+		class RipOffBehaviorInitializer
+		{
+		public:
+			RipOffBehaviorInitializer()
+			{
+				AddActivate(0x574b0d09 /* "ripoffbehaviortemplate" */, ActivateEntry(this, &RipOffBehaviorInitializer::Activate));
+				AddDeactivate(0x574b0d09 /* "ripoffbehaviortemplate" */, DeactivateEntry(this, &RipOffBehaviorInitializer::Deactivate));
+			}
+
+			Behavior *Activate(unsigned int aId, Controller *aController)
+			{
+				RipOffBehavior *ripoffbehavior = new RipOffBehavior(aId, aController);
+				Database::ripoffbehavior.Put(aId, ripoffbehavior);
+				return ripoffbehavior;
+			}
+
+			void Deactivate(unsigned int aId)
+			{
+				if (RipOffBehavior *ripoffbehavior = Database::ripoffbehavior.Get(aId))
+				{
+					delete ripoffbehavior;
+					Database::ripoffbehavior.Delete(aId);
+				}
+			}
+		}
+		ripoffbehaviorinitializer;
+	}
 }
 
 // template constructor
