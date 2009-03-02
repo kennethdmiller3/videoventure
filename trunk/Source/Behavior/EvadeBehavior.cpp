@@ -9,6 +9,62 @@
 namespace Database
 {
 	Typed<EvadeBehaviorTemplate> evadebehaviortemplate(0xe0f0e10a /* "evadebehaviortemplate" */);
+	Typed<EvadeBehavior *> evadebehavior(0x5cc74300 /* "evadebehavior" */);
+}
+
+namespace BehaviorDatabase
+{
+	namespace Loader
+	{
+		class EvadeBehaviorLoader
+		{
+		public:
+			EvadeBehaviorLoader()
+			{
+				AddConfigure(0x3cf27f66 /* "evade" */, Entry(this, &EvadeBehaviorLoader::Configure));
+			}
+
+			unsigned int Configure(unsigned int aId, const TiXmlElement *element)
+			{
+				EvadeBehaviorTemplate &evade = Database::evadebehaviortemplate.Open(aId);
+				evade.Configure(element, aId);
+				Database::evadebehaviortemplate.Close(aId);
+				return 0xe0f0e10a /* "evadebehaviortemplate" */;
+			}
+		}
+		evadebehaviorloader;
+	}
+
+	namespace Initializer
+	{
+		class EvadeBehaviorInitializer
+		{
+		public:
+			EvadeBehaviorInitializer()
+			{
+				AddActivate(0xe0f0e10a /* "evadebehaviortemplate" */, ActivateEntry(this, &EvadeBehaviorInitializer::Activate));
+				AddDeactivate(0xe0f0e10a /* "evadebehaviortemplate" */, DeactivateEntry(this, &EvadeBehaviorInitializer::Deactivate));
+			}
+
+			Behavior *Activate(unsigned int aId, Controller *aController)
+			{
+				const EvadeBehaviorTemplate &evadebehaviortemplate = Database::evadebehaviortemplate.Get(aId);
+				EvadeBehavior *evadebehavior = new EvadeBehavior(aId, evadebehaviortemplate, aController);
+				Database::evadebehavior.Put(aId, evadebehavior);
+				return evadebehavior;
+			}
+
+			void Deactivate(unsigned int aId)
+			{
+				if (EvadeBehavior *evadebehavior = Database::evadebehavior.Get(aId))
+				{
+					delete evadebehavior;
+					Database::evadebehavior.Delete(aId);
+				}
+			}
+		}
+		evadebehaviorinitializer;
+	}
 }
 
 

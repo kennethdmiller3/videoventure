@@ -9,6 +9,62 @@
 namespace Database
 {
 	Typed<PursueBehaviorTemplate> pursuebehaviortemplate(0xb9b0800f /* "pursuebehaviortemplate" */);
+	Typed<PursueBehavior *> pursuebehavior(0xa211bfc9 /* "pursuebehavior" */);
+}
+
+namespace BehaviorDatabase
+{
+	namespace Loader
+	{
+		class PursueBehaviorLoader
+		{
+		public:
+			PursueBehaviorLoader()
+			{
+				AddConfigure(0x0297228f /* "pursue" */, Entry(this, &PursueBehaviorLoader::Configure));
+			}
+
+			unsigned int Configure(unsigned int aId, const TiXmlElement *element)
+			{
+				PursueBehaviorTemplate &pursue = Database::pursuebehaviortemplate.Open(aId);
+				pursue.Configure(element, aId);
+				Database::pursuebehaviortemplate.Close(aId);
+				return 0xb9b0800f /* "pursuebehaviortemplate" */;
+			}
+		}
+		pursuebehaviorloader;
+	}
+
+	namespace Initializer
+	{
+		class PursueBehaviorInitializer
+		{
+		public:
+			PursueBehaviorInitializer()
+			{
+				AddActivate(0xb9b0800f /* "pursuebehaviortemplate" */, ActivateEntry(this, &PursueBehaviorInitializer::Activate));
+				AddDeactivate(0xb9b0800f /* "pursuebehaviortemplate" */, DeactivateEntry(this, &PursueBehaviorInitializer::Deactivate));
+			}
+
+			Behavior *Activate(unsigned int aId, Controller *aController)
+			{
+				const PursueBehaviorTemplate &pursuebehaviortemplate = Database::pursuebehaviortemplate.Get(aId);
+				PursueBehavior *pursuebehavior = new PursueBehavior(aId, pursuebehaviortemplate, aController);
+				Database::pursuebehavior.Put(aId, pursuebehavior);
+				return pursuebehavior;
+			}
+
+			void Deactivate(unsigned int aId)
+			{
+				if (PursueBehavior *pursuebehavior = Database::pursuebehavior.Get(aId))
+				{
+					delete pursuebehavior;
+					Database::pursuebehavior.Delete(aId);
+				}
+			}
+		}
+		pursuebehaviorinitializer;
+	}
 }
 
 PursueBehaviorTemplate::PursueBehaviorTemplate()

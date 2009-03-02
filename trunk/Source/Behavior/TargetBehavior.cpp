@@ -11,6 +11,62 @@ namespace Database
 {
 	Typed<TargetBehaviorTemplate> targetbehaviortemplate(0x5dfd8444 /* "targetbehaviortemplate" */);
 	Typed<TargetData> targetdata(0xcaaa7b50 /* "targetdata" */);
+	Typed<TargetBehavior *> targetbehavior(0xaaed8862 /* "targetbehavior" */);
+}
+
+namespace BehaviorDatabase
+{
+	namespace Loader
+	{
+		class TargetBehaviorLoader
+		{
+		public:
+			TargetBehaviorLoader()
+			{
+				AddConfigure(0x32608848 /* "target" */, Entry(this, &TargetBehaviorLoader::Configure));
+			}
+
+			unsigned int Configure(unsigned int aId, const TiXmlElement *element)
+			{
+				TargetBehaviorTemplate &target = Database::targetbehaviortemplate.Open(aId);
+				target.Configure(element, aId);
+				Database::targetbehaviortemplate.Close(aId);
+				return 0x5dfd8444 /* "targetbehaviortemplate" */;
+			}
+		}
+		targetbehaviorloader;
+	}
+
+	namespace Initializer
+	{
+		class TargetBehaviorInitializer
+		{
+		public:
+			TargetBehaviorInitializer()
+			{
+				AddActivate(0x5dfd8444 /* "targetbehaviortemplate" */, ActivateEntry(this, &TargetBehaviorInitializer::Activate));
+				AddDeactivate(0x5dfd8444 /* "targetbehaviortemplate" */, DeactivateEntry(this, &TargetBehaviorInitializer::Deactivate));
+			}
+
+			Behavior *Activate(unsigned int aId, Controller *aController)
+			{
+				const TargetBehaviorTemplate &targetbehaviortemplate = Database::targetbehaviortemplate.Get(aId);
+				TargetBehavior *targetbehavior = new TargetBehavior(aId, targetbehaviortemplate, aController);
+				Database::targetbehavior.Put(aId, targetbehavior);
+				return targetbehavior;
+			}
+
+			void Deactivate(unsigned int aId)
+			{
+				if (TargetBehavior *targetbehavior = Database::targetbehavior.Get(aId))
+				{
+					delete targetbehavior;
+					Database::targetbehavior.Delete(aId);
+				}
+			}
+		}
+		targetbehaviorinitializer;
+	}
 }
 
 TargetBehaviorTemplate::TargetBehaviorTemplate()
@@ -36,7 +92,7 @@ bool TargetBehaviorTemplate::Configure(const TiXmlElement *element, unsigned int
 	return true;
 }
 
-TargetBehavior::TargetBehavior(unsigned int aId, const TargetBehaviorTemplate &aTemplate, Aimer *aController)
+TargetBehavior::TargetBehavior(unsigned int aId, const TargetBehaviorTemplate &aTemplate, Controller *aController)
 : Behavior(aId, aController)
 , mDelay(aTemplate.mPeriod * aId / UINT_MAX)
 {

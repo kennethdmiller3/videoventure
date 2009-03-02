@@ -9,14 +9,7 @@
 
 #include "Ship.h"
 
-#include "Behavior/BotUtilities.h"
-#include "Behavior/WanderBehavior.h"
-#include "Behavior/TargetBehavior.h"
-#include "Behavior/PursueBehavior.h"
-#include "Behavior/AimBehavior.h"
-#include "Behavior/EvadeBehavior.h"
-#include "Behavior/RangeBehavior.h"
-#include "Behavior/EdgeBehavior.h"
+#include "Behavior/Behavior.h"
 
 
 #ifdef USE_POOL_ALLOCATOR
@@ -105,7 +98,8 @@ bool AimerTemplate::Configure(const TiXmlElement *element, unsigned int aId)
 {
 	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
-		switch (Hash(child->Value()))
+		unsigned int hash = Hash(child->Value());
+		switch (hash)
 		{
 		case 0x2e87eea4 /* "drift" */:
 			{
@@ -113,79 +107,13 @@ bool AimerTemplate::Configure(const TiXmlElement *element, unsigned int aId)
 			}
 			break;
 
-		case 0xf23b7114 /* "wander" */:
+		default:
 			{
-				WanderBehaviorTemplate &wander = Database::wanderbehaviortemplate.Open(aId);
-				wander.Configure(child, aId);
-				Database::wanderbehaviortemplate.Close(aId);
-			}
-			break;
-
-		case 0x32608848 /* "target" */:
-			{
-				TargetBehaviorTemplate &targetbehavior = Database::targetbehaviortemplate.Open(aId);
-				targetbehavior.Configure(child, aId);
-				Database::targetbehaviortemplate.Close(aId);
-			}
-			break;
-
-		case 0x0297228f /* "pursue" */:
-			{
-				PursueBehaviorTemplate &pursuebehavior = Database::pursuebehaviortemplate.Open(aId);
-				pursuebehavior.Configure(child, aId);
-				Database::pursuebehaviortemplate.Close(aId);
-			}
-			break;
-
-		case 0x383251f6 /* "aim" */:
-			{
-				AimBehaviorTemplate &aim = Database::aimbehaviortemplate.Open(aId);
-				aim.Configure(child, aId);
-				Database::aimbehaviortemplate.Close(aId);
-			}
-			break;
-
-		case 0x8eab16d9 /* "fire" */:
-			{
-				Database::Typed<FireConeTemplate> &firebehaviors = Database::fireconetemplate.Open(aId);
-				const char *name = child->Attribute("name");
-				unsigned int aSubId = name ? Hash(name) : firebehaviors.GetCount() + 1;
-				FireConeTemplate &firebehavior = firebehaviors.Open(aSubId);
-				firebehavior.Configure(child, aId);
-				firebehaviors.Close(aSubId);
-				Database::fireconetemplate.Close(aId);
-			}
-			break;
-
-		case 0x3cf27f66 /* "evade" */:
-			{
-				EvadeBehaviorTemplate &evadebehavior = Database::evadebehaviortemplate.Open(aId);
-				evadebehavior.Configure(child, aId);
-				Database::evadebehaviortemplate.Close(aId);
-			}
-			break;
-
-		case 0x27cb3b23 /* "close" */:
-			{
-				CloseBehaviorTemplate &closebehavior = Database::closebehaviortemplate.Open(aId);
-				closebehavior.Configure(child, aId);
-				Database::closebehaviortemplate.Close(aId);
-			}
-			break;
-
-		case 0xbcf819ee /* "far" */:
-			{
-				FarBehaviorTemplate &farbehavior = Database::farbehaviortemplate.Open(aId);
-				farbehavior.Configure(child, aId);
-				Database::farbehaviortemplate.Close(aId);
-			}
-			break;
-
-		case 0x56f6d83c /* "edge" */:
-			{
-				EdgeBehaviorTemplate &edgebehavior = Database::edgebehaviortemplate.Open(aId);
-				edgebehavior.Configure(child, aId);
-				Database::edgebehaviortemplate.Close(aId);
+				const BehaviorDatabase::Loader::Entry &configure = BehaviorDatabase::Loader::GetConfigure(hash);
+				if (configure)
+					mBehaviors.push_back(configure(aId, child));
+				else
+					DebugPrint("Unrecognized behavior \"%s\"\n", child->Value());
 			}
 			break;
 		}
@@ -200,64 +128,31 @@ Aimer::Aimer(const AimerTemplate &aTemplate, unsigned int aId)
 {
 	SetAction(Action(this, &Aimer::Control));
 
-	// TO DO: replace this hard-wired behavior with a Loader-based system
-
-	const WanderBehaviorTemplate &wanderbehavior = Database::wanderbehaviortemplate.Get(aId);
-	if (wanderbehavior.mFront || wanderbehavior.mSide || wanderbehavior.mTurn)
+	for (std::vector<unsigned int>::const_iterator itor = aTemplate.mBehaviors.begin(); itor != aTemplate.mBehaviors.end(); ++itor)
 	{
-		mBehaviors.push_back(new WanderBehavior(aId, wanderbehavior, this));
-		mScheduler.Run(*mBehaviors.back());
-	}
-
-	const TargetBehaviorTemplate &target = Database::targetbehaviortemplate.Get(aId);
-	if (target.mRange)
-	{
-		mBehaviors.push_back(new TargetBehavior(aId, target, this));
-		mScheduler.Run(*mBehaviors.back());
-	}
-
-	const PursueBehaviorTemplate &pursuebehavior = Database::pursuebehaviortemplate.Get(aId);
-	if (pursuebehavior.mStrength)
-	{
-		mBehaviors.push_back(new PursueBehavior(aId, pursuebehavior, this));
-		mScheduler.Run(*mBehaviors.back());
-	}
-
-	const AimBehaviorTemplate &aimbehavior = Database::aimbehaviortemplate.Get(aId);
-	if (aimbehavior.mStrength)
-	{
-		mBehaviors.push_back(new AimBehavior(aId, aimbehavior, this));
-		mScheduler.Run(*mBehaviors.back());
-	}
-
-	const EvadeBehaviorTemplate &evadebehavior = Database::evadebehaviortemplate.Get(aId);
-	if (evadebehavior.mStrength)
-	{
-		mBehaviors.push_back(new EvadeBehavior(aId, evadebehavior, this));
-		mScheduler.Run(*mBehaviors.back());
-	}
-
-	const CloseBehaviorTemplate &closebehavior = Database::closebehaviortemplate.Get(aId);
-	const FarBehaviorTemplate &farbehavior = Database::farbehaviortemplate.Get(aId);
-	if (closebehavior.mRange > 0.0f || farbehavior.mRange < FLT_MAX)
-	{
-		mBehaviors.push_back(new RangeBehavior(aId, this));
-		mScheduler.Run(*mBehaviors.back());
-	}
-
-	const EdgeBehaviorTemplate &edgebehavior = Database::edgebehaviortemplate.Get(aId);
-	if (edgebehavior.mStrength != 0.0f)
-	{
-		mBehaviors.push_back(new EdgeBehavior(aId, this));
-		mScheduler.Run(*mBehaviors.back());
+		const BehaviorDatabase::Initializer::ActivateEntry &activate = BehaviorDatabase::Initializer::GetActivate(*itor);
+		if (activate)
+		{
+			Behavior *behavior = activate(mId, this);
+			mScheduler.Run(*behavior);
+		}
 	}
 }
 
 Aimer::~Aimer(void)
 {
 	mScheduler.Stop();
-	for (std::vector<Behavior *>::iterator i = mBehaviors.begin(); i != mBehaviors.end(); ++i)
-		delete (*i);
+
+	// get aimer template
+	const AimerTemplate &aimer = Database::aimertemplate.Get(mId);
+	for (std::vector<unsigned int>::const_iterator itor = aimer.mBehaviors.begin(); itor != aimer.mBehaviors.end(); ++itor)
+	{
+		const BehaviorDatabase::Initializer::DeactivateEntry &deactivate = BehaviorDatabase::Initializer::GetDeactivate(*itor);
+		if (deactivate)
+		{
+			deactivate(mId);
+		}
+	}
 }
 
 // Aimer Control

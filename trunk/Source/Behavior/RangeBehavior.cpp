@@ -11,6 +11,84 @@ namespace Database
 {
 	Typed<CloseBehaviorTemplate> closebehaviortemplate(0x9b6aa00b /* "closebehaviortemplate" */);
 	Typed<FarBehaviorTemplate> farbehaviortemplate(0xfa06c762 /* "farbehaviortemplate" */);
+	Typed<RangeBehavior *> rangebehavior(0xc8280a04 /* "rangebehavior" */);
+}
+
+namespace BehaviorDatabase
+{
+	namespace Loader
+	{
+		class CloseBehaviorLoader
+		{
+		public:
+			CloseBehaviorLoader()
+			{
+				AddConfigure(0x27cb3b23 /* "close" */, Entry(this, &CloseBehaviorLoader::Configure));
+			}
+
+			unsigned int Configure(unsigned int aId, const TiXmlElement *element)
+			{
+				CloseBehaviorTemplate &closebehavior = Database::closebehaviortemplate.Open(aId);
+				closebehavior.Configure(element, aId);
+				Database::closebehaviortemplate.Close(aId);
+				return 0x9b6aa00b /* "closebehaviortemplate" */;
+			}
+		}
+		closebehaviorloader;
+
+		class FarBehaviorLoader
+		{
+		public:
+			FarBehaviorLoader()
+			{
+				AddConfigure(0xbcf819ee /* "far" */, Entry(this, &FarBehaviorLoader::Configure));
+			}
+
+			unsigned int Configure(unsigned int aId, const TiXmlElement *element)
+			{
+				FarBehaviorTemplate &farbehavior = Database::farbehaviortemplate.Open(aId);
+				farbehavior.Configure(element, aId);
+				Database::farbehaviortemplate.Close(aId);
+				return 0xfa06c762 /* "farbehaviortemplate" */;
+			}
+		}
+		farbehaviorloader;
+	}
+
+	namespace Initializer
+	{
+		class RangeBehaviorInitializer
+		{
+		public:
+			RangeBehaviorInitializer()
+			{
+				
+				AddActivate(0x9b6aa00b /* "closebehaviortemplate" */, ActivateEntry(this, &RangeBehaviorInitializer::Activate));
+				AddActivate(0xfa06c762 /* "farbehaviortemplate" */, ActivateEntry(this, &RangeBehaviorInitializer::Activate));
+				AddDeactivate(0x9b6aa00b /* "closebehaviortemplate" */, DeactivateEntry(this, &RangeBehaviorInitializer::Deactivate));
+				AddDeactivate(0xfa06c762 /* "farbehaviortemplate" */, DeactivateEntry(this, &RangeBehaviorInitializer::Deactivate));
+			}
+
+			Behavior *Activate(unsigned int aId, Controller *aController)
+			{
+				if (RangeBehavior *rangebehavior = Database::rangebehavior.Get(aId))
+					return rangebehavior;
+				RangeBehavior *rangebehavior = new RangeBehavior(aId, aController);
+				Database::rangebehavior.Put(aId, rangebehavior);
+				return rangebehavior;
+			}
+
+			void Deactivate(unsigned int aId)
+			{
+				if (RangeBehavior *rangebehavior = Database::rangebehavior.Get(aId))
+				{
+					delete rangebehavior;
+					Database::rangebehavior.Delete(aId);
+				}
+			}
+		}
+		rangebehaviorinitializer;
+	}
 }
 
 

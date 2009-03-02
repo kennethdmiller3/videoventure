@@ -6,6 +6,62 @@
 namespace Database
 {
 	Typed<WanderBehaviorTemplate> wanderbehaviortemplate(0xd1cc22c8 /* "wanderbehaviortemplate" */);
+	Typed<WanderBehavior *> wanderbehavior(0xa1410cd6 /* "wanderbehavior" */);
+}
+
+namespace BehaviorDatabase
+{
+	namespace Loader
+	{
+		class WanderBehaviorLoader
+		{
+		public:
+			WanderBehaviorLoader()
+			{
+				AddConfigure(0xf23b7114 /* "wander" */, Entry(this, &WanderBehaviorLoader::Configure));
+			}
+
+			unsigned int Configure(unsigned int aId, const TiXmlElement *element)
+			{
+				WanderBehaviorTemplate &wander = Database::wanderbehaviortemplate.Open(aId);
+				wander.Configure(element, aId);
+				Database::wanderbehaviortemplate.Close(aId);
+				return 0xd1cc22c8 /* "wanderbehaviortemplate" */;
+			}
+		}
+		wanderbehaviorloader;
+	}
+
+	namespace Initializer
+	{
+		class WanderBehaviorInitializer
+		{
+		public:
+			WanderBehaviorInitializer()
+			{
+				AddActivate(0xd1cc22c8 /* "wanderbehaviortemplate" */, ActivateEntry(this, &WanderBehaviorInitializer::Activate));
+				AddDeactivate(0xd1cc22c8 /* "wanderbehaviortemplate" */, DeactivateEntry(this, &WanderBehaviorInitializer::Deactivate));
+			}
+
+			Behavior *Activate(unsigned int aId, Controller *aController)
+			{
+				const WanderBehaviorTemplate &wanderbehaviortemplate = Database::wanderbehaviortemplate.Get(aId);
+				WanderBehavior *wanderbehavior = new WanderBehavior(aId, wanderbehaviortemplate, aController);
+				Database::wanderbehavior.Put(aId, wanderbehavior);
+				return wanderbehavior;
+			}
+
+			void Deactivate(unsigned int aId)
+			{
+				if (WanderBehavior *wanderbehavior = Database::wanderbehavior.Get(aId))
+				{
+					delete wanderbehavior;
+					Database::wanderbehavior.Delete(aId);
+				}
+			}
+		}
+		wanderbehaviorinitializer;
+	}
 }
 
 WanderBehaviorTemplate::WanderBehaviorTemplate()

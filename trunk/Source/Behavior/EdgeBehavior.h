@@ -19,7 +19,7 @@ public:
 class EdgeBehavior : public Behavior
 {
 public:
-	EdgeBehavior(unsigned int aId, Controller *aController);
+	EdgeBehavior(unsigned int aId, const EdgeBehaviorTemplate &aTemplate, Controller *aController);
 
 	Status Execute(void);
 };
