@@ -53,7 +53,7 @@ public:
 		: mId(aId)
 	{
 		Entity *entity = Database::entity.Get(aId);
-		Transform2 transform = entity ? entity->GetTransform() : Transform2(0, Vector2(0, 0));
+		Transform2 transform = entity ? entity->GetTransform() : Transform2::Identity();
 
 		mInstance = static_cast<unsigned int *>(malloc(aTemplate.mCount * sizeof(unsigned int)));
 		mCount = aTemplate.mCount;

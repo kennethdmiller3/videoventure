@@ -1,6 +1,5 @@
 #include "StdAfx.h"
 #include "PlayerController.h"
-#include "PlayerHUD.h"
 #include "Player.h"
 #include "Entity.h"
 #include "Ship.h"
@@ -128,37 +127,11 @@ PlayerController::PlayerController(unsigned int aId)
 	{
 		player->Attach(mId);
 	}
-
-	// hacktastic!
-	unsigned int aOwnerId = Database::owner.Get(mId);
-	if (PlayerHUD *hud = Database::playerhud.Get(aOwnerId))
-	{
-		// get player controller template
-		const PlayerControllerTemplate &controllertemplate = Database::playercontrollertemplate.Get(mId);
-
-		// show reticule if using move or aim cursor
-		if (controllertemplate.mAim == PlayerControllerTemplate::MOVECURSOR ||
-			controllertemplate.mAim == PlayerControllerTemplate::AIMCURSOR)
-			hud->ShowReticule();
-	}
 }
 
 // player controller destructor
 PlayerController::~PlayerController(void)
 {
-	// hacktastic!
-	unsigned int aOwnerId = Database::owner.Get(mId);
-	if (PlayerHUD *hud = Database::playerhud.Get(aOwnerId))
-	{
-		// get player controller template
-		const PlayerControllerTemplate &controllertemplate = Database::playercontrollertemplate.Get(mId);
-
-		// show reticule if using move or aim cursor
-		if (controllertemplate.mAim == PlayerControllerTemplate::MOVECURSOR ||
-			controllertemplate.mAim == PlayerControllerTemplate::AIMCURSOR)
-			hud->HideReticule();
-	}
-
 	unsigned int aCreatorId = Database::creator.Get(mId);
 	if (Player *player = Database::player.Get(aCreatorId))
 	{

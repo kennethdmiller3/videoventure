@@ -252,8 +252,8 @@ namespace Database
 		}
 
 	public:
-		Typed(unsigned int aId = 0, const T& aNil = T())
-			: Untyped(aId, sizeof(T), aId ? 8 : 4)
+		Typed(unsigned int aId = 0, unsigned int aBits = ~0U, const T& aNil = T())
+			: Untyped(aId, sizeof(T), (aBits == ~0U) ? (aId ? 8 : 4) : aBits)
 		{
 			CreateRecord(mNil, &aNil);
 		}
