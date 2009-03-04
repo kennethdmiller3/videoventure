@@ -315,6 +315,38 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Source\PlayerOverlayAmmo.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\PlayerOverlayGameOver.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\PlayerOverlayHealth.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\PlayerOverlayLevel.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\PlayerOverlayLives.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\PlayerOverlayReticule.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\PlayerOverlayScore.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\PlayerOverlaySpecial.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\Source\Points.cpp"
 				>
 			</File>
@@ -565,6 +597,38 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Source\PlayerOverlayAmmo.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\PlayerOverlayGameOver.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\PlayerOverlayHealth.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\PlayerOverlayLevel.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\PlayerOverlayLives.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\PlayerOverlayReticule.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\PlayerOverlayScore.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\PlayerOverlaySpecial.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Source\Points.h"
 				>
 			</File>
@@ -653,6 +717,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Source\Vector4.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Source\WaveSequence.h"
 				>
 			</File>
@@ -688,6 +756,10 @@
 			</File>
 			<File
 				RelativePath=".\Source\Behavior\AimBehavior.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Behavior\Behavior.cpp"
 				>
 			</File>
 			<File
