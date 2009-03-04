@@ -1,5 +1,7 @@
 #pragma once
 
+#include "TreeNode.h"
+
 class OverlayTemplate
 {
 public:
@@ -14,7 +16,7 @@ public:
 	bool Configure(const TiXmlElement *element, unsigned int aId);
 };
 
-class Overlay
+class Overlay : public TreeNode<Overlay>
 {
 public:
 	typedef fastdelegate::FastDelegate<void (unsigned int, float, const Transform2 &)> Action;
@@ -24,14 +26,9 @@ protected:
 	unsigned int mId;
 
 private:
-	// list of all overlays
-	static Overlay *sHead;
-	static Overlay *sTail;
+	// root overlay
+	static Overlay sRoot;
 	bool mActive;
-
-	// linked list
-	Overlay *mNext;
-	Overlay *mPrev;
 
 	// render action
 	Action mAction;
@@ -56,7 +53,7 @@ public:
 	void Hide(void);
 
 	// render
-	static void RenderAll();
+	static void RenderAll(Overlay &aRoot = sRoot);
 };
 
 

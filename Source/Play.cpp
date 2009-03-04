@@ -153,9 +153,11 @@ void PlayerJoinListener(unsigned int aId)
 	playercamera->Activate();
 
 	// create player hud overlay
+	// (creates game-specific components)
 	PlayerHUD *playerhud = new PlayerHUD(aId);
 	Database::playerhud.Put(aId, playerhud);
-	playerhud->Activate();
+
+	// show the HUD
 	playerhud->Show();
 }
 

@@ -183,6 +183,15 @@ template<typename T> inline const T Clamp(T v, T min, T max)
 	return v;
 }
 
+// rectangle template
+template<typename T> struct Rect
+{
+	T x;
+	T y;
+	T w;
+	T h;
+};
+
 namespace Random
 {
 	// TO DO: allow multiple random number generators

@@ -26,13 +26,10 @@ bool OverlayTemplate::Configure(const TiXmlElement *element, unsigned int aId)
 }
 
 
-Overlay *Overlay::sHead;
-Overlay *Overlay::sTail;
+Overlay Overlay::sRoot(0);
 
 Overlay::Overlay(unsigned int aId)
 : mId(aId)
-, mNext(NULL)
-, mPrev(NULL)
 , mActive(false)
 , mAction()
 , mStart(sim_turn)
@@ -49,12 +46,7 @@ void Overlay::Show(void)
 {
 	if (!mActive)
 	{
-		mPrev = sTail;
-		if (sTail)
-			sTail->mNext = this;
-		sTail = this;
-		if (!sHead)
-			sHead = this;
+		AttachLast(&sRoot);
 		mActive = true;
 	}
 }
@@ -63,38 +55,39 @@ void Overlay::Hide(void)
 {
 	if (mActive)
 	{
-		if (sHead == this)
-			sHead = mNext;
-		if (sTail == this)
-			sTail = mPrev;
-		if (mNext)
-			mNext->mPrev = mPrev;
-		if (mPrev)
-			mPrev->mNext = mNext;
-		mNext = NULL;
-		mPrev = NULL;
+		Detach();
 		mActive = false;
 	}
 }
 
-void Overlay::RenderAll()
+void Overlay::RenderAll(Overlay &aRoot)
 {
 	// render all overlays
-	Overlay *itor = sHead;
+	Overlay *itor = aRoot.mFirstChild;
 	while (itor)
 	{
 		// get the next iterator
 		// (in case the entry gets deleted)
-		Overlay *next = itor->mNext;
+		Overlay *next = itor->mNextSibling;
 
-		// get the overlay template
-		const OverlayTemplate &overlay = Database::overlaytemplate.Get(itor->mId);
+		// if the overlay renders...
+		if (itor->mAction)
+		{
+			// get the overlay template
+			const OverlayTemplate &overlay = Database::overlaytemplate.Get(itor->mId);
 
-		// elapsed time
-		float t = fmodf((int(sim_turn - itor->mStart) + sim_fraction - itor->mFraction) * sim_step, overlay.mPeriod);
+			// elapsed time
+			// TO DO: replace this with expressions
+			float t = fmodf((int(sim_turn - itor->mStart) + sim_fraction - itor->mFraction) * sim_step, overlay.mPeriod);
 
-		// perform action
-		(itor->mAction)(itor->mId, t, Transform2::Identity());
+			// perform action
+			// TO DO: support transform parameter
+			(itor->mAction)(itor->mId, t, Transform2::Identity());
+		}
+
+		// recurse on children
+		if (itor->mFirstChild)
+			RenderAll(*itor);
 
 		// go to the next iterator
 		itor = next;
