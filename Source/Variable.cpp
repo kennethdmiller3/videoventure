@@ -2,7 +2,7 @@
 #include "Variable.h"
 
 #ifdef USE_POOL_ALLOCATOR
-// collidable pool
+// command pool
 static boost::pool<boost::default_user_allocator_malloc_free> varcommandpool(sizeof(VarCommand));
 void *VarCommand::operator new(size_t aSize)
 {
@@ -12,6 +12,8 @@ void VarCommand::operator delete(void *aPtr)
 {
 	varcommandpool.free(aPtr);
 }
+
+// integer pool
 static boost::pool<boost::default_user_allocator_malloc_free> varintegerpool(sizeof(VarInteger));
 void *VarInteger::operator new(size_t aSize)
 {
@@ -21,6 +23,8 @@ void VarInteger::operator delete(void *aPtr)
 {
 	varintegerpool.free(aPtr);
 }
+
+// float pool
 static boost::pool<boost::default_user_allocator_malloc_free> varfloatpool(sizeof(VarFloat));
 void *VarFloat::operator new(size_t aSize)
 {
@@ -30,6 +34,8 @@ void VarFloat::operator delete(void *aPtr)
 {
 	varfloatpool.free(aPtr);
 }
+
+// string pool
 static boost::pool<boost::default_user_allocator_malloc_free> varstringpool(sizeof(VarString));
 void *VarString::operator new(size_t aSize)
 {
@@ -39,6 +45,8 @@ void VarString::operator delete(void *aPtr)
 {
 	varstringpool.free(aPtr);
 }
+
+// scope pool
 static boost::pool<boost::default_user_allocator_malloc_free> varscopepool(sizeof(VarScope));
 void *VarScope::operator new(size_t aSize)
 {
