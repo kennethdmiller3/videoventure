@@ -3,8 +3,6 @@
 #include "Drawlist.h"
 #include "Entity.h"
 
-#include "Link.h"
-
 #ifdef USE_POOL_ALLOCATOR
 // renderable pool
 static boost::pool<boost::default_user_allocator_malloc_free> pool(sizeof(Renderable));
