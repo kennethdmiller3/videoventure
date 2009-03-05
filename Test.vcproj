@@ -18,9 +18,8 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
-			IntermediateDirectory="$(SolutionDir)$(ConfigurationName)\$(ProjectName)"
 			ConfigurationType="1"
+			InheritedPropertySheets=".\PlatformSDL_Debug.vsprops"
 			UseOfATL="0"
 			CharacterSet="1"
 			>
@@ -41,22 +40,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="0"
-				AdditionalIncludeDirectories="&quot;PlatformSDL&quot;,&quot;..\SDL-1.2.13\include&quot;,&quot;tinyxml&quot;,&quot;oglconsole&quot;,&quot;..\Box2D\Include&quot;,&quot;FastDelegate&quot;"
-				PreprocessorDefinitions="WIN32;_DEBUG;_CRT_SECURE_NO_WARNINGS;OGLCONSOLE_USE_SDL;_HAS_EXCEPTIONS=0"
-				StringPooling="true"
-				MinimalRebuild="true"
-				ExceptionHandling="0"
-				BasicRuntimeChecks="3"
-				RuntimeLibrary="3"
-				EnableFunctionLevelLinking="true"
-				FloatingPointModel="2"
-				UsePrecompiledHeader="2"
-				BrowseInformation="1"
-				WarningLevel="4"
-				DebugInformationFormat="4"
-				DisableSpecificWarnings="4100;4127"
-				ShowIncludes="true"
+				AdditionalIncludeDirectories=""
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -69,13 +53,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="SDL.lib SDLmain.lib OpenGL32.lib glu32.lib"
-				LinkIncremental="2"
-				AdditionalLibraryDirectories="&quot;..\SDL-1.2.13\VisualC\SDLmain\Debug&quot;;&quot;..\SDL-1.2.13\VisualC\SDL\Debug&quot;"
-				GenerateDebugInformation="true"
-				SubSystem="2"
-				RandomizedBaseAddress="1"
-				FixedBaseAddress="2"
+				AdditionalLibraryDirectories=""
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -101,9 +79,8 @@
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
-			IntermediateDirectory="$(SolutionDir)$(ConfigurationName)\$(ProjectName)"
 			ConfigurationType="1"
+			InheritedPropertySheets=".\PlatformSDL_Release.vsprops"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
 			>
@@ -124,20 +101,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="1"
-				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="&quot;PlatformSDL&quot;,&quot;..\SDL-1.2.13\include&quot;,&quot;tinyxml&quot;,&quot;oglconsole&quot;,&quot;..\Box2D\Include&quot;,&quot;FastDelegate&quot;"
-				PreprocessorDefinitions="WIN32;NDEBUG;_CRT_SECURE_NO_WARNINGS;OGLCONSOLE_USE_SDL;_HAS_EXCEPTIONS=0"
-				StringPooling="true"
-				ExceptionHandling="0"
-				RuntimeLibrary="2"
-				EnableFunctionLevelLinking="true"
-				FloatingPointModel="2"
-				RuntimeTypeInfo="false"
-				UsePrecompiledHeader="2"
-				WarningLevel="4"
-				DebugInformationFormat="3"
-				DisableSpecificWarnings="4100;4127"
+				AdditionalIncludeDirectories=""
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -150,14 +114,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="SDL.lib SDLmain.lib OpenGL32.lib glu32.lib"
-				LinkIncremental="1"
-				AdditionalLibraryDirectories="&quot;..\SDL-1.2.13\VisualC\SDLmain\Release_NoSTDIO&quot;;&quot;..\SDL-1.2.13\VisualC\SDL\Release&quot;"
-				GenerateDebugInformation="true"
-				GenerateMapFile="true"
-				SubSystem="2"
-				OptimizeReferences="2"
-				EnableCOMDATFolding="2"
+				AdditionalLibraryDirectories=""
 			/>
 			<Tool
 				Name="VCALinkTool"
