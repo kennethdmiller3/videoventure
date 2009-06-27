@@ -1,0 +1,47 @@
+<?xml version="1.0" ?>
+<dynamicdrawlist name="enemyengineflame">
+	<block length="0.066667" repeat="-1">
+		<set name="s" type="scale" variable="thrust"/>
+		<add name="s" type="scale" y="3.0"/>
+		<mul name="s" type="scale" y="0.25"/>
+		<swizzle name="s" type="scale" x="y" y="y"/>
+		<scale variable="s"/>
+		<pushmatrix>
+			<scale>
+				<key time="0.000000" x="0.5" y="0.5"/>
+				<key time="0.033333" x="1.0" y="1.0"/>
+				<key time="0.066667" x="0.5" y="0.5"/>
+			</scale>
+			<drawlist>
+				<triangles>
+					<color r="1.0" g="0.7" b="0.4" a="1.0"/>
+					<vertex x="1" y="0"/>
+					<vertex x="0" y="-8"/>
+					<vertex x="-1" y="0"/>
+					<color r="1.0" g="0.5" b="0.0" a="0.5"/>
+					<vertex x="2" y="0"/>
+					<vertex x="0" y="-16"/>
+					<vertex x="-2" y="0"/>
+					<color r="1.0" g="0.0" b="1.0" a="0.25"/>
+					<vertex x="3" y="0"/>
+					<vertex x="0" y="-24"/>
+					<vertex x="-3" y="0"/>
+				</triangles>
+			</drawlist>
+		</pushmatrix>
+		<translate y="-1"/>
+		<scale>
+			<key time="0.000000" x="2" y="2"/>
+			<key time="0.033333" x="1" y="1"/>
+			<key time="0.066667" x="2" y="2"/>
+		</scale>
+		<color r="1.0" g="0.7" b="0.4" a="0.75"/>
+		<calllist name="circle12"/>
+		<scale x="2" y="2"/>
+		<color r="1.0" g="0.5" b="0.0" a="0.5"/>
+		<calllist name="circle12"/>
+		<scale x="1.5" y="1.5"/>
+		<color r="1.0" g="0.0" b="0.0" a="0.25"/>
+		<calllist name="circle12"/>
+	</block>
+</dynamicdrawlist>
