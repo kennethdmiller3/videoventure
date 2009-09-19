@@ -6,7 +6,7 @@
 			<circle radius="1">
 				<friction value="1" />
 				<restitution value="0" />
-				<density value="1.0" />
+				<density value="0.2" />
 				<filter name="bluebullet" />
 			</circle>
 			<fixedrotation value="1" />
@@ -69,7 +69,4 @@
 	</renderable>
 	<expire time="0.5" />
 	<bullet damage="1" spawnondeath="playerbulletexplosion" />
-	<soundcue>
-		<cue sound="stargate-playershot" />
-	</soundcue>
 </template>

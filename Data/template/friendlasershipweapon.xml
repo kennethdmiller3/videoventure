@@ -1,7 +1,0 @@
-<?xml version="1.0" ?>
-<template name="friendlasershipweapon">
-	<weapon>
-		<flash name="friendlasershiptracer" />
-		<shot delay="3.0" />
-	</weapon>
-</template>

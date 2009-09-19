@@ -1,4 +1,0 @@
-<?xml version="1.0" ?>
-<sound name="missilecommand-citybonus">
-	<pokey length="0.133333" frequency="1250000" divider="476" amplitude="1" tone="poly5" />
-</sound>

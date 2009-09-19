@@ -1,0 +1,35 @@
+﻿<?xml version="1.0"?>
+<template name="enemyshipspread" type="enemyshipturreted">
+	<link name="turret">
+		<weapon>
+			<shot delay="1.666667" />
+			<action>
+				<wait>
+					<mul>
+						<frac>
+							<mul>
+								<worldtime/>
+								<value value="-2.4"/>
+							</mul>
+						</frac>
+						<value value="0.416667"/>
+					</mul>
+				</wait>
+				<loop name="angle" from="-20" to="20" by="5">
+					<ordnance name="enemybullet">
+						<position x="0" y="4">
+							<angle>
+								<angle/>
+							</angle>
+						</position>
+						<velocity x="0" y="120"/>
+					</ordnance>
+				</loop>
+				<cue name="fire"/>
+			</action>
+		</weapon>
+		<soundcue>
+			<cue name="fire" sound="stargate-landerfire" />
+		</soundcue>
+	</link>
+</template>

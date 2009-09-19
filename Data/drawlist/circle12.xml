@@ -2,17 +2,23 @@
 <drawlist name="circle12">
 	<!-- 12 vertex circle -->
 	<polygon>
-		<vertex x="1.000000" y="0.000000" />
-		<vertex x="0.866025" y="0.500000" />
-		<vertex x="0.500000" y="0.866025" />
-		<vertex x="0.000000" y="1.000000" />
-		<vertex x="-0.500000" y="0.866025" />
-		<vertex x="-0.866025" y="0.500000" />
-		<vertex x="-1.000000" y="0.00000" />
-		<vertex x="-0.866025" y="-0.500000" />
-		<vertex x="-0.500000" y="-0.866025" />
-		<vertex x="0.000000" y="-1.00000" />
-		<vertex x="0.500000" y="-0.866025" />
-		<vertex x="0.866025" y="-0.500000" />
+		<loop name="angle" from="0" to="12" by="1">
+			<vertex>
+				<x>
+					<sinewave period="12">
+						<input>
+							<angle/>
+						</input>
+					</sinewave>
+				</x>
+				<y>
+					<sinewave phase="0.25" period="12">
+						<input>
+							<angle/>
+						</input>
+					</sinewave>
+				</y>
+			</vertex>
+		</loop>
 	</polygon>
 </drawlist>

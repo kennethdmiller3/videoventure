@@ -1,45 +1,6 @@
 <?xml version="1.0" ?>
 <template name="playershipwarp">
 	<renderable radius="2048">
-		<block start="0.8" length="0.3">
-			<pushmatrix>
-				<color>
-					<key time="0.0" r="0.0" g="0.0" b="1.0" a="0.0" />
-					<key time="0.3" r="1.0" g="1.0" b="1.0" a="1.0" />
-				</color>
-				<scale>
-					<key time="0.0" x="0.0" y="0.0" />
-					<key time="0.3" x="1.0" y="1.0" />
-				</scale>
-				<calllist name="playership" />
-			</pushmatrix>
-		</block>
-		<block start="0.6" length="0.5">
-			<pushmatrix>
-				<color>
-					<key time="0.0" r="0.0" g="0.0" b="1.0" a="0.0" />
-					<key time="0.5" r="0.4" g="0.7" b="1.0" a="0.5" />
-				</color>
-				<scale>
-					<key time="0.0" x="0.0" y="0.0" />
-					<key time="0.5" x="10.0" y="10.0" />
-				</scale>
-				<calllist name="circle16" />
-			</pushmatrix>
-		</block>
-		<block start="0.4" length="0.7">
-			<pushmatrix>
-				<color>
-					<key time="0.0" r="0.0" g="0.0" b="1.0" a="0.0" />
-					<key time="0.7" r="0.0" g="0.5" b="1.0" a="0.25" />
-				</color>
-				<scale>
-					<key time="0.0" x="0.0" y="0.0" />
-					<key time="0.7" x="16.0" y="16.0" />
-				</scale>
-				<calllist name="circle16" />
-			</pushmatrix>
-		</block>
 		<pushmatrix>
 			<color>
 				<key time="0.0" r="0.0" g="0.0" b="1.0" a="0.0" />
@@ -64,8 +25,47 @@
 				<rotate angle="18" />
 			</repeat>
 		</pushmatrix>
+		<block start="0.4" length="0.7">
+			<pushmatrix>
+				<color>
+					<key time="0.0" r="0.0" g="0.0" b="1.0" a="0.0" />
+					<key time="0.7" r="0.0" g="0.5" b="1.0" a="0.25" />
+				</color>
+				<scale>
+					<key time="0.0" x="0.0" y="0.0" />
+					<key time="0.7" x="16.0" y="16.0" />
+				</scale>
+				<calllist name="circle16" />
+			</pushmatrix>
+		</block>
+		<block start="0.6" length="0.5">
+			<pushmatrix>
+				<color>
+					<key time="0.0" r="0.0" g="0.0" b="1.0" a="0.0" />
+					<key time="0.5" r="0.4" g="0.7" b="1.0" a="0.5" />
+				</color>
+				<scale>
+					<key time="0.0" x="0.0" y="0.0" />
+					<key time="0.5" x="10.0" y="10.0" />
+				</scale>
+				<calllist name="circle16" />
+			</pushmatrix>
+		</block>
+		<block start="0.8" length="0.3">
+			<pushmatrix>
+				<color>
+					<key time="0.0" r="0.0" g="0.0" b="1.0" a="0.0" />
+					<key time="0.3" r="1.0" g="1.0" b="1.0" a="1.0" />
+				</color>
+				<scale>
+					<key time="0.0" x="0.0" y="0.0" />
+					<key time="0.3" x="1.0" y="1.0" />
+				</scale>
+				<calllist name="playership" />
+			</pushmatrix>
+		</block>
 	</renderable>
-	<expire time="1.1" switchonexpire="playershipinvulnerable" />
+	<expire time="1.1" switchonexpire="playership" />
 	<playercontroller />
 	<soundcue>
 		<cue sound="stargate-warpin" />

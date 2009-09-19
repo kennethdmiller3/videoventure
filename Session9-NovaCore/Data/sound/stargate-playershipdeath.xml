@@ -1,8 +1,0 @@
-<?xml version="1.0" ?>
-<sound name="stargate-playershipdeath">
-	<!-- innerdelay: 39+6*delay, +6 when bit flips (average 3?) -->
-	<!-- outerdelay: 17 -->
-	<!-- parameters: 1 delay start, 1 delay delta, 3 iterations -->
-	<bitnoiseramp frequency="3579000" divider="4" outersteps="114" outerdelay="17" innersteps="3" innerdelay="48" innerdelta="6" />
-	<bitnoiseramp frequency="3579000" divider="4" outersteps="114" outerdelay="17" innersteps="3" innerdelay="48" innerdelta="6" />
-</sound>

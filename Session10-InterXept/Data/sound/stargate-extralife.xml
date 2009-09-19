@@ -1,5 +1,0 @@
-<?xml version="1.0" ?>
-<sound name="stargate-extralife">
-	<!-- A=01 (sound 0x1D):	FD45	28 01 00 08 81 0200 FF FF	; extra life -->
-	<pulseloop frequency="3579000" divider="4" pulse1delay="40" pulse2delay="1" pulse1innerdelta="0" pulse2innerdelta="8" pulse1outerdelta="-1" pulse2outerdelta="0" pulse1output="0" pulse2output="255" totalpulsedelay="512" innercount="16" outercount="40" outerdelaypre="14" innerdelaypre="4" pulsedelaybase="11" pulsedelayscale="14" innerdelaypost="36" outerdelaypost="14" />
-</sound>

@@ -1,6 +1,0 @@
-<?xml version="1.0" ?>
-<template name="enemyshiprocketwing" type="enemyshipwing">
-	<damagable spawnondeath="pickuprocketwing" />
-	<link name="lwing" secondary="enemyrocketwing_l" />
-	<link name="rwing" secondary="enemyrocketwing_r" />
-</template>

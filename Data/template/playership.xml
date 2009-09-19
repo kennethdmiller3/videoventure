@@ -7,7 +7,7 @@
 				<friction value="0.5" />
 				<restitution value="0.5" />
 				<filter name="blueunit" />
-				<mask bit4="0" />
+				<mask bit5="0" bit6="0"/>
 				<group value="-1" />
 			</circle>
 			<box w="1" h="1">
@@ -45,19 +45,199 @@
 			<vertex x="-8" y="-8" />
 		</triangle_strip>
 	</drawlist>
-	<renderable radius="8">
-		<color r="0.4" g="0.5" b="1.0" a="1.0" />
-		<calllist name="playership" />
+	<renderable radius="8" depth="-1">
+		<drawlist>
+			<color r="0" g="0" b="0" a="0.5"/>
+			<triangle_strip>
+				<vertex x="8.5" y="-8.5" />
+				<vertex x="8.5" y="-5.25" />
+				<vertex x="2.25" y="-8.5" />
+				<vertex x="3.5" y="-2.75" />
+				<vertex x="2" y="-7" />
+				<vertex x="3.5" y="0.75" />
+				<vertex x="1.75" y="-7" />
+				<vertex x="2" y="2.25" />
+				<vertex x="1.5" y="-8.5" />
+				<vertex x="1.5" y="8.5" />
+				<vertex x="0" y="-8.5" />
+				<vertex x="-1.5" y="8.5" />
+				<vertex x="-1.5" y="-8.5" />
+				<vertex x="-2" y="2.25" />
+				<vertex x="-1.75" y="-7" />
+				<vertex x="-3.5" y="0.75" />
+				<vertex x="-2" y="-7" />
+				<vertex x="-3.5" y="-2.75" />
+				<vertex x="-2.25" y="-8.5" />
+				<vertex x="-8.5" y="-5.25" />
+				<vertex x="-8.5" y="-8.5" />
+			</triangle_strip>
+		</drawlist>
+		<color r="0.4" g="0.5" b="1.0" a="1.0"/>
+		<calllist name="playership"/>
 	</renderable>
 	<playercontroller>
 		<scale turn="0.05"/>
+		<aim type="aimcursor"/>
+		<move type="moveworld"/>
 	</playercontroller>
-	<ship maxveloc="150" maxaccel="1200" minaccel="150" maxomega="20" />
-	<damagable health="10" spawnondeath="playershipdeath" />
-	<soundcue>
-		<cue name="idle" sound="stargate-playershipidle" />
-		<cue name="thrust" sound="stargate-playershipthrust" />
-		<cue name="extralife" sound="stargate-extralife" />
-	</soundcue>
+	<ship maxveloc="150" maxaccel="4500" minaccel="1500" maxomega="20"/>
+	<damagable health="1" spawnondeath="playershipdeath" />
 	<team name="blue" />
+	<soundcue>
+		<cue name="extralife" sound="stargate-extralife"/>
+	</soundcue>
+	<link name="rave">
+		<inherit type="playerravegun"/>
+	</link>
+	<resource name="level" initial="0" maximum="8"/>
+	<state name="start">
+		<transition name="start" target="level3"/>
+	</state>
+	<state name="level0">
+		<inherit type="playershipweapon"/>
+		<link name="beat" secondary="playerbeat"/>
+		<transition name="upgrade" target="level1">
+			<greaterequal>
+				<resource name="level"/>
+				<value value="1"/>
+			</greaterequal>
+		</transition>
+	</state>
+	<state name="level1">
+		<inherit type="playershipweapon1"/>
+		<link name="beat" secondary="playerbeat1"/>
+		<transition name="upgrade" target="level2">
+			<greaterequal>
+				<resource name="level"/>
+				<value value="2"/>
+			</greaterequal>
+		</transition>
+		<transition name="downgrade" target="level0">
+			<less>
+				<resource name="level"/>
+				<value value="1"/>
+			</less>
+		</transition>
+	</state>
+	<state name="level2">
+		<inherit type="playershipweapon2"/>
+		<link name="beat" secondary="playerbeat2"/>
+		<transition name="upgrade" target="level3">
+			<greaterequal>
+				<resource name="level"/>
+				<value value="3"/>
+			</greaterequal>
+		</transition>
+		<transition name="downgrade" target="level1">
+			<less>
+				<resource name="level"/>
+				<value value="2"/>
+			</less>
+		</transition>
+	</state>
+	<state name="level3">
+		<inherit type="playershipweapon3"/>
+		<link name="beat" secondary="playerbeat3"/>
+		<transition name="upgrade" target="level4">
+			<greaterequal>
+				<resource name="level"/>
+				<value value="4"/>
+			</greaterequal>
+		</transition>
+		<transition name="downgrade" target="level2">
+			<less>
+				<resource name="level"/>
+				<value value="3"/>
+			</less>
+		</transition>
+	</state>
+	<state name="level4">
+		<inherit type="playershipweapon3"/>
+		<link name="beat" secondary="playerbeat3"/>
+		<link name="option" secondary="multiple" updateposition="0" updateangle="0">
+			<offset x="0" y="-16" angle="0" />
+		</link>
+		<transition name="upgrade" target="level5">
+			<greaterequal>
+				<resource name="level"/>
+				<value value="5"/>
+			</greaterequal>
+		</transition>
+		<transition name="downgrade" target="level3">
+			<less>
+				<resource name="level"/>
+				<value value="4"/>
+			</less>
+		</transition>
+	</state>
+	<state name="level5">
+		<inherit type="playershipweapon3"/>
+		<link name="beat" secondary="playerbeat3"/>
+		<link name="option" secondary="multiple2" updateposition="0" updateangle="0">
+			<offset x="0" y="-16" angle="0" />
+		</link>
+		<transition name="upgrade" target="level6">
+			<greaterequal>
+				<resource name="level"/>
+				<value value="6"/>
+			</greaterequal>
+		</transition>
+		<transition name="downgrade" target="level4">
+			<less>
+				<resource name="level"/>
+				<value value="5"/>
+			</less>
+		</transition>
+	</state>
+	<state name="level6">
+		<inherit type="playershipweapon3"/>
+		<link name="beat" secondary="playerbeat3"/>
+		<link name="option" secondary="multiple3" updateposition="0" updateangle="0">
+			<offset x="0" y="-16" angle="0" />
+		</link>
+		<transition name="upgrade" target="level7">
+			<greaterequal>
+				<resource name="level"/>
+				<value value="7"/>
+			</greaterequal>
+		</transition>
+		<transition name="downgrade" target="level5">
+			<less>
+				<resource name="level"/>
+				<value value="6"/>
+			</less>
+		</transition>
+	</state>
+	<state name="level7">
+		<inherit type="playershipweapon3"/>
+		<link name="beat" secondary="playerbeat3"/>
+		<link name="option" secondary="multiple4" updateposition="0" updateangle="0">
+			<offset x="0" y="-16" angle="0" />
+		</link>
+		<transition name="upgrade" target="level8">
+			<greaterequal>
+				<resource name="level"/>
+				<value value="8"/>
+			</greaterequal>
+		</transition>
+		<transition name="downgrade" target="level6">
+			<less>
+				<resource name="level"/>
+				<value value="7"/>
+			</less>
+		</transition>
+	</state>
+	<state name="level8">
+		<inherit type="playershipweapon3"/>
+		<link name="beat" secondary="playerbeat3"/>
+		<link name="option" secondary="multiple5" updateposition="0" updateangle="0">
+			<offset x="0" y="-16" angle="0" />
+		</link>
+		<transition name="downgrade" target="level7">
+			<less>
+				<resource name="level"/>
+				<value value="8"/>
+			</less>
+		</transition>
+	</state>
 </template>

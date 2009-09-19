@@ -6,22 +6,34 @@
 				<friction value="0" />
 				<restitution value="1" />
 				<density value="1.0" />
-				<filter name="redunit" />
-				<mask bit4="0" />
+				<filter name="redmissile" />
+				<group value="-2" />
 			</circle>
 		</body>
 	</collidable>
 	<renderable radius="4" period="0.1">
-		<pushmatrix>
-			<color r="0.2" g="0.2" b="0.2" a="1.0" />
-			<scale>
-				<key time="0.000000" x="0.0" y="0.0" />
-				<key time="0.033333" x="2.5" y="2.5" />
-				<key time="0.066667" x="2.5" y="2.5" />
-				<key time="0.100000" x="0.0" y="0.0" />
-			</scale>
-			<calllist name="diamond" />
-		</pushmatrix>
+		<drawlist>
+			<triangle_strip>
+				<color r="0.0" g="0.0" b="0.0" a="0.5" />
+				<vertex x="0" y="5"/>
+				<vertex x="1.5" y="1.5"/>
+				<vertex x="-1.5" y="1.5"/>
+				<vertex x="5" y="0"/>
+				<vertex x="-5" y="0"/>
+				<vertex x="1.5" y="-1.5"/>
+				<vertex x="-1.5" y="-1.5"/>
+				<vertex x="0" y="-5"/>
+				<color r="1.0" g="0.2" b="0.1" a="1.0" />
+				<vertex x="0" y="4"/>
+				<vertex x="1" y="1"/>
+				<vertex x="-1" y="1"/>
+				<vertex x="4" y="0"/>
+				<vertex x="-4" y="0"/>
+				<vertex x="1" y="-1"/>
+				<vertex x="-1" y="-1"/>
+				<vertex x="0" y="-4"/>
+			</triangle_strip>
+		</drawlist>
 		<pushmatrix>
 			<color r="1.0" g="1.0" b="1.0" a="1.0" />
 			<scale>
@@ -32,22 +44,23 @@
 			</scale>
 			<calllist name="diamond" />
 		</pushmatrix>
-		<color r="1.0" g="0.2" b="0.1" a="1.0" />
 		<pushmatrix>
-			<scale x="1.5" y="4" />
-			<calllist name="diamond" />
-		</pushmatrix>
-		<pushmatrix>
-			<scale x="4" y="1.5" />
+			<color r="0.2" g="0.2" b="0.2" a="1.0" />
+			<scale>
+				<key time="0.000000" x="0.0" y="0.0" />
+				<key time="0.033333" x="2.5" y="2.5" />
+				<key time="0.066667" x="2.5" y="2.5" />
+				<key time="0.100000" x="0.0" y="0.0" />
+			</scale>
 			<calllist name="diamond" />
 		</pushmatrix>
 	</renderable>
 	<expire time="30" switchonexpire="enemybulletexplosion" />
 	<bullet damage="1" ricochet="1" spawnondeath="enemyfireballexplosion" />
 	<damagable health="1" spawnondeath="enemyfireballexplosion" />
-	<!--aimer range="512" attack="0" leading="0" category="3" bit3="0" bit4="0" /-->
 	<aimer>
-		<target range="512" category="3" bit2="0" bit3="0" bit4="0" />
+		<wander side="0.5" siderate="0.5" front="0.5" frontrate="0.5" />
+		<target range="512" filter="redmissile" />
 		<pursue strength="1" leading="0" />
 	</aimer>
 	<ship maxveloc="90" maxaccel="180" minaccel="10" maxomega="0" />
@@ -55,6 +68,8 @@
 	<points value="100" />
 	<capturable resistance="1" spawnoncapture="friendspacehum" />
 	<spawner>
-		<spawn name="enemyspacehumtrail" start="0" cycle="0.2" track="0" />
+		<inherit x="0" y="0" />
+		<velocity x="0" y="0" />
+		<spawn name="enemyspacehumtrail" start="0" cycle="0.1" track="0" />
 	</spawner>
 </template>

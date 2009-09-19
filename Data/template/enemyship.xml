@@ -10,38 +10,144 @@
 			</circle>
 		</body>
 	</collidable>
-	<renderable radius="8">
+	<renderable radius="8" period="0.066667">
+		<pushmatrix>
+			<translate y="-8" />
+			<calldynamiclist name="enemyengineflame" />
+		</pushmatrix>
 		<drawlist>
-			<color r="1.0" g="0.2" b="0.1" a="1.0" />
-			<calllist name="ship" />
+			<triangle_strip>
+				<color r="0" g="0" b="0" a="0.5"/>
+				<vertex x="8.5" y="-8.5" />
+				<vertex x="8.5" y="-5.25" />
+				<vertex x="2.25" y="-8.5" />
+				<vertex x="3.5" y="-2.75" />
+				<vertex x="2" y="-7" />
+				<vertex x="3.5" y="0.75" />
+				<vertex x="1.75" y="-7" />
+				<vertex x="2" y="2.25" />
+				<vertex x="1.5" y="-8.5" />
+				<vertex x="1.5" y="8.5" />
+				<vertex x="0" y="-8.5" />
+				<vertex x="-1.5" y="8.5" />
+				<vertex x="-1.5" y="-8.5" />
+				<vertex x="-2" y="2.25" />
+				<vertex x="-1.75" y="-7" />
+				<vertex x="-3.5" y="0.75" />
+				<vertex x="-2" y="-7" />
+				<vertex x="-3.5" y="-2.75" />
+				<vertex x="-2.25" y="-8.5" />
+				<vertex x="-8.5" y="-5.25" />
+				<vertex x="-8.5" y="-8.5" />
+			</triangle_strip>
+		</drawlist>
+		<color>
+			<param>
+				<min>
+					<sub>
+						<worldtime/>
+						<lasthit/>
+					</sub>
+					<value value="0.05"/>
+				</min>
+			</param>
+			<key time="0.000000" r="1.0" g="1.0" b="1.0" a="1.0" />
+			<key time="0.033333" r="1.0" g="1.0" b="1.0" a="1.0" />
+			<key time="0.050000" r="1.0" g="0.2" b="0.1" a="1.0" />
+		</color>
+		<drawlist>
+			<triangle_strip>
+				<vertex x="8" y="-8" />
+				<vertex x="8" y="-5.5" />
+				<vertex x="2.5" y="-8" />
+				<vertex x="3" y="-3" />
+				<vertex x="2" y="-6.5" />
+				<vertex x="3" y="0.5" />
+				<vertex x="1.5" y="-6.5" />
+				<vertex x="1.5" y="2" />
+				<vertex x="1" y="-8" />
+				<vertex x="1" y="8" />
+				<vertex x="0" y="-8" />
+				<vertex x="-1" y="8" />
+				<vertex x="-1" y="-8" />
+				<vertex x="-1.5" y="2" />
+				<vertex x="-1.5" y="-6.5" />
+				<vertex x="-3" y="0.5" />
+				<vertex x="-2" y="-6.5" />
+				<vertex x="-3" y="-3" />
+				<vertex x="-2.5" y="-8" />
+				<vertex x="-8" y="-5.5" />
+				<vertex x="-8" y="-8" />
+			</triangle_strip>
 		</drawlist>
 	</renderable>
-	<!--aimer range="256" attack="128" drift="0.5" wanderturn="0.25" wanderturnrate="0.25" leading="240" angle="30" evade="1" close="64" filter="redbullet" /-->
 	<aimer>
-		<drift strength="0.5" />
-		<wander turn="0.25" turnrate="0.25" />
+		<drift strength="0.5"/>
+		<wander turn="0.5" turnrate="0.25" />
 		<target range="256" filter="redbullet" />
-		<aim strength="1" leading="240" />
+		<aim strength="0.5" leading="0" />
 		<pursue strength="1" leading="0" />
 		<fire channel="1" range="128" angle="30" />
 		<evade strength="1" />
 		<close range="64" />
+		<edge strength="0.0625" distance="16"/>
 	</aimer>
-	<ship maxveloc="60" maxaccel="60" minaccel="10" maxomega="1" />
+	<ship forwardveloc="60" neutralveloc="0" reverseveloc="-30" strafeveloc="30" maxaccel="60" minaccel="10" maxomega="1" />
 	<damagable health="10" spawnondeath="enemyexplosion" />
-	<link name="lgun" secondary="enemyshipweapon">
-		<offset x="2" y="0" angle="0" />
+	<link name="gun" updateangle="0">
+		<collidable>
+			<body name="main">
+				<circle radius="2">
+					<density value="0.5"/>
+					<friction value="0.5"/>
+					<restitution value="0.5"/>
+					<filter name="inert"/>
+				</circle>
+			</body>
+		</collidable>
+		<aimer>
+			<target range="256" filter="redbullet" />
+			<aim strength="1" leading="0" />
+			<fire channel="1" range="128" angle="15" />
+		</aimer>
+		<ship maxveloc="0" maxaccel="0" minaccel="0" maxomega="3"/>
 		<weapon>
-			<shot phase="0" cycle="2" />
+			<shot delay="0.416667"/>
+			<action>
+				<wait>
+					<mul>
+						<frac>
+							<mul>
+								<worldtime/>
+								<value value="-2.4"/>
+							</mul>
+						</frac>
+						<value value="0.416667"/>
+					</mul>
+				</wait>
+				<ordnance name="enemybullet">
+					<position x="0" y="4" />
+					<velocity x="0" y="120" />
+				</ordnance>
+				<cue name="fire"/>
+				<wait value="0.104167"/>
+				<ordnance name="enemybullet">
+					<position x="0" y="4" />
+					<velocity x="0" y="120" />
+				</ordnance>
+				<cue name="fire"/>
+				<wait value="0.104167"/>
+				<ordnance name="enemybullet">
+					<position x="0" y="4" />
+					<velocity x="0" y="120" />
+				</ordnance>
+				<cue name="fire"/>
+			</action>
 		</weapon>
-	</link>
-	<link name="rgun" secondary="enemyshipweapon">
-		<offset x="-2" y="0" angle="0" />
-		<weapon>
-			<shot phase="1" cycle="2" />
-		</weapon>
+		<soundcue>
+			<cue name="fire" sound="stargate-spaceguppyshot" />
+		</soundcue>
 	</link>
 	<team name="red" />
 	<points value="500" />
-	<capturable resistance="10" spawnoncapture="friendship" />
 </template>

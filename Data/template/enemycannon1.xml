@@ -2,8 +2,13 @@
 <template name="enemycannon1" type="enemyweapon">
 	<renderable radius="10">
 		<drawlist>
-			<color r="0.5" g="0.5" b="0.5" a="1.0" />
 			<quads>
+				<color r="0.0" g="0.0" b="0.0" a="0.5" />
+				<vertex x="1.5" y="10.5" />
+				<vertex x="2.25" y="2.5" />
+				<vertex x="-2.25" y="1.5" />
+				<vertex x="-1.5" y="10.5" />
+				<color r="0.5" g="0.5" b="0.5" a="1.0" />
 				<vertex x="1" y="10" />
 				<vertex x="1.5" y="3" />
 				<vertex x="-1.5" y="2" />

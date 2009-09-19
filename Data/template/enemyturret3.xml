@@ -12,7 +12,7 @@
 	<!--aimer range="256" attack="128" leading="240" filter="redbullet" /-->
 	<aimer>
 		<target range="256" filter="redbullet" />
-		<aim strength="1" leading="240" />
+		<aim strength="1" leading="0" />
 		<fire channel="1" range="128" />
 	</aimer>
 </template>

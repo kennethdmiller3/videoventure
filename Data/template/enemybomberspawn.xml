@@ -1,7 +1,0 @@
-<?xml version="1.0" ?>
-<template name="enemybomberspawn">
-	<spawner>
-		<velocity x="0" y="60" />
-		<spawn name="enemybomberwarp" start="30" cycle="30" track="4" />
-	</spawner>
-</template>

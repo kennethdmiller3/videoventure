@@ -1,18 +1,24 @@
 <?xml version="1.0" ?>
-<template name="multiple" type="playershipweapon">
-	<renderable radius="6" period="0.5">
+<template name="multiple">
+	<renderable radius="6">
+		<set name="t">
+			<mod>
+				<worldtime/>
+				<value value="0.5"/>
+			</mod>
+		</set>
 		<pushmatrix>
-			<color r="1.0" g="1.0" b="1.0" a="1.0" />
-			<scale>
-				<key time="0.00" x="1.5" y="2.0" />
-				<key time="0.25" x="2.5" y="3.0" />
-				<key time="0.50" x="1.5" y="2.0" />
+			<color r="0.5" g="0.0" b="1.0" a="0.25" />
+			<scale param="t">
+				<key time="0.00" x="3.5" y="4.0" />
+				<key time="0.25" x="5.5" y="6.0" />
+				<key time="0.50" x="3.5" y="4.0" />
 			</scale>
 			<calllist name="circle16" />
 		</pushmatrix>
 		<pushmatrix>
 			<color r="0.7" g="0.4" b="1.0" a="0.5" />
-			<scale>
+			<scale param="t">
 				<key time="0.00" x="2.5" y="3.0" />
 				<key time="0.25" x="4.5" y="5.0" />
 				<key time="0.50" x="2.5" y="3.0" />
@@ -20,15 +26,37 @@
 			<calllist name="circle16" />
 		</pushmatrix>
 		<pushmatrix>
-			<color r="0.5" g="0.0" b="1.0" a="0.25" />
-			<scale>
-				<key time="0.00" x="3.5" y="4.0" />
-				<key time="0.25" x="5.5" y="6.0" />
-				<key time="0.50" x="3.5" y="4.0" />
+			<color r="1.0" g="1.0" b="1.0" a="1.0" />
+			<scale param="t">
+				<key time="0.00" x="1.5" y="2.0" />
+				<key time="0.25" x="2.5" y="3.0" />
+				<key time="0.50" x="1.5" y="2.0" />
 			</scale>
 			<calllist name="circle16" />
 		</pushmatrix>
 	</renderable>
+	<weapon>
+		<shot delay="0.25"/>
+		<action>
+			<wait>
+				<mul>
+					<frac>
+						<mul>
+							<worldtime/>
+							<value value="-4"/>
+						</mul>
+					</frac>
+					<value value="0.25"/>
+				</mul>
+			</wait>
+			<ordnance name="playerbombbullet">
+				<position x="0" y="3"/>
+				<velocity x="0" y="480"/>
+			</ordnance>
+			<flash name="playerweaponflash">
+				<position x="0" y="3"/>
+			</flash>
+		</action>
+	</weapon>
 	<gunner follow="24" />
-	<team name="blue" />
 </template>
