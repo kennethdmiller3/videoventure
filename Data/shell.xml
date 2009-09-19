@@ -1,15 +1,12 @@
 <?xml version="1.0" standalone="no"?>
-<!-- Test Level -->
 <world>
 
 	<fog enable="1" mode="linear" r="0" g="0" b="0" a="0" start="512" end="1280" />
 
 
-	<!-- sounds -->
-
-	<sound name="startup">
-	</sound>
+	<!-- music -->
 	
+	<music name="title" file="4mat-starworx.mod" />
 	
 	<!-- reticule -->
 

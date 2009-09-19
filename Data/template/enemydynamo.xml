@@ -7,7 +7,9 @@
 				<friction value="0.5" />
 				<restitution value="0.5" />
 				<filter name="redunit" />
+				<group value="-2" />
 			</circle>
+			<fixedrotation value="1" />
 		</body>
 	</collidable>
 	<renderable radius="8" period="0.133333">
@@ -53,27 +55,23 @@
 			<rotate angle="180" />
 		</repeat>
 	</renderable>
-	<!--aimer range="256" attack="128" leading="0" drift="0.5" wanderturn="1.0" wanderturnrate="0.25" wanderside="0.5" wandersiderate="0.25" wanderfront="0.5" wanderfrontrate="0.25" evade="0" close="64" category="3" bit3="0" bit4="0" /-->
 	<aimer>
-		<drift strength="0.5" />
-		<wander turn="1" turnrate="0.25" side="0.5" siderate="0.25" front="0.5" frontrate="0.25" />
-		<target range="256" category="3" bit3="0" bit4="0" />
-		<aim strength="1" leading="0" />
+		<wander side="0.5" siderate="0.25" front="0.5" frontrate="0.25" />
+		<target range="512" category="3" bit3="0" bit4="0" />
 		<pursue strength="1" leading="0" />
-		<fire channel="1" range="128" angle="180"/>
+		<fire channel="1" range="256" angle="180"/>
 		<close range="64" />
 	</aimer>
-	<ship maxveloc="30" maxaccel="120" minaccel="10" maxomega="2" />
+	<ship maxveloc="30" maxaccel="120" minaccel="10" maxomega="0" />
 	<damagable health="3" spawnondeath="enemyexplosion" />
 	<weapon>
 		<velocity x="0" y="60" />
 		<ordnance name="enemyspacehum" />
-		<shot delay="1.0" track="4" />
+		<shot delay="3.0" track="4" />
 	</weapon>
 	<soundcue>
 		<cue name="fire" sound="stargate-dynamofire" />
 	</soundcue>
 	<team name="red" />
 	<points value="200" />
-	<capturable resistance="3" spawnoncapture="frienddynamo" />
 </template>

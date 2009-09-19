@@ -25,4 +25,5 @@
 			<calllist name="diamond" />
 		</pushmatrix>
 	</renderable>
+	<particle />
 </template>

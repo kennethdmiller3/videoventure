@@ -1,4 +1,0 @@
-<?xml version="1.0" ?>
-<template name="enemyturretpod2warp" type="enemylongwarpin">
-	<expire switchonexpire="enemyturretpod2" />
-</template>

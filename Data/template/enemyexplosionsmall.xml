@@ -6,7 +6,7 @@
 		<spawn name="health1" />
 	</spawner>
 	<soundcue>
-		<cue sound="stargate-landerkill" />
+		<cue sound="stargate-explosion" />
 	</soundcue>
 	<renderable radius="200">
 		<block length="0.3">

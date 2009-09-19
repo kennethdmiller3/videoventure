@@ -2,17 +2,19 @@
 <!-- input binding -->
 <input>
 	
-	<!-- mouse/keyboard -->
+	<!-- keyboard -->
 	<bind name="move_x" type="keyboard" device="0" control="97" scale="1"/>
 	<bind name="move_x" type="keyboard" device="0" control="100" scale="-1"/>
 	<bind name="move_y" type="keyboard" device="0" control="119" scale="1"/>
 	<bind name="move_y" type="keyboard" device="0" control="115" scale="-1"/>
-	<bind name="aim_x" type="mouse_axis" device="0" control="0" scale="-1"/>
-	<bind name="aim_y" type="mouse_axis" device="0" control="1" scale="-1"/>
-	<bind name="fire1" type="mouse_button" device="0" control="1" scale="1"/>
-	<bind name="fire2" type="mouse_button" device="0" control="3" scale="1"/>
-	<bind name="fire3" type="keyboard" device="0" control="32" scale="1"/>
-	<bind name="fire4" type="keyboard" device="0" control="304" scale="1"/>
+	<bind name="aim_x" type="keyboard" device="0" control="276" scale="1"/>
+	<bind name="aim_x" type="keyboard" device="0" control="275" scale="-1"/>
+	<bind name="aim_y" type="keyboard" device="0" control="273" scale="1"/>
+	<bind name="aim_y" type="keyboard" device="0" control="274" scale="-1"/>
+	<bind name="fire1" type="keyboard" device="0" control="276" scale="1"/>
+	<bind name="fire1" type="keyboard" device="0" control="275" scale="1"/>
+	<bind name="fire1" type="keyboard" device="0" control="273" scale="1"/>
+	<bind name="fire1" type="keyboard" device="0" control="274" scale="1"/>
 
 	<!-- dual-analog joystick -->
 	<bind name="move_x" type="joystick_axis" device="0" control="0" deadzone="0.1" scale="-1"/>
@@ -24,9 +26,9 @@
 	<bind name="fire3" type="joystick_button" device="0" control="4" scale="1"/>
 	<bind name="fire4" type="joystick_button" device="0" control="6" scale="1"/>
 
-	<!-- menu -->
+	<!-- mouse -->
 	<bind name="menu_x" type="mouse_axis" device="0" control="0" scale="-1"/>
 	<bind name="menu_y" type="mouse_axis" device="0" control="1" scale="-1"/>
 	<bind name="click" type="mouse_button" device="0" control="1" scale="1"/>
-	
+
 </input>

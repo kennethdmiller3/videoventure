@@ -1,6 +1,0 @@
-<?xml version="1.0" ?>
-<template name="friendtargetspawn">
-	<spawner>
-		<spawn name="friendtargetappear" start="0" cycle="5" track="1" />
-	</spawner>
-</template>

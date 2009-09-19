@@ -8,6 +8,7 @@
 				<restitution value="0.5" />
 				<filter name="redunit" />
 			</circle>
+			<fixedrotation value="1"/>
 		</body>
 	</collidable>
 	<renderable radius="7" period="0.6">
@@ -92,24 +93,21 @@
 			<calllist name="diamond" />
 		</pushmatrix>
 	</renderable>
-	<!--aimer range="128" attack="128" leading="15" angle="180" drift="1" wanderturn="1" wanderturnrate="0.25" pursue="0" evade="0" close="32" filter="redbullet" /-->
 	<aimer>
-		<drift strength="1" />
-		<wander turn="1" turnrate="0.25" />
-		<target range="128" filter="redbullet" />
-		<aim strength="1" leading="15" />
+		<wander side="1" siderate="0.5" front="0.5" frontrate="0.25" />
+		<target range="512" filter="redbullet" />
+		<pursue strength="0.5" y="-64" />
 		<fire channel="1" range="128" angle="180" />
 		<close range="32" />
 	</aimer>
-	<ship maxveloc="30" maxaccel="60" minaccel="10" maxomega="1" />
+	<ship maxveloc="60" maxaccel="60" minaccel="10" maxomega="0" />
 	<damagable health="5" spawnondeath="enemyexplosion" />
 	<weapon>
-		<velocity x="0" y="0" />
+		<velocity x="0" y="-120" />
 		<inherit x="0" y="0" />
 		<ordnance name="enemymine" />
 		<shot delay="1.0" />
 	</weapon>
 	<team name="red" />
 	<points value="250" />
-	<capturable resistance="5" spawnoncapture="friendbomber" />
 </template>
