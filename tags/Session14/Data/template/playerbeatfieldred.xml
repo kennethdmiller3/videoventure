@@ -1,0 +1,29 @@
+﻿<?xml version="1.0" ?>
+<template name="playerbeatfieldred">
+	<explosion category="0" default="0" bit5="1" bit6="1">
+		<radius inner="32" outer="32"/>
+		<damage inner="1" outer="1"/>
+	</explosion>
+	<expire time="0.3"/>
+	<renderable depth="1">
+		<pushmatrix>
+			<scale>
+				<key time="0.000000" x="32" y="32"/>
+				<key time="0.066667" x="24" y="24"/>
+				<key time="0.133333" x="16" y="16"/>
+			</scale>
+			<color>
+				<key time="0.000000" r="1.0" g="1.0" b="1.0" a="0.5"/>
+				<key time="0.016667" r="1.0" g="1.0" b="1.0" a="0.5"/>
+				<key time="0.016667" r="1.0" g="1.0" b="0.0" a="0.3"/>
+				<key time="0.066667" r="1.0" g="1.0" b="0.0" a="0.1"/>
+				<key time="0.200000" r="1.0" g="0.5" b="0.0" a="0.0"/>
+			</color>
+			<calllist name="circle32"/>
+			<scale x="0.9" y="0.9"/>
+			<calllist name="circle32"/>
+			<scale x="0.9" y="0.9"/>
+			<calllist name="circle32"/>
+		</pushmatrix>
+	</renderable>
+</template>

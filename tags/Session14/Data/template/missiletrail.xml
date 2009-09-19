@@ -1,0 +1,16 @@
+<?xml version="1.0" ?>
+<template name="missiletrail">
+	<expire time="1.0" />
+	<renderable radius="4" depth="1">
+		<scale>
+			<key time="0.0" x="2" y="2" />
+			<key time="1.0" x="4" y="4" />
+		</scale>
+		<color>
+			<key time="0.0" r="0.7" g="0.7" b="0.7" a="0.0625" />
+			<key time="1.0" r="0.7" g="0.7" b="0.7" a="0.0" />
+		</color>
+		<calllist name="circle12" />
+	</renderable>
+	<particle/>
+</template>

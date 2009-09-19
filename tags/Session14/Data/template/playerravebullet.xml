@@ -1,0 +1,122 @@
+<?xml version="1.0" ?>
+<template name="playerravebullet">
+	<collidable>
+		<body name="main">
+			<fast value="1" />
+			<circle radius="3">
+				<friction value="1" />
+				<restitution value="0" />
+				<density value="1.0" />
+				<filter name="bluebullet" />
+			</circle>
+		</body>
+	</collidable>
+	<renderable radius="16">
+		<pushmatrix>
+			<scale x="16" y="16"/>
+			<pushmatrix>
+				<rotate>
+					<mul>
+						<value angle="1440"/>
+						<worldtime/>
+					</mul>
+				</rotate>
+				<triangles>
+					<loop name="angle" from="0" to="360" by="72">
+						<color r="0.0" g="0.5" b="1.0" a="0.5"/>
+						<vertex x="0" y="0"/>
+						<color r="0.0" g="0.3" b="1.0" a="0.0"/>
+						<vertex>
+							<x>
+								<sinewave input="angle" phase="-0.02" period="360"/>
+							</x>
+							<y>
+								<sinewave input="angle" phase="0.23" period="360"/>
+							</y>
+						</vertex>
+						<vertex>
+							<x>
+								<sinewave input="angle" phase="0.02" period="360"/>
+							</x>
+							<y>
+								<sinewave input="angle" phase="0.27" period="360"/>
+							</y>
+						</vertex>
+					</loop>
+				</triangles>
+			</pushmatrix>
+			<pushmatrix>
+				<rotate>
+					<mul>
+						<value angle="-1440"/>
+						<worldtime/>
+					</mul>
+				</rotate>
+				<triangles>
+					<loop name="angle" from="0" to="360" by="72">
+						<color r="1.0" g="0.5" b="0.5" a="0.5"/>
+						<vertex x="0" y="0"/>
+						<color r="1.0" g="0.3" b="0.0" a="0.0"/>
+						<vertex>
+							<x>
+								<sinewave input="angle" phase="-0.03" period="360" scale="0.75"/>
+							</x>
+							<y>
+								<sinewave input="angle" phase="0.22" period="360" scale="0.75"/>
+							</y>
+						</vertex>
+						<vertex>
+							<x>
+								<sinewave input="angle" phase="0.03" period="360" scale="0.75"/>
+							</x>
+							<y>
+								<sinewave input="angle" phase="0.28" period="360" scale="0.75"/>
+							</y>
+						</vertex>
+					</loop>
+				</triangles>
+			</pushmatrix>
+		</pushmatrix>
+		<drawlist>
+			<pushmatrix>
+				<color r="0.0" g="0.5" b="1.0" a="0.25" />
+				<scale x="5.0" y="5.0" />
+				<calllist name="circle16" />
+			</pushmatrix>
+			<pushmatrix>
+				<color r="0.4" g="0.7" b="1.0" a="0.5" />
+				<scale x="3.0" y="3.0" />
+				<calllist name="circle16" />
+			</pushmatrix>
+			<pushmatrix>
+				<color r="1.0" g="1.0" b="1.0" a="1.0" />
+				<scale x="2.0" y="2.0" />
+				<calllist name="circle16" />
+			</pushmatrix>
+		</drawlist>
+	</renderable>
+	<expire time="3.0" />
+	<bullet damage="20" spawnondeath="playerraveexplosion" />
+	<playercontroller>
+		<scale turn="0.2"/>
+		<aim type="aimcursor"/>
+		<move type="none"/>
+	</playercontroller>
+	<ship neutralveloc="180" maxaccel="1440" minaccel="1440" maxomega="5"/>
+	<link name="blue">
+		<spawner>
+			<inherit x="0" y="0" />
+			<velocity x="0" y="0" />
+			<variance x="16" y="16" />
+			<spawn name="playerravesparkblue" start="0.000000" cycle="0.016667" track="0" />
+		</spawner>
+	</link>
+	<link name="red">
+		<spawner>
+			<inherit x="0" y="0" />
+			<velocity x="0" y="0" />
+			<variance x="16" y="16" />
+			<spawn name="playerravesparkred" start="0.008333" cycle="0.016667" track="0" />
+		</spawner>
+	</link>
+</template>

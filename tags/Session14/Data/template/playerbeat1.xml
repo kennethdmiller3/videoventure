@@ -1,0 +1,34 @@
+﻿<?xml version="1.0"?>
+<template name="playerbeat1">
+	<!--
+	<soundcue>
+		<cue name="bass" sound="playerbassdrum"/>
+		<cue name="snare" sound="playersnaredrum"/>
+	</soundcue>
+	-->
+	<weapon>
+		<trigger type="always" />
+		<action>
+			<wait>
+				<mul>
+					<frac>
+						<mul>
+							<worldtime/>
+							<value value="-1.2"/>
+						</mul>
+					</frac>
+					<value value="0.833333"/>
+				</mul>
+			</wait>
+			<flash name="playerbeatfieldblue1"/>
+			<!--
+			<cue name="bass"/>
+			-->
+			<wait value="0.416667"/>
+			<flash name="playerbeatfieldred1"/>
+			<!--
+			<cue name="snare"/>
+			-->
+		</action>
+	</weapon>
+</template>

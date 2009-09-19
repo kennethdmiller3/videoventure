@@ -1,0 +1,109 @@
+<?xml version="1.0" ?>
+<template name="enemyshiptiny">
+	<collidable>
+		<body name="main">
+			<circle radius="4">
+				<density value="1" />
+				<friction value="0.5" />
+				<restitution value="0.5" />
+				<filter name="redunit" />
+			</circle>
+		</body>
+	</collidable>
+	<renderable radius="4" period="0.066667">
+		<pushmatrix>
+			<translate y="-4" />
+			<calldynamiclist name="enemyengineflame" />
+		</pushmatrix>
+		<drawlist>
+			<triangle_strip>
+				<color r="0.0" g="0.0" b="0.0" a="0.5" />
+				<vertex x="4.5" y="-3" />
+				<vertex x="4.5" y="-0.75" />
+				<vertex x="1.25" y="-4" />
+				<vertex x="2.25" y="2" />
+				<vertex x="1.25" y="-4.75" />
+				<vertex x="1.25" y="4.75" />
+				<vertex x="0" y="-4.75" />
+				<vertex x="-1.25" y="4.75" />
+				<vertex x="-1.25" y="-4.75" />
+				<vertex x="-2.25" y="2" />
+				<vertex x="-1.25" y="-4" />
+				<vertex x="-4.5" y="-0.75" />
+				<vertex x="-4.5" y="-3" />
+			</triangle_strip>
+			<triangle_strip>
+				<color r="1.0" g="0.2" b="0.1" a="1.0" />
+				<vertex x="4" y="-2.5" />
+				<vertex x="4" y="-1" />
+				<vertex x="1" y="-3.5" />
+				<vertex x="2" y="1.5" />
+				<vertex x="0.75" y="-4" />
+				<vertex x="0.75" y="4" />
+				<vertex x="0" y="-4" />
+				<vertex x="-0.75" y="4" />
+				<vertex x="-0.75" y="-4" />
+				<vertex x="-2" y="1.5" />
+				<vertex x="-1" y="-3.5" />
+				<vertex x="-4" y="-1" />
+				<vertex x="-4" y="-2.5" />
+			</triangle_strip>
+		</drawlist>
+	</renderable>
+	<aimer>
+		<drift strength="0.5"/>
+		<wander turn="0.5" turnrate="0.25" />
+		<target range="256" filter="redbullet" />
+		<aim strength="0.5" leading="0" />
+		<pursue strength="1" leading="0" />
+		<fire channel="1" range="64" />
+		<evade strength="1" />
+		<close range="32" />
+	</aimer>
+	<ship forwardveloc="90" neutralveloc="0" reverseveloc="-30" strafeveloc="30" maxaccel="240" minaccel="120" maxomega="2" />
+	<damagable health="1" spawnondeath="enemyfireballexplosion" />
+	<link name="gun" updateangle="0">
+		<collidable>
+			<body name="main">
+				<circle radius="2">
+					<density value="0.5"/>
+					<friction value="0.5"/>
+					<restitution value="0.5"/>
+					<filter name="inert"/>
+				</circle>
+			</body>
+		</collidable>
+		<aimer>
+			<target range="256" filter="redbullet" />
+			<aim strength="1" leading="0" />
+			<fire channel="1" range="128" angle="15" />
+		</aimer>
+		<ship maxveloc="0" maxaccel="0" minaccel="0" maxomega="3"/>
+		<weapon>
+			<shot delay="0.833333" />
+			<action>
+				<wait>
+					<mul>
+						<frac>
+							<mul>
+								<worldtime/>
+								<value value="-2.4"/>
+							</mul>
+						</frac>
+						<value value="0.416667"/>
+					</mul>
+				</wait>
+				<ordnance name="enemypulsebullet">
+					<velocity x="0" y="120" />
+					<inherit x="0" y="0" />
+				</ordnance>
+				<cue name="fire"/>
+			</action>
+		</weapon>
+		<soundcue>
+			<cue name="fire" sound="stargate-landerfire" />
+		</soundcue>
+	</link>
+	<team name="red" />
+	<points value="150" />
+</template>

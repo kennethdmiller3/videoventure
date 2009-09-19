@@ -1,0 +1,9 @@
+﻿<?xml version="1.0" ?>
+<template name="playerbeatfieldred1" type="playerbeatfieldred">
+	<renderable>
+		<pushmatrix>
+			<scale x="32" y="32"/>
+			<calldynamiclist name="playerbeatlightred"/>
+		</pushmatrix>
+	</renderable>
+</template>
