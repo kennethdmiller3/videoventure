@@ -1,0 +1,140 @@
+<?xml version="1.0" ?>
+<template name="enemybomber">
+	<collidable>
+		<body name="main">
+			<circle radius="5">
+				<density value="1" />
+				<friction value="0.5" />
+				<restitution value="0.5" />
+				<filter name="redunit" />
+			</circle>
+		</body>
+	</collidable>
+	<renderable radius="7" period="0.6">
+		<drawlist>
+			<triangle_strip>
+				<color r="0.0" g="0.0" b="0.0" a="0.5" />
+				<vertex x="0" y="5.75"/>
+				<vertex x="5.75" y="0"/>
+				<vertex x="-5.75" y="0"/>
+				<vertex x="3.75" y="-2"/>
+				<vertex x="-3.75" y="-2"/>
+				<vertex x="4.75" y="-3"/>
+				<vertex x="-4.75" y="-3"/>
+				<vertex x="0" y="-7.75"/>
+			</triangle_strip>
+			<triangle_strip>
+				<color r="1.0" g="0.2" b="0.1" a="1.0" />
+				<vertex x="0" y="5"/>
+				<vertex x="5" y="0"/>
+				<vertex x="-5" y="0"/>
+				<vertex x="3" y="-2"/>
+				<vertex x="-3" y="-2"/>
+				<vertex x="4" y="-3"/>
+				<vertex x="-4" y="-3"/>
+				<vertex x="0" y="-7"/>
+			</triangle_strip>
+		</drawlist>
+		<pushmatrix>
+			<scale x="4.5" y="4.5" />
+			<color>
+				<key time="0.0" r="1.0" g="1.0" b="1.0" a="1.0" />
+				<key time="0.2" r="1.0" g="1.0" b="1.0" a="1.0" />
+				<key time="0.2" r="1.0" g="0.8" b="0.1" a="1.0" />
+				<key time="0.4" r="1.0" g="0.8" b="0.1" a="1.0" />
+				<key time="0.4" r="1.0" g="0.2" b="0.1" a="1.0" />
+				<key time="0.6" r="1.0" g="0.2" b="0.1" a="1.0" />
+			</color>
+			<calllist name="diamond" />
+		</pushmatrix>
+		<pushmatrix>
+			<scale>
+				<key time="0.0" x="3.0" y="3.0" />
+				<key time="0.2" x="4.5" y="4.5" />
+				<key time="0.2" x="3.0" y="3.0" />
+				<key time="0.4" x="4.5" y="4.5" />
+				<key time="0.4" x="3.0" y="3.0" />
+				<key time="0.6" x="4.5" y="4.5" />
+			</scale>
+			<color>
+				<key time="0.0" r="1.0" g="0.8" b="0.1" a="1.0" />
+				<key time="0.2" r="1.0" g="0.8" b="0.1" a="1.0" />
+				<key time="0.2" r="1.0" g="0.2" b="0.1" a="1.0" />
+				<key time="0.4" r="1.0" g="0.2" b="0.1" a="1.0" />
+				<key time="0.4" r="1.0" g="1.0" b="1.0" a="1.0" />
+				<key time="0.6" r="1.0" g="1.0" b="1.0" a="1.0" />
+			</color>
+			<calllist name="diamond" />
+		</pushmatrix>
+		<pushmatrix>
+			<scale>
+				<key time="0.0" x="1.5" y="1.5" />
+				<key time="0.2" x="3.0" y="3.0" />
+				<key time="0.2" x="1.5" y="1.5" />
+				<key time="0.4" x="3.0" y="3.0" />
+				<key time="0.4" x="1.5" y="1.5" />
+				<key time="0.6" x="3.0" y="3.0" />
+			</scale>
+			<color>
+				<key time="0.0" r="1.0" g="0.2" b="0.1" a="1.0" />
+				<key time="0.2" r="1.0" g="0.2" b="0.1" a="1.0" />
+				<key time="0.2" r="1.0" g="1.0" b="1.0" a="1.0" />
+				<key time="0.4" r="1.0" g="1.0" b="1.0" a="1.0" />
+				<key time="0.4" r="1.0" g="0.8" b="0.1" a="1.0" />
+				<key time="0.6" r="1.0" g="0.8" b="0.1" a="1.0" />
+			</color>
+			<calllist name="diamond" />
+		</pushmatrix>
+		<pushmatrix>
+			<scale>
+				<key time="0.0" x="0.0" y="0.0" />
+				<key time="0.2" x="1.5" y="1.5" />
+				<key time="0.2" x="0.0" y="0.0" />
+				<key time="0.4" x="1.5" y="1.5" />
+				<key time="0.4" x="0.0" y="0.0" />
+				<key time="0.6" x="1.5" y="1.5" />
+			</scale>
+			<color>
+				<key time="0.0" r="1.0" g="1.0" b="1.0" a="1.0" />
+				<key time="0.2" r="1.0" g="1.0" b="1.0" a="1.0" />
+				<key time="0.2" r="1.0" g="0.8" b="0.1" a="1.0" />
+				<key time="0.4" r="1.0" g="0.8" b="0.1" a="1.0" />
+				<key time="0.4" r="1.0" g="0.2" b="0.1" a="1.0" />
+				<key time="0.6" r="1.0" g="0.2" b="0.1" a="1.0" />
+			</color>
+			<calllist name="diamond" />
+		</pushmatrix>
+	</renderable>
+	<aimer>
+		<drift strength="1" />
+		<wander turn="1" turnrate="0.25" />
+		<target range="128" filter="redbullet" />
+		<aim strength="1" leading="15" />
+		<fire channel="1" range="128" angle="180" />
+		<close range="32" />
+	</aimer>
+	<ship maxveloc="30" maxaccel="60" minaccel="10" maxomega="1" />
+	<damagable health="5" spawnondeath="enemyexplosion" />
+	<weapon>
+		<action>
+			<wait>
+				<mul>
+					<frac>
+						<mul>
+							<worldtime/>
+							<value value="-1.2"/>
+						</mul>
+					</frac>
+					<value value="0.833333"/>
+				</mul>
+			</wait>
+			<ordnance name="enemymine">
+				<velocity x="0" y="0" />
+				<inherit x="0" y="0" />
+			</ordnance>
+		</action>
+		<shot delay="0.833333" />
+	</weapon>
+	<team name="red" />
+	<points value="250" />
+</template>

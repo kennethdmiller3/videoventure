@@ -1,0 +1,57 @@
+<?xml version="1.0" ?>
+<template name="enemypulsebullet">
+	<collidable>
+		<body name="main">
+			<fast value="1" />
+			<circle radius="1.5">
+				<friction value="1" />
+				<restitution value="0" />
+				<density value="1.0" />
+				<filter name="redbullet" />
+			</circle>
+			<fixedrotation value="1" />
+		</body>
+	</collidable>
+	<renderable radius="3.5">
+		<line_strip width="1">
+			<color r="1.0" g="1.0" b="1.0" a="0.25" />
+			<vertex x="0" y="0"/>
+			<vertex x="0">
+				<y>
+					<key time="0.0" value="0"/>
+					<key time="0.5" value="-60"/>
+					<key time="3.0" value="-60"/>
+				</y>
+			</vertex>
+		</line_strip>
+		<pushmatrix>
+			<color r="1.0" g="1.0" b="1.0" a="0.25" />
+			<scale x="3.5" y="3.5" />
+			<calllist name="diamond" />
+		</pushmatrix>
+		<pushmatrix>
+			<color r="1.0" g="1.0" b="1.0" a="0.5" />
+			<scale x="2.5" y="2.5" />
+			<calllist name="diamond" />
+		</pushmatrix>
+		<pushmatrix>
+			<color>
+				<param>
+					<mod>
+						<time/>
+						<value value="0.066667"/>
+					</mod>
+				</param>
+				<key time="0.000000" r="1.0" g="1.0" b="1.0" a="1.0"/>
+				<key time="0.033333" r="1.0" g="1.0" b="1.0" a="1.0"/>
+				<key time="0.033333" r="0.0" g="0.0" b="0.0" a="1.0"/>
+				<key time="0.066667" r="0.0" g="0.0" b="0.0" a="1.0"/>
+			</color>
+			<scale x="1.5" y="1.5" />
+			<calllist name="diamond" />
+		</pushmatrix>
+	</renderable>
+	<expire time="3" />
+	<bullet damage="1" spawnondeath="enemybulletexplosion" />
+	<cancelable switchoncancel="canceldrop" spawnoncancel="enemybulletexplosion" tethered="1" backlash="1"/>
+</template>

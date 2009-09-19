@@ -1,0 +1,63 @@
+<?xml version="1.0" ?>
+<template name="playershipenter">
+	<collidable>
+		<body name="main">
+			<circle radius="8">
+				<density value="1" />
+				<friction value="0.5" />
+				<restitution value="0.5" />
+				<filter name="inert" />
+			</circle>
+		</body>
+	</collidable>
+	<drawlist>
+		<triangle_strip>
+			<vertex x="8" y="-8" />
+			<vertex x="8" y="-5.5" />
+			<vertex x="2.5" y="-8" />
+			<vertex x="3" y="-3" />
+			<vertex x="2" y="-6.5" />
+			<vertex x="3" y="0.5" />
+			<vertex x="1.5" y="-6.5" />
+			<vertex x="1.5" y="2" />
+			<vertex x="1" y="-8" />
+			<vertex x="1" y="8" />
+			<vertex x="0" y="-8" />
+			<vertex x="-1" y="8" />
+			<vertex x="-1" y="-8" />
+			<vertex x="-1.5" y="2" />
+			<vertex x="-1.5" y="-6.5" />
+			<vertex x="-3" y="0.5" />
+			<vertex x="-2" y="-6.5" />
+			<vertex x="-3" y="-3" />
+			<vertex x="-2.5" y="-8" />
+			<vertex x="-8" y="-5.5" />
+			<vertex x="-8" y="-8" />
+		</triangle_strip>
+	</drawlist>
+	<renderable radius="8">
+		<color>
+			<key time="0.0" r="1.0" g="1.0" b="1.0" a="1.0"/>
+			<key time="0.5" r="1.0" g="1.0" b="1.0" a="1.0"/>
+			<key time="1.0" r="0.4" g="0.5" b="1.0" a="1.0"/>
+		</color>
+		<calllist name="playershipenter"/>
+		<translate y="-8"/>
+		<scale>
+			<key time="0.0" x="3" y="3"/>
+			<key time="0.5" x="1" y="1"/>
+			<key time="1.0" x="1" y="1"/>
+		</scale>
+		<block length="0.066667" repeat="-1">
+			<calldynamiclist name="playerengineflame" />
+		</block>
+	</renderable>
+	<playercontroller>
+		<scale turn="1"/>
+		<aim type="up"/>
+		<move type="moveworld"/>
+	</playercontroller>
+	<ship maxveloc="180" maxaccel="720" minaccel="180" maxomega="1"/>
+	<team name="blue" />
+	<expire time="1" switchonexpire="playership"/>
+</template>
