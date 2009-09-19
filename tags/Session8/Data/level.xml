@@ -1,0 +1,660 @@
+<?xml version="1.0" standalone="no"?>
+<!-- Test Level -->
+<world xmin="-384" ymin="-192" xmax="384" ymax="192" wall="0">
+	<!-- player camera -->
+	<playercamera>
+		<aim scale="0" filter="0"/>
+		<scale x="0.25" y="0"/>
+	</playercamera>
+	<entity name="perimeter">
+		<collidable>
+			<body>
+				<edge loop="1">
+					<vertex x="-200" y="110"/>
+					<vertex x="200" y="110"/>
+					<vertex x="200" y="-110"/>
+					<vertex x="-200" y="-110"/>
+					<restitution value="0"/>
+					<friction value="0"/>
+					<category value="0"/>
+					<mask default="0" bit1="1"/>
+				</edge>
+			</body>
+		</collidable>
+	</entity>
+	<!-- sounds -->
+	<import name="sound/stargate-explosion.xml" />
+	<import name="sound/stargate-enemykill.xml" />
+	<import name="sound/stargate-bigexplosion.xml" />
+	<import name="sound/stargate-playershipdeath.xml" />
+	<import name="sound/stargate-extralife.xml" />
+	<import name="sound/stargate-landerfire.xml" />
+	<import name="sound/stargate-spaceguppyshot.xml" />
+	<import name="sound/stargate-createmutant.xml" />
+	<import name="sound/stargate-dynamofire.xml" />
+	<!-- players -->
+	<entity name="1P">
+		<position x="0" y="-128" />
+		<velocity x="0" y="240" />
+		<player name="playership" start="1" cycle="4" lives="3" firstextra="20000" extra="50000" />
+		<team name="blue" />
+	</entity>
+	<!-- draw lists -->
+	<import name="drawlist/square.xml" />
+	<import name="drawlist/diamond.xml" />
+	<import name="drawlist/circle8.xml" />
+	<import name="drawlist/circle12.xml" />
+	<import name="drawlist/circle16.xml" />
+	<import name="drawlist/circle32.xml" />
+	<import name="drawlist/shiptiny.xml" />
+	<import name="drawlist/shipsmall.xml" />
+	<import name="drawlist/ship.xml" />
+	<!-- reticule -->
+	<import name="drawlist/reticule.xml" />
+	<!-- nebula -->
+	<entity name="nebula">
+		<texture mode="modulate" minfilter="nearest" magfilter="nearest" wraps="repeat" wrapt="repeat">
+			<!-- perlin width="64" height="64" octaves="6" frequency="0.015625" persistence="0.625" -->
+			<perlin width="256" height="256" octaves="8" frequency="0.00390625" persistence="0.75">
+				<key time="-1.000000" r="1" g="1" b="1" a="0.00"/>
+				<key time="-0.333333" r="1" g="1" b="1" a="0.00"/>
+				<key time="1.000000" r="1" g="1" b="1" a="1.00"/>
+			</perlin>
+		</texture>
+		<renderable radius="512" period="10">
+			<color r="1.0" g="1.0" b="1.0" a="1.0" />
+			<set name="t" type="texcoord">
+				<key time="0" s="0" t="1" />
+				<key time="10" s="0" t="0" />
+			</set>
+			<pushattrib texture="1">
+				<bindtexture name="nebula" />
+				<quads>
+					<color r="0.0" g="0.0" b="1.0" a="0.25" />
+					<texcoord variable="t" />
+					<vertex x="512" y="512" z="256" />
+					<add name="t" type="texcoord" s="0.25" t="0" r="0" q="0"/>
+					<texcoord variable="t" />
+					<vertex x="-512" y="512" z="256" />
+					<add name="t" type="texcoord" s="0" t="0.25" r="0" q="0"/>
+					<texcoord variable="t" />
+					<vertex x="-512" y="-512" z="256" />
+					<add name="t" type="texcoord" s="-0.25" t="0" r="0" q="0"/>
+					<texcoord variable="t" />
+					<vertex x="512" y="-512" z="256" />
+					<color r="0.0" g="1.0" b="0.0" a="0.25" />
+					<add name="t" type="texcoord" s="0.25" t="-0.75" r="0" q="0"/>
+					<texcoord variable="t" />
+					<vertex x="768" y="768" z="384" />
+					<add name="t" type="texcoord" s="0.375" t="0" r="0" q="0"/>
+					<texcoord variable="t" />
+					<vertex x="-768" y="768" z="384" />
+					<add name="t" type="texcoord" s="0" t="0.375" r="0" q="0"/>
+					<texcoord variable="t" />
+					<vertex x="-768" y="-768" z="384" />
+					<add name="t" type="texcoord" s="-0.375" t="0" r="0" q="0"/>
+					<texcoord variable="t" />
+					<vertex x="768" y="-768" z="384" />
+					<color r="1.0" g="0.0" b="0.0" a="0.25" />
+					<add name="t" type="texcoord" s="0.375" t="-1.25" r="0" q="0"/>
+					<texcoord variable="t" />
+					<vertex x="1024" y="1024" z="512" />
+					<add name="t" type="texcoord" s="0.5" t="0" r="0" q="0"/>
+					<texcoord variable="t" />
+					<vertex x="-1024" y="1024" z="512" />
+					<add name="t" type="texcoord" s="0" t="0.5" r="0" q="0"/>
+					<texcoord variable="t" />
+					<vertex x="-1024" y="-1024" z="512" />
+					<add name="t" type="texcoord" s="-0.5" t="0" r="0" q="0"/>
+					<texcoord variable="t" />
+					<vertex x="1024" y="-1024" z="512" />
+				</quads>
+			</pushattrib>
+			<clear name="t" />
+		</renderable>
+	</entity>
+	<!-- starfield -->
+	<entity name="starfield">
+		<renderable radius="1536" period="3">
+			<translate>
+				<key time="0" y="0"/>
+				<key time="3" y="-1024"/>
+			</translate>
+			<drawlist>
+				<quads>
+					<set name="a" type="color" r="1" g="1" b="1" a="1"/>
+					<repeat count="1024">
+						<set name="c" type="color" rand="1" r_avg="0.75" r_var="0.25" g_avg="0.75" g_var="0.25" b_avg="0.75" b_var="0.25" a_avg="1" a_var="0" />
+						<mul name="c" variable="a"/>
+						<color variable="c"/>
+						<set name="p0" type="position" rand="1" x_avg="0" x_var="512" y_avg="0" y_var="512" z_avg="640" z_var="384" />
+						<repeat count="2">
+							<add name="p0" type="translate" x="-1" y="-1" />
+							<vertex variable="p0" />
+							<add name="p0" type="translate" x="2" y="0" />
+							<vertex variable="p0" />
+							<add name="p0" type="translate" x="0" y="2" />
+							<vertex variable="p0" />
+							<add name="p0" type="translate" x="-2" y="0" />
+							<vertex variable="p0" />
+							<add name="p0" type="translate" x="0" y="1024"/>
+						</repeat>
+						<add name="a" type="color" a="-0.0009765625"/>
+					</repeat>
+				</quads>
+				<clear name="p0" />
+				<clear name="a" />
+				<clear name="c" />
+			</drawlist>
+		</renderable>
+	</entity>
+	<!-- collidable filters -->
+	<collidablefilter name="inert">
+		<category value="-1" />
+		<mask default="0" />
+	</collidablefilter>
+	<collidablefilter name="environment">
+		<category value="0" />
+		<mask default="1" />
+	</collidablefilter>
+	<collidablefilter name="blueunit">
+		<category value="1" />
+		<mask default="0" bit0="1" bit1="1" bit2="1" bit3="1" bit4="1"/>
+	</collidablefilter>
+	<collidablefilter name="bluemissile">
+		<category value="1" />
+		<mask default="0" bit0="1" bit3="1" bit4="1"/>
+	</collidablefilter>
+	<collidablefilter name="bluebullet">
+		<category value="2" />
+		<mask default="0" bit0="1" bit3="1"/>
+	</collidablefilter>
+	<collidablefilter name="redunit">
+		<category value="3" />
+		<mask default="0" bit0="1" bit1="1" bit2="1" bit3="1" bit4="1"/>
+	</collidablefilter>
+	<collidablefilter name="redmissile">
+		<category value="3" />
+		<mask default="0" bit0="1" bit1="1" bit2="1"/>
+	</collidablefilter>
+	<collidablefilter name="redbullet">
+		<category value="4" />
+		<mask default="0" bit0="1" bit1="1"/>
+	</collidablefilter>
+	<!-- music -->
+	<music name="soundtrack" file="4mat-thalamusic.mod"/>
+
+	<!-- player bullet explosion -->
+	<import name="template/playermachinegunhit.xml" />
+	<!-- player bullet -->
+	<import name="template/playermachinegunbullet.xml" />
+	<!-- player machine gun weapon -->
+	<import name="template/playermachinegunflash.xml" />
+	<import name="template/playermachinegun.xml" />
+	<template name="playermachinegun">
+		<weapon>
+			<inherit x="0" y="0" />
+		</weapon>
+	</template>
+	<!-- player ship -->
+	<template name="playership">
+		<collidable>
+			<body name="main">
+				<box w="4" h="8">
+					<density value="2"/>
+					<friction value="0.5"/>
+					<restitution value="0.5"/>
+					<filter name="blueunit"/>
+					<mask bit4="0"/>
+					<group value="-1"/>
+				</box>
+				<box w="2" h="3">
+					<position x="0" y="-4"/>
+					<density value="0"/>
+					<friction value="0.5"/>
+					<restitution value="0.5"/>
+					<filter name="blueunit"/>
+					<group value="-1"/>
+				</box>
+			</body>
+		</collidable>
+		<drawlist>
+			<triangle_strip>
+				<vertex x="4.5" y="-0.5" />
+				<vertex x="4.5" y="-3.5" />
+				<vertex x="3" y="-0.5" />
+				<vertex x="3" y="-5" />
+				<vertex x="2" y="2.5" />
+				<vertex x="2.5" y="-8" />
+				<vertex x="1.5" y="2.5" />
+				<vertex x="0.5" y="-8" />
+				<vertex x="1" y="8" />
+				<vertex x="0" y="-6.5" />
+				<vertex x="-1" y="8" />
+				<vertex x="-0.5" y="-8" />
+				<vertex x="-1.5" y="2.5" />
+				<vertex x="-2.5" y="-8" />
+				<vertex x="-2" y="2.5" />
+				<vertex x="-3" y="-5" />
+				<vertex x="-3" y="-0.5" />
+				<vertex x="-4.5" y="-3.5" />
+				<vertex x="-4.5" y="-0.5" />
+			</triangle_strip>
+		</drawlist>
+		<renderable radius="8" period="0.066667">
+			<color r="0.4" g="0.5" b="1.0" a="1.0"/>
+			<calllist name="playership"/>
+			<translate y="-8"/>
+			<set name="s" type="scale" variable="thrust"/>
+			<add name="s" type="scale" y="3.0"/>
+			<mul name="s" type="scale" y="0.25"/>
+			<swizzle name="s" type="scale" x="y" y="y"/>
+			<scale variable="s"/>
+			<pushmatrix>
+				<scale>
+					<key time="0.000000" x="0.5" y="0.5"/>
+					<key time="0.033333" x="1.0" y="1.0"/>
+					<key time="0.066667" x="0.5" y="0.5"/>
+				</scale>
+				<drawlist>
+					<triangles>
+						<color r="0.4" g="0.7" b="1.0" a="1.0"/>
+						<vertex x="1" y="0"/>
+						<vertex x="0" y="-8"/>
+						<vertex x="-1" y="0"/>
+						<color r="0.0" g="0.5" b="1.0" a="0.5"/>
+						<vertex x="2" y="0"/>
+						<vertex x="0" y="-16"/>
+						<vertex x="-2" y="0"/>
+						<color r="0.0" g="0.0" b="1.0" a="0.25"/>
+						<vertex x="3" y="0"/>
+						<vertex x="0" y="-24"/>
+						<vertex x="-3" y="0"/>
+					</triangles>
+				</drawlist>
+			</pushmatrix>
+			<translate y="-1"/>
+			<scale>
+				<key time="0.000000" x="2" y="2"/>
+				<key time="0.033333" x="1" y="1"/>
+				<key time="0.066667" x="2" y="2"/>
+			</scale>
+			<color r="0.4" g="0.7" b="1.0" a="0.75"/>
+			<calllist name="circle12"/>
+			<scale x="2" y="2"/>
+			<color r="0.0" g="0.5" b="1.0" a="0.5"/>
+			<calllist name="circle12"/>
+			<scale x="1.5" y="1.5"/>
+			<color r="0.0" g="0.0" b="1.0" a="0.25"/>
+			<calllist name="circle12"/>
+		</renderable>
+		<damagable health="10" spawnondeath="playershipdeath"/>
+		<playercontroller>
+			<scale turn="1"/>
+			<aim type="up"/>
+			<move type="moveworld"/>
+		</playercontroller>
+		<ship maxveloc="120" maxaccel="960" minaccel="480" maxomega="1"/>
+		<team name="blue"/>
+		<soundcue>
+			<cue name="extralife" sound="stargate-extralife"/>
+		</soundcue>
+		<link name="turret" updateangle="0">
+			<offset x="0" y="-2" angle="0"/>
+			<collidable>
+				<body name="main">
+					<circle radius="2">
+						<density value="1"/>
+						<friction value="0.5"/>
+						<restitution value="0.5"/>
+						<filter name="inert"/>
+					</circle>
+				</body>
+			</collidable>
+			<renderable radius="10">
+				<drawlist>
+					<quads>
+						<color r="0.0" g="0.5" b="1.0" a="1.0"/>
+						<vertex x="1.0" y="-2.5"/>
+						<vertex x="0.25" y="0.0"/>
+						<color r="1.0" g="1.0" b="1.0" a="1.0"/>
+						<vertex x="0.0" y="0.0"/>
+						<vertex x="0.0" y="-2.5"/>
+						<vertex x="0.0" y="0.0"/>
+						<vertex x="0.0" y="-2.5"/>
+						<color r="0.0" g="0.5" b="1.0" a="1.0"/>
+						<vertex x="-1.0" y="-2.5"/>
+						<vertex x="-0.25" y="0.0"/>
+
+						<color r="0.6" g="0.6" b="0.6" a="1.0"/>
+						<vertex x="1.0" y="10.0"/>
+						<vertex x="0.75" y="8.5"/>
+						<color r="1.0" g="1.0" b="1.0" a="1.0"/>
+						<vertex x="0.0" y="8.5"/>
+						<vertex x="0.0" y="10.0"/>
+						<vertex x="0.0" y="10.0"/>
+						<vertex x="0.0" y="8.5"/>
+						<color r="0.6" g="0.6" b="0.6" a="1.0"/>
+						<vertex x="-0.75" y="8.5"/>
+						<vertex x="-1.0" y="10.0"/>`
+
+						<color r="0.3" g="0.3" b="0.3" a="1.0"/>
+						<vertex x="0.5" y="8.5"/>
+						<vertex x="0.5" y="8.0"/>
+						<color r="0.5" g="0.5" b="0.5" a="1.0"/>
+						<vertex x="0.0" y="8.0"/>
+						<vertex x="0.0" y="8.5"/>
+						<vertex x="0.0" y="8.5"/>
+						<vertex x="0.0" y="8.0"/>
+						<color r="0.3" g="0.3" b="0.3" a="1.0"/>
+						<vertex x="-0.5" y="8.0"/>
+						<vertex x="-0.5" y="8.5"/>
+
+						<color r="0.6" g="0.6" b="0.6" a="1.0"/>
+						<vertex x="0.75" y="8.0"/>
+						<vertex x="0.75" y="7.0"/>
+						<color r="1.0" g="1.0" b="1.0" a="1.0"/>
+						<vertex x="0.0" y="7.0"/>
+						<vertex x="0.0" y="8.0"/>
+						<vertex x="0.0" y="8.0"/>
+						<vertex x="0.0" y="7.0"/>
+						<color r="0.6" g="0.6" b="0.6" a="1.0"/>
+						<vertex x="-0.75" y="7.0"/>
+						<vertex x="-0.75" y="8.0"/>
+
+						<color r="0.3" g="0.3" b="0.3" a="1.0"/>
+						<vertex x="0.5" y="7.0"/>
+						<vertex x="0.5" y="6.5"/>
+						<color r="0.5" g="0.5" b="0.5" a="1.0"/>
+						<vertex x="0.0" y="6.5"/>
+						<vertex x="0.0" y="7.0"/>
+						<vertex x="0.0" y="7.0"/>
+						<vertex x="0.0" y="6.5"/>
+						<color r="0.3" g="0.3" b="0.3" a="1.0"/>
+						<vertex x="-0.5" y="6.5"/>
+						<vertex x="-0.5" y="7.0"/>
+
+						<color r="0.6" g="0.6" b="0.6" a="1.0"/>
+						<vertex x="0.75" y="6.5"/>
+						<vertex x="0.75" y="-1.5"/>
+						<color r="1.0" g="1.0" b="1.0" a="1.0"/>
+						<vertex x="0.0" y="-1.5"/>
+						<vertex x="0.0" y="6.5"/>
+						<vertex x="0.0" y="6.5"/>
+						<vertex x="0.0" y="-1.5"/>
+						<color r="0.6" g="0.6" b="0.6" a="1.0"/>
+						<vertex x="-0.75" y="-1.5"/>
+						<vertex x="-0.75" y="6.5"/>
+
+						<color r="0.0" g="0.5" b="1.0" a="1.0"/>
+						<vertex x="1.0" y="2.25"/>
+						<vertex x="1.25" y="1.5"/>
+						<color r="1.0" g="1.0" b="1.0" a="1.0"/>
+						<vertex x="0.0" y="1.5"/>
+						<vertex x="0.0" y="2.25"/>
+						<vertex x="0.0" y="2.25"/>
+						<vertex x="0.0" y="1.5"/>
+						<color r="0.0" g="0.5" b="1.0" a="1.0"/>
+						<vertex x="-1.25" y="1.5"/>
+						<vertex x="-1.0" y="2.25"/>
+
+						<color r="0.7" g="0.7" b="0.7" a="1.0"/>
+						<vertex x="1.25" y="1.5"/>
+						<vertex x="1.5" y="0.75"/>
+						<color r="1.0" g="1.0" b="1.0" a="1.0"/>
+						<vertex x="0.0" y="0.75"/>
+						<vertex x="0.0" y="1.5"/>
+						<vertex x="0.0" y="1.5"/>
+						<vertex x="0.0" y="0.75"/>
+						<color r="0.7" g="0.7" b="0.7" a="1.0"/>
+						<vertex x="-1.5" y="0.75"/>
+						<vertex x="-1.25" y="1.5"/>
+
+						<color r="0.0" g="0.5" b="1.0" a="1.0"/>
+						<vertex x="1.5" y="0.75"/>
+						<vertex x="1.75" y="0.0"/>
+						<color r="1.0" g="1.0" b="1.0" a="1.0"/>
+						<vertex x="0.0" y="0.0"/>
+						<vertex x="0.0" y="0.75"/>
+						<vertex x="0.0" y="0.75"/>
+						<vertex x="0.0" y="0.0"/>
+						<color r="0.0" g="0.5" b="1.0" a="1.0"/>
+						<vertex x="-1.75" y="0.0"/>
+						<vertex x="-1.5" y="0.75"/>
+
+						<color r="0.7" g="0.7" b="0.7" a="1.0"/>
+						<vertex x="1.75" y="0.0"/>
+						<vertex x="2.25" y="-1.5"/>
+						<color r="1.0" g="1.0" b="1.0" a="1.0"/>
+						<vertex x="0.0" y="-1.5"/>
+						<vertex x="0.0" y="0.0"/>
+						<vertex x="0.0" y="0.0"/>
+						<vertex x="0.0" y="-1.5"/>
+						<color r="0.7" g="0.7" b="0.7" a="1.0"/>
+						<vertex x="-2.25" y="-1.5"/>
+						<vertex x="-1.75" y="0.0"/>
+
+						<vertex x="2.25" y="-1.5"/>
+						<vertex x="1.25" y="-2.5"/>
+						<color r="1.0" g="1.0" b="1.0" a="1.0"/>
+						<vertex x="0.0" y="-2.5"/>
+						<vertex x="0.0" y="-1.5"/>
+						<vertex x="0.0" y="-1.5"/>
+						<vertex x="0.0" y="-2.5"/>
+						<color r="0.7" g="0.7" b="0.7" a="1.0"/>
+						<vertex x="-1.25" y="-2.5"/>
+						<vertex x="-2.25" y="-1.5"/>
+
+						<color r="0.3" g="0.3" b="0.3" a="1.0"/>
+						<vertex x="0.625" y="-2.5"/>
+						<vertex x="0.625" y="-3.0"/>
+						<color r="0.5" g="0.5" b="0.5" a="1.0"/>
+						<vertex x="0.0" y="-3.0"/>
+						<vertex x="0.0" y="-2.5"/>
+						<vertex x="0.0" y="-2.5"/>
+						<vertex x="0.0" y="-3.0"/>
+						<color r="0.3" g="0.3" b="0.3" a="1.0"/>
+						<vertex x="-0.625" y="-3.0"/>
+						<vertex x="-0.625" y="-2.5"/>
+
+						<color r="0.6" g="0.6" b="0.6" a="1.0"/>
+						<vertex x="1.0" y="-3.0"/>
+						<vertex x="0.75" y="-5.5"/>
+						<color r="1.0" g="1.0" b="1.0" a="1.0"/>
+						<vertex x="0.0" y="-5.5"/>
+						<vertex x="0.0" y="-3.0"/>
+						<vertex x="0.0" y="-3.0"/>
+						<vertex x="0.0" y="-5.5"/>
+						<color r="0.6" g="0.6" b="0.6" a="1.0"/>
+						<vertex x="-0.75" y="-5.5"/>
+						<vertex x="-1.0" y="-3.0"/>
+					</quads>
+				</drawlist>
+			</renderable>
+			<ship maxveloc="0" maxaccel="0" minaccel="0" maxomega="20"/>
+			<link name="cannon" secondary="playermachinegun">
+				<offset x="0" y="10" angle="0"/>
+				<weapon>
+					<trigger channel="1"/>
+				</weapon>
+			</link>
+			<playercontroller>
+				<scale turn="0.05"/>
+				<aim type="aimworld"/>
+				<move type="none"/>
+			</playercontroller>
+			<team name="blue"/>
+		</link>
+	</template>
+	
+	<!-- player ship death -->
+	<import name="template/playershipdeath.xml" />
+	<!-- player ship explosion -->
+	<import name="template/playershipexplosion.xml" />
+
+	<!-- tiny enemy explosion -->
+	<import name="template/enemyfireballexplosion.xml" />
+	<!-- small enemy explosion -->
+	<import name="template/enemyexplosionsmall.xml" />
+	<!-- enemy explosion -->
+	<import name="template/enemyexplosion.xml" />
+	<!-- enemy mine explosion -->
+	<import name="template/enemymineexplosion.xml" />
+	<!-- enemy bullet explosion -->
+	<import name="template/enemybulletexplosion.xml" />
+	<!-- enemy bullet -->
+	<import name="template/enemybullet.xml" />
+	<!-- enemy pulse bullet -->
+	<import name="template/enemypulsebullet.xml" />
+	<!-- enemy weapon -->
+	<import name="template/enemyweapon.xml" />
+
+	<!-- enemy engine flame -->
+	<import name="drawlist/enemyengineflame.xml" />
+	
+	<!-- tiny enemy ship -->
+	<import name="template/enemyshiptiny.xml" />
+	
+	<!-- small enemy ship -->
+	<import name="template/enemyshipsmall.xml" />
+
+	<!-- normal enemy ship -->
+	<import name="template/enemyshipweapon.xml" />
+	<import name="template/enemyship.xml" />
+
+	<!-- enemy mine -->
+	<import name="template/enemymine.xml" />
+	
+	<!-- enemy bomber -->
+	<import name="template/enemybomber.xml" />
+
+	<!-- enemy space hum -->
+	<import name="template/enemyspacehum.xml" />
+	<import name="template/enemyspacehumtrail.xml" />
+
+	<!-- enemy dynamo -->
+	<import name="template/enemydynamo.xml" />
+
+	<!-- enemy vapor mine -->
+	<import name="template/enemymineshrapnel.xml" />
+	<import name="template/enemymineshrapnelspawn.xml" />
+	<import name="template/enemyvapormineexplosion.xml" />
+	<import name="template/enemyvapormine.xml" />
+	
+	<!-- enemy command ship -->
+	<import name="template/enemycommandship.xml" />
+
+
+	<!-- enemy large ship -->
+	<import name="template/enemyshiplarge.xml" />
+
+	<!-- enemy large ship: burst shot -->
+	<template name="enemyshipburst" type="enemyshiplarge">
+		<link name="turret">
+			<weapon>
+				<offset x="0" y="4" />
+				<inherit x="0" y="0"/>
+				<velocity x="0" y="180" />
+				<ordnance name="enemypulsebullet" />
+				<shot delay="1.0" />
+				<burst length="5" delay="0.1"/>
+			</weapon>
+			<soundcue>
+				<cue name="fire" sound="stargate-spaceguppyshot" />
+			</soundcue>
+		</link>
+	</template>
+
+	<!-- enemy large ship: spread shot -->
+	<template name="enemyshipspread" type="enemyshiplarge">
+		<link name="turret">
+			<weapon>
+				<offset angle="-10" x="0" y="4" />
+				<inherit x="0" y="0"/>
+				<velocity x="0" y="180" />
+				<ordnance name="enemypulsebullet" />
+				<shot delay="1.0" />
+				<salvo shots="5">
+					<offset angle="5"/>
+				</salvo>
+			</weapon>
+			<soundcue>
+				<cue name="fire" sound="stargate-spaceguppyshot" />
+			</soundcue>
+		</link>
+	</template>
+
+	<!-- spawn patterns -->
+
+	<entity name="enemyshiptinyspawn">
+		<position x="0" y="128"/>
+		<spawner>
+			<velocity x="0" y="-90" />
+			<scatter x="160"/>
+			<spawn name="enemyshiptiny" start="5" cycle="2" track="8"/>
+		</spawner>
+	</entity>
+	
+	<entity name="enemybomberspawn">
+		<position x="0" y="128"/>
+		<spawner>
+			<velocity x="0" y="-90" />
+			<scatter x="160"/>
+			<spawn name="enemybomber" start="10" cycle="10" track="4"/>
+		</spawner>
+	</entity>
+	
+	<entity name="enemyshipsmallspawn">
+		<position x="0" y="-128"/>
+		<spawner>
+			<velocity x="0" y="90" />
+			<scatter x="160"/>
+			<spawn name="enemyshipsmall" start="20" cycle="5" track="4"/>
+		</spawner>
+	</entity>
+
+	<entity name="enemydynamospawn">
+		<position x="0" y="-128"/>
+		<spawner>
+			<velocity x="0" y="90" />
+			<scatter x="160"/>
+			<spawn name="enemydynamo" start="30" cycle="10" track="1"/>
+		</spawner>
+	</entity>
+	
+	<entity name="enemyshipspawn">
+		<position x="0" y="128"/>
+		<spawner>
+			<velocity x="0" y="-90" />
+			<scatter x="160"/>
+			<spawn name="enemyship" start="45" cycle="15" track="1"/>
+		</spawner>
+	</entity>
+
+	<entity name="enemycommandshipspawn">
+		<position x="0" y="-128"/>
+		<spawner>
+			<velocity x="0" y="90" />
+			<scatter x="160"/>
+			<spawn name="enemycommandship" start="60" cycle="10" track="1"/>
+		</spawner>
+	</entity>
+
+	<entity name="enemyshipburstspawn">
+		<position x="0" y="128"/>
+		<spawner>
+			<velocity x="0" y="-90" />
+			<scatter x="160"/>
+			<spawn name="enemyshipburst" start="90" cycle="15" track="1"/>
+		</spawner>
+	</entity>
+	
+	<entity name="enemyshipspreadspawn">
+		<position x="0" y="-128"/>
+		<spawner>
+			<velocity x="0" y="90" />
+			<scatter x="160"/>
+			<spawn name="enemyshipspread" start="120" cycle="15" track="1"/>
+		</spawner>
+	</entity>
+</world>

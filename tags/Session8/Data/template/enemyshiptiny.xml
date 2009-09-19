@@ -1,0 +1,35 @@
+<?xml version="1.0" ?>
+<template name="enemyshiptiny">
+	<collidable>
+		<body name="main">
+			<circle radius="4">
+				<density value="1" />
+				<friction value="0.5" />
+				<restitution value="0.5" />
+				<filter name="redunit" />
+			</circle>
+			<fixedrotation value="1"/>
+		</body>
+	</collidable>
+	<renderable radius="4" period="0.066667">
+		<color r="1.0" g="0.2" b="0.1" a="1.0" />
+		<calllist name="shiptiny" />
+		<translate y="-4" />
+		<calldynamiclist name="enemyengineflame" />
+	</renderable>
+	<aimer>
+		<wander side="0.25" siderate="0.25" front="0.25" frontrate="0.25"/>
+		<target range="512" filter="redbullet" />
+		<pursue strength="1" leading="0" y="64" />
+		<fire channel="1" range="128" />
+		<evade strength="1" />
+		<close range="32" />
+	</aimer>
+	<ship maxveloc="120" maxaccel="120" minaccel="10" maxomega="0" />
+	<damagable health="1" spawnondeath="enemyfireballexplosion" />
+	<link name="gun" secondary="enemyweapon">
+		<offset x="0" y="4" angle="0" />
+	</link>
+	<team name="red" />
+	<points value="150" />
+</template>
