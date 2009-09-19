@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" standalone="no"?>
+<!-- input binding -->
+<input>
+
+	<!-- single-analog joystick -->
+	<bind name="move_x" type="joystick_axis" device="0" control="0" deadzone="0.1" scale="-1.125"/>
+	<bind name="move_y" type="joystick_axis" device="0" control="1" deadzone="0.1" scale="-1.125"/>
+	<bind name="aim_x" type="joystick_axis" device="0" control="0" deadzone="0.1"  scale="-1.125"/>
+	<bind name="aim_y" type="joystick_axis" device="0" control="1" deadzone="0.1" scale="-1.125"/>
+	<bind name="fire1" type="joystick_button" device="0" control="0" scale="1"/>
+	<bind name="fire2" type="joystick_button" device="0" control="1" scale="1"/>
+
+</input>

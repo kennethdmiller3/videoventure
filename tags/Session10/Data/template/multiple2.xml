@@ -1,0 +1,6 @@
+<?xml version="1.0" ?>
+<template name="multiple2" type="multiple">
+	<link name="multiple" secondary="multiple" updateangle="0" updateposition="0">
+		<offset x="0" y="0" />
+	</link>
+</template>
