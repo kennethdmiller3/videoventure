@@ -1,0 +1,61 @@
+<?xml version="1.0" ?>
+<template name="playershipweapon">
+	<weapon>
+		<shot delay="0.208333"/>
+		<action>
+			<wait>
+				<mul>
+					<frac>
+						<mul>
+							<worldtime/>
+							<value value="-4.8"/>
+						</mul>
+					</frac>
+					<value value="0.208333"/>
+				</mul>
+			</wait>
+			<ordnance name="playerbullet">
+				<position x="5" y="-2" angle="0"/>
+				<velocity x="0" y="480"/>
+			</ordnance>
+			<flash name="playerweaponflash">
+				<position x="5" y="-2" angle="0"/>
+			</flash>
+			<ordnance name="playerbullet">
+				<position x="-2" y="2" angle="0"/>
+				<velocity x="0" y="480"/>
+			</ordnance>
+			<flash name="playerweaponflash">
+				<position x="-2" y="2" angle="0"/>
+			</flash>
+			<ordnance name="playerbullet">
+				<position x="2" y="2" angle="0"/>
+				<velocity x="0" y="480"/>
+			</ordnance>
+			<flash name="playerweaponflash">
+				<position x="2" y="2" angle="0"/>
+			</flash>
+			<ordnance name="playerbullet">
+				<position x="-2" y="2" angle="0"/>
+				<velocity x="0" y="480"/>
+			</ordnance>
+			<flash name="playerweaponflash">
+				<position x="-2" y="2" angle="0"/>
+			</flash>
+			<ordnance name="playerbullet">
+				<position x="-5" y="-2" angle="0"/>
+				<velocity x="0" y="480"/>
+			</ordnance>
+			<flash name="playerweaponflash">
+				<position x="-5" y="-2" angle="0"/>
+			</flash>
+			<cue name="fire"/>
+		</action>
+	</weapon>
+	<sound volume="0.25">
+		<file name="robotron-playershot.wav" />
+	</sound>
+	<soundcue>
+		<cue name="fire" sound="playershipweapon" />
+	</soundcue>
+</template>
