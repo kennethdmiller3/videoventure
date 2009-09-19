@@ -1,4 +1,0 @@
-<?xml version="1.0" ?>
-<sound name="stargate-dynamofire">
-	<pulseloop frequency="3579000" divider="4" pulse1delay="0" pulse2delay="128" pulse1innerdelta="1" pulse2innerdelta="-1" pulse1outerdelta="0" pulse2outerdelta="0" pulse1output="0" pulse2output="255" totalpulsedelay="128" innercount="128" outercount="1" outerdelaypre="0" innerdelaypre="2" pulsedelaybase="6" pulsedelayscale="123" innerdelaypost="10" outerdelaypost="0" />
-</sound>

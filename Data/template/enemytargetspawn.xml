@@ -1,6 +1,0 @@
-<?xml version="1.0" ?>
-<template name="enemytargetspawn">
-	<spawner>
-		<spawn name="enemytargetappear" start="0" cycle="10" track="1" />
-	</spawner>
-</template>

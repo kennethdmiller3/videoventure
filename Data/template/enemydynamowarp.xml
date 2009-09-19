@@ -1,4 +1,0 @@
-<?xml version="1.0" ?>
-<template name="enemydynamowarp" type="enemywarpin">
-	<expire switchonexpire="enemydynamo" />
-</template>

@@ -1,9 +1,9 @@
 <?xml version="1.0" ?>
 <preferences>
 	<resolution width="640" height="480" />
-	<fullscreen enable="0" />
+	<fullscreen enable="1" />
 	<verticalsync enable="1" />
 	<multisample samples="4" />
-	<motionblur steps="4" strength="100" />
-	<sound channels="8" volume="50" />
+	<motionblur steps="1" strength="100" />
+	<sound channels="8" effectvolume="10" musicvolume="50" />
 </preferences>

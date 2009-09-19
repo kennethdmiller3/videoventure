@@ -1,8 +1,32 @@
 <?xml version="1.0" ?>
 <template name="playershipweapon">
 	<weapon>
-		<velocity x="0" y="480" />
-		<ordnance name="playerbullet" />
-		<shot delay="0.2" />
+		<action>
+			<repeat count="3">
+				<ordnance name="playerbullet">
+					<position x="2" y="2" angle="0"/>
+					<velocity x="0" y="480"/>
+				</ordnance>
+				<flash name="playerweaponflash">
+					<position x="2" y="2" angle="0"/>
+				</flash>
+				<ordnance name="playerbullet">
+					<position x="-2" y="2" angle="0"/>
+					<velocity x="0" y="480"/>
+				</ordnance>
+				<flash name="playerweaponflash">
+					<position x="-2" y="2" angle="0"/>
+				</flash>
+				<cue name="fire"/>
+				<wait value="0.05"/>
+			</repeat>
+			<wait value="0.1"/>
+		</action>
 	</weapon>
+	<sound volume="0.25">
+		<file name="robotron-playershot.wav" />
+	</sound>
+	<soundcue>
+		<cue name="fire" sound="playershipweapon" />
+	</soundcue>
 </template>

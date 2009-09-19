@@ -5,7 +5,7 @@
 			<circle radius="8">
 				<friction value="0" />
 				<restitution value="1" />
-				<density value="0" />
+				<density value="1" />
 				<filter name="redbullet" />
 				<sensor value="1" />
 			</circle>

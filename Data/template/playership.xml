@@ -7,7 +7,7 @@
 				<friction value="0.5" />
 				<restitution value="0.5" />
 				<filter name="blueunit" />
-				<mask bit4="0" />
+				<mask bit5="0" bit6="0"/>
 				<group value="-1" />
 			</circle>
 			<box w="1" h="1">
@@ -45,19 +45,293 @@
 			<vertex x="-8" y="-8" />
 		</triangle_strip>
 	</drawlist>
-	<renderable radius="8">
-		<color r="0.4" g="0.5" b="1.0" a="1.0" />
-		<calllist name="playership" />
+	<renderable radius="8" period="0.066667">
+		<color r="0.4" g="0.5" b="1.0" a="1.0"/>
+		<calllist name="playership"/>
+		<translate y="-8"/>
+		<scale>
+			<mul>
+				<add>
+					<swizzle x="y" y="y">
+						<thrust/>
+					</swizzle>
+					<value x="3" y="3"/>
+				</add>
+				<value x="0.25" y="0.25"/>
+			</mul>
+		</scale>
+		<pushmatrix>
+			<scale>
+				<key time="0.000000" x="0.5" y="0.5"/>
+				<key time="0.033333" x="1.0" y="1.0"/>
+				<key time="0.066667" x="0.5" y="0.5"/>
+			</scale>
+			<drawlist>
+				<triangles>
+					<color r="0.4" g="0.7" b="1.0" a="1.0"/>
+					<vertex x="1" y="0"/>
+					<vertex x="0" y="-8"/>
+					<vertex x="-1" y="0"/>
+					<color r="0.0" g="0.5" b="1.0" a="0.5"/>
+					<vertex x="2" y="0"/>
+					<vertex x="0" y="-16"/>
+					<vertex x="-2" y="0"/>
+					<color r="0.0" g="0.0" b="1.0" a="0.25"/>
+					<vertex x="3" y="0"/>
+					<vertex x="0" y="-24"/>
+					<vertex x="-3" y="0"/>
+				</triangles>
+			</drawlist>
+		</pushmatrix>
+		<translate y="-1"/>
+		<scale>
+			<key time="0.000000" x="2" y="2"/>
+			<key time="0.033333" x="1" y="1"/>
+			<key time="0.066667" x="2" y="2"/>
+		</scale>
+		<color r="0.4" g="0.7" b="1.0" a="0.75"/>
+		<calllist name="circle12"/>
+		<scale x="2" y="2"/>
+		<color r="0.0" g="0.5" b="1.0" a="0.5"/>
+		<calllist name="circle12"/>
+		<scale x="1.5" y="1.5"/>
+		<color r="0.0" g="0.0" b="1.0" a="0.25"/>
+		<calllist name="circle12"/>
 	</renderable>
 	<playercontroller>
-		<scale turn="0.05"/>
+		<scale turn="1"/>
+		<aim type="up"/>
+		<move type="moveworld"/>
 	</playercontroller>
-	<ship maxveloc="150" maxaccel="1200" minaccel="150" maxomega="20" />
-	<damagable health="10" spawnondeath="playershipdeath" />
-	<soundcue>
-		<cue name="idle" sound="stargate-playershipidle" />
-		<cue name="thrust" sound="stargate-playershipthrust" />
-		<cue name="extralife" sound="stargate-extralife" />
-	</soundcue>
+	<ship maxveloc="180" maxaccel="1440" minaccel="720" maxomega="1"/>
+	<damagable health="1" spawnondeath="playersmartbombexplosion" />
 	<team name="blue" />
+	<soundcue>
+		<cue name="extralife" sound="stargate-extralife"/>
+	</soundcue>
+	<shield>
+		<ammo type="level" cost="1"/>
+		<absorb cost="0" spawn="playerautobombexplosion"/>
+		<invulnerable time="1"/>
+	</shield>
+	<inherit type="playersmartbombweapon"/>
+	<resource name="level" initial="3" maximum="8" cycle="0.016667" rate="0.1"/>
+	<state name="start">
+		<transition name="start" target="level3"/>
+	</state>
+	<state name="level0">
+		<inherit type="playershipweapon"/>
+		<transition name="upgrade" target="level1">
+			<greaterequal>
+				<resource name="level"/>
+				<value value="1"/>
+			</greaterequal>
+		</transition>
+	</state>
+	<state name="level1">
+		<inherit type="playershipweapon1"/>
+		<link name="bomb1" secondary="playerbomb">
+			<offset x="0" y="-3"/>
+		</link>
+		<transition name="upgrade" target="level2">
+			<greaterequal>
+				<resource name="level"/>
+				<value value="2"/>
+			</greaterequal>
+		</transition>
+		<transition name="downgrade" target="level0">
+			<less>
+				<resource name="level"/>
+				<value value="1"/>
+			</less>
+		</transition>
+	</state>
+	<state name="level2">
+		<inherit type="playershipweapon2"/>
+		<link name="bomb2" secondary="playerbomb">
+			<offset x="-6" y="-4"/>
+			<renderable depth="1"/>
+		</link>
+		<link name="bomb3" secondary="playerbomb">
+			<offset x="6" y="-4"/>
+			<renderable depth="1"/>
+		</link>
+		<transition name="upgrade" target="level3">
+			<greaterequal>
+				<resource name="level"/>
+				<value value="3"/>
+			</greaterequal>
+		</transition>
+		<transition name="downgrade" target="level1">
+			<less>
+				<resource name="level"/>
+				<value value="2"/>
+			</less>
+		</transition>
+	</state>
+	<state name="level3">
+		<inherit type="playershipweapon3"/>
+		<link name="bomb1" secondary="playerbomb">
+			<offset x="0" y="-3"/>
+		</link>
+		<link name="bomb2" secondary="playerbomb">
+			<offset x="-6" y="-4"/>
+			<renderable depth="1"/>
+		</link>
+		<link name="bomb3" secondary="playerbomb">
+			<offset x="6" y="-4"/>
+			<renderable depth="1"/>
+		</link>
+		<transition name="upgrade" target="level4">
+			<greaterequal>
+				<resource name="level"/>
+				<value value="4"/>
+			</greaterequal>
+		</transition>
+		<transition name="downgrade" target="level2">
+			<less>
+				<resource name="level"/>
+				<value value="3"/>
+			</less>
+		</transition>
+	</state>
+	<state name="level4">
+		<inherit type="playershipweapon3"/>
+		<link name="bomb1" secondary="playerbomb">
+			<offset x="0" y="-3"/>
+		</link>
+		<link name="bomb2" secondary="playerbomb">
+			<offset x="-6" y="-4"/>
+			<renderable depth="1"/>
+		</link>
+		<link name="bomb3" secondary="playerbomb">
+			<offset x="6" y="-4"/>
+			<renderable depth="1"/>
+		</link>
+		<link name="option" secondary="multiple" updateposition="0" updateangle="0">
+			<offset x="0" y="-16" angle="0" />
+		</link>
+		<transition name="upgrade" target="level5">
+			<greaterequal>
+				<resource name="level"/>
+				<value value="5"/>
+			</greaterequal>
+		</transition>
+		<transition name="downgrade" target="level3">
+			<less>
+				<resource name="level"/>
+				<value value="4"/>
+			</less>
+		</transition>
+	</state>
+	<state name="level5">
+		<inherit type="playershipweapon3"/>
+		<link name="bomb1" secondary="playerbomb">
+			<offset x="0" y="-3"/>
+		</link>
+		<link name="bomb2" secondary="playerbomb">
+			<offset x="-6" y="-4"/>
+			<renderable depth="1"/>
+		</link>
+		<link name="bomb3" secondary="playerbomb">
+			<offset x="6" y="-4"/>
+			<renderable depth="1"/>
+		</link>
+		<link name="option" secondary="multiple2" updateposition="0" updateangle="0">
+			<offset x="0" y="-16" angle="0" />
+		</link>
+		<transition name="upgrade" target="level6">
+			<greaterequal>
+				<resource name="level"/>
+				<value value="6"/>
+			</greaterequal>
+		</transition>
+		<transition name="downgrade" target="level4">
+			<less>
+				<resource name="level"/>
+				<value value="5"/>
+			</less>
+		</transition>
+	</state>
+	<state name="level6">
+		<inherit type="playershipweapon3"/>
+		<link name="bomb1" secondary="playerbomb">
+			<offset x="0" y="-3"/>
+		</link>
+		<link name="bomb2" secondary="playerbomb">
+			<offset x="-6" y="-4"/>
+			<renderable depth="1"/>
+		</link>
+		<link name="bomb3" secondary="playerbomb">
+			<offset x="6" y="-4"/>
+			<renderable depth="1"/>
+		</link>
+		<link name="option" secondary="multiple3" updateposition="0" updateangle="0">
+			<offset x="0" y="-16" angle="0" />
+		</link>
+		<transition name="upgrade" target="level7">
+			<greaterequal>
+				<resource name="level"/>
+				<value value="7"/>
+			</greaterequal>
+		</transition>
+		<transition name="downgrade" target="level5">
+			<less>
+				<resource name="level"/>
+				<value value="6"/>
+			</less>
+		</transition>
+	</state>
+	<state name="level7">
+		<inherit type="playershipweapon3"/>
+		<link name="bomb1" secondary="playerbomb">
+			<offset x="0" y="-3"/>
+		</link>
+		<link name="bomb2" secondary="playerbomb">
+			<offset x="-6" y="-4"/>
+			<renderable depth="1"/>
+		</link>
+		<link name="bomb3" secondary="playerbomb">
+			<offset x="6" y="-4"/>
+			<renderable depth="1"/>
+		</link>
+		<link name="option" secondary="multiple4" updateposition="0" updateangle="0">
+			<offset x="0" y="-16" angle="0" />
+		</link>
+		<transition name="upgrade" target="level8">
+			<greaterequal>
+				<resource name="level"/>
+				<value value="8"/>
+			</greaterequal>
+		</transition>
+		<transition name="downgrade" target="level6">
+			<less>
+				<resource name="level"/>
+				<value value="7"/>
+			</less>
+		</transition>
+	</state>
+	<state name="level8">
+		<inherit type="playershipweapon3"/>
+		<link name="bomb1" secondary="playerbomb">
+			<offset x="0" y="-3"/>
+		</link>
+		<link name="bomb2" secondary="playerbomb">
+			<offset x="-6" y="-4"/>
+			<renderable depth="1"/>
+		</link>
+		<link name="bomb3" secondary="playerbomb">
+			<offset x="6" y="-4"/>
+			<renderable depth="1"/>
+		</link>
+		<link name="option" secondary="multiple5" updateposition="0" updateangle="0">
+			<offset x="0" y="-16" angle="0" />
+		</link>
+		<transition name="downgrade" target="level7">
+			<less>
+				<resource name="level"/>
+				<value value="8"/>
+			</less>
+		</transition>
+	</state>
 </template>

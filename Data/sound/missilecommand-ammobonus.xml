@@ -1,4 +1,0 @@
-<?xml version="1.0" ?>
-<sound name="missilecommand-ammobonus">
-	<pokey length="0.066667" frequency="1250000" divider="476" amplitude="1" tone="poly5" />
-</sound>

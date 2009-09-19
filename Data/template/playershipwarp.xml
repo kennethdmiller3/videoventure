@@ -65,7 +65,7 @@
 			</repeat>
 		</pushmatrix>
 	</renderable>
-	<expire time="1.1" switchonexpire="playershipinvulnerable" />
+	<expire time="1.1" switchonexpire="playership" />
 	<playercontroller />
 	<soundcue>
 		<cue sound="stargate-warpin" />

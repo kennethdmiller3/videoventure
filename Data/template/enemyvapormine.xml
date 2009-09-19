@@ -5,7 +5,7 @@
 			<circle radius="4">
 				<friction value="0.5" />
 				<restitution value="0.5" />
-				<density value="0" />
+				<density value="1" />
 				<filter name="redmissile" />
 			</circle>
 			<circle radius="8">
@@ -49,5 +49,4 @@
 	<damagable health="5" spawnondeath="enemyvapormineexplosion" />
 	<team name="red" />
 	<points value="100" />
-	<capturable resistance="5" spawnoncapture="friendvapormine" />
 </template>

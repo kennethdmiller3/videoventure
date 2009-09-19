@@ -6,8 +6,8 @@
 				<friction value="0" />
 				<restitution value="1" />
 				<density value="1.0" />
-				<filter name="redunit" />
-				<mask bit4="0" />
+				<filter name="redmissile" />
+				<group value="-2" />
 			</circle>
 		</body>
 	</collidable>
@@ -45,9 +45,9 @@
 	<expire time="30" switchonexpire="enemybulletexplosion" />
 	<bullet damage="1" ricochet="1" spawnondeath="enemyfireballexplosion" />
 	<damagable health="1" spawnondeath="enemyfireballexplosion" />
-	<!--aimer range="512" attack="0" leading="0" category="3" bit3="0" bit4="0" /-->
 	<aimer>
-		<target range="512" category="3" bit2="0" bit3="0" bit4="0" />
+		<wander side="0.5" siderate="0.5" front="0.5" frontrate="0.5" />
+		<target range="512" filter="redmissile" />
 		<pursue strength="1" leading="0" />
 	</aimer>
 	<ship maxveloc="90" maxaccel="180" minaccel="10" maxomega="0" />
@@ -55,6 +55,8 @@
 	<points value="100" />
 	<capturable resistance="1" spawnoncapture="friendspacehum" />
 	<spawner>
-		<spawn name="enemyspacehumtrail" start="0" cycle="0.2" track="0" />
+		<inherit x="0" y="0" />
+		<velocity x="0" y="-256" />
+		<spawn name="enemyspacehumtrail" start="0" cycle="0.1" track="0" />
 	</spawner>
 </template>

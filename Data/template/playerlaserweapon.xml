@@ -1,8 +1,11 @@
 <?xml version="1.0" ?>
 <template name="playerlaserweapon">
 	<weapon>
-		<flash name="playerlaserbeam"/>
 		<shot delay="0.1"/>
+		<action>
+			<flash name="playerlaserbeam"/>
+			<cue name="fire"/>
+		</action>
 	</weapon>
 	<sound volume="0.25">
 		<file name="robotron-playershot.wav"/>
