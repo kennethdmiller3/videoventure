@@ -1,9 +1,0 @@
-<?xml version="1.0" ?>
-<template name="enemyweaponmissile">
-	<weapon>
-		<offset x="0" y="10" />
-		<velocity x="0" y="60" />
-		<ordnance name="enemymissile" />
-		<shot delay="1.5" />
-	</weapon>
-</template>

@@ -1,6 +1,0 @@
-<?xml version="1.0" ?>
-<template name="friendturret2spawn">
-	<spawner>
-		<spawn name="friendturretpod2warp" start="0" cycle="10" track="1" />
-	</spawner>
-</template>

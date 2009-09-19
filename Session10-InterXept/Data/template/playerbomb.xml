@@ -1,7 +1,0 @@
-<?xml version="1.0" ?>
-<!-- player bomb -->
-<template name="playerbomb">
-	<renderable>
-		<calldynamicdrawlist name="playerbomb"/>
-	</renderable>
-</template>

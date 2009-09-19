@@ -1,5 +1,5 @@
 <?xml version="1.0" ?>
-<sound name="stargate-warpin">
+<sound name="stargate-warpin" volume="0.5">
 	<!-- innerdelay: 39+6*delay, +6 when bit flips (average 3?) -->
 	<!-- outerdelay: 17 -->
 	<!-- parameters: 192 delay start, -2 delay delta, 16 iterations -->
