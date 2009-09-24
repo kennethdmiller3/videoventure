@@ -8,7 +8,7 @@
 	>
 	<Tool
 		Name="VCCLCompilerTool"
-		AdditionalIncludeDirectories="&quot;$(SolutionDir)\tinyxml&quot;;&quot;$(SolutionDir)\oglconsole&quot;;&quot;$(SolutionDir)\..\Box2D\Include&quot;;&quot;$(SolutionDir)\FastDelegate&quot;"
+		AdditionalIncludeDirectories="&quot;$(SolutionDir)\tinyxml&quot;;&quot;$(SolutionDir)\oglconsole&quot;;&quot;$(SolutionDir)\..\Box2D\Box2D&quot;;&quot;$(SolutionDir)\FastDelegate&quot;"
 		PreprocessorDefinitions="WIN32;_CRT_SECURE_NO_WARNINGS;_HAS_EXCEPTIONS=0"
 		StringPooling="true"
 		ExceptionHandling="0"
