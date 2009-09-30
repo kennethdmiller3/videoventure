@@ -3,7 +3,7 @@
 	<weapon>
 		<flash name="playerblastcannonbeam" />
 		<shot delay="1.0" />
-		<recoil value="5000">
+		<recoil value="5000"/>
 	</weapon>
 	<sound volume="0.5">
 		<bitnoiseramp frequency="3579000" divider="4" outersteps="32" outerdelay="26" innersteps="16" innerdelay="53" innerdelta="128" amplitude="255" amplitudedelta="-8" />
