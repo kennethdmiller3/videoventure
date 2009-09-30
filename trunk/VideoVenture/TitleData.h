@@ -1,3 +1,5 @@
+#pragma once
+
 // title text bitmap
 static const char titlemap[][96+1] = 
 {
