@@ -3,6 +3,7 @@
 #include "Entity.h"
 #include "Updatable.h"
 #include "Link.h"
+#include "ExpressionAction.h"
 
 
 #ifdef USE_POOL_ALLOCATOR
@@ -23,10 +24,9 @@ namespace Database
 {
 	Typed<Typed<ResourceTemplate> > resourcetemplate(0x79aa609b /* "resourcetemplate" */);
 	Typed<Typed<Resource *> > resource(0x29df7ff5 /* "resource" */);
-	Typed<Typed<Typed<std::vector<unsigned int> > > > resourceaction(0x7013b58f /* "resourceaction" */);
-	Typed<Typed<Typed<Resource::ChangeListener> > > resourcechangelistener(0x80d66669 /* "resourcechangelistener" */);
-	Typed<Typed<Typed<Resource::EmptyListener> > > resourceemptylistener(0xc5325c82 /* "resourceemptylistener" */);
-	Typed<Typed<Typed<Resource::FullListener> > > resourcefulllistener(0xa4f2734c /* "resourcefulllistener" */);
+	Typed<Typed<Resource::ChangeSignal> > resourcechange(0x80d66669 /* "resourcechange" */);
+	Typed<Typed<Resource::EmptySignal> > resourceempty(0xc5325c82 /* "resourceempty" */);
+	Typed<Typed<Resource::FullSignal> > resourcefull(0xa4f2734c /* "resourcefull" */);
 
 	namespace Loader
 	{
@@ -83,9 +83,9 @@ namespace Database
 					delete resource;
 				}
 				Database::resource.Delete(aId);
-				Database::resourcechangelistener.Delete(aId);
-				Database::resourceemptylistener.Delete(aId);
-				Database::resourcefulllistener.Delete(aId);
+				Database::resourcechange.Delete(aId);
+				Database::resourceempty.Delete(aId);
+				Database::resourcefull.Delete(aId);
 			}
 		}
 		resourceinitializer;
@@ -107,70 +107,6 @@ ResourceTemplate::~ResourceTemplate(void)
 {
 }
 
-#if 0
-void ResourceChangeActions(unsigned int aId, unsigned int aSubId, unsigned int aSourceId, float aValue)
-{
-	const std::vector<unsigned int> &action = Database::resourceaction.Get(aId).Get(aSubId).Get(0x729d01bd /* "change" */);
-	if (action.size() > 0)
-		ExecuteActionItems(&action[0], action.size(), aId);
-}
-
-void ResourceEmptyActions(unsigned int aId, unsigned int aSubId, unsigned int aSourceId)
-{
-	const std::vector<unsigned int> &action = Database::resourceaction.Get(aId).Get(aSubId).Get(0x18a7beee /* "empty" */);
-	if (action.size() > 0)
-		ExecuteActionItems(&action[0], action.size(), aId);
-}
-
-void ResourceFullActions(unsigned int aId, unsigned int aSubId, unsigned int aSourceId)
-{
-	const std::vector<unsigned int> &action = Database::resourceaction.Get(aId).Get(aSubId).Get(0xff79b33c /* "full" */);
-	if (action.size() > 0)
-		ExecuteActionItems(&action[0], action.size(), aId);
-}
-#endif
-
-void ProcessResourceChange(const TiXmlElement *element, unsigned int aId, unsigned int aSubId)
-{
-#if 0
-	ProcessActions(element, aId, aSubId, 0x729d01bd /* "change" */);
-
-	Database::Typed<Database::Typed<Resource::ChangeListener> > &listenerss = Database::resourcechangelistener.Open(aId);
-	Database::Typed<Resource::ChangeListener> &listeners = listenerss.Open(aSubId);
-	listeners.Put(0xb5b54664 /* "actions" */, Resource::ChangeListener(ResourceChangeActions));
-	listenerss.Close(aSubId);
-	Database::resourcechangelistener.Close(aId);
-#endif
-}
-
-void ProcessResourceEmpty(const TiXmlElement *element, unsigned int aId, unsigned int aSubId)
-{
-#if 0
-	ProcessActions(element, aId, aSubId, 0x18a7beee /* "empty" */);
-
-	Database::Typed<Database::Typed<Resource::EmptyListener> > &listenerss = Database::resourceemptylistener.Open(aId);
-	Database::Typed<Resource::EmptyListener> &listeners = listenerss.Open(aSubId);
-	listeners.Put(0xb5b54664 /* "actions" */, Resource::EmptyListener(ResourceEmptyActions));
-	listenerss.Close(aSubId);
-	Database::resourceemptylistener.Close(aId);
-#endif
-}
-
-void ProcessResourceFull(const TiXmlElement *element, unsigned int aId, unsigned int aSubId)
-{
-#if 0
-	ProcessActions(element, aId, aSubId, 0xff79b33c /* "full" */);
-
-	Database::Typed<Database::Typed<Resource::FullListener> > &listenerss = Database::resourcefulllistener.Open(aId);
-	Database::Typed<Resource::FullListener> &listeners = listenerss.Open(aSubId);
-	listeners.Put(0xb5b54664 /* "actions" */, Resource::FullListener(ResourceFullActions));
-	listeners.Close(0xb5b54664 /* "actions" */);
-
-	listenerss.Close(aSubId);
-	Database::resourcefulllistener.Close(aId);
-#endif
-}
-
 bool ResourceTemplate::Configure(const TiXmlElement *element, unsigned int aId, unsigned int aSubId)
 {
 	mSubId = aSubId;
@@ -188,15 +124,12 @@ bool ResourceTemplate::Configure(const TiXmlElement *element, unsigned int aId, 
 		switch(Hash(child->Value()))
 		{
 		case 0xcba76728 /* "onchange" */:
-			ProcessResourceChange(element, aId, aSubId);
 			break;
 
 		case 0xb9bd5041 /* "onempty" */:
-			ProcessResourceEmpty(element, aId, aSubId);
 			break;
 
 		case 0x12a7aef5 /* "onfull" */:
-			ProcessResourceFull(element, aId, aSubId);
 			break;
 
 		default:
@@ -225,6 +158,9 @@ Resource::Resource(const ResourceTemplate &aTemplate, unsigned int aId)
 	if (aTemplate.mAdd)
 	{
 		Updatable::SetAction(Updatable::Action(this, &Resource::Update));
+		if (aTemplate.mAdd > 0 && aTemplate.mInitial < aTemplate.mMaximum ||
+			aTemplate.mAdd < 0 && aTemplate.mInitial > 0)
+			Activate();
 	}
 }
 
@@ -253,10 +189,7 @@ void Resource::Set(unsigned int aSourceId, float aValue)
 		aValue = 0;
 
 		// notify all empty listeners
-		for (Database::Typed<EmptyListener>::Iterator itor(Database::resourceemptylistener.Get(mId).Find(mSubId)); itor.IsValid(); ++itor)
-		{
-			itor.GetValue()(mId, mSubId, aSourceId);
-		}
+		Database::resourceempty.Get(mId).Get(mSubId)(mId, mSubId, aSourceId);
 
 		if (resource.mAdd < 0)
 			Deactivate();
@@ -268,10 +201,7 @@ void Resource::Set(unsigned int aSourceId, float aValue)
 		aValue = resource.mMaximum;
 		
 		// notify all full listeners
-		for (Database::Typed<FullListener>::Iterator itor(Database::resourcefulllistener.Get(mId).Find(mSubId)); itor.IsValid(); ++itor)
-		{
-			itor.GetValue()(mId, mSubId, aSourceId);
-		}
+		Database::resourcefull.Get(mId).Get(mSubId)(mId, mSubId, aSourceId);
 
 		if (resource.mAdd > 0)
 			Deactivate();
@@ -287,16 +217,15 @@ void Resource::Set(unsigned int aSourceId, float aValue)
 			Activate();
 		}
 
+#ifdef DEBUG_RESOURCE
 		DebugPrint("\"%s\" resource=\"%s\" value=%f->%f\n", Database::name.Get(mId).c_str(), Database::name.Get(mSubId).c_str(), mValue, aValue);
+#endif
 
 		// update the value
 		mValue = aValue;
 
 		// notify all change listeners
-		for (Database::Typed<ChangeListener>::Iterator itor(Database::resourcechangelistener.Get(mId).Find(mSubId)); itor.IsValid(); ++itor)
-		{
-			itor.GetValue()(mId, mSubId, aSourceId, aValue);
-		}
+		Database::resourcechange.Get(mId).Get(mSubId)(mId, mSubId, aSourceId, aValue);
 	}
 }
 

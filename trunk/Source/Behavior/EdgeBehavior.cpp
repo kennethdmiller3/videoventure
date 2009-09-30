@@ -1,9 +1,9 @@
 #include "StdAfx.h"
 
 #include "EdgeBehavior.h"
-#include "..\Controller.h"
-#include "..\Entity.h"
-#include "..\Collidable.h"
+#include "Controller.h"
+#include "Entity.h"
+#include "Collidable.h"
 
 
 namespace Database

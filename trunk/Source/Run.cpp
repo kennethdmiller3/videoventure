@@ -14,6 +14,9 @@
 
 #include "oglconsole.h"
 
+#include <time.h>
+
+
 // console
 extern OGLCONSOLE_Console console;
 
@@ -46,6 +49,9 @@ bool PROFILER_OUTPUTPRINT = false;
 // frame rate indicator
 bool FRAMERATE_OUTPUTSCREEN = false;
 bool FRAMERATE_OUTPUTPRINT = false;
+
+// debug draw
+bool DEBUG_DRAW = false;
 
 // input system
 Input input;
@@ -99,6 +105,52 @@ static void Resume(void)
 	Platform::GrabInput(true);
 	Sound::Resume();
 }
+
+#if defined(USE_SDL)
+static void Screenshot(void)
+{
+	// allocate a pixel array
+	unsigned char *pixels = static_cast<unsigned char *>(malloc(SCREEN_WIDTH * SCREEN_HEIGHT * 4));
+
+	// read pixels from frame buffer
+	for (int y = 0; y < SCREEN_HEIGHT; ++y)
+		glReadPixels(0, SCREEN_HEIGHT - y - 1, SCREEN_WIDTH, 1, GL_RGBA, GL_UNSIGNED_BYTE, pixels + y * SCREEN_WIDTH * 4);
+
+	// create an SDL surface from the pixel array
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+    unsigned int rmask = 0xff000000;
+    unsigned int gmask = 0x00ff0000;
+    unsigned int bmask = 0x0000ff00;
+    unsigned int amask = 0x00000000;
+#else
+    unsigned int rmask = 0x000000ff;
+    unsigned int gmask = 0x0000ff00;
+    unsigned int bmask = 0x00ff0000;
+    unsigned int amask = 0x00000000;
+#endif
+	SDL_Surface *surface = SDL_CreateRGBSurfaceFrom(pixels, SCREEN_WIDTH, SCREEN_HEIGHT, 32, SCREEN_WIDTH * 4, rmask, gmask, bmask, amask);
+
+	// generate a filename
+	time_t rawtime;
+	time( &rawtime );
+	tm* timeinfo;
+	timeinfo = localtime( &rawtime );
+	char acTimeString[ 128 ] = "";
+	strftime( acTimeString, 128, "%Y_%m_%d_%H_%M_%S", timeinfo );
+	char acFileName[ 256 ] = "";
+	sprintf( acFileName, "screenshot_%s.bmp", acTimeString );
+
+	// save to a bitmap file
+	if (SDL_SaveBMP(surface, acFileName) < 0)
+		DebugPrint("error: %s\n", SDL_GetError());
+
+	// free the surface
+	SDL_FreeSurface(surface);
+
+	// free the pixel array
+	free(pixels);
+}
+#endif
 
 #if defined(USE_GLFW)
 
@@ -305,6 +357,10 @@ void RunState()
 						Pause();
 					else
 						Resume();
+					break;
+
+				case SDLK_PRINT:
+					Screenshot();
 					break;
 				}
 				break;
@@ -747,6 +803,8 @@ void RunState()
 #endif
 
 #ifdef COLLECT_DEBUG_DRAW
+		if (DEBUG_DRAW)
+		{
 		// push camera transform
 		glPushMatrix();
 
@@ -761,6 +819,7 @@ void RunState()
 
 		// pop camera transform
 		glPopMatrix();
+		}
 #endif
 
 		// push projection transform

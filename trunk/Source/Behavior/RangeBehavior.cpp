@@ -3,8 +3,8 @@
 #include "RangeBehavior.h"
 #include "TargetBehavior.h"
 
-#include "..\Entity.h"
-#include "..\Controller.h"
+#include "Entity.h"
+#include "Controller.h"
 
 
 namespace Database

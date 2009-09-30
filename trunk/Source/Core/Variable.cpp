@@ -61,7 +61,7 @@ void VarScope::operator delete(void *aPtr)
 namespace Database
 {
 	Typed<VarItem *> varitem(0xa8f248fd /* "varitem" */);
-	Typed<Typed<VarItem::Listener> > varitemnotify(0xbab83e54 /* "varitemnotify" */);
+	Typed<VarItem::Signal> varitemnotify(0xbab83e54 /* "varitemnotify" */);
 }
 
 
@@ -209,8 +209,7 @@ std::string VarItem::GetString(const char *aPath)
 
 void VarItem::Notify()
 {
-	for (Database::Typed<VarItem::Listener>::Iterator itor(Database::varitemnotify.Find(mId)); itor.IsValid(); ++itor)
-		itor.GetValue()(mId);
+	Database::varitemnotify.Get(mId)(mId);
 }
 
 

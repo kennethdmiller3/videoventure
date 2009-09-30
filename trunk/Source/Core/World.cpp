@@ -79,6 +79,9 @@ namespace Database
 
 				switch (Hash(element->Attribute("mode")))
 				{
+				case 0:
+					break;
+
 				default:
 				case 0xd00594c0 /* "linear" */:
 					{

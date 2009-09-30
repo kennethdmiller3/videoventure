@@ -6,9 +6,18 @@ namespace Expression
 	struct Context
 	{
 		const unsigned int *mStream;
+
+		Context()
+		{
+		}
+
+		Context(const unsigned int *aStream)
+			: mStream(aStream)
+		{
+		}
 	};
 
-	// allocate data from a aBuffer
+	// allocate data from a buffer
 	inline void *Alloc(std::vector<unsigned int> &aBuffer, size_t aSize)
 	{
 		aSize = (aSize + sizeof(unsigned int) - 1) / sizeof(unsigned int);
@@ -16,7 +25,7 @@ namespace Expression
 		return &aBuffer[aBuffer.size() - aSize];
 	}
 
-	// allocate object from a aBuffer
+	// allocate object from a buffer
 	template <typename T> T *New(std::vector<unsigned int> &aBuffer)
 	{
 		return new(Alloc(aBuffer, sizeof(T))) T();
@@ -38,7 +47,7 @@ namespace Expression
 		return new(Alloc(aBuffer, sizeof(T))) T(aArg1, aArg2, aArg3, aArg4);
 	}
 
-	// append an expression to a aBuffer
+	// append an expression to a buffer
 	template <typename A1> void Append(std::vector<unsigned int> &aBuffer, A1 aArg1)
 	{
 		New<A1>(aBuffer, aArg1);
@@ -138,7 +147,7 @@ namespace Expression
 			return value;
 		}
 	};
-	template <typename T> struct ComponentNullary<T, 0>
+	template <typename T> struct ComponentNullary<T, 1>
 	{
 		// specialization for scalar type
 		template <typename OR, OR Op()> static const T Evaluate(Context &aContext)
@@ -160,7 +169,7 @@ namespace Expression
 			return value;
 		}
 	};
-	template <typename T> struct ComponentUnary<T, 0>
+	template <typename T> struct ComponentUnary<T, 1>
 	{
 		// specialization for scalar type
 		template <typename OR, typename O1, OR Op(O1)> static const T Evaluate(Context &aContext)
@@ -184,7 +193,7 @@ namespace Expression
 			return value;
 		}
 	};
-	template <typename T> struct ComponentBinary<T, 0>
+	template <typename T> struct ComponentBinary<T, 1>
 	{
 		// specialization for scalar type
 		template <typename OR, typename O1, typename O2, OR Op(O1, O2)> static const T Evaluate(Context &aContext)
@@ -210,7 +219,7 @@ namespace Expression
 			return value;
 		}
 	};
-	template <typename T> struct ComponentTernary<T, 0>
+	template <typename T> struct ComponentTernary<T, 1>
 	{
 		// specialization for scalar type
 		template <typename OR, typename O1, typename O2, typename O3, OR Op(O1, O2, O3)> static const T Evaluate(Context &aContext)
@@ -251,3 +260,5 @@ namespace Expression
 		return T(arg1, arg2, arg3, arg4);
 	}
 }
+
+#include "ExpressionSIMD.h"

@@ -20,7 +20,6 @@ public:
 	// update flags
 	bool mUpdateAngle;
 	bool mUpdatePosition;
-	bool mUpdateTeam;
 	bool mDeleteSecondary;
 
 public:
@@ -36,7 +35,17 @@ class Link :
 {
 protected:
 	unsigned int mSub;
+
+	// secondary
 	unsigned int mSecondary;
+
+	// offset
+	Transform2 mOffset;
+
+	// update flags
+	bool mUpdateAngle;
+	bool mUpdatePosition;
+	bool mDeleteSecondary;
 
 public:
 #ifdef USE_POOL_ALLOCATOR

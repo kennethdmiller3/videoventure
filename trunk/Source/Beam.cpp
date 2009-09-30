@@ -3,6 +3,7 @@
 #include "Entity.h"
 #include "Collidable.h"
 #include "Damagable.h"
+#include "Cancelable.h"
 #include "Team.h"
 #include "Renderable.h"
 #include "Drawlist.h"
@@ -180,7 +181,7 @@ void Beam::Update(float aStep)
 		// impact point
 		float lambda = 1.0f;
 		b2Vec2 normal(0.0f, 0.0f);
-		b2Shape *shape = NULL;
+		b2Fixture *shape = NULL;
 
 		// check for segment intersection
 		unsigned int hitId = Collidable::TestSegment(segment, beam.mFilter, mId, lambda, normal, shape);
@@ -196,13 +197,9 @@ void Beam::Update(float aStep)
 		// if the beam hit something...
 		if (hitId != 0)
 		{
-			// if applying damage...
-			if (curDamage != 0.0f)
-			{
 				// if the recipient is damagable...
 				// and not healing or the target is at max health...
-				Damagable *damagable = Database::damagable.Get(hitId);
-				if (damagable)
+			if (Damagable *damagable = Database::damagable.Get(hitId))
 				{
 					// get base damage
 					float damage = curDamage;
@@ -222,6 +219,15 @@ void Beam::Update(float aStep)
 
 					// apply damage
 					damagable->Damage(mId, damage);
+			}
+
+			if (curDamage >= 0)
+			{
+				// if the recipient is cancelable...
+				if (Cancelable *cancelable = Database::cancelable.Get(hitId))
+				{
+					// apply cancel
+					cancelable->Cancel(hitId, mId);
 				}
 			}
 		}

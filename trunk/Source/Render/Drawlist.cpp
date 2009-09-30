@@ -5,25 +5,14 @@
 #include "Noise.h"
 
 #include "Expression.h"
+#include "ExpressionConfigure.h"
+
 
 #define DRAWLIST_LOOP
 
-#include "xmmintrin.h"
-//#include "fvec.h"
-
-
-// draw item context
-// (extends expression context)
-struct DrawItemContext : public Expression::Context
-{
-	const unsigned int *mEnd;
-	float mParam;
-	unsigned int mId;
-	Database::Typed<float> *mVars;
-};
 
 // execute a dynamic draw list
-void ExecuteDrawItems(DrawItemContext &aContext);
+void ExecuteDrawItems(EntityContext &aContext);
 
 
 //
@@ -31,9 +20,9 @@ void ExecuteDrawItems(DrawItemContext &aContext);
 //
 
 typedef float DLScalar;
-static const char * const sScalarNames[] = { "value" };
-static const float sScalarDefault[] = { 0.0f };
-static const int sScalarWidth = 1;
+const char * const sScalarNames[] = { "value" };
+const float sScalarDefault[] = { 0.0f };
+const int sScalarWidth = 1;
 
 //typedef Vector3 DLPosition;
 typedef __m128 DLPosition;
@@ -90,6 +79,7 @@ void GetTypeData(unsigned int type, int &width, const char * const *&names, cons
 	switch (type)
 	{
 	default:
+	case 0xaeebcbdd /* "scalar" */:		names = sScalarNames; data = sScalarDefault; width = sScalarWidth; break;
 	case 0x934f4e0a /* "position" */:	names = sPositionNames; data = sPositionDefault; width = sPositionWidth; break;
 	case 0xe68b9c52 /* "normal" */:		names = sNormalNames; data = sNormalDefault; width = sNormalWidth; break;
 	case 0xad0ecfd5 /* "translate" */:	names = sTranslationNames, data = sTranslationDefault; width = sTranslationWidth; break;
@@ -153,14 +143,8 @@ namespace Database
 				ConfigureDrawItems(element, drawlist);
 
 				// execute the dynamic draw list
-				DrawItemContext context;
-				context.mStream = &drawlist[0];
-				context.mEnd = context.mStream + drawlist.size();
-				context.mParam = param;
-				context.mId = aId;
-				context.mVars = &Database::variable.Open(aId);
+				EntityContext context(&drawlist[0], drawlist.size(), param, aId);
 				ExecuteDrawItems(context);
-				Database::variable.Close(aId);
 
 				// close the dynamic draw list
 				Database::dynamicdrawlist.Close(handle);
@@ -230,471 +214,9 @@ static const unsigned int sHashToAttribMask[][2] =
 };
 #endif
 
-template <typename T> void ConfigureExpression(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float data[]);
-
-namespace Expression
-{
-	// read a value from an expression stream
-	template <> inline const __m128 Read<__m128>(Context &aContext)
-	{
-		__m128 value(_mm_loadu_ps(reinterpret_cast<const float *>(aContext.mStream)));
-		aContext.mStream += (sizeof(__m128) + sizeof(unsigned int) - 1) / sizeof(unsigned int);
-		return value;
-	}
-	template <> __m128 *New<__m128, __m128>(std::vector<unsigned int> &aBuffer, __m128 aArg1)
-	{
-		void *ptr = Alloc(aBuffer, sizeof(__m128));
-		_mm_storeu_ps(reinterpret_cast<float *>(ptr), aArg1);
-		return reinterpret_cast<__m128 *>(ptr);
-	}
-	template <> struct ComponentNullary<__m128, 4>
-	{
-		// requres that T support operator[]
-		template <typename OR, OR Op()> static const __m128 Evaluate(Context &aContext)
-		{
-			return _mm_set_ps(Op(), Op(), Op(), Op());
-		}
-	};
-	template <> struct ComponentUnary<__m128, 4>
-	{
-		// requres that T support operator[]
-		template <typename OR, typename O1, OR Op(O1)> static const __m128 Evaluate(Context &aContext)
-		{
-			__m128 arg1(Expression::Evaluate<__m128>(aContext));
-			return _mm_setr_ps(
-				Op(reinterpret_cast<float *>(&arg1)[0]),
-				Op(reinterpret_cast<float *>(&arg1)[1]),
-				Op(reinterpret_cast<float *>(&arg1)[2]),
-				Op(reinterpret_cast<float *>(&arg1)[3])
-				);
-		}
-	};
-	template <> struct ComponentBinary<__m128, 4>
-	{
-		// requres that T support operator[]
-		template <typename OR, typename O1, typename O2, OR Op(O1, O2)> static const __m128 Evaluate(Context &aContext)
-		{
-			__m128 arg1(Expression::Evaluate<__m128>(aContext));
-			__m128 arg2(Expression::Evaluate<__m128>(aContext));
-			return _mm_setr_ps(
-				Op(reinterpret_cast<float *>(&arg1)[0], reinterpret_cast<float *>(&arg2)[0]),
-				Op(reinterpret_cast<float *>(&arg1)[1], reinterpret_cast<float *>(&arg2)[1]),
-				Op(reinterpret_cast<float *>(&arg1)[2], reinterpret_cast<float *>(&arg2)[2]),
-				Op(reinterpret_cast<float *>(&arg1)[3], reinterpret_cast<float *>(&arg2)[3])
-				);
-		}
-	};
-	template <> struct ComponentTernary<__m128, 4>
-	{
-		// requres that T support operator[]
-		template <typename OR, typename O1, typename O2, typename O3, OR Op(O1, O2, O3)> static const __m128 Evaluate(Context &aContext)
-		{
-			__m128 arg1(Expression::Evaluate<__m128>(aContext));
-			__m128 arg2(Expression::Evaluate<__m128>(aContext));
-			__m128 arg3(Expression::Evaluate<__m128>(aContext));
-			return _mm_setr_ps(
-				Op(reinterpret_cast<float *>(&arg1)[0], reinterpret_cast<float *>(&arg2)[0], reinterpret_cast<float *>(&arg3)[0]),
-				Op(reinterpret_cast<float *>(&arg1)[1], reinterpret_cast<float *>(&arg2)[1], reinterpret_cast<float *>(&arg3)[1]),
-				Op(reinterpret_cast<float *>(&arg1)[2], reinterpret_cast<float *>(&arg2)[2], reinterpret_cast<float *>(&arg3)[2]),
-				Op(reinterpret_cast<float *>(&arg1)[3], reinterpret_cast<float *>(&arg2)[3], reinterpret_cast<float *>(&arg3)[3])
-				);
-		}
-	};
-
-	// schema
-	template <typename T> struct Schema { static const char * const NAME; };
-	template <> struct Schema<float> { enum { COUNT = 0 }; static const char * const NAME; };
-	const char * const Schema<float>::NAME = "float";
-	template <> struct Schema<float const> { enum { COUNT = 0 }; static const char * const NAME; };
-	const char * const Schema<float const>::NAME = "float const";
-	template <> struct Schema<Vector2> { enum { COUNT = 2 }; static const char *const NAME; };
-	const char * const Schema<Vector2>::NAME = "Vector2";
-	template <> struct Schema<Vector3> { enum { COUNT = 3 }; static const char *const NAME; };
-	const char * const Schema<Vector3>::NAME = "Vector3";
-	template <> struct Schema<Vector4> { enum { COUNT = 4 }; static const char *const NAME; };
-	const char * const Schema<Vector4>::NAME = "Vector4";
-	template <> struct Schema<Color4> { enum { COUNT = 4 }; static const char *const NAME; };
-	const char * const Schema<Color4>::NAME = "Color4";
-	template <> struct Schema<__m128> { enum { COUNT = 4 }; static const char *const NAME; };
-	const char * const Schema<__m128>::NAME = "__m128";
-	template <> struct Schema<__m128 const> { enum { COUNT = 4 }; static const char *const NAME; };
-	const char * const Schema<__m128 const>::NAME = "__m128 const";
-
-	// various constructors
-	template <typename T> const T Construct(Context &aContext);
-	template <> const float Construct<float>(Context &aContext)
-	{
-		return Evaluate<float>(aContext);
-	}
-	template <> const Vector2 Construct<Vector2>(Context &aContext)
-	{
-		float arg1(Evaluate<float>(aContext));
-		float arg2(Evaluate<float>(aContext));
-		return Vector2(arg1, arg2);
-	}
-	template <> const Vector3 Construct<Vector3>(Context &aContext)
-	{
-		float arg1(Evaluate<float>(aContext));
-		float arg2(Evaluate<float>(aContext));
-		float arg3(Evaluate<float>(aContext));
-		return Vector3(arg1, arg2, arg3);
-	}
-	template <> const Vector4 Construct<Vector4>(Context &aContext)
-	{
-		float arg1(Evaluate<float>(aContext));
-		float arg2(Evaluate<float>(aContext));
-		float arg3(Evaluate<float>(aContext));
-		float arg4(Evaluate<float>(aContext));
-		return Vector4(arg1, arg2, arg3, arg4);
-	}
-	template <> const Color4 Construct<Color4>(Context &aContext)
-	{
-		float arg1(Evaluate<float>(aContext));
-		float arg2(Evaluate<float>(aContext));
-		float arg3(Evaluate<float>(aContext));
-		float arg4(Evaluate<float>(aContext));
-		return Color4(arg1, arg2, arg3, arg4);
-	}
-	template <> const __m128 Construct<__m128>(Context &aContext)
-	{
-		float arg1(Evaluate<float>(aContext));
-		float arg2(Evaluate<float>(aContext));
-		float arg3(Evaluate<float>(aContext));
-		float arg4(Evaluate<float>(aContext));
-		return _mm_setr_ps(arg1, arg2, arg3, arg4);
-	}
-
-	// extend a scalar
-	template <typename T, typename A> const T Extend(Context &aContext);
-	template <> const float Extend<float, float>(Context &aContext)
-	{
-		return Evaluate<float>(aContext);
-	}
-	template <> const Vector2 Extend<Vector2, float>(Context &aContext)
-	{
-		float arg(Evaluate<float>(aContext));
-		return Vector2(arg, arg);
-	}
-	template <> const Vector3 Extend<Vector3, float>(Context &aContext)
-	{
-		float arg(Evaluate<float>(aContext));
-		return Vector3(arg, arg, arg);
-	}
-	template <> const Vector4 Extend<Vector4, float>(Context &aContext)
-	{
-		float arg(Evaluate<float>(aContext));
-		return Vector4(arg, arg, arg, arg);
-	}
-	template <> const Color4 Extend<Color4, float>(Context &aContext)
-	{
-		float arg(Evaluate<float>(aContext));
-		return Color4(arg, arg, arg, arg);
-	}
-	template <> const __m128 Extend<__m128, float>(Context &aContext)
-	{
-		float arg(Evaluate<float>(aContext));
-		return _mm_set_ps1(arg);
-	}
-
-	// aritmetic operators
-	template <typename T> T Add(Context &aContext)
-	{
-		T arg1(Evaluate<T>(aContext));
-		T arg2(Evaluate<T>(aContext));
-		return arg1 + arg2;
-	}
-	template <> __m128 Add(Context &aContext)
-	{
-		__m128 arg1(Evaluate<__m128>(aContext));
-		__m128 arg2(Evaluate<__m128>(aContext));
-		return _mm_add_ps(arg1, arg2);
-	}
-	template <typename T> T Sub(Context &aContext)
-	{
-		T arg1(Evaluate<T>(aContext));
-		T arg2(Evaluate<T>(aContext));
-		return arg1 - arg2;
-	}
-	template <> __m128 Sub(Context &aContext)
-	{
-		__m128 arg1(Evaluate<__m128>(aContext));
-		__m128 arg2(Evaluate<__m128>(aContext));
-		return _mm_sub_ps(arg1, arg2);
-	}
-	template <typename T> T Mul(Context &aContext)
-	{
-		T arg1(Evaluate<T>(aContext));
-		T arg2(Evaluate<T>(aContext));
-		return arg1 * arg2;
-	}
-	template <> __m128 Mul(Context &aContext)
-	{
-		__m128 arg1(Evaluate<__m128>(aContext));
-		__m128 arg2(Evaluate<__m128>(aContext));
-		return _mm_mul_ps(arg1, arg2);
-	}
-	template <typename T> T Div(Context &aContext)
-	{
-		T arg1(Evaluate<T>(aContext));
-		T arg2(Evaluate<T>(aContext));
-		return arg1 / arg2;
-	}
-	template <> __m128 Div(Context &aContext)
-	{
-		__m128 arg1(Evaluate<__m128>(aContext));
-		__m128 arg2(Evaluate<__m128>(aContext));
-		return _mm_div_ps(arg1, arg2);
-	}
-	template <typename T> T Neg(Context &aContext)
-	{
-		T arg1(Evaluate<T>(aContext));
-		return -arg1;
-	}
-	template <> __m128 Neg(Context &aContext)
-	{
-		__m128 arg1(Evaluate<__m128>(aContext));
-		return _mm_sub_ps(_mm_setzero_ps(), arg1);
-	}
-	float Rcp(float v) { return 1.0f / v; };
-	template <typename T> T Rcp(Context &aContext)
-	{
-		return ComponentUnary<T, Schema<T>::COUNT>::Evaluate<float, float, Rcp>(aContext);
-	}
-	template <> __m128 Rcp(Context &aContext)
-	{
-		__m128 arg1(Evaluate<__m128>(aContext));
-		return _mm_rcp_ps(arg1);
-	}
-	float Inc(float v) { return v + 1.0f; };
-	template <typename T> T Inc(Context &aContext)
-	{
-		return ComponentUnary<T, Schema<T>::COUNT>::Evaluate<float, float, Inc>(aContext);
-	}
-	template <> __m128 Inc(Context &aContext)
-	{
-		__m128 arg1(Evaluate<__m128>(aContext));
-		return _mm_add_ps(arg1, _mm_set_ps1(1));
-	}
-	float Dec(float v) { return v - 1.0f; };
-	template <typename T> T Dec(Context &aContext)
-	{
-		return ComponentUnary<T, Schema<T>::COUNT>::Evaluate<float, float, Dec>(aContext);
-	}
-	template <> __m128 Dec(Context &aContext)
-	{
-		__m128 arg1(Evaluate<__m128>(aContext));
-		return _mm_sub_ps(arg1, _mm_set_ps1(1));
-	}
-	
-	// relational operators
-	template <typename T> bool Greater(Context &aContext)
-	{
-		T arg1(Evaluate<T>)(aContext);
-		T arg2(Evaluate<T>)(aContext);
-		return arg1 > arg2;
-	}
-	template <typename T> bool GreaterEqual(Context &aContext)
-	{
-		T arg1(Evaluate<T>)(aContext);
-		T arg2(Evaluate<T>)(aContext);
-		return arg1 >= arg2;
-	}
-	template <typename T> bool Less(Context &aContext)
-	{
-		T arg1(Evaluate<T>)(aContext);
-		T arg2(Evaluate<T>)(aContext);
-		return arg1 < arg2;
-	}
-	template <typename T> bool LessEqual(Context &aContext)
-	{
-		T arg1(Evaluate<T>)(aContext);
-		T arg2(Evaluate<T>)(aContext);
-		return arg1 <= arg2;
-	}
-	template <typename T> bool Equal(Context &aContext)
-	{
-		T arg1(Evaluate<T>)(aContext);
-		T arg2(Evaluate<T>)(aContext);
-		return arg1 == arg2;
-	}
-	template <typename T> bool NotEqual(Context &aContext)
-	{
-		T arg1(Evaluate<T>)(aContext);
-		T arg2(Evaluate<T>)(aContext);
-		return arg1 != arg2;
-	}
-
-	// trigonometric functions
-	template <typename T> T Sin(Context &aContext)
-	{
-		return ComponentUnary<T, Schema<T>::COUNT>::Evaluate<float, float, sinf>(aContext);
-	}
-	template <typename T> T Cos(Context &aContext)
-	{
-		return ComponentUnary<T, Schema<T>::COUNT>::Evaluate<float, float, cosf>(aContext);
-	}
-	template <typename T> T Tan(Context &aContext)
-	{
-		return ComponentUnary<T, Schema<T>::COUNT>::Evaluate<float, float, tanf>(aContext);
-	}
-	template <typename T> T Asin(Context &aContext)
-	{
-		return ComponentUnary<T, Schema<T>::COUNT>::Evaluate<float, float, asinf>(aContext);
-	}
-	template <typename T> T Acos(Context &aContext)
-	{
-		return ComponentUnary<T, Schema<T>::COUNT>::Evaluate<float, float, acosf>(aContext);
-	}
-	template <typename T> T Atan(Context &aContext)
-	{
-		return ComponentUnary<T, Schema<T>::COUNT>::Evaluate<float, float, atanf>(aContext);
-	}
-	template <typename T> T Atan2(Context &aContext)
-	{
-		return ComponentBinary<T, Schema<T>::COUNT>::Evaluate<float, float, float, atan2f>(aContext);
-	}
-
-	// hyperbolic functions
-	template <typename T> T Sinh(Context &aContext)
-	{
-		return ComponentUnary<T, Schema<T>::COUNT>::Evaluate<float, float, sinhf>(aContext);
-	}
-	template <typename T> T Cosh(Context &aContext)
-	{
-		return ComponentUnary<T, Schema<T>::COUNT>::Evaluate<float, float, coshf>(aContext);
-	}
-	template <typename T> T Tanh(Context &aContext)
-	{
-		return ComponentUnary<T, Schema<T>::COUNT>::Evaluate<float, float, tanhf>(aContext);
-	}
-
-	// exponential functions
-	template <typename T> T Pow(Context &aContext)
-	{
-		return ComponentBinary<T, Schema<T>::COUNT>::Evaluate<float, float, float, powf>(aContext);
-	}
-	template <typename T> T Exp(Context &aContext)
-	{
-		return ComponentUnary<T, Schema<T>::COUNT>::Evaluate<float, float, expf>(aContext);
-	}
-	template <typename T> T Log(Context &aContext)
-	{
-		return ComponentUnary<T, Schema<T>::COUNT>::Evaluate<float, float, logf>(aContext);
-	}
-	template <typename T> T Sqrt(Context &aContext)
-	{
-		return ComponentUnary<T, Schema<T>::COUNT>::Evaluate<float, float, sqrtf>(aContext);
-	}
-	template <> __m128 Sqrt(Context &aContext)
-	{
-		__m128 arg1(Evaluate<__m128>(aContext));
-		return _mm_sqrt_ps(arg1);
-	}
-	template <typename T> T InvSqrt(Context &aContext)
-	{
-		return ComponentUnary<T, Schema<T>::COUNT>::Evaluate<float, float, ::InvSqrt>(aContext);
-	}
-	template <> __m128 InvSqrt(Context &aContext)
-	{
-		__m128 arg1(Evaluate<__m128>(aContext));
-		return _mm_rsqrt_ps(arg1);
-	}
-
-	// common functions
-	template <typename T> T Abs(Context &aContext)
-	{
-		return ComponentUnary<T, Schema<T>::COUNT>::Evaluate<float, float, fabsf>(aContext);
-	}
-	template <> __m128 Abs<__m128>(Context &aContext)
-	{
-		__m128 arg1(Evaluate<__m128>(aContext));
-		return _mm_max_ps(arg1, _mm_sub_ps(_mm_setzero_ps(), arg1));
-	}
-	float Sign(float v) { return (v == 0) ? (0.0f) : ((v > 0) ? (1.0f) : (-1.0f)); }
-	template <typename T> T Sign(Context &aContext)
-	{
-		return ComponentUnary<T, Schema<T>::COUNT>::Evaluate<float, float, Sign>(aContext);
-	}
-	template <typename T> T Floor(Context &aContext)
-	{
-		return ComponentUnary<T, Schema<T>::COUNT>::Evaluate<float, float, floorf>(aContext);
-	}
-	template <typename T> T Ceil(Context &aContext)
-	{
-		return ComponentUnary<T, Schema<T>::COUNT>::Evaluate<float, float, ceilf>(aContext);
-	}
-	float Frac(float v) { return v - xs_FloorToInt(v); }
-	template <typename T> T Frac(Context &aContext)
-	{
-		return ComponentUnary<T, Schema<T>::COUNT>::Evaluate<float, float, Frac>(aContext);
-	}
-	template <typename T> T Mod(Context &aContext)
-	{
-		return ComponentBinary<T, Schema<T>::COUNT>::Evaluate<float, float, float, fmodf>(aContext);
-	}
-	template <typename T> T Min(Context &aContext)
-	{
-		return ComponentBinary<T, Schema<T>::COUNT>::Evaluate<const float &, const float &, const float &, std::min<float> >(aContext);
-	}
-	template <> __m128 Min(Context &aContext)
-	{
-		__m128 arg1(Evaluate<__m128>(aContext));
-		__m128 arg2(Evaluate<__m128>(aContext));
-		return _mm_min_ps(arg1, arg2);
-	}
-	template <typename T> T Max(Context &aContext)
-	{
-		return ComponentBinary<T, Schema<T>::COUNT>::Evaluate<const float &, const float &, const float &, std::max<float> >(aContext);
-	}
-	template <> __m128 Max(Context &aContext)
-	{
-		__m128 arg1(Evaluate<__m128>(aContext));
-		__m128 arg2(Evaluate<__m128>(aContext));
-		return _mm_max_ps(arg1, arg2);
-	}
-	template <typename T> T Clamp(Context &aContext)
-	{
-		return ComponentTernary<T, Schema<T>::COUNT>::Evaluate<const float, const float, const float, const float, ::Clamp<float> >(aContext);
-	}
-	template <> __m128 Clamp(Context &aContext)
-	{
-		__m128 val(Evaluate<__m128>(aContext));
-		__m128 min(Evaluate<__m128>(aContext));
-		__m128 max(Evaluate<__m128>(aContext));
-		return _mm_min_ps(_mm_max_ps(val, min), max);
-	}
-	template <typename T> T Lerp(Context &aContext)
-	{
-		return Ternary<T, T, T, float>::Evaluate<const T, const T, const T, float, ::Lerp<T> >(aContext);
-	}
-	template <> __m128 Lerp(Context &aContext)
-	{
-		__m128 v0(Evaluate<__m128>(aContext));
-		__m128 v1(Evaluate<__m128>(aContext));
-		float s(Evaluate<float>(aContext));
-		return _mm_add_ps(v0, _mm_mul_ps(_mm_sub_ps(v1, v0), _mm_set_ps1(s)));
-	}
-	float Step(float e, float v) { return v < e ? 0.0f : 1.0f; }
-	template <typename T> T Step(Context &aContext)
-	{
-		return ComponentBinary<T, Schema<T>::COUNT>::Evaluate<float, float, float, Step >(aContext);
-	}
-	float SmoothStep(float e0, float e1, float v)
-	{
-		if (v <= e0) return 0.0f;
-		if (v >= e1) return 1.0f;
-		float t = (v - e0) / (e1 - e0);
-		return t * t * (3 - 2 * t);
-	}
-	template <typename T> T SmoothStep(Context &aContext)
-	{
-		return ComponentTernary<T, Schema<T>::COUNT>::Evaluate<float, float, float, float, SmoothStep >(aContext);
-	}
-}
-
 
 //
-// VARIABLE OPERATOR
+// DRAWLIST VARIABLE OPERATOR
 //
 
 // component-level operators
@@ -708,7 +230,7 @@ void VariableOperatorMin(float &v, float data) { v = std::min(v, data); }
 void VariableOperatorMax(float &v, float data) { v = std::max(v, data); }
 
 // evaluate variable operator
-bool EvaluateVariableOperator(DrawItemContext &aContext, VariableOperator op)
+bool EvaluateVariableOperator(EntityContext &aContext, VariableOperator op)
 {
 	unsigned int name = *aContext.mStream++;
 	int width = *aContext.mStream++;
@@ -738,42 +260,42 @@ bool EvaluateVariableOperator(DrawItemContext &aContext, VariableOperator op)
 // DRAWLIST OPERATIONS
 //
 
-void DO_glArrayElement(DrawItemContext &aContext)
+void DO_glArrayElement(EntityContext &aContext)
 {
 	glArrayElement(Expression::Read<GLint>(aContext));
 }
 
-void DO_glBegin(DrawItemContext &aContext)
+void DO_glBegin(EntityContext &aContext)
 {
 	glBegin(Expression::Read<GLenum>(aContext));
 }
 
-void DO_glBindTexture(DrawItemContext &aContext)
+void DO_glBindTexture(EntityContext &aContext)
 {
 	GLenum target(Expression::Read<GLenum>(aContext));
 	GLuint texture(Expression::Read<GLuint>(aContext));
 	glBindTexture(target, texture);
 }
 
-void DO_glBlendFunc(DrawItemContext &aContext)
+void DO_glBlendFunc(EntityContext &aContext)
 {
 	GLenum sfactor(Expression::Read<GLenum>(aContext));
 	GLenum dfactor(Expression::Read<GLenum>(aContext));
 	glBlendFunc(sfactor, dfactor);
 }
 
-void DO_glCallList(DrawItemContext &aContext)
+void DO_glCallList(EntityContext &aContext)
 {
 	glCallList(Expression::Read<GLuint>(aContext));
 }
 
-void DO_glColor4fv(DrawItemContext &aContext)
+void DO_glColor4fv(EntityContext &aContext)
 {
 	DLColor value(Expression::Evaluate<DLColor>(aContext));
 	glColor4fv(reinterpret_cast<float *>(&value));
 }
 
-void DO_glColorPointer(DrawItemContext &aContext)
+void DO_glColorPointer(EntityContext &aContext)
 {
 	GLint size(Expression::Read<GLint>(aContext));
 	GLsizei stride(Expression::Read<GLsizei>(aContext));
@@ -782,17 +304,17 @@ void DO_glColorPointer(DrawItemContext &aContext)
 	aContext.mStream += (count*sizeof(GLfloat)+sizeof(unsigned int)-1)/sizeof(unsigned int);
 }
 
-void DO_glDisable(DrawItemContext &aContext)
+void DO_glDisable(EntityContext &aContext)
 {
 	glDisable(Expression::Read<GLenum>(aContext));
 }
 
-void DO_glDisableClientState(DrawItemContext &aContext)
+void DO_glDisableClientState(EntityContext &aContext)
 {
 	glDisableClientState(Expression::Read<GLenum>(aContext));
 }
 
-void DO_glDrawArrays(DrawItemContext &aContext)
+void DO_glDrawArrays(EntityContext &aContext)
 {
 	GLenum mode(Expression::Read<GLenum>(aContext));
 	GLint first(Expression::Read<GLint>(aContext));
@@ -800,7 +322,7 @@ void DO_glDrawArrays(DrawItemContext &aContext)
 	glDrawArrays(mode, first, count);
 }
 
-void DO_glDrawElements(DrawItemContext &aContext)
+void DO_glDrawElements(EntityContext &aContext)
 {
 	GLenum mode(Expression::Read<GLenum>(aContext));
 	size_t count(Expression::Read<size_t>(aContext));
@@ -808,12 +330,12 @@ void DO_glDrawElements(DrawItemContext &aContext)
 	aContext.mStream += (count*sizeof(unsigned short)+sizeof(unsigned int)-1)/sizeof(unsigned int);
 }
 
-void DO_glEdgeFlag(DrawItemContext &aContext)
+void DO_glEdgeFlag(EntityContext &aContext)
 {
 	glEdgeFlag(Expression::Read<GLboolean>(aContext));
 }
 
-void DO_glEdgeFlagPointer(DrawItemContext &aContext)
+void DO_glEdgeFlagPointer(EntityContext &aContext)
 {
 	GLsizei stride(Expression::Read<GLsizei>(aContext));
 	size_t count(Expression::Read<size_t>(aContext));
@@ -821,28 +343,28 @@ void DO_glEdgeFlagPointer(DrawItemContext &aContext)
 	aContext.mStream += (count*sizeof(bool)+sizeof(unsigned int)-1)/sizeof(unsigned int);
 }
 
-void DO_glEnable(DrawItemContext &aContext)
+void DO_glEnable(EntityContext &aContext)
 {
 	glEnable(Expression::Read<GLenum>(aContext));
 }
 
-void DO_glEnableClientState(DrawItemContext &aContext)
+void DO_glEnableClientState(EntityContext &aContext)
 {
 	glEnableClientState(Expression::Read<GLenum>(aContext));
 }
 
-void DO_glEnd(DrawItemContext &aContext)
+void DO_glEnd(EntityContext &aContext)
 {
 	glEnd();
 }
 
-void DO_glIndexf(DrawItemContext &aContext)
+void DO_glIndexf(EntityContext &aContext)
 {
 	float value(Expression::Evaluate<DLIndex>(aContext));
 	glIndexf(value);
 }
 
-void DO_glIndexPointer(DrawItemContext &aContext)
+void DO_glIndexPointer(EntityContext &aContext)
 {
 	GLsizei stride(Expression::Read<GLsizei>(aContext));
 	size_t count(Expression::Read<size_t>(aContext));
@@ -850,30 +372,36 @@ void DO_glIndexPointer(DrawItemContext &aContext)
 	aContext.mStream += (count*sizeof(GLfloat)+sizeof(unsigned int)-1)/sizeof(unsigned int);
 }
 
-void DO_glLoadIdentity(DrawItemContext &aContext)
+void DO_glLineWidth(EntityContext &aContext)
+{
+	GLfloat width(Expression::Read<GLfloat>(aContext));
+	glLineWidth(width);
+}
+
+void DO_glLoadIdentity(EntityContext &aContext)
 {
 	glLoadIdentity();
 }
 
-void DO_glLoadMatrixf(DrawItemContext &aContext)
+void DO_glLoadMatrixf(EntityContext &aContext)
 {
 	glLoadMatrixf(reinterpret_cast<const GLfloat *>(aContext.mStream));
 	aContext.mStream += (16*sizeof(GLfloat)+sizeof(unsigned int)-1)/sizeof(unsigned int);
 }
 
-void DO_glMultMatrixf(DrawItemContext &aContext)
+void DO_glMultMatrixf(EntityContext &aContext)
 {
 	glMultMatrixf(reinterpret_cast<const GLfloat *>(aContext.mStream));
 	aContext.mStream += (16*sizeof(GLfloat)+sizeof(unsigned int)-1)/sizeof(unsigned int);
 }
 
-void DO_glNormal3fv(DrawItemContext &aContext)
+void DO_glNormal3fv(EntityContext &aContext)
 {
 	DLNormal value(Expression::Evaluate<DLNormal>(aContext));
 	glNormal3fv(reinterpret_cast<float *>(&value));
 }
 
-void DO_glNormalPointer(DrawItemContext &aContext)
+void DO_glNormalPointer(EntityContext &aContext)
 {
 	GLsizei stride(Expression::Read<GLsizei>(aContext));
 	size_t count(Expression::Read<size_t>(aContext));
@@ -881,55 +409,61 @@ void DO_glNormalPointer(DrawItemContext &aContext)
 	aContext.mStream += (count*sizeof(GLfloat)+sizeof(unsigned int)-1)/sizeof(unsigned int);
 }
 
-void DO_glPopAttrib(DrawItemContext &aContext)
+void DO_glPointSize(EntityContext &aContext)
+{
+	GLfloat size(Expression::Read<GLfloat>(aContext));
+	glPointSize(size);
+}
+
+void DO_glPopAttrib(EntityContext &aContext)
 {
 	glPopAttrib();
 }
 
-void DO_glPopClientAttrib(DrawItemContext &aContext)
+void DO_glPopClientAttrib(EntityContext &aContext)
 {
 	glPopClientAttrib();
 }
 
-void DO_glPopMatrix(DrawItemContext &aContext)
+void DO_glPopMatrix(EntityContext &aContext)
 {
 	glPopMatrix();
 }
 
-void DO_glPushAttrib(DrawItemContext &aContext)
+void DO_glPushAttrib(EntityContext &aContext)
 {
 	glPushAttrib(Expression::Read<GLbitfield>(aContext));
 }
 
-void DO_glPushClientAttrib(DrawItemContext &aContext)
+void DO_glPushClientAttrib(EntityContext &aContext)
 {
 	glPushClientAttrib(Expression::Read<GLbitfield>(aContext));
 }
 
-void DO_glPushMatrix(DrawItemContext &aContext)
+void DO_glPushMatrix(EntityContext &aContext)
 {
 	glPushMatrix();
 }
 
-void DO_glRotatef(DrawItemContext &aContext)
+void DO_glRotatef(EntityContext &aContext)
 {
 	float value(Expression::Evaluate<DLRotation>(aContext));
 	glRotatef(value, 0, 0, 1);
 }
 
-void DO_glScalef(DrawItemContext &aContext)
+void DO_glScalef(EntityContext &aContext)
 {
 	DLScale value(Expression::Evaluate<DLScale>(aContext));
 	glScalef(reinterpret_cast<float *>(&value)[0], reinterpret_cast<float *>(&value)[1], reinterpret_cast<float *>(&value)[2]);
 }
 
-void DO_glTexCoord2fv(DrawItemContext &aContext)
+void DO_glTexCoord2fv(EntityContext &aContext)
 {
 	DLTexCoord value(Expression::Evaluate<DLTexCoord>(aContext));
 	glTexCoord2fv(reinterpret_cast<float *>(&value));
 }
 
-void DO_glTexCoordPointer(DrawItemContext &aContext)
+void DO_glTexCoordPointer(EntityContext &aContext)
 {
 	GLint size(Expression::Read<GLint>(aContext));
 	GLsizei stride(Expression::Read<GLsizei>(aContext));
@@ -938,19 +472,19 @@ void DO_glTexCoordPointer(DrawItemContext &aContext)
 	aContext.mStream += (count*sizeof(GLfloat)+sizeof(unsigned int)-1)/sizeof(unsigned int);
 }
 
-void DO_glTranslatef(DrawItemContext &aContext)
+void DO_glTranslatef(EntityContext &aContext)
 {
 	DLTranslation value(Expression::Evaluate<DLTranslation>(aContext));
 	glTranslatef(reinterpret_cast<float *>(&value)[0], reinterpret_cast<float *>(&value)[1], reinterpret_cast<float *>(&value)[2]);
 }
 
-void DO_glVertex3fv(DrawItemContext &aContext)
+void DO_glVertex3fv(EntityContext &aContext)
 {
 	DLPosition value(Expression::Evaluate<DLPosition>(aContext));
 	glVertex3fv(reinterpret_cast<float *>(&value));
 }
 
-void DO_glVertexPointer(DrawItemContext &aContext)
+void DO_glVertexPointer(EntityContext &aContext)
 {
 	GLint size(Expression::Read<GLint>(aContext));
 	GLsizei stride(Expression::Read<GLsizei>(aContext));
@@ -959,21 +493,22 @@ void DO_glVertexPointer(DrawItemContext &aContext)
 	aContext.mStream += (count*sizeof(GLfloat)+sizeof(unsigned int)-1)/sizeof(unsigned int);
 }
 
-void DO_Repeat(DrawItemContext &aContext)
+void DO_Repeat(EntityContext &aContext)
 {
 	int repeat(Expression::Read<int>(aContext));
 	size_t size(Expression::Read<size_t>(aContext));
-	DrawItemContext context(aContext);
+	EntityContext context(aContext);
+	context.mBegin = context.mStream;
 	context.mEnd = context.mStream + size;
 	for (int i = 0; i < repeat; i++)
 	{
-		context.mStream = aContext.mStream;
+		context.mStream = context.mBegin;
 		ExecuteDrawItems(context);
 	}
 	aContext.mStream += size;
 }
 
-void DO_Block(DrawItemContext &aContext)
+void DO_Block(EntityContext &aContext)
 {
 	float start(Expression::Read<float>(aContext));
 	float length(Expression::Read<float>(aContext));
@@ -988,7 +523,8 @@ void DO_Block(DrawItemContext &aContext)
 		{
 			t -= loop * length;
 			t *= scale;
-			DrawItemContext context(aContext);
+			EntityContext context(aContext);
+			context.mBegin = context.mStream;
 			context.mEnd = context.mStream + size;
 			context.mParam = t;
 			ExecuteDrawItems(context);
@@ -997,42 +533,42 @@ void DO_Block(DrawItemContext &aContext)
 	aContext.mStream += size;
 }
 
-void DO_Set(DrawItemContext &aContext)
+void DO_Set(EntityContext &aContext)
 {
 	EvaluateVariableOperator(aContext, VariableOperatorSet);
 }
 
-void DO_Add(DrawItemContext &aContext)
+void DO_Add(EntityContext &aContext)
 {
 	EvaluateVariableOperator(aContext, VariableOperatorAdd);
 }
 
-void DO_Sub(DrawItemContext &aContext)
+void DO_Sub(EntityContext &aContext)
 {
 	EvaluateVariableOperator(aContext, VariableOperatorSub);
 }
 
-void DO_Mul(DrawItemContext &aContext)
+void DO_Mul(EntityContext &aContext)
 {
 	EvaluateVariableOperator(aContext, VariableOperatorMul);
 }
 
-void DO_Div(DrawItemContext &aContext)
+void DO_Div(EntityContext &aContext)
 {
 	EvaluateVariableOperator(aContext, VariableOperatorDiv);
 }
 
-void DO_Min(DrawItemContext &aContext)
+void DO_Min(EntityContext &aContext)
 {
 	EvaluateVariableOperator(aContext, VariableOperatorMin);
 }
 
-void DO_Max(DrawItemContext &aContext)
+void DO_Max(EntityContext &aContext)
 {
 	EvaluateVariableOperator(aContext, VariableOperatorMax);
 }
 
-void DO_Swizzle(DrawItemContext &aContext)
+void DO_Swizzle(EntityContext &aContext)
 {
 	unsigned int name(Expression::Read<unsigned int>(aContext));
 	int width(Expression::Read<int>(aContext));
@@ -1045,7 +581,7 @@ void DO_Swizzle(DrawItemContext &aContext)
 //	Database::variable.Close(aContext.mId);
 }
 
-void DO_Clear(DrawItemContext &aContext)
+void DO_Clear(EntityContext &aContext)
 {
 	unsigned int name(Expression::Read<unsigned int>(aContext));
 	int width(Expression::Read<int>(aContext));
@@ -1056,7 +592,7 @@ void DO_Clear(DrawItemContext &aContext)
 }
 
 #ifdef DRAWLIST_LOOP
-void DO_Loop(DrawItemContext &aContext)
+void DO_Loop(EntityContext &aContext)
 {
 	unsigned int name = Expression::Read<unsigned int>(aContext);
 	float from = Expression::Read<float>(aContext);
@@ -1065,7 +601,8 @@ void DO_Loop(DrawItemContext &aContext)
 	size_t size = Expression::Read<size_t>(aContext);
 
 //		Database::Typed<float> &variables = Database::variable.Open(aContext.mId);
-	DrawItemContext context(aContext);
+	EntityContext context(aContext);
+	context.mBegin = context.mStream;
 	context.mEnd = context.mStream + size;
 	if (by > 0)
 	{
@@ -1093,963 +630,6 @@ void DO_Loop(DrawItemContext &aContext)
 #endif
 
 
-//
-// LITERAL EXPRESSION
-// returns an embedded constant value
-//
-
-// float[width] literal
-void ConfigureLiteral(const TiXmlElement *element, std::vector<unsigned int> &buffer, int width, const char * const names[], const float defaults[])
-{
-	// process literal data
-	for (int i = 0; i < width; ++i)
-	{
-		float value = defaults[i];
-		element->QueryFloatAttribute(names[i], &value);
-		buffer.push_back(*reinterpret_cast<unsigned int *>(&value));
-		DebugPrint(" %s=%f", names[i], value);
-	}
-}
-
-// typed literal
-template <typename T> void ConfigureLiteral(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
-{
-	// append a constant expression
-	DebugPrint("%s literal:", Expression::Schema<T>::NAME);
-	Expression::Append(buffer, Expression::Constant<T>);
-	ConfigureLiteral(element, buffer, sizeof(T)/sizeof(float), names, defaults);
-	DebugPrint("\n");
-}
-/*
-template <> void ConfigureLiteral<__m128>(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
-{
-	Expression::Append(buffer, Expression::Constant<__m128>);
-	__m128 value = _mm_setzero_ps();
-	for (int i = 0; i < 4; ++i)
-	{
-		reinterpret_cast<float *>(&value)[i] = defaults[i];
-		element->QueryFloatAttribute(names[i], &reinterpret_cast<float *>(&value)[i]);
-	}
-	Expression::New<__m128>(buffer, value);
-}
-*/
-
-//
-// VARIABLE EXPRESSION
-// returns the value of a named variable
-//
-
-// evaluate float[width] variable
-void EvaluateVariable(float value[], int width, DrawItemContext &aContext)
-{
-	unsigned int name = Expression::Read<unsigned int>(aContext);
-//	const Database::Typed<float> &variables = Database::variable.Get(aContext.mId);
-	for (int i = 0; i < width; ++i)
-		value[i] = aContext.mVars->Get(name+i);
-}
-
-// evaluate typed variable
-template <typename T> static const T EvaluateVariable(DrawItemContext &aContext)
-{
-	T value = T();
-	EvaluateVariable(reinterpret_cast<float * __restrict>(&value), sizeof(T)/sizeof(float), aContext);
-	return value;
-}
-
-// typed variable: attribute-inlined version
-template <typename T> void ConfigureInlineVariable(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
-{
-	// append a variable expression
-	DebugPrint("%s variable %s (inline)\n", Expression::Schema<T>::NAME, element->Attribute("variable"));
-	Expression::Append(buffer, EvaluateVariable<T>, Hash(element->Attribute("variable")));
-}
-
-// typed variable: normal version
-template <typename T> void ConfigureVariable(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
-{
-	// append a variable expression
-	DebugPrint("%s variable %s\n", Expression::Schema<T>::NAME, element->Attribute("name"));
-	Expression::Append(buffer, EvaluateVariable<T>, Hash(element->Attribute("name")));
-}
-
-// typed variable: tag-named version
-template <typename T> void ConfigureTagVariable(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
-{
-	// append a variable expression
-	DebugPrint("%s variable %s (tag)\n", Expression::Schema<T>::NAME, element->Value());
-	Expression::Append(buffer, EvaluateVariable<T>, Hash(element->Value()));
-}
-
-
-//
-// INTERPOLATOR EXPRESSION
-// returns interpolated value based on parameter
-//
-
-#pragma optimize( "t", on )
-
-// evaluate float[width] interpolator
-void EvaluateInterpolator(float value[], int width, float param, DrawItemContext &aContext)
-{
-	// data size
-	unsigned int size = Expression::Read<unsigned int>(aContext);
-
-	// end of data
-	const unsigned int *end = aContext.mStream + size;
-
-	// get interpolator value
-	const int count = Expression::Read<int>(aContext);
-	const float * __restrict keys = reinterpret_cast<const float * __restrict>(aContext.mStream);
-	int dummy = 0;
-	if (!ApplyInterpolator(value, width, count, keys, param, dummy))
-		memset(value, 0, width * sizeof(float));
-
-	// advance stream
-	aContext.mStream = end;
-}
-
-// evaluate typed interpolator
-template <typename T> static const T EvaluateInterpolator(DrawItemContext &aContext)
-{
-	T value = T();
-	float param(Expression::Evaluate<float>(aContext));
-	EvaluateInterpolator(reinterpret_cast<float * __restrict>(&value), sizeof(T)/sizeof(float), param, aContext);
-	return value;
-}
-
-template <typename T> T ApplyInterpolator(int aCount, const float aKeys[], float aTime, int &aHint);
-
-template<> float ApplyInterpolator<float>(int aCount, const float aKeys[], float aTime, int &aHint)
-{
-	// get stride
-	const int aStride = sizeof(float)/sizeof(float) + 1;
-
-	// find the key index
-	int index = FindKeyIndex(aStride, aCount, aKeys, aTime, aHint);
-	if (index < 0)
-		return 0.0f;
-
-	// interpolate the value
-	const float * __restrict key = aKeys + index * aStride;
-	const float time0 = key[0];
-	const float data0 = key[1];
-	const float time1 = key[aStride];
-	const float data1 = key[aStride + 1];
-	const float t = (aTime - time0) / (time1 - time0 + FLT_EPSILON);
-	return data0 + (data1 - data0) * t;
-}
-
-template <> __m128 ApplyInterpolator<__m128>(int aCount, const float aKeys[], float aTime, int &aHint)
-{
-	// get stride
-	const int aStride = sizeof(__m128)/sizeof(float) + 1;
-
-	// find the key index
-	int index = FindKeyIndex(aStride, aCount, aKeys, aTime, aHint);
-	if (index < 0)
-		return _mm_setzero_ps();
-
-	// interpolate the value
-	const float * __restrict key = aKeys + index * aStride;
-	const float time0 = key[0];
-	const __m128 data0 = _mm_loadu_ps(&key[1]);
-	const float time1 = key[aStride];
-	const __m128 data1 = _mm_loadu_ps(&key[aStride + 1]);
-	const float t = (aTime - time0) / (time1 - time0 + FLT_EPSILON);
-	return _mm_add_ps(data0, _mm_mul_ps(_mm_sub_ps(data1, data0), _mm_set_ps1(t)));
-}
-
-template <> static const float EvaluateInterpolator<float>(DrawItemContext &aContext)
-{
-	//bool ApplyInterpolator(float aTarget[], int aWidth, int aCount, const float aKeys[], float aTime, int &aHint)
-
-	// get parameter value
-	float aTime(Expression::Evaluate<float>(aContext));
-
-	// data size
-	unsigned int size = Expression::Read<unsigned int>(aContext);
-
-	// end of data
-	const unsigned int *end = aContext.mStream + size;
-
-	// get interpolator data
-	const int aCount = Expression::Read<int>(aContext);
-	const float * __restrict aKeys = reinterpret_cast<const float * __restrict>(aContext.mStream);
-	int aHint = 0;
-
-	// get interpolated value
-	float value = ApplyInterpolator<float>(aCount, aKeys, aTime, aHint);
-
-	// advance stream
-	aContext.mStream = end;
-
-	// return value
-	return value;
-}
-
-template <> static const __m128 EvaluateInterpolator<__m128>(DrawItemContext &aContext)
-{
-	//bool ApplyInterpolator(float aTarget[], int aWidth, int aCount, const float aKeys[], float aTime, int &aHint)
-
-	// get parameter value
-	float aTime(Expression::Evaluate<float>(aContext));
-
-	// data size
-	unsigned int size = Expression::Read<unsigned int>(aContext);
-
-	// end of data
-	const unsigned int *end = aContext.mStream + size;
-
-	// get interpolator data
-	const int aCount = Expression::Read<int>(aContext);
-	const float * __restrict aKeys = reinterpret_cast<const float * __restrict>(aContext.mStream);
-	int aHint = 0;
-
-	// get interpolated value
-	__m128 value = ApplyInterpolator<__m128>(aCount, aKeys, aTime, aHint);
-
-	// advance stream
-	aContext.mStream = end;
-
-	// return value
-	return value;
-}
-
-#pragma optimize( "", on )
-
-
-// configure float[width] interpolator
-static void ConfigureInterpolator(const TiXmlElement *element, std::vector<unsigned int> &buffer, int width, const char * const names[], const float defaults[])
-{
-	// process interpolator data
-	buffer.push_back(0);
-	int start = buffer.size();
-	ConfigureInterpolatorItem(element, buffer, width, names, defaults);
-	buffer[start - 1] = buffer.size() - start;
-}
-
-// configure typed interpolator
-template <typename T> void ConfigureInterpolator(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
-{
-	// append an interpolator expression
-	DebugPrint("%s interpolator\n", Expression::Schema<T>::NAME);
-	Expression::Append(buffer, EvaluateInterpolator<T>);
-	if (const TiXmlElement *param = element->FirstChildElement("param"))
-		ConfigureExpressionRoot<float>(param, buffer, sScalarNames, sScalarDefault);
-	else
-		Expression::Append(buffer, EvaluateTime);
-	ConfigureInterpolator(element, buffer, sizeof(T)/sizeof(float), names, defaults);
-}
-
-
-//
-// RANDOM EXPRESSION
-// returns a random value
-//
-
-// TO DO: float[width] random
-
-// configure typed random
-template <typename T> void ConfigureRandom(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
-{
-	// width in floats (HACK)
-	const int width = (sizeof(T)+sizeof(float)-1)/sizeof(float);
-
-	// get random count
-	int count = 1;
-	element->QueryIntAttribute("rand", &count);
-
-	DebugPrint("%s random %d:", Expression::Schema<T>::NAME, count);
-
-	// offset factor
-	float offset[width];
-
-	// scale factor
-	float scale[width];
-
-	// status flags
-	bool need_offset = false;
-	bool need_scale = false;
-	bool need_rand = false;
-
-	// get component properties
-	for (int i = 0; i < width; i++)
-	{
-		char label[64];
-
-		// default values
-		offset[i] = defaults[i];
-		scale[i] = 0;
-
-		// average
-		sprintf(label, "%s_avg", names[i]);
-		float average = defaults[i];
-		if (element->QueryFloatAttribute(label, &average) == TIXML_SUCCESS)
-		{
-			offset[i] = average;
-		}
-
-		// variance
-		sprintf(label, "%s_var", names[i]);
-		float variance = 0.0f;
-		if (element->QueryFloatAttribute(label, &variance) == TIXML_SUCCESS)
-		{
-			offset[i] = average - variance;
-			scale[i] = variance * 2;
-		}
-
-		// minimum
-		sprintf(label, "%s_min", names[i]);
-		float minimum = 0.0f;
-		if (element->QueryFloatAttribute(label, &minimum) == TIXML_SUCCESS)
-		{
-			offset[i] = minimum;
-		}
-
-		// maximum
-		sprintf(label, "%s_max", names[i]);
-		float maximum = 0.0f;
-		if (element->QueryFloatAttribute(label, &maximum) == TIXML_SUCCESS)
-		{
-			scale[i] = maximum - minimum;
-		}
-
-		// update status
-		if (offset[i] != 0.0f)
-			need_offset = true;
-
-		if (count > 0)
-		{
-			// compensate for random count
-			scale[i] /= count;
-
-			if (scale[i] != 0.0f)
-				need_rand = true;
-			if (scale[i] != 1.0f)
-				need_scale = true;
-		}
-
-		DebugPrint(" %f+%f*%s", offset[i], scale[i], names[i]);
-	}
-
-	if (need_offset || !need_rand)
-	{
-		if (need_rand)
-		{
-			// push add
-			Expression::Append(buffer, Expression::Add<T>);
-		}
-
-		// push offset
-		Expression::Append(buffer, Expression::Constant<T>);
-		for (int i = 0; i < width; ++i)
-			Expression::New<float>(buffer, offset[i]);
-	}
-
-	if (need_rand)
-	{
-		if (need_scale)
-		{
-			// push multiply
-			Expression::Append(buffer, Expression::Mul<T>);
-
-			// push scale
-			Expression::Append(buffer, Expression::Constant<T>);
-			for (int i = 0; i < width; ++i)
-				Expression::New<float>(buffer, scale[i]);
-		}
-
-		for (int i = 0; i < count; ++i)
-		{
-			if (count > 1 && i < count - 1)
-			{
-				// push add
-				Expression::Append(buffer, Expression::Add<T>);
-			}
-
-			// push randoms
-			Expression::Append(buffer, Expression::ComponentNullary<T, Expression::Schema<T>::COUNT>::Evaluate<float, Random::Float>);
-		}
-	}
-
-	DebugPrint("\n");
-}
-
-
-//
-// NOISE EXPRESSION
-//
-template <typename T> void ConfigureNoise(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
-{
-	const TiXmlElement *arg1 = element->FirstChildElement();
-	if (!arg1)
-	{
-		DebugPrint("%s noise ->", Expression::Schema<T>::NAME);
-		ConfigureLiteral<T>(element, buffer, names, defaults);
-		return;
-	}
-
-	const TiXmlElement *arg2 = arg1->NextSiblingElement();
-	if (!arg2)
-	{
-		DebugPrint("%s noise1\n", Expression::Schema<T>::NAME);
-		Expression::Append(buffer, Expression::ComponentUnary<T, Expression::Schema<T>::COUNT>::Evaluate<float, float, Noise>);
-		ConfigureExpression<T>(arg1, buffer, names, defaults);
-		return;
-	}
-
-	const TiXmlElement *arg3 = arg2->NextSiblingElement();
-	if (!arg3)
-	{
-		DebugPrint("%s noise2\n", Expression::Schema<T>::NAME);
-		Expression::Append(buffer, Expression::ComponentBinary<T, Expression::Schema<T>::COUNT>::Evaluate<float, float, float, Noise>);
-		ConfigureExpression<T>(arg1, buffer, names, defaults);
-		ConfigureExpression<T>(arg2, buffer, names, defaults);
-		return;
-	}
-
-	const TiXmlElement *arg4 = arg3->NextSiblingElement();
-	if (!arg4)
-	{
-		DebugPrint("%s noise3\n", Expression::Schema<T>::NAME);
-		Expression::Append(buffer, Expression::ComponentTernary<T, Expression::Schema<T>::COUNT>::Evaluate<float, float, float, float, Noise>);
-		ConfigureExpression<T>(arg1, buffer, names, defaults);
-		ConfigureExpression<T>(arg2, buffer, names, defaults);
-		ConfigureExpression<T>(arg3, buffer, names, defaults);
-		return;
-	}
-
-	DebugPrint("%s noise4\n", Expression::Schema<T>::NAME);
-	assert(false);
-}
-
-
-//
-// TIME EXPRESSION
-//
-
-float EvaluateTime(DrawItemContext &aContext)
-{
-	return aContext.mParam;
-}
-
-
-//
-// OSCILLATOR EXPRESSION
-//
-
-template <typename T> void ConfigureSineWave(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
-{
-	// add offset
-	if (const TiXmlElement *child = element->FirstChildElement("offset"))
-	{
-		Expression::Append(buffer, Expression::Add<T>);
-		ConfigureExpressionRoot<T>(child, buffer, names, defaults);
-	}
-
-	// apply scale
-	if (const TiXmlElement *child = element->FirstChildElement("scale"))
-	{
-		Expression::Append(buffer, Expression::Mul<T>);
-		ConfigureExpressionRoot<T>(child, buffer, names, sScaleDefault);
-	}
-
-	// extend float -> T
-	Expression::Append(buffer, Expression::Extend<T, float>);
-
-	// sine
-	Expression::Append(buffer, Expression::Sin<float>);
-
-	// scale by 2 PI
-	Expression::Append(buffer, Expression::Mul<float>);
-	Expression::Append(buffer, Expression::Constant<float>, float(M_PI)*2.0f);
-
-	// add phase
-	float phase = 0.0f;
-	if (const TiXmlElement *child = element->FirstChildElement("phase"))
-	{
-		Expression::Append(buffer, Expression::Add<float>);
-		ConfigureExpressionRoot<float>(child, buffer, sScalarNames, &phase);
-	}
-	else
-	{
-		element->QueryFloatAttribute("phase", &phase);
-		if (phase != 0.0f)
-		{
-			Expression::Append(buffer, Expression::Add<float>);
-			Expression::Append(buffer, Expression::Constant<float>, phase);
-		}
-	}
-
-	// apply period
-	float period = 1.0f;
-	if (const TiXmlElement *child = element->FirstChildElement("period"))
-	{
-		Expression::Append(buffer, Expression::Mul<float>);
-		Expression::Append(buffer, Expression::Rcp<float>);
-		ConfigureExpressionRoot<float>(child, buffer, sScalarNames, &period);
-	}
-	else
-	{
-		element->QueryFloatAttribute("period", &period);
-		if (period != 1.0f)
-		{
-			Expression::Append(buffer, Expression::Mul<float>);
-			Expression::Append(buffer, Expression::Constant<float>, 1.0f/period);
-		}
-	}
-
-	// apply frequency
-	float frequency = 1.0f;
-	if (const TiXmlElement *child = element->FirstChildElement("frequency"))
-	{
-		Expression::Append(buffer, Expression::Mul<float>);
-		ConfigureExpressionRoot<float>(child, buffer, sScalarNames, &frequency);
-	}
-	else
-	{
-		element->QueryFloatAttribute("frequency", &frequency);
-		if (frequency != 1.0f)
-		{
-			Expression::Append(buffer, Expression::Mul<float>);
-			Expression::Append(buffer, Expression::Constant<float>, frequency);
-		}
-	}
-
-	// get input
-	if (const TiXmlElement *child = element->FirstChildElement("input"))
-	{
-		ConfigureExpressionRoot<float>(child, buffer, sScalarNames, sScalarDefault);
-	}
-	else
-	{
-		Expression::Append(buffer, EvaluateTime);
-	}
-}
-template <typename T> void ConfigureTriangleWave(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
-{
-}
-template <typename T> void ConfigureSquareWave(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
-{
-}
-template <typename T> void ConfigureSawtoothWave(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
-{
-}
-
-
-//
-// TYPE CONVERSION
-//
-template <typename T, typename A> struct Convert
-{
-	static void Append(std::vector<unsigned int> &buffer)
-	{
-		Expression::Append(buffer, Expression::Construct<T, A>);
-	}
-};
-template <typename T> struct Convert<T, T>
-{
-	static void Append(std::vector<unsigned int> &buffer)
-	{
-	}
-};
-template <> struct Convert<Vector2, float>
-{
-	static void Append(std::vector<unsigned int> &buffer)
-	{
-		Expression::Append(buffer, Expression::Extend<Vector2, float>);
-	}
-};
-template <> struct Convert<Vector3, float>
-{
-	static void Append(std::vector<unsigned int> &buffer)
-	{
-		Expression::Append(buffer, Expression::Extend<Vector3, float>);
-	}
-};
-template <> struct Convert<Vector4, float>
-{
-	static void Append(std::vector<unsigned int> &buffer)
-	{
-		Expression::Append(buffer, Expression::Extend<Vector4, float>);
-	}
-};
-template <> struct Convert<Color4, float>
-{
-	static void Append(std::vector<unsigned int> &buffer)
-	{
-		Expression::Append(buffer, Expression::Extend<Color4, float>);
-	}
-};
-template <> struct Convert<__m128, float>
-{
-	static void Append(std::vector<unsigned int> &buffer)
-	{
-		Expression::Append(buffer, Expression::Extend<__m128, float>);
-	}
-};
-template <typename T, typename A> void ConfigureConvert(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
-{
-	DebugPrint("%s convert %s\n", Expression::Schema<T>::NAME, Expression::Schema<A>::NAME);
-
-	const TiXmlElement *arg1 = element->FirstChildElement();
-	if (!arg1)
-	{
-		// no first argument: treat element as a literal (HACK)
-		assert(!"no argument for type conversion");
-		ConfigureLiteral<T>(element, buffer, names, defaults);
-		return;
-	}
-
-	// append the operator
-	Convert<T, A>::Append(buffer);
-
-	// append first argument
-	ConfigureExpression<A>(arg1, buffer, names, defaults);
-}
-
-//
-// CONSTRUCT EXPRESSION
-//
-template <typename T> void ConfigureConstruct(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
-{
-	DebugPrint("%s construct\n", Expression::Schema<T>::NAME);
-
-	// width in floats (HACK)
-	const int width = (sizeof(T)+sizeof(float)-1)/sizeof(float);
-
-	// append the operator
-	Expression::Append(buffer, Expression::Construct<T>);
-
-	// for each component...
-	for (int i = 0; i < width; ++i)
-	{
-		// if there is a corresponding tag...
-		if (const TiXmlElement *component = element->FirstChildElement(names[i]))
-		{
-			// configure the expression
-			ConfigureExpressionRoot<DLScalar>(component, buffer, sScalarNames, &defaults[i]);
-		}
-		else
-		{
-			// use default value
-			DebugPrint("%s default %s: %f\n", Expression::Schema<float>::NAME, names[i], defaults[i]);
-			Expression::Append(buffer, Expression::Constant<float>, defaults[i]);
-		}
-	}
-}
-
-
-//
-// UNARY EXPRESSION
-// return the result of an expression taking one parameter
-//
-template <typename T, typename A, typename C> void ConfigureUnary(T (expr)(C), const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
-{
-	const TiXmlElement *arg1 = element->FirstChildElement();
-	if (!arg1)
-	{
-		// no first argument: treat element as a literal (HACK)
-		assert(!"no argument for unary operator");
-		ConfigureLiteral<T>(element, buffer, names, defaults);
-		return;
-	}
-
-	// append the operator
-	Expression::Append(buffer, expr);
-
-	// append first argument
-	ConfigureExpression<A>(arg1, buffer, names, defaults);
-}
-
-
-//
-// BINARY EXPRESSION
-// return the result of an expression taking two parameters
-//
-template <typename T, typename A1, typename A2, typename C> void ConfigureBinary(T (expr)(C), const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
-{
-	const TiXmlElement *arg1 = element->FirstChildElement();
-	if (!arg1)
-	{
-		// no first argument: treat element as a literal (HACK)
-		assert(!"no first argument for binary operator");
-		ConfigureLiteral<T>(element, buffer, names, defaults);
-		return;
-	}
-
-	const TiXmlElement *arg2 = arg1->NextSiblingElement();
-	if (!arg2)
-	{
-		// no second argument: treat element as a literal (HACK)
-		assert(!"no second argument for binary operator");
-		ConfigureLiteral<T>(element, buffer, names, defaults);
-		return;
-	}
-
-	// append the operator
-	Expression::Append(buffer, expr);
-
-	// append first argument
-	ConfigureExpression<A1>(arg1, buffer, names, defaults);
-
-	// append second argument
-	ConfigureExpression<A2>(arg2, buffer, names, defaults);
-}
-
-
-//
-// TERNARY EXPRESSION
-// return the result of an expression taking three parameters
-//
-template <typename T, typename A1, typename A2, typename A3, typename C> void ConfigureTernary(T (expr)(C), const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
-{
-	const TiXmlElement *arg1 = element->FirstChildElement();
-	if (!arg1)
-	{
-		// no first argument: treat element as a literal (HACK)
-		assert(!"no first argument for ternary operator");
-		ConfigureLiteral<T>(element, buffer, names, defaults);
-		return;
-	}
-
-	const TiXmlElement *arg2 = arg1->NextSiblingElement();
-	if (!arg2)
-	{
-		// no second argument: treat element as a literal (HACK)
-		assert(!"no second argument for ternary operator");
-		ConfigureLiteral<T>(element, buffer, names, defaults);
-		return;
-	}
-
-	const TiXmlElement *arg3 = arg2->NextSiblingElement();
-	if (!arg3)
-	{
-		// no third argument: treat element as a literal (HACK)
-		assert(!"no third argument for ternary operator");
-		ConfigureLiteral<T>(element, buffer, names, defaults);
-		return;
-	}
-
-	// append the operator
-	Expression::Append(buffer, expr);
-
-	// append first argument
-	ConfigureExpression<A1>(arg1, buffer, names, defaults);
-
-	// append second argument
-	ConfigureExpression<A2>(arg2, buffer, names, defaults);
-
-	// append third argument
-	ConfigureExpression<A3>(arg3, buffer, names, defaults);
-}
-
-
-//
-// VARIADIC EXPRESSION
-// binary-to-variadic adapter
-//
-
-// configure typed variadic
-template <typename T, typename A, typename C> void ConfigureVariadic(T (expr)(C), const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
-{
-	const TiXmlElement *arg1 = element->FirstChildElement();
-	if (!arg1)
-	{
-		// no first argument: treat element as a literal (HACK)
-		DebugPrint("no first argument for variadic operator");
-		ConfigureLiteral<T>(element, buffer, names, defaults);
-		return;
-	}
-
-	const TiXmlElement *arg2 = arg1->NextSiblingElement();
-	if (!arg2)
-	{
-		// no second argument: convert type of first argument (HACK)
-		DebugPrint("no second argument for variadic operator: performing type conversion");
-		Convert<T, A>::Append(buffer);
-		ConfigureExpression<A>(arg1, buffer, names, defaults);
-		return;
-	}
-
-	// rewind
-	arg2 = arg1;
-	do
-	{
-		// get next argument
-		arg1 = arg2;
-		arg2 = arg2->NextSiblingElement();
-
-		// if there is a second argument...
-		if (arg2)
-		{
-			// append the operator
-			Expression::Append(buffer, expr);
-		}
-
-		// append first argument
-		ConfigureExpression<A>(arg1, buffer, names, defaults);
-	}
-	while (arg2);
-}
-
-
-//
-// EXPRESSION
-//
-
-// configure an expression
-template <typename T> void ConfigureExpression(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
-{
-	DebugPrint("%s expression %s\n", Expression::Schema<T>::NAME, element->Value());
-
-	// width in floats (HACK)
-	const int width = (sizeof(T)+sizeof(float)-1)/sizeof(float);
-
-	// copy defaults
-	float *data = static_cast<float *>(_alloca(width * sizeof(float)));
-	memcpy(data, defaults, width * sizeof(float));
-
-	// get hash of tag name
-	unsigned int hash = Hash(element->Value());
-
-	// read literal values from attributes (if any)
-	bool overrided = false;
-	for (int i = 0; i < width; ++i)
-	{
-		if (element->QueryFloatAttribute(names[i], &data[i]) == TIXML_SUCCESS)
-			overrided = true;
-	}
-
-
-	// configure based on tag name
-	switch(hash)
-	{
-	case 0x425ed3ca /* "value" */:			ConfigureLiteral<T>(element, buffer, names, data); return;
-	case 0x19385305 /* "variable" */:		ConfigureVariable<T>(element, buffer, names, data); return;
-	case 0x83588fd4 /* "interpolator" */:	ConfigureInterpolator<T>(element, buffer, names, data); return;
-	case 0xa19b8cd6 /* "rand" */:			ConfigureRandom<T>(element, buffer, names, data); return;
-	case 0x904416d1 /* "noise" */:			ConfigureNoise<T>(element, buffer, names, data); return;
-
-	case 0xaa7d7949 /* "extend" */:			ConfigureUnary<const T, float, Expression::Context &>(Expression::Extend<T, float>, element, buffer, sScalarNames, sScalarDefault); return;
-	case 0x40c09172 /* "construct" */:		ConfigureConstruct<T>(element, buffer, names, data); return;
-	case 0x5d3c9be4 /* "time" */:			Expression::Append(buffer, EvaluateTime); return;
-
-	case 0x3b391274 /* "add" */:			ConfigureVariadic<T, T>(Expression::Add<T>, element, buffer, names, data); return;
-	case 0xdc4e3915 /* "sub" */:			ConfigureVariadic<T, T>(Expression::Sub<T>, element, buffer, names, data); return;
-	case 0xeb84ed81 /* "mul" */:			ConfigureVariadic<T, T>(Expression::Mul<T>, element, buffer, names, data); return;
-	case 0xe562ab48 /* "div" */:			ConfigureVariadic<T, T>(Expression::Div<T>, element, buffer, names, data); return;
-	case 0x3899af41 /* "neg" */:			ConfigureUnary<T, T>(Expression::Neg<T>, element, buffer, names, data); return;
-	case 0x31037236 /* "rcp" */:			ConfigureUnary<T, T>(Expression::Rcp<T>, element, buffer, names, data); return;
-	case 0xa8e99c47 /* "inc" */:			ConfigureUnary<T, T>(Expression::Inc<T>, element, buffer, names, data); return;
-	case 0xc25979d3 /* "dec" */:			ConfigureUnary<T, T>(Expression::Dec<T>, element, buffer, names, data); return;
-									
-	case 0xe0302a4d /* "sin" */:			ConfigureUnary<T, T>(Expression::Sin<T>, element, buffer, names, data); return;
-	case 0xfb8de29c /* "cos" */:			ConfigureUnary<T, T>(Expression::Cos<T>, element, buffer, names, data); return;
-	case 0x9cf73498 /* "tan" */:			ConfigureUnary<T, T>(Expression::Tan<T>, element, buffer, names, data); return;
-	case 0xfeae7ea6 /* "asin" */:			ConfigureUnary<T, T>(Expression::Asin<T>, element, buffer, names, data); return;
-	case 0x3c01df1f /* "acos" */:			ConfigureUnary<T, T>(Expression::Acos<T>, element, buffer, names, data); return;
-	case 0x0678cabf /* "atan" */:			ConfigureUnary<T, T>(Expression::Atan<T>, element, buffer, names, data); return;
-	case 0xbd26dbf7 /* "atan2" */:			ConfigureBinary<T, T, T>(Expression::Atan2<T>, element, buffer, names, data); return;
-									
-	case 0x10d2583f /* "sinh" */:			ConfigureUnary<T, T>(Expression::Sinh<T>, element, buffer, names, data); return;
-	case 0xf45c461c /* "cosh" */:			ConfigureUnary<T, T>(Expression::Cosh<T>, element, buffer, names, data); return;
-	case 0x092855d0 /* "tanh" */:			ConfigureUnary<T, T>(Expression::Tanh<T>, element, buffer, names, data); return;
-									
-	case 0x58336ad5 /* "pow" */:			ConfigureBinary<T, T, T>(Expression::Pow<T>, element, buffer, names, data); return;
-	case 0x72a68728 /* "exp" */:			ConfigureUnary<T, T>(Expression::Exp<T>, element, buffer, names, data); return;
-	case 0x3f515151 /* "log" */:			ConfigureUnary<T, T>(Expression::Log<T>, element, buffer, names, data); return;
-	case 0x7dee3bcf /* "sqrt" */:			ConfigureUnary<T, T>(Expression::Sqrt<T>, element, buffer, names, data); return;
-	case 0x0a6a5946 /* "invsqrt" */:		ConfigureUnary<T, T>(Expression::InvSqrt<T>, element, buffer, names, data); return;
-									
-	case 0x2a48023b /* "abs" */:			ConfigureUnary<T, T>(Expression::Abs<T>, element, buffer, names, data); return;
-	case 0x0cbc8ba4 /* "sign" */:			ConfigureUnary<T, T>(Expression::Sign<T>, element, buffer, names, data); return;
-	case 0xb8e70c1d /* "floor" */:			ConfigureUnary<T, T>(Expression::Floor<T>, element, buffer, names, data); return;
-	case 0x62e4e208 /* "ceil" */:			ConfigureUnary<T, T>(Expression::Ceil<T>, element, buffer, names, data); return;
-	case 0x87aad829 /* "frac" */:			ConfigureUnary<T, T>(Expression::Frac<T>, element, buffer, names, data); return;
-	case 0xdf9e7283 /* "mod" */:			ConfigureBinary<T, T, T>(Expression::Mod<T>, element, buffer, names, data); return;
-	case 0xc98f4557 /* "min" */:			ConfigureVariadic<T, T>(Expression::Min<T>, element, buffer, names, data); return;
-	case 0xd7a2e319 /* "max" */:			ConfigureVariadic<T, T>(Expression::Max<T>, element, buffer, names, data); return;
-	case 0xa82efcbc /* "clamp" */:			ConfigureTernary<T, T, T, T>(Expression::Clamp<T>, element, buffer, names, data); return;
-	case 0x1e691468 /* "lerp" */:			ConfigureTernary<T, T, T, float>(Expression::Lerp<T>, element, buffer, names, data); return;
-	case 0xc7441a0f /* "step" */:			ConfigureBinary<T, T, T>(Expression::Step<T>, element, buffer, names, data); return;
-	case 0x95964e7d /* "smoothstep" */:		ConfigureTernary<T, T, T, T>(Expression::SmoothStep<T>, element, buffer, names, data); return;
-
-	case 0xb711f539 /* "sinewave" */:		ConfigureSineWave<T>(element, buffer, names, data); return;
-	case 0xd0308494 /* "trianglewave" */:	ConfigureTriangleWave<T>(element, buffer, names, data); return;
-	case 0x3d18154f /* "squarewave" */:		ConfigureSquareWave<T>(element, buffer, names, data); return;
-	case 0x705614d5 /* "sawtoothwave" */:	ConfigureSawtoothWave<T>(element, buffer, names, data); return;
-
-	default:								ConfigureTagVariable<T>(element, buffer, names, data); return;
-	}
-}
-
-// configure an expression root (the tag hosting the expression)
-template <typename T> void ConfigureExpressionRoot(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
-{
-	DebugPrint("%s root %s\n", Expression::Schema<T>::NAME, element->Value());
-
-	// width in floats (HACK)
-	const int width = (sizeof(T)+sizeof(float)-1)/sizeof(float);
-
-	// copy defaults
-	float *data = static_cast<float *>(_alloca(width * sizeof(float)));
-	memcpy(data, defaults, width * sizeof(float));
-
-	// read literal values from attributes (if any)
-	bool overrided = false;
-	for (int i = 0; i < width; ++i)
-	{
-		if (element->QueryFloatAttribute(names[i], &data[i]) == TIXML_SUCCESS)
-			overrided = true;
-	}
-
-	// special case: attribute variable reference
-	if (element->Attribute("variable"))
-	{
-		ConfigureInlineVariable<T>(element, buffer, names, data);
-		return;
-	}
-
-	// special case: attribute random value
-	if (element->Attribute("rand"))
-	{
-		ConfigureRandom<T>(element, buffer, names, data);
-		return;
-	}
-
-	// special case: embedded interpolator keyframes
-	if (element->FirstChildElement("key"))
-	{
-		ConfigureInterpolator<T>(element, buffer, names, data);
-		return;
-	}
-
-	// special case: no child elements
-	if (!element->FirstChildElement())
-	{
-		// push literal data
-		ConfigureLiteral<T>(element, buffer, names, data);
-		return;
-	}
-
-	// special case: component elements
-	for (int i = 0; i < width; ++i)
-	{
-		if (element->FirstChildElement(names[i]))
-		{
-			ConfigureConstruct<T>(element, buffer, names, data);
-			return;
-		}
-	}
-
-	// for each child node...
-	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
-	{
-		// recurse on child
-		ConfigureExpression<T>(child, buffer, names, data);
-	}
-}
 
 void ConfigureFloatData(const TiXmlElement *element, std::vector<unsigned int> &buffer)
 {
@@ -2067,7 +647,7 @@ void ConfigureFloatData(const TiXmlElement *element, std::vector<unsigned int> &
 	}
 }
 
-void ConfigureVariableOperator(const TiXmlElement *element, std::vector<unsigned int> &buffer, void (*op)(DrawItemContext &), bool drawdata)
+void ConfigureVariableOperator(const TiXmlElement *element, std::vector<unsigned int> &buffer, void (*op)(EntityContext &), bool drawdata)
 {
 	unsigned int name = Hash(element->Attribute("name"));
 	unsigned int type = Hash(element->Attribute("type"));
@@ -2077,8 +657,8 @@ void ConfigureVariableOperator(const TiXmlElement *element, std::vector<unsigned
 	GetTypeData(type, width, names, data);
 
 	Expression::Append(buffer, op);
-	Expression::New<unsigned int>(buffer, name);
-	Expression::New<unsigned int>(buffer, width);
+	Expression::Append(buffer, name);
+	Expression::Append(buffer, width);
 	if (drawdata)
 	{
 		switch (width)
@@ -2098,11 +678,11 @@ void ConfigurePrimitive(const TiXmlElement *element, std::vector<unsigned int> &
 	Expression::Append(buffer, DO_glEnd);
 }
 
-void ConfigureArray(const TiXmlElement *element, std::vector<unsigned int> &buffer, void (*op)(DrawItemContext &), size_t size, size_t stride)
+void ConfigureArray(const TiXmlElement *element, std::vector<unsigned int> &buffer, void (*op)(EntityContext &), size_t size, size_t stride)
 {
 	Expression::Append(buffer, op);
-	Expression::New<size_t>(buffer, size);
-	Expression::New<size_t>(buffer, stride);
+	Expression::Append(buffer, size);
+	Expression::Append(buffer, stride);
 
 	buffer.push_back(0);
 	int start = buffer.size();
@@ -2328,25 +908,73 @@ void ConfigureDrawItem(const TiXmlElement *element, std::vector<unsigned int> &b
 
 	case 0xbc9567c6 /* "points" */:
 		{
+			float size = 0.0f;
+			element->QueryFloatAttribute("size", &size);
+			if (size != 0.0f)
+			{
+				Expression::Append(buffer, DO_glPointSize);
+				Expression::Append(buffer, size * float(SCREEN_HEIGHT) / 240.0f);
+			}
 			ConfigurePrimitive(element, buffer, GL_POINTS);
+			if (size != 0.0f)
+			{
+				Expression::Append(buffer, DO_glPointSize);
+				Expression::Append(buffer, 1.0f);
+			}
 		}
 		break;
 
 	case 0xe1e4263c /* "lines" */:
 		{
+			float width = 0.0f;
+			element->QueryFloatAttribute("width", &width);
+			if (width != 0.0f)
+			{
+				Expression::Append(buffer, DO_glLineWidth);
+				Expression::Append(buffer, width * float(SCREEN_HEIGHT) / 240.0f);
+			}
 			ConfigurePrimitive(element, buffer, GL_LINES);
+			if (width != 0.0f)
+			{
+				Expression::Append(buffer, DO_glLineWidth);
+				Expression::Append(buffer, 1.0f);
+			}
 		}
 		break;
 
 	case 0xc2106ab6 /* "line_loop" */:
 		{
+			float width = 0.0f;
+			element->QueryFloatAttribute("width", &width);
+			if (width != 0.0f)
+			{
+				Expression::Append(buffer, DO_glLineWidth);
+				Expression::Append(buffer, width * float(SCREEN_HEIGHT) / 240.0f);
+			}
 			ConfigurePrimitive(element, buffer, GL_LINE_LOOP);
+			if (width != 0.0f)
+			{
+				Expression::Append(buffer, DO_glLineWidth);
+				Expression::Append(buffer, 1.0f);
+			}
 		}
 		break;
 
 	case 0xc6f2fa0e /* "line_strip" */:
 		{
+			float width = 0.0f;
+			element->QueryFloatAttribute("width", &width);
+			if (width != 0.0f)
+			{
+				Expression::Append(buffer, DO_glLineWidth);
+				Expression::Append(buffer, width * float(SCREEN_HEIGHT) / 240.0f);
+			}
 			ConfigurePrimitive(element, buffer, GL_LINE_STRIP);
+			if (width != 0.0f)
+			{
+				Expression::Append(buffer, DO_glLineWidth);
+				Expression::Append(buffer, 1.0f);
+			}
 		}
 		break;
 
@@ -2436,6 +1064,10 @@ void ConfigureDrawItem(const TiXmlElement *element, std::vector<unsigned int> &b
 					Expression::Append(buffer, DO_glCallList);
 					buffer.push_back(drawlist);
 				}
+				else
+				{
+					DebugPrint("Missing drawlist %s\n", name);
+				}
 			}
 		}
 		break;
@@ -2453,6 +1085,10 @@ void ConfigureDrawItem(const TiXmlElement *element, std::vector<unsigned int> &b
 					{
 						buffer.push_back(drawlist[i]);
 					}
+				}
+				else
+				{
+					DebugPrint("Missing dynamic drawlist %s\n", name);
 				}
 			}
 		}
@@ -2490,14 +1126,8 @@ void ConfigureDrawItem(const TiXmlElement *element, std::vector<unsigned int> &b
 			ConfigureDrawItems(element, drawlist);
 
 			// execute the dynamic draw list
-			DrawItemContext context;
-			context.mStream = &drawlist[0];
-			context.mEnd = context.mStream + drawlist.size();
-			context.mParam = param;
-			context.mId = 0;
-			context.mVars = &Database::variable.Open(0);
+			EntityContext context(&drawlist[0], drawlist.size(), param, 0);
 			ExecuteDrawItems(context);
-			Database::variable.Close(0);
 
 			// close the dynamic draw list
 			Database::dynamicdrawlist.Close(handle);
@@ -2940,7 +1570,7 @@ void MultiplyMatrix4f(float m[16], float a[16], float b[16])
 #endif
 
 #pragma optimize( "t", on )
-void ExecuteDrawItems(DrawItemContext &aContext)
+void ExecuteDrawItems(EntityContext &aContext)
 {
 	while (aContext.mStream < aContext.mEnd)
 		Expression::Evaluate<void>(aContext);
@@ -2964,14 +1594,8 @@ void RebuildDrawlists(void)
 		const std::vector<unsigned int> &drawlist = Database::dynamicdrawlist.Get(handle);
 		if (drawlist.size() > 0)
 		{
-			DrawItemContext context;
-			context.mStream = &drawlist[0];
-			context.mEnd = context.mStream + drawlist.size();
-			context.mParam = param;
-			context.mId = 0;
-			context.mVars = &Database::variable.Open(context.mId);
+			EntityContext context(&drawlist[0], drawlist.size(), param, 0);
 			ExecuteDrawItems(context);
-			Database::variable.Close(context.mId);
 		}
 
 		// finish the draw list
@@ -2992,23 +1616,21 @@ void RenderDrawlist(unsigned int aId, float aTime, const Transform2 &aTransform)
 	if (buffer.empty())
 		return;
 
+#if 0
 	// push a transform
 	glPushMatrix();
 
 	// load matrix
 	glTranslatef(aTransform.p.x, aTransform.p.y, 0);
 	glRotatef(aTransform.a*180/float(M_PI), 0.0f, 0.0f, 1.0f);
+#endif
 
 	// execute the deferred draw list
-	DrawItemContext context;
-	context.mStream = &buffer[0];
-	context.mEnd = context.mStream + buffer.size();
-	context.mParam = aTime;
-	context.mId = aId;
-	context.mVars = &Database::variable.Open(aId);
+	EntityContext context(&buffer[0], buffer.size(), aTime, aId);
 	ExecuteDrawItems(context);
-	Database::variable.Close(aId);
 
+#if 0
 	// reset the transform
 	glPopMatrix();
+#endif
 };

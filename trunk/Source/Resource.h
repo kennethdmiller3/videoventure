@@ -2,6 +2,7 @@
 
 #include "Database.h"
 #include "Updatable.h"
+#include "Signal.h"
 
 // find the specified resource,
 // starting with the specified identifier
@@ -40,9 +41,9 @@ protected:
 	float mTimer;
 
 public:
-	typedef fastdelegate::FastDelegate<void (unsigned int, unsigned int, unsigned int, float)> ChangeListener;
-	typedef fastdelegate::FastDelegate<void (unsigned int, unsigned int, unsigned int)> EmptyListener;
-	typedef fastdelegate::FastDelegate<void (unsigned int, unsigned int, unsigned int)> FullListener;
+	typedef Signal<void (unsigned int, unsigned int, unsigned int, float)> ChangeSignal;
+	typedef Signal<void (unsigned int, unsigned int, unsigned int)> EmptySignal;
+	typedef Signal<void (unsigned int, unsigned int, unsigned int)> FullSignal;
 
 public:
 #ifdef USE_POOL_ALLOCATOR
@@ -60,12 +61,12 @@ public:
 
 	void Update(float aStep);
 
-	float GetValue(void)
+	float GetValue(void) const
 	{
 		return mValue;
 	}
 
-	bool IsEmpty(void)
+	bool IsEmpty(void) const
 	{
 		return mValue <= 0.0f;
 	}
@@ -75,7 +76,7 @@ namespace Database
 {
 	extern Typed<Typed<ResourceTemplate> > resourcetemplate;
 	extern Typed<Typed<Resource *> > resource;
-	extern Typed<Typed<Typed<Resource::ChangeListener> > > resourcechangelistener;
-	extern Typed<Typed<Typed<Resource::EmptyListener> > > resourceemptylistener;
-	extern Typed<Typed<Typed<Resource::FullListener> > > resourcefulllistener;
+	extern Typed<Typed<Resource::ChangeSignal> > resourcechange;
+	extern Typed<Typed<Resource::EmptySignal> > resourceempty;
+	extern Typed<Typed<Resource::FullSignal> > resourcefull;
 }

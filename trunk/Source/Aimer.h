@@ -11,7 +11,10 @@ class Behavior;
 class AimerTemplate
 {
 public:
-	float mDrift;
+	float mSide;
+	float mFront;
+	float mTurn;
+	Transform2 mDrift;
 	std::vector<unsigned int> mBehaviors;
 
 public:

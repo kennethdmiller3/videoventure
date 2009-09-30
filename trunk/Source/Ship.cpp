@@ -189,8 +189,13 @@ void Ship::Simulate(float aStep)
 
 	// apply thrust
 	{
-		const Vector2 mMove = controller ? controller->mMove : Vector2(0, 0);
-		float control = std::min(mMove.LengthSq(), 1.0f);
+		Vector2 mMove = controller ? controller->mMove : Vector2(0, 0);
+		float control = mMove.LengthSq();
+		if (control > 1.0f)
+		{
+			control = 1.0f;
+			mMove *= InvSqrt(control);
+		}
 		float acc = Lerp(ship.mMinAccel, ship.mMaxAccel, control);
 		Vector2 localvel(
 			mMove.x * ship.mStrafeVeloc,
@@ -202,7 +207,7 @@ void Ship::Simulate(float aStep)
 		float it = std::min(acc * InvSqrt(dv.LengthSq() + 0.0001f), 1.0f / aStep);
 		Vector2 new_accel(dv * it);
 		if (body)
-			body->ApplyForce(new_accel * body->GetMass(), body->GetXForm().position);
+			body->ApplyForce(new_accel * body->GetMass(), body->GetTransform().position);
 		else
 			entity->SetVelocity(entity->GetVelocity() + aStep * new_accel);
 

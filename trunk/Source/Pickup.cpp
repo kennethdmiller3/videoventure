@@ -5,7 +5,10 @@
 #include "Link.h"
 #include "Team.h"
 #include "Renderable.h"
-
+#include "Resource.h"
+#include "Damagable.h"
+#include "Points.h"
+#include "PlayerController.h"
 
 #ifdef USE_POOL_ALLOCATOR
 
@@ -24,9 +27,11 @@ void Pickup::operator delete(void *aPtr)
 
 namespace Database
 {
-	Typed<Typed<Typed<LinkTemplate> > > pickupgrant(0x18e2ce2d /* "pickupgrant" */);
 	Typed<PickupTemplate> pickuptemplate(0x01ebaacb /* "pickuptemplate" */);
 	Typed<Pickup *> pickup(0x6958f085 /* "pickup" */);
+
+	Typed<Typed<Typed<LinkTemplate> > > pickuplink(0xaf3da629 /* "pickuplink" */);
+	Typed<Typed<Typed<float> > > pickupresource(0x15fc7db5 /* "pickupresource" */);
 
 	namespace Loader
 	{
@@ -105,6 +110,8 @@ bool PickupTemplate::Configure(const TiXmlElement *element, unsigned int aId)
 			{
 				if (const char *teamname = child->Attribute("name"))
 				{
+					unsigned int aTeamId = Hash(teamname);
+
 					for (const TiXmlElement *param = child->FirstChildElement(); param != NULL; param = param->NextSiblingElement())
 					{
 						switch (Hash(param->Value()))
@@ -112,15 +119,30 @@ bool PickupTemplate::Configure(const TiXmlElement *element, unsigned int aId)
 						case 0x0ddb0669 /* "link" */:
 							if (const char *linkname = param->Attribute("name"))
 							{
-								Database::Typed<Database::Typed<LinkTemplate> > &teamgrants = Database::pickupgrant.Open(aId);
-								unsigned int aTeamId = Hash(teamname);
-								Database::Typed<LinkTemplate> &grants = teamgrants.Open(aTeamId);
 								unsigned int aSubId = Hash(linkname);
-								LinkTemplate &grant = grants.Open(aSubId);
-								grant.Configure(param, aId, aSubId);
-								grants.Close(aSubId);
-								teamgrants.Close(aTeamId);
-								Database::pickupgrant.Close(aId);
+
+								Database::Typed<Database::Typed<LinkTemplate> > &teamlinks = Database::pickuplink.Open(aId);
+								Database::Typed<LinkTemplate> &links = teamlinks.Open(aTeamId);
+								LinkTemplate &link = links.Open(aSubId);
+								link.Configure(param, aId, aSubId);
+								links.Close(aSubId);
+								teamlinks.Close(aTeamId);
+								Database::pickuplink.Close(aId);
+							}
+							break;
+
+						case 0x29df7ff5 /* "resource" */:
+							if (const char *resourcename = param->Attribute("name"))
+							{
+								unsigned int aSubId = Hash(resourcename);
+
+								Database::Typed<Database::Typed<float> > &teamresources = Database::pickupresource.Open(aId);
+								Database::Typed<float> &resources = teamresources.Open(aTeamId);
+								float &resource = resources.Open(aSubId);
+								param->QueryFloatAttribute("add", &resource);
+								resources.Close(aSubId);
+								teamresources.Close(aTeamId);
+								Database::pickupresource.Close(aId);
 							}
 							break;
 						}
@@ -143,15 +165,15 @@ Pickup::Pickup(void)
 Pickup::Pickup(const PickupTemplate &aTemplate, unsigned int aId)
 : mId(aId), mDestroy(false)
 {
-	Database::Typed<Collidable::ContactListener> &listeners = Database::collidablecontactadd.Open(mId);
-	listeners.Put(Database::Key(this), Collidable::ContactListener(this, &Pickup::Collide));
+	Collidable::ContactSignal &signal = Database::collidablecontactadd.Open(mId);
+	signal.Connect(this, &Pickup::Collide);
 	Database::collidablecontactadd.Close(mId);
 }
 
 Pickup::~Pickup(void)
 {
-	Database::Typed<Collidable::ContactListener> &listeners = Database::collidablecontactadd.Open(mId);
-	listeners.Delete(Database::Key(this));
+	Collidable::ContactSignal &signal = Database::collidablecontactadd.Open(mId);
+	signal.Disconnect(this, &Pickup::Collide);
 	Database::collidablecontactadd.Close(mId);
 }
 
@@ -213,20 +235,23 @@ public:
 
 	void Update(float aStep)
 	{
+		// was used?
+		bool wasUsed = false;
+
 		// get team affiliation
 		unsigned int aHitTeam = Database::team.Get(mHitId);
 
-		// for each link template...
+		if (Database::pickuplink.Find(mId))
+			Database::Deactivate(mHitId);
+
+		// for each pickup link...
 #ifdef PICKUP_CASCADE_LINK_CHAIN
 		const Database::Typed<Link *> &links = Database::link.Get(mHitId);
 #endif
-		for (Database::Typed<LinkTemplate>::Iterator itor(Database::linktemplate.Find(mHitId)); itor.IsValid(); ++itor)
+		for (Database::Typed<LinkTemplate>::Iterator itor(Database::pickuplink.Get(mId).Find(aHitTeam)); itor.IsValid(); ++itor)
 		{
-			// get the grant link template
-			const LinkTemplate &grant = Database::pickupgrant.Get(mId).Get(aHitTeam).Get(itor.GetKey());
-
-			// if the pickup grants an item...
-			if (grant.mSecondary)
+			// if the recipient supports the link...
+			if (Database::linktemplate.Get(mHitId).Find(itor.GetKey()))
 			{
 				// open link templates for the hit entity
 				Database::Typed<LinkTemplate> &linktemplates = Database::linktemplate.Open(mHitId);
@@ -273,8 +298,8 @@ public:
 					}
 
 					// set link template based on chaining
-					linktemplate.mSecondary = chain ? grant : prev;
-					DebugPrint("%s link %08x: %s -> %s\n", Database::name.Get(mHitId).c_str(), name, Database::name.Get(prev).c_str(), Database::name.Get(grant).c_str());
+					linktemplate.mSecondary = chain ? link : prev;
+					DebugPrint("%s link %08x: %s -> %s\n", Database::name.Get(mHitId).c_str(), name, Database::name.Get(prev).c_str(), Database::name.Get(link).c_str());
 
 					// if the group is empty
 					if (groupempty)
@@ -285,7 +310,7 @@ public:
 					else
 					{
 						// push link template contents forward
-						grant = prev;
+						link = prev;
 					}
 
 					// close link template
@@ -301,12 +326,13 @@ public:
 
 				// merge templates (HACK)
 				// TO DO: figure out how to determine template overrides
+				const LinkTemplate &link = itor.GetValue();
 				LinkTemplate merge(linktemplatebase);
-				merge.mSecondary = grant.mSecondary;
-				merge.mOffset = grant.mOffset * linktemplatebase.mOffset;
+				merge.mSecondary = link.mSecondary;
+				merge.mOffset = link.mOffset * linktemplatebase.mOffset;
 
-				// set link template based on grant
-				DebugPrint("%s link %08x: %s -> %s\n", Database::name.Get(mHitId).c_str(), name, Database::name.Get(linktemplates.Get(name).mSecondary).c_str(), Database::name.Get(grant.mSecondary).c_str());
+				// set link template based on link
+				DebugPrint("%s link %08x: %s -> %s\n", Database::name.Get(mHitId).c_str(), name, Database::name.Get(linktemplates.Get(name).mSecondary).c_str(), Database::name.Get(link.mSecondary).c_str());
 				linktemplates.Put(name, merge);
 #endif
 
@@ -314,14 +340,58 @@ public:
 				// close link templates
 				Database::linktemplate.Close(mHitId);
 #endif
+
+				// was used
+				wasUsed = true;
 			}
 		}
 
-		Database::Deactivate(mHitId);
-		Database::Activate(mHitId);
+		// for each pickup resource...
+		for (Database::Typed<float>::Iterator itor(Database::pickupresource.Get(mId).Find(aHitTeam)); itor.IsValid(); ++itor)
+		{
+			// if the recipient supports the resource...
+			if (Resource *resource = Database::resource.Get(mHitId).Get(itor.GetKey()))
+			{
+				// amount to add
+				const float add = itor.GetValue();
+
+				// get the resource template
+				const ResourceTemplate &resourcetemplate = Database::resourcetemplate.Get(mHitId).Get(itor.GetKey());
+
+				// if not at the limit...
+				if ((add > 0.0f && resource->GetValue() < resourcetemplate.mMaximum) ||
+					(add < 0.0f && resource->GetValue() > 0.0f))
+				{
+				// add the resource
+					resource->Add(mId, add);
+
+					// was used
+					wasUsed = true;
+				}
+			}
+		}
+
+		if (Database::pickuplink.Find(mId))
+			Database::Activate(mHitId);
 
 		if (Pickup *pickup = Database::pickup.Get(mId))
 			pickup->Kill(mTime);
+
+		// get hit owner
+		unsigned int aOwnerId = Database::owner.Get(mHitId);
+
+		if (!wasUsed)
+		{
+			// notify all source kill listeners
+			Database::killsignal.Get(mHitId)(mHitId, mId);
+
+			// notify all owner kill listeners
+			Database::killsignal.Get(aOwnerId)(aOwnerId, mId);
+
+			// notify all death listeners
+			Database::deathsignal.Get(mId)(mId, mHitId);
+		}
+
 		Deactivate();
 		delete this;
 	}
@@ -342,7 +412,7 @@ void PickupGrantUpdate::operator delete(void *aPtr)
 #endif
 
 
-void Pickup::Collide(unsigned int aId, unsigned int aHitId, float aFraction, const b2ContactPoint &aPoint)
+void Pickup::Collide(unsigned int aId, unsigned int aHitId, float aFraction, const b2Contact &aContact)
 {
 	// do nothing if destroyed...
 	if (mDestroy)
@@ -352,17 +422,48 @@ void Pickup::Collide(unsigned int aId, unsigned int aHitId, float aFraction, con
 	// get team affiliation
 	unsigned int aHitTeam = Database::team.Get(aHitId);
 
-	// for each link template...
-	for (Database::Typed<LinkTemplate>::Iterator itor(Database::linktemplate.Find(aHitId)); itor.IsValid(); ++itor)
+	// for each pickup link...
+	for (Database::Typed<LinkTemplate>::Iterator itor(Database::pickuplink.Get(mId).Find(aHitTeam)); itor.IsValid(); ++itor)
 	{
-		// get the grant link template
-		const LinkTemplate &grant = Database::pickupgrant.Get(mId).Get(aHitTeam).Get(itor.GetKey());
-
-		// if the pickup grants an item...
-		if (grant.mSecondary)
+		// if the recipient supports the link...
+		if (Database::linktemplate.Get(aHitId).Find(itor.GetKey()))
 		{
+			// apply
 			mDestroy = true;
 			break;
+		}
+	}
+
+	// for each pickup resource...
+	for (Database::Typed<float>::Iterator itor(Database::pickupresource.Get(mId).Find(aHitTeam)); itor.IsValid(); ++itor)
+	{
+		// if the recipient supports the resource...
+		if (Resource *resource = Database::resource.Get(aHitId).Get(itor.GetKey()))
+		{
+			// amount to add
+			const float add = itor.GetValue();
+
+			// get the resource template
+			const ResourceTemplate &resourcetemplate = Database::resourcetemplate.Get(aHitId).Get(itor.GetKey());
+
+			// if not at the limit...
+			if ((add > 0.0f && resource->GetValue() < resourcetemplate.mMaximum) ||
+				(add < 0.0f && resource->GetValue() > 0.0f))
+		{
+				// apply
+			mDestroy = true;
+			break;
+			}
+		}
+	}
+
+	// if it grants points...
+	if (Database::points.Get(mId))
+	{
+		// if the recipient is player-controlled...
+		if (Database::playercontroller.Find(aHitId))
+		{
+			mDestroy = true;
 		}
 	}
 

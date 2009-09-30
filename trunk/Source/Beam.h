@@ -13,7 +13,7 @@ public:
 	float mRange;
 
 	// collision
-	b2FilterData mFilter;
+	b2Filter mFilter;
 
 	// spawn
 	unsigned int mSpawnOnImpact;

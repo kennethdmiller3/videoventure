@@ -43,9 +43,17 @@ namespace Database
 
 				// process child elements
 				std::vector<unsigned int> &buffer = Database::dynamicdrawlist.Open(aId);
+#ifdef DRAW_FRONT_TO_BACK
 				if (!inherit)
 					buffer.clear();
 				ConfigureDrawItems(element, buffer);
+#else
+				std::vector<unsigned int> original;
+				std::swap(buffer, original);
+				ConfigureDrawItems(element, buffer);
+				if (inherit)
+					buffer.insert(buffer.end(), original.begin(), original.end());
+#endif
 				Database::dynamicdrawlist.Close(aId);
 			}
 		}
@@ -91,6 +99,7 @@ RenderableTemplate::RenderableTemplate(void)
 : mRadius(0)
 , mDepth(0)
 , mPeriod(FLT_MAX)
+, mTransform(true)
 {
 }
 
@@ -156,42 +165,37 @@ void Renderable::Show(void)
 	{
 		Renderable *aParent;
 
+#ifdef DRAW_FRONT_TO_BACK
 		// TO DO: make this go faster
 		for (aParent = sHead; aParent != NULL; aParent = aParent->mNext)
-#ifdef DRAW_FRONT_TO_BACK
 			if (mDepth <= aParent->mDepth)
-#else
-			if (mDepth >= aParent->mDepth)
-#endif
 				break;
 
-#ifdef DRAW_FRONT_TO_BACK
-		{
-			if (aParent)
-			{
-				mNext = aParent;
-				mPrev = aParent->mPrev;
-			}
-			else
-			{
-				mNext = sHead;
-				mPrev = NULL;
-			}
-		}
-#else
-//		else
+		if (aParent)
 		{
 			mNext = aParent;
-			if (aParent)
-			{
-				mNext = aParent->mNext;
-				mPrev = aParent;
-			}
-			else
-			{
-				mNext = NULL;
-				mPrev = sTail;
-			}
+			mPrev = aParent->mPrev;
+		}
+		else
+		{
+			mNext = NULL;
+			mPrev = sTail;
+		}
+#else
+		// TO DO: make this go faster
+		for (aParent = sTail; aParent != NULL; aParent = aParent->mPrev)
+			if (mDepth <= aParent->mDepth)
+				break;
+
+		if (aParent)
+		{
+			mNext = aParent->mNext;
+			mPrev = aParent;
+		}
+		else
+		{
+			mNext = sHead;
+			mPrev = NULL;
 		}
 #endif
 
@@ -247,7 +251,10 @@ void Renderable::RenderAll(const AlignedBox2 &aView)
 		// get the entity (HACK)
 		const Entity *entity = Database::entity.Get(itor->mId);
 		if (!entity)
+		{
+			itor = next;
 			continue;
+		}
 
 #ifdef RENDER_SIMULATION_POSITIONS
 		// draw line between last and current simulated position
@@ -276,8 +283,22 @@ void Renderable::RenderAll(const AlignedBox2 &aView)
 			// elapsed time
 			float t = fmodf((int(sim_turn - itor->mStart) + sim_fraction - itor->mFraction) * sim_step, renderable.mPeriod);
 
+			// push a transform
+			glPushMatrix();
+
+			// if applying the entity transformm...
+			if (renderable.mTransform)
+			{
+				// apply transform
+				glTranslatef(position.x, position.y, 0);
+				glRotatef(angle*180/float(M_PI), 0.0f, 0.0f, 1.0f);
+			}
+
 			// render
 			(itor->mAction)(itor->mId, t, Transform2(angle, position));
+
+			// reset the transform
+			glPopMatrix();
 
 #ifdef RENDER_STATS
 			++drawn;

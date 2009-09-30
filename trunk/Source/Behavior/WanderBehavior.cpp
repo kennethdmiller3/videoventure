@@ -1,7 +1,7 @@
 #include "StdAfx.h"
 
 #include "WanderBehavior.h"
-#include "..\Controller.h"
+#include "Controller.h"
 
 namespace Database
 {

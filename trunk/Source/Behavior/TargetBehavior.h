@@ -14,7 +14,7 @@ public:
 	float mAngle;		// cone angle
 	float mFocus;		// weight factor for current target
 	float mAlign;		// weight factor for angle alignment
-	b2FilterData mFilter;	// collision filtering
+	b2Filter mFilter;	// collision filtering
 
 public:
 	TargetBehaviorTemplate();

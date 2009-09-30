@@ -6,21 +6,19 @@ class WeaponTemplate
 {
 public:
 	// offset
-	Transform2 mOffset;
-	Transform2 mScatter;
-	Transform2 mInherit;
-	Transform2 mVelocity;
-	Transform2 mVariance;
 	Vector2 mAim;
 	float mRecoil;
 
-	// ordnance
-	unsigned int mOrdnance;
-	
-	// flash (tethered)
-	unsigned int mFlash;
-
 	// fire channel
+	enum TriggerType
+	{
+		TRIGGER_HOLD,
+		TRIGGER_PRESS,
+		TRIGGER_RELEASE,
+		TRIGGER_INVERT,
+		TRIGGER_ALWAYS,
+	};
+	TriggerType mTrigger;
 	int mChannel;
 
 	// fire delay
@@ -29,22 +27,19 @@ public:
 	int mCycle;
 	int mTrack;
 
-	// burst
-	int mBurstLength;
-	float mBurstDelay;
-
-	// salvo
-	int mSalvoShots;
-
 	// ammo
 	unsigned int mType;
 	float mCost;
+
+	// action
+	std::vector<unsigned int> mAction;
 
 public:
 	WeaponTemplate(void);
 	~WeaponTemplate(void);
 
 	// configure
+	bool ConfigureAction(const TiXmlElement *element, unsigned int aId);
 	bool Configure(const TiXmlElement *element, unsigned int aId);
 };
 
@@ -57,11 +52,13 @@ protected:
 
 	// fire channel
 	int mChannel;
+	float mPrevFire;
 
 	// fire timer
 	int mTrack;
-	int mBurst;
+	size_t mIndex;
 	float mTimer;
+	float mLocal;
 	int mPhase;
 
 	// ammo pool
@@ -84,8 +81,17 @@ public:
 		mControlId = aControlId;
 	}
 
+	// set previous fire value (HACK)
+	void SetPrevFire(float aFire)
+	{
+		mPrevFire = aFire;
+	}
+
 	// update
-	void Update(float aStep);
+	void UpdateNone(float aStep);
+	void UpdateReady(float aStep);
+	void UpdateAction(float aStep);
+	void UpdateDelay(float aStep);
 
 protected:
 	friend class WeaponTracker;

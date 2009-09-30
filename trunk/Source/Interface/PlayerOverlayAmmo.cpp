@@ -97,14 +97,14 @@ void PlayerOverlayAmmo::Render(unsigned int aId, float aTime, const Transform2 &
 	glBegin(GL_QUADS);
 
 	// background
-	glColor4fv(ammocolor[cur_level-1]);
+	glColor4fv(ammocolor[cur_level]);
 	glVertex2f(ammorect.x, ammorect.y);
 	glVertex2f(ammorect.x + ammorect.w, ammorect.y);
 	glVertex2f(ammorect.x + ammorect.w, ammorect.y + ammorect.h);
 	glVertex2f(ammorect.x, ammorect.y + ammorect.h);
 
 	// fill gauge
-	glColor4fv(ammocolor[cur_level]);
+	glColor4fv(ammocolor[cur_level+1]);
 	glVertex2f(ammorect.x, ammorect.y);
 	glVertex2f(ammorect.x + ammorect.w * cur_ammo, ammorect.y);
 	glVertex2f(ammorect.x + ammorect.w * cur_ammo, ammorect.y + ammorect.h);

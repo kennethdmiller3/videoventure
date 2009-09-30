@@ -912,18 +912,24 @@ music volume			[-] <volume %> [+]
 test					[-] <sound> [+]
 */
 
+int shellmenuaudiosoundchannelsonenter;
 char shellmenuaudiosoundchannelstext[8];
+float shellmenuaudiosoundvolumeeffectonenter;
 char shellmenuaudiosoundvolumeeffecttext[8];
+float shellmenuaudiosoundvolumemusiconenter;
 char shellmenuaudiosoundvolumemusictext[8];
 
 void ShellMenuAudioEnter()
 {
+	shellmenuaudiosoundchannelsonenter = SOUND_CHANNELS;
 	VarItem *varsoundchannels = VarItem::CreateInteger("shell.menu.audio.channels", SOUND_CHANNELS, 1);
 	TIXML_SNPRINTF(shellmenuaudiosoundchannelstext, sizeof(shellmenuaudiosoundchannelstext), "%d", varsoundchannels->GetInteger());
 
+	shellmenuaudiosoundvolumeeffectonenter = SOUND_VOLUME_EFFECT;
 	VarItem *varsoundvolumeeffect = VarItem::CreateInteger("shell.menu.audio.volume.effect", xs_RoundToInt(SOUND_VOLUME_EFFECT * 10), 0, 20);
 	TIXML_SNPRINTF(shellmenuaudiosoundvolumeeffecttext, sizeof(shellmenuaudiosoundvolumeeffecttext), "%d%%", varsoundvolumeeffect->GetInteger() * 10);
 
+	shellmenuaudiosoundvolumemusiconenter = SOUND_VOLUME_MUSIC;
 	VarItem *varsoundvolumemusic = VarItem::CreateInteger("shell.menu.audio.volume.music", xs_RoundToInt(SOUND_VOLUME_MUSIC * 10), 0, 20);
 	TIXML_SNPRINTF(shellmenuaudiosoundvolumemusictext, sizeof(shellmenuaudiosoundvolumemusictext), "%d%%", varsoundvolumemusic->GetInteger() * 10);
 }
@@ -940,11 +946,19 @@ void ShellMenuAudioPressAccept()
 
 	WritePreferences("preferences.xml");
 
+	UpdateSoundVolume();
+
 	shellmenu.Pop();
 }
 
 void ShellMenuAudioPressCancel()
 {
+	SOUND_CHANNELS = shellmenuaudiosoundchannelsonenter;
+	SOUND_VOLUME_EFFECT = shellmenuaudiosoundvolumeeffectonenter;
+	SOUND_VOLUME_MUSIC = shellmenuaudiosoundvolumemusiconenter;
+
+	UpdateSoundVolume();
+
 	shellmenu.Pop();
 }
 
@@ -955,6 +969,7 @@ void ShellMenuAudioPressSoundChannelsUp()
 	{
 		item->SetInteger(item->GetInteger() + 1);
 		sprintf(shellmenuaudiosoundchannelstext, "%d", item->GetInteger());
+		SOUND_CHANNELS = item->GetInteger();
 	}
 }
 
@@ -964,6 +979,7 @@ void ShellMenuAudioPressSoundChannelsDown()
 	{
 		item->SetInteger(item->GetInteger() - 1);
 		sprintf(shellmenuaudiosoundchannelstext, "%d", item->GetInteger());
+		SOUND_CHANNELS = item->GetInteger();
 	}
 }
 
@@ -973,6 +989,8 @@ void ShellMenuAudioPressSoundVolumeEffectUp()
 	{
 		item->SetInteger(item->GetInteger() + 1);
 		sprintf(shellmenuaudiosoundvolumeeffecttext, "%d%%", item->GetInteger() * 10);
+		SOUND_VOLUME_EFFECT = item->GetInteger() / 10.0f;
+		UpdateSoundVolume();
 	}
 }
 
@@ -982,6 +1000,8 @@ void ShellMenuAudioPressSoundVolumeEffectDown()
 	{
 		item->SetInteger(item->GetInteger() - 1);
 		sprintf(shellmenuaudiosoundvolumeeffecttext, "%d%%", item->GetInteger() * 10);
+		SOUND_VOLUME_EFFECT = item->GetInteger() / 10.0f;
+		UpdateSoundVolume();
 	}
 }
 
@@ -991,6 +1011,8 @@ void ShellMenuAudioPressSoundVolumeMusicUp()
 	{
 		item->SetInteger(item->GetInteger() + 1);
 		sprintf(shellmenuaudiosoundvolumemusictext, "%d%%", item->GetInteger() * 10);
+		SOUND_VOLUME_MUSIC = item->GetInteger() / 10.0f;
+		UpdateSoundVolume();
 	}
 }
 
@@ -1000,6 +1022,8 @@ void ShellMenuAudioPressSoundVolumeMusicDown()
 	{
 		item->SetInteger(item->GetInteger() - 1);
 		sprintf(shellmenuaudiosoundvolumemusictext, "%d%%", item->GetInteger() * 10);
+		SOUND_VOLUME_MUSIC = item->GetInteger() / 10.0f;
+		UpdateSoundVolume();
 	}
 }
 
@@ -1261,12 +1285,20 @@ void RenderOptions(ShellMenu &menu, unsigned int aId, float aTime, const Transfo
 			if (cursor_x >= option.mButtonPos.x && cursor_x <= option.mButtonPos.x + option.mButtonSize.x &&
 				cursor_y >= option.mButtonPos.y && cursor_y <= option.mButtonPos.y + option.mButtonSize.y)
 			{
+				// play a sound if not rolled over
+				if (!(option.mState & BUTTON_ROLLOVER))
+					PlaySoundCue(0, 0x5d147744 /* "rollover" */);
+
 				// mark as rollover
 				option.mState |= BUTTON_ROLLOVER;
 
 				// if mouse button pressed...
 				if (input.value[Input::MENU_CLICK])
 				{
+					// play a sound if not selected
+					if (!(option.mState & BUTTON_SELECTED))
+						PlaySoundCue(0, 0x5c7ea86f /* "click" */);
+
 					// mark as selected
 					option.mState |= BUTTON_SELECTED;
 				}

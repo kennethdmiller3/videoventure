@@ -206,10 +206,10 @@ void EnterPlayState()
 	InitInput(INPUT_CONFIG.c_str());
 
 	// add a join listener
-	Database::playerjoin.Put(0xe28d61c6 /* "hud" */, PlayerJoinListener);
+	Player::sJoin.Connect(PlayerJoinListener);
 
 	// add a quit listener
-	Database::playerquit.Put(0xe28d61c6 /* "hud" */, PlayerQuitListener);
+	Player::sQuit.Connect(PlayerQuitListener);
 
 	// level configuration
 	if (!InitLevel(LEVEL_CONFIG.c_str()))
@@ -247,6 +247,12 @@ void ExitPlayState()
 
 	// clear all databases
 	Database::Cleanup();
+
+	// remove the join listener
+	Player::sJoin.Disconnect(PlayerJoinListener);
+
+	// remove the quit listener
+	Player::sQuit.Disconnect(PlayerQuitListener);
 
 	// collidable done
 	Collidable::WorldDone();
