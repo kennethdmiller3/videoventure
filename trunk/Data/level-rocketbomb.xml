@@ -61,7 +61,7 @@
 				<quads>
 					<repeat count="64">
 						<set name="c" type="color" rand="1" r_avg="1" r_var="0.5" g_avg="1" g_var="0.5" b_avg="1" b_var="0.5" a_avg="1" a_var="0" />
-						<mul name="c" variable="c0" />
+						<mul name="c" type="color" variable="c0" />
 						<color variable="c" />
 						<set name="p0" type="position" rand="4" x_avg="0" x_var="1024" y_avg="0" y_var="1024" z_avg="0" z_var="0" />
 						<set name="w" type="translate" rand="1" x_avg="64" x_var="48" y_avg="0" y_var="0" z_avg="0" z_var="0" />
