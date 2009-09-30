@@ -1,7 +1,7 @@
 #include "StdAfx.h"
 
 // get texture template definition
-#include "..\Source\Texture.h"
+#include "Texture.h"
 
 namespace Platform
 {

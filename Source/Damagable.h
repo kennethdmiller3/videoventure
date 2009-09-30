@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Database.h"
+#include "Signal.h"
 
 class DamagableTemplate
 {
@@ -27,9 +28,9 @@ protected:
 	float mHealth;
 
 public:
-	typedef fastdelegate::FastDelegate<void (unsigned int, unsigned int, float)> DamageListener;
-	typedef fastdelegate::FastDelegate<void (unsigned int, unsigned int)> DeathListener;
-	typedef fastdelegate::FastDelegate<void (unsigned int, unsigned int)> KillListener;
+	typedef Signal<void (unsigned int aId, unsigned int aSourceId, float aDamage)> DamageSignal;
+	typedef Signal<void (unsigned int aId, unsigned int aSourceId)> DeathSignal;
+	typedef Signal<void (unsigned int aId, unsigned int aKillId)> KillSignal;
 
 public:
 #ifdef USE_POOL_ALLOCATOR
@@ -61,8 +62,8 @@ namespace Database
 {
 	extern Typed<DamagableTemplate> damagabletemplate;
 	extern Typed<Damagable *> damagable;
-	extern Typed<Typed<Damagable::DamageListener> > damagelistener;
-	extern Typed<Typed<Damagable::DeathListener> > deathlistener;
-	extern Typed<Typed<Damagable::KillListener> > killlistener;
+	extern Typed<Damagable::DamageSignal > damagesignal;
+	extern Typed<Damagable::DeathSignal > deathsignal;
+	extern Typed<Damagable::KillSignal > killsignal;
 	extern Typed<int> hitcombo;
 }

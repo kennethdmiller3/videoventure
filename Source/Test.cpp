@@ -168,22 +168,12 @@ bool InitOpenGL()
 	glEnable( GL_DEPTH_TEST );
 	glDepthFunc( GL_LEQUAL );
 #else
+	// disable z test
 	glDisable( GL_DEPTH_TEST );
 #endif
 
+	// diable fog by default
 	glDisable( GL_FOG );
-	/*
-#ifdef ENABLE_FOG
-	// enable depth fog
-	GLfloat fogColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
-	glEnable( GL_FOG );
-	glFogi( GL_FOG_MODE, GL_LINEAR );
-	glFogfv( GL_FOG_COLOR, fogColor );
-	glHint( GL_FOG_HINT, GL_DONT_CARE );
-	glFogf( GL_FOG_START, 256.0f*2.0f );
-	glFogf( GL_FOG_END, 256.0f*5.0f );
-#endif
-	*/
 
 	// return true if no errors
 	return glGetError() == GL_NO_ERROR;

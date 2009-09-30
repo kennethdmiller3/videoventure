@@ -224,7 +224,6 @@ Spawner::Spawner(const SpawnerTemplate &aTemplate, unsigned int aId)
 // spawner destructor
 Spawner::~Spawner(void)
 {
-	// remove listeners
 }
 
 // spawner update
@@ -288,29 +287,34 @@ void Spawner::Update(float aStep)
 		// get world velocity
 		velocity.p = transform.Rotate(velocity.p);
 
+		// apply fractional turn (HACK)
+		transform.a += velocity.a * (aStep - mTimer);
+		transform.p += velocity.p * (aStep - mTimer);
+
 		// instantiate the spawn entity
-		unsigned int spawnId = Database::Instantiate(spawner.mSpawn, Database::owner.Get(mId), mId, transform.a, transform.p, velocity.p, velocity.a, false);
-
-		// if the spawner has a team...
-		unsigned int team = Database::team.Get(mId);
-		if (team)
+		if (unsigned int spawnId = Database::Instantiate(spawner.mSpawn, Database::owner.Get(mId), mId, transform.a, transform.p, velocity.p, velocity.a, false))
 		{
-			// propagate team to spawned item
-			Database::team.Put(spawnId, team);
-		}
+			// if the spawner has a team...
+			unsigned int team = Database::team.Get(mId);
+			if (team)
+			{
+				// propagate team to spawned item
+				Database::team.Put(spawnId, team);
+			}
 
-		// activate
-		Database::Activate(spawnId);
+			// activate
+			Database::Activate(spawnId);
 
-		// set fractional turn
-		if (Renderable *renderable = Database::renderable.Get(spawnId))
-			renderable->SetFraction(mTimer / aStep);
+			// set fractional turn
+			if (Renderable *renderable = Database::renderable.Get(spawnId))
+				renderable->SetFraction(mTimer / aStep);
 
-		// if tracking....
-		if (spawner.mTrack)
-		{
-			// add a tracker
-			Database::spawnertracker.Put(spawnId, SpawnerTracker(mId));
+			// if tracking....
+			if (spawner.mTrack)
+			{
+				// add a tracker
+				Database::spawnertracker.Put(spawnId, SpawnerTracker(mId));
+			}
 		}
 
 		// set the timer

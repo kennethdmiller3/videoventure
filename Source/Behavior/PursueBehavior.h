@@ -8,6 +8,7 @@ class PursueBehaviorTemplate
 public:
 	float mStrength;	// pursuit strength
 	float mLeading;		// leading speed
+	Transform2 mOffset;	// offset transform
 
 public:
 	PursueBehaviorTemplate();

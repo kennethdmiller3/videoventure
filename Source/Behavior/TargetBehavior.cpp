@@ -1,11 +1,12 @@
 #include "StdAfx.h"
 
 #include "TargetBehavior.h"
-#include "..\Collidable.h"
-#include "..\Entity.h"
-#include "..\Team.h"
-#include "..\Damagable.h"
-#include "..\Aimer.h"
+#include "Collidable.h"
+#include "Entity.h"
+#include "Team.h"
+#include "Damagable.h"
+#include "Cancelable.h"
+#include "Aimer.h"
 
 namespace Database
 {
@@ -104,6 +105,133 @@ TargetBehavior::TargetBehavior(unsigned int aId, const TargetBehaviorTemplate &a
 	Database::targetdata.Close(aId);
 }
 
+class TargetQueryCallback : public b2QueryCallback
+{
+public:
+	TargetBehaviorTemplate mTarget;
+	unsigned int mId;
+	unsigned int mTeam;
+	Transform2 mTransform;
+	unsigned int mCurrentTarget;
+
+	float mBestRange;
+	unsigned int mBestTargetId;
+	Vector2 mBestTargetPos;
+
+public:
+	TargetQueryCallback(const TargetBehaviorTemplate &aTarget, unsigned int aId, unsigned int aTeam, Transform2 aTransform, unsigned int aCurrentTarget)
+		: mTarget(aTarget)
+		, mId(aId)
+		, mTeam(aTeam)
+		, mTransform(aTransform)
+		, mCurrentTarget(aCurrentTarget)
+		, mBestRange(FLT_MAX)
+		, mBestTargetId(0)
+		, mBestTargetPos(0, 0)
+	{
+	}
+
+	virtual bool ReportFixture(b2Fixture* fixture)
+	{
+		// skip unhittable fixtures
+		if (fixture->IsSensor())
+			return true;
+		if (!Collidable::CheckFilter(fixture->GetFilterData(), mTarget.mFilter))
+			return true;
+
+		// get the parent body
+		b2Body* body = fixture->GetBody();
+
+		// get local position
+		b2Vec2 localPos;
+		switch (fixture->GetType())
+		{
+		case b2Shape::e_circle:		localPos = static_cast<b2CircleShape *>(fixture->GetShape())->m_p;	break;
+		case b2Shape::e_polygon:	localPos = static_cast<b2PolygonShape *>(fixture->GetShape())->m_centroid; break;
+		default:					localPos = Vector2(0, 0); break;
+		}
+		Vector2 fixturePos(body->GetWorldPoint(localPos));
+
+		// get the collidable identifier
+		unsigned int targetId = reinterpret_cast<unsigned int>(body->GetUserData());
+
+		// skip non-entity
+		if (targetId == 0)
+			return true;
+
+		// skip self
+		if (targetId == mId)
+			return true;
+
+		// get team affiliation
+		unsigned int targetTeam = Database::team.Get(targetId);
+
+		// skip neutral
+		if (targetTeam == 0)
+			return true;
+
+		// skip teammate
+		if (targetTeam == mTeam)
+			return true;
+
+		// skip indestructible
+		if (!Database::damagable.Find(targetId) && !Database::cancelable.Find(targetId))
+			return true;
+
+		// get local direction
+		Vector2 localDir(mTransform.Untransform(fixturePos));
+
+		// get range to target
+		float range = localDir.Length() - 0.5f * fixture->GetShape()->m_radius;	//fixture->ComputeSweepRadius(localPos);
+
+		// skip if out of range
+		if (range > mTarget.mRange)
+			return true;
+
+		// if using a cone angle or angle scale
+		if (mTarget.mAngle < float(M_PI)*2.0f || mTarget.mAlign != 0.0f)
+		{
+			// get angle to target
+			float aimAngle = -atan2f(localDir.x, localDir.y);
+
+			// get local angle
+			float localAngle = aimAngle - mTarget.mDirection;
+			if (localAngle > float(M_PI))
+				localAngle -= float(M_PI)*2.0f;
+			else if (localAngle < -float(M_PI))
+				localAngle += float(M_PI)*2.0f;
+
+			// skip if outside angle
+			if (fabsf(localAngle) > mTarget.mAngle)
+				return true;
+
+			// if using angle scale...
+			if (mTarget.mAlign != 0.0f)
+			{
+				// apply angle scale
+				range *= 1.0f + fabsf(localAngle) * mTarget.mAlign;
+			}
+		}
+
+		// if the current target...
+		if (targetId == mCurrentTarget)
+		{
+			// apply focus scale
+			range /= mTarget.mFocus;
+		}
+
+		// if better than the current range
+		if (mBestRange > range)
+		{
+			// use the new target
+			mBestRange = range;
+			mBestTargetId = targetId;
+			mBestTargetPos = localPos;
+		}
+		return true;
+	}
+};
+
 // target behavior
 Status TargetBehavior::Execute(void)
 {
@@ -128,14 +256,6 @@ Status TargetBehavior::Execute(void)
 	// get the collision world
 	b2World *world = Collidable::GetWorld();
 
-	// get nearby shapes
-	b2AABB aabb;
-	const float lookRadius = target.mRange;
-	aabb.lowerBound.Set(entity->GetPosition().x - lookRadius, entity->GetPosition().y - lookRadius);
-	aabb.upperBound.Set(entity->GetPosition().x + lookRadius, entity->GetPosition().y + lookRadius);
-	b2Shape* shapes[b2_maxProxies];
-	int32 count = world->Query(aabb, shapes, b2_maxProxies);
-
 	// get team affiliation
 	unsigned int aTeam = Database::team.Get(mId);
 
@@ -144,114 +264,17 @@ Status TargetBehavior::Execute(void)
 	unsigned int &mTarget = data.mTarget;
 	Vector2 &mOffset = data.mOffset;
 
-	// no target yet
-	unsigned int bestTargetId = 0;
-	Vector2 bestTargetPos(0, 0);
-	float bestRange = FLT_MAX;
-
-	// for each shape...
-	for (int32 i = 0; i < count; ++i)
-	{
-		// skip unhittable shapes
-		if (shapes[i]->IsSensor())
-			continue;
-		if (!Collidable::CheckFilter(shapes[i]->GetFilterData(), target.mFilter))
-			continue;
-
-		// get the parent body
-		b2Body* body = shapes[i]->GetBody();
-
-		// get local position
-		b2Vec2 localPos;
-		switch (shapes[i]->GetType())
-		{
-		case e_circleShape:		localPos = static_cast<b2CircleShape *>(shapes[i])->GetLocalPosition();	break;
-		case e_polygonShape:	localPos = static_cast<b2PolygonShape *>(shapes[i])->GetCentroid(); break;
-		default:				localPos = Vector2(0, 0); break;
-		}
-		Vector2 shapePos(body->GetWorldPoint(localPos));
-
-		// get the collidable identifier
-		unsigned int targetId = reinterpret_cast<unsigned int>(body->GetUserData());
-
-		// skip non-entity
-		if (targetId == 0)
-			continue;
-
-		// skip self
-		if (targetId == mId)
-			continue;
-
-		// get team affiliation
-		unsigned int targetTeam = Database::team.Get(targetId);
-
-		// skip neutral
-		if (targetTeam == 0)
-			continue;
-
-		// skip teammate
-		if (targetTeam == aTeam)
-			continue;
-
-		// skip indestructible
-		if (!Database::damagable.Find(targetId))
-			continue;
-
-		// get local direction
-		Vector2 localDir(transform.Untransform(shapePos));
-
-		// get range to target
-		float range = localDir.Length() - 0.5f * shapes[i]->GetSweepRadius();
-
-		// skip if out of range
-		if (range > target.mRange)
-			continue;
-
-		// if using a cone angle or angle scale
-		if (target.mAngle < float(M_PI)*2.0f || target.mAlign != 0.0f)
-		{
-			// get angle to target
-			float aimAngle = -atan2f(localDir.x, localDir.y);
-
-			// get local angle
-			float localAngle = aimAngle - target.mDirection;
-			if (localAngle > float(M_PI))
-				localAngle -= float(M_PI)*2.0f;
-			else if (localAngle < -float(M_PI))
-				localAngle += float(M_PI)*2.0f;
-
-			// skip if outside angle
-			if (fabsf(localAngle) > target.mAngle)
-				continue;
-
-			// if using angle scale...
-			if (target.mAlign != 0.0f)
-			{
-				// apply angle scale
-				range *= 1.0f + fabsf(localAngle) * target.mAlign;
-			}
-		}
-
-		// if the current target...
-		if (targetId == mTarget)
-		{
-			// apply focus scale
-			range /= target.mFocus;
-		}
-
-		// if better than the current range
-		if (bestRange > range)
-		{
-			// use the new target
-			bestRange = range;
-			bestTargetId = targetId;
-			bestTargetPos = localPos;
-		}
-	}
+	// query nearby fixtures
+	TargetQueryCallback callback(target, mId, aTeam, transform, data.mTarget);
+	b2AABB aabb;
+	const float lookRadius = target.mRange;
+	aabb.lowerBound.Set(entity->GetPosition().x - lookRadius, entity->GetPosition().y - lookRadius);
+	aabb.upperBound.Set(entity->GetPosition().x + lookRadius, entity->GetPosition().y + lookRadius);
+	world->QueryAABB(&callback, aabb);
 
 	// use the new target
-	mTarget = bestTargetId;
-	mOffset = bestTargetPos;
+	mTarget = callback.mBestTargetId;
+	mOffset = callback.mBestTargetPos;
 	return runningTask;
 }
 

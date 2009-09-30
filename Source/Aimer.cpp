@@ -86,7 +86,9 @@ namespace Database
 }
 
 AimerTemplate::AimerTemplate(void)
-: mDrift(0.0f)
+: mSide(0.0f)
+, mFront(0.0f)
+, mTurn(0.0f)
 {
 }
 
@@ -103,7 +105,13 @@ bool AimerTemplate::Configure(const TiXmlElement *element, unsigned int aId)
 		{
 		case 0x2e87eea4 /* "drift" */:
 			{
-				child->QueryFloatAttribute("strength", &mDrift);
+				// backwards compatibility
+				child->QueryFloatAttribute("strength", &mFront);
+
+				// drift controls
+				child->QueryFloatAttribute("turn", &mTurn);
+				child->QueryFloatAttribute("side", &mSide);
+				child->QueryFloatAttribute("front", &mFront);
 			}
 			break;
 
@@ -168,9 +176,9 @@ void Aimer::Control(float aStep)
 	const AimerTemplate &aimer = Database::aimertemplate.Get(mId);
 
 	// set default controls
-	mMove = transform.Rotate(Vector2(0, aimer.mDrift));
+	mMove = transform.Rotate(Vector2(aimer.mSide, aimer.mFront));
 	mAim = Vector2(0, 0);
-	mTurn = 0;
+	mTurn = aimer.mTurn;
 	memset(mFire, 0, sizeof(mFire));
 
 	// think
@@ -181,8 +189,8 @@ void Aimer::Control(float aStep)
 	if (Collidable *collidable = Database::collidable.Get(mId))
 	{
 		b2Body *body = collidable->GetBody();
-		b2Shape *shapelist = body->GetShapeList();
-		const b2FilterData &filter = shapelist->GetFilterData();
+		b2Fixture *shapelist = body->GetShapeList();
+		const b2Filter &filter = shapelist->GetFilterData();
 
 		// collision probe
 		b2Segment segment;
@@ -192,7 +200,7 @@ void Aimer::Control(float aStep)
 		// perform a segment test
 		float lambda = 1.0f;
 		b2Vec2 normal(0, 0);
-		b2Shape *shape = NULL;
+		b2Fixture *shape = NULL;
 		Collidable::TestSegment(segment, shapelist->GetSweepRadius() * 0.5f, mId, filter.categoryBits, filter.maskBits, lambda, normal, shape);
 		if (lambda < 1.0f)
 		{

@@ -277,6 +277,9 @@ int ProcessCommand( unsigned int aCommand, char *aParam[], int aCount )
 	case 0x55cfbc33 /* "framerateprint" */:
 		return ProcessCommandBool(FRAMERATE_OUTPUTPRINT, aParam, aCount, NULL, "framerateprint: %d\n");
 
+	case 0xe41f87fa /* "debugdraw" */:
+		return ProcessCommandBool(DEBUG_DRAW, aParam, aCount, NULL, "debugdraw: %d\n");
+
 	case 0xa165ddb8 /* "database" */:
 		if (aCount >= 1)
 		{

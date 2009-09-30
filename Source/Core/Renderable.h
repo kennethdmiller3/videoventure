@@ -12,6 +12,9 @@ public:
 	// period
 	float mPeriod;
 
+	// apply entity transform
+	bool mTransform;
+
 public:
 	RenderableTemplate(void);
 	~RenderableTemplate();

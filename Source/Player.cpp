@@ -16,8 +16,6 @@
 
 namespace Database
 {
-	Typed<fastdelegate::FastDelegate<void (unsigned int)> > playerjoin(0xd15784b0 /* "playerjoin" */);
-	Typed<fastdelegate::FastDelegate<void (unsigned int)> > playerquit(0x33bcfaff /* "playerquit" */);
 	Typed<PlayerTemplate> playertemplate(0x4893610a /* "playertemplate" */);
 	Typed<Player *> player(0x2c99c300 /* "player" */);
 
@@ -72,6 +70,11 @@ namespace Database
 		playerinitializer;
 	}
 }
+
+
+Signal<void(unsigned int)> Player::sJoin;
+Signal<void(unsigned int)> Player::sQuit;
+
 
 /*
 // PLAYER TEMPLATE
@@ -128,21 +131,20 @@ Player::Player(const PlayerTemplate &aTemplate, unsigned int aId)
 	SetAction(Action(this, &Player::Update));
 
 	// notify join listeners
-	for (Database::Typed<fastdelegate::FastDelegate<void (unsigned int)> >::Iterator itor(&Database::playerjoin); itor.IsValid(); ++itor)
-		itor.GetValue()(mId);
+	sJoin(mId);
 
 	{
 		// add a kill listener
-		Database::Typed<Damagable::KillListener> &listeners = Database::killlistener.Open(mId);
-		listeners.Put(Database::Key(this), Damagable::KillListener(this, &Player::GotKill));
-		Database::killlistener.Close(mId);
+		Damagable::KillSignal &signal = Database::killsignal.Open(mId);
+		signal.Connect(this, &Player::GotKill);
+		Database::killsignal.Close(mId);
 	}
 
 #ifdef USE_CAPTURABLE
 	{
 		// add a capture listener
-		Database::Typed<Capturable::CaptureListener> &listeners = Database::capturelistener.Open(mId);
-		listeners.Put(Database::Key(this), Capturable::KillListener(this, &Player::GotKill));
+		Capturable::CaptureSignal &signal = Database::capturelistener.Open(mId);
+		signal.Connect(this, &Player::GotKill);
 		Database::capturelistener.Close(mId);
 	}
 #endif
@@ -161,22 +163,21 @@ Player::~Player(void)
 #if USE_CAPTURABLE
 	{
 		// remove any capture listener
-		Database::Typed<Capturable::CaptureListener> &listeners = Database::capturelistener.Open(mId);
-		listeners.Delete(Database::Key(this));
+		Capturable::CaptureSignal &signal = Database::capturelistener.Open(mId);
+		signal.Disconnect(this, &Player::GotKill);
 		Database::capturelistener.Close(mId);
 	}
 #endif
 
 	{
 		// remove any kill listener
-		Database::Typed<Damagable::KillListener> &listeners = Database::killlistener.Open(mId);
-		listeners.Delete(Database::Key(this));
-		Database::killlistener.Close(mId);
+		Damagable::KillSignal &signal = Database::killsignal.Open(mId);
+		signal.Disconnect(this, &Player::GotKill);
+		Database::killsignal.Close(mId);
 	}
 
 	// notify leave listeners
-	for (Database::Typed<fastdelegate::FastDelegate<void (unsigned int)> >::Iterator itor(&Database::playerquit); itor.IsValid(); ++itor)
-		itor.GetValue()(mId);
+	sQuit(mId);
 }
 
 // player update
@@ -224,9 +225,9 @@ void Player::Attach(unsigned int aAttach)
 	mAttach = aAttach;
 
 	// add a death listener
-	Database::Typed<Damagable::DeathListener> &listeners = Database::deathlistener.Open(mAttach);
-	listeners.Put(Database::Key(this), Damagable::DeathListener(this, &Player::OnDeath));
-	Database::deathlistener.Close(mAttach);
+	Damagable::DeathSignal &signal = Database::deathsignal.Open(mAttach);
+	signal.Connect(this, &Player::OnDeath);
+	Database::deathsignal.Close(mAttach);
 }
 
 // player detach
@@ -241,9 +242,9 @@ void Player::Detach(unsigned int aAttach)
 #endif
 
 	// remove any death listener
-	Database::Typed<Damagable::DeathListener> &listeners = Database::deathlistener.Open(mAttach);
-	listeners.Delete(Database::Key(this));
-	Database::deathlistener.Close(mAttach);
+	Damagable::DeathSignal &signal = Database::deathsignal.Open(mAttach);
+	signal.Disconnect(this, &Player::OnDeath);
+	Database::deathsignal.Close(mAttach);
 
 	// detach from entity
 	mAttach = 0;

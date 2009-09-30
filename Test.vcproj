@@ -6,7 +6,7 @@
 	ProjectGUID="{FC5E6837-9810-43F3-AE5D-A4CDDDF5D1AF}"
 	RootNamespace="Test"
 	Keyword="Win32Proj"
-	TargetFrameworkVersion="131072"
+	TargetFrameworkVersion="196613"
 	>
 	<Platforms>
 		<Platform
@@ -19,8 +19,7 @@
 		<Configuration
 			Name="Debug|Win32"
 			ConfigurationType="1"
-			InheritedPropertySheets=".\PlatformSDL_Debug.vsprops"
-			UseOfATL="0"
+			InheritedPropertySheets=".\PlatformSDLMixer_Debug.vsprops"
 			CharacterSet="1"
 			>
 			<Tool
@@ -40,7 +39,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories=""
+				AdditionalIncludeDirectories="Source;Source\Behavior;Source\Core;Source\Expression;Source\Interface;Source\Render;Source\Shell;Source\Sound"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -53,7 +52,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalLibraryDirectories=""
+				TargetMachine="1"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -80,7 +79,7 @@
 		<Configuration
 			Name="Release|Win32"
 			ConfigurationType="1"
-			InheritedPropertySheets=".\PlatformSDL_Release.vsprops"
+			InheritedPropertySheets=".\PlatformSDLMixer_Release.vsprops"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
 			>
@@ -101,7 +100,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories=""
+				AdditionalIncludeDirectories="Source;Source\Behavior;Source\Core;Source\Expression;Source\Interface;Source\Render;Source\Shell;Source\Sound"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -114,7 +113,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalLibraryDirectories=""
+				TargetMachine="1"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -143,566 +142,296 @@
 	</References>
 	<Files>
 		<Filter
-			Name="Source Files"
-			Filter="cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx"
-			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
+			Name="Core"
 			>
 			<File
-				RelativePath=".\Source\Aimer.cpp"
+				RelativePath=".\Source\Core\AlignedBox2.h"
 				>
 			</File>
 			<File
-				RelativePath=".\Source\Beam.cpp"
+				RelativePath=".\Source\Core\Collidable.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\Source\Bullet.cpp"
+				RelativePath=".\Source\Core\Collidable.h"
 				>
 			</File>
 			<File
-				RelativePath=".\Source\Collidable.cpp"
+				RelativePath=".\Source\Core\Color4.h"
 				>
 			</File>
 			<File
-				RelativePath=".\Source\Command.cpp"
+				RelativePath=".\Source\Core\Controller.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\Source\Controller.cpp"
+				RelativePath=".\Source\Core\Controller.h"
 				>
 			</File>
 			<File
-				RelativePath=".\Source\Damagable.cpp"
+				RelativePath=".\Source\Core\Database.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\Source\Database.cpp"
+				RelativePath=".\Source\Core\Database.h"
 				>
 			</File>
 			<File
-				RelativePath=".\Source\Drawlist.cpp"
+				RelativePath=".\Source\Core\DatabaseTyped.h"
 				>
 			</File>
 			<File
-				RelativePath=".\Source\Entity.cpp"
+				RelativePath=".\Source\Core\DatabaseUntyped.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\Source\Expire.cpp"
+				RelativePath=".\Source\Core\DatabaseUntyped.h"
 				>
 			</File>
 			<File
-				RelativePath=".\Source\Explosion.cpp"
+				RelativePath=".\Source\Core\Entity.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\Source\Expression.cpp"
+				RelativePath=".\Source\Core\Entity.h"
 				>
 			</File>
 			<File
-				RelativePath=".\Source\GameState.cpp"
+				RelativePath=".\Source\Core\Hash.h"
 				>
 			</File>
 			<File
-				RelativePath=".\Source\Gunner.cpp"
+				RelativePath=".\Source\Core\Input.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\Source\Input.cpp"
+				RelativePath=".\Source\Core\Input.h"
 				>
 			</File>
 			<File
-				RelativePath=".\Source\Interpolator.cpp"
+				RelativePath=".\Source\Core\Interpolator.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\Source\Link.cpp"
+				RelativePath=".\Source\Core\Interpolator.h"
 				>
 			</File>
 			<File
-				RelativePath=".\PlatformSDL\LoadTexture.cpp"
+				RelativePath=".\Source\Core\Link.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\Source\Noise.cpp"
+				RelativePath=".\Source\Core\Link.h"
 				>
 			</File>
 			<File
-				RelativePath=".\PlatformSDL\OneTime.cpp"
+				RelativePath=".\Source\Core\Magic.h"
 				>
 			</File>
 			<File
-				RelativePath=".\Source\Overlay.cpp"
+				RelativePath=".\Source\Core\Matrix2.h"
 				>
 			</File>
 			<File
-				RelativePath=".\Source\Particle.cpp"
+				RelativePath=".\Source\Core\Noise.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\Source\Pathing.cpp"
+				RelativePath=".\Source\Core\Noise.h"
 				>
 			</File>
 			<File
-				RelativePath=".\Source\PerfTimer.cpp"
+				RelativePath=".\Source\Core\Overlay.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\Source\Pickup.cpp"
+				RelativePath=".\Source\Core\Overlay.h"
 				>
 			</File>
 			<File
-				RelativePath=".\Source\Play.cpp"
+				RelativePath=".\Source\Core\Particle.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\Source\Player.cpp"
+				RelativePath=".\Source\Core\Pathing.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\Source\PlayerCamera.cpp"
+				RelativePath=".\Source\Core\Pathing.h"
 				>
 			</File>
 			<File
-				RelativePath=".\Source\PlayerController.cpp"
+				RelativePath=".\Source\Core\PerfTimer.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\Source\PlayerHUD.cpp"
+				RelativePath=".\Source\Core\PerfTimer.h"
 				>
 			</File>
 			<File
-				RelativePath=".\Source\PlayerOverlayAmmo.cpp"
+				RelativePath=".\Source\Core\Renderable.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\Source\PlayerOverlayGameOver.cpp"
+				RelativePath=".\Source\Core\Renderable.h"
 				>
 			</File>
 			<File
-				RelativePath=".\Source\PlayerOverlayHealth.cpp"
+				RelativePath=".\Source\Core\Signal.h"
 				>
 			</File>
 			<File
-				RelativePath=".\Source\PlayerOverlayLevel.cpp"
+				RelativePath=".\Source\Core\Simulatable.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\Source\PlayerOverlayLives.cpp"
+				RelativePath=".\Source\Core\Simulatable.h"
 				>
 			</File>
 			<File
-				RelativePath=".\Source\PlayerOverlayReticule.cpp"
+				RelativePath=".\Source\Core\Sphere2.h"
 				>
 			</File>
 			<File
-				RelativePath=".\Source\PlayerOverlayScore.cpp"
+				RelativePath=".\Source\Core\targetver.h"
 				>
 			</File>
 			<File
-				RelativePath=".\Source\PlayerOverlaySpecial.cpp"
+				RelativePath=".\Source\Core\Transform2.h"
 				>
 			</File>
 			<File
-				RelativePath=".\Source\Points.cpp"
+				RelativePath=".\Source\Core\TreeNode.h"
 				>
 			</File>
 			<File
-				RelativePath=".\Source\PointsOverlay.cpp"
+				RelativePath=".\Source\Core\Updatable.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\Source\Preferences.cpp"
+				RelativePath=".\Source\Core\Updatable.h"
 				>
 			</File>
 			<File
-				RelativePath=".\PlatformSDL\PrintAttributes.cpp"
+				RelativePath=".\Source\Core\Variable.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\Source\Renderable.cpp"
+				RelativePath=".\Source\Core\Variable.h"
 				>
 			</File>
 			<File
-				RelativePath=".\Source\Resource.cpp"
+				RelativePath=".\Source\Core\Vector2.h"
 				>
 			</File>
 			<File
-				RelativePath=".\Source\Run.cpp"
+				RelativePath=".\Source\Core\Vector3.h"
 				>
 			</File>
 			<File
-				RelativePath=".\Source\Shell.cpp"
+				RelativePath=".\Source\Core\Vector4.h"
 				>
 			</File>
 			<File
-				RelativePath=".\Source\Ship.cpp"
+				RelativePath=".\Source\Core\World.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\Source\Simulatable.cpp"
+				RelativePath=".\Source\Core\World.h"
 				>
 			</File>
 			<File
-				RelativePath=".\Source\Sound.cpp"
+				RelativePath=".\Source\Core\xs_Config.h"
 				>
 			</File>
 			<File
-				RelativePath=".\Source\Spawn.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\Source\Spawner.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\Source\stdafx.cpp"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="1"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="1"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath=".\Source\Team.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\Source\Test.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\Source\Texture.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\Source\Tilemap.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\Source\Title.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\Source\TurnAction.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\Source\Updatable.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\Source\Variable.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\Source\WaveSequence.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\Source\Weapon.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\PlatformSDL\Window.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\Source\World.cpp"
+				RelativePath=".\Source\Core\xs_Float.h"
 				>
 			</File>
 		</Filter>
 		<Filter
-			Name="Header Files"
-			Filter="h;hpp;hxx;hm;inl;inc;xsd"
-			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
+			Name="Interface"
 			>
 			<File
-				RelativePath=".\Source\Aimer.h"
+				RelativePath=".\Source\Interface\PlayerHUD.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\Source\AlignedBox2.h"
+				RelativePath=".\Source\Interface\PlayerHUD.h"
 				>
 			</File>
 			<File
-				RelativePath=".\Source\Beam.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Source\Bullet.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Source\Collidable.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Source\Color4.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Source\Command.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Source\Controller.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Source\Damagable.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Source\Database.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Source\Drawlist.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Source\Entity.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Source\Expire.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Source\Explosion.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Source\Expression.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Source\GameState.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Source\Gunner.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Source\Hash.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Source\Input.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Source\Interpolator.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Source\Link.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Source\Matrix2.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Source\Noise.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Source\Overlay.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Source\PerfTimer.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Source\Pickup.h"
-				>
-			</File>
-			<File
-				RelativePath=".\PlatformSDL\Platform.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Source\Player.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Source\PlayerCamera.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Source\PlayerController.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Source\PlayerHUD.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Source\PlayerOverlayAmmo.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Source\PlayerOverlayGameOver.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Source\PlayerOverlayHealth.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Source\PlayerOverlayLevel.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Source\PlayerOverlayLives.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Source\PlayerOverlayReticule.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Source\PlayerOverlayScore.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Source\PlayerOverlaySpecial.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Source\Points.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Source\PointsOverlay.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Source\Preferences.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Source\Renderable.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Source\Resource.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Source\Shell.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Source\Ship.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Source\Simulatable.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Source\Sound.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Source\Spawn.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Source\Spawner.h"
-				>
+				RelativePath=".\Source\Interface\PlayerOverlayAmmo.cpp"
+					>
 			</File>
 			<File
-				RelativePath=".\Source\Sphere2.h"
-				>
+				RelativePath=".\Source\Interface\PlayerOverlayAmmo.h"
+					>
 			</File>
 			<File
-				RelativePath=".\Source\stdafx.h"
+				RelativePath=".\Source\Interface\PlayerOverlayGameOver.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\Source\targetver.h"
+				RelativePath=".\Source\Interface\PlayerOverlayGameOver.h"
 				>
 			</File>
 			<File
-				RelativePath=".\Source\Team.h"
+				RelativePath=".\Source\Interface\PlayerOverlayHealth.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\Source\Texture.h"
+				RelativePath=".\Source\Interface\PlayerOverlayHealth.h"
 				>
 			</File>
 			<File
-				RelativePath=".\Source\Transform2.h"
+				RelativePath=".\Source\Interface\PlayerOverlayLevel.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\Source\TurnAction.h"
+				RelativePath=".\Source\Interface\PlayerOverlayLevel.h"
 				>
 			</File>
 			<File
-				RelativePath=".\Source\Updatable.h"
+				RelativePath=".\Source\Interface\PlayerOverlayLives.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\Source\Variable.h"
+				RelativePath=".\Source\Interface\PlayerOverlayLives.h"
 				>
 			</File>
 			<File
-				RelativePath=".\Source\Vector2.h"
+				RelativePath=".\Source\Interface\PlayerOverlayReticule.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\Source\Vector3.h"
+				RelativePath=".\Source\Interface\PlayerOverlayReticule.h"
 				>
 			</File>
 			<File
-				RelativePath=".\Source\Vector4.h"
+				RelativePath=".\Source\Interface\PlayerOverlayScore.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\Source\WaveSequence.h"
+				RelativePath=".\Source\Interface\PlayerOverlayScore.h"
 				>
 			</File>
 			<File
-				RelativePath=".\Source\Weapon.h"
+				RelativePath=".\Source\Interface\PlayerOverlaySpecial.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\Source\World.h"
+				RelativePath=".\Source\Interface\PlayerOverlaySpecial.h"
 				>
 			</File>
 			<File
-				RelativePath=".\Source\xs_Config.h"
+				RelativePath=".\Source\Interface\PointsOverlay.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\Source\xs_Float.h"
+				RelativePath=".\Source\Interface\PointsOverlay.h"
 				>
 			</File>
-		</Filter>
-		<Filter
-			Name="Resource Files"
-			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav"
-			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
-			>
 		</Filter>
 		<Filter
 			Name="Behavior"
@@ -820,8 +549,496 @@
 				>
 			</File>
 		</Filter>
+		<Filter
+			Name="Render"
+			>
+			<File
+				RelativePath=".\Source\Render\Drawlist.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Render\Drawlist.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Render\Texture.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Render\Texture.h"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="Shell"
+			>
+			<File
+				RelativePath=".\Source\Shell\Shell.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Shell\Shell.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Shell\Title.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Shell\Title.h"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="Sound"
+			>
+			<File
+				RelativePath=".\Source\Sound\Sound.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Sound\Sound.h"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="Game"
+			>
+			<File
+				RelativePath=".\Source\Aimer.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Aimer.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Beam.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Beam.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Bullet.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Bullet.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Cancelable.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Cancelable.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Command.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Command.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Condition.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Damagable.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Damagable.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Expire.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Expire.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Explosion.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Explosion.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\GameState.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\GameState.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Gunner.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Gunner.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Pickup.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Pickup.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Play.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Player.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Player.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\PlayerCamera.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\PlayerCamera.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\PlayerController.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\PlayerController.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Points.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Points.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Preferences.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Preferences.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Resource.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Resource.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Run.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Ship.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Ship.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Spawn.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Spawn.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Spawner.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Spawner.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\State.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\State.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Team.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Team.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Test.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Tilemap.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\TurnAction.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\TurnAction.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\WaveSequence.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\WaveSequence.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Weapon.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Weapon.h"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="Platform"
+			>
+			<File
+				RelativePath=".\PlatformSDL\LoadTexture.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\PlatformSDL\OneTime.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\PlatformSDL\Platform.h"
+				>
+			</File>
+			<File
+				RelativePath=".\PlatformSDL\PrintAttributes.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\PlatformSDL\Window.cpp"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="Expression"
+			>
+			<File
+				RelativePath=".\Source\Expression\Expression.h"
+			>
+			</File>
+			<File
+				RelativePath=".\Source\Expression\ExpressionAction.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Expression\ExpressionAction.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Expression\ExpressionBoolean.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Expression\ExpressionBoolean.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Expression\ExpressionConfigure.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Expression\ExpressionConstruct.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Expression\ExpressionConstruct.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Expression\ExpressionConvert.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Expression\ExpressionEntity.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Expression\ExpressionEntity.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Expression\ExpressionExtend.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Expression\ExpressionExtend.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Expression\ExpressionIntegral.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Expression\ExpressionIntegral.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Expression\ExpressionInterpolator.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Expression\ExpressionInterpolator.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Expression\ExpressionLiteral.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Expression\ExpressionLiteral.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Expression\ExpressionLogical.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Expression\ExpressionLogical.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Expression\ExpressionNoise.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Expression\ExpressionNoise.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Expression\ExpressionOperator.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Expression\ExpressionOperatorSIMD.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Expression\ExpressionOperatorSIMD.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Expression\ExpressionOscillator.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Expression\ExpressionOscillator.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Expression\ExpressionRandom.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Expression\ExpressionRelational.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Expression\ExpressionResource.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Expression\ExpressionResource.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Expression\ExpressionSchema.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Expression\ExpressionSchema.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Expression\ExpressionSIMD.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Expression\ExpressionSwizzle.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Expression\ExpressionSwizzle.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Expression\ExpressionTime.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Expression\ExpressionTime.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Expression\ExpressionVariable.h"
+				>
+			</File>
+		</Filter>
 		<File
-			RelativePath=".\ReadMe.txt"
+			RelativePath=".\Source\stdafx.cpp"
+			>
+			<FileConfiguration
+				Name="Debug|Win32"
+				>
+				<Tool
+					Name="VCCLCompilerTool"
+					UsePrecompiledHeader="1"
+				/>
+			</FileConfiguration>
+			<FileConfiguration
+				Name="Release|Win32"
+				>
+				<Tool
+					Name="VCCLCompilerTool"
+					UsePrecompiledHeader="1"
+				/>
+			</FileConfiguration>
+		</File>
+		<File
+			RelativePath=".\Source\stdafx.h"
+			>
+		</File>
+		<File
+			RelativePath=".\Source\targetver.h"
 			>
 		</File>
 	</Files>

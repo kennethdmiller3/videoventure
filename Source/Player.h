@@ -1,6 +1,8 @@
 #pragma once
 
 #include "Updatable.h"
+#include "Signal.h"
+
 
 // player
 
@@ -31,6 +33,9 @@ public:
 	unsigned int mAttach;
 	int mLives;
 	int mScore;
+
+	static Signal<void(unsigned int)> sJoin;
+	static Signal<void(unsigned int)> sQuit;
 
 public:
 	// default constructor
@@ -63,8 +68,6 @@ public:
 
 namespace Database
 {
-	extern Typed<fastdelegate::FastDelegate<void (unsigned int)> > playerjoin;
-	extern Typed<fastdelegate::FastDelegate<void (unsigned int)> > playerquit;
 	extern Typed<PlayerTemplate> playertemplate;
 	extern Typed<Player *> player;
 }

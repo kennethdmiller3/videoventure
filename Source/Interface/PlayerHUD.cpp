@@ -9,12 +9,6 @@
 #include "PlayerOverlayReticule.h"
 #include "PlayerOverlayScore.h"
 #include "PlayerOverlaySpecial.h"
-#include "Damagable.h"
-#include "Drawlist.h"
-#include "Resource.h"
-
-#include "GameState.h"
-
 
 
 namespace Database

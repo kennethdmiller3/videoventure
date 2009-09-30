@@ -10,6 +10,8 @@
 #include "Resource.h"
 #include "Interpolator.h"
 
+#include "ExpressionConfigure.h"
+#include "Drawlist.h" // for variable
 
 #ifdef USE_POOL_ALLOCATOR
 // weapon pool
@@ -23,7 +25,6 @@ void Weapon::operator delete(void *aPtr)
 	pool.free(aPtr);
 }
 #endif
-
 
 class WeaponTracker
 {
@@ -60,12 +61,55 @@ public:
 	}
 };
 
+class WeaponTemplateOld
+{
+public:
+	// offset
+	Transform2 mOffset;
+	Transform2 mScatter;
+	Transform2 mInherit;
+	Transform2 mVelocity;
+	Transform2 mVariance;
+
+	// ordnance
+	unsigned int mOrdnance;
+	
+	// flash (tethered)
+	unsigned int mFlash;
+
+	// burst
+	float mBurstStart;
+	int mBurstLength;
+	float mBurstDelay;
+
+	// salvo
+	int mSalvoShots;
+
+public:
+	WeaponTemplateOld()
+		: mOffset(0, Vector2(0, 0))
+		, mScatter(0, Vector2(0, 0))
+		, mInherit(0, Vector2(1, 1))
+		, mVelocity(0, Vector2(0, 0))
+		, mVariance(0, Vector2(0, 0))
+		, mOrdnance(0)
+		, mFlash(0)
+		, mBurstStart(0.0f)
+		, mBurstLength(1)
+		, mBurstDelay(0.0f)
+		, mSalvoShots(1)
+	{
+	}
+
+	void BuildAction(std::vector<unsigned int> &aAction, unsigned int aId) const;
+};
+
 namespace Database
 {
 	Typed<WeaponTemplate> weapontemplate(0xb1050fa7 /* "weapontemplate" */);
+	Typed<WeaponTemplateOld> weapontemplateold(0x87db0828 /* "weapontemplateold" */);
 	Typed<Weapon *> weapon(0x6f332041 /* "weapon" */);
 	Typed<WeaponTracker> weapontracker(0x49c0728f /* "weapontracker" */);
-	Typed<Typed<std::vector<unsigned int> > > weaponproperty(0x5abbb61c /* "weaponproperty" */);
 
 	namespace Loader
 	{
@@ -112,9 +156,10 @@ namespace Database
 				Weapon *weapon = Database::weapon.Get(aId);
 				for (unsigned int aControlId = aId; aControlId != 0; aControlId = Database::backlink.Get(aControlId))
 				{
-					if (Database::controller.Find(aControlId))
+					if (const Controller *controller = Database::controller.Get(aControlId))
 					{
 						weapon->SetControl(aControlId);
+						weapon->SetPrevFire(controller->mFire[Database::weapontemplate.Get(aId).mChannel]);
 						break;
 					}
 				}
@@ -136,23 +181,13 @@ namespace Database
 
 
 WeaponTemplate::WeaponTemplate(void)
-: mOffset(0, Vector2(0, 0))
-, mScatter(0, Vector2(0, 0))
-, mInherit(0, Vector2(1, 1))
-, mVelocity(0, Vector2(0, 0))
-, mVariance(0, Vector2(0, 0))
-, mAim(0, 0)
+: mAim(0, 0)
 , mRecoil(0)
-, mOrdnance(0)
-, mFlash(0)
 , mChannel(0)
-, mDelay(1.0f)
+, mDelay(0.0f)
 , mPhase(0)
 , mCycle(1)
 , mTrack(0)
-, mBurstLength(1)
-, mBurstDelay(0.0f)
-, mSalvoShots(1)
 , mType(0U)
 , mCost(0.0f)
 {
@@ -162,7 +197,324 @@ WeaponTemplate::~WeaponTemplate(void)
 {
 }
 
-bool WeaponTemplate::Configure(const TiXmlElement *element, unsigned int aId)
+// actions
+
+static const char * const sTransformNames[] = { "x", "y", "angle", ""};
+static const float sTransformDefault[] = { 0.0f, 0.0f, 0.0f, 0.0f };
+
+template<> inline Transform2 Cast<Transform2, __m128>(__m128 i)
+{
+	return Transform2(reinterpret_cast<const float * __restrict>(&i)[2],
+		Vector2(reinterpret_cast<const float * __restrict>(&i)[0], reinterpret_cast<const float * __restrict>(&i)[1]));
+}
+
+template<> inline __m128 Cast<__m128, Transform2>(Transform2 i)
+{
+	return _mm_set_ps(0, i.a, i.p.y, i.p.x);
+}
+
+static void WeaponWait(EntityContext &aContext)
+{
+	float delay = Expression::Evaluate<float>(aContext);
+	aContext.mParam -= delay;
+}
+
+static void WeaponRecoil(EntityContext &aContext)
+{
+	float recoil(Expression::Evaluate<float>(aContext));
+	if (recoil)
+	{
+		// get the entity
+		Entity *entity = Database::entity.Get(aContext.mId);
+
+		// interpolated transform
+		Transform2 transform(entity->GetInterpolatedTransform(aContext.mParam / sim_step));
+
+		// apply recoil force
+		for (unsigned int id = aContext.mId; id != 0; id = Database::backlink.Get(id))
+		{
+			if (Collidable *collidable = Database::collidable.Get(id))
+			{
+				collidable->GetBody()->ApplyImpulse(transform.Rotate(Vector2(0, -recoil)), transform.p);
+				break;
+			}
+		}
+	}
+}
+
+static void WeaponFlash(EntityContext &aContext)
+{
+	unsigned int flash(Expression::Read<unsigned int>(aContext));
+	Transform2 position(Cast<Transform2, __m128>(Expression::Evaluate<__m128>(aContext)));
+	position.a *= float(M_PI) / 180.0f;
+
+	// get the entity
+	Entity *entity = Database::entity.Get(aContext.mId);
+
+	// interpolated transform
+	Transform2 basetransform(entity->GetInterpolatedTransform(aContext.mParam / sim_step));
+
+	// get world position
+	Transform2 transform(position * basetransform);
+
+	// instantiate a flash
+	if (unsigned int flashId = Database::Instantiate(flash, Database::owner.Get(aContext.mId), aContext.mId,
+		transform.a, transform.p, entity->GetVelocity(), entity->GetOmega()))
+	{
+		// set fractional turn
+		if (Renderable *renderable = Database::renderable.Get(flashId))
+			renderable->SetFraction(aContext.mParam / sim_step);
+
+		// link it (HACK)
+		LinkTemplate linktemplate;
+		linktemplate.mOffset = position;
+		linktemplate.mSub = flashId;
+		linktemplate.mSecondary = flashId;
+		Link *link = new Link(linktemplate, aContext.mId);
+		Database::Typed<Link *> &links = Database::link.Open(aContext.mId);
+		links.Put(flashId, link);
+		Database::link.Close(aContext.mId);
+		link->Activate();
+	}
+}
+
+static void WeaponOrdnance(EntityContext &aContext)
+{
+	// get parameters
+	unsigned int ordnance(Expression::Read<unsigned int>(aContext));
+	int track(Expression::Read<unsigned int>(aContext));
+	Transform2 position(Cast<Transform2, __m128>(Expression::Evaluate<__m128>(aContext)));
+	position.a *= float(M_PI) / 180.0f;
+	Transform2 velocity(Cast<Transform2, __m128>(Expression::Evaluate<__m128>(aContext)));
+	velocity.a *= float(M_PI) / 180.0f;
+
+	// get the entity
+	Entity *entity = Database::entity.Get(aContext.mId);
+
+	// interpolated transform
+	Transform2 basetransform(entity->GetInterpolatedTransform(aContext.mParam / sim_step));
+
+	// get world position
+	position *= basetransform;
+
+	// get world velocity
+	velocity.p = position.Rotate(velocity.p);
+
+	// instantiate a bullet
+	if (unsigned int ordId = Database::Instantiate(ordnance, Database::owner.Get(aContext.mId), aContext.mId, position.a, position.p, velocity.p, velocity.a))
+	{
+#ifdef DEBUG_WEAPON_CREATE_ORDNANCE
+		DebugPrint("ordnance=\"%s\" owner=\"%s\"\n",
+			Database::name.Get(ordId).c_str(),
+			Database::name.Get(Database::owner.Get(ordId)).c_str());
+#endif
+
+		// set fractional turn
+		if (Renderable *renderable = Database::renderable.Get(ordId))
+			renderable->SetFraction(aContext.mParam / sim_step);
+
+		// if tracking....
+		if (track)
+		{
+			// add a tracker
+			Database::weapontracker.Put(ordId, WeaponTracker(aContext.mId));
+		}
+	}
+}
+
+static void WeaponSound(EntityContext &aContext)
+{
+	unsigned int name(Expression::Read<unsigned int>(aContext));
+	PlaySoundCue(aContext.mId, name);
+}
+
+void WeaponStartRepeat(EntityContext &aContext)
+{
+	// initialize repeat count and sequence offset
+	unsigned int name(Expression::Read<unsigned int>(aContext));
+	aContext.mVars->Put(name, Expression::Evaluate<float>(aContext));
+	aContext.mVars->Put(name+1, Cast<float, unsigned int>(0));
+}
+
+void WeaponRepeat(EntityContext &aContext)
+{
+	const unsigned int *reset = aContext.mStream - 1;
+
+	// get repeat count and sequence offset
+	unsigned int name(Expression::Read<unsigned int>(aContext));
+	float count = aContext.mVars->Get(name);
+	unsigned int offset = Cast<unsigned int, float>(aContext.mVars->Get(name+1));
+
+	// get repeat block
+	size_t size(Expression::Read<size_t>(aContext));
+	const unsigned int *begin = aContext.mStream;
+	const unsigned int *end = aContext.mStream + size;
+
+	// resume from saved offset
+	aContext.mStream += offset;
+
+	// while iterations left...
+	while (count > 0.0f)
+	{
+		// evaluate the next expression
+		Expression::Evaluate<void>(aContext);
+
+		// if reaching the end...
+		if (aContext.mStream >= end)
+		{
+			// rewind and decrement the count
+			aContext.mStream = begin;
+			count -= 1;
+			if (count <= 0.0f)
+				break;
+		}
+
+		// if out of time...
+		if (aContext.mParam < -0.0001f)
+		{
+			// save repeat count and sequence offset
+			aContext.mVars->Put(name, count);
+			aContext.mVars->Put(name+1, Cast<float, unsigned int>(aContext.mStream - begin));
+			aContext.mStream = reset;
+			return;
+		}
+	}
+
+	// clear out variables
+	aContext.mVars->Delete(name);
+	aContext.mVars->Delete(name+1);
+
+	// jump to the end
+	aContext.mStream = end;
+}
+
+// build an action
+void WeaponTemplateOld::BuildAction(std::vector<unsigned int> &aAction, unsigned int aId) const
+{
+	// for each entry in the burst...
+	for (int burst = 0; burst < mBurstLength; ++burst)
+	{
+		if (burst == 0)
+		{
+			if (mBurstStart > 0.0f)
+			{
+				// add burst start delay
+				Expression::Append(aAction, WeaponWait, mBurstStart);
+			}
+		}
+		else
+		{
+			if (mBurstDelay > 0.0f)
+			{
+				// add burst delay
+				Expression::Append(aAction, WeaponWait, mBurstDelay);
+			}
+		}
+
+		// trigger sound cue
+		Expression::Append(aAction, WeaponSound, 0x8eab16d9 /* "fire" */);
+
+		// for each entry in the salvo...
+		for (int salvo = 0; salvo < mSalvoShots; ++salvo)
+		{
+			if (mFlash)
+			{
+				// emit a flash
+				Expression::Append(aAction, WeaponFlash, mFlash);
+				Expression::Append(aAction, Expression::Constant<__m128>, Cast<__m128, Transform2>(mOffset));
+			}
+
+			if (mOrdnance)
+			{
+				// emit an ordnance
+				Expression::Append(aAction, WeaponOrdnance, mOrdnance, Database::weapontemplate.Get(aId).mTrack);
+			
+				// position
+				if (mOffset.a != 0 || mOffset.p.x != 0 || mOffset.p.y != 0)
+				{
+					if (mScatter.a != 0 || mScatter.p.x != 0 || mScatter.p.y != 0)
+					{
+						Expression::Append(aAction, Expression::Add<__m128>);
+						Expression::Append(aAction, Expression::Constant<__m128>, Cast<__m128, Transform2>(mOffset));
+						Expression::Append(aAction, Expression::Mul<__m128>);
+						Expression::Append(aAction, Expression::Constant<__m128>, Cast<__m128, Transform2>(mScatter));
+						Expression::Append(aAction, Expression::ComponentNullary<__m128, 4>::Evaluate<float, Random::Float>);
+					}
+					else
+					{
+						Expression::Append(aAction, Expression::Constant<__m128>, Cast<__m128, Transform2>(mOffset));
+					}
+				}
+				else
+				{
+					if (mScatter.a != 0 || mScatter.p.x != 0 || mScatter.p.y != 0)
+					{
+						Expression::Append(aAction, Expression::Mul<__m128>);
+						Expression::Append(aAction, Expression::Constant<__m128>, Cast<__m128, Transform2>(mScatter));
+						Expression::Append(aAction, Expression::ComponentNullary<__m128, 4>::Evaluate<float, Random::Float>);
+					}
+					else
+					{
+						Expression::Append(aAction, Expression::Constant<__m128>, _mm_setzero_ps());
+					}
+				}
+
+				// velocity
+				// TO DO: get inherit to work
+				if (mVelocity.a != 0 || mVelocity.p.x != 0 || mVelocity.p.y != 0)
+				{
+					if (mVariance.a != 0 || mVariance.p.x != 0 || mVariance.p.y != 0)
+					{
+						Expression::Append(aAction, Expression::Add<__m128>);
+						Expression::Append(aAction, Expression::Constant<__m128>, Cast<__m128, Transform2>(mVelocity));
+						Expression::Append(aAction, Expression::Mul<__m128>);
+						Expression::Append(aAction, Expression::Constant<__m128>, Cast<__m128, Transform2>(mVariance));
+						Expression::Append(aAction, Expression::ComponentNullary<__m128, 4>::Evaluate<float, Random::Float>);
+					}
+					else
+					{
+						Expression::Append(aAction, Expression::Constant<__m128>, Cast<__m128, Transform2>(mVelocity));
+					}
+				}
+				else
+				{
+					if (mVariance.a != 0 || mVariance.p.x != 0 || mVariance.p.y != 0)
+					{
+						Expression::Append(aAction, Expression::Mul<__m128>);
+						Expression::Append(aAction, Expression::Constant<__m128>, Cast<__m128, Transform2>(mVariance));
+						Expression::Append(aAction, Expression::ComponentNullary<__m128, 4>::Evaluate<float, Random::Float>);
+					}
+					else
+					{
+						Expression::Append(aAction, Expression::Constant<__m128>, _mm_setzero_ps());
+					}
+				}
+			}
+		}
+	}
+}
+
+// configue a parameter
+static void ConfigureParameter(const TiXmlElement *element, const char *param, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
+{
+	// get constant value from attribute
+	float value = defaults[0];
+	element->QueryFloatAttribute(param, &value);
+
+	// if there is a child tag for the parameter...
+	if (const TiXmlElement *child = element->FirstChildElement(param))
+	{
+		// configure the expression
+		ConfigureExpressionRoot<float>(child, buffer, names, &value);
+	}
+	else
+	{
+		// append a constant expression
+		Expression::Append(buffer, Expression::Constant<float>, value);
+	}
+}
+
+bool WeaponTemplate::ConfigureAction(const TiXmlElement *element, unsigned int aId)
 {
 	// process child elements
 	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
@@ -170,55 +522,135 @@ bool WeaponTemplate::Configure(const TiXmlElement *element, unsigned int aId)
 		unsigned int aPropId = Hash(child->Value());
 		switch (aPropId)
 		{
-		case 0x14c8d3ca /* "offset" */:
+		case 0x892e4ca0 /* "wait" */:
 			{
-				if (child->QueryFloatAttribute("angle", &mOffset.a) == TIXML_SUCCESS)
-					mOffset.a *= float(M_PI) / 180.0f;
-				child->QueryFloatAttribute("x", &mOffset.p.x);
-				child->QueryFloatAttribute("y", &mOffset.p.y);
+				Expression::Append(mAction, WeaponWait);
+				ConfigureExpressionRoot<float>(child, mAction, sScalarNames, sScalarDefault);
 			}
 			break;
 
-		case 0xcab7a341 /* "scatter" */:
+		case 0xc4642eff /* "action" */:
 			{
-				if (child->QueryFloatAttribute("angle", &mScatter.a) == TIXML_SUCCESS)
-					mScatter.a *= float(M_PI) / 180.0f;
-				child->QueryFloatAttribute("x", &mScatter.p.x);
-				child->QueryFloatAttribute("y", &mScatter.p.y);
+				// reserve size
+				mAction.push_back(0);
+				int start = mAction.size();
+
+				// configure actions
+				ConfigureAction(child, aId);
+
+				// set size
+				mAction[start-1] = mAction.size() - start;
 			}
 			break;
 
-		case 0xca04efe0 /* "inherit" */:
+		case 0xd99ba82a /* "repeat" */:
 			{
-				if (child->QueryFloatAttribute("angle", &mInherit.a) == TIXML_SUCCESS)
-					mInherit.a *= float(M_PI) / 180.0f;
-				child->QueryFloatAttribute("x", &mInherit.p.x);
-				child->QueryFloatAttribute("y", &mInherit.p.y);
+				// generate an identifier based on offset
+				size_t id = mAction.size() * 4;
+
+				// configure loop setup
+				Expression::Append(mAction, WeaponStartRepeat, id);
+				ConfigureParameter(child, "count", mAction, sScalarNames, sScalarDefault);
+
+				// append loop repeat
+				Expression::Append(mAction, WeaponRepeat, id);
+
+				// configure loop body
+				mAction.push_back(0);
+				int start = mAction.size();
+				ConfigureAction(child, aId);
+				mAction[start-1] = mAction.size() - start;
 			}
 			break;
 
-		case 0x32741c32 /* "velocity" */:
-			{
-				if (child->QueryFloatAttribute("angle", &mVelocity.a) == TIXML_SUCCESS)
-					mVelocity.a *= float(M_PI) / 180.0f;
-				child->QueryFloatAttribute("x", &mVelocity.p.x);
-				child->QueryFloatAttribute("y", &mVelocity.p.y);
+		case 0x63734e77 /* "recoil" */:
+			Expression::Append(mAction, WeaponRecoil, mRecoil);
+			break;
 
-				// if the property has keyframes...
-				// (TO DO: handle this in a smarter way)
-				if (child->FirstChildElement())
+		case 0xaf85ad29 /* "flash" */:
+			Expression::Append(mAction, WeaponFlash, Hash(child->Attribute("name")));
+			if (const TiXmlElement *param = child->FirstChildElement("position"))
+				ConfigureExpressionRoot<__m128>(param, mAction, sTransformNames, sTransformDefault);
+			else
+				Expression::Append(mAction, Expression::Constant<__m128>, _mm_setzero_ps());
+			break;
+
+		case 0x399bf05d /* "ordnance" */:
+			Expression::Append(mAction, WeaponOrdnance, Hash(child->Attribute("name")), mTrack);
+			if (const TiXmlElement *param = child->FirstChildElement("position"))
+				ConfigureExpressionRoot<__m128>(param, mAction, sTransformNames, sTransformDefault);
+			else
+				Expression::Append(mAction, Expression::Constant<__m128>, _mm_setzero_ps());
+			if (const TiXmlElement *param = child->FirstChildElement("velocity"))
+				ConfigureExpressionRoot<__m128>(param, mAction, sTransformNames, sTransformDefault);
+			else
+				Expression::Append(mAction, Expression::Constant<__m128>, _mm_setzero_ps());
+			break;
+
+		case 0xe5561300 /* "cue" */:
+			Expression::Append(mAction, WeaponSound, Hash(child->Attribute("name")));
+			break;
+
+#if 0
+		case 0xd99ba82a /* "repeat" */:
+			{
+				int count = 1;
+				child->QueryIntAttribute("count", &count);
+
+				Expression::Append(mAction, Expression::Repeat, count);
+
+				mAction.push_back(0);
+				int start = mAction.size();
+				ConfigureAction(child, aId);
+				mAction[start-1] = mAction.size() - start;
+			}
+			break;
+#endif
+
+		case 0xddef486b /* "loop" */:
+			{
+				unsigned int name = Hash(child->Attribute("name"));
+				float from = 0.0f;
+				child->QueryFloatAttribute("from", &from);
+				float to = 0.0f;
+				child->QueryFloatAttribute("to", &to);
+				float by = from < to ? 1.0f : -1.0f;
+				child->QueryFloatAttribute("by", &by);
+
+				if ((to - from) * by <= 0)
 				{
-					// process the interpolator item
-					Database::Typed<std::vector<unsigned int> > &properties = Database::weaponproperty.Open(aId);
-					std::vector<unsigned int> &buffer = properties.Open(aPropId);
-					const char *names[] = { "angle", "x", "y" };
-					ConfigureInterpolatorItem(child, buffer, sizeof(mVelocity)/sizeof(float), names, (float *)(&mVelocity));
-					properties.Close(aPropId);
-					Database::weaponproperty.Close(aId);
+					DebugPrint("loop name=\"%s\" from=\"%f\" to=\"%f\" by=\"%f\" would never terminate\n");
+					break;
 				}
+
+				Expression::Append(mAction, Expression::Loop, name);
+				Expression::Append(mAction, from, to, by);
+
+				mAction.push_back(0);
+				int start = mAction.size();
+				ConfigureAction(child, aId);
+				mAction[start-1] = mAction.size() - start;
 			}
 			break;
+		}
+	}
 
+	return true;
+}
+
+bool WeaponTemplate::Configure(const TiXmlElement *element, unsigned int aId)
+{
+	// clear any existing action
+	// TO DO: support inheritance
+	// TO DO: support "call"
+	mAction.clear();
+
+	// process child elements
+	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+	{
+		unsigned int aPropId = Hash(child->Value());
+		switch (aPropId)
+		{
 		case 0x383251f6 /* "aim" */:
 			{
 				element->QueryFloatAttribute("x", &mAim.x);
@@ -226,40 +658,9 @@ bool WeaponTemplate::Configure(const TiXmlElement *element, unsigned int aId)
 			}
 			break;
 
-		case 0x0dd0b0be /* "variance" */:
-			{
-				if (child->QueryFloatAttribute("angle", &mVariance.a) == TIXML_SUCCESS)
-					mVariance.a *= float(M_PI) / 180.0f;
-				child->QueryFloatAttribute("x", &mVariance.p.x);
-				child->QueryFloatAttribute("y", &mVariance.p.y);
-			}
-			break;
-
 		case 0x63734e77 /* "recoil" */:
 			{
 				child->QueryFloatAttribute("value", &mRecoil);
-			}
-			break;
-
-		case 0x399bf05d /* "ordnance" */:
-			{
-				if (const char *ordnance = child->Attribute("name"))
-					mOrdnance = Hash(ordnance);
-			}
-			break;
-
-		case 0xaf85ad29 /* "flash" */:
-			{
-				if (const char *flash = child->Attribute("name"))
-					mFlash = Hash(flash);
-			}
-			break;
-
-		case 0x75413203 /* "trigger" */:
-			{
-				if (child->QueryIntAttribute("channel", &mChannel) == TIXML_SUCCESS)
-					--mChannel;
-				// TO DO: support single/automatic/charge
 			}
 			break;
 
@@ -272,16 +673,19 @@ bool WeaponTemplate::Configure(const TiXmlElement *element, unsigned int aId)
 			}
 			break;
 
-		case 0xfd3600a1 /* "burst" */:
+		case 0x75413203 /* "trigger" */:
 			{
-				child->QueryIntAttribute("length", &mBurstLength);
-				child->QueryFloatAttribute("delay", &mBurstDelay);
-			}
-			break;
-
-		case 0x8ac0eddc /* "salvo" */:
-			{
-				child->QueryIntAttribute("shots", &mSalvoShots);
+				// TO DO: support single/automatic/charge
+				switch (Hash(child->Attribute("type")))
+				{
+				case 0xadc649b8 /* "hold" */:		mTrigger = TRIGGER_HOLD; break;
+				case 0x01fcf9b4 /* "press" */:		mTrigger = TRIGGER_PRESS; break;
+				case 0x1036ae7e /* "release" */:	mTrigger = TRIGGER_RELEASE; break;
+				case 0x316c9fa1 /* "invert" */:		mTrigger = TRIGGER_INVERT; break;
+				case 0x6736afe4 /* "always" */:		mTrigger = TRIGGER_ALWAYS; break;
+				};
+				if (child->QueryIntAttribute("channel", &mChannel) == TIXML_SUCCESS)
+					--mChannel;
 			}
 			break;
 
@@ -292,7 +696,128 @@ bool WeaponTemplate::Configure(const TiXmlElement *element, unsigned int aId)
 				child->QueryFloatAttribute("cost", &mCost);
 			}
 			break;
+
+		case 0xc4642eff /* "action" */:
+			ConfigureAction(child, aId);
+			break;
+
+			//
+			// BACKWARDS COMPATIBILITY
+
+		case 0x14c8d3ca /* "offset" */:
+			{
+				WeaponTemplateOld &old = Database::weapontemplateold.Open(aId);
+				child->QueryFloatAttribute("angle", &old.mOffset.a);
+				child->QueryFloatAttribute("x", &old.mOffset.p.x);
+				child->QueryFloatAttribute("y", &old.mOffset.p.y);
+				Database::weapontemplateold.Close(aId);
+			}
+			break;
+
+		case 0xcab7a341 /* "scatter" */:
+			{
+				WeaponTemplateOld &old = Database::weapontemplateold.Open(aId);
+				child->QueryFloatAttribute("angle", &old.mScatter.a);
+				child->QueryFloatAttribute("x", &old.mScatter.p.x);
+				child->QueryFloatAttribute("y", &old.mScatter.p.y);
+				Database::weapontemplateold.Close(aId);
+			}
+			break;
+
+		case 0xca04efe0 /* "inherit" */:
+			{
+				WeaponTemplateOld &old = Database::weapontemplateold.Open(aId);
+				child->QueryFloatAttribute("angle", &old.mInherit.a);
+				child->QueryFloatAttribute("x", &old.mInherit.p.x);
+				child->QueryFloatAttribute("y", &old.mInherit.p.y);
+				Database::weapontemplateold.Close(aId);
+			}
+			break;
+
+		case 0x32741c32 /* "velocity" */:
+			{
+				WeaponTemplateOld &old = Database::weapontemplateold.Open(aId);
+				child->QueryFloatAttribute("angle", &old.mVelocity.a);
+				child->QueryFloatAttribute("x", &old.mVelocity.p.x);
+				child->QueryFloatAttribute("y", &old.mVelocity.p.y);
+
+#if 0	// Dreadnought Crisis
+				// if the property has keyframes...
+				// (TO DO: handle this in a smarter way)
+				if (child->FirstChildElement())
+				{
+					// process the interpolator item
+					Database::Typed<std::vector<unsigned int> > &properties = Database::weaponproperty.Open(aId);
+					std::vector<unsigned int> &buffer = properties.Open(aPropId);
+					const char *names[] = { "angle", "x", "y" };
+					ConfigureInterpolatorItem(child, buffer, sizeof(mVelocity)/sizeof(float), names, (float *)(&mVelocity));
+					properties.Close(aPropId);
+					Database::weaponproperty.Close(aId);
+				}
+#endif
+				Database::weapontemplateold.Close(aId);
+			}
+			break;
+
+		case 0x0dd0b0be /* "variance" */:
+			{
+				WeaponTemplateOld &old = Database::weapontemplateold.Open(aId);
+				child->QueryFloatAttribute("angle", &old.mVariance.a);
+				child->QueryFloatAttribute("x", &old.mVariance.p.x);
+				child->QueryFloatAttribute("y", &old.mVariance.p.y);
+				Database::weapontemplateold.Close(aId);
+			}
+			break;
+
+		case 0x399bf05d /* "ordnance" */:
+			{
+				if (const char *ordnance = child->Attribute("name"))
+				{
+					WeaponTemplateOld &old = Database::weapontemplateold.Open(aId);
+					old.mOrdnance = Hash(ordnance);
+					Database::weapontemplateold.Close(aId);
+				}
+			}
+			break;
+
+		case 0xaf85ad29 /* "flash" */:
+			{
+				if (const char *flash = child->Attribute("name"))
+				{
+					WeaponTemplateOld &old = Database::weapontemplateold.Open(aId);
+					old.mFlash = Hash(flash);
+					Database::weapontemplateold.Close(aId);
+				}
+			}
+			break;
+
+		case 0xfd3600a1 /* "burst" */:
+			{
+				WeaponTemplateOld &old = Database::weapontemplateold.Open(aId);
+				child->QueryFloatAttribute("start", &old.mBurstStart);
+				child->QueryIntAttribute("length", &old.mBurstLength);
+				child->QueryFloatAttribute("delay", &old.mBurstDelay);
+				Database::weapontemplateold.Close(aId);
+			}
+			break;
+
+		case 0x8ac0eddc /* "salvo" */:
+			{
+				WeaponTemplateOld &old = Database::weapontemplateold.Open(aId);
+				child->QueryIntAttribute("shots", &old.mSalvoShots);
+				Database::weapontemplateold.Close(aId);
 		}
+			break;
+
+			//
+		}
+	}
+
+	// if no action specified...
+	if (mAction.empty())
+	{
+		// generate compatibility action
+		Database::weapontemplateold.Get(aId).BuildAction(mAction, aId);
 	}
 
 	return true;
@@ -304,25 +829,38 @@ Weapon::Weapon(void)
 , mControlId(0)
 , mChannel(0)
 , mTrack(0)
-, mBurst(0)
+, mIndex(0)
 , mTimer(0.0f)
+, mLocal(0.0f)
 , mPhase(0)
 , mAmmo(0)
 {
-	SetAction(Action(this, &Weapon::Update));
 }
 
 Weapon::Weapon(const WeaponTemplate &aTemplate, unsigned int aId)
 : Updatable(aId)
 , mControlId(0)
 , mChannel(aTemplate.mChannel)
+, mPrevFire(0.0f)
 , mTrack(0)
-, mBurst(0)
+, mIndex(aTemplate.mAction.size())
 , mTimer(0.0f)
+, mLocal(0.0f)
 , mPhase(aTemplate.mPhase)
 , mAmmo(0)
 {
-	SetAction(Action(this, &Weapon::Update));
+	// if the action is empty...
+	if (aTemplate.mAction.empty())
+	{
+		// set to none
+		DebugPrint("warning: weapon \"%s\" has no action\n", Database::name.Get(aId));
+		SetAction(Action(this, &Weapon::UpdateNone));
+	}
+	else
+	{
+		// set to ready
+		SetAction(Action(this, &Weapon::UpdateReady));
+	}
 
 	// if the weapon uses ammo...
 	if (aTemplate.mCost)
@@ -336,194 +874,166 @@ Weapon::~Weapon(void)
 {
 }
 
-// Weapon Update
-void Weapon::Update(float aStep)
+// weapon none update
+void Weapon::UpdateNone(float aStep)
+{
+}
+
+// weapon ready update
+void Weapon::UpdateReady(float aStep)
 {
 	// get controller
 	const Controller *controller = Database::controller.Get(mControlId);
 	if (!controller)
 		return;
 
+	// get template data
+	const WeaponTemplate &weapon = Database::weapontemplate.Get(mId);
+
+	// get trigger value
+	float fire = controller->mFire[mChannel];
+	bool trigger;
+	switch (weapon.mTrigger)
+	{
+	default:
+	case WeaponTemplate::TRIGGER_HOLD: trigger = fire != 0; break;
+	case WeaponTemplate::TRIGGER_PRESS: trigger = fire != 0 && mPrevFire == 0; break;
+	case WeaponTemplate::TRIGGER_RELEASE: trigger = fire == 0 && mPrevFire != 0; break;
+	case WeaponTemplate::TRIGGER_INVERT: trigger = fire == 0; break;
+	case WeaponTemplate::TRIGGER_ALWAYS: trigger = true; break;
+	}
+	mPrevFire = fire;
+
+	// if triggered...
+	if (trigger)
+	{
+		// rewind main timer
+		mTimer -= weapon.mDelay / weapon.mCycle;
+
+		// if firing on this phase...
+		if (mPhase == 0)
+		{
+			Resource *resource = NULL;
+
+			// if using ammo
+			if (weapon.mCost)
+			{
+				// ammo resource (if any)
+				resource = Database::resource.Get(mAmmo).Get(weapon.mType);
+			}
+
+			// if enough ammo...
+			if (!resource || weapon.mCost <= resource->GetValue())
+			{
+				// deduct ammo
+				if (resource)
+					resource->Add(mId, -weapon.mCost);
+
+				// set action index
+				mIndex = 0;
+
+				// set local timer
+				mLocal = -aStep;
+
+				// switch to action
+				SetAction(Action(this, &Weapon::UpdateAction));
+				UpdateAction(aStep);
+			}
+			else
+			{
+				// start "empty" sound cue
+				PlaySoundCue(mId, 0x18a7beee /* "empty" */);
+
+				// switch to delay
+				SetAction(Action(this, &Weapon::UpdateDelay));
+				UpdateDelay(aStep);
+			}
+
+			// wrap around
+			mPhase = weapon.mCycle - 1;
+		}
+		else
+		{
+			// advance phase
+			--mPhase;
+
+			// switch to delay
+			SetAction(Action(this, &Weapon::UpdateDelay));
+			UpdateDelay(aStep);
+		}
+	}
+}
+
+void Weapon::UpdateDelay(float aStep)
+{
 	// advance fire timer
 	mTimer += aStep;
+
+	// if the timer elapses...
+	if (mTimer > -0.001f)
+	{
+		// advance to next event
+		aStep -= mTimer;
+		mTimer = 0.0f;
+
+		// switch to ready
+		SetAction(Action(this, &Weapon::UpdateReady));
+		UpdateReady(aStep);
+	}
+}
+
+void Weapon::UpdateAction(float aStep)
+{
+	// advance the local timer
+	mLocal += aStep;
+
+	// update fire timer
+	mTimer += aStep;
+	if (mTimer > 0.0f)
+		mTimer = 0.0f;
+
+	// if still waiting...
+	if (mLocal < -0.001f)
+	{
+		// done
+		return;
+	}
 
 	// get template data
 	const WeaponTemplate &weapon = Database::weapontemplate.Get(mId);
 
-	// if triggered...
-	if (controller->mFire[mChannel])
+	// create an entity context
+	EntityContext context(&weapon.mAction.front(), weapon.mAction.size(), mLocal, mId);
+	context.mStream += mIndex;
+
+	// evaluate actions
+	while (context.mParam > -0.001f && context.mStream < context.mEnd)
+		Expression::Evaluate<void>(context);
+
+	// read updated context
+	mIndex = context.mStream - context.mBegin;
+	mLocal = context.mParam;
+
+	// if the action is completed or out of track slots...
+	if (context.mStream >= context.mEnd || weapon.mTrack && mTrack >= weapon.mTrack)
 	{
-		// if not busy
-		if (mBurst <= 0 && mTimer > 0.0f && (!weapon.mTrack || mTrack < weapon.mTrack))
+		// update fire timer
+		mTimer += mLocal;
+
+		if (mTimer > -aStep)
 		{
-			// if firing on this phase...
-			if (mPhase == 0)
-			{
-				Resource *resource = NULL;
+			// advance to next event
+			aStep = -mTimer;
+			mTimer = 0.0f;
 
-				// if using ammo
-				if (weapon.mCost)
-				{
-					// ammo resource (if any)
-					resource = Database::resource.Get(mAmmo).Get(weapon.mType);
-				}
-
-				// if enough ammo...
-				if (!resource || weapon.mCost <= resource->GetValue())
-				{
-					// deduct ammo
-					if (resource)
-						resource->Add(mId, -weapon.mCost);
-
-					// start a new burst
-					mBurst = weapon.mBurstLength;
-				}
-				else
-				{
-					// start "empty" sound cue
-					PlaySoundCue(mId, 0x18a7beee /* "empty" */);
-				}
-
-				// wrap around
-				mPhase = weapon.mCycle - 1;
-			}
-			else
-			{
-				// advance phase
-				--mPhase;
-
-				// wait for next phase
-				mTimer -= weapon.mDelay / weapon.mCycle;
-			}
+			// switch to ready
+			SetAction(Action(this, &Weapon::UpdateReady));
+			UpdateReady(aStep);
 		}
-	}
-
-	// if ready to fire...
-	while (mBurst > 0 && mTimer > 0.0f && (!weapon.mTrack || mTrack < weapon.mTrack))
-	{
-		// deduct a burst
-		--mBurst;
-
-		// get the entity
-		Entity *entity = Database::entity.Get(mId);
-
-		// start the "fire" sound cue
-		PlaySoundCue(mId, 0x8eab16d9 /* "fire" */);
-
-		// interpolated transform
-		Transform2 basetransform(entity->GetInterpolatedTransform(mTimer / aStep));
-
-		for (int salvo = 0; salvo < weapon.mSalvoShots; ++salvo)
-		{
-			// get local position
-			Transform2 position(weapon.mOffset);
-
-			// apply transform offset
-			Transform2 transform(position * basetransform);
-
-			if (weapon.mRecoil)
-			{
-				// apply recoil force
-				for (unsigned int id = mId; id != 0; id = Database::backlink.Get(id))
-				{
-					if (Collidable *collidable = Database::collidable.Get(id))
-					{
-						collidable->GetBody()->ApplyImpulse(transform.Rotate(Vector2(0, -weapon.mRecoil)), transform.p);
-						break;
-					}
-				}
-			}
-
-			if (weapon.mFlash)
-			{
-				// instantiate a flash
-				unsigned int flashId = Database::Instantiate(weapon.mFlash, Database::owner.Get(mId), mId,
-					transform.Angle(), transform.p, entity->GetVelocity(), entity->GetOmega());
-
-				// set fractional turn
-				if (Renderable *renderable = Database::renderable.Get(flashId))
-					renderable->SetFraction(mTimer / aStep);
-
-				// link it (HACK)
-				LinkTemplate linktemplate;
-				linktemplate.mOffset = weapon.mOffset;
-				linktemplate.mSub = flashId;
-				linktemplate.mSecondary = flashId;
-				Link *link = new Link(linktemplate, mId);
-				Database::Typed<Link *> &links = Database::link.Open(mId);
-				links.Put(flashId, link);
-				Database::link.Close(mId);
-				link->Activate();
-			}
-
-			if (weapon.mOrdnance)
-			{
-				// TO DO: consolidate this with similar spawn patterns (Graze, Spawner)
-
-				// apply position scatter
-				position.a += Random::Value(0.0f, weapon.mScatter.a);
-				position.p.x += Random::Value(0.0f, weapon.mScatter.p.x);
-				position.p.y += Random::Value(0.0f, weapon.mScatter.p.y);
-
-				// get world position
-				position *= basetransform;
-
-				// get local velocity
-				Transform2 velocity(entity->GetOmega(), position.Unrotate(entity->GetVelocity()));
-
-				// apply velocity inherit
-				velocity.a *= weapon.mInherit.a;
-				velocity.p.x *= weapon.mInherit.p.x;
-				velocity.p.y *= weapon.mInherit.p.y;
-
-				// apply velocity add
-				velocity.a += weapon.mVelocity.a;
-				velocity.p.x += weapon.mVelocity.p.x;
-				velocity.p.y += weapon.mVelocity.p.y;
-
-				// apply velocity variance
-				velocity.a += Random::Value(0.0f, weapon.mVariance.a);
-				velocity.p.x += Random::Value(0.0f, weapon.mScatter.p.x);
-				velocity.p.y += Random::Value(0.0f, weapon.mScatter.p.y);
-
-				// apply velocity aim
-				velocity.p.x += controller->mAim.x * weapon.mAim.x;
-				velocity.p.y += controller->mAim.y * weapon.mAim.y;
-
-				// get world velocity
-				velocity.p = position.Rotate(velocity.p);
-
-				// instantiate a bullet
-				unsigned int ordId = Database::Instantiate(weapon.mOrdnance, Database::owner.Get(mId), mId, position.a, position.p, velocity.p, velocity.a);
-#ifdef DEBUG_WEAPON_CREATE_ORDNANCE
-				DebugPrint("ordnance=\"%s\" owner=\"%s\"\n",
-					Database::name.Get(ordId).c_str(),
-					Database::name.Get(Database::owner.Get(ordId)).c_str());
-#endif
-
-				// set fractional turn
-				if (Renderable *renderable = Database::renderable.Get(ordId))
-					renderable->SetFraction(mTimer / aStep);
-
-				// if tracking....
-				if (weapon.mTrack)
-				{
-					// add a tracker
-					Database::weapontracker.Put(ordId, WeaponTracker(mId));
-				}
-			}
-		}
-
-		// update weapon delay
-		if (mBurst > 0)
-			mTimer -= weapon.mBurstDelay;
 		else
-			mTimer -= (weapon.mDelay - weapon.mBurstDelay * (weapon.mBurstLength - 1)) / weapon.mCycle;
-	}
-
-	if (mTimer > 0.0f)
-	{
-		// clamp fire delay
-		mTimer = 0.0f;
+		{
+		// switch to delay
+		SetAction(Action(this, &Weapon::UpdateDelay));
+		}
 	}
 }

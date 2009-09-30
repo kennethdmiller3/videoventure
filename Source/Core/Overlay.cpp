@@ -55,8 +55,8 @@ void Overlay::Hide(void)
 {
 	if (mActive)
 	{
-		Detach();
 		mActive = false;
+		Detach();
 	}
 }
 
@@ -80,9 +80,15 @@ void Overlay::RenderAll(Overlay &aRoot)
 			// TO DO: replace this with expressions
 			float t = fmodf((int(sim_turn - itor->mStart) + sim_fraction - itor->mFraction) * sim_step, overlay.mPeriod);
 
+			// push a transform
+			glPushMatrix();
+
 			// perform action
 			// TO DO: support transform parameter
 			(itor->mAction)(itor->mId, t, Transform2::Identity());
+
+			// reset the transform
+			glPopMatrix();
 		}
 
 		// recurse on children

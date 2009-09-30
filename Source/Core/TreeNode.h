@@ -66,9 +66,9 @@ template <typename T> struct TreeNode
 		mParent = NULL;
 		if (mPrevSibling)
 			mPrevSibling->mNextSibling = mNextSibling;
-		mPrevSibling = NULL;
 		if (mNextSibling)
 			mNextSibling->mPrevSibling = mPrevSibling;
+		mPrevSibling = NULL;
 		mNextSibling = NULL;
 	}
 };

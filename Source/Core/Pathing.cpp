@@ -61,6 +61,36 @@ static void AddGridSlab(const b2AABB &aabb, Color4 &color)
 	glEnd();
 }
 
+class GridQueryCallback : public b2QueryCallback
+{
+public:
+	b2Filter mFilter;
+	b2Fixture *mBlocker;
+
+public:
+	GridQueryCallback(const b2Filter &aFilter)
+		: mFilter(aFilter), mBlocker(NULL)
+	{
+	}
+
+	virtual bool ReportFixture(b2Fixture* fixture)
+	{
+		// skip unhittable fixtures
+		if (fixture->IsSensor())
+			return true;
+		if (!Collidable::CheckFilter(fixture->GetFilterData(), mFilter))
+			return true;
+
+		// get the parent body
+		b2Body* body = fixture->GetBody();
+		if (!body->IsStatic())
+			return true;
+
+		mBlocker = fixture;
+		return false;
+	}
+};
+
 void BuildPathingGrid(const int aZoneSize, const int aCellSize)
 {
 	if (grid_handle)
@@ -91,11 +121,15 @@ void BuildPathingGrid(const int aZoneSize, const int aCellSize)
 	// get the collision world
 	b2World *world = Collidable::GetWorld();
 
-	// create a probe shape
-	b2PolygonDef probedef;
-	probedef.SetAsBox(aCellSize * 0.5f, aCellSize * 0.5f, b2Vec2(aCellSize * 0.5f, aCellSize * 0.5f), 0.0f);
-	probedef.isSensor = true;
-	b2Shape *probe = world->GetGroundBody()->CreateShape(&probedef);
+	// create a probe fixture
+	b2PolygonShape probeshape;
+	probeshape.SetAsBox(aCellSize * 0.5f, aCellSize * 0.5f, b2Vec2(aCellSize * 0.5f, aCellSize * 0.5f), 0.0f);
+	b2BodyDef probebodydef;
+	b2Body *probebody = world->CreateBody(&probebodydef);
+	b2FixtureDef probefixturedef;
+	probefixturedef.shape = &probeshape;
+	probefixturedef.isSensor = true;
+	b2Fixture *probe = probebody->CreateFixture(&probefixturedef);
 
 	// for each zone row...
 	for (int zy = zy0; zy < zy1; ++zy)
@@ -129,51 +163,20 @@ void BuildPathingGrid(const int aZoneSize, const int aCellSize)
 				// for each cell column...
 				for (int col = 0; col < cell_side; ++col)
 				{
-					// get shapes intersecting the cell
+					// probe filter
+					static const b2Filter aFilter = { 1 << 0, 0xFFFF, 0 };
+
+					// get fixtures intersecting the cell
 					b2AABB cell_aabb;
 					cell_aabb.lowerBound.x = zone_aabb.lowerBound.x + (col) * aCellSize;
 					cell_aabb.lowerBound.y = zone_aabb.lowerBound.y + (row) * aCellSize;
 					cell_aabb.upperBound.x = zone_aabb.lowerBound.x + (col + 1) * aCellSize;
 					cell_aabb.upperBound.y = zone_aabb.lowerBound.y + (row + 1) * aCellSize;
-					b2Shape* shapes[b2_maxProxies];
-					int count = world->Query(cell_aabb, shapes, b2_maxProxies);
-
-					// probe transform
-					b2XForm probe_xform(cell_aabb.lowerBound, b2Mat22(1, 0, 0, 1));
-
-					static const unsigned int aCategoryBits = 1 << 0;
-					static const unsigned int aMaskBits = 0xFFFF;
-
-					bool blocked = false;
-					for (int i = 0; i < count; ++i)
-					{
-						// get the shape
-						b2Shape *shape = shapes[i];
-
-						// skip unhittable shapes
-						if (shape->IsSensor())
-							continue;
-						if ((shape->GetFilterData().maskBits & aCategoryBits) == 0)
-							continue;
-						if ((shape->GetFilterData().categoryBits & aMaskBits) == 0)
-							continue;
-
-						// get the parent body
-						b2Body* body = shape->GetBody();
-						if (!body->IsStatic())
-							continue;
-
-						// probe intersection
-						b2Vec2 x1, x2;
-						if (b2Distance(&x1, &x2, probe, probe_xform, shape, body->GetXForm()) <= 0.0f)
-						{
-							blocked = true;
-							break;
-						}
-					}
+					GridQueryCallback callback(aFilter);
+					world->QueryAABB(&callback, cell_aabb);
 
 					// cell type (0=empty, 1=blocked)
-					cell_map[row * cell_side + col] = blocked;
+					cell_map[row * cell_side + col] = callback.mBlocker != NULL;
 				}
 			}
 
@@ -258,8 +261,8 @@ void BuildPathingGrid(const int aZoneSize, const int aCellSize)
 		}
 	}
 
-	// destroy the probe shape
-	world->GetGroundBody()->DestroyShape(probe);
+	// destroy the probe fixture
+	world->DestroyBody(probebody);
 
 	glEndList();
 }

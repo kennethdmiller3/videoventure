@@ -4,6 +4,7 @@
 #include "Collidable.h"
 #include "Explosion.h"
 #include "Damagable.h"
+#include "Cancelable.h"
 #include "Link.h"
 #include "Team.h"
 #include "Expire.h"
@@ -115,15 +116,15 @@ Bullet::Bullet(void)
 Bullet::Bullet(const BulletTemplate &aTemplate, unsigned int aId)
 : mId(aId), mDestroy(false)
 {
-	Database::Typed<Collidable::ContactListener> &listeners = Database::collidablecontactadd.Open(mId);
-	listeners.Put(Database::Key(this), Collidable::ContactListener(this, &Bullet::Collide));
+	Collidable::ContactSignal &signal = Database::collidablecontactadd.Open(mId);
+	signal.Connect(this, &Bullet::Collide);
 	Database::collidablecontactadd.Close(mId);
 }
 
 Bullet::~Bullet(void)
 {
-	Database::Typed<Collidable::ContactListener> &listeners = Database::collidablecontactadd.Open(mId);
-	listeners.Delete(Database::Key(this));
+	Collidable::ContactSignal &signal = Database::collidablecontactadd.Open(mId);
+	signal.Disconnect(this, &Bullet::Collide);
 	Database::collidablecontactadd.Close(mId);
 }
 
@@ -206,7 +207,7 @@ void BulletKillUpdate::operator delete(void *aPtr)
 #endif
 
 
-void Bullet::Collide(unsigned int aId, unsigned int aHitId, float aFraction, const b2ContactPoint &aPoint)
+void Bullet::Collide(unsigned int aId, unsigned int aHitId, float aFraction, const b2Contact &aContact)
 {
 	// do nothing if destroyed...
 	if (mDestroy)
@@ -227,8 +228,7 @@ void Bullet::Collide(unsigned int aId, unsigned int aHitId, float aFraction, con
 		if (!aTeam || !aHitTeam || aTeam != aHitTeam)
 		{
 			// if the recipient is damagable...
-			Damagable *damagable = Database::damagable.Get(aHitId);
-			if (damagable)
+			if (Damagable *damagable = Database::damagable.Get(aHitId))
 			{
 				// apply damage value
 #ifdef DEBUG_BULLET_APPLY_DAMAGE
@@ -241,6 +241,13 @@ void Bullet::Collide(unsigned int aId, unsigned int aHitId, float aFraction, con
 #endif
 				damagable->Damage(mId, bullet.mDamage);
 				mDestroy = true;
+			}
+
+			// if the recipient is cancelable...
+			if (Cancelable *cancelable = Database::cancelable.Get(aHitId))
+			{
+				// apply cancel
+				cancelable->Cancel(aHitId, mId);
 			}
 		}
 	}
@@ -296,8 +303,11 @@ void Bullet::Collide(unsigned int aId, unsigned int aHitId, float aFraction, con
 	// if spawning on impact...
 	if (bullet.mSpawnOnImpact)
 	{
+		b2WorldManifold worldManifold;
+		aContact.GetWorldManifold(&worldManifold);
+
 		// estimate the point of impact
-		b2Vec2 position(aPoint.position - aPoint.separation * aPoint.normal);
+		b2Vec2 position(worldManifold.m_points[0]);
 
 		// spawn the template
 		unsigned int spawnId = Database::Instantiate(bullet.mSpawnOnImpact, Database::owner.Get(mId), mId, 0, Vector2(position), Vector2(0, 0), 0);

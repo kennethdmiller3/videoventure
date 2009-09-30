@@ -32,6 +32,31 @@ namespace Database
 				DebugPrint("Unrecognized tag \"%s\"\n", value);
 		}
 
+		class InheritLoader
+		{
+		public:
+			InheritLoader()
+			{
+				AddConfigure(0xca04efe0 /* "inherit" */, Entry(this, &InheritLoader::Configure));
+			}
+
+			void Configure(unsigned int aId, const TiXmlElement *element)
+			{
+				// get base type name
+				if (const char *type = element->Attribute("type"))
+				{
+					// get import identifier
+					unsigned int aImportId = Hash(type);
+					if (!Database::name.Find(aImportId))
+						DebugPrint("warning: \"%s\" base type \"%s\" not found\n", Database::name.Get(aId), type);
+
+					// inherit components
+					Database::Inherit(aId, aImportId);
+				}
+			}
+		}
+		inheritloader;
+
 		class TemplateLoader
 		{
 		public:
@@ -42,15 +67,17 @@ namespace Database
 
 			void Configure(unsigned int aId, const TiXmlElement *element)
 			{
-				// get parent identifier
-				const char *type = element->Attribute("type");
-				unsigned int aParentId = Hash(type);
+				// get base type name
+				if (const char *type = element->Attribute("type"))
+				{
+					// get parent identifier
+					unsigned int aParentId = Hash(type);
+					if (!Database::name.Find(aParentId))
+						DebugPrint("warning: template \"%s\" base type \"%s\" not found\n", element->Attribute("name"), type);
 
-				if (aParentId && !Database::name.Find(aParentId))
-					DebugPrint("warning: template \"%s\" parent \"%s\" not found\n", element->Attribute("name"), type);
-
-				// inherit parent components
-				Database::Inherit(aId, aParentId);
+					// inherit parent components
+					Database::Inherit(aId, aParentId);
+				}
 
 				// set name
 				std::string &namebuf = Database::name.Open(aId);
@@ -77,20 +104,22 @@ namespace Database
 
 			void Configure(unsigned int aId, const TiXmlElement *element)
 			{
-				// get parent identifier
-				const char *type = element->Attribute("type");
-				unsigned int aParentId = Hash(type);
-
-				if (aParentId && !Database::name.Find(aParentId))
-					DebugPrint("warning: entity \"%s\" parent \"%s\" not found\n", element->Attribute("name"), type);
+				// get base type name
+				if (const char *type = element->Attribute("type"))
+				{
+					// get parent identifier
+					unsigned int aParentId = Hash(type);
+					if (!Database::name.Find(aParentId))
+						DebugPrint("warning: entity \"%s\" base type \"%s\" not found\n", element->Attribute("name"), type);
+					
+					// set parent
+					Database::parent.Put(aId, aParentId);
+				}
 
 				// set name
 				std::string &namebuf = Database::name.Open(aId);
 				namebuf = element->Attribute("name");
 				Database::name.Close(aId);
-				
-				// set parent
-				Database::parent.Put(aId, aParentId);
 
 				// objects default to owning themselves
 				Database::owner.Put(aId, aId);

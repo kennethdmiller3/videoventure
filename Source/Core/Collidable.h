@@ -1,12 +1,53 @@
 #pragma once
 
 #include "Database.h"
+#include "Signal.h"
 
 const int COLLISION_LAYERS = 32;
 
+// TO DO: configure this from the level file
+const float sLengthUnitsPerMeter = 16.0f;
+const float sMetersPerLengthUnit = 1.0f/sLengthUnitsPerMeter;
+
 class LinkTemplate;
 
-extern void ConfigureFilterData(b2FilterData &aFilter, const TiXmlElement *element);
+extern void ConfigureFilterData(b2Filter &aFilter, const TiXmlElement *element);
+
+struct CollisionCircleDef 
+{
+	b2FixtureDef mFixture;
+	b2CircleShape mShape;
+
+	CollisionCircleDef()
+	{
+		mFixture.shape = &mShape;
+	}
+	CollisionCircleDef(const CollisionCircleDef &aSrc)
+	{
+		mFixture = aSrc.mFixture;
+		mShape = aSrc.mShape;
+		mFixture.shape = &mShape;
+	}
+};
+struct CollisionPolygonDef 
+{
+	b2FixtureDef mFixture;
+	b2PolygonShape mShape;
+
+	CollisionPolygonDef()
+	{
+		mFixture.shape = &mShape;
+	}
+	CollisionPolygonDef(const CollisionPolygonDef &aSrc)
+	{
+		mFixture = aSrc.mFixture;
+		mShape = aSrc.mShape;
+		mFixture.shape = &mShape;
+	}
+};
+
+typedef boost::variant<int, CollisionCircleDef, CollisionPolygonDef> CollisionShapeDef;
+typedef boost::variant<int, b2RevoluteJointDef, b2PrismaticJointDef, b2DistanceJointDef, b2PulleyJointDef, b2LineJointDef> CollisionJointDef;
 
 class CollidableTemplate
 {
@@ -17,15 +58,11 @@ public:
 	// body definition
 	b2BodyDef bodydef;
 
-#ifndef COLLIDABLE_SHAPE_DATABASE
 	// shape definitions
-	Database::Typed<b2ShapeDef *> shapes;
-#endif
+	Database::Typed<CollisionShapeDef> shapes;
 
-#ifndef COLLIDABLE_JOINT_DATABASE
 	// joint definitions
-	Database::Typed<b2JointDef *> joints;
-#endif
+	Database::Typed<CollisionJointDef> joints;
 
 public:
 	CollidableTemplate(void);
@@ -33,15 +70,16 @@ public:
 	~CollidableTemplate(void);
 
 	// configure
-	bool ConfigureShapeItem(const TiXmlElement *element, b2ShapeDef &shape);
-	bool ConfigureShape(const TiXmlElement *element, b2ShapeDef &shape);
-	bool ConfigureCircle(const TiXmlElement *element, b2CircleDef &shape);
-	bool ConfigureBox(const TiXmlElement *element, b2PolygonDef &shape);
-	bool ConfigurePolyItem(const TiXmlElement *element, b2PolygonDef &shape);
-	bool ConfigurePoly(const TiXmlElement *element, b2PolygonDef &shape);
-#ifdef B2_EDGE_SHAPE_H
-	bool ConfigureEdgeItem(const TiXmlElement *element, b2EdgeChainDef &shape);
-	bool ConfigureEdge(const TiXmlElement *element, b2EdgeChainDef &shape);
+	bool ConfigureFixtureItem(const TiXmlElement *element, b2FixtureDef &fixture);
+	bool ConfigureFixture(const TiXmlElement *element, b2FixtureDef &fixture);
+	bool ConfigureCircle(const TiXmlElement *element, b2CircleShape &shape);
+	bool ConfigureBox(const TiXmlElement *element, b2PolygonShape &shape);
+	bool ConfigurePolyItem(const TiXmlElement *element, b2PolygonShape &shape);
+	bool ConfigurePoly(const TiXmlElement *element, b2PolygonShape &shape);
+	bool ConfigureEdge(const TiXmlElement *element, b2PolygonShape &shape);
+#ifdef B2_EDGE_CHAIN_H
+	bool ConfigureEdgeChainItem(const TiXmlElement *element, b2EdgeChainDef &shape);
+	bool ConfigureEdgeChain(const TiXmlElement *element, b2EdgeChainDef &shape);
 #endif
 	bool ConfigureBodyItem(const TiXmlElement *element, b2BodyDef &body);
 	bool ConfigureBody(const TiXmlElement *element, b2BodyDef &body);
@@ -54,8 +92,10 @@ public:
 	bool ConfigureDistanceJoint(const TiXmlElement *element, b2DistanceJointDef &joint);
 	bool ConfigurePulleyJointItem(const TiXmlElement *element, b2PulleyJointDef &joint);
 	bool ConfigurePulleyJoint(const TiXmlElement *element, b2PulleyJointDef &joint);
-	bool ConfigureMouseJointItem(const TiXmlElement *element, b2MouseJointDef &joint);
-	bool ConfigureMouseJoint(const TiXmlElement *element, b2MouseJointDef &joint);
+#ifdef B2_LINE_JOINT_H
+	bool ConfigureLineJointItem(const TiXmlElement *element, b2LineJointDef &joint);
+	bool ConfigureLineJoint(const TiXmlElement *element, b2LineJointDef &joint);
+#endif
 	bool Configure(const TiXmlElement *element, unsigned int id);
 
 	bool SetupLinkJoint(const LinkTemplate &linktemplate, unsigned int id, unsigned int secondary);
@@ -74,8 +114,8 @@ protected:
 	b2Body *body;
 
 public:
-	typedef fastdelegate::FastDelegate<void (unsigned int, unsigned int, float, const b2ContactPoint &)> ContactListener;
-	typedef fastdelegate::FastDelegate<void (unsigned int)> BoundaryListener;
+	typedef Signal<void (unsigned int, unsigned int, float, const b2Contact &)> ContactSignal;
+	typedef Signal<void (unsigned int)> BoundarySignal;
 
 public:
 #ifdef USE_POOL_ALLOCATOR
@@ -114,14 +154,14 @@ public:
 	}
 
 	// default filter
-	static const b2FilterData &GetDefaultFilter(void)
+	static const b2Filter &GetDefaultFilter(void)
 	{
-		static b2FilterData filter = { 0x0001, 0xFFFF, 0 };
+		static b2Filter filter = { 0x0001, 0xFFFF, 0 };
 		return filter;
 	}
 
 	// check filtering
-	static bool CheckFilter(const b2FilterData &aFilter1, const b2FilterData &aFilter2)
+	static bool CheckFilter(const b2Filter &aFilter1, const b2Filter &aFilter2)
 	{
 		if (aFilter1.groupIndex == aFilter2.groupIndex && aFilter1.groupIndex != 0)
 			return aFilter1.groupIndex > 0;
@@ -131,21 +171,17 @@ public:
 	}
 
 	// test segment for intersection with world shapes
-	static unsigned int TestSegment(const b2Segment &aSegment, const b2FilterData &aFilter, unsigned int aId,
-									float &aLambda, b2Vec2 &aNormal, b2Shape *&aShape);
+	static unsigned int TestSegment(const b2Segment &aSegment, const b2Filter &aFilter, unsigned int aId,
+									float &aLambda, b2Vec2 &aNormal, b2Fixture *&aShape);
 
 	// control
 	static void CollideAll(float aStep);
-
-protected:
-	bool CreateJoint(const b2JointDef &joint) const;
 };
 
 namespace Database
 {
 	extern Typed<CollidableTemplate> collidabletemplate;
 	extern Typed<Collidable *> collidable;
-	extern Typed<Typed<Collidable::ContactListener> > collidablecontactadd;
-	extern Typed<Typed<Collidable::ContactListener> > collidablecontactremove;
-	extern Typed<Typed<Collidable::BoundaryListener> > collidableboundaryviolation;
+	extern Typed<Collidable::ContactSignal> collidablecontactadd;
+	extern Typed<Collidable::ContactSignal> collidablecontactremove;
 }

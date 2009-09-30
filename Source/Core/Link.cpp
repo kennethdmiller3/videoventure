@@ -2,7 +2,6 @@
 #include "Link.h"
 #include "Entity.h"
 #include "Collidable.h"
-#include "Team.h"
 
 
 #ifdef USE_POOL_ALLOCATOR
@@ -119,7 +118,6 @@ LinkTemplate::LinkTemplate(void)
 , mType(0)
 , mUpdateAngle(true)
 , mUpdatePosition(true)
-, mUpdateTeam(true)
 , mDeleteSecondary(true)
 {
 }
@@ -150,11 +148,6 @@ bool LinkTemplate::Configure(const TiXmlElement *element, unsigned int aId, unsi
 	int updateposition = mUpdatePosition;
 	element->QueryIntAttribute("updateposition", &updateposition);
 	mUpdatePosition = updateposition != 0;
-
-	// update linked team?
-	int updateteam = mUpdateTeam;
-	element->QueryIntAttribute("updateteam", &updateteam);
-	mUpdateTeam = updateteam != 0;
 
 	// delete linked secondary?
 	int deletesecondary = mDeleteSecondary;
@@ -220,6 +213,10 @@ Link::Link(const LinkTemplate &aTemplate, unsigned int aId)
 : Updatable(aId)
 , mSub(aTemplate.mSub)
 , mSecondary(aTemplate.mSecondary)
+, mOffset(aTemplate.mOffset)
+, mUpdateAngle(aTemplate.mUpdateAngle)
+, mUpdatePosition(aTemplate.mUpdatePosition)
+, mDeleteSecondary(aTemplate.mDeleteSecondary)
 {
 	SetAction(Action(this, &Link::Update));
 
@@ -233,17 +230,6 @@ Link::Link(const LinkTemplate &aTemplate, unsigned int aId)
 		Transform2 transform(aTemplate.mOffset * entity->GetTransform());
 		mSecondary = Database::Instantiate(mSecondary, Database::owner.Get(mId), mId,
 			transform.Angle(), transform.p, entity->GetVelocity(), entity->GetOmega(), false);
-	}
-
-	if (aTemplate.mUpdateTeam)
-	{
-		// if the owner has a team...
-		unsigned int team = Database::team.Get(mId);
-		if (team)
-		{
-			// propagate team to spawned item
-			Database::team.Put(mSecondary, team);
-		}
 	}
 
 	// create a backlink
@@ -260,11 +246,8 @@ Link::~Link(void)
 {
 	if (mSecondary)
 	{
-		// get template data
-		const LinkTemplate &link = Database::linktemplate.Get(mId).Get(mSub);
-		
 		// if deleting the secondary
-		if (link.mDeleteSecondary)
+		if (mDeleteSecondary)
 		{
 			Database::Delete(mSecondary);
 		}
@@ -287,18 +270,15 @@ void Link::Update(float aStep)
 			return;
 		}
 
-		// get template data
-		const LinkTemplate &link = Database::linktemplate.Get(mId).Get(mSub);
-
 		// update secondary transform
-		Transform2 transform(link.mOffset * entity->GetTransform());
+		Transform2 transform(mOffset * entity->GetTransform());
 		secondary->Step();
-		if (link.mUpdateAngle)
+		if (mUpdateAngle)
 		{
 			secondary->SetAngle(transform.Angle());
 			secondary->SetOmega(entity->GetOmega());
 		}
-		if (link.mUpdatePosition)
+		if (mUpdatePosition)
 		{
 			secondary->SetPosition(transform.p);
 			secondary->SetVelocity(entity->GetVelocity());
@@ -306,7 +286,7 @@ void Link::Update(float aStep)
 		if (Collidable *collidable = Database::collidable.Get(mSecondary))
 		{
 			collidable->GetBody()->WakeUp();
-			collidable->GetBody()->SetXForm(transform.p, transform.a);
+			collidable->GetBody()->SetTransform(transform.p, transform.a);
 			collidable->GetBody()->SetLinearVelocity(entity->GetVelocity());
 			collidable->GetBody()->SetAngularVelocity(entity->GetOmega());
 		}

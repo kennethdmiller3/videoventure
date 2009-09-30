@@ -1,9 +1,11 @@
 #pragma once
 
+#include "Signal.h"
+
 class VarItem
 {
 public:
-	typedef fastdelegate::FastDelegate<void (unsigned int)> Listener;
+	typedef Signal<void (unsigned int)> Signal;
 
 	unsigned int mId;
 
@@ -201,5 +203,5 @@ public:
 namespace Database
 {
 	extern Typed<VarItem *> varitem;
-	extern Typed<Typed<VarItem::Listener> > varitemnotify;
+	extern Typed<VarItem::Signal> varitemnotify;
 }

@@ -3,7 +3,7 @@
 #include "Entity.h"
 #include "Updatable.h"
 #include "Link.h"
-
+#include "Drawlist.h"
 
 #ifdef USE_POOL_ALLOCATOR
 // damagable pool
@@ -23,9 +23,9 @@ namespace Database
 {
 	Typed<DamagableTemplate> damagabletemplate(0x5e73241b /* "damagabletemplate" */);
 	Typed<Damagable *> damagable(0x1b715375 /* "damagable" */);
-	Typed<Typed<Damagable::DamageListener> > damagelistener(0x23d6dc58 /* "damagelistener" */);
-	Typed<Typed<Damagable::DeathListener> > deathlistener(0x4e26c609 /* "deathlistener" */);
-	Typed<Typed<Damagable::KillListener> > killlistener(0xa2bf0d7d /* "killlistener" */);
+	Typed<Damagable::DamageSignal > damagesignal(0x23d6dc58 /* "damagesignal" */);
+	Typed<Damagable::DeathSignal > deathsignal(0x4e26c609 /* "deathsignal" */);
+	Typed<Damagable::KillSignal > killsignal(0xa2bf0d7d /* "killsignal" */);
 	Typed<int> hitcombo(0xa2610244 /* "hitcombo" */);
 
 	namespace Loader
@@ -72,9 +72,9 @@ namespace Database
 				{
 					delete damagable;
 					Database::damagable.Delete(aId);
-					Database::damagelistener.Delete(aId);
-					Database::deathlistener.Delete(aId);
-					Database::killlistener.Delete(aId);
+					Database::damagesignal.Delete(aId);
+					Database::deathsignal.Delete(aId);
+					Database::killsignal.Delete(aId);
 				}
 			}
 		}
@@ -165,11 +165,13 @@ void Damagable::Damage(unsigned int aSourceId, float aDamage)
 
 	const DamagableTemplate &damagable = Database::damagabletemplate.Get(mId);
 
+	// update last hit time (HACK)
+	Database::Typed<float> &variables = Database::variable.Open(mId);
+	variables.Put(0xd62af07e /* "lasthit" */, float(sim_turn + sim_fraction) / float(sim_rate));
+	Database::variable.Close(mId);
+
 	// notify all damage listeners
-	for (Database::Typed<DamageListener>::Iterator itor(Database::damagelistener.Find(mId)); itor.IsValid(); ++itor)
-	{
-		itor.GetValue()(mId, aSourceId, aDamage);
-	}
+	Database::damagesignal.Get(mId)(mId, aSourceId, aDamage);
 
 	// if propagating damage...
 	if (damagable.mPropagateScale)
@@ -237,22 +239,13 @@ void Damagable::Damage(unsigned int aSourceId, float aDamage)
 #endif
 
 		// notify all source kill listeners
-		for (Database::Typed<KillListener>::Iterator itor(Database::killlistener.Find(aSourceId)); itor.IsValid(); ++itor)
-		{
-			itor.GetValue()(aSourceId, mId);
-		}
+		Database::killsignal.Get(aSourceId)(aSourceId, mId);
 
 		// notify all owner kill listeners
-		for (Database::Typed<KillListener>::Iterator itor(Database::killlistener.Find(aOwnerId)); itor.IsValid(); ++itor)
-		{
-			itor.GetValue()(aOwnerId, mId);
-		}
+		Database::killsignal.Get(aOwnerId)(aOwnerId, mId);
 
 		// notify all death listeners
-		for (Database::Typed<DeathListener>::Iterator itor(Database::deathlistener.Find(mId)); itor.IsValid(); ++itor)
-		{
-			itor.GetValue()(mId, aSourceId);
-		}
+		Database::deathsignal.Get(mId)(mId, aSourceId);
 	}
 }
 

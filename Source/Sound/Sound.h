@@ -2,6 +2,10 @@
 
 #include "Updatable.h"
 
+#if defined(USE_SDL_MIXER)
+extern "C" struct Mix_Chunk;
+#endif
+
 class SoundTemplate
 {
 public:
@@ -10,6 +14,13 @@ public:
 	size_t mLength;		// sound length
 	float mVolume;
 	int mRepeat;
+
+#if defined(USE_BASS)
+	int mFrequency;
+	unsigned long mHandle;
+#elif defined(USE_SDL_MIXER)
+	Mix_Chunk *mChunk;
+#endif
 
 public:
 	SoundTemplate(void);
@@ -31,11 +42,17 @@ private:
 	Sound *mPrev;
 
 public:
+#if defined(USE_BASS)
+	unsigned long mHandle;
+#elif defined(USE_SDL_MIXER)
+	Mix_Chunk *mChunk;
+#elif defined(USE_SDL)
     void *mData;
 	size_t mLength;
     size_t mOffset;
-	float mVolume;
+#endif
 	int mRepeat;
+	float mVolume;
 	Vector2 mPosition;
 	int mPlaying;
 

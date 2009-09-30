@@ -3,9 +3,9 @@
 #include "AimBehavior.h"
 #include "TargetBehavior.h"
 #include "BotUtilities.h"
-#include "..\Controller.h"
-#include "..\Entity.h"
-#include "..\Ship.h"
+#include "Controller.h"
+#include "Entity.h"
+#include "Ship.h"
 
 namespace Database
 {
@@ -68,11 +68,15 @@ namespace BehaviorDatabase
 			{
 				AddActivate(0x48ae5f7a /* "aimbehaviortemplate" */, ActivateEntry(this, &AimBehaviorInitializer::Activate));
 				AddDeactivate(0x48ae5f7a /* "aimbehaviortemplate" */, DeactivateEntry(this, &AimBehaviorInitializer::Deactivate));
+				AddActivate(0x00dbebf8 /* "fireconetemplate" */, ActivateEntry(this, &AimBehaviorInitializer::Activate));
+				AddDeactivate(0x00dbebf8 /* "fireconetemplate" */, DeactivateEntry(this, &AimBehaviorInitializer::Deactivate));
 			}
 
 			Behavior *Activate(unsigned int aId, Controller *aController)
 			{
 				const AimBehaviorTemplate &aimbehaviortemplate = Database::aimbehaviortemplate.Get(aId);
+				if (AimBehavior *aimbehavior = Database::aimbehavior.Get(aId))
+					return aimbehavior;
 				AimBehavior *aimbehavior = new AimBehavior(aId, aimbehaviortemplate, aController);
 				Database::aimbehavior.Put(aId, aimbehavior);
 				return aimbehavior;

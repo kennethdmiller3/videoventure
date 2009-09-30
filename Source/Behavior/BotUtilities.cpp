@@ -1,7 +1,7 @@
 #include "StdAfx.h"
 
 #include "BotUtilities.h"
-#include "..\Entity.h"
+#include "Entity.h"
 
 Vector2 Intercept(float aLeading, const Vector2 &aPosition, const Vector2 &aVelocity)
 {
@@ -15,15 +15,40 @@ Vector2 Intercept(float aLeading, const Vector2 &aPosition, const Vector2 &aVelo
 	float d = b * b - a * c;
 
 	// compute the time to intersection
-	if (d > 0.0f)
-		b += sqrtf(d);
 	float t;
-	if (fabsf(a) > FLT_EPSILON)
+	if (d <= 0.0f)
+	{
+		// no real roots; get time of closest approach
 		t = -b / a;
-	else if (fabsf(b) > FLT_EPSILON)
-		t = c / -b;
+	}
 	else
-		t = 0.0f;
+	{
+		float sqrtd = sqrtf(d);
+		float f = b > 0 ? -(b + sqrtd) : -(b - sqrtd);
+
+		// if root 1 is not positive...
+		if (f * a <= 0.0f)
+		{
+			// use root 2
+			t = c / f;
+		}
+
+		// else if root 2 is not positive...
+		else if (c * f <= 0.0f)
+		{
+			// use root 1
+			t = f / a;
+		}
+		else
+		{
+			// get both roots
+			float t1 = f / a;
+			float t2 = c / f;
+
+			// use the minimum of the two
+			t = std::min(t1, t2);
+		}
+	}
 
 	// prevent negative time
 	if (t < 0.0f)

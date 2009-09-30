@@ -3,8 +3,8 @@
 #include "PursueBehavior.h"
 #include "TargetBehavior.h"
 #include "BotUtilities.h"
-#include "..\Controller.h"
-#include "..\Entity.h"
+#include "Controller.h"
+#include "Entity.h"
 
 namespace Database
 {
@@ -70,6 +70,7 @@ namespace BehaviorDatabase
 PursueBehaviorTemplate::PursueBehaviorTemplate()
 : mStrength(0.0f)
 , mLeading(0.0f)
+, mOffset(Transform2::Identity())
 {
 }
 
@@ -77,6 +78,10 @@ bool PursueBehaviorTemplate::Configure(const TiXmlElement *element, unsigned int
 {
 	element->QueryFloatAttribute("strength", &mStrength);
 	element->QueryFloatAttribute("leading", &mLeading);
+	if (element->QueryFloatAttribute("angle", &mOffset.a) == TIXML_SUCCESS)
+		mOffset.a *= float(M_PI) / 180.0f;
+	element->QueryFloatAttribute("x", &mOffset.p.x);
+	element->QueryFloatAttribute("y", &mOffset.p.y);
 	return true;
 }
 
@@ -104,8 +109,8 @@ Status PursueBehavior::Execute(void)
 	Entity *entity = Database::entity.Get(mId);
 
 	// direction to target
-	Vector2 targetDir(TargetDir(pursue.mLeading, entity, targetEntity, targetdata.mOffset));
-
+	Vector2 targetDir(pursue.mOffset.Untransform(TargetDir(pursue.mLeading, entity, targetEntity, targetdata.mOffset)));
+	
 	// save range
 	float distSq = targetDir.LengthSq();
 

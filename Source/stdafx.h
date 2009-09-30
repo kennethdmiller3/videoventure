@@ -7,6 +7,9 @@
 
 #include "targetver.h"
 
+// SIMD intrinsics
+#include "xmmintrin.h"
+
 // standard C library includes
 #define _USE_MATH_DEFINES
 #include <math.h>
@@ -28,7 +31,7 @@
 #include "tinyxml.h"
 
 // Box2D includes
-#include "Box2D.h"
+#include "Box2d/Box2D.h"
 
 // FastDelegate includes
 #include "FastDelegate.h"
@@ -91,6 +94,9 @@ extern bool PROFILER_OUTPUTPRINT;
 extern bool FRAMERATE_OUTPUTSCREEN;
 extern bool FRAMERATE_OUTPUTPRINT;
 
+// debug draw
+extern bool DEBUG_DRAW;
+
 // simulation attributes
 extern int SIMULATION_RATE;
 extern float TIME_SCALE;
@@ -147,6 +153,14 @@ extern GLuint reticule_handle;
 
 
 // UTILITY
+
+// cast anything to anything
+template <typename O, typename I> inline O Cast(I i)
+{
+	union { I i; O o; } cast;
+	cast.i = i;
+	return cast.o;
+}
 
 // access float as integer
 union FloatInt
@@ -263,3 +277,12 @@ const int AUDIO_FREQUENCY = 48000;
 #ifdef USE_POOL_ALLOCATOR
 #include <boost/pool/pool.hpp>
 #endif
+
+namespace std
+{
+	struct RTTI_NOT_SUPPORTED;
+	typedef RTTI_NOT_SUPPORTED type_info;
+}
+#define typeid *( ::std::type_info* )sizeof 
+#include <boost/variant.hpp>
+

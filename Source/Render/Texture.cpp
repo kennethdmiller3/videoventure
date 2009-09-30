@@ -1,7 +1,7 @@
 #include "StdAfx.h"
 
 #include "Texture.h"
-#include "Interpolator.h"
+#include "ExpressionConfigure.h"
 #include "Noise.h"
 
 static const char * sColorNames[] = { "r", "g", "b", "a" };
@@ -127,15 +127,13 @@ namespace Database
 							child->QueryFloatAttribute("seed", &seed);
 
 							std::vector<unsigned int> buffer;
-							ConfigureInterpolatorItem(child, buffer, SDL_arraysize(sColorNames), sColorNames, sColorDefault);
+							ConfigureExpressionRoot<__m128>(child, buffer, sColorNames, sColorDefault);
+
+							EntityContext context(&buffer[0], buffer.size(), 0, aId);
 
 							texture.mPixels = static_cast<unsigned char *>(malloc(texture.mWidth * texture.mHeight * texture.mComponents));
 
 							unsigned char *pixel = texture.mPixels;
-
-							// interpolator output
-							int index = 0;
-							float data[SDL_arraysize(sColorNames)];
 
 							for (int y = 0; y < texture.mHeight; ++y)
 							{
@@ -162,15 +160,60 @@ namespace Database
 									value = Clamp(value, -1.0f, 1.0f);
 
 									// get interpolator value
-									if (!ApplyInterpolator(data, SDL_arraysize(data), buffer[0], reinterpret_cast<const float * __restrict>(&buffer[1]), value, index))
-										memset(data, 0, sizeof(data));
+									context.Restart();
+									context.mParam = value;
+									__m128 color = Expression::Evaluate<__m128>(context);
 
-									*pixel++ = (unsigned char)xs_RoundToInt(data[0] * 255);
-									*pixel++ = (unsigned char)xs_RoundToInt(data[1] * 255);
-									*pixel++ = (unsigned char)xs_RoundToInt(data[2] * 255);
-									*pixel++ = (unsigned char)xs_RoundToInt(data[3] * 255);
+									*pixel++ = (unsigned char)xs_RoundToInt(Clamp(reinterpret_cast<float * __restrict>(&color)[0], 0.0f, 1.0f) * 255);
+									*pixel++ = (unsigned char)xs_RoundToInt(Clamp(reinterpret_cast<float * __restrict>(&color)[1], 0.0f, 1.0f) * 255);
+									*pixel++ = (unsigned char)xs_RoundToInt(Clamp(reinterpret_cast<float * __restrict>(&color)[2], 0.0f, 1.0f) * 255);
+									*pixel++ = (unsigned char)xs_RoundToInt(Clamp(reinterpret_cast<float * __restrict>(&color)[3], 0.0f, 1.0f) * 255);
 								}
 							}
+						}
+						break;
+
+					case 0xcf15afeb /* "expression" */:
+						{
+							texture.mComponents = 4;
+
+							texture.mWidth = 64;
+							child->QueryIntAttribute("width", &texture.mWidth);
+							texture.mHeight = 64;
+							child->QueryIntAttribute("height", &texture.mHeight);
+
+							texture.mFormat = GL_RGBA;
+
+							std::vector<unsigned int> buffer;
+							ConfigureExpressionRoot<__m128>(child, buffer, sColorNames, sColorDefault);
+
+							EntityContext context(&buffer[0], buffer.size(), 0, aId);
+
+							texture.mPixels = static_cast<unsigned char *>(malloc(texture.mWidth * texture.mHeight * texture.mComponents));
+
+							unsigned char *pixel = texture.mPixels;
+
+							for (int y = 0; y < texture.mHeight; ++y)
+							{
+								context.mVars->Put(0xfc0c4ef4 /* "y" */, float(y)/float(texture.mHeight));
+
+								for (int x = 0; x < texture.mWidth; ++x)
+								{
+									context.mVars->Put(0xfd0c5087 /* "x" */, float(x)/float(texture.mWidth));
+
+									// get interpolator value
+									context.Restart();
+									__m128 color = Expression::Evaluate<__m128>(context);
+
+									*pixel++ = (unsigned char)xs_RoundToInt(Clamp(reinterpret_cast<float * __restrict>(&color)[0], 0.0f, 1.0f) * 255);
+									*pixel++ = (unsigned char)xs_RoundToInt(Clamp(reinterpret_cast<float * __restrict>(&color)[1], 0.0f, 1.0f) * 255);
+									*pixel++ = (unsigned char)xs_RoundToInt(Clamp(reinterpret_cast<float * __restrict>(&color)[2], 0.0f, 1.0f) * 255);
+									*pixel++ = (unsigned char)xs_RoundToInt(Clamp(reinterpret_cast<float * __restrict>(&color)[3], 0.0f, 1.0f) * 255);
+								}
+							}
+
+							context.mVars->Delete(0xfd0c5087 /* "x" */);
+							context.mVars->Delete(0xfc0c4ef4 /* "y" */);
 						}
 						break;
 
@@ -183,6 +226,7 @@ namespace Database
 								continue;
 							}
 						}
+						break;
 					}
 				}
 

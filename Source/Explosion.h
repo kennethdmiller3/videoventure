@@ -9,13 +9,11 @@ public:
 	float mLifeSpan;
 
 	// collision
-	b2FilterData mFilter;
+	b2Filter mFilter;
 
-	// damage
-	float mRadiusInner;
-	float mRadiusOuter;
-	float mDamageInner;
-	float mDamageOuter;
+	// properties
+	std::vector<unsigned int> mRadius;
+	std::vector<unsigned int> mDamage;
 
 public:
 	ExplosionTemplate(void);
