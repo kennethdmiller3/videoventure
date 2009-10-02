@@ -27,9 +27,6 @@ public:
 	SoundTemplate(const SoundTemplate &aTemplate);
 	~SoundTemplate(void);
 
-	bool ConfigureFile(const TiXmlElement *element, unsigned int id);
-	bool ConfigureSample(const TiXmlElement *element, unsigned int id);
-	bool ConfigurePokey(const TiXmlElement *element, unsigned int id);
 	bool Configure(const TiXmlElement *element, unsigned int id);
 };
 
