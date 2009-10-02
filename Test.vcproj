@@ -362,11 +362,11 @@
 			</File>
 			<File
 				RelativePath=".\Source\Interface\PlayerOverlayAmmo.cpp"
-					>
+				>
 			</File>
 			<File
 				RelativePath=".\Source\Interface\PlayerOverlayAmmo.h"
-					>
+				>
 			</File>
 			<File
 				RelativePath=".\Source\Interface\PlayerOverlayGameOver.cpp"
@@ -598,6 +598,78 @@
 			</File>
 			<File
 				RelativePath=".\Source\Sound\Sound.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Sound\SoundBitNoiseRamp.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Sound\SoundConfigure.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Sound\SoundConfigure.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Sound\SoundExpression.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Sound\SoundMixer.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Sound\SoundMixer.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Sound\SoundPokey.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Sound\SoundPulseLoop.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Sound\SoundSample.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Sound\SoundSound.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Sound\SoundStargate.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Sound\SoundStargate.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Sound\SoundStargateF9A6.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Sound\SoundStargateF9F3.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Sound\SoundTriangleNoise.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Sound\SoundUtilities.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Sound\SoundUtilities.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Sound\SoundWaveLoop.cpp"
 				>
 			</File>
 		</Filter>
@@ -854,7 +926,7 @@
 			>
 			<File
 				RelativePath=".\Source\Expression\Expression.h"
-			>
+				>
 			</File>
 			<File
 				RelativePath=".\Source\Expression\ExpressionAction.cpp"
