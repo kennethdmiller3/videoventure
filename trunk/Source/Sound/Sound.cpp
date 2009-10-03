@@ -283,17 +283,19 @@ namespace Database
 
 			void Deactivate(unsigned int aId)
 			{
-#if defined(USE_SDL)
 				if (Database::sound.Find(aId))
 				{
+#if defined(USE_SDL)
 					SDL_LockAudio();
+#endif
 					const Typed<Sound *> &sounds = Database::sound.Get(aId);
 					for (Typed<Sound *>::Iterator itor(&sounds); itor.IsValid(); ++itor)
 						delete itor.GetValue();
 					Database::sound.Delete(aId);
+#if defined(USE_SDL)
 					SDL_UnlockAudio();
-				}
 #endif
+				}
 			}
 		}
 		soundinitializer;
@@ -748,6 +750,7 @@ void Sound::Stop(void)
 	if (mPlaying != 0)
 	{
 		BASS_ChannelStop(mPlaying);
+		mPlaying = 0;
 	}
 #elif defined(USE_SDL_MIXER)
 	if (mPlaying >= 0)
@@ -784,10 +787,9 @@ void Sound::Stop(void)
 void Sound::Update(float aStep)
 {
 #if defined(USE_BASS)
-	if (!BASS_ChannelIsActive(mPlaying))
+	if (BASS_ChannelIsActive(mPlaying) == BASS_ACTIVE_STOPPED)
 	{
-		mPlaying = 0;
-		Deactivate();
+		Stop();
 		return;
 	}
 #elif defined(USE_SDL_MIXER)
