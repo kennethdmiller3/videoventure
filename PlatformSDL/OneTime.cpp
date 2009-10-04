@@ -22,6 +22,9 @@ namespace Platform
 			}
 		}
 
+		// enable unicode
+		SDL_EnableUNICODE(1);
+
 		// create the window
 		OpenWindow();
 

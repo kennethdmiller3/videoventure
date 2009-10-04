@@ -2,6 +2,7 @@
 
 // input callbacks
 extern void KeyCallback(int aIndex, int aState);
+extern void CharCallback(int aIndex, int aState);
 extern void MousePosCallback(int aPosX, int aPosY);
 extern void MouseButtonCallback(int aIndex, int aState);
 extern void MouseWheelCallback(int aPos);
@@ -43,6 +44,7 @@ namespace Platform
 
 		// set callbacks
 		glfwSetKeyCallback(KeyCallback);
+		glfwSetCharCallback(CharCallback);
 		glfwSetMousePosCallback(MousePosCallback);
 		glfwSetMouseButtonCallback(MouseButtonCallback);
 		glfwSetMouseWheelCallback(MouseWheelCallback);
