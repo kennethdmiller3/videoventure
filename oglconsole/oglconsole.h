@@ -28,13 +28,11 @@ void OGLCONSOLE_Output(OGLCONSOLE_Console console, const char *s, ...);
 /* Register a callback with the console */
 void OGLCONSOLE_EnterKey(void(*cbfun)(OGLCONSOLE_Console console, char *cmd));
 
-/* This function tries to handle the incoming SDL event. In the future there may
+/* This function tries to handle the incoming keydown event. In the future there may
  * be non-SDL analogs for input systems such as GLUT. Returns true if the event
  * was handled by the console. If console is hidden, no events are handled. */
-#if defined(OGLCONSOLE_USE_SDL)
-#include "SDL.h"
-int OGLCONSOLE_SDLEvent(SDL_Event * e);
-#endif
+int OGLCONSOLE_KeyEvent(int key, int mod);
+int OGLCONSOLE_CharEvent(int unicode);
 
 /* Sets the current console for receiving user input */
 void OGLCONSOLE_FocusConsole(OGLCONSOLE_Console console);
@@ -47,6 +45,7 @@ void OGLCONSOLE_SetDimensions(int width, int height);
 
 /* Show or hide the console. */
 void OGLCONSOLE_SetVisibility(int visible);
+int OGLCONSOLE_GetVisibility();
 
 #ifdef __cplusplus
 }
