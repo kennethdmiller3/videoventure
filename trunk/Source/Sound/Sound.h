@@ -13,6 +13,8 @@ public:
 	size_t mSize;		// data buffer size in bytes
 	size_t mLength;		// sound length
 	float mVolume;
+	float mNear;
+	float mFar;
 	int mRepeat;
 
 #if defined(USE_BASS)
@@ -43,6 +45,8 @@ public:
 	unsigned long mHandle;
 #elif defined(USE_SDL_MIXER)
 	Mix_Chunk *mChunk;
+	float mNear;
+	float mFar;
 #elif defined(USE_SDL)
     void *mData;
 	size_t mLength;
@@ -51,6 +55,7 @@ public:
 	int mRepeat;
 	float mVolume;
 	Vector2 mPosition;
+	Vector2 mVelocity;
 	int mPlaying;
 
 public:
@@ -82,9 +87,11 @@ public:
 	// update
 	void Update(float aStep);
 
-public:
+private:
 	static Vector2 listenerpos;
+	static Vector2 listenervel;
 
+public:
 	// initialize
 	static void Init(void);
 
@@ -97,6 +104,10 @@ public:
 	// resume
 	static void Resume(void);
 
+	// set listener position
+	static void Listener(Vector2 aPos, Vector2 aVel = Vector2(0, 0));
+
+	// software mixer
 	friend void MixSound(void *userdata, unsigned char *stream, int len);
 };
 

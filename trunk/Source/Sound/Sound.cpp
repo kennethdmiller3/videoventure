@@ -3,6 +3,8 @@
 #include "SoundConfigure.h"
 #include "Entity.h"
 
+#define DISTANCE_FALLOFF
+
 #if defined(USE_BASS)
 
 #include "bass.h"
@@ -14,7 +16,6 @@
 #else
 
 #include "SoundMixer.h"
-#define DISTANCE_FALLOFF(volume, distsq) ((volume) / (1.0f + (distsq) / 16384.0f))
 
 #endif
 
@@ -24,9 +25,15 @@ int SOUND_CHANNELS = 8;				// effect mixer channels
 float SOUND_VOLUME_EFFECT = 0.5f;	// effects volume
 float SOUND_VOLUME_MUSIC = 0.5f;	// music volume
 
+// sound position factors
+float SOUND_DISTANCE_FACTOR = 1.0f/16.0f;
+float SOUND_ROLLOFF_FACTOR = 0.0f;
+float SOUND_DOPPLER_FACTOR = 0.0f;
+extern float CAMERA_DISTANCE;
 
 // sound listener position
 Vector2 Sound::listenerpos;
+Vector2 Sound::listenervel;
 
 
 #ifdef USE_POOL_ALLOCATOR
@@ -114,6 +121,42 @@ namespace Database
 
 	namespace Loader
 	{
+		class SoundSystemLoader
+		{
+		public:
+			SoundSystemLoader()
+			{
+				AddConfigure(0x01ba332d /* "soundsystem" */, Entry(this, &SoundSystemLoader::Configure));
+			}
+
+			void Configure(unsigned int aId, const TiXmlElement *element)
+			{
+				for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+				{
+					switch (Hash(child->Value()))
+					{
+					case 0x2eb31462 /* "distance" */:
+						child->QueryFloatAttribute("factor", &SOUND_DISTANCE_FACTOR);
+						break;
+
+					case 0xab59d4bb /* "rolloff" */:
+						child->QueryFloatAttribute("factor", &SOUND_ROLLOFF_FACTOR);
+						break;
+
+					case 0xcca0ad5f /* "doppler" */:
+						child->QueryFloatAttribute("factor", &SOUND_DOPPLER_FACTOR);
+						break;
+					}
+				}
+
+#if defined(USE_BASS)
+				BASS_Set3DFactors(SOUND_DISTANCE_FACTOR, SOUND_ROLLOFF_FACTOR, SOUND_DOPPLER_FACTOR);
+				BASS_Apply3D();
+#endif
+			}
+		}
+		soundsystemloader;
+
 		class SoundLoader
 		{
 		public:
@@ -127,9 +170,6 @@ namespace Database
 				// open sound template
 				SoundTemplate &sound = Database::soundtemplate.Open(aId);
 
-				element->QueryFloatAttribute("volume", &sound.mVolume);
-				element->QueryIntAttribute("repeat", &sound.mRepeat);
-
 				// if there are no sound cues...
 				if (!Database::soundcue.Find(aId))
 				{
@@ -139,44 +179,8 @@ namespace Database
 					Database::soundcue.Close(aId);
 				}
 
-				// clear sound data
-				sound.mData = NULL;
-				sound.mSize = 0;
-				sound.mLength = 0;
-
 				// configure the sound template
 				sound.Configure(element, aId);
-
-#if defined(USE_BASS)
-				// create a sample
-				unsigned int flags = BASS_SAMPLE_OVER_POS;
-				if (sound.mRepeat)
-					flags |= BASS_SAMPLE_LOOP;
-				sound.mHandle = BASS_SampleCreate(sound.mSize, sound.mFrequency, 1, 1, flags);
-				if (sound.mHandle)
-				{
-					// set sample data
-					BASS_SampleSetData(sound.mHandle, sound.mData);
-
-					// set default volume
-					BASS_SAMPLE info;
-					BASS_SampleGetInfo(sound.mHandle, &info);
-					info.volume = sound.mVolume;
-					BASS_SampleSetInfo(sound.mHandle, &info);
-				}
-				else
-				{
-					DebugPrint("error creating sample: %s\n", BASS_ErrorGetString());
-				}
-#elif defined(USE_SDL_MIXER)
-				// create a chunk
-				sound.mChunk = Mix_QuickLoad_RAW(static_cast<unsigned char *>(sound.mData), sound.mSize);
-				if (sound.mChunk)
-				{
-					// set default volume
-					Mix_VolumeChunk(sound.mChunk, xs_RoundToInt(sound.mVolume * MIX_MAX_VOLUME));
-				}
-#endif
 
 				// close sound template
 				Database::soundtemplate.Close(aId);
@@ -314,7 +318,7 @@ namespace Database
 			{
 				// HACK
 				const std::string &music = Database::musictemplate.Get(aId);
-				HMUSIC handle = BASS_MusicLoad(false, music.c_str(), 0, 0, BASS_MUSIC_RAMPS, 0);
+				HMUSIC handle = BASS_MusicLoad(false, music.c_str(), 0, 0, BASS_MUSIC_RAMPS|BASS_MUSIC_LOOP, 0);
 				if (!handle)
 					DebugPrint("error loading music: %s\n", BASS_ErrorGetString());
 				if (!BASS_ChannelPlay(handle, true))
@@ -375,6 +379,8 @@ SoundTemplate::SoundTemplate(void)
 , mSize(0)
 , mLength(0)
 , mVolume(1.0f)
+, mNear(CAMERA_DISTANCE)
+, mFar(FLT_MAX)
 , mRepeat(0)
 #if defined(USE_BASS)
 , mFrequency(AUDIO_FREQUENCY)
@@ -390,6 +396,8 @@ SoundTemplate::SoundTemplate(const SoundTemplate &aTemplate)
 , mSize(aTemplate.mSize)
 , mLength(aTemplate.mLength)
 , mVolume(aTemplate.mVolume)
+, mNear(aTemplate.mNear)
+, mFar(aTemplate.mFar)
 , mRepeat(aTemplate.mRepeat)
 #if defined(USE_BASS)
 , mFrequency(aTemplate.mFrequency)
@@ -554,6 +562,17 @@ soundfileloader;
 
 bool SoundTemplate::Configure(const TiXmlElement *element, unsigned int id)
 {
+	// clear sound data
+	mData = NULL;
+	mSize = 0;
+	mLength = 0;
+
+	// get sound properties
+	element->QueryFloatAttribute("volume", &mVolume);
+	element->QueryFloatAttribute("near", &mNear);
+	element->QueryFloatAttribute("far", &mFar);
+	element->QueryIntAttribute("repeat", &mRepeat);
+
 	// process sound configuration
 	for (const TiXmlElement *child = element->FirstChildElement(); child; child = child->NextSiblingElement())
 	{
@@ -565,6 +584,43 @@ bool SoundTemplate::Configure(const TiXmlElement *element, unsigned int id)
 
 	// output total length
 	DebugPrint("size=%d length=%d (%fs)\n", mSize, mLength, float(mLength) / AUDIO_FREQUENCY);
+
+#if defined(USE_BASS)
+	// create a sample
+	unsigned int flags = BASS_SAMPLE_OVER_POS;
+#if defined(DISTANCE_FALLOFF)
+	flags |= BASS_SAMPLE_3D;
+#endif
+	if (mRepeat)
+		flags |= BASS_SAMPLE_LOOP;
+
+	mHandle = BASS_SampleCreate(mSize, mFrequency, 1, 3, flags);
+	if (mHandle)
+	{
+		// set sample data
+		BASS_SampleSetData(mHandle, mData);
+
+		// set default volume
+		BASS_SAMPLE info;
+		BASS_SampleGetInfo(mHandle, &info);
+		info.volume = mVolume;
+		info.mindist = mNear;
+		info.maxdist = mFar;
+		BASS_SampleSetInfo(mHandle, &info);
+	}
+	else
+	{
+		DebugPrint("error creating sample: %s\n", BASS_ErrorGetString());
+	}
+#elif defined(USE_SDL_MIXER)
+	// create a chunk
+	mChunk = Mix_QuickLoad_RAW(static_cast<unsigned char *>(mData), mSize);
+	if (mChunk)
+	{
+		// set default volume
+		Mix_VolumeChunk(mChunk, xs_RoundToInt(mVolume * MIX_MAX_VOLUME));
+	}
+#endif
 
 #ifdef _DEBUG
 //#define DEBUG_OUTPUT_SOUND_FILE
@@ -651,6 +707,8 @@ Sound::Sound(void)
 , mHandle(0)
 #elif defined(USE_SDL_MIXER)
 , mChunk(NULL)
+, mNear(CAMERA_DISTANCE)
+, mFar(FLT_MAX)
 #elif defined(USE_SDL)
 , mData(NULL)
 , mLength(0)
@@ -676,6 +734,8 @@ Sound::Sound(const SoundTemplate &aTemplate, unsigned int aId)
 , mHandle(aTemplate.mHandle)
 #elif defined(USE_SDL_MIXER)
 , mChunk(aTemplate.mChunk)
+, mNear(aTemplate.mNear)
+, mFar(aTemplate.mFar)
 #elif defined(USE_SDL)
 , mData(aTemplate.mData)
 , mLength(aTemplate.mLength)
@@ -684,6 +744,7 @@ Sound::Sound(const SoundTemplate &aTemplate, unsigned int aId)
 , mVolume(aTemplate.mVolume)
 , mRepeat(aTemplate.mRepeat)
 , mPosition(0, 0)
+, mVelocity(0, 0)
 #if defined(USE_BASS)
 , mPlaying(0)
 #elif defined(USE_SDL_MIXER)
@@ -809,25 +870,45 @@ void Sound::Update(float aStep)
 
 #if defined(DISTANCE_FALLOFF)
 	if (Entity *entity = Database::entity.Get(mId))
+	{
 		mPosition = entity->GetPosition();
+		mVelocity = entity->GetVelocity();
+	}
 	else
+	{
 		mPosition = listenerpos;
+		mVelocity = listenervel;
+	}
 #endif
 
 #if defined(USE_BASS)
 	if (mPlaying)
 	{
-		BASS_ChannelSetAttribute(mPlaying, BASS_ATTRIB_VOL, mVolume);
+//		BASS_ChannelSetAttribute(mPlaying, BASS_ATTRIB_VOL, mVolume);
+
+#if defined(DISTANCE_FALLOFF)
+		BASS_3DVECTOR pos(mPosition.x, mPosition.y, 0.0f);
+		BASS_3DVECTOR vel(mVelocity.x, mVelocity.y, 0.0f);
+		if (!BASS_ChannelSet3DPosition(mPlaying, &pos, NULL, &vel))
+			DebugPrint("error setting channel 3d position: %s\n", BASS_ErrorGetString());
+#endif
 	}
 #elif defined(USE_SDL_MIXER)
 	if (mPlaying >= 0)
 	{
 		float volume = SOUND_VOLUME_EFFECT;
 #if defined(DISTANCE_FALLOFF)
-		if (mId)
+		if (mId && SOUND_ROLLOFF_FACTOR)
 		{
-			// apply sound fall-off
-			volume = DISTANCE_FALLOFF(volume, listenerpos.DistSq(mPosition));
+			// get distance
+			const float dist = sqrtf(listenerpos.DistSq(mPosition) + CAMERA_DISTANCE * CAMERA_DISTANCE);
+
+			// if outside the near distance...
+			if (dist > mNear)
+			{
+				// apply sound fall-off
+				volume *= mNear / (mNear + SOUND_ROLLOFF_FACTOR * (dist - mNear));
+			}
 		}
 #endif
 		Mix_Volume(mPlaying, xs_RoundToInt(volume * MIX_MAX_VOLUME));
@@ -843,7 +924,11 @@ void Sound::Init(void)
 {
 #if defined(USE_BASS)
 	// setup output - get latency
-	if (!BASS_Init(-1,AUDIO_FREQUENCY,BASS_DEVICE_LATENCY,0,NULL))
+	DWORD flags = BASS_DEVICE_LATENCY;
+#if defined(DISTANCE_FALLOFF)
+	flags |= BASS_DEVICE_3D;
+#endif
+	if (!BASS_Init(-1,AUDIO_FREQUENCY,flags,0,NULL))
 	{
 		DebugPrint("Can't initialize device");
 		return;
@@ -858,6 +943,13 @@ void Sound::Init(void)
 
 	// initialize sound volume
 	UpdateSoundVolume();
+
+#if defined(DISTANCE_FALLOFF)
+	// set default 3D factors
+	if (!BASS_Set3DFactors(SOUND_DISTANCE_FACTOR, SOUND_ROLLOFF_FACTOR, SOUND_DOPPLER_FACTOR))
+		DebugPrint("error setting 3d factors: %s\n", BASS_ErrorGetString());
+	BASS_Apply3D();
+#endif
 #elif defined(USE_SDL_MIXER)
 	// initialize mixer
 	if ( Mix_OpenAudio(AUDIO_FREQUENCY, AUDIO_S16SYS, 1, xs_CeilToInt(AUDIO_FREQUENCY / SIMULATION_RATE) ) < 0 )
@@ -865,7 +957,7 @@ void Sound::Init(void)
 		DebugPrint("Unable to open audio: %s\n", Mix_GetError());
 		return;
 	}
-	Mix_AllocateChannels(256);
+	Mix_AllocateChannels(SOUND_CHANNELS);
 
 	// initialize sound volume
 	UpdateSoundVolume();
@@ -922,6 +1014,26 @@ void Sound::Resume(void)
 	SDL_PauseAudio(false);
 #endif
 }
+
+// update listener
+void Sound::Listener(Vector2 aPos, Vector2 aVel)
+{
+#if defined(DISTANCE_FALLOFF)
+	listenerpos = aPos;
+	listenervel = aVel;
+
+#if defined(USE_BASS)
+	BASS_3DVECTOR pos(listenerpos.x, listenerpos.y, -CAMERA_DISTANCE);
+	BASS_3DVECTOR vel(listenervel.x, listenervel.y, 0.0f);
+	BASS_3DVECTOR front(0.0f, 1.0f, 0.0f);
+	BASS_3DVECTOR top(0.0f, 0.0f, 1.0f);
+	if (!BASS_Set3DPosition(&pos, &vel, &front, &top))
+		DebugPrint("error setting listener 3d position: %s\n", BASS_ErrorGetString());
+	BASS_Apply3D();
+#endif
+#endif
+}
+
 
 void UpdateSoundVolume(void)
 {

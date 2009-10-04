@@ -4,6 +4,13 @@
 
 #if defined(USE_SDL) && !defined(USE_SDL_MIXER)
 
+#define DISTANCE_FALLOFF
+extern float SOUND_DISTANCE_FACTOR;
+extern float SOUND_ROLLOFF_FACTOR;
+extern float SOUND_DOPPLER_FACTOR;
+extern float CAMERA_DISTANCE;
+
+
 // AUDIO MIXER
 
 static const float timestep = 1.0f / AUDIO_FREQUENCY;
@@ -101,8 +108,12 @@ void MixSound(void *userdata, unsigned char *stream, int len)
 		// if associated with an identifier
 		if (sound->mId)
 		{
+			// get distance
+			const float dist = sqrtf(listenerpos.DistSq(mPosition) + CAMERA_DISTANCE * CAMERA_DISTANCE);
+			const float mNear = CAMERA_DISTANCE;
+
 			// apply sound fall-off
-			volume = DISTANCE_FALLOFF(volume, listenerpos.DistSq(sound->mPosition));
+			volume *= mNear / (mNear + SOUND_ROLLOFF_FACTOR * (dist - mNear));
 			if (volume < 1.0f/256.0f)
 				continue;
 		}

@@ -134,9 +134,6 @@ void PlayerCamera::Update(float aStep)
 			mTrackPos0 = mTrackPos1;
 			mTrackPos1 = entity->GetTransform().Transform(playercamera.mTrackOffset);
 
-			// set listener position
-			Sound::listenerpos = mTrackPos1;
-
 			// if applying view aim
 			if (playercamera.mViewAim)
 			{
@@ -171,6 +168,9 @@ void PlayerCamera::Update(float aStep)
 	// set camera position
 	camerapos[0] = mTrackPos0;
 	camerapos[1] = mTrackPos1;
+
+	// set listener position
+	Sound::Listener(mTrackPos1, (mTrackPos1 - mTrackPos0) / aStep);	// HACK
 
 #ifdef TEST_PATHING
 	Pathing(entity->GetPosition(), mTrackPos1 + aimpos[1] * 120 * VIEW_SIZE / 240, 4.0f);
