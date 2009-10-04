@@ -261,7 +261,7 @@ void OGLCONSOLE_DefaultEnterKeyCallback(OGLCONSOLE_Console console, char *cmd)
             "No enter key callback is registered for this console!\n");
 }
 
-OGLCONSOLE_Resize(_OGLCONSOLE_Console *console)
+void OGLCONSOLE_Resize(_OGLCONSOLE_Console *console)
 {
     GLint viewport[4];
 
@@ -446,6 +446,12 @@ void OGLCONSOLE_EditConsole(OGLCONSOLE_Console console) { programConsole = C; }
 /* Show or hide a console */
 void OGLCONSOLE_SetVisibility(int visible)
 {
+    userConsole->visibility = visible;
+}
+
+int OGLCONSOLE_GetVisibility()
+{
+	return userConsole->visibility;
 }
 
 /* Get current configuration information about a console */
@@ -825,18 +831,6 @@ void OGLCONSOLE_YankHistory(_OGLCONSOLE_Console *console)
     }
 }
 
-#ifndef OGLCONSOLE_USE_SDL
-#error **************************************************************************
-#error
-#error
-#error
-#error Only SDL is supported so far: you must define the OGLCONSOLE_USE_SDL macro
-#error
-#error
-#error
-#error **************************************************************************
-#endif
-
 /* This function tries to handle the incoming SDL event. In the future there may
  * be non-SDL analogs for input systems such as GLUT. Returns true if the event
  * was handled by the console. If console is hidden, no events are handled. */
@@ -851,13 +845,29 @@ void OGLCONSOLE_YankHistory(_OGLCONSOLE_Console *console)
 #define KEY_RIGHT       SDLK_RIGHT
 #define KEY_PAGEUP      SDLK_PAGEUP
 #define KEY_PAGEDOWN    SDLK_PAGEDOWN
-#define KMOD_CAPITALIZE (KMOD_LSHIFT|KMOD_RSHIFT|KMOD_CAPS)
-int OGLCONSOLE_SDLEvent(SDL_Event *e)
+#endif
+#ifdef OGLCONSOLE_USE_GLFW
+#include <GL/glfw.h>
+#define KEY_BACKSPACE   GLFW_KEY_BACKSPACE
+#define KEY_DELETE      GLFW_KEY_DEL
+#define KEY_RETURN      GLFW_KEY_ENTER
+#define KEY_UP          GLFW_KEY_UP
+#define KEY_DOWN        GLFW_KEY_DOWN
+#define KEY_LEFT        GLFW_KEY_LEFT
+#define KEY_RIGHT       GLFW_KEY_RIGHT
+#define KEY_PAGEUP      GLFW_KEY_PAGEUP
+#define KEY_PAGEDOWN    GLFW_KEY_PAGEDOWN
+#define KMOD_LSHIFT     1
+#define KMOD_RSHIFT     2
+#define KMOD_SHIFT      (KMOD_LSHIFT|KMOD_RSHIFT)
+#endif
+
+int OGLCONSOLE_KeyEvent(int sym, int mod)
 {
     /* If the terminal is hidden we only check for show/hide key */
     if (userConsole->visibility < 1)
     {
-        if (e->type == SDL_KEYDOWN && e->key.keysym.sym == '`')
+        if (sym == '`')
         {  
             // TODO: Fetch values from OS?
             // TODO: Expose them to the program
@@ -869,254 +879,229 @@ int OGLCONSOLE_SDLEvent(SDL_Event *e)
         return 0;
     }
 
-    /* TODO: SDL_KEYPRESS? ENABLE KEY REPEAT USING THE HIDE/SHOW FUNCTION? */
-    if (e->type == SDL_KEYDOWN)
+    /* Check for hide key */
+    if (sym == '`')
     {
-        /* Reject most modifier keys TODO: Add some accelerator keys? */
-        //if (e->key.keysym.mod & ~(KMOD_CAPITALIZE)) return 0;
+        /* Tell console to slide into closing */
+        userConsole->visibility -= SLIDE_STEPS;
 
-        /* Check for hide key */
-        if (e->key.keysym.sym == '`')
+        /* Disable key repeat */
+        //SDL_EnableKeyRepeat(0, 0);
+        return 1;
+    }
+
+    else if (sym == KEY_DELETE
+         ||  sym == KEY_BACKSPACE)
+    {
+        /* Yank the command history if necessary */
+        OGLCONSOLE_YankHistory(userConsole);
+
+        /* If string is not empty */
+        if (userConsole->inputLineLength)
         {
-            /* Tell console to slide into closing */
-            userConsole->visibility -= SLIDE_STEPS;
+            char *end, *c;
 
-            /* Disable key repeat */
-            //SDL_EnableKeyRepeat(0, 0);
-            return 1;
-        }
-        
-        /* TODO: Find out how to handle CAPSLOCK */
-        if (e->key.keysym.sym >= ' ' && e->key.keysym.sym <= '~')
-        {
-            int k = e->key.keysym.sym;
-            char *c, *d;
+            /* Backspace is like pressing LEFT and then DELETE */
+            if (sym == KEY_BACKSPACE)
+                userConsole->inputCursorPos--;
 
-            /* Yank the command history if necessary */
-            OGLCONSOLE_YankHistory(userConsole);
+            /* With delete we much check more than just inputLineLength */
+            else if (userConsole->inputCursorPos ==
+                    userConsole->inputLineLength)
+                return 1;
 
-            /* Capitalize if necessary */
-            if (e->key.keysym.mod & KMOD_CAPITALIZE)
+            c   = userConsole->inputLine +   userConsole->inputCursorPos;
+            end = userConsole->inputLine + --userConsole->inputLineLength;
+
+            while (c <= end)
             {
-                static
-                const int capital[] = { (int)' ', (int)'!', (int)'"', (int)'#',
-                    (int)'$', (int)'%', (int)'&', (int)'"', (int)'(', (int)')',
-                    (int)'*', (int)'+', (int)'<', (int)'_', (int)'>', (int)'?',
-                    (int)')', (int)'!', (int)'@', (int)'#', (int)'$', (int)'%',
-                    (int)'^', (int)'&', (int)'*', (int)'(', (int)':', (int)':',
-                    (int)'<', (int)'+', (int)'>', (int)'?', (int)'@', (int)'A',
-                    (int)'B', (int)'C', (int)'D', (int)'E', (int)'F', (int)'G',
-                    (int)'H', (int)'I', (int)'J', (int)'K', (int)'L', (int)'M',
-                    (int)'N', (int)'O', (int)'P', (int)'Q', (int)'R', (int)'S',
-                    (int)'T', (int)'U', (int)'V', (int)'W', (int)'X', (int)'Y',
-                    (int)'Z', (int)'{', (int)'|', (int)'}', (int)'^', (int)'_',
-                    (int)'~', (int)'A', (int)'B', (int)'C', (int)'D', (int)'E',
-                    (int)'F', (int)'G', (int)'H', (int)'I', (int)'J', (int)'K',
-                    (int)'L', (int)'M', (int)'N', (int)'O', (int)'P', (int)'Q',
-                    (int)'R', (int)'S', (int)'T', (int)'U', (int)'V', (int)'W',
-                    (int)'X', (int)'Y', (int)'Z', (int)'{', (int)'|', (int)'}',
-                    (int)'~' };
-
-                /* If we're not explicitly holding a shift key, that means just
-                 * capslock, which means we only capitalize letters */
-                if ((k >= 'a' && k <= 'z') || (e->key.keysym.mod & KMOD_SHIFT))
-                    k = capital[k-' '];
+                *c = *(c+1);
+                c++;
             }
-
-            /* Point to the cursor position and the end of the string */
-            c = userConsole->inputLine + userConsole->inputCursorPos;
-            d = userConsole->inputLine + userConsole->inputLineLength + 1;
-
-            /* Slide some of the string to the right */
-            for (; d != c; d--)
-                *d = *(d-1);
-
-            /* Insert new character */
-            *c = k;
-
-            /* Increment input line length counter */
-            userConsole->inputLineLength++;
-
-            /* Advance input cursor position */
-            userConsole->inputCursorPos++;
-
-            return 1;
         }
 
-        else if (e->key.keysym.sym == KEY_DELETE
-             ||  e->key.keysym.sym == KEY_BACKSPACE)
-        {
-            /* Yank the command history if necessary */
-            OGLCONSOLE_YankHistory(userConsole);
+        return 1;
+    }
 
-            /* If string is not empty */
-            if (userConsole->inputLineLength)
+    else if (sym == KEY_RETURN)
+    {
+        /* Yank the command history if necessary */
+        OGLCONSOLE_YankHistory(userConsole);
+
+        /* Add user's command to history */
+        OGLCONSOLE_AddHistory(userConsole, userConsole->inputLine);
+
+        /* Print user's command to the console */
+        OGLCONSOLE_Output((void*)userConsole, "%s\n", userConsole->inputLine);
+
+        /* Invoke console's enter-key callback function */
+        userConsole->enterKeyCallback((void*)userConsole,userConsole->inputLine);
+
+        /* Erase command line */
+        userConsole->inputCursorPos = 0;
+        userConsole->inputLineLength = 0;
+        userConsole->inputLine[0] = '\0';
+    }
+
+    // Page up key
+    else if (sym == KEY_PAGEUP)
+    {
+        userConsole->lineScrollIndex -= userConsole->textHeight / 2;
+
+        if (userConsole->lineScrollIndex < 0)
+            userConsole->lineScrollIndex += userConsole->maxLines;
+
+        printf("scroll index = %i\n", userConsole->lineScrollIndex);
+
+        return 1;
+    }
+
+    // Page down key
+    else if (sym == KEY_PAGEDOWN)
+    {
+        userConsole->lineScrollIndex += userConsole->textHeight / 2;
+
+        if (userConsole->lineScrollIndex >= userConsole->maxLines)
+            userConsole->lineScrollIndex -= userConsole->maxLines;
+
+        printf("scroll index = %i\n", userConsole->lineScrollIndex);
+
+        return 1;
+    }
+
+    // Arrow key up
+    else if (sym == KEY_UP)
+    {
+        // Shift key is for scrolling the output display
+        if (mod & (KMOD_LSHIFT|KMOD_RSHIFT))
+        {
+            if (--userConsole->lineScrollIndex < 0)
+                userConsole->lineScrollIndex = userConsole->maxLines-1;
+        }
+
+        // No shift key is for scrolling through command history
+        else
+        {
+            // -1 means we aren't look at history yet
+            if (userConsole->historyScrollIndex == -1)
             {
-                char *end, *c;
-
-                /* Backspace is like pressing LEFT and then DELETE */
-                if (e->key.keysym.sym == KEY_BACKSPACE)
-                    userConsole->inputCursorPos--;
-
-                /* With delete we much check more than just inputLineLength */
-                else if (userConsole->inputCursorPos ==
-                        userConsole->inputLineLength)
-                    return 1;
-
-                c   = userConsole->inputLine +   userConsole->inputCursorPos;
-                end = userConsole->inputLine + --userConsole->inputLineLength;
-
-                while (c <= end)
-                {
-                    *c = *(c+1);
-                    c++;
-                }
+                userConsole->historyScrollIndex =
+                    userConsole->historyQueueIndex;
             }
-
-            return 1;
-        }
-
-        else if (e->key.keysym.sym == KEY_RETURN)
-        {
-            /* Yank the command history if necessary */
-            OGLCONSOLE_YankHistory(userConsole);
-
-            /* Add user's command to history */
-            OGLCONSOLE_AddHistory(userConsole, userConsole->inputLine);
-
-            /* Print user's command to the console */
-            OGLCONSOLE_Output((void*)userConsole, "%s\n", userConsole->inputLine);
-
-            /* Invoke console's enter-key callback function */
-            userConsole->enterKeyCallback((void*)userConsole,userConsole->inputLine);
-
-            /* Erase command line */
-            userConsole->inputCursorPos = 0;
-            userConsole->inputLineLength = 0;
-            userConsole->inputLine[0] = '\0';
-
-            return 1;
-        }
-
-        // Page up key
-        else if (e->key.keysym.sym == SDLK_PAGEUP)
-        {
-            userConsole->lineScrollIndex -= userConsole->textHeight / 2;
-
-            if (userConsole->lineScrollIndex < 0)
-                userConsole->lineScrollIndex += userConsole->maxLines;
-
-            printf("scroll index = %i\n", userConsole->lineScrollIndex);
-        }
-
-        // Page down key
-        else if (e->key.keysym.sym == SDLK_PAGEDOWN)
-        {
-            userConsole->lineScrollIndex += userConsole->textHeight / 2;
-
-            if (userConsole->lineScrollIndex >= userConsole->maxLines)
-                userConsole->lineScrollIndex -= userConsole->maxLines;
-
-            printf("scroll index = %i\n", userConsole->lineScrollIndex);
-        }
-
-        // Arrow key up
-        else if (e->key.keysym.sym == KEY_UP)
-        {
-            // Shift key is for scrolling the output display
-            if (e->key.keysym.mod & (KMOD_LSHIFT|KMOD_RSHIFT))
-            {
-                if (--userConsole->lineScrollIndex < 0)
-                    userConsole->lineScrollIndex = userConsole->maxLines-1;
-            }
-
-            // No shift key is for scrolling through command history
             else
             {
-                // -1 means we aren't look at history yet
-                if (userConsole->historyScrollIndex == -1)
-                {
-                    userConsole->historyScrollIndex =
-                        userConsole->historyQueueIndex;
-                }
-                else
-                {
-                    // Wrap our history scrolling
-                    if (--userConsole->historyScrollIndex < 0)
-                        userConsole->historyScrollIndex = MAX_HISTORY_COUNT;
-                }
+                // Wrap our history scrolling
+                if (--userConsole->historyScrollIndex < 0)
+                    userConsole->historyScrollIndex = MAX_HISTORY_COUNT;
+            }
+
+            // If we've returned to our current position in the command
+            // history, we'll just drop out of history mode
+            if (userConsole->historyScrollIndex ==
+                    userConsole->historyQueueIndex +1)
+                userConsole->historyScrollIndex = -1;
+        }
+
+        return 1;
+    }
+
+    // Arrow key down
+    else if (sym == KEY_DOWN)
+    {
+        // Shift key is for scrolling the output display
+        if (mod & (KMOD_LSHIFT|KMOD_RSHIFT))
+        {
+            if (++userConsole->lineScrollIndex >= userConsole->maxLines)
+                userConsole->lineScrollIndex = 0;
+        }
+
+        // No shift key is for scrolling through command history
+        else
+        {
+            // -1 means we aren't look at history yet
+            if (userConsole->historyScrollIndex != -1)
+            {
+                // Wrap our history scrolling
+                if (++userConsole->historyScrollIndex >= MAX_HISTORY_COUNT)
+                    userConsole->historyScrollIndex = 0;
 
                 // If we've returned to our current position in the command
                 // history, we'll just drop out of history mode
                 if (userConsole->historyScrollIndex ==
                         userConsole->historyQueueIndex +1)
-                    userConsole->historyScrollIndex = -1;
+                userConsole->historyScrollIndex = -1;
             }
-
-            return 1;
-        }
-
-        // Arrow key down
-        else if (e->key.keysym.sym == KEY_DOWN)
-        {
-            // Shift key is for scrolling the output display
-            if (e->key.keysym.mod & (KMOD_LSHIFT|KMOD_RSHIFT))
-            {
-                if (++userConsole->lineScrollIndex >= userConsole->maxLines)
-                    userConsole->lineScrollIndex = 0;
-            }
-
-            // No shift key is for scrolling through command history
             else
             {
-                // -1 means we aren't look at history yet
-                if (userConsole->historyScrollIndex != -1)
-                {
-                    // Wrap our history scrolling
-                    if (++userConsole->historyScrollIndex >= MAX_HISTORY_COUNT)
-                        userConsole->historyScrollIndex = 0;
-
-                    // If we've returned to our current position in the command
-                    // history, we'll just drop out of history mode
-                    if (userConsole->historyScrollIndex ==
-                            userConsole->historyQueueIndex +1)
-                    userConsole->historyScrollIndex = -1;
-                }
-                else
-                {
-                    // TODO: be like, no bitch, there's no history down there
-                }
+                // TODO: be like, no bitch, there's no history down there
             }
-            return 1;
         }
 
-        // Arrow key left
-        else if (e->key.keysym.sym == KEY_LEFT)
-        {
-            /* Yank the command history if necessary */
-            OGLCONSOLE_YankHistory(userConsole);
+        return 1;
+    }
 
-            if (userConsole->inputCursorPos > 0)
-                userConsole->inputCursorPos--;
+    // Arrow key left
+    else if (sym == KEY_LEFT)
+    {
+        /* Yank the command history if necessary */
+        OGLCONSOLE_YankHistory(userConsole);
 
-            return 1;
-        }
+        if (userConsole->inputCursorPos > 0)
+            userConsole->inputCursorPos--;
 
-        // Arrow key right
-        else if (e->key.keysym.sym == KEY_RIGHT)
-        {
-            /* Yank the command history if necessary */
-            OGLCONSOLE_YankHistory(userConsole);
+        return 1;
+    }
 
-            if (userConsole->inputCursorPos <
-                userConsole->inputLineLength)
-                userConsole->inputCursorPos++;
+    // Arrow key right
+    else if (sym == KEY_RIGHT)
+    {
+        /* Yank the command history if necessary */
+        OGLCONSOLE_YankHistory(userConsole);
 
-            return 1;
-        }
+        if (userConsole->inputCursorPos <
+            userConsole->inputLineLength)
+            userConsole->inputCursorPos++;
+
+        return 1;
     }
 
     return 0;
 }
-#endif
 
+int OGLCONSOLE_CharEvent(int unicode)
+{
+    /* If the terminal is hidden we only check for show/hide key */
+    if (userConsole->visibility < 1)
+    {
+        return 0;
+    }
+
+    if (unicode != 0)
+    {
+        char *c, *d;
+
+        /* Yank the command history if necessary */
+        OGLCONSOLE_YankHistory(userConsole);
+
+        /* Point to the cursor position and the end of the string */
+        c = userConsole->inputLine + userConsole->inputCursorPos;
+        d = userConsole->inputLine + userConsole->inputLineLength + 1;
+
+        /* Slide some of the string to the right */
+        for (; d != c; d--)
+            *d = *(d-1);
+
+        /* Insert new character */
+        *c = (char)unicode;
+
+        /* Increment input line length counter */
+        userConsole->inputLineLength++;
+
+        /* Advance input cursor position */
+        userConsole->inputCursorPos++;
+
+        return 1;
+    }
+
+    return 0;
+}

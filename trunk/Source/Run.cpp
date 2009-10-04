@@ -71,6 +71,7 @@ unsigned int Random::gSeed = 0x92D68CA2;
 
 // camera position (HACK)
 Vector2 camerapos[2];
+float CAMERA_DISTANCE = 256.0f;
 
 // reticule handle (HACK)
 GLuint reticule_handle;
@@ -154,10 +155,18 @@ static void Screenshot(void)
 
 #if defined(USE_GLFW)
 
+static int consolekeyevent = 0;
+
 void KeyCallback(int aIndex, int aState)
 {
 	if (aState == GLFW_PRESS)
 	{
+		consolekeyevent = OGLCONSOLE_KeyEvent(aIndex, (glfwGetKey(GLFW_KEY_LSHIFT)) | (glfwGetKey(GLFW_KEY_RSHIFT) << 1));
+		if (consolekeyevent)
+			return;
+		if (OGLCONSOLE_GetVisibility())
+			return;
+
 		input.OnPress(Input::TYPE_KEYBOARD, 0, aIndex);
 
 		switch (aIndex)
@@ -204,6 +213,17 @@ void KeyCallback(int aIndex, int aState)
 	else
 	{
 		input.OnRelease(Input::TYPE_KEYBOARD, 0, aIndex);
+	}
+}
+
+void CharCallback(int aIndex, int aState)
+{
+	if (aState == GLFW_PRESS)
+	{
+		if (consolekeyevent)
+			return;
+		if (OGLCONSOLE_CharEvent(aIndex))
+			return;
 	}
 }
 
@@ -311,13 +331,15 @@ void RunState()
 		// process events
 		while( SDL_PollEvent( &event ) )
 		{
-			/* Give the console first dibs on event processing */
-			if (OGLCONSOLE_SDLEvent(&event))
-				continue;
 
 			switch (event.type)
 			{
 			case SDL_KEYDOWN:
+				/* Give the console first dibs on event processing */
+				if (OGLCONSOLE_KeyEvent(event.key.keysym.sym, event.key.keysym.mod))
+					continue;
+				if (event.key.keysym.unicode && OGLCONSOLE_CharEvent(event.key.keysym.unicode))
+					continue;
 				input.OnPress( Input::TYPE_KEYBOARD, event.key.which, event.key.keysym.sym );
 				switch (event.key.keysym.sym)
 				{
@@ -567,7 +589,7 @@ void RunState()
 			// set base modelview matrix
 			glMatrixMode( GL_MODELVIEW );
 			glLoadIdentity();
-			glTranslatef( 0.0f, 0.0f, -256.0f );
+			glTranslatef( 0.0f, 0.0f, -CAMERA_DISTANCE );
 			glScalef( -1.0f, -1.0f, -1.0f );
 
 			// advance the sim timer

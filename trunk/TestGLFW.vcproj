@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="Test"
-	ProjectGUID="{FC5E6837-9810-43F3-AE5D-A4CDDDF5D1AF}"
-	RootNamespace="Test"
+	Name="TestGLFW"
+	ProjectGUID="{8281103E-F163-404B-ADA8-DDE1AADC17AF}"
+	RootNamespace="TestGLFW"
 	Keyword="Win32Proj"
 	TargetFrameworkVersion="196613"
 	>
@@ -19,7 +19,7 @@
 		<Configuration
 			Name="Debug|Win32"
 			ConfigurationType="1"
-			InheritedPropertySheets=".\PlatformSDLMixer_Debug.vsprops"
+			InheritedPropertySheets=".\PlatformGLFW_Debug.vsprops;.\PlatformBASS.vsprops"
 			CharacterSet="1"
 			>
 			<Tool
@@ -40,6 +40,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalIncludeDirectories="Source;Source\Behavior;Source\Core;Source\Expression;Source\Interface;Source\Render;Source\Shell;Source\Sound"
+				PreprocessorDefinitions="GLHEADERINCLUDE=\&quot;SDL_opengl.h\&quot;"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -79,7 +80,7 @@
 		<Configuration
 			Name="Release|Win32"
 			ConfigurationType="1"
-			InheritedPropertySheets=".\PlatformSDLMixer_Release.vsprops"
+			InheritedPropertySheets=".\PlatformGLFW_Release.vsprops;.\PlatformBASS.vsprops"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
 			>
@@ -101,6 +102,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalIncludeDirectories="Source;Source\Behavior;Source\Core;Source\Expression;Source\Interface;Source\Render;Source\Shell;Source\Sound"
+				PreprocessorDefinitions="GLHEADERINCLUDE=\&quot;SDL_opengl.h\&quot;"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -901,23 +903,19 @@
 			Name="Platform"
 			>
 			<File
-				RelativePath=".\PlatformSDL\LoadTexture.cpp"
+				RelativePath=".\PlatformGLFW\LoadTexture.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\PlatformSDL\OneTime.cpp"
+				RelativePath=".\PlatformGLFW\OneTime.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\PlatformSDL\Platform.h"
+				RelativePath=".\PlatformGLFW\Platform.h"
 				>
 			</File>
 			<File
-				RelativePath=".\PlatformSDL\PrintAttributes.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\PlatformSDL\Window.cpp"
+				RelativePath=".\PlatformGLFW\Window.cpp"
 				>
 			</File>
 		</Filter>
@@ -1092,20 +1090,10 @@
 				RelativePath=".\oglconsole\oglconsole.c"
 				>
 				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						PreprocessorDefinitions="GLHEADERINCLUDE=\&quot;SDL_opengl.h\&quot;"
-						UsePrecompiledHeader="0"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
 					Name="Release|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-						PreprocessorDefinitions="GLHEADERINCLUDE=\&quot;SDL_opengl.h\&quot;"
 						UsePrecompiledHeader="0"
 					/>
 				</FileConfiguration>
