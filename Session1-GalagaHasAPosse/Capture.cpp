@@ -8,7 +8,8 @@
 #include "Team.h"
 #include "Renderable.h"
 #include "Sound.h"
-
+#undef max
+#undef min
 
 #ifdef USE_POOL_ALLOCATOR
 // capture pool
@@ -152,6 +153,98 @@ Capture::~Capture(void)
 {
 }
 
+class CaptureQueryCallback : public b2QueryCallback
+{
+public:
+	unsigned int mId;
+	CaptureTemplate mCapture;
+	Transform2 mTransform;
+	int mTeam;
+	float mCurRadius[2];
+	float mCurStrength[2];
+
+public:
+	virtual bool ReportFixture(b2Fixture* fixture)
+	{
+		// skip unhittable fixtures
+		if (fixture->IsSensor())
+			return true;
+
+		// get the parent body
+		b2Body* body = fixture->GetBody();
+
+		// get the collidable identifier
+		unsigned int targetId = reinterpret_cast<unsigned int>(body->GetUserData());
+
+		// skip non-entity
+		if (targetId == 0)
+			return true;
+
+		// skip self
+		if (targetId == mId)
+			return true;
+
+		// get team affiliation
+		unsigned int targetTeam = Database::team.Get(targetId);
+
+		// skip teammate
+		if (targetTeam == mTeam)
+			return true;
+
+		// get local position
+		b2Vec2 localPos;
+		switch (fixture->GetType())
+		{
+		case b2Shape::e_circle:		localPos = static_cast<b2CircleShape *>(fixture->GetShape())->m_p;	break;
+		case b2Shape::e_polygon:	localPos = static_cast<b2PolygonShape *>(fixture->GetShape())->m_centroid; break;
+		default:					localPos = Vector2(0, 0); break;
+		}
+		Vector2 fixturePos(body->GetWorldPoint(localPos));
+
+		// get range
+		Vector2 dir(mTransform.Transform(fixturePos));
+		float range = dir.Length();
+		float radius = 0.5f * fixture->GetShape()->m_radius;	//fixture->ComputeSweepRadius(localPos);
+
+		// skip if out of range
+		if (range > mCurRadius[1] + radius)
+			return true;
+
+		// skip if outside angle
+		// TO DO: handle partial overlap
+		if (fabsf(atan2f(dir.x, dir.y)) > mCapture.mAngle)
+			return true;
+
+		// apply strength falloff
+		float strength;
+		if (range <= mCurRadius[0] - radius)
+		{
+			strength = mCurStrength[0];
+		}
+		else
+		{
+			float interp = (range - mCurRadius[0] + radius) / (mCurRadius[1] + radius - mCurRadius[0] + radius);
+			strength = Lerp(mCurStrength[0], mCurStrength[1], interp);
+		}
+
+		// if the recipient is capturable...
+		// and not healing or the target is at max resistance...
+		if (Capturable *capturable = Database::capturable.Get(targetId))
+		{
+			// limit healing
+			if (strength < 0)
+			{
+				strength = std::max(strength, capturable->GetResistance() - Database::capturabletemplate.Get(targetId).mResistance);
+			}
+
+			// apply strength
+			capturable->Persuade(mId, strength);
+		}
+
+		return true;
+	}
+};
+
 void Capture::Update(float aStep)
 {
 	// get controller
@@ -174,84 +267,26 @@ void Capture::Update(float aStep)
 		// get parent entity
 		Entity *entity = Database::entity.Get(mId);
 
-		// get the collision world
-		b2World *world = Collidable::GetWorld();
+		// set up query callback
+		CaptureQueryCallback callback;
+		callback.mId = mId;
+		callback.mCapture = capture;
+		callback.mTransform = entity->GetTransform().Inverse();
+		callback.mTeam = Database::team.Get(mId);
 
-		// get nearby shapes
+		// default radius and strength
+		callback.mCurRadius[0] = 0.0f;
+		callback.mCurRadius[1] = capture.mRadius;
+		callback.mCurStrength[0] = capture.mStrength * aStep;
+		callback.mCurStrength[1] = 0.0f;
+
+		// get nearby fixtures
 		// TO DO: optimize for angle
 		b2AABB aabb;
-		const float lookRadius = capture.mRadius;
+		const float lookRadius = callback.mCurRadius[1];
 		aabb.lowerBound.Set(entity->GetPosition().x - lookRadius, entity->GetPosition().y - lookRadius);
 		aabb.upperBound.Set(entity->GetPosition().x + lookRadius, entity->GetPosition().y + lookRadius);
-		b2Shape* shapes[b2_maxProxies];
-		int32 count = world->Query(aabb, shapes, b2_maxProxies);
-
-		// get team affiliation
-		unsigned int aTeam = Database::team.Get(mId);
-
-		// world-to-local transform
-		Matrix2 transform(entity->GetTransform().Inverse());
-
-		// for each shape...
-		for (int32 i = 0; i < count; ++i)
-		{
-			// get the parent body
-			b2Body* body = shapes[i]->GetBody();
-
-			// get the collidable identifier
-			unsigned int targetId = reinterpret_cast<unsigned int>(body->GetUserData());
-
-			// skip non-entity
-			if (targetId == 0)
-				continue;
-
-			// skip self
-			if (targetId == mId)
-				continue;
-
-			// get team affiliation
-			unsigned int targetTeam = Database::team.Get(targetId);
-
-			// skip teammate
-			if (targetTeam == aTeam)
-				continue;
-
-			// get range
-			Vector2 dir(transform.Transform(Vector2(body->GetPosition())));
-			float range = dir.Length() - 0.5f * shapes[i]->GetSweepRadius();
-
-			// skip if out of range
-			if (range > capture.mRadius)
-				continue;
-
-			// skip if outside angle
-			// TO DO: handle partial overlap
-			if (fabsf(atan2f(dir.x, dir.y)) > capture.mAngle)
-				continue;
-
-			// if the recipient is capturable...
-			Capturable *capturable = Database::capturable.Get(targetId);
-			if (capturable)
-			{
-				// get base strength
-				float strength = capture.mStrength * aStep;
-
-				// apply strength falloff
-				if (range > 0)
-				{
-					strength *= (1.0f - (range * range) / (capture.mRadius * capture.mRadius));
-				}
-
-				// limit healing
-				if (strength < 0)
-				{
-					strength = std::max(strength, capturable->GetResistance() - Database::capturabletemplate.Get(targetId).mResistance);
-				}
-
-				// apply strength
-				capturable->Persuade(mId, strength);
-			}
-		}
+		Collidable::QueryAABB(&callback, aabb);
 	}
 	else
 	{
