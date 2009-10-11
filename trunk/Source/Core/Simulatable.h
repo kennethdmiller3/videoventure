@@ -1,6 +1,6 @@
 #pragma once
 
-class Simulatable
+class GAME_API Simulatable
 {
 public:
 	typedef fastdelegate::FastDelegate<void (float)> Action;

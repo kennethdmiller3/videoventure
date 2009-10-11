@@ -2,7 +2,7 @@
 
 #include "TreeNode.h"
 
-class OverlayTemplate
+class GAME_API OverlayTemplate
 {
 public:
 	// period
@@ -16,7 +16,7 @@ public:
 	bool Configure(const TiXmlElement *element, unsigned int aId);
 };
 
-class Overlay : public TreeNode<Overlay>
+class GAME_API Overlay : public TreeNode<Overlay>
 {
 public:
 	typedef fastdelegate::FastDelegate<void (unsigned int, float, const Transform2 &)> Action;

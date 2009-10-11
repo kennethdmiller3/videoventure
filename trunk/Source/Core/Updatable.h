@@ -1,6 +1,6 @@
 #pragma once
 
-class Updatable
+class GAME_API Updatable
 {
 public:
 	typedef fastdelegate::FastDelegate<void (float)> Action;

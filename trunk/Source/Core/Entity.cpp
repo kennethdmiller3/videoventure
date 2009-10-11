@@ -18,7 +18,7 @@ void Entity::operator delete(void *aPtr)
 
 namespace Database
 {
-	Typed<Entity *> entity(0xd33ff5da /* "entity" */);
+	GAME_API Typed<Entity *> entity(0xd33ff5da /* "entity" */);
 
 	namespace Loader
 	{

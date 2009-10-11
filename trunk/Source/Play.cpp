@@ -9,6 +9,7 @@
 #include "World.h"
 #include "Drawlist.h"
 #include "Shell.h"
+#include "Library.h"
 
 
 bool InitInput(const char *config)
@@ -247,6 +248,9 @@ void ExitPlayState()
 
 	// clear all databases
 	Database::Cleanup();
+
+	// free any loaded libraries
+	FreeLibraries();
 
 	// remove the join listener
 	Player::sJoin.Disconnect(PlayerJoinListener);

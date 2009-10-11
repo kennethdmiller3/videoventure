@@ -219,6 +219,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Source\Core\Library.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Core\Library.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Source\Core\Link.cpp"
 				>
 			</File>
@@ -1089,6 +1097,14 @@
 			<File
 				RelativePath=".\oglconsole\oglconsole.c"
 				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
 				<FileConfiguration
 					Name="Release|Win32"
 					>

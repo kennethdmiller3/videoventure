@@ -6,7 +6,7 @@ namespace Database
 	typedef unsigned int Key;
 
 	// untyped (core) database
-	class Untyped
+	class GAME_API Untyped
 	{
 	protected:
 		const unsigned int mId;

@@ -2,7 +2,7 @@
 
 #include "Updatable.h"
 
-class LinkTemplate
+class GAME_API LinkTemplate
 {
 public:
 	// offset
@@ -30,7 +30,7 @@ public:
 	bool Configure(const TiXmlElement *element, unsigned int aId, unsigned int aSubId);
 };
 
-class Link :
+class GAME_API Link :
 	public Updatable
 {
 protected:
@@ -69,8 +69,7 @@ public:
 
 namespace Database
 {
-	extern Typed<Typed<LinkTemplate> > linktemplate;
-	extern Typed<Typed<Link *> > link;
-	extern Typed<unsigned int> backlink;
-	extern Typed<bool> below;
+	extern GAME_API Typed<Typed<LinkTemplate> > linktemplate;
+	extern GAME_API Typed<Typed<Link *> > link;
+	extern GAME_API Typed<unsigned int> backlink;
 }

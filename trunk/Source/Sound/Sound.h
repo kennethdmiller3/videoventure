@@ -122,5 +122,5 @@ namespace Database
 void UpdateSoundVolume(void);
 
 // play/stop sound cues
-void PlaySoundCue(unsigned int aId, unsigned int aCueId = 0);
-void StopSoundCue(unsigned int aId, unsigned int aCueId = 0);
+void GAME_API PlaySoundCue(unsigned int aId, unsigned int aCueId = 0);
+void GAME_API StopSoundCue(unsigned int aId, unsigned int aCueId = 0);

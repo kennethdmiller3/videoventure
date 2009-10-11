@@ -49,7 +49,7 @@ struct CollisionPolygonDef
 typedef boost::variant<int, CollisionCircleDef, CollisionPolygonDef> CollisionShapeDef;
 typedef boost::variant<int, b2RevoluteJointDef, b2PrismaticJointDef, b2DistanceJointDef, b2PulleyJointDef, b2LineJointDef> CollisionJointDef;
 
-class CollidableTemplate
+class GAME_API CollidableTemplate
 {
 public:
 	// identifier
@@ -101,7 +101,7 @@ public:
 	bool SetupLinkJoint(const LinkTemplate &linktemplate, unsigned int id, unsigned int secondary);
 };
 
-class Collidable
+class GAME_API Collidable
 {
 protected:
 	static b2World *world;
@@ -173,6 +173,9 @@ public:
 	// test segment for intersection with world shapes
 	static unsigned int TestSegment(const b2Segment &aSegment, const b2Filter &aFilter, unsigned int aId,
 									float &aLambda, b2Vec2 &aNormal, b2Fixture *&aShape);
+
+	// wrapper for world query aabb
+	static void QueryAABB(b2QueryCallback* callback, const b2AABB& aabb);
 
 	// control
 	static void CollideAll(float aStep);

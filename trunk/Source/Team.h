@@ -3,5 +3,5 @@
 namespace Database
 {
 	// team affiliation database
-	extern Typed<unsigned int> team;
+	extern GAME_API Typed<unsigned int> team;
 }

@@ -1,6 +1,6 @@
 #pragma once
 
-class RenderableTemplate
+class GAME_API RenderableTemplate
 {
 public:
 	// bounding radius
@@ -23,7 +23,7 @@ public:
 	bool Configure(const TiXmlElement *element, unsigned int aId);
 };
 
-class Renderable
+class GAME_API Renderable
 {
 public:
 	typedef fastdelegate::FastDelegate<void (unsigned int, float, const Transform2 &)> Action;
@@ -96,6 +96,6 @@ void RenderGeometry(float aTime, unsigned int aId, const Transform2 &aTransform)
 
 namespace Database
 {
-	extern Typed<RenderableTemplate> renderabletemplate;
-	extern Typed<Renderable *> renderable;
+	extern GAME_API Typed<RenderableTemplate> renderabletemplate;
+	extern GAME_API Typed<Renderable *> renderable;
 }
