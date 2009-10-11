@@ -9,6 +9,7 @@
 #include "Collidable.h"
 #include "PlayerHUD.h"
 #include "Preferences.h"
+#include "Library.h"
 
 
 // text display (HACK)
@@ -1404,6 +1405,9 @@ void ExitShellState()
 
 	// clear all databases
 	Database::Cleanup();
+
+	// free any loaded libraries
+	FreeLibraries();
 
 	// collidable done
 	Collidable::WorldDone();

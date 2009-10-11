@@ -78,7 +78,7 @@ static float Gradient(int hash, float x, float y, float z, float t)
 
 
 // 1D Perlin Noise
-float Noise(float x)
+float GAME_API Noise(float x)
 {
 	// split x value into integer, fraction, and interpolator parts
 	int ix = xs_FloorToInt(x);
@@ -96,7 +96,7 @@ float Noise(float x)
 
 
 // 2D Perlin Noise
-float Noise(float x, float y)
+float GAME_API Noise(float x, float y)
 {
 	// split x value into integer, fraction, and interpolator parts
 	int ix = xs_FloorToInt(x);
@@ -130,7 +130,7 @@ float Noise(float x, float y)
 
 
 // 3D Perlin Noise
- float Noise(float x, float y, float z)
+ float GAME_API Noise(float x, float y, float z)
 {
 	// split x value into integer, fraction, and interpolator parts
 	int ix = xs_FloorToInt(x);
@@ -188,7 +188,7 @@ float Noise(float x, float y)
 
 
 // 4D Perlin Noise
-float Noise(float x, float y, float z, float w)
+float GAME_API Noise(float x, float y, float z, float w)
 {
 	// split x value into integer, fraction, and interpolator parts
 	int ix = xs_FloorToInt(x);

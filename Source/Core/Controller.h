@@ -1,6 +1,6 @@
 #pragma once
 
-class Controller
+class GAME_API Controller
 {
 public:
 	typedef fastdelegate::FastDelegate<void (float)> Action;
@@ -62,5 +62,5 @@ public:
 
 namespace Database
 {
-	extern Typed<Controller *> controller;
+	extern GAME_API Typed<Controller *> controller;
 }

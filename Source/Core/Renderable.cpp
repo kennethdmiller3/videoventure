@@ -19,8 +19,8 @@ void Renderable::operator delete(void *aPtr)
 
 namespace Database
 {
-	Typed<RenderableTemplate> renderabletemplate(0x0cb54133 /* "renderabletemplate" */);
-	Typed<Renderable *> renderable(0x109dd1ad /* "renderable" */);
+	GAME_API Typed<RenderableTemplate> renderabletemplate(0x0cb54133 /* "renderabletemplate" */);
+	GAME_API Typed<Renderable *> renderable(0x109dd1ad /* "renderable" */);
 
 	namespace Loader
 	{

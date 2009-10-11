@@ -217,6 +217,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Source\Core\Library.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Core\Library.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Source\Core\Link.cpp"
 				>
 			</File>

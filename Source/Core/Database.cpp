@@ -14,16 +14,16 @@ namespace Database
 	}
 
 	// name database
-	Typed<std::string> name(0x8d39bde6 /* "name" */);
+	GAME_API Typed<std::string> name(0x8d39bde6 /* "name" */);
 
 	// parent identifier database
-	Typed<Key> parent(0xeacdfcfd /* "parent" */);
+	GAME_API Typed<Key> parent(0xeacdfcfd /* "parent" */);
 
 	// owner identifier database
-	Typed<Key> owner(0xf5674cd4 /* "owner" */);
+	GAME_API Typed<Key> owner(0xf5674cd4 /* "owner" */);
 
 	// creator identifier database
-	Typed<Key> creator(0x27d56017 /* "creator" */);
+	GAME_API Typed<Key> creator(0x27d56017 /* "creator" */);
 
 	// deleted signal
 	Typed<DeleteSignal> deleted(0x84d1546a /* "deleted" */);
@@ -38,11 +38,11 @@ namespace Database
 			static Typed<Entry> configure;
 			return configure;
 		}
-		void AddConfigure(unsigned int aTagId, Entry aConfigure)
+		GAME_API void AddConfigure(unsigned int aTagId, Entry aConfigure)
 		{
 			GetConfigureDB().Put(aTagId, aConfigure);
 		}
-		const Entry &GetConfigure(unsigned int aTagId)
+		GAME_API const Entry &GetConfigure(unsigned int aTagId)
 		{
 			return GetConfigureDB().Get(aTagId);
 		}
@@ -58,7 +58,7 @@ namespace Database
 			static Typed<Entry> onactivate;
 			return onactivate;
 		}
-		void AddActivate(unsigned int aDatabaseId, Entry aEntry)
+		GAME_API void AddActivate(unsigned int aDatabaseId, Entry aEntry)
 		{
 			GetActivate().Put(aDatabaseId, aEntry);
 		}
@@ -67,7 +67,7 @@ namespace Database
 			static Typed<Entry> onpostactivate;
 			return onpostactivate;
 		}
-		void AddPostActivate(unsigned int aDatabaseId, Entry aEntry)
+		GAME_API void AddPostActivate(unsigned int aDatabaseId, Entry aEntry)
 		{
 			GetPostActivate().Put(aDatabaseId, aEntry);
 		}
@@ -76,7 +76,7 @@ namespace Database
 			static Typed<Entry> onpredeactivate;
 			return onpredeactivate;
 		}
-		void AddPreDeactivate(unsigned int aDatabaseId, Entry aEntry)
+		GAME_API void AddPreDeactivate(unsigned int aDatabaseId, Entry aEntry)
 		{
 			GetPreDeactivate().Put(aDatabaseId, aEntry);
 		}
@@ -85,7 +85,7 @@ namespace Database
 			static Typed<Entry> ondeactivate;
 			return ondeactivate;
 		}
-		void AddDeactivate(unsigned int aDatabaseId, Entry aEntry)
+		GAME_API void AddDeactivate(unsigned int aDatabaseId, Entry aEntry)
 		{
 			GetDeactivate().Put(aDatabaseId, aEntry);
 		}
@@ -105,7 +105,7 @@ namespace Database
 	std::deque<unsigned int> deletequeue;
 
 	// instantiate a template
-	void Instantiate(unsigned int aInstanceId, unsigned int aTemplateId, unsigned int aOwnerId, unsigned int aCreatorId, float aAngle, Vector2 aPosition, Vector2 aVelocity, float aOmega, bool aActivate)
+	void GAME_API Instantiate(unsigned int aInstanceId, unsigned int aTemplateId, unsigned int aOwnerId, unsigned int aCreatorId, float aAngle, Vector2 aPosition, Vector2 aVelocity, float aOmega, bool aActivate)
 	{
 		// set parent
 		parent.Put(aInstanceId, aTemplateId);
@@ -132,7 +132,7 @@ namespace Database
 	}
 
 	// instantiate a template (automatically-generated identifier)
-	unsigned int Instantiate(unsigned int aTemplateId, unsigned int aOwnerId, unsigned int aCreatorId, float aAngle, Vector2 aPosition, Vector2 aVelocity, float aOmega, bool aActivate)
+	unsigned int GAME_API Instantiate(unsigned int aTemplateId, unsigned int aOwnerId, unsigned int aCreatorId, float aAngle, Vector2 aPosition, Vector2 aVelocity, float aOmega, bool aActivate)
 	{
 		// generate an instance identifier
 		const unsigned int aInstanceTag = Entity::TakeId();
@@ -146,7 +146,7 @@ namespace Database
 	}
 
 	// inherit from a template
-	void Inherit(unsigned int aInstanceId, unsigned int aTemplateId)
+	void GAME_API Inherit(unsigned int aInstanceId, unsigned int aTemplateId)
 	{
 		// for each registered database...
 		for (Typed<Untyped *>::Iterator itor(&GetDatabases()); itor.IsValid(); ++itor)
@@ -164,7 +164,7 @@ namespace Database
 	}
 
 	// change an instance's type
-	void Switch(unsigned int aInstanceId, unsigned int aTemplateId)
+	void GAME_API Switch(unsigned int aInstanceId, unsigned int aTemplateId)
 	{
 		Deactivate(aInstanceId);
 		parent.Put(aInstanceId, aTemplateId);
@@ -172,7 +172,7 @@ namespace Database
 	}
 
 	// activate an identifier
-	void Activate(unsigned int aId)
+	void GAME_API Activate(unsigned int aId)
 	{
 		// queue activation
 		activatequeue.push_back(aId);
@@ -226,7 +226,7 @@ namespace Database
 	}
 
 	// deactivate an identifier
-	void Deactivate(unsigned int aId)
+	void GAME_API Deactivate(unsigned int aId)
 	{
 		// queue deactivation
 		deactivatequeue.push_back(aId);
@@ -269,7 +269,7 @@ namespace Database
 	}
 
 	// delete an identifier
-	void Delete(unsigned int aId)
+	void GAME_API Delete(unsigned int aId)
 	{
 		// defer deletion
 		deletequeue.push_back(aId);

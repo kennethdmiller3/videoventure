@@ -4,7 +4,7 @@
 namespace Database
 {
 	// team identifier database
-	Typed<unsigned int> team(0xa2fd7d0c /* "team" */);
+	GAME_API Typed<unsigned int> team(0xa2fd7d0c /* "team" */);
 
 	namespace Loader
 	{

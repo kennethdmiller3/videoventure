@@ -1,6 +1,6 @@
 #pragma once
 
-class Entity
+class GAME_API Entity
 {
 private:
 	// next available identifier
@@ -172,5 +172,5 @@ public:
 
 namespace Database
 {
-	extern Typed<Entity *> entity;
+	extern GAME_API Typed<Entity *> entity;
 }

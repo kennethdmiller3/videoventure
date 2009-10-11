@@ -1396,3 +1396,8 @@ unsigned int Collidable::TestSegment(const b2Segment &aSegment, const b2Filter &
 	aNormal = raycast.mHitNormal;
 	return raycast.mHitId;
 }
+
+void Collidable::QueryAABB(b2QueryCallback* callback, const b2AABB& aabb)
+{
+	world->QueryAABB(callback, aabb);
+}
