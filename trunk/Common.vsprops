@@ -16,7 +16,7 @@
 		FloatingPointModel="2"
 		UsePrecompiledHeader="2"
 		WarningLevel="4"
-		DisableSpecificWarnings="4100;4127"
+		DisableSpecificWarnings="4100;4127;4251;4512"
 	/>
 	<Tool
 		Name="VCLinkerTool"
