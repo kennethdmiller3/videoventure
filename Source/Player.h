@@ -26,7 +26,7 @@ public:
 };
 
 // player
-class Player : public Updatable
+class GAME_API Player : public Updatable
 {
 public:
 	float mTimer;
@@ -68,6 +68,6 @@ public:
 
 namespace Database
 {
-	extern Typed<PlayerTemplate> playertemplate;
-	extern Typed<Player *> player;
+	extern GAME_API Typed<PlayerTemplate> playertemplate;
+	extern GAME_API Typed<Player *> player;
 }
