@@ -148,27 +148,27 @@
 	</References>
 	<Files>
 		<File
-			RelativePath="..\Shmup\Session5-DreadnoughtCrisis\CriticalItem.cpp"
+			RelativePath=".\CriticalItem.cpp"
 			>
 		</File>
 		<File
-			RelativePath="..\Shmup\Session5-DreadnoughtCrisis\dllmain.cpp"
+			RelativePath=".\dllmain.cpp"
 			>
 		</File>
 		<File
-			RelativePath="..\Shmup\Session5-DreadnoughtCrisis\Engine.cpp"
+			RelativePath=".\Engine.cpp"
 			>
 		</File>
 		<File
-			RelativePath="..\Shmup\Session5-DreadnoughtCrisis\PlayerReset.cpp"
+			RelativePath=".\PlayerReset.cpp"
 			>
 		</File>
 		<File
-			RelativePath="..\Shmup\Session5-DreadnoughtCrisis\PlayerReset.h"
+			RelativePath=".\PlayerReset.h"
 			>
 		</File>
 		<File
-			RelativePath="..\Shmup\Session5-DreadnoughtCrisis\stdafx.cpp"
+			RelativePath=".\stdafx.cpp"
 			>
 			<FileConfiguration
 				Name="Debug|Win32"
@@ -188,11 +188,11 @@
 			</FileConfiguration>
 		</File>
 		<File
-			RelativePath="..\Shmup\Session5-DreadnoughtCrisis\stdafx.h"
+			RelativePath=".\stdafx.h"
 			>
 		</File>
 		<File
-			RelativePath="..\Shmup\Session5-DreadnoughtCrisis\TitleData.h"
+			RelativePath=".\TitleData.h"
 			>
 		</File>
 	</Files>
