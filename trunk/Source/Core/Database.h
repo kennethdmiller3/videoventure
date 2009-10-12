@@ -10,6 +10,7 @@ namespace Database
 	{
 		typedef fastdelegate::FastDelegate<void (unsigned int, const TiXmlElement *)> Entry;
 		GAME_API void AddConfigure(unsigned int aTagId, Entry aEntry);
+		GAME_API void RemoveConfigure(unsigned int aTagId, Entry aEntry);
 		GAME_API const Entry &GetConfigure(unsigned int aTagId);
 	}
 
@@ -18,9 +19,13 @@ namespace Database
 	{
 		typedef fastdelegate::FastDelegate<void (unsigned int)> Entry;
 		GAME_API void AddActivate(unsigned int aDatabaseId, Entry aEntry);
+		GAME_API void RemoveActivate(unsigned int aDatabaseId, Entry aEntry);
 		GAME_API void AddPostActivate(unsigned int aDatabaseId, Entry aEntry);
+		GAME_API void RemovePostActivate(unsigned int aDatabaseId, Entry aEntry);
 		GAME_API void AddPreDeactivate(unsigned int aDatabaseId, Entry aEntry);
+		GAME_API void RemovePreDeactivate(unsigned int aDatabaseId, Entry aEntry);
 		GAME_API void AddDeactivate(unsigned int aDatabaseId, Entry aEntry);
+		GAME_API void RemoveDeactivate(unsigned int aDatabaseId, Entry aEntry);
 	}
 
 	// get database of databases

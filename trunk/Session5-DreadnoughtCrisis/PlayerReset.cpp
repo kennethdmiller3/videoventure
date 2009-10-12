@@ -21,6 +21,11 @@ namespace Database
 				AddConfigure(0x006f2a3f /* "playerreset" */, Entry(this, &PlayerResetLoader::Configure));
 			}
 
+			~PlayerResetLoader()
+			{
+				RemoveConfigure(0x006f2a3f /* "playerreset" */, Entry(this, &PlayerResetLoader::Configure));
+			}
+
 			void Configure(unsigned int aId, const TiXmlElement *element)
 			{
 				PlayerResetTemplate &playerreset = Database::playerresettemplate.Open(aId);
@@ -40,6 +45,12 @@ namespace Database
 			{
 				AddActivate(0xb683cbdd /* "playerresettemplate" */, Entry(this, &PlayerResetInitializer::Activate));
 				AddDeactivate(0xb683cbdd /* "playerresettemplate" */, Entry(this, &PlayerResetInitializer::Deactivate));
+			}
+
+			~PlayerResetInitializer()
+			{
+				RemoveActivate(0xb683cbdd /* "playerresettemplate" */, Entry(this, &PlayerResetInitializer::Activate));
+				RemoveDeactivate(0xb683cbdd /* "playerresettemplate" */, Entry(this, &PlayerResetInitializer::Deactivate));
 			}
 
 			void Activate(unsigned int aId)

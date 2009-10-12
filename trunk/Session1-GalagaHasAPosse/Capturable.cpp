@@ -33,6 +33,11 @@ namespace Database
 				AddConfigure(0xec2b4992 /* "capturable" */, Entry(this, &CapturableLoader::Configure));
 			}
 
+			~CapturableLoader()
+			{
+				RemoveConfigure(0xec2b4992 /* "capturable" */, Entry(this, &CapturableLoader::Configure));
+			}
+
 			void Configure(unsigned int aId, const TiXmlElement *element)
 			{
 				CapturableTemplate &capturable = Database::capturabletemplate.Open(aId);
@@ -52,6 +57,12 @@ namespace Database
 			{
 				AddActivate(0xc19fcdd4 /* "capturabletemplate" */, Entry(this, &CapturableInitializer::Activate));
 				AddDeactivate(0xc19fcdd4 /* "capturabletemplate" */, Entry(this, &CapturableInitializer::Deactivate));
+			}
+
+			~CapturableInitializer()
+			{
+				RemoveActivate(0xc19fcdd4 /* "capturabletemplate" */, Entry(this, &CapturableInitializer::Activate));
+				RemoveDeactivate(0xc19fcdd4 /* "capturabletemplate" */, Entry(this, &CapturableInitializer::Deactivate));
 			}
 
 			void Activate(unsigned int aId)
