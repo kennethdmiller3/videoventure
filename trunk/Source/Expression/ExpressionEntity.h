@@ -25,3 +25,10 @@ struct EntityContext : public Expression::Context
 		return mStream >= mEnd;
 	}
 };
+
+namespace Expression
+{
+	// entity transform
+	__m128 EvaluatePosition(EntityContext &aContext);
+	__m128 EvaluateVelocity(EntityContext &aContext);
+}

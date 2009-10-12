@@ -210,7 +210,7 @@ template<> inline Transform2 Cast<Transform2, __m128>(__m128 i)
 
 template<> inline __m128 Cast<__m128, Transform2>(Transform2 i)
 {
-	return _mm_set_ps(0, i.a, i.p.y, i.p.x);
+	return _mm_setr_ps(i.p.x, i.p.y, i.a, 0);
 }
 
 static void WeaponWait(EntityContext &aContext)
@@ -388,6 +388,22 @@ void WeaponRepeat(EntityContext &aContext)
 	aContext.mStream = end;
 }
 
+// get velocity in entity-local space
+__m128 EvaluateVelocityLocal(EntityContext &aContext)
+{
+	if (const Entity *entity = Database::entity.Get(aContext.mId))
+	{
+		const Transform2 transform = entity->GetInterpolatedTransform(sim_fraction);
+		const Vector2 velocity(transform.Unrotate(entity->GetVelocity()));
+		const float omega(entity->GetOmega());
+		return _mm_setr_ps(velocity.x, velocity.y, omega, 0.0f);
+	}
+	else
+	{
+		return _mm_setzero_ps();
+	}
+}
+
 // build an action
 void WeaponTemplateOld::BuildAction(std::vector<unsigned int> &aAction, unsigned int aId) const
 {
@@ -428,66 +444,60 @@ void WeaponTemplateOld::BuildAction(std::vector<unsigned int> &aAction, unsigned
 			{
 				// emit an ordnance
 				Expression::Append(aAction, WeaponOrdnance, mOrdnance, Database::weapontemplate.Get(aId).mTrack);
-			
+	
 				// position
-				if (mOffset.a != 0 || mOffset.p.x != 0 || mOffset.p.y != 0)
+				bool hasOffset = (mOffset.a != 0 || mOffset.p.x != 0 || mOffset.p.y != 0);
+				bool hasScatter = (mScatter.a != 0 || mScatter.p.x != 0 || mScatter.p.y != 0);
+				if (hasOffset && hasScatter)
 				{
-					if (mScatter.a != 0 || mScatter.p.x != 0 || mScatter.p.y != 0)
-					{
-						Expression::Append(aAction, Expression::Add<__m128>);
-						Expression::Append(aAction, Expression::Constant<__m128>, Cast<__m128, Transform2>(mOffset));
-						Expression::Append(aAction, Expression::Mul<__m128>);
-						Expression::Append(aAction, Expression::Constant<__m128>, Cast<__m128, Transform2>(mScatter));
-						Expression::Append(aAction, Expression::ComponentNullary<__m128, 4>::Evaluate<float, Random::Float>);
-					}
-					else
-					{
-						Expression::Append(aAction, Expression::Constant<__m128>, Cast<__m128, Transform2>(mOffset));
-					}
+					Expression::Append(aAction, Expression::Add<__m128>);
 				}
-				else
+				if (hasOffset)
 				{
-					if (mScatter.a != 0 || mScatter.p.x != 0 || mScatter.p.y != 0)
-					{
-						Expression::Append(aAction, Expression::Mul<__m128>);
-						Expression::Append(aAction, Expression::Constant<__m128>, Cast<__m128, Transform2>(mScatter));
-						Expression::Append(aAction, Expression::ComponentNullary<__m128, 4>::Evaluate<float, Random::Float>);
-					}
-					else
-					{
-						Expression::Append(aAction, Expression::Constant<__m128>, _mm_setzero_ps());
-					}
+					Expression::Append(aAction, Expression::Constant<__m128>, Cast<__m128, Transform2>(mOffset));
+				}
+				if (hasScatter)
+				{
+					Expression::Append(aAction, Expression::Mul<__m128>);
+					Expression::Append(aAction, Expression::Constant<__m128>, Cast<__m128, Transform2>(mScatter));
+					Expression::Append(aAction, Expression::ComponentNullary<__m128, 4>::Evaluate<float, Random::Float>);
+				}
+				if (!hasOffset && !hasScatter)
+				{
+					Expression::Append(aAction, Expression::Constant<__m128>, _mm_setzero_ps());
 				}
 
 				// velocity
-				// TO DO: get inherit to work
-				if (mVelocity.a != 0 || mVelocity.p.x != 0 || mVelocity.p.y != 0)
+				bool hasInherit = (mInherit.a != 0 || mInherit.p.x != 0 || mInherit.p.y != 0);
+				bool hasVelocity = (mVelocity.a != 0 || mVelocity.p.x != 0 || mVelocity.p.y != 0);
+				bool hasVariance = (mVariance.a != 0 || mVariance.p.x != 0 || mVariance.p.y != 0);
+				if (hasInherit && (hasVelocity || hasVariance))
 				{
-					if (mVariance.a != 0 || mVariance.p.x != 0 || mVariance.p.y != 0)
-					{
-						Expression::Append(aAction, Expression::Add<__m128>);
-						Expression::Append(aAction, Expression::Constant<__m128>, Cast<__m128, Transform2>(mVelocity));
-						Expression::Append(aAction, Expression::Mul<__m128>);
-						Expression::Append(aAction, Expression::Constant<__m128>, Cast<__m128, Transform2>(mVariance));
-						Expression::Append(aAction, Expression::ComponentNullary<__m128, 4>::Evaluate<float, Random::Float>);
-					}
-					else
-					{
-						Expression::Append(aAction, Expression::Constant<__m128>, Cast<__m128, Transform2>(mVelocity));
-					}
+					Expression::Append(aAction, Expression::Add<__m128>);
 				}
-				else
+				if (hasInherit)
 				{
-					if (mVariance.a != 0 || mVariance.p.x != 0 || mVariance.p.y != 0)
-					{
-						Expression::Append(aAction, Expression::Mul<__m128>);
-						Expression::Append(aAction, Expression::Constant<__m128>, Cast<__m128, Transform2>(mVariance));
-						Expression::Append(aAction, Expression::ComponentNullary<__m128, 4>::Evaluate<float, Random::Float>);
-					}
-					else
-					{
-						Expression::Append(aAction, Expression::Constant<__m128>, _mm_setzero_ps());
-					}
+					Expression::Append(aAction, Expression::Mul<__m128>);
+					Expression::Append(aAction, Expression::Constant<__m128>, Cast<__m128, Transform2>(mInherit));
+					Expression::Append(aAction, EvaluateVelocityLocal);
+				}
+				if (hasVelocity && hasVariance)
+				{
+					Expression::Append(aAction, Expression::Add<__m128>);
+				}
+				if (hasVelocity)
+				{
+					Expression::Append(aAction, Expression::Constant<__m128>, Cast<__m128, Transform2>(mVelocity));
+				}
+				if (hasVariance)
+				{
+					Expression::Append(aAction, Expression::Mul<__m128>);
+					Expression::Append(aAction, Expression::Constant<__m128>, Cast<__m128, Transform2>(mVariance));
+					Expression::Append(aAction, Expression::ComponentNullary<__m128, 4>::Evaluate<float, Random::Float>);
+				}
+				if (!hasInherit && !hasVelocity && !hasVariance)
+				{
+					Expression::Append(aAction, Expression::Constant<__m128>, _mm_setzero_ps());
 				}
 			}
 		}
