@@ -3,7 +3,7 @@
 
 namespace Database
 {
-	GAME_API Typed<Controller *> controller(0xb4652c81 /* "controller" */);
+	Typed<Controller *> controller(0xb4652c81 /* "controller" */);
 }
 
 // list of all controllers

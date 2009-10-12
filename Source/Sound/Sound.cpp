@@ -1045,7 +1045,7 @@ void UpdateSoundVolume(void)
 #endif
 }
 
-void GAME_API PlaySoundCue(unsigned int aId, unsigned int aCueId)
+void PlaySoundCue(unsigned int aId, unsigned int aCueId)
 {
 	const Database::Typed<unsigned int> &soundcues = Database::soundcue.Get(aId);
 	unsigned int aSoundId = soundcues.Get(aCueId);
@@ -1069,7 +1069,7 @@ void GAME_API PlaySoundCue(unsigned int aId, unsigned int aCueId)
 	}
 }
 
-void GAME_API StopSoundCue(unsigned int aId, unsigned int aCueId)
+void StopSoundCue(unsigned int aId, unsigned int aCueId)
 {
 	const Database::Typed<Sound *> &sounds = Database::sound.Get(aId);
 	if (Sound *s = sounds.Get(aCueId))

@@ -20,9 +20,9 @@ void Link::operator delete(void *aPtr)
 
 namespace Database
 {
-	GAME_API Typed<Typed<LinkTemplate> > linktemplate(0x801f01af /* "linktemplate" */);
-	GAME_API Typed<Typed<Link *> > link(0x0ddb0669 /* "link" */);
-	GAME_API Typed<unsigned int> backlink(0xe3736e9a /* "backlink" */);
+	Typed<Typed<LinkTemplate> > linktemplate(0x801f01af /* "linktemplate" */);
+	Typed<Typed<Link *> > link(0x0ddb0669 /* "link" */);
+	Typed<unsigned int> backlink(0xe3736e9a /* "backlink" */);
 
 	namespace Loader
 	{

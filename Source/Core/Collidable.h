@@ -183,8 +183,8 @@ public:
 
 namespace Database
 {
-	extern Typed<CollidableTemplate> collidabletemplate;
-	extern Typed<Collidable *> collidable;
-	extern Typed<Collidable::ContactSignal> collidablecontactadd;
-	extern Typed<Collidable::ContactSignal> collidablecontactremove;
+	extern GAME_API Typed<CollidableTemplate> collidabletemplate;
+	extern GAME_API Typed<Collidable *> collidable;
+	extern GAME_API Typed<Collidable::ContactSignal> collidablecontactadd;
+	extern GAME_API Typed<Collidable::ContactSignal> collidablecontactremove;
 }
