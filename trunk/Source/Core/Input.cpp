@@ -106,14 +106,14 @@ static const char * const physicalname_key[GLFW_KEY_LAST] =
 	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
 	NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-	"escape", "f1", "f2", "f3", "f4", "f5", "f6", "f7",
-	"f8", "f9", "f10", "f11", "f12", "f13", "f14", "f15",
-	"f16", "f17", "f18", "F19", "f20", "f21", "f22", "f23",
-	"f24", "f25", "up", "down", "left", "right", "lshift", "rshift",
-	"lctrl", "rctrl", "lalt", "ralt", "tab", "enter", "backspace", "insert",
-	"delete", "pageup", "pagedown", "home", "end", "keypad0", "keypad1",
-	"keypad2", "keypad3", "keypad4", "keypad5", "keypad6", "keypad7", "keypad8", "keypad9",
-	"keypaddivide", "keypadmultiply", "keypadsubtract", "keypadadd", "keypaddecimal", "keypadequal", "keypadenter"
+	NULL, "escape", "f1", "f2", "f3", "f4", "f5", "f6",
+	"f7", "f8", "f9", "f10", "f11", "f12", "f13", "f14",
+	"f15", "f16", "f17", "f18", "F19", "f20", "f21", "f22",
+	"f23", "f24", "f25", "up", "down", "left", "right", "lshift",
+	"rshift", "lctrl", "rctrl", "lalt", "ralt", "tab", "enter", "backspace",
+	"insert", "delete", "pageup", "pagedown", "home", "end", "keypad0",
+	"keypad1", "keypad2", "keypad3", "keypad4", "keypad5", "keypad6", "keypad7", "keypad8",
+	"keypad9", "keypaddivide", "keypadmultiply", "keypadsubtract", "keypadadd", "keypaddecimal", "keypadequal", "keypadenter"
 };
 static const char * const physicalname_mouseaxis[] =
 {
