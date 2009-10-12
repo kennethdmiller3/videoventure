@@ -18,7 +18,7 @@ public:
 	bool Configure(const TiXmlElement *element);
 };
 
-class Expire : public Updatable
+class GAME_API Expire : public Updatable
 {
 public:
 	unsigned int mTurn;
@@ -44,6 +44,6 @@ public:
 
 namespace Database
 {
-	extern Typed<ExpireTemplate> expiretemplate;
-	extern Typed<Expire *> expire;
+	extern GAME_API Typed<ExpireTemplate> expiretemplate;
+	extern GAME_API Typed<Expire *> expire;
 }

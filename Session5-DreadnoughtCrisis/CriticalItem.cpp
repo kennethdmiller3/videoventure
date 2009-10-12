@@ -1,5 +1,6 @@
 #include "StdAfx.h"
 #include "Damagable.h"
+#include "Player.h"
 
 namespace Database
 {
@@ -40,17 +41,16 @@ namespace Database
 
 			void Activate(unsigned int aId)
 			{
-				Database::Typed<Damagable::DeathListener> &deathlisteners = Database::deathlistener.Open(aId);
-				deathlisteners.Put(0x26de6ef7 /* "criticalitem" */, Damagable::DeathListener(this, &CriticalItemInitializer::OnDeath));
-				Database::deathlistener.Close(aId);
+				Damagable::DeathSignal &signal = Database::deathsignal.Open(aId);
+				signal.Connect(this, &CriticalItemInitializer::OnDeath);
+				Database::deathsignal.Close(aId);
 			}
 
 			void Deactivate(unsigned int aId)
 			{
-				// 
-				Database::Typed<Damagable::DeathListener> &deathlisteners = Database::deathlistener.Open(aId);
-				deathlisteners.Delete(0x26de6ef7 /* "criticalitem" */);
-				Database::deathlistener.Close(aId);
+				Damagable::DeathSignal &signal = Database::deathsignal.Open(aId);
+				signal.Disconnect(this, &CriticalItemInitializer::OnDeath);
+				Database::deathsignal.Close(aId);
 			}
 
 			void OnDeath(unsigned int aId, unsigned int aSourceId)

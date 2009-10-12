@@ -1,12 +1,12 @@
 <?xml version="1.0" standalone="no"?>
 <!-- Test Level -->
 <world xmin="-512" ymin="-96" xmax="512" ymax="4000">
-	<!-- player camera -->
-	<playercamera>
-		<offset y="96"/>
-		<aim scale="0" filter="0"/>
-		<boundary xmin="-512" xmax="512"/>
-	</playercamera>
+	<library name="session5.dll"/>
+	<soundsystem>
+		<distance factor="0.0625"/>
+		<rolloff factor="4"/>
+		<doppler factor="0"/>
+	</soundsystem>
 	<!-- sounds -->
 	<import name="sound/stargate-playershot.xml" />
 	<import name="sound/stargate-playershipidle.xml" />
@@ -23,6 +23,12 @@
 		<position x="0" y="0" />
 		<player name="playership" start="1" cycle="4" lives="10" extra="1000" />
 		<team name="blue" />
+		<!-- player camera -->
+		<playercamera>
+			<offset y="96"/>
+			<aim scale="0" filter="0"/>
+			<boundary xmin="-512" xmax="512"/>
+		</playercamera>
 	</entity>
 	<!-- draw lists -->
 	<import name="drawlist/square.xml" />
