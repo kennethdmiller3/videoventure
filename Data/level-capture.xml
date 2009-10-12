@@ -1,6 +1,12 @@
 <?xml version="1.0" standalone="no" ?>
 <!-- Test Level -->
 <world xmin="-1024" ymin="-1024" xmax="1024" ymax="1024">
+	<library name="session1.dll"/>
+	<soundsystem>
+		<distance factor="0.0625"/>
+		<rolloff factor="4"/>
+		<doppler factor="0"/>
+	</soundsystem>
 	<!-- sounds -->
 	<import name="sound/stargate-start.xml" />
 	<import name="sound/missilecommand-alert.xml" />
