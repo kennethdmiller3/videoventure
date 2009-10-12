@@ -1,6 +1,7 @@
 #include "StdAfx.h"
 
 #include "ExpressionEntity.h"
+#include "Entity.h"
 
 #include "Drawlist.h"	// <-- for variable
 
@@ -28,5 +29,30 @@ EntityContext::~EntityContext()
 	if (mOwned)
 	{
 		Database::variable.Close(mId);
+	}
+}
+
+__m128 Expression::EvaluatePosition(EntityContext &aContext)
+{
+	if (const Entity *entity = Database::entity.Get(aContext.mId))
+	{
+		const Transform2 transform = entity->GetInterpolatedTransform(sim_fraction);
+		return _mm_setr_ps(transform.p.x, transform.p.y, transform.a, 0.0f);
+	}
+	else
+	{
+		return _mm_setzero_ps();
+	}
+}
+
+__m128 Expression::EvaluateVelocity(EntityContext &aContext)
+{
+	if (const Entity *entity = Database::entity.Get(aContext.mId))
+	{
+		return _mm_setr_ps(entity->GetVelocity().x, entity->GetVelocity().y, entity->GetOmega(), 0.0f);
+	}
+	else
+	{
+		return _mm_setzero_ps();
 	}
 }
