@@ -1,5 +1,9 @@
 #pragma once
 
+#include "Updatable.h"
+
+class Player;
+
 class PlayerResetTemplate
 {
 public:

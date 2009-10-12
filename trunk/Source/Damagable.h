@@ -20,7 +20,7 @@ public:
 	bool Configure(const TiXmlElement *element);
 };
 
-class Damagable
+class GAME_API Damagable
 {
 protected:
 	unsigned int mId;
@@ -60,10 +60,10 @@ public:
 
 namespace Database
 {
-	extern Typed<DamagableTemplate> damagabletemplate;
-	extern Typed<Damagable *> damagable;
-	extern Typed<Damagable::DamageSignal > damagesignal;
-	extern Typed<Damagable::DeathSignal > deathsignal;
-	extern Typed<Damagable::KillSignal > killsignal;
-	extern Typed<int> hitcombo;
+	extern GAME_API Typed<DamagableTemplate> damagabletemplate;
+	extern GAME_API Typed<Damagable *> damagable;
+	extern GAME_API Typed<Damagable::DamageSignal > damagesignal;
+	extern GAME_API Typed<Damagable::DeathSignal > deathsignal;
+	extern GAME_API Typed<Damagable::KillSignal > killsignal;
+	extern GAME_API Typed<int> hitcombo;
 }

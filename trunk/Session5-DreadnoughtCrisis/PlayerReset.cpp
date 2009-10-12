@@ -4,6 +4,7 @@
 #include "Player.h"
 #include "Entity.h"
 #include "Expire.h"
+#include "Damagable.h"
 
 namespace Database
 {
@@ -73,9 +74,9 @@ PlayerReset::PlayerReset(const PlayerResetTemplate &aTemplate, unsigned int aId)
 	SetAction(Action(this, &PlayerReset::Update));
 	Activate();
 
-	Database::Typed<Damagable::DeathListener> &deathlisteners = Database::deathlistener.Open(mId);
-	deathlisteners.Put(reinterpret_cast<unsigned int>(this), Damagable::DeathListener(this, &PlayerReset::OnDeath));
-	Database::deathlistener.Close(mId);
+	Damagable::DeathSignal &signal = Database::deathsignal.Open(mId);
+	signal.Connect(this, &PlayerReset::OnDeath);
+	Database::deathsignal.Close(mId);
 }
 
 void PlayerReset::Update(float aStep)
