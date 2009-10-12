@@ -38,9 +38,14 @@ namespace Database
 			static Typed<Entry> configure;
 			return configure;
 		}
-		void AddConfigure(unsigned int aTagId, Entry aConfigure)
+		void AddConfigure(unsigned int aTagId, Entry aEntry)
 		{
-			GetConfigureDB().Put(aTagId, aConfigure);
+			GetConfigureDB().Put(aTagId, aEntry);
+		}
+		void RemoveConfigure(unsigned int aTagId, Entry aEntry)
+		{
+			if (GetConfigureDB().Get(aTagId) == aEntry);
+				GetConfigureDB().Delete(aTagId);
 		}
 		const Entry &GetConfigure(unsigned int aTagId)
 		{
@@ -62,6 +67,11 @@ namespace Database
 		{
 			GetActivate().Put(aDatabaseId, aEntry);
 		}
+		void RemoveActivate(unsigned int aDatabaseId, Entry aEntry)
+		{
+			if (GetActivate().Get(aDatabaseId) == aEntry)
+				GetActivate().Delete(aDatabaseId);
+		}
 		Typed<Entry> &GetPostActivate()
 		{
 			static Typed<Entry> onpostactivate;
@@ -70,6 +80,11 @@ namespace Database
 		void AddPostActivate(unsigned int aDatabaseId, Entry aEntry)
 		{
 			GetPostActivate().Put(aDatabaseId, aEntry);
+		}
+		void RemovePostActivate(unsigned int aDatabaseId, Entry aEntry)
+		{
+			if (GetPostActivate().Get(aDatabaseId) == aEntry)
+				GetPostActivate().Delete(aDatabaseId);
 		}
 		Typed<Entry> &GetPreDeactivate()
 		{
@@ -80,6 +95,11 @@ namespace Database
 		{
 			GetPreDeactivate().Put(aDatabaseId, aEntry);
 		}
+		void RemovePreDeactivate(unsigned int aDatabaseId, Entry aEntry)
+		{
+			if (GetPreDeactivate().Get(aDatabaseId) == aEntry)
+				GetPreDeactivate().Delete(aDatabaseId);
+		}
 		Typed<Entry> &GetDeactivate()
 		{
 			static Typed<Entry> ondeactivate;
@@ -88,6 +108,11 @@ namespace Database
 		void AddDeactivate(unsigned int aDatabaseId, Entry aEntry)
 		{
 			GetDeactivate().Put(aDatabaseId, aEntry);
+		}
+		void RemoveDeactivate(unsigned int aDatabaseId, Entry aEntry)
+		{
+			if (GetDeactivate().Get(aDatabaseId) == aEntry)
+				GetDeactivate().Delete(aDatabaseId);
 		}
 	}
 

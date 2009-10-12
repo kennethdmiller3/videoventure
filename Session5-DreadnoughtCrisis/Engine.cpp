@@ -20,6 +20,11 @@ namespace Database
 				AddConfigure(0xeb9ca706 /* "enginebase" */, Entry(this, &EngineBaseLoader::Configure));
 			}
 
+			~EngineBaseLoader()
+			{
+				RemoveConfigure(0xeb9ca706 /* "enginebase" */, Entry(this, &EngineBaseLoader::Configure));
+			}
+
 			void Configure(unsigned int aId, const TiXmlElement *element)
 			{
 				float &enginebase = Database::enginebasetemplate.Open(aId);
@@ -35,6 +40,11 @@ namespace Database
 			EngineAddLoader()
 			{
 				AddConfigure(0xc31e166e /* "engineadd" */, Entry(this, &EngineAddLoader::Configure));
+			}
+
+			~EngineAddLoader()
+			{
+				RemoveConfigure(0xc31e166e /* "engineadd" */, Entry(this, &EngineAddLoader::Configure));
 			}
 
 			void Configure(unsigned int aId, const TiXmlElement *element)
@@ -69,6 +79,12 @@ namespace Database
 				AddDeactivate(0x8e6d1598 /* "enginebasetemplate" */, Entry(this, &EngineBaseInitializer::Deactivate));
 			}
 
+			~EngineBaseInitializer()
+			{
+				RemoveActivate(0x8e6d1598 /* "enginebasetemplate" */, Entry(this, &EngineBaseInitializer::Activate));
+				RemoveDeactivate(0x8e6d1598 /* "enginebasetemplate" */, Entry(this, &EngineBaseInitializer::Deactivate));
+			}
+
 			void Activate(unsigned int aId)
 			{
 				float &setspeed = Database::setspeed.Open(aId);
@@ -90,6 +106,12 @@ namespace Database
 			{
 				AddActivate(0xbe47c2c0 /* "engineaddtemplate" */, Entry(this, &EngineAddInitializer::Activate));
 				AddDeactivate(0xbe47c2c0 /* "engineaddtemplate" */, Entry(this, &EngineAddInitializer::Deactivate));
+			}
+
+			~EngineAddInitializer()
+			{
+				RemoveActivate(0xbe47c2c0 /* "engineaddtemplate" */, Entry(this, &EngineAddInitializer::Activate));
+				RemoveDeactivate(0xbe47c2c0 /* "engineaddtemplate" */, Entry(this, &EngineAddInitializer::Deactivate));
 			}
 
 			void Apply(unsigned int aId, float aDelta)

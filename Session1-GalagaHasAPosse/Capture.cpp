@@ -40,6 +40,11 @@ namespace Database
 				AddConfigure(0xfc9819c1 /* "capture" */, Entry(this, &CaptureLoader::Configure));
 			}
 
+			~CaptureLoader()
+			{
+				RemoveConfigure(0xfc9819c1 /* "capture" */, Entry(this, &CaptureLoader::Configure));
+			}
+
 			void Configure(unsigned int aId, const TiXmlElement *element)
 			{
 				CaptureTemplate &capture = Database::capturetemplate.Open(aId);
@@ -59,6 +64,12 @@ namespace Database
 			{
 				AddActivate(0x6d1fb927 /* "capturetemplate" */, Entry(this, &CaptureInitializer::Activate));
 				AddDeactivate(0x6d1fb927 /* "capturetemplate" */, Entry(this, &CaptureInitializer::Deactivate));
+			}
+
+			~CaptureInitializer()
+			{
+				RemoveActivate(0x6d1fb927 /* "capturetemplate" */, Entry(this, &CaptureInitializer::Activate));
+				RemoveDeactivate(0x6d1fb927 /* "capturetemplate" */, Entry(this, &CaptureInitializer::Deactivate));
 			}
 
 			void Activate(unsigned int aId)
