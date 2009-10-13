@@ -55,6 +55,7 @@
 #include "Hash.h"
 #include "Database.h"
 #include "Input.h"
+#include "Random.h"
 
 
 // TO DO: move all these definitions to more appropriate locations
@@ -66,85 +67,18 @@ extern int DebugPrint(const char *format, ...);
 
 // GLOBAL VALUES (HACK)
 
-// screen attributes
-extern int SCREEN_WIDTH;
-extern int SCREEN_HEIGHT;
-extern int SCREEN_DEPTH;
-extern bool SCREEN_FULLSCREEN;
-
-// view attributes
-extern float VIEW_SIZE;
-
-// opengl attributes
-extern bool OPENGL_SWAPCONTROL;
-extern bool OPENGL_ANTIALIAS;
-extern int OPENGL_MULTISAMPLE;
-
-// debug output
-extern bool DEBUGPRINT_OUTPUTCONSOLE;
-extern bool DEBUGPRINT_OUTPUTDEBUG;
-extern bool DEBUGPRINT_OUTPUTSTDERR;
-
-// visual profiler
-extern bool PROFILER_OUTPUTSCREEN;
-extern bool PROFILER_OUTPUTPRINT;
-
-// frame rate indicator
-extern bool FRAMERATE_OUTPUTSCREEN;
-extern bool FRAMERATE_OUTPUTPRINT;
-
-// debug draw
-extern bool DEBUG_DRAW;
-
-// simulation attributes
-extern int SIMULATION_RATE;
-extern float TIME_SCALE;
-extern bool FIXED_STEP;
-
-// rendering attributes
-extern int MOTIONBLUR_STEPS;
-extern float MOTIONBLUR_TIME;
-
-// sound attributes
-extern int SOUND_CHANNELS;
-extern float SOUND_VOLUME_EFFECT;
-extern float SOUND_VOLUME_MUSIC;
-
-// simulation attributes
-extern int SIMULATION_RATE;
-
-// default input configuration
-extern std::string INPUT_CONFIG;
-
-// default level configuration
-extern std::string LEVEL_CONFIG;
-
-// default record configuration
-extern std::string RECORD_CONFIG;
-extern bool record;
-extern bool playback;
-
-// runtime
-extern bool runtime;
-
-// device was reset (HACK)
-extern bool wasreset;
-
-// input system
-extern Input input;
-
 // frame values
-extern float frame_time;
-extern float frame_turns;
+extern GAME_API float frame_time;
+extern GAME_API float frame_turns;
 
 // simulation values
-extern float sim_rate;
-extern float sim_step;
-extern unsigned int sim_turn;
-extern float sim_fraction;
+extern GAME_API float sim_rate;
+extern GAME_API float sim_step;
+extern GAME_API unsigned int sim_turn;
+extern GAME_API float sim_fraction;
 
 // camera position
-extern Vector2 camerapos[2];
+extern GAME_API Vector2 camerapos[2];
 
 
 
@@ -158,19 +92,11 @@ template <typename O, typename I> inline O Cast(I i)
 	return cast.o;
 }
 
-// access float as integer
-union FloatInt
-{
-	float f;
-	int i;
-	unsigned u;
-};
-
 // fast reciprocal square root
 inline float InvSqrt(float x)
 {
 	float xhalf = 0.5f*x;
-	FloatInt floatint;
+	union { float f; int i; } floatint;
 	floatint.f = x;	// get bits for floating value
 	floatint.i = 0x5f375a86 - (floatint.i >> 1); // gives initial guess y0
 	floatint.f *= (1.5f-xhalf*floatint.f*floatint.f); // Newton step, repeating increases accuracy
@@ -202,50 +128,6 @@ template<typename T> struct Rect
 	T h;
 };
 
-namespace Random
-{
-	// TO DO: allow multiple random number generators
-
-	// random seed
-	extern unsigned int gSeed;
-
-	// set seed
-	inline void Seed(unsigned int aSeed)
-	{
-		gSeed = aSeed;
-	}
-
-	// random unsigned long
-	inline unsigned int Int()
-	{
-	//	gSeed = 1664525L * gSeed + 1013904223L;
-		gSeed ^= (gSeed << 13);
-		gSeed ^= (gSeed >> 17);
-		gSeed ^= (gSeed << 5);
-		return gSeed;
-	}
-
-	// random uniform float
-	inline float Float()
-	{
-		FloatInt floatint;
-		floatint.u = 0x3f800000 | (Int() >> 9);
-		return floatint.f - 1.0f;
-	}
-
-	// random range value
-	inline float Value(float aAverage, float aVariance)
-	{
-		return (2.0f * Float() - 1.0f) * aVariance + aAverage;
-	}
-}
-
-// color typedef (HACK)
-typedef Color4 Color4_2[2];
-
-
-// queue a turn action
-extern void OnTurn(unsigned int aTurn, float aFraction, fastdelegate::FastDelegate<void ()> aAction);
 
 #ifndef SDL_arraysize
 #define SDL_arraysize(array)	(sizeof(array)/sizeof(array[0]))
@@ -254,21 +136,7 @@ extern void OnTurn(unsigned int aTurn, float aFraction, fastdelegate::FastDelega
 
 // CONFIGURATION
 
-//#define ENABLE_DEPTH_TEST
-#define ENABLE_FOG
-
-// for consistency between AA modes
-#define ENABLE_SRC_ALPHA_SATURATE
-#define DRAW_FRONT_TO_BACK
-
 #define USE_POOL_ALLOCATOR
-#define USE_CHANGE_DYNAMIC_TYPE
-
-#define COLLECT_DEBUG_DRAW
-//#define COLLIDABLE_DEBUG_DRAW
-
-const int AUDIO_FREQUENCY = 48000;
-
 
 #ifdef USE_POOL_ALLOCATOR
 #include <boost/pool/pool.hpp>

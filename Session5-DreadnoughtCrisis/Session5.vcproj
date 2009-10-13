@@ -20,7 +20,7 @@
 			Name="Debug|Win32"
 			ConfigurationType="2"
 			InheritedPropertySheets="$(SolutionDir)debug.vsprops"
-			CharacterSet="0"
+			CharacterSet="1"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -82,7 +82,7 @@
 			Name="Release|Win32"
 			ConfigurationType="2"
 			InheritedPropertySheets="$(SolutionDir)release.vsprops"
-			CharacterSet="0"
+			CharacterSet="1"
 			WholeProgramOptimization="1"
 			>
 			<Tool
