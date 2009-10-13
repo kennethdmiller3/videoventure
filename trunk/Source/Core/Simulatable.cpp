@@ -30,6 +30,8 @@ void Simulatable::Activate(void)
 		sTail = this;
 		if (!sHead)
 			sHead = this;
+		if (!sNext)
+			sNext = this;
 		mActive = true;
 	}
 }
