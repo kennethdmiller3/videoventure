@@ -13,9 +13,14 @@ namespace BehaviorDatabase
 			static Database::Typed<Entry> configure;
 			return configure;
 		}
-		void AddConfigure(unsigned int aTagId, Entry aConfigure)
+		void AddConfigure(unsigned int aTagId, Entry aEntry)
 		{
-			GetConfigureDB().Put(aTagId, aConfigure);
+			GetConfigureDB().Put(aTagId, aEntry);
+		}
+		void RemoveConfigure(unsigned int aTagId, Entry aEntry)
+		{
+			if (GetConfigureDB().Get(aTagId) == aEntry)
+				GetConfigureDB().Delete(aTagId);
 		}
 		const Entry &GetConfigure(unsigned int aTagId)
 		{
@@ -37,6 +42,11 @@ namespace BehaviorDatabase
 		{
 			GetActivate().Put(aDatabaseId, aEntry);
 		}
+		void RemoveActivate(unsigned int aDatabaseId, ActivateEntry aEntry)
+		{
+			if (GetActivate().Get(aDatabaseId) == aEntry)
+				GetActivate().Delete(aDatabaseId);
+		}
 		const ActivateEntry &GetActivate(unsigned int aDatabaseId)
 		{
 			return GetActivate().Get(aDatabaseId);
@@ -50,6 +60,11 @@ namespace BehaviorDatabase
 		void AddDeactivate(unsigned int aDatabaseId, DeactivateEntry aEntry)
 		{
 			GetDeactivate().Put(aDatabaseId, aEntry);
+		}
+		void RemoveDeactivate(unsigned int aDatabaseId, DeactivateEntry aEntry)
+		{
+			if (GetDeactivate().Get(aDatabaseId) == aEntry)
+				GetDeactivate().Delete(aDatabaseId);
 		}
 		const DeactivateEntry &GetDeactivate(unsigned int aDatabaseId)
 		{

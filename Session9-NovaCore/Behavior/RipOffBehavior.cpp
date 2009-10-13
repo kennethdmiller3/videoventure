@@ -3,11 +3,10 @@
 #include "RipOffBehavior.h"
 #include "BotUtilities.h"
 #include "Tag.h"
-#include "..\Controller.h"
-#include "..\Entity.h"
-#include "..\Ship.h"
-#include "..\Link.h"
-#include "..\Collidable.h"
+#include "Controller.h"
+#include "Entity.h"
+#include "Link.h"
+#include "Collidable.h"
 
 
 /*
@@ -47,6 +46,11 @@ namespace BehaviorDatabase
 				AddConfigure(0xc4fc7791 /* "ripoff" */, Entry(this, &RipOffBehaviorLoader::Configure));
 			}
 
+			~RipOffBehaviorLoader()
+			{
+				RemoveConfigure(0xc4fc7791 /* "ripoff" */, Entry(this, &RipOffBehaviorLoader::Configure));
+			}
+
 			unsigned int Configure(unsigned int aId, const TiXmlElement *element)
 			{
 				RipOffBehaviorTemplate &ripoff = Database::ripoffbehaviortemplate.Open(aId);
@@ -67,6 +71,12 @@ namespace BehaviorDatabase
 			{
 				AddActivate(0x574b0d09 /* "ripoffbehaviortemplate" */, ActivateEntry(this, &RipOffBehaviorInitializer::Activate));
 				AddDeactivate(0x574b0d09 /* "ripoffbehaviortemplate" */, DeactivateEntry(this, &RipOffBehaviorInitializer::Deactivate));
+			}
+
+			~RipOffBehaviorInitializer()
+			{
+				RemoveActivate(0x574b0d09 /* "ripoffbehaviortemplate" */, ActivateEntry(this, &RipOffBehaviorInitializer::Activate));
+				RemoveDeactivate(0x574b0d09 /* "ripoffbehaviortemplate" */, DeactivateEntry(this, &RipOffBehaviorInitializer::Deactivate));
 			}
 
 			Behavior *Activate(unsigned int aId, Controller *aController)
@@ -143,9 +153,9 @@ RipOffBehavior::RipOffBehavior(unsigned int aId, Controller *aController)
 	bind(this, &RipOffBehavior::PickClosestTarget);
 
 	// add a boundary violation listener: escape
-	Database::Typed<Collidable::BoundaryListener> &collidableboundaryviolations = Database::collidableboundaryviolation.Open(mId);
-	collidableboundaryviolations.Put(Database::Key(this), Collidable::BoundaryListener(this, &RipOffBehavior::Escape));
-	Database::collidableboundaryviolation.Close(mId);
+	Collidable::ContactSignal &signal = Database::collidablecontactadd.Open(0x9e212406 /* "escape" */);
+	signal.Connect(this, &RipOffBehavior::Escape);
+	Database::collidablecontactadd.Close(mId);
 }
 
 // destructor
@@ -159,12 +169,9 @@ RipOffBehavior::~RipOffBehavior()
 	}
 
 	// remove boundary violation listener
-	if (Database::collidableboundaryviolation.Find(mId))
-	{
-		Database::Typed<Collidable::BoundaryListener> &collidableboundaryviolations = Database::collidableboundaryviolation.Open(mId);
-		collidableboundaryviolations.Delete(Database::Key(this));
-		Database::collidableboundaryviolation.Close(mId);
-	}
+	Collidable::ContactSignal &signal = Database::collidablecontactadd.Open(0x9e212406 /* "escape" */);
+	signal.Disconnect(this, &RipOffBehavior::Escape);
+	Database::collidablecontactadd.Close(mId);
 }
 
 // pick a random target
@@ -234,7 +241,7 @@ Status RipOffBehavior::AvoidFriendly(void)
 	const RipOffBehaviorTemplate &ripoffbehavior = Database::ripoffbehaviortemplate.Get(mId);
 
 	// close to an friendly?
-	b2FilterData filter = { 0xFFFF, 1 << 3, 0 };
+	b2Filter filter = { 0xFFFF, 1 << 3, 0 };
 	unsigned int friendly = ClosestEntity(ripoffbehavior.mAvoidRadius, filter);
 	if (!friendly)
 		return failedTask;
@@ -253,7 +260,7 @@ Status RipOffBehavior::AttackEnemy(void)
 	const RipOffBehaviorTemplate &ripoffbehavior = Database::ripoffbehaviortemplate.Get(mId);
 
 	// close to an enemy?
-	b2FilterData filter = { 0xFFFF, 1 << 1, 0 };
+	b2Filter filter = { 0xFFFF, 1 << 1, 0 };
 	unsigned int enemy = ClosestEntity(mTarget ? ripoffbehavior.mAttackRadius : 65536.0f, filter);
 	if (!enemy)
 		return failedTask;
@@ -265,10 +272,10 @@ Status RipOffBehavior::AttackEnemy(void)
 
 	// check line of fire
 	b2Segment shotsegment = { mEntity->GetPosition(), mEntity->GetTransform().Transform(Vector2(0, 64)) };
-	b2FilterData shotfilter = { 1 << 4, 0xFFFF, 0 };
+	b2Filter shotfilter = { 1 << 4, 0xFFFF, 0 };
 	float lambda = 1.0f;
 	b2Vec2 normal;
-	b2Shape *shape;
+	b2Fixture *shape;
 	unsigned int hitId = Collidable::TestSegment(shotsegment, shotfilter, mId, lambda, normal, shape);
 
 	// fire if not blocked
@@ -511,67 +518,81 @@ unsigned int RipOffBehavior::ClosestTarget(float aRadius, bool aLocked)
 	return bestTarget;
 }
 
-unsigned int RipOffBehavior::ClosestEntity(float aRadius, b2FilterData aFilter)
+class ClosestEntityCallback : public b2QueryCallback
 {
-	// get the collision world
-	b2World *world = Collidable::GetWorld();
+public:
+	unsigned int mId;
+	b2Filter mFilter;
+	Transform2 mTransform;
+	float mBestDist;
+	unsigned int mBestTarget;
 
-	// get nearby shapes
-	b2AABB aabb;
-	aabb.lowerBound.Set(mEntity->GetPosition().x - aRadius, mEntity->GetPosition().y - aRadius);
-	aabb.upperBound.Set(mEntity->GetPosition().x + aRadius, mEntity->GetPosition().y + aRadius);
-	b2Shape* shapes[b2_maxProxies];
-	int32 count = world->Query(aabb, shapes, b2_maxProxies);
-
-	// get transform
-	const Matrix2 transform(mEntity->GetTransform());
-
-	// best distance
-	float bestDist = aRadius;
-
-	// best target
-	unsigned int bestTarget = 0;
-
-	// for each shape...
-	for (int32 i = 0; i < count; ++i)
+public:
+	ClosestEntityCallback(unsigned int aId, float aRadius, const b2Filter &aFilter, const Transform2 &aTransform)
+		: mId(aId), mFilter(aFilter), mTransform(aTransform), mBestDist(aRadius), mBestTarget(0)
 	{
-		// get the shape
-		b2Shape* shape = shapes[i];
+	}
 
-		// skip unhittable shapes
-		if (shape->IsSensor())
-			continue;
-		if (!Collidable::CheckFilter(aFilter, shape->GetFilterData()))
-			continue;
+	virtual bool ReportFixture(b2Fixture* fixture)
+	{
+		// skip unhittable fixtures
+		if (fixture->IsSensor())
+			return true;
+		if (!Collidable::CheckFilter(mFilter, fixture->GetFilterData()))
+			return true;
 
 		// get the parent body
-		b2Body* body = shapes[i]->GetBody();
+		b2Body* body = fixture->GetBody();
 
 		// get the collidable identifier
 		unsigned int targetId = reinterpret_cast<unsigned int>(body->GetUserData());
 
 		// skip non-entity
 		if (targetId == 0)
-			continue;
+			return true;
 
 		// skip self
 		if (targetId == mId)
-			continue;
+			return true;
+
+		// get local position
+		b2Vec2 localPos;
+		switch (fixture->GetType())
+		{
+		case b2Shape::e_circle:		localPos = static_cast<b2CircleShape *>(fixture->GetShape())->m_p;	break;
+		case b2Shape::e_polygon:	localPos = static_cast<b2PolygonShape *>(fixture->GetShape())->m_centroid; break;
+		default:					localPos = Vector2(0, 0); break;
+		}
+		Vector2 fixturePos(body->GetWorldPoint(localPos));
 
 		// get range
-		Vector2 dir(transform.Untransform(Vector2(body->GetPosition())));
-		float dist = dir.Length() - 0.5f * shapes[i]->GetSweepRadius();
+		Vector2 dir(mTransform.Transform(fixturePos));
+		float dist = dir.Length() - 0.5f * fixture->GetShape()->m_radius;
 
 		// if closer than the current best
-		if (bestDist > dist)
+		if (mBestDist > dist)
 		{
 			// update target
-			bestDist = dist;
-			bestTarget = targetId;
+			mBestDist = dist;
+			mBestTarget = targetId;
 		}
+		return true;
 	}
+};
 
-	return bestTarget;
+unsigned int RipOffBehavior::ClosestEntity(float aRadius, b2Filter aFilter)
+{
+	// fill in callback values
+	ClosestEntityCallback callback(mId, aRadius, aFilter, mEntity->GetTransform());
+
+	// perform query
+	b2AABB aabb;
+	aabb.lowerBound.Set(mEntity->GetPosition().x - aRadius, mEntity->GetPosition().y - aRadius);
+	aabb.upperBound.Set(mEntity->GetPosition().x + aRadius, mEntity->GetPosition().y + aRadius);
+	Collidable::QueryAABB(&callback, aabb);
+
+	// return best target
+	return callback.mBestTarget;
 }
 
 // drive
@@ -586,23 +607,19 @@ void RipOffBehavior::Drive(float aSpeed, Vector2 aDirection)
 	// local direction
 	Vector2 localDir = transform.Unrotate(aDirection);
 
-	// angle to target direction
-	float aimAngle = -atan2f(localDir.x, localDir.y);
-
 	// turn towards target direction
-	const ShipTemplate &ship = Database::shiptemplate.Get(mId);	// <-- hack!
-	if (ship.mMaxOmega != 0.0f)
-	{
-		mController->mTurn += Clamp(aimAngle / (ship.mMaxOmega * sim_step), -1.0f, 1.0f);
-	}
+	mController->mTurn += SteerTowards(mEntity, localDir);
 }
 
 // escape
-void RipOffBehavior::Escape(unsigned int aId)
+void RipOffBehavior::Escape(unsigned int aId1, unsigned int aId2, float aTime, const b2Contact &aContact)
 {
-	assert(aId == mId);
+	// skip incorrect recipient
+	if (aId2 != mId)
+		return;
 
 	// I'm free!  I'm freeeeee!
+	DebugPrint("\"%s\" (%08x) escaped with \"%s\" (%08x)\n", Database::name.Get(mId).c_str(), mId, Database::name.Get(mTarget).c_str(), mTarget);
 	Database::Delete(mTarget);
 	Database::Delete(mId);
 }
@@ -610,6 +627,9 @@ void RipOffBehavior::Escape(unsigned int aId)
 // attach the specified target
 void RipOffBehavior::Attach(unsigned int aTarget)
 {
+	assert(mTarget == aTarget);
+	DebugPrint("\"%s\" (%08x) attached \"%s\" (%08x)\n", Database::name.Get(mId).c_str(), mId, Database::name.Get(aTarget).c_str(), aTarget);
+
 	const RipOffBehaviorTemplate &ripoffbehavior = Database::ripoffbehaviortemplate.Get(mId);
 
 	// create a link template
@@ -619,7 +639,6 @@ void RipOffBehavior::Attach(unsigned int aTarget)
 	linktemplate.mSub = mTarget;
 	linktemplate.mSecondary = mTarget;
 	linktemplate.mUpdateAngle = false;
-	linktemplate.mUpdateTeam = false;
 	linktemplate.mDeleteSecondary = false;
 
 	// create a link
@@ -636,8 +655,11 @@ void RipOffBehavior::Attach(unsigned int aTarget)
 // detach the specified target
 void RipOffBehavior::Detach(unsigned int aTarget)
 {
+	assert(mTarget == aTarget);
 	if (Database::link.Find(mId))
 	{
+		DebugPrint("\"%s\" (%08x) detached \"%s\" (%08x)\n", Database::name.Get(mId).c_str(), mId, Database::name.Get(aTarget).c_str(), aTarget);
+
 		// remove the link
 		Database::Typed<Link *> &links = Database::link.Open(mId);
 		Link *link = links.Get(mTarget);
@@ -662,6 +684,9 @@ void RipOffBehavior::Detach(unsigned int aTarget)
 // lock the specified target
 void RipOffBehavior::Lock(unsigned int aTarget)
 {
+	assert(mTarget == aTarget);
+	DebugPrint("\"%s\" (%08x) locked \"%s\" (%08x)\n", Database::name.Get(mId).c_str(), mId, Database::name.Get(mTarget).c_str(), mTarget);
+
 	// set the "locked" tag to the owner
 	Database::Typed<Tag> &tags = Database::tag.Open(aTarget);
 	Tag &tag = tags.Open(0xce164093 /* "locked" */);
@@ -673,8 +698,11 @@ void RipOffBehavior::Lock(unsigned int aTarget)
 // unlock the specified target
 void RipOffBehavior::Unlock(unsigned int aTarget)
 {
+	assert(mTarget == aTarget);
 	if (Database::tag.Find(aTarget))
 	{
+		DebugPrint("\"%s\" (%08x) unlocked \"%s\" (%08x)\n", Database::name.Get(mId).c_str(), mId, Database::name.Get(mTarget).c_str(), mTarget);
+
 		// remove the "locked" tag
 		Database::Typed<Tag> &tags = Database::tag.Open(aTarget);
 		if (tags.Get(0xce164093 /* "locked" */).u == mId)

@@ -2,6 +2,7 @@
 
 #include "BotUtilities.h"
 #include "Entity.h"
+#include "Ship.h"
 
 Vector2 Intercept(float aLeading, const Vector2 &aPosition, const Vector2 &aVelocity)
 {
@@ -75,4 +76,21 @@ Vector2 TargetDir(float aLeading, const Entity *aEntity, const Entity *aTargetEn
 
 	// return direction
 	return targetDir;
+}
+
+float SteerTowards(const Entity *aEntity, const Vector2 &aLocalDir)
+{
+	// get physics properties
+	// TO DO: replace this with an control property
+	const ShipTemplate &ship = Database::shiptemplate.Get(aEntity->GetId());	// <-- hack!
+	if (ship.mMaxOmega != 0.0f)
+	{
+		// angle to target
+		float aimAngle = -atan2f(aLocalDir.x, aLocalDir.y);
+
+		// turn towards target direction
+		return Clamp(aimAngle / (ship.mMaxOmega * sim_step), -1.0f, 1.0f);
+	}
+
+	return 0.0f;
 }

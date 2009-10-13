@@ -5,7 +5,6 @@
 #include "BotUtilities.h"
 #include "Controller.h"
 #include "Entity.h"
-#include "Ship.h"
 
 namespace Database
 {
@@ -167,18 +166,11 @@ Status AimBehavior::Execute(void)
 	// local direction
 	mController->mAim = transform.Unrotate(targetDir);
 
-	// angle to target
-	float aimAngle = -atan2f(mController->mAim.x, mController->mAim.y);
-
 	// if aiming...
 	if (aim.mStrength != 0)
 	{
 		// turn towards target direction
-		const ShipTemplate &ship = Database::shiptemplate.Get(mId);	// <-- hack!
-		if (ship.mMaxOmega != 0.0f)
-		{
-			mController->mTurn += aim.mStrength * Clamp(aimAngle / (ship.mMaxOmega * sim_step), -1.0f, 1.0f);
-		}
+		mController->mTurn += aim.mStrength * SteerTowards(entity, mController->mAim);
 	}
 
 	// for each fire cone...
