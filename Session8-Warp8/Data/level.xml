@@ -2,18 +2,36 @@
 <!-- Test Level -->
 <world xmin="-384" ymin="-192" xmax="384" ymax="192" wall="0">
 	<!-- player camera -->
-	<playercamera>
-		<aim scale="0" filter="0"/>
-		<scale x="0.25" y="0"/>
-	</playercamera>
 	<entity name="perimeter">
 		<collidable>
 			<body>
-				<edge loop="1">
-					<vertex x="-200" y="110"/>
-					<vertex x="200" y="110"/>
-					<vertex x="200" y="-110"/>
-					<vertex x="-200" y="-110"/>
+				<edge>
+					<vertex1 x="-200" y="110"/>
+					<vertex2 x="200" y="110"/>
+					<restitution value="0"/>
+					<friction value="0"/>
+					<category value="0"/>
+					<mask default="0" bit1="1"/>
+				</edge>
+				<edge>
+					<vertex1 x="200" y="110"/>
+					<vertex2 x="200" y="-110"/>
+					<restitution value="0"/>
+					<friction value="0"/>
+					<category value="0"/>
+					<mask default="0" bit1="1"/>
+				</edge>
+				<edge>
+					<vertex1 x="200" y="-110"/>
+					<vertex2 x="-200" y="-110"/>
+					<restitution value="0"/>
+					<friction value="0"/>
+					<category value="0"/>
+					<mask default="0" bit1="1"/>
+				</edge>
+				<edge>
+					<vertex1 x="-200" y="-110"/>
+					<vertex2 x="-200" y="110"/>
 					<restitution value="0"/>
 					<friction value="0"/>
 					<category value="0"/>
@@ -34,10 +52,14 @@
 	<import name="sound/stargate-dynamofire.xml" />
 	<!-- players -->
 	<entity name="1P">
-		<position x="0" y="-128" />
+		<position x="0" y="-100" />
 		<velocity x="0" y="240" />
 		<player name="playership" start="1" cycle="4" lives="3" firstextra="20000" extra="50000" />
 		<team name="blue" />
+		<playercamera>
+			<aim scale="0" filter="0"/>
+			<scale x="0.25" y="0"/>
+		</playercamera>
 	</entity>
 	<!-- draw lists -->
 	<import name="drawlist/square.xml" />
@@ -125,7 +147,7 @@
 					<set name="a" type="color" r="1" g="1" b="1" a="1"/>
 					<repeat count="1024">
 						<set name="c" type="color" rand="1" r_avg="0.75" r_var="0.25" g_avg="0.75" g_var="0.25" b_avg="0.75" b_var="0.25" a_avg="1" a_var="0" />
-						<mul name="c" variable="a"/>
+						<mul name="c" type="color" variable="a"/>
 						<color variable="c"/>
 						<set name="p0" type="position" rand="1" x_avg="0" x_var="512" y_avg="0" y_var="512" z_avg="640" z_var="384" />
 						<repeat count="2">
@@ -182,7 +204,9 @@
 		<mask default="0" bit0="1" bit1="1"/>
 	</collidablefilter>
 	<!-- music -->
-	<music name="soundtrack" file="4mat-thalamusic.mod"/>
+	<entity name="soundtrack">
+		<music file="4mat-thalamusic.mod"/>
+	</entity>
 
 	<!-- player bullet explosion -->
 	<import name="template/playermachinegunhit.xml" />
@@ -569,14 +593,18 @@
 	<template name="enemyshipspread" type="enemyshiplarge">
 		<link name="turret">
 			<weapon>
-				<offset angle="-10" x="0" y="4" />
-				<inherit x="0" y="0"/>
-				<velocity x="0" y="180" />
-				<ordnance name="enemypulsebullet" />
 				<shot delay="1.0" />
-				<salvo shots="5">
-					<offset angle="5"/>
-				</salvo>
+				<action>
+					<loop name="angle" from="-10" to="10" by="5">
+						<ordnance name="enemypulsebullet">
+							<position x="0" y="4">
+								<angle variable="angle"/>
+							</position>
+							<velocity x="0" y="180" />
+						</ordnance>
+					</loop>
+					<cue name="fire"/>
+				</action>
 			</weapon>
 			<soundcue>
 				<cue name="fire" sound="stargate-spaceguppyshot" />
@@ -654,7 +682,7 @@
 		<spawner>
 			<velocity x="0" y="90" />
 			<scatter x="160"/>
-			<spawn name="enemyshipspread" start="120" cycle="15" track="1"/>
+			<spawn name="enemyshipspread" start="0" cycle="15" track="1"/>
 		</spawner>
 	</entity>
 </world>

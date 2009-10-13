@@ -5,9 +5,12 @@
 
 
 	<!-- music -->
-	
-	<music name="title" file="4mat-starworx.mod" />
-	
+
+	<entity name="title">
+		<music file="4mat-starworx.mod" />
+	</entity>
+
+
 	<!-- reticule -->
 
 	<import name="drawlist/reticule.xml" />
