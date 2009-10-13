@@ -23,7 +23,6 @@
 		<position x="0" y="0" />
 		<player name="playership" start="1" cycle="4" lives="10" extra="1000" />
 		<team name="blue" />
-		<!-- player camera -->
 		<playercamera>
 			<offset y="96"/>
 			<aim scale="0" filter="0"/>
@@ -200,7 +199,7 @@
 						<vertex variable="p"/>
 						<mul name="p" type="scale" x="-1"/>
 						<vertex variable="p"/>
-						<add name="p" variable="d"/>
+						<add name="p" type="scale" variable="d"/>
 						<sub name="d" type="translate" y="1"/>
 						<vertex variable="p"/>
 						<mul name="p" type="scale" x="-1"/>
@@ -213,7 +212,7 @@
 						<vertex variable="p"/>
 						<mul name="p" type="scale" x="-1"/>
 						<vertex variable="p"/>
-						<add name="p" variable="d"/>
+						<add name="p" type="scale" variable="d"/>
 						<add name="d" type="translate" y="0.5"/>
 						<vertex variable="p"/>
 						<mul name="p" type="scale" x="-1"/>
