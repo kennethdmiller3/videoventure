@@ -58,6 +58,11 @@ namespace Database
 				AddConfigure(0x26de6ef7 /* "criticalitem" */, Entry(this, &CriticalItemLoader::Configure));
 			}
 
+			~CriticalItemLoader()
+			{
+				RemoveConfigure(0x26de6ef7 /* "criticalitem" */, Entry(this, &CriticalItemLoader::Configure));
+			}
+
 			void Configure(unsigned int aId, const TiXmlElement *element)
 			{
 				bool &criticalitem = Database::criticalitem.Open(aId);
@@ -79,6 +84,12 @@ namespace Database
 			{
 				AddPostActivate(0x26de6ef7 /* "criticalitem" */, Entry(this, &CriticalItemInitializer::PostActivate));
 				AddPreDeactivate(0x26de6ef7 /* "criticalitem" */, Entry(this, &CriticalItemInitializer::PreDeactivate));
+			}
+
+			~CriticalItemInitializer()
+			{
+				RemovePostActivate(0x26de6ef7 /* "criticalitem" */, Entry(this, &CriticalItemInitializer::PostActivate));
+				RemovePreDeactivate(0x26de6ef7 /* "criticalitem" */, Entry(this, &CriticalItemInitializer::PreDeactivate));
 			}
 
 			void PostActivate(unsigned int aId)

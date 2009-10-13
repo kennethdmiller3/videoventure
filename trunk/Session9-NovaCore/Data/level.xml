@@ -1,15 +1,82 @@
 <?xml version="1.0" standalone="no"?>
 <world xmin="-215" ymin="-165" xmax="215" ymax="165" wall="0">
-
+	<library name="session9.dll" />
+	
+	<!-- level escape -->
+	<entity name="escape">
+		<collidable>
+			<body>
+				<edge>
+					<vertex1 x="-215" y="165"/>
+					<vertex2 x="215" y="165"/>
+					<restitution value="0"/>
+					<friction value="0"/>
+					<category value="0"/>
+					<mask default="0" bit3="1"/>
+					<sensor value="1"/>
+				</edge>
+				<edge>
+					<vertex1 x="215" y="165"/>
+					<vertex2 x="215" y="-165"/>
+					<restitution value="0"/>
+					<friction value="0"/>
+					<category value="0"/>
+					<mask default="0" bit3="1"/>
+					<sensor value="1"/>
+				</edge>
+				<edge>
+					<vertex1 x="215" y="-165"/>
+					<vertex2 x="-215" y="-165"/>
+					<restitution value="0"/>
+					<friction value="0"/>
+					<category value="0"/>
+					<mask default="0" bit3="1"/>
+					<sensor value="1"/>
+				</edge>
+				<edge>
+					<vertex1 x="-215" y="-165"/>
+					<vertex2 x="-215" y="165"/>
+					<restitution value="0"/>
+					<friction value="0"/>
+					<category value="0"/>
+					<mask default="0" bit3="1"/>
+					<sensor value="1"/>
+				</edge>
+			</body>
+		</collidable>	
+	</entity>
+	
 	<!-- level perimeter -->
 	<entity name="perimeter">
 		<collidable>
 			<body>
-				<edge loop="1">
-					<vertex x="-200" y="150"/>
-					<vertex x="200" y="150"/>
-					<vertex x="200" y="-150"/>
-					<vertex x="-200" y="-150"/>
+				<edge>
+					<vertex1 x="-200" y="150"/>
+					<vertex2 x="200" y="150"/>
+					<restitution value="0"/>
+					<friction value="0"/>
+					<category value="0"/>
+					<mask default="0" bit1="1" bit2="1"/>
+				</edge>
+				<edge>
+					<vertex1 x="200" y="150"/>
+					<vertex2 x="200" y="-150"/>
+					<restitution value="0"/>
+					<friction value="0"/>
+					<category value="0"/>
+					<mask default="0" bit1="1" bit2="1"/>
+				</edge>
+				<edge>
+					<vertex1 x="200" y="-150"/>
+					<vertex2 x="-200" y="-150"/>
+					<restitution value="0"/>
+					<friction value="0"/>
+					<category value="0"/>
+					<mask default="0" bit1="1" bit2="1"/>
+				</edge>
+				<edge>
+					<vertex1 x="-200" y="-150"/>
+					<vertex2 x="-200" y="150"/>
 					<restitution value="0"/>
 					<friction value="0"/>
 					<category value="0"/>
@@ -19,13 +86,6 @@
 		</collidable>
 	</entity>
 	
-	
-	<!-- player camera -->
-	<playercamera>
-		<aim scale="0" filter="0"/>
-		<scale x="0.25" y="0.25"/>
-	</playercamera>
-
 	
 	<!-- sounds -->
 	<import name="sound/stargate-warpin.xml" />
@@ -46,6 +106,10 @@
 		<position x="0" y="0" />
 		<player name="playershipwarp" start="1.5" cycle="2" />
 		<team name="blue" />
+		<playercamera>
+			<aim scale="0" filter="0"/>
+			<scale x="0.25" y="0.25"/>
+		</playercamera>
 	</entity>
 
 

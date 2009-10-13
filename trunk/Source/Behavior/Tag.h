@@ -9,5 +9,5 @@ union Tag
 
 namespace Database
 {
-	extern Typed<Typed<Tag> > tag;
+	extern GAME_API Typed<Typed<Tag> > tag;
 }

@@ -11,7 +11,7 @@ const float sMetersPerLengthUnit = 1.0f/sLengthUnitsPerMeter;
 
 class LinkTemplate;
 
-extern void ConfigureFilterData(b2Filter &aFilter, const TiXmlElement *element);
+extern GAME_API void ConfigureFilterData(b2Filter &aFilter, const TiXmlElement *element);
 
 struct CollisionCircleDef 
 {
@@ -114,8 +114,7 @@ protected:
 	b2Body *body;
 
 public:
-	typedef Signal<void (unsigned int, unsigned int, float, const b2Contact &)> ContactSignal;
-	typedef Signal<void (unsigned int)> BoundarySignal;
+	typedef Signal<void (unsigned int id1, unsigned int id2, float t, const b2Contact &contact)> ContactSignal;
 
 public:
 #ifdef USE_POOL_ALLOCATOR

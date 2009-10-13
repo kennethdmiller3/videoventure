@@ -31,25 +31,25 @@ typedef Task Status;
 typedef fastdelegate::FastDelegate<void (Status)> TaskObserver;
 
 // task still processing: call again next tick
-extern Status runningTask;
+extern GAME_API Status runningTask;
 
 // task active but waiting: call only when notified to resume
-extern Status suspendedTask;
+extern GAME_API Status suspendedTask;
 
 // task finished successfully: do not call again
-extern Status completedTask;
+extern GAME_API Status completedTask;
 
 // task finished unsuccessfully: do not call again
-extern Status failedTask;
+extern GAME_API Status failedTask;
 
 // task had an error: do not call again; abort search and start again
-extern Status errorTask;
+extern GAME_API Status errorTask;
 
 // task aborted from outside: should not be returned by tasks
-extern Status abortedTask;
+extern GAME_API Status abortedTask;
 
 // empty task: does nothing
-extern Status nullTask;
+extern GAME_API Status nullTask;
 
 // is the specified task active?
 inline bool IsTaskActive(const Task &aStatus)

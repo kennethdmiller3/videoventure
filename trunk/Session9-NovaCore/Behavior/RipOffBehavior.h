@@ -9,10 +9,10 @@ class RipOffBehaviorTemplate
 public:
 	unsigned int mTargetTag;
 
-	b2FilterData mAvoidFilter;
+	b2Filter mAvoidFilter;
 	float mAvoidRadius;
 
-	b2FilterData mAttackFilter;
+	b2Filter mAttackFilter;
 	float mAttackRadius;
 
 	float mCloseRadius;
@@ -56,11 +56,11 @@ public:
 protected:
 	unsigned int RandomTarget(void);
 	unsigned int ClosestTarget(float aRadius, bool aLocked);
-	unsigned int ClosestEntity(float aRadius, b2FilterData aFilter);
+	unsigned int ClosestEntity(float aRadius, b2Filter aFilter);
 
 	void Drive(float aSpeed, Vector2 aDirection);
 
-	void Escape(unsigned int aId);
+	void Escape(unsigned int aId1, unsigned int aId2, float aTime, const b2Contact &aContact);
 
 	void Attach(unsigned int aTarget);
 	void Detach(unsigned int aTarget);
