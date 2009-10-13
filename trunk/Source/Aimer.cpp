@@ -119,9 +119,15 @@ bool AimerTemplate::Configure(const TiXmlElement *element, unsigned int aId)
 			{
 				const BehaviorDatabase::Loader::Entry &configure = BehaviorDatabase::Loader::GetConfigure(hash);
 				if (configure)
-					mBehaviors.push_back(configure(aId, child));
+				{
+					unsigned int initializer = configure(aId, child);
+					if (std::find(mBehaviors.begin(), mBehaviors.end(), initializer) == mBehaviors.end())
+						mBehaviors.push_back(initializer);
+				}
 				else
+				{
 					DebugPrint("Unrecognized behavior \"%s\"\n", child->Value());
+				}
 			}
 			break;
 		}

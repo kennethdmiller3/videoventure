@@ -257,7 +257,7 @@ WaveSequence::~WaveSequence(void)
 
 void WaveSequence::SequenceEnter(float aStep)
 {
-	DebugPrint("%08x sequence enter\n", mId);
+	DebugPrint("\"%s\" sequence enter\n", Database::name.Get(mId).c_str());
 
 	mWaveIndex = 0;
 
@@ -268,9 +268,9 @@ void WaveSequence::SequenceEnter(float aStep)
 
 void WaveSequence::SequenceStartPreDelay(float aStep)
 {
-	DebugPrint("%08x sequence start pre-delay\n", mId);
-
 	const WaveSequenceTemplate &wavesequence = Database::wavesequencetemplate.Get(mId);
+
+	DebugPrint("\"%s\" sequence start pre-delay: %.2fs\n", Database::name.Get(mId).c_str(), wavesequence.mPreDelay);
 
 	mTimer -= wavesequence.mPreDelay;
 
@@ -281,11 +281,11 @@ void WaveSequence::SequenceStartPreDelay(float aStep)
 
 void WaveSequence::SequencePreDelay(float aStep)
 {
-	DebugPrint("%08x sequence pre-delay\n", mId);
-
 	mTimer += aStep;
 	if (mTimer < 0.0f)
 		return;
+
+	DebugPrint("\"%s\" sequence finish pre-delay\n", Database::name.Get(mId).c_str());
 
 	const WaveSequenceTemplate &wavesequence = Database::wavesequencetemplate.Get(mId);
 
@@ -301,7 +301,7 @@ void WaveSequence::SequencePreDelay(float aStep)
 
 void WaveSequence::WaveEnter(float aStep)
 {
-	DebugPrint("%08x wave %d enter\n", mId, mWaveIndex);
+	DebugPrint("\"%s\" wave %d enter\n", Database::name.Get(mId).c_str(), mWaveIndex);
 
 	mEntryIndex = 0;
 
@@ -312,14 +312,14 @@ void WaveSequence::WaveEnter(float aStep)
 
 void WaveSequence::WaveStartPreDelay(float aStep)
 {
-	DebugPrint("%08x wave %d start pre-delay\n", mId, mWaveIndex);
-
 	const WaveSequenceTemplate &wavesequence = Database::wavesequencetemplate.Get(mId);
 
 	Database::Typed<WaveTemplate>::Iterator waveitor(&wavesequence.mWaves, mWaveIndex);
 	assert(waveitor.IsValid());
 
 	mTimer -= waveitor.GetValue().mPreDelay;
+
+	DebugPrint("\"%s\" wave %d start pre-delay: %.2fs\n", Database::name.Get(mId).c_str(), mWaveIndex, waveitor.GetValue().mPreDelay);
 
 	Deactivate();
 	SetAction(Action(this, &WaveSequence::WavePreDelay));
@@ -328,11 +328,11 @@ void WaveSequence::WaveStartPreDelay(float aStep)
 
 void WaveSequence::WavePreDelay(float aStep)
 {
-	DebugPrint("%08x wave %d pre-delay\n", mId, mWaveIndex);
-
 	mTimer += aStep;
 	if (mTimer < 0.0f)
 		return;
+
+	DebugPrint("\"%s\" wave %d finish pre-delay\n", Database::name.Get(mId).c_str(), mWaveIndex);
 
 	const WaveSequenceTemplate &wavesequence = Database::wavesequencetemplate.Get(mId);
 
@@ -351,7 +351,7 @@ void WaveSequence::WavePreDelay(float aStep)
 
 void WaveSequence::WaveSpawn(float aStep)
 {
-	DebugPrint("%08x wave %d spawn\n", mId, mWaveIndex);
+	DebugPrint("\"%s\" wave %d spawn\n", Database::name.Get(mId).c_str(), mWaveIndex);
 
 	mTimer += aStep;
 
@@ -372,7 +372,7 @@ void WaveSequence::WaveSpawn(float aStep)
 			return;
 		}
 
-		DebugPrint("%08x wave %d entry %d trigger\n", mId, mWaveIndex, mEntryIndex);
+		DebugPrint("\"%s\" wave %d entry %d trigger\n", Database::name.Get(mId).c_str(), mWaveIndex, mEntryIndex);
 
 		// spawn the entry
 		Entity *entity = Database::entity.Get(mId);
@@ -393,9 +393,10 @@ void WaveSequence::WaveSpawn(float aStep)
 
 void WaveSequence::WaveTrack(float aStep)
 {
-	DebugPrint("%08x wave %d track\n", mId, mWaveIndex);
 	if (mTrack > 0)
 		return;
+
+	DebugPrint("\"%s\" wave %d finish track\n", Database::name.Get(mId).c_str(), mWaveIndex);
 
 	Deactivate();
 	SetAction(Action(this, &WaveSequence::WaveStartPostDelay));
@@ -404,14 +405,14 @@ void WaveSequence::WaveTrack(float aStep)
 
 void WaveSequence::WaveStartPostDelay(float aStep)
 {
-	DebugPrint("%08x wave %d start post-delay\n", mId, mWaveIndex);
-
 	const WaveSequenceTemplate &wavesequence = Database::wavesequencetemplate.Get(mId);
 
 	Database::Typed<WaveTemplate>::Iterator waveitor(&wavesequence.mWaves, mWaveIndex);
 	assert(waveitor.IsValid());
 
 	mTimer -= waveitor.GetValue().mPostDelay;
+
+	DebugPrint("\"%s\" wave %d start post-delay: %.2fs\n", Database::name.Get(mId).c_str(), mWaveIndex, waveitor.GetValue().mPostDelay);
 
 	Deactivate();
 	SetAction(Action(this, &WaveSequence::WavePostDelay));
@@ -420,11 +421,11 @@ void WaveSequence::WaveStartPostDelay(float aStep)
 
 void WaveSequence::WavePostDelay(float aStep)
 {
-	DebugPrint("%08x wave %d post-delay\n", mId, mWaveIndex);
-
 	mTimer += aStep;
 	if (mTimer < 0.0f)
 		return;
+
+	DebugPrint("\"%s\" wave %d finish post-delay\n", Database::name.Get(mId).c_str(), mWaveIndex);
 
 	mTimer -= aStep;
 	Deactivate();
@@ -434,7 +435,7 @@ void WaveSequence::WavePostDelay(float aStep)
 
 void WaveSequence::WaveExit(float aStep)
 {
-	DebugPrint("%08x wave %d exit\n", mId, mWaveIndex);
+	DebugPrint("\"%s\" wave %d exit\n", Database::name.Get(mId).c_str(), mWaveIndex);
 
 	++mWaveIndex;
 
@@ -473,9 +474,9 @@ void WaveSequence::WaveRestart(float aStep)
 
 void WaveSequence::SequenceStartPostDelay(float aStep)
 {
-	DebugPrint("%08x sequence start post-delay\n", mId);
-
 	const WaveSequenceTemplate &wavesequence = Database::wavesequencetemplate.Get(mId);
+
+	DebugPrint("\"%s\" sequence start post-delay: %.2fs\n", Database::name.Get(mId).c_str(), wavesequence.mPostDelay);
 
 	mTimer -= wavesequence.mPostDelay;
 
@@ -486,11 +487,11 @@ void WaveSequence::SequenceStartPostDelay(float aStep)
 
 void WaveSequence::SequencePostDelay(float aStep)
 {
-	DebugPrint("%08x sequence post-delay\n", mId);
-
 	mTimer += aStep;
 	if (mTimer < 0.0f)
 		return;
+
+	DebugPrint("\"%s\" sequence finish post-delay\n", Database::name.Get(mId).c_str());
 
 	mTimer -= aStep;
 	Deactivate();
@@ -500,7 +501,7 @@ void WaveSequence::SequencePostDelay(float aStep)
 
 void WaveSequence::SequenceExit(float aStep)
 {
-	DebugPrint("%08x sequence exit\n", mId);
+	DebugPrint("\"%s\" sequence exit\n", Database::name.Get(mId).c_str());
 
 	Deactivate();
 }
