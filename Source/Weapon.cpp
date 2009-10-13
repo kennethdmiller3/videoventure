@@ -415,7 +415,7 @@ void WeaponTemplateOld::BuildAction(std::vector<unsigned int> &aAction, unsigned
 			if (mBurstStart > 0.0f)
 			{
 				// add burst start delay
-				Expression::Append(aAction, WeaponWait, mBurstStart);
+				Expression::Append(aAction, WeaponWait, Expression::Constant<float>, mBurstStart);
 			}
 		}
 		else
@@ -423,7 +423,7 @@ void WeaponTemplateOld::BuildAction(std::vector<unsigned int> &aAction, unsigned
 			if (mBurstDelay > 0.0f)
 			{
 				// add burst delay
-				Expression::Append(aAction, WeaponWait, mBurstDelay);
+				Expression::Append(aAction, WeaponWait, Expression::Constant<float>, mBurstDelay);
 			}
 		}
 
@@ -932,8 +932,15 @@ void Weapon::UpdateReady(float aStep)
 				resource = Database::resource.Get(mAmmo).Get(weapon.mType);
 			}
 
+			// if out of tracking slots...
+			if (weapon.mTrack && weapon.mTrack <= mTrack)
+			{
+				// switch to delay
+				SetAction(Action(this, &Weapon::UpdateDelay));
+				UpdateDelay(aStep);
+			}
 			// if enough ammo...
-			if (!resource || weapon.mCost <= resource->GetValue())
+			else if (!resource || weapon.mCost <= resource->GetValue())
 			{
 				// deduct ammo
 				if (resource)
@@ -1042,8 +1049,8 @@ void Weapon::UpdateAction(float aStep)
 		}
 		else
 		{
-		// switch to delay
-		SetAction(Action(this, &Weapon::UpdateDelay));
+			// switch to delay
+			SetAction(Action(this, &Weapon::UpdateDelay));
 		}
 	}
 }

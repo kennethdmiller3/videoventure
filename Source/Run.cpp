@@ -192,7 +192,7 @@ void KeyCallback(int aIndex, int aState)
 					EscapeMenuEnter();
 			}
 			break;
-		case 'P':
+		case GLFW_KEY_PAUSE:
 			if (glfwGetKey(GLFW_KEY_LSHIFT) || glfwGetKey(GLFW_KEY_RSHIFT))
 			{
 				paused = true;
@@ -753,9 +753,7 @@ void RunState()
 			singlestep = false;
 
 			// seed the random number generator
-			FloatInt floatint;
-			floatint.f = sim_fraction;
-			Random::Seed(0x92D68CA2 ^ sim_turn ^ floatint.u);
+			Random::Seed(0x92D68CA2 ^ sim_turn ^ Cast<unsigned, float>(sim_fraction));
 			(void)Random::Int();
 
 #ifdef PRINT_SIMULATION_TIMER

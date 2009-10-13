@@ -58,13 +58,14 @@
 #include "Hash.h"
 #include "Database.h"
 #include "Input.h"
+#include "Random.h"
 
 
 // TO DO: move all these definitions to more appropriate locations
 
 
 // debug function
-extern int DebugPrint(const char *format, ...);
+extern GAME_API int DebugPrint(const char *format, ...);
 
 
 // GLOBAL VALUES (HACK)
@@ -137,17 +138,17 @@ extern bool wasreset;
 extern Input input;
 
 // frame values
-extern float frame_time;
-extern float frame_turns;
+extern GAME_API float frame_time;
+extern GAME_API float frame_turns;
 
 // simulation values
-extern float sim_rate;
-extern float sim_step;
-extern unsigned int sim_turn;
-extern float sim_fraction;
+extern GAME_API float sim_rate;
+extern GAME_API float sim_step;
+extern GAME_API unsigned int sim_turn;
+extern GAME_API float sim_fraction;
 
 // camera position
-extern Vector2 camerapos[2];
+extern GAME_API Vector2 camerapos[2];
 
 // reticule handle (HACK)
 extern GLuint reticule_handle;
@@ -164,19 +165,11 @@ template <typename O, typename I> inline O Cast(I i)
 	return cast.o;
 }
 
-// access float as integer
-union FloatInt
-{
-	float f;
-	int i;
-	unsigned u;
-};
-
 // fast reciprocal square root
 inline float InvSqrt(float x)
 {
 	float xhalf = 0.5f*x;
-	FloatInt floatint;
+	union { float f; int i; } floatint;
 	floatint.f = x;	// get bits for floating value
 	floatint.i = 0x5f375a86 - (floatint.i >> 1); // gives initial guess y0
 	floatint.f *= (1.5f-xhalf*floatint.f*floatint.f); // Newton step, repeating increases accuracy
@@ -207,44 +200,6 @@ template<typename T> struct Rect
 	T w;
 	T h;
 };
-
-namespace Random
-{
-	// TO DO: allow multiple random number generators
-
-	// random seed
-	extern unsigned int gSeed;
-
-	// set seed
-	inline void Seed(unsigned int aSeed)
-	{
-		gSeed = aSeed;
-	}
-
-	// random unsigned long
-	inline unsigned int Int()
-	{
-	//	gSeed = 1664525L * gSeed + 1013904223L;
-		gSeed ^= (gSeed << 13);
-		gSeed ^= (gSeed >> 17);
-		gSeed ^= (gSeed << 5);
-		return gSeed;
-	}
-
-	// random uniform float
-	inline float Float()
-	{
-		FloatInt floatint;
-		floatint.u = 0x3f800000 | (Int() >> 9);
-		return floatint.f - 1.0f;
-	}
-
-	// random range value
-	inline float Value(float aAverage, float aVariance)
-	{
-		return (2.0f * Float() - 1.0f) * aVariance + aAverage;
-	}
-}
 
 // color typedef (HACK)
 typedef Color4 Color4_2[2];

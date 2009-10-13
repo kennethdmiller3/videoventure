@@ -44,7 +44,7 @@ namespace Database
 		}
 		void RemoveConfigure(unsigned int aTagId, Entry aEntry)
 		{
-			if (GetConfigureDB().Get(aTagId) == aEntry);
+			if (GetConfigureDB().Get(aTagId) == aEntry)
 				GetConfigureDB().Delete(aTagId);
 		}
 		const Entry &GetConfigure(unsigned int aTagId)
