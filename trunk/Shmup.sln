@@ -47,6 +47,12 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Session10", "Session10-Inte
 		{C406DAEC-0886-4771-8DEA-9D7329B46CC1} = {C406DAEC-0886-4771-8DEA-9D7329B46CC1}
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Session7", "Session7-BuzzKill\Session7.vcproj", "{D5C74EF1-49E3-4F64-9449-81C68F916F3C}"
+	ProjectSection(ProjectDependencies) = postProject
+		{8281103E-F163-404B-ADA8-DDE1AADC17AF} = {8281103E-F163-404B-ADA8-DDE1AADC17AF}
+		{C406DAEC-0886-4771-8DEA-9D7329B46CC1} = {C406DAEC-0886-4771-8DEA-9D7329B46CC1}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -97,6 +103,10 @@ Global
 		{D723B78E-2830-48D9-8FF4-F033FCF051DA}.Debug|Win32.Build.0 = Debug|Win32
 		{D723B78E-2830-48D9-8FF4-F033FCF051DA}.Release|Win32.ActiveCfg = Release|Win32
 		{D723B78E-2830-48D9-8FF4-F033FCF051DA}.Release|Win32.Build.0 = Release|Win32
+		{D5C74EF1-49E3-4F64-9449-81C68F916F3C}.Debug|Win32.ActiveCfg = Debug|Win32
+		{D5C74EF1-49E3-4F64-9449-81C68F916F3C}.Debug|Win32.Build.0 = Debug|Win32
+		{D5C74EF1-49E3-4F64-9449-81C68F916F3C}.Release|Win32.ActiveCfg = Release|Win32
+		{D5C74EF1-49E3-4F64-9449-81C68F916F3C}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -18,7 +18,6 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="2"
 			InheritedPropertySheets="$(SolutionDir)debug.vsprops;..\DynamicLibrary.vsprops"
 			CharacterSet="1"
