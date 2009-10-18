@@ -1,0 +1,7 @@
+<?xml version="1.0" ?>
+<template name="enemycarrierspawn">
+	<spawner>
+		<velocity x="0" y="60" />
+		<spawn name="enemycarrier" start="240" cycle="30" track="1" />
+	</spawner>
+</template>

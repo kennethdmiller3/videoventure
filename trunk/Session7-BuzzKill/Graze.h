@@ -6,7 +6,7 @@ class GrazeTemplate
 {
 public:
 	// collision
-	b2FilterData mFilter;
+	b2Filter mFilter;
 
 	// ammo type
 	unsigned int mType;
@@ -55,7 +55,4 @@ public:
 	~Graze(void);
 
 	void Update(float aStep);
-
-protected:
-	void Spark(const GrazeTemplate &aGraze, unsigned int aId);
 };

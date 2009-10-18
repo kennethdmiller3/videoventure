@@ -1,0 +1,23 @@
+<?xml version="1.0" ?>
+<sound name="stargate-swarmerfire">
+	<waveloop frequency="3579000" divider="4" delayrepeat="6" waverepeat="10" fadedelta="1" delaydelta="0" outerrepeat="2" fadestart="2">
+		<wave>
+			<data value="127" />
+			<data value="217" />
+			<data value="255" />
+			<data value="217" />
+			<data value="127" />
+			<data value="36" />
+			<data value="0" />
+			<data value="36" />
+		</wave>
+		<delay>
+			<data value="23" />
+			<data value="24" />
+			<data value="25" />
+			<data value="26" />
+			<data value="27" />
+			<data value="28" />
+		</delay>
+	</waveloop>
+</sound>

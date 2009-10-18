@@ -1,0 +1,7 @@
+<?xml version="1.0" ?>
+<template name="enemycommandshipspawn">
+	<spawner>
+		<velocity x="0" y="60"/>
+		<spawn name="enemycommandshipwarp" start="105" cycle="30" track="2"/>
+	</spawner>
+</template>
