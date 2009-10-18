@@ -13,42 +13,6 @@ class LinkTemplate;
 
 extern GAME_API void ConfigureFilterData(b2Filter &aFilter, const TiXmlElement *element);
 
-struct CollisionCircleDef 
-{
-	b2FixtureDef mFixture;
-	b2CircleShape mShape;
-
-	CollisionCircleDef()
-	{
-		mFixture.shape = &mShape;
-	}
-	CollisionCircleDef(const CollisionCircleDef &aSrc)
-	{
-		mFixture = aSrc.mFixture;
-		mShape = aSrc.mShape;
-		mFixture.shape = &mShape;
-	}
-};
-struct CollisionPolygonDef 
-{
-	b2FixtureDef mFixture;
-	b2PolygonShape mShape;
-
-	CollisionPolygonDef()
-	{
-		mFixture.shape = &mShape;
-	}
-	CollisionPolygonDef(const CollisionPolygonDef &aSrc)
-	{
-		mFixture = aSrc.mFixture;
-		mShape = aSrc.mShape;
-		mFixture.shape = &mShape;
-	}
-};
-
-typedef boost::variant<int, CollisionCircleDef, CollisionPolygonDef> CollisionShapeDef;
-typedef boost::variant<int, b2RevoluteJointDef, b2PrismaticJointDef, b2DistanceJointDef, b2PulleyJointDef, b2LineJointDef> CollisionJointDef;
-
 class GAME_API CollidableTemplate
 {
 public:
@@ -57,12 +21,6 @@ public:
 
 	// body definition
 	b2BodyDef bodydef;
-
-	// shape definitions
-	Database::Typed<CollisionShapeDef> shapes;
-
-	// joint definitions
-	Database::Typed<CollisionJointDef> joints;
 
 public:
 	CollidableTemplate(void);
@@ -77,12 +35,8 @@ public:
 	bool ConfigurePolyItem(const TiXmlElement *element, b2PolygonShape &shape);
 	bool ConfigurePoly(const TiXmlElement *element, b2PolygonShape &shape);
 	bool ConfigureEdge(const TiXmlElement *element, b2PolygonShape &shape);
-#ifdef B2_EDGE_CHAIN_H
-	bool ConfigureEdgeChainItem(const TiXmlElement *element, b2EdgeChainDef &shape);
-	bool ConfigureEdgeChain(const TiXmlElement *element, b2EdgeChainDef &shape);
-#endif
-	bool ConfigureBodyItem(const TiXmlElement *element, b2BodyDef &body);
-	bool ConfigureBody(const TiXmlElement *element, b2BodyDef &body);
+	bool ConfigureBodyItem(const TiXmlElement *element, b2BodyDef &body, unsigned int id);
+	bool ConfigureBody(const TiXmlElement *element, b2BodyDef &body, unsigned int id);
 	bool ConfigureJointItem(const TiXmlElement *element, b2JointDef &joint);
 	bool ConfigureRevoluteJointItem(const TiXmlElement *element, b2RevoluteJointDef &joint);
 	bool ConfigureRevoluteJoint(const TiXmlElement *element, b2RevoluteJointDef &joint);

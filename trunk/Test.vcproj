@@ -329,6 +329,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Source\Core\VarItem.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Core\VarItem.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Source\Core\Vector2.h"
 				>
 			</File>

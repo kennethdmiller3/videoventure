@@ -170,7 +170,7 @@ public:
 	unsigned int mId;
 	CaptureTemplate mCapture;
 	Transform2 mTransform;
-	int mTeam;
+	unsigned int mTeam;
 	float mCurRadius[2];
 	float mCurStrength[2];
 

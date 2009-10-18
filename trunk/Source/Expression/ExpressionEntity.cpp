@@ -2,8 +2,7 @@
 
 #include "ExpressionEntity.h"
 #include "Entity.h"
-
-#include "Drawlist.h"	// <-- for variable
+#include "Variable.h"
 
 EntityContext::EntityContext(const unsigned int *aBuffer, const size_t aSize, float aParam, unsigned int aId, Database::Typed<float> *aVars)
 : Expression::Context(aBuffer)

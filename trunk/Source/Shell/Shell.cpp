@@ -2,7 +2,7 @@
 
 #include "Shell.h"
 #include "GameState.h"
-#include "Variable.h"
+#include "VarItem.h"
 #include "oglconsole.h"
 #include "Title.h"
 #include "Sound.h"
@@ -36,6 +36,9 @@ enum ButtonState
 	BUTTON_ROLLOVER = 1 << 1,
 	NUM_BUTTON_STATES = 1 << 2
 };
+
+// color typedef (HACK)
+typedef Color4 Color4_2[2];
 
 static const Color4 optionbackcolor[NUM_BUTTON_STATES] =
 {

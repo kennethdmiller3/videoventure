@@ -18,8 +18,9 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
+			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="2"
-			InheritedPropertySheets="$(SolutionDir)debug.vsprops"
+			InheritedPropertySheets="$(SolutionDir)debug.vsprops;..\DynamicLibrary.vsprops"
 			CharacterSet="1"
 			>
 			<Tool
@@ -39,8 +40,8 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)Source&quot;;&quot;$(SolutionDir)Source\Core&quot;;&quot;$(SolutionDir)Source\Sound&quot;;&quot;$(SolutionDir)Source\Behavior&quot;"
-				PreprocessorDefinitions="_USRDLL;SESSION9_EXPORTS"
+				AdditionalIncludeDirectories=""
+				PreprocessorDefinitions="SESSION9_EXPORTS"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -53,8 +54,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="TestGLFW.lib"
-				AdditionalLibraryDirectories="$(SolutionDir)$(ConfigurationName)"
+				AdditionalLibraryDirectories=""
 				TargetMachine="1"
 			/>
 			<Tool
@@ -82,7 +82,7 @@
 		<Configuration
 			Name="Release|Win32"
 			ConfigurationType="2"
-			InheritedPropertySheets="$(SolutionDir)release.vsprops"
+			InheritedPropertySheets="$(SolutionDir)release.vsprops;..\DynamicLibrary.vsprops"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
 			>
@@ -103,10 +103,8 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)Source&quot;;&quot;$(SolutionDir)Source\Core&quot;;&quot;$(SolutionDir)Source\Sound&quot;;&quot;$(SolutionDir)Source\Behavior&quot;"
-				PreprocessorDefinitions="_USRDLL;SESSION9_EXPORTS"
-				WarningLevel="4"
-				DebugInformationFormat="3"
+				AdditionalIncludeDirectories=""
+				PreprocessorDefinitions="SESSION9_EXPORTS"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -119,8 +117,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="TestGLFW.lib"
-				AdditionalLibraryDirectories="$(SolutionDir)$(ConfigurationName)"
+				AdditionalLibraryDirectories=""
 			/>
 			<Tool
 				Name="VCALinkTool"

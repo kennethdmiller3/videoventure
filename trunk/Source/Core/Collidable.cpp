@@ -3,6 +3,15 @@
 #include "Entity.h"
 #include "Link.h"
 
+namespace std
+{
+	struct RTTI_NOT_SUPPORTED;
+	typedef RTTI_NOT_SUPPORTED type_info;
+}
+#define typeid *( ::std::type_info* )sizeof 
+#include <boost/variant.hpp>
+
+
 #ifdef USE_POOL_ALLOCATOR
 // collidable pool
 static boost::pool<boost::default_user_allocator_malloc_free> pool(sizeof(Collidable));
@@ -16,10 +25,48 @@ void Collidable::operator delete(void *aPtr)
 }
 #endif
 
+struct CollisionCircleDef 
+{
+	b2FixtureDef mFixture;
+	b2CircleShape mShape;
+
+	CollisionCircleDef()
+	{
+		mFixture.shape = &mShape;
+	}
+	CollisionCircleDef(const CollisionCircleDef &aSrc)
+	{
+		mFixture = aSrc.mFixture;
+		mShape = aSrc.mShape;
+		mFixture.shape = &mShape;
+	}
+};
+struct CollisionPolygonDef 
+{
+	b2FixtureDef mFixture;
+	b2PolygonShape mShape;
+
+	CollisionPolygonDef()
+	{
+		mFixture.shape = &mShape;
+	}
+	CollisionPolygonDef(const CollisionPolygonDef &aSrc)
+	{
+		mFixture = aSrc.mFixture;
+		mShape = aSrc.mShape;
+		mFixture.shape = &mShape;
+	}
+};
+
+typedef boost::variant<int, CollisionCircleDef, CollisionPolygonDef> CollisionShapeDef;
+typedef boost::variant<int, b2RevoluteJointDef, b2PrismaticJointDef, b2DistanceJointDef, b2PulleyJointDef, b2LineJointDef> CollisionJointDef;
+
 namespace Database
 {
 	Typed<b2Filter> collidablefilter(0x5224d988 /* "collidablefilter" */);
 	Typed<CollidableTemplate> collidabletemplate(0xa7380c00 /* "collidabletemplate" */);
+	Typed<Typed<CollisionShapeDef> > collidableshapes(0x08366028 /* "collidableshapes" */);
+	Typed<Typed<CollisionJointDef> > collidablejoints(0x9c0ba7db /* "collidablejoints" */);
 	Typed<Collidable *> collidable(0x74e9dbae /* "collidable" */);
 	Typed<Collidable::ContactSignal> collidablecontactadd(0x7cf2c45d /* "collidablecontactadd" */);
 	Typed<Collidable::ContactSignal> collidablecontactremove(0x95ed5aba /* "collidablecontactremove" */);
@@ -171,8 +218,6 @@ CollidableTemplate::CollidableTemplate(void)
 CollidableTemplate::CollidableTemplate(const CollidableTemplate &aTemplate)
 : id(aTemplate.id)
 , bodydef(aTemplate.bodydef)
-, shapes(aTemplate.shapes)
-, joints(aTemplate.joints)
 {
 }
 
@@ -326,68 +371,7 @@ bool CollidableTemplate::ConfigureEdge(const TiXmlElement *element, b2PolygonSha
 	return true;
 }
 
-#ifdef B2_EDGE_CHAIN_H
-bool CollidableTemplate::ConfigureEdgeChainItem(const TiXmlElement *element, b2EdgeChainDef &shape)
-{
-	const char *name = element->Value();
-	switch (Hash(name))
-	{
-	case 0x945367a7 /* "vertex" */:
-		shape.vertices = static_cast<b2Vec2 *>(realloc(shape.vertices, (shape.vertexCount + 1) * sizeof(b2Vec2)));
-		element->QueryFloatAttribute("x", &shape.vertices[shape.vertexCount].x);
-		element->QueryFloatAttribute("y", &shape.vertices[shape.vertexCount].y);
-		++shape.vertexCount;
-		return true;
-
-	case 0xa51be2bb /* "friction" */:
-		element->QueryFloatAttribute("value", &shape.friction);
-		return true;
-
-	case 0xf59a4f8f /* "restitution" */:
-		element->QueryFloatAttribute("value", &shape.restitution);
-		return true;
-
-	case 0xc7e16877 /* "filter" */:
-		ConfigureFilterData(shape.filter, element);
-		return true;
-
-	case 0xcf2f4271 /* "category" */:
-		ConfigureFilterCategory(shape.filter, element, "value");
-		return true;
-
-	case 0xe7774569 /* "mask" */:
-		ConfigureFilterMask(shape.filter, element);
-		return true;
-
-	case 0x5fb91e8c /* "group" */:
-		ConfigureFilterGroup(shape.filter, element, "value");
-		return true;
-
-	case 0x83b6367b /* "sensor" */:
-		{
-			int sensor = shape.isSensor;
-			element->QueryIntAttribute("value", &sensor);
-			shape.isSensor = sensor != 0;
-		}
-		return true;
-
-	default:
-		return false;
-	}
-}
-
-bool CollidableTemplate::ConfigureEdgeChain(const TiXmlElement *element, b2EdgeChainDef &shape)
-{
-	// process child elements
-	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
-	{
-		ConfigureEdgeChainItem(child, shape);
-	}
-	return true;
-}
-#endif
-
-bool CollidableTemplate::ConfigureBodyItem(const TiXmlElement *element, b2BodyDef &body)
+bool CollidableTemplate::ConfigureBodyItem(const TiXmlElement *element, b2BodyDef &body, unsigned int id)
 {
 	const char *name = element->Value();
 	switch (Hash(name))
@@ -441,10 +425,12 @@ bool CollidableTemplate::ConfigureBodyItem(const TiXmlElement *element, b2BodyDe
 			CollisionCircleDef def;
 			ConfigureFixture(element, def.mFixture);
 			ConfigureCircle(element, def.mShape);
+			Database::Typed<CollisionShapeDef> &shapes = Database::collidableshapes.Open(id);
 			if (const char *name = element->Attribute("name"))
 				shapes.Put(Hash(name), def);
 			else
 				shapes.Put(shapes.GetCount() + 1, def);
+			Database::collidableshapes.Close(id);
 		}
 		return true;
 
@@ -453,10 +439,12 @@ bool CollidableTemplate::ConfigureBodyItem(const TiXmlElement *element, b2BodyDe
 			CollisionPolygonDef def;
 			ConfigureFixture(element, def.mFixture);
 			ConfigureBox(element, def.mShape);
+			Database::Typed<CollisionShapeDef> &shapes = Database::collidableshapes.Open(id);
 			if (const char *name = element->Attribute("name"))
 				shapes.Put(Hash(name), def);
 			else
 				shapes.Put(shapes.GetCount() + 1, def);
+			Database::collidableshapes.Close(id);
 		}
 		return true;
 
@@ -465,10 +453,12 @@ bool CollidableTemplate::ConfigureBodyItem(const TiXmlElement *element, b2BodyDe
 			CollisionPolygonDef def;
 			ConfigureFixture(element, def.mFixture);
 			ConfigurePoly(element, def.mShape);
+			Database::Typed<CollisionShapeDef> &shapes = Database::collidableshapes.Open(id);
 			if (const char *name = element->Attribute("name"))
 				shapes.Put(Hash(name), def);
 			else
 				shapes.Put(shapes.GetCount() + 1, def);
+			Database::collidableshapes.Close(id);
 		}
 		return true;
 
@@ -477,37 +467,26 @@ bool CollidableTemplate::ConfigureBodyItem(const TiXmlElement *element, b2BodyDe
 			CollisionPolygonDef def;
 			ConfigureFixture(element, def.mFixture);
 			ConfigureEdge(element, def.mShape);
+			Database::Typed<CollisionShapeDef> &shapes = Database::collidableshapes.Open(id);
 			if (const char *name = element->Attribute("name"))
 				shapes.Put(Hash(name), def);
 			else
 				shapes.Put(shapes.GetCount() + 1, def);
+			Database::collidableshapes.Close(id);
 		}
 		return true;
-
-#ifdef B2_EDGE_CHAIN_H
-	case 0x620c0b45 /* "edgechain" */:
-		{
-			b2EdgeChainDef def;
-			ConfigureEdgeChain(element, def);
-			if (const char *name = element->Attribute("name"))
-				shapes.Put(Hash(name), def);
-			else
-				shapes.Put(shapes.GetCount() + 1, def);
-		}
-		return true;
-#endif
 
 	default:
 		return false;
 	}
 }
 
-bool CollidableTemplate::ConfigureBody(const TiXmlElement *element, b2BodyDef &body)
+bool CollidableTemplate::ConfigureBody(const TiXmlElement *element, b2BodyDef &body, unsigned int id)
 {
 	// process child elements
 	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
-		ConfigureBodyItem(child, body);
+		ConfigureBodyItem(child, body, id);
 	}
 	return true;
 }
@@ -793,7 +772,7 @@ bool CollidableTemplate::Configure(const TiXmlElement *element, unsigned int id)
 		case 0xdbaa7975 /* "body" */:
 			{
 				// set up the collidable body
-				CollidableTemplate::ConfigureBody(child, bodydef);
+				CollidableTemplate::ConfigureBody(child, bodydef, id);
 			}
 			break;
 
@@ -801,10 +780,12 @@ bool CollidableTemplate::Configure(const TiXmlElement *element, unsigned int id)
 			{
 				b2RevoluteJointDef def;
 				CollidableTemplate::ConfigureRevoluteJoint(child, def);
+				Database::Typed<CollisionJointDef> &joints = Database::collidablejoints.Open(id);
 				if (const char *name = child->Attribute("name"))
 					joints.Put(Hash(name), def);
 				else
 					joints.Put(joints.GetCount() + 1, def);
+				Database::collidablejoints.Close(id);
 			}
 			break;
 
@@ -812,10 +793,12 @@ bool CollidableTemplate::Configure(const TiXmlElement *element, unsigned int id)
 			{
 				b2PrismaticJointDef def;
 				CollidableTemplate::ConfigurePrismaticJoint(child, def);
+				Database::Typed<CollisionJointDef> &joints = Database::collidablejoints.Open(id);
 				if (const char *name = child->Attribute("name"))
 					joints.Put(Hash(name), def);
 				else
 					joints.Put(joints.GetCount() + 1, def);
+				Database::collidablejoints.Close(id);
 			}
 			break;
 
@@ -823,10 +806,12 @@ bool CollidableTemplate::Configure(const TiXmlElement *element, unsigned int id)
 			{
 				b2DistanceJointDef def;
 				CollidableTemplate::ConfigureDistanceJoint(child, def);
+				Database::Typed<CollisionJointDef> &joints = Database::collidablejoints.Open(id);
 				if (const char *name = child->Attribute("name"))
 					joints.Put(Hash(name), def);
 				else
 					joints.Put(joints.GetCount() + 1, def);
+				Database::collidablejoints.Close(id);
 			}
 			break;
 
@@ -834,10 +819,12 @@ bool CollidableTemplate::Configure(const TiXmlElement *element, unsigned int id)
 			{
 				b2PulleyJointDef def;
 				CollidableTemplate::ConfigurePulleyJoint(child, def);
+				Database::Typed<CollisionJointDef> &joints = Database::collidablejoints.Open(id);
 				if (const char *name = child->Attribute("name"))
 					joints.Put(Hash(name), def);
 				else
 					joints.Put(joints.GetCount() + 1, def);
+				Database::collidablejoints.Close(id);
 			}
 			break;
 
@@ -846,10 +833,12 @@ bool CollidableTemplate::Configure(const TiXmlElement *element, unsigned int id)
 			{
 				b2LineJointDef def;
 				CollidableTemplate::ConfigureLineJoint(child, def);
+				Database::Typed<CollisionJointDef> &joints = Database::collidablejoints.Open(id);
 				if (const char *name = child->Attribute("name"))
 					joints.Put(Hash(name), def);
 				else
 					joints.Put(joints.GetCount() + 1, def);
+				Database::collidablejoints.Close(id);
 			}
 			break;
 #endif
@@ -876,7 +865,11 @@ bool CollidableTemplate::SetupLinkJoint(const LinkTemplate &linktemplate, unsign
 		def.upperAngle = 0.0f;
 		def.enableLimit = true;
 	}
+
+	Database::Typed<CollisionJointDef> &joints = Database::collidablejoints.Open(id);
 	joints.Put(aSecondary, def);
+	Database::collidablejoints.Close(id);
+
 	return true;
 }
 
@@ -1229,11 +1222,11 @@ void Collidable::AddToWorld(void)
 	body = world->CreateBody(&def);
 
 	// add shapes
-	for (Database::Typed<CollisionShapeDef>::Iterator itor(&collidable.shapes); itor.IsValid(); ++itor)
+	for (Database::Typed<CollisionShapeDef>::Iterator itor(Database::collidableshapes.Find(id)); itor.IsValid(); ++itor)
 		boost::apply_visitor(CollidableCreateFixture(body), itor.GetValue());
 
 	// add joints
-	for (Database::Typed<CollisionJointDef>::Iterator itor(&collidable.joints); itor.IsValid(); ++itor)
+	for (Database::Typed<CollisionJointDef>::Iterator itor(Database::collidablejoints.Find(id)); itor.IsValid(); ++itor)
 		boost::apply_visitor(CollidableCreateJoint(id), itor.GetValue());
 }
 

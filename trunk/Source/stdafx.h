@@ -59,6 +59,7 @@
 #include "Database.h"
 #include "Input.h"
 #include "Random.h"
+#include "Utility.h"
 
 
 // TO DO: move all these definitions to more appropriate locations
@@ -154,63 +155,8 @@ extern GAME_API Vector2 camerapos[2];
 extern GLuint reticule_handle;
 
 
-
-// UTILITY
-
-// cast anything to anything
-template <typename O, typename I> inline O Cast(I i)
-{
-	union { I i; O o; } cast;
-	cast.i = i;
-	return cast.o;
-}
-
-// fast reciprocal square root
-inline float InvSqrt(float x)
-{
-	float xhalf = 0.5f*x;
-	union { float f; int i; } floatint;
-	floatint.f = x;	// get bits for floating value
-	floatint.i = 0x5f375a86 - (floatint.i >> 1); // gives initial guess y0
-	floatint.f *= (1.5f-xhalf*floatint.f*floatint.f); // Newton step, repeating increases accuracy
-	return floatint.f;
-}
-
-// linear interpolation
-template<typename T> inline const T Lerp(T v0, T v1, float s)
-{
-	return (1 - s) * v0 + s * v1;
-}
-
-// value clamp
-template<typename T> inline const T Clamp(T v, T min, T max)
-{
-	if (v < min)
-		return min;
-	if (v > max)
-		return max;
-	return v;
-}
-
-// rectangle template
-template<typename T> struct Rect
-{
-	T x;
-	T y;
-	T w;
-	T h;
-};
-
-// color typedef (HACK)
-typedef Color4 Color4_2[2];
-
-
 // queue a turn action
 extern void OnTurn(unsigned int aTurn, float aFraction, fastdelegate::FastDelegate<void ()> aAction);
-
-#ifndef SDL_arraysize
-#define SDL_arraysize(array)	(sizeof(array)/sizeof(array[0]))
-#endif
 
 
 // CONFIGURATION
@@ -234,12 +180,3 @@ const int AUDIO_FREQUENCY = 48000;
 #ifdef USE_POOL_ALLOCATOR
 #include <boost/pool/pool.hpp>
 #endif
-
-namespace std
-{
-	struct RTTI_NOT_SUPPORTED;
-	typedef RTTI_NOT_SUPPORTED type_info;
-}
-#define typeid *( ::std::type_info* )sizeof 
-#include <boost/variant.hpp>
-

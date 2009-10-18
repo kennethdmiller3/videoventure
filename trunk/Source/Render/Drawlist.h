@@ -9,5 +9,4 @@ namespace Database
 {
 	extern Typed<std::vector<unsigned int> > dynamicdrawlist;
 	extern Typed<GLuint> drawlist;
-	extern Typed<Typed<float> > variable;
 }

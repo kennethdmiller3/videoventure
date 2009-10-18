@@ -7,7 +7,7 @@
 // find the specified resource,
 // starting with the specified identifier
 // and backtracking through the link chain
-extern unsigned int FindResource(unsigned int aId, unsigned int aSubId);
+extern GAME_API unsigned int FindResource(unsigned int aId, unsigned int aSubId);
 
 class ResourceTemplate
 {
@@ -33,7 +33,7 @@ public:
 	bool Configure(const TiXmlElement *element, unsigned int aId, unsigned int aSubId);
 };
 
-class Resource : public Updatable
+class GAME_API Resource : public Updatable
 {
 protected:
 	unsigned int mSubId;
@@ -74,9 +74,9 @@ public:
 
 namespace Database
 {
-	extern Typed<Typed<ResourceTemplate> > resourcetemplate;
-	extern Typed<Typed<Resource *> > resource;
-	extern Typed<Typed<Resource::ChangeSignal> > resourcechange;
-	extern Typed<Typed<Resource::EmptySignal> > resourceempty;
-	extern Typed<Typed<Resource::FullSignal> > resourcefull;
+	extern GAME_API Typed<Typed<ResourceTemplate> > resourcetemplate;
+	extern GAME_API Typed<Typed<Resource *> > resource;
+	extern GAME_API Typed<Typed<Resource::ChangeSignal> > resourcechange;
+	extern GAME_API Typed<Typed<Resource::EmptySignal> > resourceempty;
+	extern GAME_API Typed<Typed<Resource::FullSignal> > resourcefull;
 }

@@ -1,5 +1,6 @@
 #include "StdAfx.h"
 #include "Drawlist.h"
+#include "Variable.h"
 #include "Texture.h"
 #include "Interpolator.h"
 #include "Noise.h"
@@ -96,7 +97,6 @@ namespace Database
 {
 	Typed<std::vector<unsigned int> > dynamicdrawlist(0xdf3cf9c0 /* "dynamicdrawlist" */);
 	Typed<GLuint> drawlist(0xc98b019b /* "drawlist" */);
-	Typed<Typed<float> > variable(0x19385305 /* "variable" */);
 
 	namespace Loader
 	{
