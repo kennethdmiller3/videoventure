@@ -1,7 +1,7 @@
 // Hash.cpp : Defines the entry point for the console application.
 //
 
-#include "..\Source\Hash.h"
+#include "../Source/Core/Hash.h"
 #include <stdio.h>
 
 int main(int argc, const char* argv[])

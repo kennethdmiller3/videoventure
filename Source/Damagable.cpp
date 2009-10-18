@@ -3,7 +3,7 @@
 #include "Entity.h"
 #include "Updatable.h"
 #include "Link.h"
-#include "Drawlist.h"
+#include "Variable.h"
 
 #ifdef USE_POOL_ALLOCATOR
 // damagable pool

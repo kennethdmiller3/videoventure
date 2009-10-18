@@ -8,7 +8,7 @@
 #include "World.h"
 #include "Preferences.h"
 #include "Sound.h"
-#include "Variable.h"
+#include "VarItem.h"
 #include "Command.h"
 #include "Drawlist.h"
 #include "Texture.h"

@@ -1,6 +1,8 @@
 <?xml version="1.0" standalone="no"?>
 <!-- Test Level -->
 <world xmin="-384" ymin="-192" xmax="384" ymax="192" wall="0">
+	<library name="session10.dll"/>
+	
 	<!-- disable fog-->
 	<fog enable="0" />
 
@@ -8,11 +10,33 @@
 	<entity name="perimeter">
 		<collidable>
 			<body>
-				<edge loop="1">
-					<vertex x="-200" y="110"/>
-					<vertex x="200" y="110"/>
-					<vertex x="200" y="-110"/>
-					<vertex x="-200" y="-110"/>
+				<edge>
+					<vertex1 x="-200" y="110"/>
+					<vertex2 x="200" y="110"/>
+					<restitution value="0"/>
+					<friction value="0"/>
+					<category value="0"/>
+					<mask default="0" bit1="1"/>
+				</edge>
+				<edge>
+					<vertex1 x="200" y="110"/>
+					<vertex2 x="200" y="-110"/>
+					<restitution value="0"/>
+					<friction value="0"/>
+					<category value="0"/>
+					<mask default="0" bit1="1"/>
+				</edge>
+				<edge>
+					<vertex1 x="200" y="-110"/>
+					<vertex2 x="-200" y="-110"/>
+					<restitution value="0"/>
+					<friction value="0"/>
+					<category value="0"/>
+					<mask default="0" bit1="1"/>
+				</edge>
+				<edge>
+					<vertex1 x="-200" y="-110"/>
+					<vertex2 x="-200" y="110"/>
 					<restitution value="0"/>
 					<friction value="0"/>
 					<category value="0"/>
@@ -35,7 +59,7 @@
 	<import name="sound/stargate-dynamofire.xml" />
 	<!-- players -->
 	<entity name="1P">
-		<position x="0" y="-128" />
+		<position x="0" y="-100" />
 		<velocity x="0" y="240" />
 		<player name="playership" start="1" cycle="4" lives="3" firstextra="20000" extra="50000" />
 		<team name="blue" />
