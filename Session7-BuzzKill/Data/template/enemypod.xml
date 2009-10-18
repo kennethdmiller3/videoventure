@@ -1,0 +1,99 @@
+<?xml version="1.0" ?>
+<template name="enemypod">
+	<collidable>
+		<body name="main">
+			<circle radius="4">
+				<density value="1" />
+				<friction value="0.5" />
+				<restitution value="0.5" />
+				<filter name="redunit" />
+			</circle>
+		</body>
+	</collidable>
+	<renderable radius="6" period="0.3">
+		<pushmatrix>
+			<scale>
+				<key time="0.00" x="1" y="1" />
+				<key time="0.15" x="2" y="2" />
+				<key time="0.30" x="1" y="1" />
+			</scale>
+			<color>
+				<key time="0.00" r="1.0" g="1.0" b="1.0" a="1.0" />
+				<key time="0.15" r="1.0" g="0.8" b="0.1" a="1.0" />
+				<key time="0.30" r="1.0" g="1.0" b="1.0" a="1.0" />
+			</color>
+			<calllist name="diamond" />
+		</pushmatrix>
+		<pushmatrix>
+			<scale>
+				<key time="0.00" x="3" y="3" />
+				<key time="0.15" x="2" y="2" />
+				<key time="0.30" x="3" y="3" />
+			</scale>
+			<color>
+				<key time="0.00" r="1.0" g="0.8" b="0.1" a="1.0" />
+				<key time="0.15" r="1.0" g="0.2" b="0.1" a="1.0" />
+				<key time="0.30" r="1.0" g="0.8" b="0.1" a="1.0" />
+			</color>
+			<calllist name="diamond" />
+		</pushmatrix>
+		<pushmatrix>
+			<scale x="4" y="4" />
+			<color r="1.0" g="0.2" b="0.1" a="1.0" />
+			<calllist name="diamond" />
+		</pushmatrix>
+		<repeat count="2">
+			<pushmatrix>
+				<translate x="5" y="0" />
+				<color>
+					<key time="0.0" r="1.0" g="0.8" b="0.1" a="1.0" />
+					<key time="0.3" r="1.0" g="0.2" b="0.1" a="0.4" />
+				</color>
+				<calllist name="diamond" />
+			</pushmatrix>
+			<rotate angle="180" />
+		</repeat>
+		<rotate angle="90" />
+		<repeat count="2">
+			<pushmatrix>
+				<translate x="5" y="0" />
+				<color>
+					<key time="0.0" r="1.0" g="0.4" b="0.1" a="0.6" />
+					<key time="0.1" r="1.0" g="0.2" b="0.1" a="0.4" />
+					<key time="0.1" r="1.0" g="0.8" b="0.1" a="1.0" />
+					<key time="0.3" r="1.0" g="0.4" b="0.1" a="0.6" />
+				</color>
+				<calllist name="diamond" />
+			</pushmatrix>
+			<rotate angle="180" />
+		</repeat>
+		<rotate angle="45" />
+		<repeat count="4">
+			<pushmatrix>
+				<translate x="4" y="0" />
+				<color>
+					<key time="0.0" r="1.0" g="0.6" b="0.1" a="0.8" />
+					<key time="0.2" r="1.0" g="0.2" b="0.1" a="0.4" />
+					<key time="0.2" r="1.0" g="0.8" b="0.1" a="1.0" />
+					<key time="0.3" r="1.0" g="0.6" b="0.1" a="0.8" />
+				</color>
+				<calllist name="diamond" />
+			</pushmatrix>
+			<rotate angle="90" />
+		</repeat>
+	</renderable>
+	<!--aimer range="256" attack="0" drift="0.5" wanderturn="1" wanderturnrate="0.25" pursue="0.25" leading="30" category="3" bit3="0" bit4="0" /-->
+	<aimer>
+		<drift strength="0.5" />
+		<wander turn="1" turnrate="0.25" />
+		<target range="256" category="3" bit2="0" bit3="0" bit4="0" />
+		<aim strength="1" leading="30" />
+		<pursue strength="0.25" leading="30" />
+	</aimer>
+	<ship maxveloc="30" maxaccel="30" minaccel="10" maxomega="0.5" />
+	<bullet damage="1" ricochet="1" spawnondeath="enemypodexplosion" />
+	<damagable health="5" spawnondeath="enemypodexplosion" />
+	<team name="red" />
+	<points value="1000" />
+	<capturable resistance="5" spawnoncapture="friendpod" />
+</template>

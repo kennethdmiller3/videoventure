@@ -206,93 +206,84 @@ Graze::~Graze(void)
 {
 }
 
-void Graze::Update(float aStep)
+class GrazeQueryCallback : public b2QueryCallback
 {
-	// get parent entity
-	Entity *entity = Database::entity.Get(mId);
+public:
+	unsigned int mId;
+	GrazeTemplate mGraze;
+	Transform2 mTransform;
+	unsigned int mAmmo;
+	float mStep;
 
-	// get the collision world
-	b2World *world = Collidable::GetWorld();
-
-	// get the graze template
-	const GrazeTemplate &graze = Database::grazetemplate.Get(mId);
-
-	// get nearby shapes
-	b2AABB aabb;
-	const float lookRadius = graze.mRadiusOuter;
-	aabb.lowerBound.Set(entity->GetPosition().x - lookRadius, entity->GetPosition().y - lookRadius);
-	aabb.upperBound.Set(entity->GetPosition().x + lookRadius, entity->GetPosition().y + lookRadius);
-	b2Shape* shapes[b2_maxProxies];
-	int32 count = world->Query(aabb, shapes, b2_maxProxies);
-
-	// collector origin transform
-	Matrix2 origin(graze.mOffset * entity->GetTransform());
-
-	// for each shape...
-	for (int32 i = 0; i < count; ++i)
+public:
+	virtual bool ReportFixture(b2Fixture* fixture)
 	{
-		// get the shape
-		b2Shape* shape = shapes[i];
-
 		// skip unhittable shapes
-		if (shape->IsSensor())
-			continue;
-		if (!Collidable::CheckFilter(graze.mFilter, shape->GetFilterData()))
-			continue;
+		if (fixture->IsSensor())
+			return true;
+		if (!Collidable::CheckFilter(mGraze.mFilter, fixture->GetFilterData()))
+			return true;
 
 		// get the parent body
-		b2Body* body = shapes[i]->GetBody();
+		b2Body* body = fixture->GetBody();
 
 		// get the collidable identifier
 		unsigned int targetId = reinterpret_cast<unsigned int>(body->GetUserData());
 
 		// skip non-entity
 		if (targetId == 0)
-			continue;
+			return true;
 
 		// skip self
 		if (targetId == mId)
-			continue;
+			return true;
+
+		// get local position
+		b2Vec2 localPos;
+		switch (fixture->GetType())
+		{
+		case b2Shape::e_circle:		localPos = static_cast<b2CircleShape *>(fixture->GetShape())->m_p;	break;
+		case b2Shape::e_polygon:	localPos = static_cast<b2PolygonShape *>(fixture->GetShape())->m_centroid; break;
+		default:					localPos = Vector2(0, 0); break;
+		}
+		Vector2 fixturePos(body->GetWorldPoint(localPos));
 
 		// get range
-		Vector2 dir(origin.Untransform(body->GetPosition()));
+		Vector2 dir(mTransform.Transform(fixturePos));
 		float range = dir.Length();
-		float radius = 0.5f * shapes[i]->GetSweepRadius();
+		float radius = 0.5f * fixture->GetShape()->m_radius;	//fixture->ComputeSweepRadius(localPos);
 
 		// skip if out of range
-		if (range > graze.mRadiusOuter + radius)
-			continue;
+		if (range > mGraze.mRadiusOuter + radius)
+			return true;
 
 		// apply value falloff
 		float interp;
-		if (range <= graze.mRadiusInner - radius)
+		if (range <= mGraze.mRadiusInner - radius)
 			interp = 0.0f;
 		else
-			interp = (range - graze.mRadiusInner + radius) / (graze.mRadiusOuter + radius - graze.mRadiusInner + radius);
-		float value = Lerp(graze.mValueInner, graze.mValueOuter, interp);
-
-		// scale by time step
-		value *= aStep;
+			interp = (range - mGraze.mRadiusInner + radius) / (mGraze.mRadiusOuter + radius - mGraze.mRadiusInner + radius);
+		float value = Lerp(mGraze.mValueInner, mGraze.mValueOuter, interp);
 
 		// if spawning on collect...
-		if (graze.mSpawn)
+		if (mGraze.mSpawn)
 		{
 			// spawn a spark
-			Spark(graze, targetId);
+			Spark(targetId);
 		}
 
 		// ammo resource (if any)
-		Resource *resource = Database::resource.Get(mAmmo).Get(graze.mType);
+		Resource *resource = Database::resource.Get(mAmmo).Get(mGraze.mType);
 		if (resource)
 		{
 			// add value
-			resource->Add(mId, value);
+			resource->Add(mId, value * mStep);
 
 			// if switching on full...
-			if (graze.mSwitchOnFull)
+			if (mGraze.mSwitchOnFull)
 			{
 				// ammo resource template
-				const ResourceTemplate &resourcetemplate = Database::resourcetemplate.Get(mAmmo).Get(graze.mType);
+				const ResourceTemplate &resourcetemplate = Database::resourcetemplate.Get(mAmmo).Get(mGraze.mType);
 
 				// if full...
 				if (resource->GetValue() >= resourcetemplate.mMaximum)
@@ -301,55 +292,81 @@ void Graze::Update(float aStep)
 					//float spillover = resource->GetValue() - resourcetemplate.mMaximum;
 
 					// change dynamic type
-					Database::Switch(mId, graze.mSwitchOnFull);
+					Database::Switch(mId, mGraze.mSwitchOnFull);
 				}
 			}
 		}
+
+		return true;
 	}
-}
 
-void Graze::Spark(const GrazeTemplate &graze, unsigned int aId)
+	void Spark(unsigned int aId)
+	{
+		// TO DO: consolidate this with similar spawn patterns (Spawner, Weapon)
+
+		// get the source
+		Entity *entity = Database::entity.Get(aId);
+
+		// get world transform
+		Transform2 transform(entity->GetTransform());
+
+		// apply transform scatter
+		if (mGraze.mScatter.a)
+			transform.a += Random::Value(0.0f, mGraze.mScatter.a);
+		if (mGraze.mScatter.p.x)
+			transform.p.x += Random::Value(0.0f, mGraze.mScatter.p.x);
+		if (mGraze.mScatter.p.y)
+			transform.p.y += Random::Value(0.0f, mGraze.mScatter.p.y);
+
+		// get local velocity
+		Transform2 velocity(entity->GetOmega(), transform.Unrotate(entity->GetVelocity()));
+
+		// apply velocity inherit
+		velocity.a *= mGraze.mInherit.a;
+		velocity.p.x *= mGraze.mInherit.p.x;
+		velocity.p.y *= mGraze.mInherit.p.y;
+
+		// apply velocity add
+		velocity.a += mGraze.mVelocity.a;
+		velocity.p.x += mGraze.mVelocity.p.x;
+		velocity.p.y += mGraze.mVelocity.p.y;
+
+		// apply velocity variance
+		if (mGraze.mVariance.a)
+			velocity.a += Random::Value(0.0f, mGraze.mVariance.a);
+		if (mGraze.mVariance.p.x)
+			velocity.p.x += Random::Value(0.0f, mGraze.mVariance.p.x);
+		if (mGraze.mVariance.p.y)
+			velocity.p.y += Random::Value(0.0f, mGraze.mVariance.p.y);
+
+		// get world velocity
+		velocity.p = transform.Rotate(velocity.p);
+
+		// instantiate the spawn entity
+		Database::Instantiate(mGraze.mSpawn, Database::owner.Get(mId), mId, transform.a, transform.p, velocity.p, velocity.a, true);
+	}
+};
+
+void Graze::Update(float aStep)
 {
-	// TO DO: consolidate this with similar spawn patterns (Spawner, Weapon)
+	// get parent entity
+	Entity *entity = Database::entity.Get(mId);
 
-	// get the source
-	Entity *entity = Database::entity.Get(aId);
+	// get the graze template
+	const GrazeTemplate &graze = Database::grazetemplate.Get(mId);
 
-	// get world transform
-	Transform2 transform(entity->GetTransform());
+	// set up query callback
+	GrazeQueryCallback callback;
+	callback.mId = mId;
+	callback.mGraze = graze;
+	callback.mTransform = (entity->GetTransform() * graze.mOffset).Inverse();
+	callback.mAmmo = mAmmo;
+	callback.mStep = aStep;
 
-	// apply transform scatter
-	if (graze.mScatter.a)
-		transform.a += Random::Value(0.0f, graze.mScatter.a);
-	if (graze.mScatter.p.x)
-		transform.p.x += Random::Value(0.0f, graze.mScatter.p.x);
-	if (graze.mScatter.p.y)
-		transform.p.y += Random::Value(0.0f, graze.mScatter.p.y);
-
-	// get local velocity
-	Transform2 velocity(entity->GetOmega(), transform.Unrotate(entity->GetVelocity()));
-
-	// apply velocity inherit
-	velocity.a *= graze.mInherit.a;
-	velocity.p.x *= graze.mInherit.p.x;
-	velocity.p.y *= graze.mInherit.p.y;
-
-	// apply velocity add
-	velocity.a += graze.mVelocity.a;
-	velocity.p.x += graze.mVelocity.p.x;
-	velocity.p.y += graze.mVelocity.p.y;
-
-	// apply velocity variance
-	if (graze.mVariance.a)
-		velocity.a += Random::Value(0.0f, graze.mVariance.a);
-	if (graze.mVariance.p.x)
-		velocity.p.x += Random::Value(0.0f, graze.mVariance.p.x);
-	if (graze.mVariance.p.y)
-		velocity.p.y += Random::Value(0.0f, graze.mVariance.p.y);
-
-	// get world velocity
-	velocity.p = transform.Rotate(velocity.p);
-
-	// instantiate the spawn entity
-	Database::Instantiate(graze.mSpawn, Database::owner.Get(mId), mId, transform.a, transform.p, velocity.p, velocity.a, true);
+	// get nearby fixtures
+	b2AABB aabb;
+	const float lookRadius = graze.mRadiusOuter;
+	aabb.lowerBound.Set(entity->GetPosition().x - lookRadius, entity->GetPosition().y - lookRadius);
+	aabb.upperBound.Set(entity->GetPosition().x + lookRadius, entity->GetPosition().y + lookRadius);
+	Collidable::QueryAABB(&callback, aabb);
 }
