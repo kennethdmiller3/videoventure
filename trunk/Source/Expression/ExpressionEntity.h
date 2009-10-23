@@ -13,8 +13,8 @@ struct EntityContext : public Expression::Context
 	Database::Typed<float> *mVars;
 	bool mOwned;
 
-	EntityContext(const unsigned int *aBuffer, const size_t aSize, float aParam, unsigned int aId, Database::Typed<float> *aVars = NULL);
-	~EntityContext();
+	GAME_API EntityContext(const unsigned int *aBuffer, const size_t aSize, float aParam, unsigned int aId, Database::Typed<float> *aVars = NULL);
+	GAME_API ~EntityContext();
 
 	void Restart(void)
 	{
@@ -29,6 +29,6 @@ struct EntityContext : public Expression::Context
 namespace Expression
 {
 	// entity transform
-	__m128 EvaluatePosition(EntityContext &aContext);
-	__m128 EvaluateVelocity(EntityContext &aContext);
+	GAME_API __m128 EvaluatePosition(EntityContext &aContext);
+	GAME_API __m128 EvaluateVelocity(EntityContext &aContext);
 }

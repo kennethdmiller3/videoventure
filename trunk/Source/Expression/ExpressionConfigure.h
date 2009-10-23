@@ -14,8 +14,8 @@
 #include "ExpressionBoolean.h"
 #include "ExpressionAction.h"
 
-extern const char * const sScalarNames[];
-extern const float sScalarDefault[];
+extern GAME_API const char * const sScalarNames[];
+extern GAME_API const float sScalarDefault[];
 
 //
 // EXPRESSION

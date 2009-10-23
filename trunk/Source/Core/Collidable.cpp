@@ -212,6 +212,7 @@ void ConfigureFilterData(b2Filter &aFilter, const TiXmlElement *element)
 }
 
 CollidableTemplate::CollidableTemplate(void)
+: id(0)
 {
 }
 
@@ -866,9 +867,9 @@ bool CollidableTemplate::SetupLinkJoint(const LinkTemplate &linktemplate, unsign
 		def.enableLimit = true;
 	}
 
-	Database::Typed<CollisionJointDef> &joints = Database::collidablejoints.Open(id);
-	joints.Put(aSecondary, def);
-	Database::collidablejoints.Close(id);
+	Database::Typed<CollisionJointDef> &joints = Database::collidablejoints.Open(aSecondary);
+	joints.Put(aId, def);
+	Database::collidablejoints.Close(aSecondary);
 
 	return true;
 }
