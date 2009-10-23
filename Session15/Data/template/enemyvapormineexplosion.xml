@@ -1,0 +1,51 @@
+<?xml version="1.0" ?>
+<template name="enemyvapormineexplosion" type="enemymineexplosion">
+	<link name="spawn0" secondary="enemymineshrapnelspawn">
+		<offset x="0" y="0" angle="0" />
+	</link>
+	<link name="spawn1" secondary="enemymineshrapnelspawn">
+		<offset x="0" y="0" angle="22.5" />
+	</link>
+	<link name="spawn2" secondary="enemymineshrapnelspawn">
+		<offset x="0" y="0" angle="45" />
+	</link>
+	<link name="spawn3" secondary="enemymineshrapnelspawn">
+		<offset x="0" y="0" angle="67.5" />
+	</link>
+	<link name="spawn4" secondary="enemymineshrapnelspawn">
+		<offset x="0" y="0" angle="90" />
+	</link>
+	<link name="spawn5" secondary="enemymineshrapnelspawn">
+		<offset x="0" y="0" angle="112.5" />
+	</link>
+	<link name="spawn6" secondary="enemymineshrapnelspawn">
+		<offset x="0" y="0" angle="135" />
+	</link>
+	<link name="spawn7" secondary="enemymineshrapnelspawn">
+		<offset x="0" y="0" angle="157.5" />
+	</link>
+	<link name="spawn8" secondary="enemymineshrapnelspawn">
+		<offset x="0" y="0" angle="180" />
+	</link>
+	<link name="spawn9" secondary="enemymineshrapnelspawn">
+		<offset x="0" y="0" angle="202.5" />
+	</link>
+	<link name="spawn10" secondary="enemymineshrapnelspawn">
+		<offset x="0" y="0" angle="225" />
+	</link>
+	<link name="spawn11" secondary="enemymineshrapnelspawn">
+		<offset x="0" y="0" angle="247.5" />
+	</link>
+	<link name="spawn12" secondary="enemymineshrapnelspawn">
+		<offset x="0" y="0" angle="270" />
+	</link>
+	<link name="spawn13" secondary="enemymineshrapnelspawn">
+		<offset x="0" y="0" angle="292.5" />
+	</link>
+	<link name="spawn14" secondary="enemymineshrapnelspawn">
+		<offset x="0" y="0" angle="315" />
+	</link>
+	<link name="spawn15" secondary="enemymineshrapnelspawn">
+		<offset x="0" y="0" angle="337.5" />
+	</link>
+</template>

@@ -1,0 +1,88 @@
+<?xml version="1.0" ?>
+<template name="playershipweapon">
+	<chargeweapon>
+		<state name="charge0" time="0.2" next="charge1">
+			<action>
+				<ordnance name="playerbullet">
+					<position x="0" y="8" angle="0"/>
+					<velocity x="0" y="480"/>
+				</ordnance>
+				<flash name="playerweaponflash">
+					<position x="0" y="8" angle="0"/>
+				</flash>
+				<cue name="fire"/>
+			</action>
+		</state>
+		<state name="charge1" time="0.3" next="charge2">
+			<action>
+				<ordnance name="playerbullet1">
+					<position x="0" y="8" angle="0"/>
+					<velocity x="0" y="480"/>
+				</ordnance>
+				<flash name="playerweaponflash">
+					<position x="0" y="8" angle="0"/>
+				</flash>
+				<cue name="fire"/>
+				<wait value="0.1"/>
+			</action>
+		</state>
+		<state name="charge2" time="0.5" next="charge3">
+			<action>
+				<ordnance name="playerbullet2">
+					<position x="0" y="8" angle="0"/>
+					<velocity x="0" y="480"/>
+				</ordnance>
+				<flash name="playerweaponflash">
+					<position x="0" y="8" angle="0"/>
+				</flash>
+				<cue name="fire"/>
+				<wait value="0.15"/>
+			</action>
+		</state>
+		<state name="charge3" time="1.0" next="charge4">
+			<action>
+				<ordnance name="playerbullet3">
+					<position x="0" y="8" angle="0"/>
+					<velocity x="0" y="480"/>
+				</ordnance>
+				<flash name="playerweaponflash">
+					<position x="0" y="8" angle="0"/>
+				</flash>
+				<cue name="fire"/>
+				<wait value="0.2"/>
+			</action>
+		</state>
+		<state name="charge4" time="1.0" next="charge5">
+			<action>
+				<ordnance name="playerbullet4">
+					<position x="0" y="8" angle="0"/>
+					<velocity x="0" y="480"/>
+				</ordnance>
+				<flash name="playerweaponflash">
+					<position x="0" y="8" angle="0"/>
+				</flash>
+				<cue name="fire"/>
+				<wait value="0.3"/>
+			</action>
+		</state>
+		<state name="charge5" time="0.0">
+			<action>
+				<ordnance name="playerbullet5">
+					<position x="0" y="8" angle="0"/>
+					<velocity x="0" y="480"/>
+				</ordnance>
+				<flash name="playerweaponflash">
+					<position x="0" y="8" angle="0"/>
+				</flash>
+				<cue name="fire"/>
+				<wait value="0.5"/>
+			</action>
+		</state>
+	</chargeweapon>
+	<sound volume="0.25">
+		<file name="robotron-playershot.wav" />
+	</sound>
+	<soundcue>
+		<cue name="fire" sound="playershipweapon" />
+	</soundcue>
+</template>

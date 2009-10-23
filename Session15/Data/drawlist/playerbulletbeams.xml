@@ -1,0 +1,65 @@
+﻿<?xml version="1.0"?>
+<dynamicdrawlist name="playerbulletbeams">
+	<pushmatrix>
+		<rotate>
+			<mul>
+				<value angle="1440"/>
+				<worldtime/>
+			</mul>
+		</rotate>
+		<triangles>
+			<loop name="angle" from="0" to="360" by="72">
+				<color r="0.0" g="0.5" b="1.0" a="0.5"/>
+				<vertex x="0" y="0"/>
+				<color r="0.0" g="0.0" b="1.0" a="0.0"/>
+				<vertex>
+					<x>
+						<sinewave input="angle" phase="-0.02" period="360"/>
+					</x>
+					<y>
+						<sinewave input="angle" phase="0.23" period="360"/>
+					</y>
+				</vertex>
+				<vertex>
+					<x>
+						<sinewave input="angle" phase="0.02" period="360"/>
+					</x>
+					<y>
+						<sinewave input="angle" phase="0.27" period="360"/>
+					</y>
+				</vertex>
+			</loop>
+		</triangles>
+	</pushmatrix>
+	<pushmatrix>
+		<rotate>
+			<mul>
+				<value angle="-1440"/>
+				<worldtime/>
+			</mul>
+		</rotate>
+		<triangles>
+			<loop name="angle" from="0" to="360" by="72">
+				<color r="0.0" g="0.5" b="1.0" a="0.5"/>
+				<vertex x="0" y="0"/>
+				<color r="0.0" g="0.0" b="1.0" a="0.0"/>
+				<vertex>
+					<x>
+						<sinewave input="angle" phase="-0.03" period="360" scale="0.75"/>
+					</x>
+					<y>
+						<sinewave input="angle" phase="0.22" period="360" scale="0.75"/>
+					</y>
+				</vertex>
+				<vertex>
+					<x>
+						<sinewave input="angle" phase="0.03" period="360" scale="0.75"/>
+					</x>
+					<y>
+						<sinewave input="angle" phase="0.28" period="360" scale="0.75"/>
+					</y>
+				</vertex>
+			</loop>
+		</triangles>
+	</pushmatrix>
+</dynamicdrawlist>

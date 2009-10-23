@@ -53,6 +53,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Session7", "Session7-BuzzKi
 		{C406DAEC-0886-4771-8DEA-9D7329B46CC1} = {C406DAEC-0886-4771-8DEA-9D7329B46CC1}
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Session15", "Session15\Session15.vcproj", "{93678241-DF0E-431A-B32B-0E0664DE5CCB}"
+	ProjectSection(ProjectDependencies) = postProject
+		{C406DAEC-0886-4771-8DEA-9D7329B46CC1} = {C406DAEC-0886-4771-8DEA-9D7329B46CC1}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -107,6 +112,10 @@ Global
 		{D5C74EF1-49E3-4F64-9449-81C68F916F3C}.Debug|Win32.Build.0 = Debug|Win32
 		{D5C74EF1-49E3-4F64-9449-81C68F916F3C}.Release|Win32.ActiveCfg = Release|Win32
 		{D5C74EF1-49E3-4F64-9449-81C68F916F3C}.Release|Win32.Build.0 = Release|Win32
+		{93678241-DF0E-431A-B32B-0E0664DE5CCB}.Debug|Win32.ActiveCfg = Debug|Win32
+		{93678241-DF0E-431A-B32B-0E0664DE5CCB}.Debug|Win32.Build.0 = Debug|Win32
+		{93678241-DF0E-431A-B32B-0E0664DE5CCB}.Release|Win32.ActiveCfg = Release|Win32
+		{93678241-DF0E-431A-B32B-0E0664DE5CCB}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
