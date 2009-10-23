@@ -1,0 +1,7 @@
+<?xml version="1.0" ?>
+<sound name="stargate-playershot" volume="0.125">
+	<!-- innerdelay: 46+8*delay, +3 when bit flips (average 1?) -->
+	<!-- outerdelay: 26 -->
+	<!-- parameters: 1 delay start, 1 delay delta, 32 iterations, 255 amplitude, -1 amplitude delta -->
+	<bitnoiseramp frequency="3579000" divider="4" outersteps="127" outerdelay="26" innersteps="32" innerdelay="53" innerdelta="8" amplitude="255" amplitudedelta="-2" />
+</sound>

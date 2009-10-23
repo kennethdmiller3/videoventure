@@ -1,0 +1,18 @@
+<?xml version="1.0" ?>
+<template name="playerbullettrail4">
+	<expire time="0.25" />
+	<renderable radius="3" depth="3">
+		<pushmatrix>
+			<scale>
+				<key time="0.00" x="3" y="3" />
+				<key time="0.25" x="0.5" y="0.5" />
+			</scale>
+			<color>
+				<key time="0.00" r="0.0" g="0.5" b="1.0" a="0.5" />
+				<key time="0.25" r="0.0" g="0.0" b="1.0" a="0.0" />
+			</color>
+			<calllist name="circle8" />
+		</pushmatrix>
+	</renderable>
+	<particle />
+</template>
