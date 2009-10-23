@@ -20,10 +20,10 @@ template <typename T> inline T EvaluateApplyInterpolator(int aCount, const float
 }
 
 // apply interpolator (specialization for scalar)
-template<> float EvaluateApplyInterpolator<float>(int aCount, const float aKeys[], float aTime, int &aHint);
+template<> GAME_API float EvaluateApplyInterpolator<float>(int aCount, const float aKeys[], float aTime, int &aHint);
 
 // apply interpolator (specialization for SIMD)
-template <> __m128 EvaluateApplyInterpolator<__m128>(int aCount, const float aKeys[], float aTime, int &aHint);
+template <> GAME_API __m128 EvaluateApplyInterpolator<__m128>(int aCount, const float aKeys[], float aTime, int &aHint);
 
 // evaluate typed interpolator
 template <typename T> const T EvaluateInterpolator(EntityContext &aContext)

@@ -3,7 +3,7 @@
 struct EntityContext;
 
 // evaluate numerical integration
-float EvaluateIntegral(EntityContext &aContext);
+GAME_API float EvaluateIntegral(EntityContext &aContext);
 
 // evaluate numerical differentiation
-float EvaluateDifferential(EntityContext &aContext);
+GAME_API float EvaluateDifferential(EntityContext &aContext);

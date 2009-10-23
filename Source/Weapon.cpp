@@ -9,9 +9,9 @@
 #include "Sound.h"
 #include "Resource.h"
 #include "Interpolator.h"
+#include "Variable.h"
 
 #include "ExpressionConfigure.h"
-#include "Drawlist.h" // for variable
 
 #ifdef USE_POOL_ALLOCATOR
 // weapon pool
@@ -650,11 +650,6 @@ bool WeaponTemplate::ConfigureAction(const TiXmlElement *element, unsigned int a
 
 bool WeaponTemplate::Configure(const TiXmlElement *element, unsigned int aId)
 {
-	// clear any existing action
-	// TO DO: support inheritance
-	// TO DO: support "call"
-	mAction.clear();
-
 	// process child elements
 	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
@@ -708,6 +703,10 @@ bool WeaponTemplate::Configure(const TiXmlElement *element, unsigned int aId)
 			break;
 
 		case 0xc4642eff /* "action" */:
+			// clear any existing action
+			// TO DO: support inheritance
+			// TO DO: support "call"
+			mAction.clear();
 			ConfigureAction(child, aId);
 			break;
 

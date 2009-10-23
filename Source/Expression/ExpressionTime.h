@@ -7,7 +7,7 @@ struct EntityContext;
 //
 
 // world time
-float EvaluateWorldTime(Expression::Context &aContext);
+GAME_API float EvaluateWorldTime(Expression::Context &aContext);
 
 // entity-local time
-float EvaluateTime(EntityContext &aContext);
+GAME_API float EvaluateTime(EntityContext &aContext);

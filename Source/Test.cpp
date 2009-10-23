@@ -273,6 +273,9 @@ bool Init(void)
 	// initialize sound system
 	Sound::Init();
 
+	// pause audio
+	Sound::Pause();
+
 	// success!
 	return true;    
 }
