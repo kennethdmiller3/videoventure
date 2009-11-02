@@ -2,6 +2,7 @@
 
 #include "Expression.h"
 #include "ExpressionSchema.h"
+#include "ExpressionConvert.h"
 
 namespace Expression
 {

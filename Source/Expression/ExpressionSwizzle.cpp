@@ -1,6 +1,10 @@
 #include "StdAfx.h"
 
 #include "ExpressionSwizzle.h"
+#include "ExpressionConfigure.h"
+
+static ExpressionConfigure::Auto<float> swizzlefloat(0x3deb1461 /* "swizzle" */, ConfigureSwizzle<float>);
+static ExpressionConfigure::Auto<__m128> swizzlevector(0x3deb1461 /* "swizzle" */, ConfigureSwizzle<__m128>);
 
 namespace Expression
 {

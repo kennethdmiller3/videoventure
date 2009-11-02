@@ -1,6 +1,10 @@
 #include "StdAfx.h"
 
 #include "ExpressionInterpolator.h"
+#include "ExpressionConfigure.h"
+
+static ExpressionConfigure::Auto<float> interpolatorfloat(0x83588fd4 /* "interpolator" */, ConfigureInterpolator<float>);
+static ExpressionConfigure::Auto<__m128> interpolatorvector(0x83588fd4 /* "interpolator" */, ConfigureInterpolator<__m128>);
 
 // apply interpolator (specialization for scalar)
 template<> float EvaluateApplyInterpolator<float>(int aCount, const float aKeys[], float aTime, int &aHint)

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Expression.h"
+#include "ExpressionOperator.h"
 #include "ExpressionSchema.h"
 
 //

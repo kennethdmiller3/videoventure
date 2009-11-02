@@ -1,6 +1,15 @@
 #include "StdAfx.h"
 
 #include "ExpressionExtend.h"
+#include "ExpressionConfigure.h"
+
+template<typename T> static void ConfigureExtend(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
+{
+	ConfigureUnary<const T, float, Expression::Context &>(Expression::Extend<T, float>, element, buffer, sScalarNames, sScalarDefault);
+}
+
+static ExpressionConfigure::Auto<float> extendfloat(0xaa7d7949 /* "extend" */, ConfigureExtend<float>);
+static ExpressionConfigure::Auto<__m128> extendvector(0xaa7d7949 /* "extend" */, ConfigureExtend<__m128>);
 
 namespace Expression
 {

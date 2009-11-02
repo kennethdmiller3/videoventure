@@ -2,8 +2,18 @@
 
 #include "ExpressionSchema.h"
 #include "ExpressionResource.h"
+#include "ExpressionConfigure.h"
+#include "ExpressionConvert.h"
 #include "Resource.h"
 
+template<typename T> static void ConfigureResource(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
+{
+	Expression::Convert<T, float>::Append(buffer);
+	::ConfigureResource(element, buffer, sScalarNames, sScalarDefault);
+}
+
+static ExpressionConfigure::Auto<float> resourcefloat(0x29df7ff5 /* "resource" */, ConfigureResource<float>);
+static ExpressionConfigure::Auto<__m128> resourcevector(0x29df7ff5 /* "resource" */, ConfigureResource<__m128>);
 
 //
 // RESOURCE EXPRESSION

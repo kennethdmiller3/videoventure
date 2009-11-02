@@ -2,23 +2,44 @@
 
 #include "ExpressionLiteral.h"
 #include "ExpressionVariable.h"
-#include "ExpressionResource.h"
 #include "ExpressionInterpolator.h"
 #include "ExpressionRandom.h"
-#include "ExpressionConvert.h"
-#include "ExpressionNoise.h"
 #include "ExpressionConstruct.h"
-#include "ExpressionSwizzle.h"
-#include "ExpressionOperator.h"
-#include "ExpressionOscillator.h"
 #include "ExpressionBoolean.h"
-#include "ExpressionAction.h"
 
 extern GAME_API const char * const sScalarNames[];
 extern GAME_API const float sScalarDefault[];
 
 //
 // EXPRESSION
+
+
+namespace ExpressionConfigure
+{
+	typedef fastdelegate::FastDelegate<void (const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])> Entry;
+
+	template <typename T> Database::Typed<Entry> &GetDB()
+	{
+		static Database::Typed<Entry> configure;
+		return configure;
+	}
+	template <typename T> void Add(unsigned int aTagId, Entry aConfigure)
+	{
+		GetDB<T>().Put(aTagId, aConfigure);
+	}
+	template <typename T> const Entry &Get(unsigned int aTagId)
+	{
+		return GetDB<T>().Get(aTagId);
+	}
+
+	template <typename T> struct Auto
+	{
+		Auto(unsigned int aTagId, Entry aEntry)
+		{
+			Add<T>(aTagId, aEntry);
+		}
+	};
+}
 
 //
 // configure an expression
@@ -44,7 +65,19 @@ template <typename T> void ConfigureExpression(const TiXmlElement *element, std:
 			overrided = true;
 	}
 
+	// if the tag matches a configure database entry...
+	const ExpressionConfigure::Entry &entry = ExpressionConfigure::Get<T>(hash);
+	if (entry)
+	{
+		// use the entry
+		entry(element, buffer, names, data);
+		return;
+	}
 
+	// default to tag variable
+	ConfigureTagVariable<T>(element, buffer, names, data);
+
+#if 0
 	// configure based on tag name
 	switch(hash)
 	{
@@ -108,6 +141,7 @@ template <typename T> void ConfigureExpression(const TiXmlElement *element, std:
 
 	default:								ConfigureTagVariable<T>(element, buffer, names, data); return;
 	}
+#endif
 }
 
 // configure an expression root (the tag hosting the expression)

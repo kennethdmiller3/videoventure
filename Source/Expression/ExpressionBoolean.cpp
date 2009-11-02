@@ -1,10 +1,11 @@
 #include "StdAfx.h"
 
 #include "Expression.h"
-#include "ExpressionConfigure.h"
 #include "ExpressionLogical.h"
 #include "ExpressionRelational.h"
 #include "ExpressionOperator.h"
+#include "ExpressionConvert.h"
+#include "ExpressionConfigure.h"
 
 #include "ExpressionBoolean.h"
 
