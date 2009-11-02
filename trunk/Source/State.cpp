@@ -2,6 +2,7 @@
 
 #include "State.h"
 #include "ExpressionConfigure.h"
+#include "ExpressionAction.h"
 #include "Entity.h"
 #include "Link.h"
 

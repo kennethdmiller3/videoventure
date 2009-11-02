@@ -1,9 +1,52 @@
 #include "StdAfx.h"
 
 #include "Expression.h"
+#include "ExpressionOperator.h"
 #include "ExpressionConfigure.h"
 #include "ExpressionIntegral.h"
+#include "ExpressionConvert.h"
 #include "ExpressionOscillator.h"
+
+//
+template<typename T> static void ConfigureSineWave(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
+{
+	Expression::Convert<T, float>::Append(buffer);
+	ConfigureSineWave(element, buffer);
+}
+
+static ExpressionConfigure::Auto<float> sinewavefloat(0xb711f539 /* "sinewave" */, ConfigureSineWave<float>);
+static ExpressionConfigure::Auto<__m128> sinewavevector(0xb711f539 /* "sinewave" */, ConfigureSineWave<__m128>);
+
+//
+template<typename T> static void ConfigureTriangleWave(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
+{
+	Expression::Convert<T, float>::Append(buffer);
+	ConfigureTriangleWave(element, buffer);
+}
+
+static ExpressionConfigure::Auto<float> trianglewavefloat(0xd0308494 /* "trianglewave" */, ConfigureTriangleWave<float>);
+static ExpressionConfigure::Auto<__m128> trianglewavevector(0xd0308494 /* "trianglewave" */, ConfigureTriangleWave<__m128>);
+
+//
+template<typename T> static void ConfigureSawtoothWave(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
+{
+	Expression::Convert<T, float>::Append(buffer);
+	ConfigureSawtoothWave(element, buffer);
+}
+
+static ExpressionConfigure::Auto<float> sawtoothwavefloat(0x705614d5 /* "sawtoothwave" */, ConfigureSawtoothWave<float>);
+static ExpressionConfigure::Auto<__m128> sawtoothwavevector(0x705614d5 /* "sawtoothwave" */, ConfigureSawtoothWave<__m128>);
+
+
+//
+template<typename T> static void ConfigurePulseWave(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
+{
+	Expression::Convert<T, float>::Append(buffer);
+	ConfigurePulseWave(element, buffer);
+}
+
+static ExpressionConfigure::Auto<float> pulsewavefloat(0x3f8dc467 /* "pulsewave" */, ConfigurePulseWave<float>);
+static ExpressionConfigure::Auto<__m128> pulsewavevector(0x3f8dc467 /* "pulsewave" */, ConfigurePulseWave<__m128>);
 
 
 //

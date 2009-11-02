@@ -1,6 +1,10 @@
 #include "StdAfx.h"
 
 #include "ExpressionLiteral.h"
+#include "ExpressionConfigure.h"
+
+static ExpressionConfigure::Auto<float> literalfloat(0x425ed3ca /* "value" */, ConfigureLiteral<float>);
+static ExpressionConfigure::Auto<__m128> literalvector(0x425ed3ca /* "value" */, ConfigureLiteral<__m128>);
 
 //
 // LITERAL EXPRESSION

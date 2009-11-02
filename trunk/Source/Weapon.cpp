@@ -12,6 +12,7 @@
 #include "Variable.h"
 
 #include "ExpressionConfigure.h"
+#include "ExpressionAction.h"
 
 #ifdef USE_POOL_ALLOCATOR
 // weapon pool

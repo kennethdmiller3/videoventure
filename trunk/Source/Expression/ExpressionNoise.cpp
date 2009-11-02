@@ -3,9 +3,19 @@
 #include "Expression.h"
 #include "ExpressionSchema.h"
 #include "ExpressionLiteral.h"
+#include "ExpressionConvert.h"
 #include "ExpressionConfigure.h"
 #include "ExpressionNoise.h"
 #include "Noise.h"
+
+template<typename T> static void ConfigureNoise(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
+{
+	Expression::Convert<T, float>::Append(buffer);
+	ConfigureNoise(element, buffer, names, defaults);
+}
+
+static ExpressionConfigure::Auto<float> noisefloat(0x904416d1 /* "noise" */, ConfigureNoise<float>);
+static ExpressionConfigure::Auto<__m128> noisevector(0x904416d1 /* "noise" */, ConfigureNoise<__m128>);
 
 // configue a parameter
 static bool ConfigureParameter(const TiXmlElement *element, const char *param, std::vector<unsigned int> &buffer, float (*op)(Expression::Context &), const char * const names[], const float defvalue, const float identity)

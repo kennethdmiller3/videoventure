@@ -1031,6 +1031,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Source\Expression\ExpressionOperator.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\Source\Expression\ExpressionOperator.h"
 				>
 			</File>
@@ -1048,6 +1052,10 @@
 			</File>
 			<File
 				RelativePath=".\Source\Expression\ExpressionOscillator.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Expression\ExpressionRandom.cpp"
 				>
 			</File>
 			<File
@@ -1092,6 +1100,10 @@
 			</File>
 			<File
 				RelativePath=".\Source\Expression\ExpressionTime.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Expression\ExpressionVariable.cpp"
 				>
 			</File>
 			<File

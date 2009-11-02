@@ -1,6 +1,10 @@
 #include "StdAfx.h"
 
 #include "ExpressionConstruct.h"
+#include "ExpressionConfigure.h"
+
+static ExpressionConfigure::Auto<float> constructfloat(0x40c09172 /* "construct" */, ConfigureConstruct<float>);
+static ExpressionConfigure::Auto<__m128> constructvector(0x40c09172 /* "construct" */, ConfigureConstruct<__m128>);
 
 namespace Expression
 {
