@@ -9,13 +9,6 @@
 // console
 extern OGLCONSOLE_Console console;
 
-// text display (HACK)
-extern "C" GLuint OGLCONSOLE_glFontHandle;
-extern "C" void OGLCONSOLE_DrawString(char *s, double x, double y, double w, double h, double z);
-extern "C" void OGLCONSOLE_DrawCharacter(int c, double x, double y, double w, double h, double z);
-extern "C" void OGLCONSOLE_CreateFont();
-extern "C" void OGLCONSOLE_Resize(OGLCONSOLE_Console console);
-
 // open window
 extern bool OpenWindow(void);
 

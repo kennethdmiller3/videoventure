@@ -196,6 +196,60 @@ namespace Database
 		Activate(aInstanceId);
 	}
 
+	// activate immediately
+	void ActivateImmediate(unsigned int aId)
+	{
+		// for each activation initializer...
+		for (Typed<Initializer::Entry>::Iterator itor(&Initializer::GetActivate()); itor.IsValid(); ++itor)
+		{
+			// if the corresponding database has a record...
+			if (GetDatabases().Get(itor.GetKey())->Find(aId))
+			{
+				// call the initializer
+				itor.GetValue()(aId);
+			}
+		}
+
+		// if entity has no physics...
+		if (!Database::collidable.Get(aId))
+		{
+			// get the entity
+			Entity *entity = Database::entity.Get(aId);
+
+			// step the entity (HACK)
+			// TO DO: come up with a workaround for this
+			entity->Step();
+		}
+
+		// for each post-activation initializer...
+		for (Typed<Initializer::Entry>::Iterator itor(&Initializer::GetPostActivate()); itor.IsValid(); ++itor)
+		{
+			// if the corresponding database has a record...
+			if (GetDatabases().Get(itor.GetKey())->Find(aId))
+			{
+				// call the initializer
+				itor.GetValue()(aId);
+			}
+		}
+	}
+
+	// process queued activations
+	void ActivateQueued()
+	{
+		// while the queue is not empty...
+		while (!activatequeue.empty())
+		{
+			// get the first entry
+			unsigned int aId = activatequeue.front();
+
+			// activate the entry
+			ActivateImmediate(aId);
+
+			// remove from the queue
+			activatequeue.pop_front();
+		}
+	}
+
 	// activate an identifier
 	void Activate(unsigned int aId)
 	{
@@ -203,50 +257,53 @@ namespace Database
 		activatequeue.push_back(aId);
 
 		// defer activation if busy
-		if (activatequeue.size() > 1)
+		if (!runtime || activatequeue.size() > 1)
 			return;
 
 		// process queued activations
-		while (!activatequeue.empty())
+		ActivateQueued();
+	}
+
+	// deactivate immediately
+	void DeactivateImmediate(unsigned int aId)
+	{
+		// for each pre-deactivation initializer...
+		for (Typed<Initializer::Entry>::Iterator itor(&Initializer::GetPreDeactivate()); itor.IsValid(); ++itor)
+		{
+			// if the corresponding database has a record...
+			if (GetDatabases().Get(itor.GetKey())->Find(aId))
+			{
+				// call the initializer
+				itor.GetValue()(aId);
+			}
+		}
+
+		// for each deactivation initializer...
+		for (Typed<Initializer::Entry>::Iterator itor(&Initializer::GetDeactivate()); itor.IsValid(); ++itor)
+		{
+			// if the corresponding database has a record...
+			if (GetDatabases().Get(itor.GetKey())->Find(aId))
+			{
+				// call the initializer
+				itor.GetValue()(aId);
+			}
+		}
+	}
+
+	// process queued deactivations
+	void DeactivateQueued()
+	{
+		// while the queue is not empty...
+		while (!deactivatequeue.empty())
 		{
 			// get the first entry
-			unsigned int aId = activatequeue.front();
+			unsigned int aId = deactivatequeue.front();
 
-			// for each activation initializer...
-			for (Typed<Initializer::Entry>::Iterator itor(&Initializer::GetActivate()); itor.IsValid(); ++itor)
-			{
-				// if the corresponding database has a record...
-				if (GetDatabases().Get(itor.GetKey())->Find(aId))
-				{
-					// call the initializer
-					itor.GetValue()(aId);
-				}
-			}
-
-			// if entity has no physics...
-			if (!Database::collidable.Get(aId))
-			{
-				// get the entity
-				Entity *entity = Database::entity.Get(aId);
-
-				// step the entity (HACK)
-				// TO DO: come up with a workaround for this
-				entity->Step();
-			}
-
-			// for each post-activation initializer...
-			for (Typed<Initializer::Entry>::Iterator itor(&Initializer::GetPostActivate()); itor.IsValid(); ++itor)
-			{
-				// if the corresponding database has a record...
-				if (GetDatabases().Get(itor.GetKey())->Find(aId))
-				{
-					// call the initializer
-					itor.GetValue()(aId);
-				}
-			}
+			// deactivate the entry
+			DeactivateImmediate(aId);
 
 			// remove from the queue
-			activatequeue.pop_front();
+			deactivatequeue.pop_front();
 		}
 	}
 
@@ -257,54 +314,15 @@ namespace Database
 		deactivatequeue.push_back(aId);
 
 		// defer deactivation if busy
-		if (deactivatequeue.size() > 1)
+		if (!runtime || deactivatequeue.size() > 1)
 			return;
 
 		// process queued deactivations
-		while (!deactivatequeue.empty())
-		{
-			// get the first entry
-			unsigned int aId = deactivatequeue.front();
-
-			// for each pre-deactivation initializer...
-			for (Typed<Initializer::Entry>::Iterator itor(&Initializer::GetPreDeactivate()); itor.IsValid(); ++itor)
-			{
-				// if the corresponding database has a record...
-				if (GetDatabases().Get(itor.GetKey())->Find(aId))
-				{
-					// call the initializer
-					itor.GetValue()(aId);
-				}
-			}
-
-			// for each deactivation initializer...
-			for (Typed<Initializer::Entry>::Iterator itor(&Initializer::GetDeactivate()); itor.IsValid(); ++itor)
-			{
-				// if the corresponding database has a record...
-				if (GetDatabases().Get(itor.GetKey())->Find(aId))
-				{
-					// call the initializer
-					itor.GetValue()(aId);
-				}
-			}
-
-			// remove from the queue
-			deactivatequeue.pop_front();
-		}
+		DeactivateQueued();
 	}
 
-	// delete an identifier
-	void Delete(unsigned int aId)
-	{
-		// defer deletion
-		deletequeue.push_back(aId);
-
-		// send out a signal
-		deleted.Get(aId)(aId);
-	}
-
-	// destroy the identifier
-	void Destroy(unsigned int aId)
+	// delete immediately
+	void DeleteImmediate(unsigned int aId)
 	{
 		// deactivate
 		Deactivate(aId);
@@ -326,15 +344,45 @@ namespace Database
 		}
 	}
 
+	// process queued deletions
+	void DeleteQueued()
+	{
+		// while the queue is not empty...
+		while (!deletequeue.empty())
+		{
+			// get the first entry
+			unsigned int aId = deletequeue.front();
+
+			// delete the entry
+			DeleteImmediate(aId);
+
+			// remove from the queue
+			deletequeue.pop_front();
+		}
+	}
+
+	// delete an identifier
+	void Delete(unsigned int aId)
+	{
+		// defer deletion
+		deletequeue.push_back(aId);
+
+		// send out a signal
+		deleted.Get(aId)(aId);
+	}
+
+	// pause
+	void Pause(void);
+
+	// resume
+	void Resume(void);
+
 	// update the database system
 	void Update(void)
 	{
-		while (!deletequeue.empty())
-		{
-			unsigned int aId = deletequeue.front();
-			deletequeue.pop_front();
-			Destroy(aId);
-		}
+		ActivateQueued();
+		DeactivateQueued();
+		DeleteQueued();
 	}
 
 	// clean up all databases

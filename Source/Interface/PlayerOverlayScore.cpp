@@ -1,12 +1,8 @@
 #include "StdAfx.h"
 #include "PlayerOverlayScore.h"
 #include "Player.h"
+#include "Font.h"
 
-
-// text display (HACK)
-extern "C" GLuint OGLCONSOLE_glFontHandle;
-extern "C" void OGLCONSOLE_DrawString(char *s, double x, double y, double w, double h, double z);
-extern "C" void OGLCONSOLE_DrawCharacter(int c, double x, double y, double w, double h, double z);
 
 // score properties
 static const Rect<float> scorerect =
@@ -70,9 +66,7 @@ void PlayerOverlayScore::Render(unsigned int aId, float aTime, const Transform2 
 		sprintf(score, "%08d", new_score);
 		bool leading = true;
 
-		glEnable(GL_TEXTURE_2D);
-		glBindTexture(GL_TEXTURE_2D, OGLCONSOLE_glFontHandle);
-		glBegin(GL_QUADS);
+		FontDrawBegin(sDefaultFontHandle);
 
 		for (char *s = score; *s != '\0'; ++s)
 		{
@@ -80,14 +74,12 @@ void PlayerOverlayScore::Render(unsigned int aId, float aTime, const Transform2 
 			if (c != '0')
 				leading = false;
 			glColor4fv(scorecolor[leading]);
-			OGLCONSOLE_DrawCharacter(c,
+			FontDrawCharacter(c,
 				scorerect.x + scorerect.w * (s - score), scorerect.y + scorerect.h,
 				scorerect.w, -scorerect.h, 0);
 		}
 
-		glEnd();
-
-		glDisable(GL_TEXTURE_2D);
+		FontDrawEnd();
 
 		glEndList();
 	}

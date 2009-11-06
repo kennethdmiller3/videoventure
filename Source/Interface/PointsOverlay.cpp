@@ -1,9 +1,6 @@
 #include "StdAfx.h"
 #include "PointsOverlay.h"
-
-
-extern "C" GLuint OGLCONSOLE_glFontHandle;
-extern "C" void OGLCONSOLE_DrawString(char *s, double x, double y, double w, double h, double z);
+#include "Font.h"
 
 
 namespace Database
@@ -69,9 +66,7 @@ void PointsOverlay::Render(unsigned int aId, float aTime, const Transform2 &aTra
 	glTranslatef( -viewpos.x, -viewpos.y, 0 );
 
 	// start drawing
-	glEnable(GL_TEXTURE_2D);
-	glBindTexture(GL_TEXTURE_2D, OGLCONSOLE_glFontHandle);
-	glBegin(GL_QUADS);
+	FontDrawBegin(sDefaultFontHandle);
 
 	// for each points item
 	for (int i = mItemFirst; i != mItemLast; i = (i + 1) % SDL_arraysize(mItems))
@@ -89,7 +84,7 @@ void PointsOverlay::Render(unsigned int aId, float aTime, const Transform2 &aTra
 		// draw point value
 		glColor4f(1.0f, 1.0f, 1.0f, std::min(item.mTime, 1.0f));
 		float w = 4 * VIEW_SIZE / 240;
-		OGLCONSOLE_DrawString(buf, item.mPosition.x + w * 0.5f * strlen(buf), item.mPosition.y - w * 0.5f, -w, w, 0);
+		FontDrawString(buf, item.mPosition.x + w * 0.5f * strlen(buf), item.mPosition.y - w * 0.5f, -w, w, 0);
 
 		// count down time
 		item.mTime -= frame_time;
@@ -100,8 +95,7 @@ void PointsOverlay::Render(unsigned int aId, float aTime, const Transform2 &aTra
 	}
 
 	// finish drawing
-	glEnd();
-	glDisable(GL_TEXTURE_2D);
+	FontDrawEnd();
 
 	// reset camera transform
 	glPopMatrix();

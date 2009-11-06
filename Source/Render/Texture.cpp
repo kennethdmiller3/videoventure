@@ -131,6 +131,7 @@ namespace Database
 
 							EntityContext context(&buffer[0], buffer.size(), 0, aId);
 
+							// TO DO: fix memory leak
 							texture.mPixels = static_cast<unsigned char *>(malloc(texture.mWidth * texture.mHeight * texture.mComponents));
 
 							unsigned char *pixel = texture.mPixels;

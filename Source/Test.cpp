@@ -12,6 +12,7 @@
 #include "Command.h"
 #include "Drawlist.h"
 #include "Texture.h"
+#include "Font.h"
 
 #include <cstdarg>
 
@@ -64,10 +65,9 @@ OGLCONSOLE_Console console;
 
 // text display (HACK)
 extern "C" GLuint OGLCONSOLE_glFontHandle;
-extern "C" void OGLCONSOLE_DrawString(char *s, double x, double y, double w, double h, double z);
-extern "C" void OGLCONSOLE_DrawCharacter(int c, double x, double y, double w, double h, double z);
 extern "C" void OGLCONSOLE_CreateFont();
 extern "C" void OGLCONSOLE_Resize(OGLCONSOLE_Console console);
+
 
 // debug output
 int DebugPrint(const char *format, ...)
@@ -247,7 +247,6 @@ void CloseWindow(void)
 	}
 }
 
-
 bool Init(void)
 {
 	// platform-specific initialization
@@ -255,6 +254,9 @@ bool Init(void)
 
 	// create window
 	OpenWindow();
+
+	// create default font
+	CreateDefaultFont();
 
 	// hide the mouse cursor
 	Platform::ShowCursor(false);
