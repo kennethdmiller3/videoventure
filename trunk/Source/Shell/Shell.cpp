@@ -10,14 +10,8 @@
 #include "PlayerHUD.h"
 #include "Preferences.h"
 #include "Library.h"
+#include "Font.h"
 
-
-// text display (HACK)
-extern "C" GLuint OGLCONSOLE_glFontHandle;
-extern "C" void OGLCONSOLE_DrawString(char *s, double x, double y, double w, double h, double z);
-extern "C" void OGLCONSOLE_DrawCharacter(int c, double x, double y, double w, double h, double z);
-extern "C" void OGLCONSOLE_CreateFont();
-extern "C" void OGLCONSOLE_Resize(OGLCONSOLE_Console console);
 
 extern bool escape;
 extern bool paused;
@@ -118,10 +112,7 @@ struct ShellMenuItem
 
 		if (mLabel)
 		{
-			glEnable(GL_TEXTURE_2D);
-			glBindTexture(GL_TEXTURE_2D, OGLCONSOLE_glFontHandle);
-
-			glBegin(GL_QUADS);
+			FontDrawBegin(sDefaultFontHandle);
 
 			// get text corner position
 			size_t labellen = strlen(mLabel);
@@ -133,14 +124,14 @@ struct ShellMenuItem
 			{
 				// render border
 				glColor4fv(mBorderColor[state]);
-				OGLCONSOLE_DrawString(mLabel, labelcorner.x - 2, labelcorner.y - 2, mCharSize.x, -mCharSize.y, 0);
-				OGLCONSOLE_DrawString(mLabel, labelcorner.x    , labelcorner.y - 2, mCharSize.x, -mCharSize.y, 0);
-				OGLCONSOLE_DrawString(mLabel, labelcorner.x + 2, labelcorner.y - 2, mCharSize.x, -mCharSize.y, 0);
-				OGLCONSOLE_DrawString(mLabel, labelcorner.x - 2, labelcorner.y    , mCharSize.x, -mCharSize.y, 0);
-				OGLCONSOLE_DrawString(mLabel, labelcorner.x + 2, labelcorner.y    , mCharSize.x, -mCharSize.y, 0);
-				OGLCONSOLE_DrawString(mLabel, labelcorner.x - 2, labelcorner.y + 2, mCharSize.x, -mCharSize.y, 0);
-				OGLCONSOLE_DrawString(mLabel, labelcorner.x    , labelcorner.y + 2, mCharSize.x, -mCharSize.y, 0);
-				OGLCONSOLE_DrawString(mLabel, labelcorner.x + 2, labelcorner.y + 2, mCharSize.x, -mCharSize.y, 0);
+				FontDrawString(mLabel, labelcorner.x - 2, labelcorner.y - 2, mCharSize.x, -mCharSize.y, 0);
+				FontDrawString(mLabel, labelcorner.x    , labelcorner.y - 2, mCharSize.x, -mCharSize.y, 0);
+				FontDrawString(mLabel, labelcorner.x + 2, labelcorner.y - 2, mCharSize.x, -mCharSize.y, 0);
+				FontDrawString(mLabel, labelcorner.x - 2, labelcorner.y    , mCharSize.x, -mCharSize.y, 0);
+				FontDrawString(mLabel, labelcorner.x + 2, labelcorner.y    , mCharSize.x, -mCharSize.y, 0);
+				FontDrawString(mLabel, labelcorner.x - 2, labelcorner.y + 2, mCharSize.x, -mCharSize.y, 0);
+				FontDrawString(mLabel, labelcorner.x    , labelcorner.y + 2, mCharSize.x, -mCharSize.y, 0);
+				FontDrawString(mLabel, labelcorner.x + 2, labelcorner.y + 2, mCharSize.x, -mCharSize.y, 0);
 			}
 
 			// render label
@@ -149,11 +140,9 @@ struct ShellMenuItem
 			for (int c = 0; c < 4; c++)
 				color[c] = Lerp(mLabelColor[state][0][c], mLabelColor[state][1][c], interp);
 			glColor4fv(color);
-			OGLCONSOLE_DrawString(mLabel, labelcorner.x, labelcorner.y, mCharSize.x, -mCharSize.y, 0);
+			FontDrawString(mLabel, labelcorner.x, labelcorner.y, mCharSize.x, -mCharSize.y, 0);
 
-			glEnd();
-
-			glDisable(GL_TEXTURE_2D);
+			FontDrawEnd();
 		}
 	}
 };

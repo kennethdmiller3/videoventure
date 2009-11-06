@@ -4,11 +4,6 @@
 #include "Resource.h"
 
 
-// text display (HACK)
-extern "C" GLuint OGLCONSOLE_glFontHandle;
-extern "C" void OGLCONSOLE_DrawString(char *s, double x, double y, double w, double h, double z);
-extern "C" void OGLCONSOLE_DrawCharacter(int c, double x, double y, double w, double h, double z);
-
 // ammo gauge
 static const Rect<float> ammorect =
 {

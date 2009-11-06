@@ -11,6 +11,7 @@
 #include "Renderable.h"
 #include "Overlay.h"
 #include "Sound.h"
+#include "Font.h"
 
 #include "oglconsole.h"
 
@@ -19,13 +20,6 @@
 
 // console
 extern OGLCONSOLE_Console console;
-
-// text display (HACK)
-extern "C" GLuint OGLCONSOLE_glFontHandle;
-extern "C" void OGLCONSOLE_DrawString(char *s, double x, double y, double w, double h, double z);
-extern "C" void OGLCONSOLE_DrawCharacter(int c, double x, double y, double w, double h, double z);
-extern "C" void OGLCONSOLE_CreateFont();
-extern "C" void OGLCONSOLE_Resize(OGLCONSOLE_Console console);
 
 // forward declaration
 extern bool OpenWindow(void);
@@ -970,25 +964,20 @@ void RunState()
 			if (FRAMERATE_OUTPUTSCREEN)
 			{
 				// draw frame rate indicator
-				glEnable(GL_TEXTURE_2D);
-				glBindTexture(GL_TEXTURE_2D, OGLCONSOLE_glFontHandle);
-
-				glBegin(GL_QUADS);
+				FontDrawBegin(sDefaultFontHandle);
 
 				char fps[16];
 				sprintf(fps, "%.2f max", rate_max);
 				glColor4f(0.5f, 0.5f, 0.5f, 1.0f);
-				OGLCONSOLE_DrawString(fps, 640 - 16 - 8 * strlen(fps), 16, 8, -8, 0);
+				FontDrawString(fps, float(640 - 16 - 8 * strlen(fps)), 16, 8, -8, 0);
 				sprintf(fps, "%.2f avg", rate_avg);
 				glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-				OGLCONSOLE_DrawString(fps, 640 - 16 - 8 * strlen(fps), 24, 8, -8, 0);
+				FontDrawString(fps, float(640 - 16 - 8 * strlen(fps)), 24, 8, -8, 0);
 				sprintf(fps, "%.2f min", rate_min);
 				glColor4f(0.5f, 0.5f, 0.5f, 1.0f);
-				OGLCONSOLE_DrawString(fps, 640 - 16 - 8 * strlen(fps), 32, 8, -8, 0);
+				FontDrawString(fps, float(640 - 16 - 8 * strlen(fps)), 32, 8, -8, 0);
 
-				glEnd();
-
-				glDisable(GL_TEXTURE_2D);
+				FontDrawEnd();
 			}
 #endif
 

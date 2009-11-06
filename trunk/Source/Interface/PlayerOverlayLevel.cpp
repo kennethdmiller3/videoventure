@@ -3,12 +3,8 @@
 #include "Player.h"
 #include "Resource.h"
 #include "Drawlist.h"
+#include "Font.h"
 
-
-// text display (HACK)
-extern "C" GLuint OGLCONSOLE_glFontHandle;
-extern "C" void OGLCONSOLE_DrawString(char *s, double x, double y, double w, double h, double z);
-extern "C" void OGLCONSOLE_DrawCharacter(int c, double x, double y, double w, double h, double z);
 
 // level indicator position
 static const Vector2 levelpos(8 + 128 + 8, 24 + 16);
@@ -117,22 +113,18 @@ void PlayerOverlayLevel::Render(unsigned int aId, float aTime, const Transform2 
 	char level[16];
 	sprintf(level, "x%d", cur_level);
 
-	glEnable(GL_TEXTURE_2D);
-	glBindTexture(GL_TEXTURE_2D, OGLCONSOLE_glFontHandle);
+	FontDrawBegin(sDefaultFontHandle);
 
 	glColor4f(0.4f, 0.5f, 1.0f, 1.0f);
 
-	glBegin(GL_QUADS);
 	float w = 8;
 	float h = -8;
 	float x = levelpos.x + 8;
 	float y = levelpos.y - 0.5f * h;
 	float z = 0;
-	OGLCONSOLE_DrawString(level, x, y, w, h, z);
+	FontDrawString(level, x, y, w, h, z);
 
-	glEnd();
-
-	glDisable(GL_TEXTURE_2D);
+	FontDrawEnd();
 
 	glEndList();
 }

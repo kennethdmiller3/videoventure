@@ -279,6 +279,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Source\Core\Random.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Source\Core\Renderable.cpp"
 				>
 			</File>
@@ -320,6 +324,10 @@
 			</File>
 			<File
 				RelativePath=".\Source\Core\Updatable.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Core\Utility.h"
 				>
 			</File>
 			<File
@@ -370,6 +378,10 @@
 		<Filter
 			Name="Interface"
 			>
+			<File
+				RelativePath=".\Source\Interface\Font.cpp"
+				>
+			</File>
 			<File
 				RelativePath=".\Source\Interface\PlayerHUD.cpp"
 				>

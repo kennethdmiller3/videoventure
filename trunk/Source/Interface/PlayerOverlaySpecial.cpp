@@ -3,12 +3,8 @@
 #include "Player.h"
 #include "Resource.h"
 #include "Drawlist.h"
+#include "Font.h"
 
-
-// text display (HACK)
-extern "C" GLuint OGLCONSOLE_glFontHandle;
-extern "C" void OGLCONSOLE_DrawString(char *s, double x, double y, double w, double h, double z);
-extern "C" void OGLCONSOLE_DrawCharacter(int c, double x, double y, double w, double h, double z);
 
 // special ammo position
 static const Vector2 specialpos(8 + 128 + 8, 24 + 16);
@@ -77,22 +73,18 @@ void PlayerOverlaySpecial::Render(unsigned int aId, float aTime, const Transform
 	char special[16];
 	sprintf(special, "x%d", cur_special);
 
-	glEnable(GL_TEXTURE_2D);
-	glBindTexture(GL_TEXTURE_2D, OGLCONSOLE_glFontHandle);
+	FontDrawBegin(sDefaultFontHandle);
 
 	glColor4f(0.4f, 0.5f, 1.0f, 1.0f);
 
-	glBegin(GL_QUADS);
 	float w = 8;
 	float h = -8;
 	float x = specialpos.x + 8;
 	float y = specialpos.y - 0.5f * h;
 	float z = 0;
-	OGLCONSOLE_DrawString(special, x, y, w, h, z);
+	FontDrawString(special, x, y, w, h, z);
 
-	glEnd();
-
-	glDisable(GL_TEXTURE_2D);
+	FontDrawEnd();
 
 	glEndList();
 }

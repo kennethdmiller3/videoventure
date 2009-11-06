@@ -3,12 +3,7 @@
 #include "Player.h"
 #include "Controller.h"
 #include "GameState.h"	// for setgamestate
-
-
-// text display (HACK)
-extern "C" GLuint OGLCONSOLE_glFontHandle;
-extern "C" void OGLCONSOLE_DrawString(char *s, double x, double y, double w, double h, double z);
-extern "C" void OGLCONSOLE_DrawCharacter(int c, double x, double y, double w, double h, double z);
+#include "Font.h"
 
 
 //
@@ -48,11 +43,7 @@ void PlayerOverlayGameOver::Render(unsigned int aId, float aTime, const Transfor
 		// display game over
 		gameovertimer += frame_time;
 
-		glEnable(GL_TEXTURE_2D);
-		glBindTexture(GL_TEXTURE_2D, OGLCONSOLE_glFontHandle);
-
-
-		glBegin(GL_QUADS);
+		FontDrawBegin(sDefaultFontHandle);
 
 		float lerp = std::min(gameovertimer, 1.0f);
 		static char *text = "GAME OVER";
@@ -64,21 +55,19 @@ void PlayerOverlayGameOver::Render(unsigned int aId, float aTime, const Transfor
 		const float a = lerp * lerp;
 
 		glColor4f(0.1f, 0.1f, 0.1f, a);
-		OGLCONSOLE_DrawString(text, x - 2, y - 2, w, h, z);
-		OGLCONSOLE_DrawString(text, x    , y - 2, w, h, z);
-		OGLCONSOLE_DrawString(text, x + 2, y - 2, w, h, z);
-		OGLCONSOLE_DrawString(text, x - 2, y    , w, h, z);
-		OGLCONSOLE_DrawString(text, x + 2, y    , w, h, z);
-		OGLCONSOLE_DrawString(text, x - 2, y + 2, w, h, z);
-		OGLCONSOLE_DrawString(text, x    , y + 2, w, h, z);
-		OGLCONSOLE_DrawString(text, x + 2, y + 2, w, h, z);
+		FontDrawString(text, x - 2, y - 2, w, h, z);
+		FontDrawString(text, x    , y - 2, w, h, z);
+		FontDrawString(text, x + 2, y - 2, w, h, z);
+		FontDrawString(text, x - 2, y    , w, h, z);
+		FontDrawString(text, x + 2, y    , w, h, z);
+		FontDrawString(text, x - 2, y + 2, w, h, z);
+		FontDrawString(text, x    , y + 2, w, h, z);
+		FontDrawString(text, x + 2, y + 2, w, h, z);
 
 		glColor4f(1.0f, 0.2f, 0.1f, a);
-		OGLCONSOLE_DrawString(text, x, y, w, h, z);
+		FontDrawString(text, x, y, w, h, z);
 
-		glEnd();
-
-		glDisable(GL_TEXTURE_2D);
+		FontDrawEnd();
 
 		// HACK: this should not be done right nere
 		if (gameovertimer > 5)
