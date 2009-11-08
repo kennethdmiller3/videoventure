@@ -40,7 +40,6 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalIncludeDirectories="Source;Source\Behavior;Source\Core;Source\Expression;Source\Interface;Source\Render;Source\Shell;Source\Sound"
-				PreprocessorDefinitions="GLHEADERINCLUDE=\&quot;SDL_opengl.h\&quot;"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -102,7 +101,6 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalIncludeDirectories="Source;Source\Behavior;Source\Core;Source\Expression;Source\Interface;Source\Render;Source\Shell;Source\Sound"
-				PreprocessorDefinitions="GLHEADERINCLUDE=\&quot;SDL_opengl.h\&quot;"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -380,6 +378,10 @@
 			>
 			<File
 				RelativePath=".\Source\Interface\Font.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Interface\Font.h"
 				>
 			</File>
 			<File
@@ -1134,6 +1136,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
+						PreprocessorDefinitions="GLHEADERINCLUDE=&lt;GL/glfw.h&gt;"
 						UsePrecompiledHeader="0"
 					/>
 				</FileConfiguration>
@@ -1142,6 +1145,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
+						PreprocessorDefinitions="GLHEADERINCLUDE=&lt;GL/glfw.h&gt;"
 						UsePrecompiledHeader="0"
 					/>
 				</FileConfiguration>

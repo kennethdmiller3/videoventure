@@ -21,6 +21,9 @@ extern bool InitInput(const char *config);
 // split level
 extern bool SplitLevel(const char *config, const char *output);
 
+// merge level
+extern bool MergeLevel(const char *config, const char *output);
+
 
 // post-command function
 typedef void (*ProcessCommandPostFunc)(void);
@@ -215,6 +218,14 @@ int ProcessCommand( unsigned int aCommand, char *aParam[], int aCount )
 		if (aCount > 0)
 		{
 			SplitLevel(LEVEL_CONFIG.c_str(), aParam[0]);
+			return 1;
+		}
+		return 0;
+
+	case 0xb9764627 /* "merge" */:
+		if (aCount > 0)
+		{
+			MergeLevel(LEVEL_CONFIG.c_str(), aParam[0]);
 			return 1;
 		}
 		return 0;
