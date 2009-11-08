@@ -43,34 +43,13 @@ bool SplitLevel(const char *config, const char *output)
 		DebugPrint("error loading level file \"%s\": %s\n", config, document.ErrorDesc());
 
 	// if the document has a world section...
-	if (const TiXmlElement *root = document.FirstChildElement("world"))
+	if (TiXmlElement *root = document.FirstChildElement("world"))
 	{
-		// output level data file
-		TiXmlDocument split(output);
-		split.SetCondenseWhiteSpace(false);
-		TiXmlElement *splitroot = NULL;
-
-		// copy nodes from the original
-		for (const TiXmlNode *node = document.FirstChild(); node != NULL; node = node->NextSibling())
-		{
-			if (node == root)
-			{
-				splitroot = new TiXmlElement(root->Value());
-				for (const TiXmlAttribute *attribute = root->FirstAttribute(); attribute != NULL; attribute = attribute->Next())
-					splitroot->SetAttribute(attribute->Name(), attribute->Value());
-				split.LinkEndChild(splitroot);
-			}
-			else
-			{
-				split.InsertEndChild(*node);
-			}
-		}
-
 		// for each node...
-		for (const TiXmlNode *node = root->FirstChild(); node != NULL; node = node->NextSibling())
+		for (TiXmlNode *node = root->FirstChild(); node != NULL; node = node->NextSibling())
 		{
 			// if the node is an element...
-			if (const TiXmlElement *element = node->ToElement())
+			if (TiXmlElement *element = node->ToElement())
 			{
 				// if the element is not an instance
 				if (Hash(element->Value()) != 0xd33ff5da /* "entity" */)
@@ -78,32 +57,97 @@ bool SplitLevel(const char *config, const char *output)
 					// if the element has a name...
 					if (const char *name = element->Attribute("name"))
 					{
-						// export child element as a separate XML file
-						char filename[256];
-						TIXML_SNPRINTF(filename, sizeof(filename), "%s/%s.xml", element->Value(), name);
-						DebugPrint("%s\n", filename);
-						TiXmlDocument piece(filename);
+						// generate file path based on element type and name
+						char path[256];
+						TIXML_SNPRINTF(path, sizeof(path), "%s/%s.xml", element->Value(), name);
+						DebugPrint("%s\n", path);
+
+						// create a new XML document
+						TiXmlDocument piece(path);
+
+						// add XML declaration
 						TiXmlDeclaration * declaration = new TiXmlDeclaration( "1.0", "", "" );
 						piece.LinkEndChild(declaration);
+
+						// copy element contents
 						piece.InsertEndChild(*element);
+
+						// if the document saved...
 						if (piece.SaveFile())
 						{
-							// insert an import element
+							// substitute an import element
 							TiXmlElement *import = new TiXmlElement("import");
-							import->SetAttribute("name", filename);
-							splitroot->LinkEndChild(import);
-
-							continue;
+							import->SetAttribute("name", path);
+							node = root->ReplaceChild(node, *import);
+						}
+						else
+						{
+							DebugPrint("error loading import file \"%s\": %s\n", name, document.ErrorDesc());
 						}
 					}
 				}
 			}
-
-			// copy to the output
-			splitroot->InsertEndChild(*node);
 		}
 
-		split.SaveFile();
+		// save the updated level file
+		document.SaveFile(output);
+
+		return true;
+	}
+
+	return false;
+}
+
+bool MergeLevel(const char *config, const char *output)
+{
+	// load level data file
+	DebugPrint("Level %s -> %s\n", config, output);
+	TiXmlDocument document(config);
+	document.SetCondenseWhiteSpace(false);
+	if (!document.LoadFile())
+		DebugPrint("error loading level file \"%s\": %s\n", config, document.ErrorDesc());
+
+	// if the document has a world section...
+	if (TiXmlElement *root = document.FirstChildElement("world"))
+	{
+		// for each node...
+		for (TiXmlNode *node = root->FirstChild(); node != NULL; node = node->NextSibling())
+		{
+			// if the node is an element...
+			if (TiXmlElement *element = node->ToElement())
+			{
+				// if the element is an import
+				if (Hash(element->Value()) == 0x112a90d4 /* "import" */)
+				{
+					// if the element has a name...
+					if (const char *name = element->Attribute("name"))
+					{
+						// import child element from a separate XML file
+						DebugPrint("%s\n", name);
+						TiXmlDocument piece(name);
+						if (!piece.LoadFile())
+						{
+							DebugPrint("error loading import file \"%s\": %s\n", name, document.ErrorDesc());
+							continue;
+						}
+
+						// get the first element
+						if (const TiXmlElement *import = piece.FirstChildElement())
+						{
+							// substitute the element
+							node = root->ReplaceChild(node, *import);
+						}
+						else
+						{
+							DebugPrint("import file \"%s\" contains no elements\n", name);
+						}
+					}
+				}
+			}
+		}
+
+		// save the updated level file
+		document.SaveFile(output);
 
 		return true;
 	}
