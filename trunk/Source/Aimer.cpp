@@ -192,9 +192,8 @@ void Aimer::Control(float aStep)
 
 #ifdef AIMER_OBSTACLE_AVOIDANCE
 	// obstacle avoidance
-	if (Collidable *collidable = Database::collidable.Get(mId))
+	if (b2Body *body = Database::collidablebody.Get(mId))
 	{
-		b2Body *body = collidable->GetBody();
 		b2Fixture *shapelist = body->GetShapeList();
 		const b2Filter &filter = shapelist->GetFilterData();
 

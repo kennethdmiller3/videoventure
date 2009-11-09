@@ -6,13 +6,6 @@ static const int LAST_CHARACTER  = '\x7F';
 
 Rect<float> sDefaultFontUVs[LAST_CHARACTER-FIRST_CHARACTER];
 
-static const int CHAR_PIXEL_W = 8;
-static const int CHAR_PIXEL_H = 8;
-static const int CHAR_COLS = 128/CHAR_PIXEL_W;
-static const int CHAR_ROWS = 64/CHAR_PIXEL_H;
-static const float CHAR_WIDTH = CHAR_PIXEL_W/128.0;
-static const float CHAR_HEIGHT = CHAR_PIXEL_H/64.0;
-
 GLuint sDefaultFontHandle;
 
 void CreateDefaultFont()
@@ -21,9 +14,9 @@ void CreateDefaultFont()
 
 	// modified Atari 8-bit font
 	// TO DO: support other fonts
-	const size_t aTextureWidth = 128;
-	const size_t aTextureHeight = 64;
-	const unsigned char aTextureData[aTextureWidth*aTextureHeight] = 
+	static const size_t aTextureWidth = 128;
+	static const size_t aTextureHeight = 64;
+	static const unsigned char aTextureData[] = 
 	{
 		0x00, 0x18, 0xc0, 0x18, 0x18, 0x00, 0xc0, 0x03, 0x80, 0x00, 0x01, 0xf0, 0x0f, 0xff, 0x00, 0x00, 
 		0x6c, 0x18, 0xc0, 0x18, 0x18, 0x00, 0xe0, 0x07, 0xc0, 0x00, 0x03, 0xf0, 0x0f, 0xff, 0x00, 0x00, 

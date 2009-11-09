@@ -211,7 +211,7 @@ namespace Database
 		}
 
 		// if entity has no physics...
-		if (!Database::collidable.Get(aId))
+		if (!Database::collidablebody.Get(aId))
 		{
 			// get the entity
 			Entity *entity = Database::entity.Get(aId);

@@ -234,9 +234,9 @@ static void WeaponRecoil(EntityContext &aContext)
 		// apply recoil force
 		for (unsigned int id = aContext.mId; id != 0; id = Database::backlink.Get(id))
 		{
-			if (Collidable *collidable = Database::collidable.Get(id))
+			if (b2Body *body = Database::collidablebody.Get(id))
 			{
-				collidable->GetBody()->ApplyImpulse(transform.Rotate(Vector2(0, -recoil)), transform.p);
+				body->ApplyImpulse(transform.Rotate(Vector2(0, -recoil)), transform.p);
 				break;
 			}
 		}

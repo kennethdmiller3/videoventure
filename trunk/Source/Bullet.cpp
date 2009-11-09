@@ -287,10 +287,8 @@ void Bullet::Collide(unsigned int aId, unsigned int aHitId, float aFraction, con
 
 #ifdef BULLET_COLLISION_BOUNCE
 	// reorient to new direction
-	Collidable *collidable = Database::collidable.Get(mId);
-	if (collidable)
+	if (b2Body *body = Database::collidablebody.Get(mId);
 	{
-		b2Body *body = collidable->GetBody();
 		const b2Vec2 velocity = body->GetLinearVelocity();
 		float angle = -atan2f(velocity.x, velocity.y);
 		body->SetOriginPosition(body->GetOriginPosition(), angle);

@@ -180,9 +180,7 @@ void Ship::Simulate(float aStep)
 	const ShipTemplate &ship = Database::shiptemplate.Get(mId);
 
 	// get collision body (if any)
-	b2Body *body = NULL;
-	if (const Collidable *collidable = Database::collidable.Get(mId))
-		body = collidable->GetBody();
+	b2Body *body = Database::collidablebody.Get(mId);
 
 	// get ship controller
 	const Controller *controller = Database::controller.Get(mId);

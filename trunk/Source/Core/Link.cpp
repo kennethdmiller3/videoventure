@@ -2,6 +2,7 @@
 #include "Link.h"
 #include "Entity.h"
 #include "Collidable.h"
+#include "PhysicsRevoluteJoint.h"
 
 
 #ifdef USE_POOL_ALLOCATOR
@@ -73,17 +74,32 @@ namespace Database
 					links.Put(itor.GetKey(), link);
 
 					// if linking two collidables...
-					unsigned int mSecondary = link->GetSecondary();
+					unsigned int aSecondary = link->GetSecondary();
 					if (Database::collidabletemplate.Find(aId) &&
-						Database::collidabletemplate.Find(mSecondary))
+						Database::collidabletemplate.Find(aSecondary))
 					{
 						// if updating position
 						if (linktemplate.mUpdatePosition)
 						{
-							// add a revolute joint to the linked template (HACK)
-							CollidableTemplate &collidable = Database::collidabletemplate.Open(mSecondary);
-							collidable.SetupLinkJoint(linktemplate, aId, mSecondary);
-							Database::collidabletemplate.Close(mSecondary);
+							// get revolute joints for the link target
+							Database::Typed<b2RevoluteJointDef> &joints = Database::revolutejointdef.Open(aSecondary);
+							
+							// configure the joint definition
+							b2RevoluteJointDef &def = joints.Open(aId);
+							def.body1 = reinterpret_cast<b2Body *>(aId);
+							def.body2 = reinterpret_cast<b2Body *>(aSecondary);
+							def.localAnchor1.Set(linktemplate.mOffset.p.x, linktemplate.mOffset.p.y);
+							def.localAnchor2.Set(0, 0);
+							def.referenceAngle = linktemplate.mOffset.Angle();
+							if (linktemplate.mUpdateAngle)
+							{
+								def.lowerAngle = 0.0f;
+								def.upperAngle = 0.0f;
+								def.enableLimit = true;
+							}
+							joints.Close(aId);
+
+							Database::revolutejointdef.Close(aSecondary);
 						}
 					}
 					// else if updating angle or position...
@@ -283,12 +299,12 @@ void Link::Update(float aStep)
 			secondary->SetPosition(transform.p);
 			secondary->SetVelocity(entity->GetVelocity());
 		}
-		if (Collidable *collidable = Database::collidable.Get(mSecondary))
+		if (b2Body *body = Database::collidablebody.Get(mSecondary))
 		{
-			collidable->GetBody()->WakeUp();
-			collidable->GetBody()->SetTransform(transform.p, transform.a);
-			collidable->GetBody()->SetLinearVelocity(entity->GetVelocity());
-			collidable->GetBody()->SetAngularVelocity(entity->GetOmega());
+			body->WakeUp();
+			body->SetTransform(transform.p, transform.a);
+			body->SetLinearVelocity(entity->GetVelocity());
+			body->SetAngularVelocity(entity->GetOmega());
 		}
 	}
 }
