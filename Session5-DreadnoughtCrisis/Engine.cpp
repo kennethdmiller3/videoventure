@@ -65,8 +65,8 @@ namespace Database
 			{
 				Vector2 velocity(entity->GetTransform().Rotate(Vector2(0, aSpeed)));
 				entity->SetVelocity(velocity);
-				if (Collidable *collidable = Database::collidable.Get(aId))
-					collidable->GetBody()->SetLinearVelocity(velocity);
+				if (b2Body *body = Database::collidablebody.Get(aId))
+					body->SetLinearVelocity(velocity);
 			}
 		}
 

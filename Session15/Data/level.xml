@@ -171,14 +171,9 @@
 		<mask default="0" bit0="1" bit1="1" bit2="1"/>
 	</collidablefilter>
 	<!-- music -->
-	<template name="soundtrack">
-		<music file="reed-imploder.xm"/>
-	</template>
-	<entity name="soundtrackstart">
-		<spawner>
-			<spawn name="soundtrack" start="0" track="1"/>
-		</spawner>
-	</entity>
+	<entity name="soundtrack">
+    <music file="reed-imploder.xm"/>
+  </entity>
 
 	<!-- player bullet explosion -->
 
