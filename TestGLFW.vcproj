@@ -605,11 +605,51 @@
 			Name="Shell"
 			>
 			<File
+				RelativePath=".\Source\Shell\Escape.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Shell\Escape.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Shell\EscapeMenuMain.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\Source\Shell\Shell.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\Source\Shell\Shell.h"
+				RelativePath=".\Source\Shell\ShellMenu.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Shell\ShellMenu.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Shell\ShellMenuAudio.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Shell\ShellMenuItem.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Shell\ShellMenuItem.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Shell\ShellMenuMain.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Shell\ShellMenuOptions.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Shell\ShellMenuVideo.cpp"
 				>
 			</File>
 			<File

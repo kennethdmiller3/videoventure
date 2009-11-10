@@ -4,11 +4,8 @@
 // includes
 #include "oglconsole.h"
 #include "GameState.h"
-#include "Shell.h"
-#include "World.h"
 #include "Preferences.h"
 #include "Sound.h"
-#include "VarItem.h"
 #include "Command.h"
 #include "Drawlist.h"
 #include "Texture.h"
