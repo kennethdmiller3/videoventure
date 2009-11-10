@@ -3,14 +3,6 @@
 #include "Entity.h"
 #include "Link.h"
 
-namespace std
-{
-	struct RTTI_NOT_SUPPORTED;
-	typedef RTTI_NOT_SUPPORTED type_info;
-}
-#define typeid *( ::std::type_info* )sizeof 
-#include <boost/variant.hpp>
-
 struct CollisionCircleDef 
 {
 	b2FixtureDef mFixture;
@@ -25,6 +17,12 @@ struct CollisionCircleDef
 		mFixture = aSrc.mFixture;
 		mShape = aSrc.mShape;
 		mFixture.shape = &mShape;
+	}
+	b2Fixture *Instantiate(b2Body *aBody) const
+	{
+		b2Fixture *fixture = aBody->CreateFixture(&mFixture);
+		fixture->SetUserData(aBody->GetUserData());
+		return fixture;
 	}
 };
 struct CollisionPolygonDef 
@@ -42,15 +40,20 @@ struct CollisionPolygonDef
 		mShape = aSrc.mShape;
 		mFixture.shape = &mShape;
 	}
+	b2Fixture *Instantiate(b2Body *aBody) const
+	{
+		b2Fixture *fixture = aBody->CreateFixture(&mFixture);
+		fixture->SetUserData(aBody->GetUserData());
+		return fixture;
+	}
 };
-
-typedef boost::variant<int, CollisionCircleDef, CollisionPolygonDef> CollisionShapeDef;
 
 namespace Database
 {
 	Typed<b2Filter> collidablefilter(0x5224d988 /* "collidablefilter" */);
 	Typed<CollidableTemplate> collidabletemplate(0xa7380c00 /* "collidabletemplate" */);
-	Typed<Typed<CollisionShapeDef> > collidableshapes(0x08366028 /* "collidableshapes" */);
+	Typed<Typed<CollisionCircleDef> > collidablecircles(0x67fa99ff /* "collidablecircles" */);
+	Typed<Typed<CollisionPolygonDef> > collidablepolygons(0xab54c159 /* "collidablepolygons" */);
 	Typed<b2Body *> collidablebody(0x6ccc2b62 /* "collidablebody" */);
 	Typed<Collidable::ContactSignal> collidablecontactadd(0x7cf2c45d /* "collidablecontactadd" */);
 	Typed<Collidable::ContactSignal> collidablecontactremove(0x95ed5aba /* "collidablecontactremove" */);
@@ -401,12 +404,12 @@ bool CollidableTemplate::ConfigureBodyItem(const TiXmlElement *element, b2BodyDe
 			CollisionCircleDef def;
 			ConfigureFixture(element, def.mFixture);
 			ConfigureCircle(element, def.mShape);
-			Database::Typed<CollisionShapeDef> &shapes = Database::collidableshapes.Open(id);
+			Database::Typed<CollisionCircleDef> &shapes = Database::collidablecircles.Open(id);
 			if (const char *name = element->Attribute("name"))
 				shapes.Put(Hash(name), def);
 			else
 				shapes.Put(shapes.GetCount() + 1, def);
-			Database::collidableshapes.Close(id);
+			Database::collidablecircles.Close(id);
 		}
 		return true;
 
@@ -415,12 +418,12 @@ bool CollidableTemplate::ConfigureBodyItem(const TiXmlElement *element, b2BodyDe
 			CollisionPolygonDef def;
 			ConfigureFixture(element, def.mFixture);
 			ConfigureBox(element, def.mShape);
-			Database::Typed<CollisionShapeDef> &shapes = Database::collidableshapes.Open(id);
+			Database::Typed<CollisionPolygonDef> &shapes = Database::collidablepolygons.Open(id);
 			if (const char *name = element->Attribute("name"))
 				shapes.Put(Hash(name), def);
 			else
 				shapes.Put(shapes.GetCount() + 1, def);
-			Database::collidableshapes.Close(id);
+			Database::collidablepolygons.Close(id);
 		}
 		return true;
 
@@ -429,12 +432,12 @@ bool CollidableTemplate::ConfigureBodyItem(const TiXmlElement *element, b2BodyDe
 			CollisionPolygonDef def;
 			ConfigureFixture(element, def.mFixture);
 			ConfigurePoly(element, def.mShape);
-			Database::Typed<CollisionShapeDef> &shapes = Database::collidableshapes.Open(id);
+			Database::Typed<CollisionPolygonDef> &shapes = Database::collidablepolygons.Open(id);
 			if (const char *name = element->Attribute("name"))
 				shapes.Put(Hash(name), def);
 			else
 				shapes.Put(shapes.GetCount() + 1, def);
-			Database::collidableshapes.Close(id);
+			Database::collidablepolygons.Close(id);
 		}
 		return true;
 
@@ -443,12 +446,12 @@ bool CollidableTemplate::ConfigureBodyItem(const TiXmlElement *element, b2BodyDe
 			CollisionPolygonDef def;
 			ConfigureFixture(element, def.mFixture);
 			ConfigureEdge(element, def.mShape);
-			Database::Typed<CollisionShapeDef> &shapes = Database::collidableshapes.Open(id);
+			Database::Typed<CollisionPolygonDef> &shapes = Database::collidablepolygons.Open(id);
 			if (const char *name = element->Attribute("name"))
 				shapes.Put(Hash(name), def);
 			else
 				shapes.Put(shapes.GetCount() + 1, def);
-			Database::collidableshapes.Close(id);
+			Database::collidablepolygons.Close(id);
 		}
 		return true;
 
@@ -684,50 +687,6 @@ void DebugDraw::DrawForce(const b2Vec2& point, const b2Vec2& force, const b2Colo
 }
 #endif
 
-
-// create fixture visitor
-class CollidableCreateFixture
-	: public boost::static_visitor<b2Fixture *>
-{
-protected:
-	b2Body *mBody;
-
-public:
-	CollidableCreateFixture(b2Body *aBody = NULL)
-		: mBody(aBody)
-	{
-	}
-
-	b2Fixture * operator()(const int & aDef) const
-	{
-		return NULL;
-	}
-
-	b2Fixture * operator()(const CollisionCircleDef & aDef) const
-	{
-		b2Fixture *fixture = mBody->CreateFixture(&aDef.mFixture);
-		fixture->SetUserData(mBody->GetUserData());
-		return fixture;
-	}
-
-	b2Fixture * operator()(const CollisionPolygonDef & aDef) const
-	{
-		b2Fixture *fixture = mBody->CreateFixture(&aDef.mFixture);
-		fixture->SetUserData(mBody->GetUserData());
-		return fixture;
-	}
-
-	/*
-	b2Fixture * operator()(const b2EdgeChainDef & aDef) const
-	{
-		b2EdgeChainDef def(aDef);
-		def.userData = mBody->GetUserData();
-		return b2CreateEdgeChain(mBody, &def);
-	}
-	*/
-};
-
-
 b2World *Collidable::GetWorld(void)
 {
 	return world;
@@ -759,8 +718,10 @@ void Collidable::AddToWorld(unsigned int aId)
 	Database::collidablebody.Put(aId, body);
 
 	// add shapes
-	for (Database::Typed<CollisionShapeDef>::Iterator itor(Database::collidableshapes.Find(aId)); itor.IsValid(); ++itor)
-		boost::apply_visitor(CollidableCreateFixture(body), itor.GetValue());
+	for (Database::Typed<CollisionCircleDef>::Iterator itor(Database::collidablecircles.Find(aId)); itor.IsValid(); ++itor)
+		itor.GetValue().Instantiate(body);
+	for (Database::Typed<CollisionPolygonDef>::Iterator itor(Database::collidablepolygons.Find(aId)); itor.IsValid(); ++itor)
+		itor.GetValue().Instantiate(body);
 }
 
 void Collidable::RemoveFromWorld(unsigned int aId)

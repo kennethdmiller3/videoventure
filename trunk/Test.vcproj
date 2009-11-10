@@ -39,7 +39,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="Source;Source\Behavior;Source\Core;Source\Expression;Source\Interface;Source\Render;Source\Shell;Source\Sound"
+				AdditionalIncludeDirectories="Source;Source\Behavior;Source\Core;Source\Expression;Source\Interface;Source\Physics;Source\Render;Source\Shell;Source\Sound"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -100,7 +100,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="Source;Source\Behavior;Source\Core;Source\Expression;Source\Interface;Source\Render;Source\Shell;Source\Sound"
+				AdditionalIncludeDirectories="Source;Source\Behavior;Source\Core;Source\Expression;Source\Interface;Source\Physics;Source\Render;Source\Shell;Source\Sound"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -1156,6 +1156,58 @@
 			</File>
 			<File
 				RelativePath=".\oglconsole\oglconsole.h"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="Physics"
+			>
+			<File
+				RelativePath=".\Source\Physics\PhysicsDistanceJoint.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Physics\PhysicsDistanceJoint.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Physics\PhysicsLineJoint.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Physics\PhysicsLineJoint.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Physics\PhysicsPrismaticJoint.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Physics\PhysicsPrismaticJoint.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Physics\PhysicsPulleyJoint.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Physics\PhysicsPulleyJoint.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Physics\PhysicsRevoluteJoint.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Physics\PhysicsRevoluteJoint.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Physics\PhysicsUtilities.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Physics\PhysicsUtilities.h"
 				>
 			</File>
 		</Filter>
