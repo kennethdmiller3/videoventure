@@ -401,57 +401,107 @@ bool CollidableTemplate::ConfigureBodyItem(const TiXmlElement *element, b2BodyDe
 
 	case 0x28217089 /* "circle" */:
 		{
-			CollisionCircleDef def;
+			Database::Typed<CollisionCircleDef> &shapes = Database::collidablecircles.Open(id);
+			unsigned int subid;
+			if (const char *name = element->Attribute("name"))
+				subid = Hash(name);
+			else
+				subid = shapes.GetCount() + 1;
+			CollisionCircleDef &def = shapes.Open(subid);
 			ConfigureFixture(element, def.mFixture);
 			ConfigureCircle(element, def.mShape);
-			Database::Typed<CollisionCircleDef> &shapes = Database::collidablecircles.Open(id);
-			if (const char *name = element->Attribute("name"))
-				shapes.Put(Hash(name), def);
-			else
-				shapes.Put(shapes.GetCount() + 1, def);
+			shapes.Close(subid);
 			Database::collidablecircles.Close(id);
 		}
 		return true;
 
 	case 0x70c67e32 /* "box" */:
 		{
-			CollisionPolygonDef def;
+			Database::Typed<CollisionPolygonDef> &shapes = Database::collidablepolygons.Open(id);
+			unsigned int subid;
+			if (const char *name = element->Attribute("name"))
+				subid = Hash(name);
+			else
+				subid = shapes.GetCount() + 1;
+			CollisionPolygonDef &def = shapes.Open(subid);
 			ConfigureFixture(element, def.mFixture);
 			ConfigureBox(element, def.mShape);
-			Database::Typed<CollisionPolygonDef> &shapes = Database::collidablepolygons.Open(id);
-			if (const char *name = element->Attribute("name"))
-				shapes.Put(Hash(name), def);
-			else
-				shapes.Put(shapes.GetCount() + 1, def);
+			shapes.Close(subid);
 			Database::collidablepolygons.Close(id);
 		}
 		return true;
 
 	case 0x84d6a947 /* "poly" */:
 		{
-			CollisionPolygonDef def;
+			Database::Typed<CollisionPolygonDef> &shapes = Database::collidablepolygons.Open(id);
+			unsigned int subid;
+			if (const char *name = element->Attribute("name"))
+				subid = Hash(name);
+			else
+				subid = shapes.GetCount() + 1;
+			CollisionPolygonDef &def = shapes.Open(subid);
 			ConfigureFixture(element, def.mFixture);
 			ConfigurePoly(element, def.mShape);
-			Database::Typed<CollisionPolygonDef> &shapes = Database::collidablepolygons.Open(id);
-			if (const char *name = element->Attribute("name"))
-				shapes.Put(Hash(name), def);
-			else
-				shapes.Put(shapes.GetCount() + 1, def);
+			shapes.Close(subid);
 			Database::collidablepolygons.Close(id);
 		}
 		return true;
 
 	case 0x56f6d83c /* "edge" */:
 		{
-			CollisionPolygonDef def;
+			Database::Typed<CollisionPolygonDef> &shapes = Database::collidablepolygons.Open(id);
+			unsigned int subid;
+			if (const char *name = element->Attribute("name"))
+				subid = Hash(name);
+			else
+				subid = shapes.GetCount() + 1;
+			CollisionPolygonDef &def = shapes.Open(subid);
 			ConfigureFixture(element, def.mFixture);
 			ConfigureEdge(element, def.mShape);
-			Database::Typed<CollisionPolygonDef> &shapes = Database::collidablepolygons.Open(id);
-			if (const char *name = element->Attribute("name"))
-				shapes.Put(Hash(name), def);
-			else
-				shapes.Put(shapes.GetCount() + 1, def);
+			shapes.Close(subid);
 			Database::collidablepolygons.Close(id);
+		}
+		return true;
+
+	case 0x620c0b45 /* "edgechain" */:
+		{
+			Database::Typed<CollisionPolygonDef> &shapes = Database::collidablepolygons.Open(id);
+			unsigned int subid;
+			if (const char *name = element->Attribute("name"))
+				subid = Hash(name);
+			else
+				subid = shapes.GetCount() + 1;
+			if (const TiXmlElement *first = element->FirstChildElement("vertex"))
+			{
+				b2Vec2 vf;
+				first->QueryFloatAttribute("x", &vf.x);
+				first->QueryFloatAttribute("y", &vf.y);
+
+				b2Vec2 v0 = vf;
+				for (const TiXmlElement *child = first->NextSiblingElement("vertex"); child != NULL; child = child->NextSiblingElement("vertex"))
+				{
+					b2Vec2 v1;
+					child->QueryFloatAttribute("x", &v1.x);
+					child->QueryFloatAttribute("y", &v1.y);
+
+					CollisionPolygonDef &def = shapes.Open(subid);
+					ConfigureFixture(element, def.mFixture);
+					def.mShape.SetAsEdge(v0, v1);
+					shapes.Close(subid);
+
+					v0 = v1;
+					++subid;
+				}
+				int loop = 0;
+				element->QueryIntAttribute("loop", &loop);
+				if (loop != 0)
+				{
+					CollisionPolygonDef &def = shapes.Open(subid++);
+					ConfigureFixture(element, def.mFixture);
+					def.mShape.SetAsEdge(v0, vf);
+					shapes.Close(subid);
+				}
+			}
 		}
 		return true;
 
