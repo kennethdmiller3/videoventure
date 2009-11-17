@@ -98,22 +98,19 @@ void CreateDefaultFont()
 	texture.mWrapT = GL_CLAMP;
 
 	// unpack font data
-	const unsigned char *src = aTextureData;
-	unsigned char *dst = texture.mPixels;
-	for (unsigned int y = 0; y < aTextureHeight; ++y)
+	const unsigned char * __restrict src = aTextureData;
+	unsigned char * __restrict dst = texture.mPixels;
+	for (unsigned int i = 0; i < sizeof(aTextureData); ++i)
 	{
-		for (unsigned int x = 0; x < aTextureWidth; x += 8)
-		{
-			*dst++ = -((*src     ) & 1);
-			*dst++ = -((*src >> 1) & 1);
-			*dst++ = -((*src >> 2) & 1);
-			*dst++ = -((*src >> 3) & 1);
-			*dst++ = -((*src >> 4) & 1);
-			*dst++ = -((*src >> 5) & 1);
-			*dst++ = -((*src >> 6) & 1);
-			*dst++ = -((*src >> 7) & 1);
-			src++;
-		}
+		unsigned char s = *src++;
+		*dst++ = -(s & 1); s >>= 1;
+		*dst++ = -(s & 1); s >>= 1;
+		*dst++ = -(s & 1); s >>= 1;
+		*dst++ = -(s & 1); s >>= 1;
+		*dst++ = -(s & 1); s >>= 1;
+		*dst++ = -(s & 1); s >>= 1;
+		*dst++ = -(s & 1); s >>= 1;
+		*dst++ = -(s & 1);
 	}
 
 	// generate a texture handle
@@ -158,6 +155,18 @@ void CreateDefaultFont()
 		uv.w = float(aCharacterWidth) / float(aTextureWidth);
 		uv.h = float(-aCharacterHeight) / float(aTextureHeight);
 	}
+}
+
+int FontGetWidth(GLuint handle, int c)
+{
+	// TO DO: read from font info
+	return 8;
+}
+
+int FontGetHeight(GLuint handle)
+{
+	// TO DO: read from font info
+	return 8;
 }
 
 void FontDrawBegin(GLuint handle)

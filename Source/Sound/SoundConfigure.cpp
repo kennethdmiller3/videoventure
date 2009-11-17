@@ -12,6 +12,10 @@ namespace SoundConfigure
 	{
 		GetDB().Put(aTagId, aConfigure);
 	}
+	void Remove(unsigned int aTagId)
+	{
+		GetDB().Delete(aTagId);
+	}
 	const Entry &Get(unsigned int aTagId)
 	{
 		return GetDB().Get(aTagId);
