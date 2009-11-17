@@ -377,6 +377,14 @@
 			Name="Interface"
 			>
 			<File
+				RelativePath=".\Source\Interface\Console.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Interface\Console.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Source\Interface\Font.cpp"
 				>
 			</File>
@@ -1172,32 +1180,6 @@
 		<Filter
 			Name="Console"
 			>
-			<File
-				RelativePath=".\oglconsole\oglconsole.c"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						PreprocessorDefinitions="GLHEADERINCLUDE=\&quot;SDL_opengl.h\&quot;"
-						UsePrecompiledHeader="0"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						PreprocessorDefinitions="GLHEADERINCLUDE=\&quot;SDL_opengl.h\&quot;"
-						UsePrecompiledHeader="0"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath=".\oglconsole\oglconsole.h"
-				>
-			</File>
 		</Filter>
 		<Filter
 			Name="Physics"
