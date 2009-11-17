@@ -2,7 +2,7 @@
 #include "stdafx.h"
 
 // includes
-#include "oglconsole.h"
+#include "Console.h"
 #include "GameState.h"
 #include "Preferences.h"
 #include "Sound.h"
@@ -58,12 +58,7 @@ bool runtime = false;
 bool wasreset = true;
 
 // console
-OGLCONSOLE_Console console;
-
-// text display (HACK)
-extern "C" GLuint OGLCONSOLE_glFontHandle;
-extern "C" void OGLCONSOLE_CreateFont();
-extern "C" void OGLCONSOLE_Resize(OGLCONSOLE_Console console);
+Console *console;
 
 
 // debug output
@@ -77,7 +72,7 @@ int DebugPrint(const char *format, ...)
 	if (DEBUGPRINT_OUTPUTDEBUG)
 		OutputDebugStringA(buf);
 	if (DEBUGPRINT_OUTPUTCONSOLE && console)
-		OGLCONSOLE_Output(console, "%s", buf);
+		console->Print("%s", buf);
 	if (DEBUGPRINT_OUTPUTSTDERR)
 		fputs(buf, stderr);
 #else
@@ -87,7 +82,7 @@ int DebugPrint(const char *format, ...)
 	return n;
 }
 
-void cmdCB(OGLCONSOLE_Console console, char *cmd)
+void cmdCB(const char *cmd)
 {
 	// copy the command string
 	char buf[256];
@@ -228,8 +223,7 @@ bool OpenWindow(void)
 		RebuildDrawlists();
 
 		// rebuild console
-		OGLCONSOLE_CreateFont();
-		OGLCONSOLE_Resize(console);
+		console->Resize();
 	}
 
 	return true;
@@ -264,10 +258,8 @@ bool Init(void)
 	// print OpenGL attributes
 	PrintAttributes();
 
-    /* Initialize OGLCONSOLE */                                                                      
-    console = OGLCONSOLE_Create();
-	OGLCONSOLE_EditConsole(console);
-    OGLCONSOLE_EnterKey(cmdCB);
+	// initialize console
+	console = new Console(cmdCB);
 
 	// initialize sound system
 	Sound::Init();
@@ -281,8 +273,8 @@ bool Init(void)
 
 void Done(void)
 {
-    /* clean up oglconsole */                                                                        
-    OGLCONSOLE_Quit();
+    // clean up console
+	delete console;
 
 	// clean up sound system
 	Sound::Done();
@@ -310,7 +302,7 @@ int main( int argc, char *argv[] )
 	{
 		// turn on floating-point exceptions
 		unsigned int prev;
-		_controlfp_s(&prev, unsigned int(~(_EM_ZERODIVIDE|_EM_INVALID)), _MCW_EM);
+		_controlfp_s(&prev, 0, _EM_ZERODIVIDE|_EM_INVALID);
 
 		// enable debug heap in a debug build
 		_CrtSetDbgFlag( _CRTDBG_ALLOC_MEM_DF|_CRTDBG_CHECK_EVERY_1024_DF|_CRTDBG_CHECK_CRT_DF|_CRTDBG_LEAK_CHECK_DF );

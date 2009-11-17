@@ -13,13 +13,13 @@
 #include "Sound.h"
 #include "Font.h"
 
-#include "oglconsole.h"
+#include "Console.h"
 
 #include <time.h>
 
 
 // console
-extern OGLCONSOLE_Console console;
+extern Console *console;
 
 // forward declaration
 extern bool OpenWindow(void);
@@ -155,10 +155,10 @@ void KeyCallback(int aIndex, int aState)
 {
 	if (aState == GLFW_PRESS)
 	{
-		consolekeyevent = OGLCONSOLE_KeyEvent(aIndex, (glfwGetKey(GLFW_KEY_LSHIFT)) | (glfwGetKey(GLFW_KEY_RSHIFT) << 1));
+		consolekeyevent = console->KeyEvent(aIndex, (glfwGetKey(GLFW_KEY_LSHIFT)) | (glfwGetKey(GLFW_KEY_RSHIFT) << 1));
 		if (consolekeyevent)
 			return;
-		if (OGLCONSOLE_GetVisibility())
+		if (console->GetVisibility())
 			return;
 
 		input.OnPress(Input::TYPE_KEYBOARD, 0, aIndex);
@@ -216,7 +216,7 @@ void CharCallback(int aIndex, int aState)
 	{
 		if (consolekeyevent)
 			return;
-		if (OGLCONSOLE_CharEvent(aIndex))
+		if (console->CharEvent(aIndex))
 			return;
 	}
 }
@@ -330,9 +330,9 @@ void RunState()
 			{
 			case SDL_KEYDOWN:
 				/* Give the console first dibs on event processing */
-				if (OGLCONSOLE_KeyEvent(event.key.keysym.sym, event.key.keysym.mod))
+				if (console->KeyEvent(event.key.keysym.sym, event.key.keysym.mod))
 					continue;
-				if (event.key.keysym.unicode && OGLCONSOLE_CharEvent(event.key.keysym.unicode))
+				if (event.key.keysym.unicode && console->CharEvent(event.key.keysym.unicode))
 					continue;
 				input.OnPress( Input::TYPE_KEYBOARD, event.key.which, event.key.keysym.sym );
 				switch (event.key.keysym.sym)
@@ -418,10 +418,6 @@ void RunState()
 	    sf::Event event;
 		while (window.GetEvent(event))
 		{
-			/* Give the console first dibs on event processing */
-			if (OGLCONSOLE_SFMLEvent(&event))
-				continue;
-
 			// Some code for stopping application on close or when escape is pressed...
 			switch (event.Type)
 			{
@@ -429,6 +425,9 @@ void RunState()
 				glViewport(0, 0, event.Size.Width, event.Size.Height);
 				break;
 			case sf::Event::KeyPressed:
+				/* Give the console first dibs on event processing */
+				if (console->KeyEvent(event.Key.Code, event.Key.Shift))
+					break;
 				input.OnPress( Input::TYPE_KEYBOARD, 0, event.Key.Code );
 				switch(event.Key.Code)
 				{
@@ -1001,7 +1000,7 @@ void RunState()
 		glPopAttrib();
 
 		/* Render our console */
-		OGLCONSOLE_Draw();
+		console->Render();
 
 		// show the back buffer
 		Platform::Present();
