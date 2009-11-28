@@ -2,6 +2,7 @@
 #include "Collidable.h"
 #include "Entity.h"
 #include "Link.h"
+#include "Command.h"
 
 struct CollisionCircleDef 
 {
@@ -192,6 +193,7 @@ void ConfigureFilterData(b2Filter &aFilter, const TiXmlElement *element)
 CollidableTemplate::CollidableTemplate(void)
 : id(0)
 {
+	bodydef.type = b2_dynamicBody;
 }
 
 CollidableTemplate::CollidableTemplate(const CollidableTemplate &aTemplate)
@@ -367,19 +369,19 @@ bool CollidableTemplate::ConfigureBodyItem(const TiXmlElement *element, b2BodyDe
 		element->QueryFloatAttribute("angular", &body.angularDamping);
 		return true;
 
-	case 0xac01f355 /* "allowsleep" */:
+	case 0x85e2c459 /* "autosleep" */:
 		{
-			int allowsleep = body.allowSleep;
-			element->QueryIntAttribute("value", &allowsleep);
-			body.allowSleep = allowsleep != 0;
+			int autosleep = body.autoSleep;
+			element->QueryIntAttribute("value", &autosleep);
+			body.autoSleep = autosleep != 0;
 		}
 		return true;
 
-	case 0xa3ae0ca2 /* "startsleep" */:
+	case 0xd71034dc /* "awake" */:
 		{
-			int startsleep = body.isSleeping;
-			element->QueryIntAttribute("value", &startsleep);
-			body.isSleeping = startsleep != 0;
+			int awake = body.awake;
+			element->QueryIntAttribute("value", &awake);
+			body.awake = awake != 0;
 		}
 		return true;
 
@@ -393,9 +395,36 @@ bool CollidableTemplate::ConfigureBodyItem(const TiXmlElement *element, b2BodyDe
 
 	case 0x029402af /* "fast" */:
 		{
-			int isBullet = body.isBullet;
-			element->QueryIntAttribute("value", &isBullet);
-			body.isBullet = isBullet != 0;
+			int bullet = body.bullet;
+			element->QueryIntAttribute("value", &bullet);
+			body.bullet = bullet != 0;
+		}
+		return true;
+
+	case 0xd975992f /* "active" */:
+		{
+			int active = body.active;
+			element->QueryIntAttribute("value", &active);
+			body.active = active != 0;
+		}
+		return true;
+
+	case 0x5127f14d /* "type" */:
+		{
+			switch(Hash(element->Attribute("value")))
+			{
+			case 0xd290c23b /* "static" */:
+				body.type = b2_staticBody;
+				break;
+
+			case 0xc4be0946 /* "kinematic" */:
+				body.type = b2_kinematicBody;
+				break;
+
+			case 0x4f5296ae /* "dynamic" */:
+				body.type = b2_dynamicBody;
+				break;
+			}
 		}
 		return true;
 
@@ -594,9 +623,9 @@ public:
 	void DrawPoint(const b2Vec2& p, float32 size, const b2Color& color);
 	void DrawSegment(const b2Vec2& p1, const b2Vec2& p2, const b2Color& color);
 	void DrawAxis(const b2Vec2& point, const b2Vec2& axis, const b2Color& color);
-	void DrawTransform(const b2Transform& xf);
 	void DrawForce(const b2Vec2& point, const b2Vec2& force, const b2Color& color);
 	void DrawAABB(b2AABB* aabb, const b2Color& c);
+	void DrawTransform(const b2Transform& xf);
 }
 debugDraw;
 
@@ -735,6 +764,38 @@ void DebugDraw::DrawForce(const b2Vec2& point, const b2Vec2& force, const b2Colo
 	b2Vec2 p2 = point + k_forceScale * force;
 	DrawSegment(p1, p2, color);
 }
+
+int CommandDrawCollidable(const char * const aParam[], int aCount)
+{
+	if (aCount == 0)
+		return 0;
+
+	unsigned int flag;
+	switch (Hash(aParam[0]))
+	{
+	case 0x9dc3d926 /* "shape" */:	flag = b2DebugDraw::e_shapeBit; break;
+	case 0xaeae0877 /* "joint" */:	flag = b2DebugDraw::e_jointBit; break;
+	case 0x63e91357 /* "aabb" */:	flag = b2DebugDraw::e_aabbBit; break;
+	case 0x7c445ab1 /* "pair" */:	flag = b2DebugDraw::e_pairBit; break;
+	case 0x058c4484 /* "center" */:	flag = b2DebugDraw::e_centerOfMassBit; break;
+	default:						flag = 0; break;
+	}
+
+	if (aCount == 1)
+	{
+		DebugPrint("%s: %s", aParam[0], (debugDraw.GetFlags() & flag) ? "on" : "off");
+		return 1;
+	}
+
+	if (atoi(aParam[1]) != 0)
+		debugDraw.AppendFlags(flag);
+	else
+		debugDraw.ClearFlags(flag);
+
+	return 2;
+}
+Command::Auto commanddrawcollidable(0x38c5ac70 /* "drawcollidable" */, CommandDrawCollidable);
+
 #endif
 
 b2World *Collidable::GetWorld(void)
@@ -806,7 +867,6 @@ void Collidable::WorldInit(float aMinX, float aMinY, float aMaxX, float aMaxY, b
 #ifdef COLLIDABLE_DEBUG_DRAW
 	// set debug render
 	world->SetDebugDraw(&debugDraw);
-	debugDraw.SetFlags(~0U);
 #endif
 
 	if (aWall)
@@ -845,13 +905,13 @@ void Collidable::CollideAll(float aStep)
 		return;
 
 	// step the physics world
-	world->Step(aStep, 16, 16);
+	world->Step(aStep, 16, 16, true);
 
 	// for each body...
 	for (b2Body* body = world->GetBodyList(); body; body = body->GetNext())
 	{
 		// if the body is not sleeping or static...
-		if (!body->IsSleeping() && !body->IsStatic())
+		if (body->IsAwake() && body->GetType() != b2_staticBody)
 		{
 			// get the database key
 			Database::Key id = reinterpret_cast<Database::Key>(body->GetUserData());
@@ -867,6 +927,10 @@ void Collidable::CollideAll(float aStep)
 			}
 		}
 	}
+
+#ifdef COLLIDABLE_DEBUG_DRAW
+	world->DrawDebugData();
+#endif
 }
 
 class CollidableRayCast : public b2RayCastCallback

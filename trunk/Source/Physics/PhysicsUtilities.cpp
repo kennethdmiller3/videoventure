@@ -1,5 +1,6 @@
 #include "StdAfx.h"
 #include "PhysicsUtilities.h"
+#include "Collidable.h"
 
 bool ConfigureJointItem(const TiXmlElement *element, b2JointDef &joint)
 {
@@ -9,14 +10,14 @@ bool ConfigureJointItem(const TiXmlElement *element, b2JointDef &joint)
 	case 0x115ce60c /* "body1" */:
 		{
 			const char *name = element->Attribute("name");
-			joint.body1 = reinterpret_cast<b2Body *>(name ? Hash(name) : 0);
+			joint.bodyA = reinterpret_cast<b2Body *>(name ? Hash(name) : 0);
 		}
 		return true;
 
 	case 0x145ceac5 /* "body2" */:
 		{
 			const char *name = element->Attribute("name");
-			joint.body2 = reinterpret_cast<b2Body *>(name ? Hash(name) : 0);
+			joint.bodyB = reinterpret_cast<b2Body *>(name ? Hash(name) : 0);
 		}
 		return true;
 
@@ -31,4 +32,13 @@ bool ConfigureJointItem(const TiXmlElement *element, b2JointDef &joint)
 	default:
 		return false;
 	}
+}
+
+void UnpackJointDef(b2JointDef &aDef, unsigned int aId)
+{
+	aDef.userData = NULL;
+	unsigned int idA = reinterpret_cast<unsigned int>(aDef.bodyA);
+	aDef.bodyA = Database::collidablebody.Get(idA ? idA : aId);
+	unsigned int idB = reinterpret_cast<unsigned int>(aDef.bodyB);
+	aDef.bodyB = Database::collidablebody.Get(idB ? idB : aId);
 }

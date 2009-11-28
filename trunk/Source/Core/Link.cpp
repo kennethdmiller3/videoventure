@@ -86,10 +86,10 @@ namespace Database
 							
 							// configure the joint definition
 							b2RevoluteJointDef &def = joints.Open(aId);
-							def.body1 = reinterpret_cast<b2Body *>(aId);
-							def.body2 = reinterpret_cast<b2Body *>(aSecondary);
-							def.localAnchor1.Set(linktemplate.mOffset.p.x, linktemplate.mOffset.p.y);
-							def.localAnchor2.Set(0, 0);
+							def.bodyA = reinterpret_cast<b2Body *>(aId);
+							def.bodyB = reinterpret_cast<b2Body *>(aSecondary);
+							def.localAnchorA.Set(linktemplate.mOffset.p.x, linktemplate.mOffset.p.y);
+							def.localAnchorB.Set(0, 0);
 							def.referenceAngle = linktemplate.mOffset.Angle();
 							if (linktemplate.mUpdateAngle)
 							{
@@ -301,7 +301,7 @@ void Link::Update(float aStep)
 		}
 		if (b2Body *body = Database::collidablebody.Get(mSecondary))
 		{
-			body->WakeUp();
+			body->SetAwake(true);
 			body->SetTransform(transform.p, transform.a);
 			body->SetLinearVelocity(entity->GetVelocity());
 			body->SetAngularVelocity(entity->GetOmega());

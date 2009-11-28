@@ -9,13 +9,13 @@ static bool ConfigureRevoluteJointItem(const TiXmlElement *element, b2RevoluteJo
 	switch (Hash(name))
 	{
 	case 0xe155cf5f /* "anchor1" */:
-		element->QueryFloatAttribute("x", &joint.localAnchor1.x);
-		element->QueryFloatAttribute("y", &joint.localAnchor1.y);
+		element->QueryFloatAttribute("x", &joint.localAnchorA.x);
+		element->QueryFloatAttribute("y", &joint.localAnchorA.y);
 		return true;
 
 	case 0xe255d0f2 /* "anchor2" */:
-		element->QueryFloatAttribute("x", &joint.localAnchor2.x);
-		element->QueryFloatAttribute("y", &joint.localAnchor2.y);
+		element->QueryFloatAttribute("x", &joint.localAnchorB.x);
+		element->QueryFloatAttribute("y", &joint.localAnchorB.y);
 		return true;
 
 	case 0xad544418 /* "angle" */:
@@ -97,12 +97,8 @@ namespace Database
 				for (Database::Typed<b2RevoluteJointDef>::Iterator itor(&Database::revolutejointdef.Get(aId)); itor.IsValid(); ++itor)
 				{
 					b2RevoluteJointDef def(itor.GetValue());
-					def.userData = NULL;
-					unsigned int id1 = reinterpret_cast<unsigned int>(def.body1);
-					def.body1 = Database::collidablebody.Get(id1 ? id1 : aId);
-					unsigned int id2 = reinterpret_cast<unsigned int>(def.body2);
-					def.body2 = Database::collidablebody.Get(id2 ? id2 : aId);
-					if (def.body1 && def.body2)
+					UnpackJointDef(def, aId);
+					if (def.bodyA && def.bodyB)
 					{
 						Collidable::GetWorld()->CreateJoint(&def);
 					}
