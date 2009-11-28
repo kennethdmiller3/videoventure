@@ -9,31 +9,31 @@ bool ConfigurePulleyJointItem(const TiXmlElement *element, b2PulleyJointDef &joi
 	switch (Hash(name))
 	{
 	case 0xe1acc15d /* "ground1" */:
-		element->QueryFloatAttribute("x", &joint.groundAnchor1.x);
-		element->QueryFloatAttribute("y", &joint.groundAnchor1.y);
+		element->QueryFloatAttribute("x", &joint.groundAnchorA.x);
+		element->QueryFloatAttribute("y", &joint.groundAnchorA.y);
 		return true;
 
 	case 0xdeacbca4 /* "ground2" */:
-		element->QueryFloatAttribute("x", &joint.groundAnchor2.x);
-		element->QueryFloatAttribute("y", &joint.groundAnchor2.y);
+		element->QueryFloatAttribute("x", &joint.groundAnchorB.x);
+		element->QueryFloatAttribute("y", &joint.groundAnchorB.y);
 		return true;
 
 	case 0xe155cf5f /* "anchor1" */:
-		element->QueryFloatAttribute("x", &joint.localAnchor1.x);
-		element->QueryFloatAttribute("y", &joint.localAnchor1.y);
+		element->QueryFloatAttribute("x", &joint.localAnchorA.x);
+		element->QueryFloatAttribute("y", &joint.localAnchorA.y);
 		return true;
 
 	case 0xe255d0f2 /* "anchor2" */:
-		element->QueryFloatAttribute("x", &joint.localAnchor2.x);
-		element->QueryFloatAttribute("y", &joint.localAnchor2.y);
+		element->QueryFloatAttribute("x", &joint.localAnchorB.x);
+		element->QueryFloatAttribute("y", &joint.localAnchorB.y);
 		return true;
 
 	case 0xa4c53aac /* "length1" */:
-		element->QueryFloatAttribute("max", &joint.maxLength1);
+		element->QueryFloatAttribute("max", &joint.maxLengthA);
 		return true;
 
 	case 0xa7c53f65 /* "length2" */:
-		element->QueryFloatAttribute("max", &joint.maxLength2);
+		element->QueryFloatAttribute("max", &joint.maxLengthB);
 		return true;
 
 	case 0xc1121e84 /* "ratio" */:
@@ -99,12 +99,8 @@ namespace Database
 				for (Database::Typed<b2PulleyJointDef>::Iterator itor(&Database::pulleyjointdef.Get(aId)); itor.IsValid(); ++itor)
 				{
 					b2PulleyJointDef def(itor.GetValue());
-					def.userData = NULL;
-					unsigned int id1 = reinterpret_cast<unsigned int>(def.body1);
-					def.body1 = Database::collidablebody.Get(id1 ? id1 : aId);
-					unsigned int id2 = reinterpret_cast<unsigned int>(def.body2);
-					def.body2 = Database::collidablebody.Get(id2 ? id2 : aId);
-					if (def.body1 && def.body2)
+					UnpackJointDef(def, aId);
+					if (def.bodyA && def.bodyB)
 					{
 						Collidable::GetWorld()->CreateJoint(&def);
 					}

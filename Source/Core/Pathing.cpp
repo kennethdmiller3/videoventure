@@ -83,7 +83,7 @@ public:
 
 		// get the parent body
 		b2Body* body = fixture->GetBody();
-		if (!body->IsStatic())
+		if (body->GetType() != b2_staticBody)
 			return true;
 
 		mBlocker = fixture;
