@@ -68,7 +68,7 @@ void PlayerOverlayLevel::Render(unsigned int aId, float aTime, const Transform2 
 	float new_part = levelresource->GetValue() - new_level;
 
 	// if the level has not changed...
-	if (new_part == cur_part && new_level == cur_level && !wasreset)
+	if (new_part == cur_part && new_level == cur_level && glIsList(level_handle))
 	{
 		// call the existing draw list
 		glCallList(level_handle);

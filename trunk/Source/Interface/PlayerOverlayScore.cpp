@@ -48,7 +48,7 @@ void PlayerOverlayScore::Render(unsigned int aId, float aTime, const Transform2 
 	int new_score = player->mScore;
 
 	// if the score has not changed...
-	if (new_score == cur_score && !wasreset)
+	if (new_score == cur_score && glIsList(score_handle))
 	{
 		// call the existing draw list
 		glCallList(score_handle);

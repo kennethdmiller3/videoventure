@@ -48,7 +48,7 @@ void PlayerOverlaySpecial::Render(unsigned int aId, float aTime, const Transform
 	int new_special = xs_FloorToInt(specialresource->GetValue());
 
 	// if the special has not changed...
-	if (new_special == cur_special && !wasreset)
+	if (new_special == cur_special && glIsList(special_handle))
 	{
 		// call the existing draw list
 		glCallList(special_handle);
