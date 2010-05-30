@@ -271,12 +271,13 @@ Status RipOffBehavior::AttackEnemy(void)
 	Drive(1, dir);
 
 	// check line of fire
-	b2Segment shotsegment = { mEntity->GetPosition(), mEntity->GetTransform().Transform(Vector2(0, 64)) };
+	b2Vec2 shotstart = mEntity->GetPosition();
+	b2Vec2 shotend = mEntity->GetTransform().Transform(Vector2(0, 64));
 	b2Filter shotfilter = { 1 << 4, 0xFFFF, 0 };
 	float lambda = 1.0f;
 	b2Vec2 normal;
 	b2Fixture *shape;
-	unsigned int hitId = Collidable::TestSegment(shotsegment, shotfilter, mId, lambda, normal, shape);
+	unsigned int hitId = Collidable::TestSegment(shotstart, shotend, shotfilter, mId, lambda, normal, shape);
 
 	// fire if not blocked
 	if (hitId == 0 || hitId == enemy)

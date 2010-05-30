@@ -80,7 +80,7 @@ namespace Collidable
 	}
 
 	// test segment for intersection with world shapes
-	GAME_API unsigned int TestSegment(const b2Segment &aSegment, const b2Filter &aFilter, unsigned int aId,
+	GAME_API unsigned int TestSegment(const b2Vec2 &aStart, const b2Vec2 &aEnd, const b2Filter &aFilter, unsigned int aId,
 						   			  float &aLambda, b2Vec2 &aNormal, b2Fixture *&aShape);
 
 	// wrapper for world query aabb
