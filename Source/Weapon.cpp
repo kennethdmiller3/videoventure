@@ -876,7 +876,7 @@ Weapon::Weapon(const WeaponTemplate &aTemplate, unsigned int aId)
 	if (aTemplate.mCost)
 	{
 		// find the specified resource
-		mAmmo = FindResource(aId, aTemplate.mType);
+		mAmmo = FindResourceContainer(aId, aTemplate.mType);
 	}
 }
 

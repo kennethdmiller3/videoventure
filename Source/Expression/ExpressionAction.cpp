@@ -40,7 +40,7 @@ void Expression::AddResource(EntityContext &aContext)
 {
 	unsigned int name(Expression::Read<unsigned int>(aContext));
 	float value(Expression::Evaluate<float>(aContext));
-	unsigned int id = FindResource(aContext.mId, name);
+	unsigned int id = FindResourceContainer(aContext.mId, name);
 	if (Resource *resource = Database::resource.Get(id).Get(name))
 		resource->Add(aContext.mId, value);
 }

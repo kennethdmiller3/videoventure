@@ -163,7 +163,7 @@ Shield::Shield(const ShieldTemplate &aTemplate, unsigned int aId)
 	if (aTemplate.mType)
 	{
 		// find the specified resource
-		mAmmo = FindResource(aId, aTemplate.mType);
+		mAmmo = FindResourceContainer(aId, aTemplate.mType);
 
 		// if found...
 		if (mAmmo)
