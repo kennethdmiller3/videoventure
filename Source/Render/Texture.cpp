@@ -80,26 +80,13 @@ namespace Database
 				case 0xd99ba82a /* "repeat" */:				texture.mWrapT = GL_REPEAT; break;
 				}
 
-				// save texture state
-				glPushAttrib(GL_TEXTURE_BIT);
-
-				// bind the texture object
-				glBindTexture(GL_TEXTURE_2D, handle);
-
-				// set texture properties
-				glTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, texture.mEnvMode );
-				glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, texture.mMinFilter );
-				glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, texture.mMagFilter );
-				glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, texture.mWrapS );
-				glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, texture.mWrapT );
-
 				for (const TiXmlElement *child = element->FirstChildElement(); child; child = child->NextSiblingElement())
 				{
 					switch (Hash(child->Value()))
 					{
 					case 0x7494fdb7 /* "perlin" */:
 						{
-							texture.mComponents = 4;
+							texture.mInternalFormat = GL_RGBA;
 
 							texture.mWidth = 64;
 							child->QueryIntAttribute("width", &texture.mWidth);
@@ -132,7 +119,7 @@ namespace Database
 							EntityContext context(&buffer[0], buffer.size(), 0, aId);
 
 							// TO DO: fix memory leak
-							texture.mPixels = static_cast<unsigned char *>(malloc(texture.mWidth * texture.mHeight * texture.mComponents));
+							texture.mPixels = static_cast<unsigned char *>(malloc(texture.mWidth * texture.mHeight * 4));
 
 							unsigned char *pixel = texture.mPixels;
 
@@ -176,7 +163,7 @@ namespace Database
 
 					case 0xcf15afeb /* "expression" */:
 						{
-							texture.mComponents = 4;
+							texture.mInternalFormat = GL_RGBA;
 
 							texture.mWidth = 64;
 							child->QueryIntAttribute("width", &texture.mWidth);
@@ -190,7 +177,7 @@ namespace Database
 
 							EntityContext context(&buffer[0], buffer.size(), 0, aId);
 
-							texture.mPixels = static_cast<unsigned char *>(malloc(texture.mWidth * texture.mHeight * texture.mComponents));
+							texture.mPixels = static_cast<unsigned char *>(malloc(texture.mWidth * texture.mHeight * 4));
 
 							unsigned char *pixel = texture.mPixels;
 
@@ -231,8 +218,8 @@ namespace Database
 					}
 				}
 
-				// set texture image data
-				gluBuild2DMipmaps(GL_TEXTURE_2D, texture.mComponents, texture.mWidth, texture.mHeight, texture.mFormat, GL_UNSIGNED_BYTE, texture.mPixels);
+				// bind the texture
+				BindTexture(handle, texture);
 
 				// done with texture template
 				Database::texturetemplate.Close(handle);
@@ -244,6 +231,35 @@ namespace Database
 		textureloader;
 
 	}
+}
+
+void BindTexture(GLuint handle, TextureTemplate const &texture)
+{
+	// save texture state
+	glPushAttrib(GL_TEXTURE_BIT);
+
+	// bind the texture object
+	glBindTexture(GL_TEXTURE_2D, handle);
+
+	// set texture properties
+	glTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, texture.mEnvMode );
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, texture.mMinFilter );
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, texture.mMagFilter );
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, texture.mWrapS );
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, texture.mWrapT );
+
+	// set texture image data
+	gluBuild2DMipmaps(GL_TEXTURE_2D, texture.mInternalFormat, texture.mWidth, texture.mHeight, texture.mFormat, GL_UNSIGNED_BYTE, texture.mPixels);
+
+	/*
+	glTexImage2D(
+		GL_TEXTURE_2D, 0, texture.mSurface->format->BytesPerPixel, texture.mSurface->w, texture.mSurface->h, 0,
+		texture.mFormat, GL_UNSIGNED_BYTE, texture.mSurface->pixels
+		);
+	*/
+
+	// restore texture state
+	glPopAttrib();
 }
 
 void RebuildTextures(void)
@@ -259,30 +275,7 @@ void RebuildTextures(void)
 		if (!texture.mPixels)
 			continue;
 
-		// save texture state
-		glPushAttrib(GL_TEXTURE_BIT);
-
-		// bind the texture object
-		glBindTexture(GL_TEXTURE_2D, handle);
-
-		// set texture properties
-		glTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, texture.mEnvMode );
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, texture.mMinFilter );
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, texture.mMagFilter );
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, texture.mWrapS );
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, texture.mWrapT );
-
-		// set texture image data
-		gluBuild2DMipmaps(GL_TEXTURE_2D, texture.mComponents, texture.mWidth, texture.mHeight, texture.mFormat, GL_UNSIGNED_BYTE, texture.mPixels);
-
-		/*
-		glTexImage2D(
-			GL_TEXTURE_2D, 0, texture.mSurface->format->BytesPerPixel, texture.mSurface->w, texture.mSurface->h, 0,
-			texture.mFormat, GL_UNSIGNED_BYTE, texture.mSurface->pixels
-			);
-		*/
-
-		// restore texture state
-		glPopAttrib();
+		// bind the texture
+		BindTexture(handle, texture);
 	}
 }

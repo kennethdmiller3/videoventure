@@ -3,7 +3,7 @@
 // texture descriptor
 struct TextureTemplate
 {
-	GLint mComponents;
+	GLint mInternalFormat;
 	GLint mWidth;
 	GLint mHeight;
 	GLenum mFormat;
@@ -15,6 +15,7 @@ struct TextureTemplate
 	GLint mWrapT;
 };
 
+extern void BindTexture(GLuint handle, TextureTemplate const &texture);
 extern void RebuildTextures(void);
 
 namespace Database

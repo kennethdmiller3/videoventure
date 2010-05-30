@@ -12,8 +12,8 @@ namespace Platform
 		if (!glfwReadImage(aName, &image, GLFW_ALPHA_MAP_BIT))
 			return false;
 
-		// components per pixel
-		aTexture.mComponents = image.BytesPerPixel;
+		// texture internal format
+		aTexture.mInternalFormat = image.Format;
 
 		// texture dimensions
 		aTexture.mWidth = image.Width;
@@ -23,7 +23,7 @@ namespace Platform
 		aTexture.mFormat = image.Format;
 
 		// copy pixel data
-		size_t count = aTexture.mWidth * aTexture.mHeight * aTexture.mComponents;
+		size_t count = image.Width * image.Height * image.BytesPerPixel;
 		aTexture.mPixels = static_cast<unsigned char *>(malloc(count));
 		memcpy(aTexture.mPixels, image.Data, count);
 
