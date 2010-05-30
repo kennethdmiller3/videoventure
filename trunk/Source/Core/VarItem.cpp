@@ -256,7 +256,7 @@ std::string VarInteger::GetString()
 }
 void VarInteger::SetString(std::string aValue)
 {
-	TIXML_SNSCANF( aValue.c_str(), aValue.length(), "%d", &value );
+	TIXML_SSCANF( aValue.c_str(), "%d", &value );
 	value = Clamp(value, minimum, maximum);
 	Notify();
 }
@@ -305,7 +305,7 @@ std::string VarFloat::GetString()
 }
 void VarFloat::SetString(std::string aValue)
 {
-	TIXML_SNSCANF( aValue.c_str(), aValue.length(), "%f", &value );
+	TIXML_SSCANF( aValue.c_str(), "%f", &value );
 	value = Clamp(value, minimum, maximum);
 	Notify();
 }
@@ -317,7 +317,7 @@ void VarFloat::SetString(std::string aValue)
 int VarString::GetInteger()
 {
 	int rValue;
-	TIXML_SNSCANF( value.c_str(), value.length(), "%d", &rValue );
+	TIXML_SSCANF( value.c_str(), "%d", &rValue );
 	return rValue;
 }
 void VarString::SetInteger(int aValue)
@@ -334,7 +334,7 @@ void VarString::SetIntegerRange(int aMinimum, int aMaximum)
 float VarString::GetFloat()
 {
 	float rValue;
-	TIXML_SNSCANF( value.c_str(), value.length(), "%f", &rValue );
+	TIXML_SSCANF( value.c_str(), "%f", &rValue );
 	return rValue;
 }
 void VarString::SetFloat(float aValue)
