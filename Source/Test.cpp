@@ -54,9 +54,6 @@ bool playback = false;
 // runtime
 bool runtime = false;
 
-// device was reset
-bool wasreset = true;
-
 // console
 Console *console;
 
@@ -200,9 +197,6 @@ void PrintAttributes(void)
 
 bool OpenWindow(void)
 {
-	// device was reset
-	wasreset = true;
-
 	if (runtime)
 	{
 		// platform-specific open

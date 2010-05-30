@@ -1018,9 +1018,6 @@ void RunState()
 		// wait for rendering to finish
 		glFinish();
 #endif
-
-		// clear device reset flag
-		wasreset = false;
 	}
 	while( setgamestate == curgamestate );
 

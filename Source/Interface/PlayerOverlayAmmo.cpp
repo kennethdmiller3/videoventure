@@ -75,7 +75,7 @@ void PlayerOverlayAmmo::Render(unsigned int aId, float aTime, const Transform2 &
 	}
 
 	// if the lives count has not changed...
-	if (new_ammo == cur_ammo && new_level == cur_level && !wasreset)
+	if (new_ammo == cur_ammo && new_level == cur_level && glIsList(ammo_handle))
 	{
 		// call the existing draw list
 		glCallList(ammo_handle);

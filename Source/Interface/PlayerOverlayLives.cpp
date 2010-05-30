@@ -43,7 +43,7 @@ void PlayerOverlayLives::Render(unsigned int aId, float aTime, const Transform2 
 		return;
 
 	// if the lives count has not changed...
-	if (new_lives == cur_lives && !wasreset)
+	if (new_lives == cur_lives && glIsList(lives_handle))
 	{
 		// call the existing draw list
 		glCallList(lives_handle);
