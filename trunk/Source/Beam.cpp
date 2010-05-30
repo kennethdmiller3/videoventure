@@ -174,9 +174,8 @@ void Beam::Update(float aStep)
 		Entity *entity = Database::entity.Get(mId);
 
 		// beam segment
-		b2Segment segment;
-		segment.p1 = entity->GetPosition();
-		segment.p2 = entity->GetPosition() + Matrix2(entity->GetTransform()).y * curRange;
+		b2Vec2 start(entity->GetPosition());
+		b2Vec2 end(entity->GetPosition() + Matrix2(entity->GetTransform()).y * curRange);
 
 		// impact point
 		float lambda = 1.0f;
@@ -184,7 +183,7 @@ void Beam::Update(float aStep)
 		b2Fixture *shape = NULL;
 
 		// check for segment intersection
-		unsigned int hitId = Collidable::TestSegment(segment, beam.mFilter, mId, lambda, normal, shape);
+		unsigned int hitId = Collidable::TestSegment(start, end, beam.mFilter, mId, lambda, normal, shape);
 
 		// save local endpoint for the renderer
 		Database::Typed<float> &variables = Database::variable.Open(mId);
@@ -244,7 +243,7 @@ void Beam::Update(float aStep)
 				{
 					// spawn template at the impact location
 					unsigned int spawnId = Database::Instantiate(beam.mSpawnOnImpact, Database::owner.Get(mId), mId, 
-						entity->GetAngle(), Vector2(segment.p1 + lambda * (segment.p2 - segment.p1)));
+						entity->GetAngle(), Vector2(start + lambda * (end - start)));
 
 					// copy renderable fractional turn
 					if (Renderable *renderable = Database::renderable.Get(spawnId))

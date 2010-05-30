@@ -150,7 +150,7 @@ static void WeaponRecoil(EntityContext &aContext)
 		{
 			if (b2Body *body = Database::collidablebody.Get(id))
 			{
-				body->ApplyImpulse(transform.Rotate(Vector2(0, -recoil)), transform.p);
+				body->ApplyLinearImpulse(transform.Rotate(Vector2(0, -recoil)), transform.p);
 				break;
 			}
 		}

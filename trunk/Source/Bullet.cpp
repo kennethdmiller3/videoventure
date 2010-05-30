@@ -305,7 +305,7 @@ void Bullet::Collide(unsigned int aId, unsigned int aHitId, float aFraction, con
 		aContact.GetWorldManifold(&worldManifold);
 
 		// estimate the point of impact
-		b2Vec2 position(worldManifold.m_points[0]);
+		b2Vec2 position(worldManifold.points[0]);
 
 		// spawn the template
 		unsigned int spawnId = Database::Instantiate(bullet.mSpawnOnImpact, Database::owner.Get(mId), mId, 0, Vector2(position), Vector2(0, 0), 0);

@@ -369,11 +369,11 @@ bool CollidableTemplate::ConfigureBodyItem(const TiXmlElement *element, b2BodyDe
 		element->QueryFloatAttribute("angular", &body.angularDamping);
 		return true;
 
-	case 0x85e2c459 /* "autosleep" */:
+	case 0xac01f355 /* "allowsleep" */:
 		{
-			int autosleep = body.autoSleep;
-			element->QueryIntAttribute("value", &autosleep);
-			body.autoSleep = autosleep != 0;
+			int allowsleep = body.allowSleep;
+			element->QueryIntAttribute("value", &allowsleep);
+			body.allowSleep = allowsleep != 0;
 		}
 		return true;
 
@@ -884,10 +884,12 @@ void Collidable::WorldInit(float aMinX, float aMinY, float aMaxX, float aMaxY, b
 		};
 
 		b2PolygonShape shape;
+		b2FixtureDef fixture;
+		fixture.shape = &shape;
 		for (int i = 0; i < 4; ++i)
 		{
 			shape.SetAsEdge(vertex[i], vertex[(i+1)&3]);
-			body->CreateFixture(&shape);
+			body->CreateFixture(&fixture);
 		}
 	}
 }
@@ -905,7 +907,7 @@ void Collidable::CollideAll(float aStep)
 		return;
 
 	// step the physics world
-	world->Step(aStep, 16, 16, true);
+	world->Step(aStep, 16, 16);
 
 	// for each body...
 	for (b2Body* body = world->GetBodyList(); body; body = body->GetNext())
@@ -986,12 +988,12 @@ public:
 	}
 };
 
-unsigned int Collidable::TestSegment(const b2Segment &aSegment, const b2Filter &aFilter, unsigned int aId,
+unsigned int Collidable::TestSegment(const b2Vec2 &aStart, const b2Vec2 &aEnd, const b2Filter &aFilter, unsigned int aId,
 									 float &aLambda, b2Vec2 &aNormal, b2Fixture *&aShape)
 {
 	// raycast
 	CollidableRayCast raycast(aFilter, aId);
-	world->RayCast(&raycast, aSegment.p1, aSegment.p2);
+	world->RayCast(&raycast, aStart, aEnd);
 
 	// return result
 	aLambda = raycast.mHitFraction;

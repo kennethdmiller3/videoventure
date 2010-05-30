@@ -198,15 +198,14 @@ void Aimer::Control(float aStep)
 		const b2Filter &filter = shapelist->GetFilterData();
 
 		// collision probe
-		b2Segment segment;
-		segment.p1 = transform.p;
-		segment.p2 = transform.p + 32 * mMove;
+		b2Vec2 start = transform.p;
+		b2Vec2 end = transform.p + 32 * mMove;
 
 		// perform a segment test
 		float lambda = 1.0f;
 		b2Vec2 normal(0, 0);
 		b2Fixture *shape = NULL;
-		Collidable::TestSegment(segment, shapelist->GetSweepRadius() * 0.5f, mId, filter.categoryBits, filter.maskBits, lambda, normal, shape);
+		Collidable::TestSegment(start, end, shapelist->GetSweepRadius() * 0.5f, mId, filter.categoryBits, filter.maskBits, lambda, normal, shape);
 		if (lambda < 1.0f)
 		{
 			float push = 1.0f - lambda;
