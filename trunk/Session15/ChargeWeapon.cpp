@@ -579,7 +579,7 @@ ChargeWeapon::ChargeWeapon(const ChargeWeaponTemplate &aTemplate, unsigned int a
 	if (aTemplate.mType)
 	{
 		// find the specified resource
-		mAmmo = FindResource(aId, aTemplate.mType);
+		mAmmo = FindResourceContainer(aId, aTemplate.mType);
 	}
 }
 

@@ -24,7 +24,7 @@ static ExpressionConfigure::Auto<__m128> resourcevector(0x29df7ff5 /* "resource"
 float EvaluateResource(EntityContext &aContext)
 {
 	unsigned int name = Expression::Read<unsigned int>(aContext);
-	unsigned int id = FindResource(aContext.mId, name);
+	unsigned int id = FindResourceContainer(aContext.mId, name);
 	const Resource *resource = Database::resource.Get(id).Get(name);
 	return resource ? resource->GetValue() : 0.0f;
 }

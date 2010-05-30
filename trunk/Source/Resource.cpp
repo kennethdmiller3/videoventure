@@ -237,7 +237,7 @@ void Resource::Add(unsigned int aSourceId, float aAdd)
 
 
 
-unsigned int FindResource(unsigned int aId, unsigned int aSubId)
+unsigned int FindResourceContainer(unsigned int aId, unsigned int aSubId)
 {
 	// skip unnamed resource
 	if (!aSubId)

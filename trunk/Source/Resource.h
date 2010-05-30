@@ -7,7 +7,7 @@
 // find the specified resource,
 // starting with the specified identifier
 // and backtracking through the link chain
-extern GAME_API unsigned int FindResource(unsigned int aId, unsigned int aSubId);
+extern GAME_API unsigned int FindResourceContainer(unsigned int aId, unsigned int aSubId);
 
 class ResourceTemplate
 {
