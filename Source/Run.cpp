@@ -241,83 +241,8 @@ void MouseWheelCallback(int aPos)
 
 #endif
 
-// common run state
-void RunState()
+static void ReadInput()
 {
-#if defined(USE_SDL)
-	// last ticks
-	unsigned int ticks = SDL_GetTicks();
-#elif defined(USE_SFML)
-	// timer
-	sf::Clock timer;
-
-	// start timer
-	timer.Reset();
-#elif defined(USE_GLFW)
-	double prevtime = glfwGetTime();
-#endif
-
-	// input logging
-	TiXmlDocument inputlog(RECORD_CONFIG.c_str());
-	TiXmlElement *inputlogroot;
-	TiXmlElement *inputlognext;
-	if (playback)
-	{
-		if (!inputlog.LoadFile())
-			DebugPrint("error loading recording file \"%s\": %s\n", RECORD_CONFIG.c_str(), inputlog.ErrorDesc());
-		inputlogroot = inputlog.RootElement();
-		inputlognext = inputlogroot->FirstChildElement();
-	}
-	else if (record)
-	{
-		inputlogroot = inputlog.LinkEndChild(new TiXmlElement("journal"))->ToElement();
-		inputlognext = NULL;
-	}
-	else
-	{
-		inputlogroot = NULL;
-		inputlognext = NULL;
-	}
-
-#ifdef GET_PERFORMANCE_DETAILS
-	PerfTimer::Init();
-
-	PerfTimer control_timer;
-	PerfTimer simulate_timer;
-	PerfTimer collide_timer;
-	PerfTimer update_timer;
-	PerfTimer render_timer;
-	PerfTimer overlay_timer;
-	PerfTimer display_timer;
-	PerfTimer total_timer;
-
-	total_timer.Stamp();
-#endif
-
-#ifdef COLLECT_DEBUG_DRAW
-	// create a new draw list
-	GLuint debugdraw = glGenLists(1);
-#endif
-
-	// wait for user exit
-	do
-	{
-
-#ifdef GET_PERFORMANCE_DETAILS
-		PerfTimer::Next();
-
-		control_timer.Clear();
-		simulate_timer.Clear();
-		collide_timer.Clear();
-		update_timer.Clear();
-		render_timer.Clear();
-		overlay_timer.Clear();
-		display_timer.Clear();
-		total_timer.Clear();
-#endif
-
-		// INPUT PHASE
-
 #if defined(USE_SDL)
 		// event handler
 		SDL_Event event;
@@ -409,11 +334,6 @@ void RunState()
 				break;
 			}
 		}
-
-		// get loop time in ticks
-		unsigned int nextticks = SDL_GetTicks();
-		float delta = (nextticks - ticks) / 1000.0f;
-		ticks = nextticks;
 #elif defined(USE_SFML)
 	    sf::Event event;
 		while (window.GetEvent(event))
@@ -497,11 +417,6 @@ void RunState()
 				break;
 			}
 		}
-
-		// get loop time in ticks
-		float delta = timer.GetElapsedTime();
-		timer.Reset();
-		//ticks += delta;
 #elif defined(USE_GLFW)
 		if (glfwGetJoystickParam(0, GLFW_PRESENT))
 		{
@@ -519,7 +434,98 @@ void RunState()
 			for (int i = 0; i < buttoncount; ++i)
 				input.OnAxis(Input::TYPE_JOYSTICK_BUTTON, 0, i, button[i]);
 		}
-		
+#endif
+}
+
+// common run state
+void RunState()
+{
+#if defined(USE_SDL)
+	// last ticks
+	unsigned int ticks = SDL_GetTicks();
+#elif defined(USE_SFML)
+	// timer
+	sf::Clock timer;
+
+	// start timer
+	timer.Reset();
+#elif defined(USE_GLFW)
+	double prevtime = glfwGetTime();
+#endif
+
+	// input logging
+	TiXmlDocument inputlog(RECORD_CONFIG.c_str());
+	TiXmlElement *inputlogroot;
+	TiXmlElement *inputlognext;
+	if (playback)
+	{
+		if (!inputlog.LoadFile())
+			DebugPrint("error loading recording file \"%s\": %s\n", RECORD_CONFIG.c_str(), inputlog.ErrorDesc());
+		inputlogroot = inputlog.RootElement();
+		inputlognext = inputlogroot->FirstChildElement();
+	}
+	else if (record)
+	{
+		inputlogroot = inputlog.LinkEndChild(new TiXmlElement("journal"))->ToElement();
+		inputlognext = NULL;
+	}
+	else
+	{
+		inputlogroot = NULL;
+		inputlognext = NULL;
+	}
+
+#ifdef GET_PERFORMANCE_DETAILS
+	PerfTimer::Init();
+
+	PerfTimer control_timer;
+	PerfTimer simulate_timer;
+	PerfTimer collide_timer;
+	PerfTimer update_timer;
+	PerfTimer render_timer;
+	PerfTimer overlay_timer;
+	PerfTimer display_timer;
+	PerfTimer total_timer;
+
+	total_timer.Stamp();
+#endif
+
+#ifdef COLLECT_DEBUG_DRAW
+	// create a new draw list
+	GLuint debugdraw = glGenLists(1);
+#endif
+
+	// wait for user exit
+	do
+	{
+
+#ifdef GET_PERFORMANCE_DETAILS
+		PerfTimer::Next();
+
+		control_timer.Clear();
+		simulate_timer.Clear();
+		collide_timer.Clear();
+		update_timer.Clear();
+		render_timer.Clear();
+		overlay_timer.Clear();
+		display_timer.Clear();
+		total_timer.Clear();
+#endif
+
+		// INPUT PHASE
+
+		ReadInput();
+
+		// get loop time
+#if defined(USE_SDL)
+		unsigned int nextticks = SDL_GetTicks();
+		float delta = (nextticks - ticks) / 1000.0f;
+		ticks = nextticks;
+#elif defined(USE_SFML)
+		float delta = timer.GetElapsedTime();
+		timer.Reset();
+		//ticks += delta;
+#elif defined(USE_GLFW)
 		double nexttime = glfwGetTime();
 		float delta = float(nexttime - prevtime);
 		prevtime = nexttime;
