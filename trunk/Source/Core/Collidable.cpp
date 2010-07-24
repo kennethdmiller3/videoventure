@@ -3,6 +3,7 @@
 #include "Entity.h"
 #include "Link.h"
 #include "Command.h"
+#include "Console.h"
 
 struct CollisionCircleDef 
 {
@@ -193,7 +194,8 @@ void ConfigureFilterData(b2Filter &aFilter, const TiXmlElement *element)
 CollidableTemplate::CollidableTemplate(void)
 : id(0)
 {
-	bodydef.type = b2_dynamicBody;
+	// default to automatic type selection
+	bodydef.type = b2BodyType(-1);
 }
 
 CollidableTemplate::CollidableTemplate(const CollidableTemplate &aTemplate)
@@ -413,6 +415,10 @@ bool CollidableTemplate::ConfigureBodyItem(const TiXmlElement *element, b2BodyDe
 		{
 			switch(Hash(element->Attribute("value")))
 			{
+			case 0x923fa396 /* "auto" */:
+				body.type = b2BodyType(-1);
+				break;
+
 			case 0xd290c23b /* "static" */:
 				body.type = b2_staticBody;
 				break;
@@ -765,34 +771,47 @@ void DebugDraw::DrawForce(const b2Vec2& point, const b2Vec2& force, const b2Colo
 	DrawSegment(p1, p2, color);
 }
 
+// console
+extern Console *console;
+
 int CommandDrawCollidable(const char * const aParam[], int aCount)
 {
-	if (aCount == 0)
-		return 0;
-
-	unsigned int flag;
-	switch (Hash(aParam[0]))
+	struct Option
 	{
-	case 0x9dc3d926 /* "shape" */:	flag = b2DebugDraw::e_shapeBit; break;
-	case 0xaeae0877 /* "joint" */:	flag = b2DebugDraw::e_jointBit; break;
-	case 0x63e91357 /* "aabb" */:	flag = b2DebugDraw::e_aabbBit; break;
-	case 0x7c445ab1 /* "pair" */:	flag = b2DebugDraw::e_pairBit; break;
-	case 0x058c4484 /* "center" */:	flag = b2DebugDraw::e_centerOfMassBit; break;
-	default:						flag = 0; break;
+		unsigned int hash;
+		const char * name;
+		unsigned int flag;
+	};
+	const Option options[] =
+	{
+		{ 0x9dc3d926 /* "shape" */, "shape", b2DebugDraw::e_shapeBit },
+		{ 0xaeae0877 /* "joint" */, "joint", b2DebugDraw::e_jointBit },
+		{ 0x63e91357 /* "aabb" */, "aabb", b2DebugDraw::e_aabbBit },
+		{ 0x7c445ab1 /* "pair" */, "pair", b2DebugDraw::e_pairBit },
+		{ 0x058c4484 /* "center" */, "center", b2DebugDraw::e_centerOfMassBit },
+	};
+
+	unsigned int hash = (aCount >= 1) ? Hash(aParam[0]) : 0x13254bc4 /* "all" */;
+	for (int i = 0; i < SDL_arraysize(options); ++i)
+	{
+		const Option &option = options[i];
+		if (hash == option.hash || hash == 0x13254bc4 /* "all" */)
+		{
+			if (aCount >= 2)
+			{
+				if (atoi(aParam[1]) != 0)
+					debugDraw.AppendFlags(option.flag);
+				else
+					debugDraw.ClearFlags(option.flag);
+			}
+			else
+			{
+				console->Print("%s: %s\n", option.name, (debugDraw.GetFlags() & option.flag) == option.flag ? "on" : "off");
+			}
+		}
 	}
 
-	if (aCount == 1)
-	{
-		DebugPrint("%s: %s", aParam[0], (debugDraw.GetFlags() & flag) ? "on" : "off");
-		return 1;
-	}
-
-	if (atoi(aParam[1]) != 0)
-		debugDraw.AppendFlags(flag);
-	else
-		debugDraw.ClearFlags(flag);
-
-	return 2;
+	return std::min(aCount, 2);
 }
 Command::Auto commanddrawcollidable(0x38c5ac70 /* "drawcollidable" */, CommandDrawCollidable);
 
@@ -822,6 +841,24 @@ void Collidable::AddToWorld(unsigned int aId)
 		def.angle = entity->GetAngle();
 		def.linearVelocity = entity->GetVelocity();
 		def.angularVelocity = entity->GetOmega();
+	}
+
+	// if using automatic type...
+	if (def.type < 0)
+	{
+		// kinematic if the body is moving, static otherwise
+		if (def.linearVelocity.LengthSquared() > 0.0f || fabsf(def.angularVelocity) > 0.0f)
+			def.type = b2_kinematicBody;
+		else
+			def.type = b2_staticBody;
+
+		// dynamic if the body has mass
+		for (Database::Typed<CollisionCircleDef>::Iterator itor(Database::collidablecircles.Find(aId)); itor.IsValid(); ++itor)
+			if (itor.GetValue().mFixture.density > 0.0f)
+				def.type = b2_dynamicBody;
+		for (Database::Typed<CollisionPolygonDef>::Iterator itor(Database::collidablepolygons.Find(aId)); itor.IsValid(); ++itor)
+			if (itor.GetValue().mFixture.density > 0.0f)
+				def.type = b2_dynamicBody;
 	}
 
 	// create the body
@@ -877,10 +914,10 @@ void Collidable::WorldInit(float aMinX, float aMinY, float aMaxX, float aMaxY, b
 
 		b2Vec2 vertex[4] =
 		{
-			b2Vec2(aMaxX * (1.0f - FLT_EPSILON), aMaxY * (1.0f - FLT_EPSILON)),
-			b2Vec2(aMaxX * (1.0f - FLT_EPSILON), aMinY * (1.0f - FLT_EPSILON)),
-			b2Vec2(aMinX * (1.0f - FLT_EPSILON), aMinY * (1.0f - FLT_EPSILON)),
-			b2Vec2(aMinX * (1.0f - FLT_EPSILON), aMaxY * (1.0f - FLT_EPSILON))
+			b2Vec2(aMaxX, aMaxY),
+			b2Vec2(aMaxX, aMinY),
+			b2Vec2(aMinX, aMinY),
+			b2Vec2(aMinX, aMaxY)
 		};
 
 		b2PolygonShape shape;

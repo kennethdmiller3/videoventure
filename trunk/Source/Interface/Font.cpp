@@ -109,11 +109,11 @@ void CreateDefaultFont()
 	texture.mWrapT = GL_CLAMP;
 
 	// unpack font data
-	const unsigned char * __restrict src = aTextureData;
-	unsigned char * __restrict dst = texture.mPixels;
+	const unsigned char * src = aTextureData;
+	unsigned char * dst = texture.mPixels;
 	for (unsigned int i = 0; i < sizeof(aTextureData); ++i)
 	{
-		unsigned char s = *src++;
+		register unsigned char s = *src++;
 		*dst++ = -(s & 1); s >>= 1;
 		*dst++ = -(s & 1); s >>= 1;
 		*dst++ = -(s & 1); s >>= 1;
