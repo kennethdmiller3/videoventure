@@ -68,7 +68,24 @@ namespace Expression
 		New<A1>(aBuffer, aArg1);
 		New<A2>(aBuffer, aArg2);
 		New<A3>(aBuffer, aArg3);
-		New<A4>(aBuffer, aArg3);
+		New<A4>(aBuffer, aArg4);
+	}
+	template <typename A1, typename A2, typename A3, typename A4, typename A5> void Append(std::vector<unsigned int> &aBuffer, A1 aArg1, A2 aArg2, A3 aArg3, A4 aArg4, A5 aArg5)
+	{
+		New<A1>(aBuffer, aArg1);
+		New<A2>(aBuffer, aArg2);
+		New<A3>(aBuffer, aArg3);
+		New<A4>(aBuffer, aArg4);
+		New<A5>(aBuffer, aArg5);
+	}
+	template <typename A1, typename A2, typename A3, typename A4, typename A5, typename A6> void Append(std::vector<unsigned int> &aBuffer, A1 aArg1, A2 aArg2, A3 aArg3, A4 aArg4, A5 aArg5, A6 aArg6)
+	{
+		New<A1>(aBuffer, aArg1);
+		New<A2>(aBuffer, aArg2);
+		New<A3>(aBuffer, aArg3);
+		New<A4>(aBuffer, aArg4);
+		New<A5>(aBuffer, aArg5);
+		New<A6>(aBuffer, aArg6);
 	}
 
 	// read a value from an expression stream
