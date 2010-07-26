@@ -16,9 +16,6 @@ OverlayTemplate::~OverlayTemplate(void)
 // configure
 bool OverlayTemplate::Configure(const TiXmlElement *element, unsigned int aId)
 {
-	if (Hash(element->Value()) != 0x109dd1ad /* "overlay" */)
-		return false;
-
 	// animation period
 	element->QueryFloatAttribute("period", &mPeriod);
 
