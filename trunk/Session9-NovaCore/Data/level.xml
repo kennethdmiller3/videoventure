@@ -1,92 +1,45 @@
 <?xml version="1.0" standalone="no"?>
 <world xmin="-215" ymin="-165" xmax="215" ymax="165" wall="0">
 	<library name="session9.dll" />
-	
+
 	<!-- level escape -->
 	<entity name="escape">
 		<collidable>
 			<body>
-				<edge>
-					<vertex1 x="-215" y="165"/>
-					<vertex2 x="215" y="165"/>
+				<edgechain loop="1">
+					<vertex x="-215" y="165"/>
+					<vertex x="215" y="165"/>
+					<vertex x="215" y="-165"/>
+					<vertex x="-215" y="-165"/>
 					<restitution value="0"/>
 					<friction value="0"/>
 					<category value="0"/>
 					<mask default="0" bit3="1"/>
 					<sensor value="1"/>
-				</edge>
-				<edge>
-					<vertex1 x="215" y="165"/>
-					<vertex2 x="215" y="-165"/>
-					<restitution value="0"/>
-					<friction value="0"/>
-					<category value="0"/>
-					<mask default="0" bit3="1"/>
-					<sensor value="1"/>
-				</edge>
-				<edge>
-					<vertex1 x="215" y="-165"/>
-					<vertex2 x="-215" y="-165"/>
-					<restitution value="0"/>
-					<friction value="0"/>
-					<category value="0"/>
-					<mask default="0" bit3="1"/>
-					<sensor value="1"/>
-				</edge>
-				<edge>
-					<vertex1 x="-215" y="-165"/>
-					<vertex2 x="-215" y="165"/>
-					<restitution value="0"/>
-					<friction value="0"/>
-					<category value="0"/>
-					<mask default="0" bit3="1"/>
-					<sensor value="1"/>
-				</edge>
+				</edgechain>
 			</body>
-		</collidable>	
+		</collidable>
 	</entity>
-	
+
 	<!-- level perimeter -->
 	<entity name="perimeter">
 		<collidable>
 			<body>
-				<edge>
-					<vertex1 x="-200" y="150"/>
-					<vertex2 x="200" y="150"/>
+				<edgechain loop="1">
+					<vertex x="-200" y="150"/>
+					<vertex x="200" y="150"/>
+					<vertex x="200" y="-150"/>
+					<vertex x="-200" y="-150"/>
 					<restitution value="0"/>
 					<friction value="0"/>
 					<category value="0"/>
 					<mask default="0" bit1="1" bit2="1"/>
-				</edge>
-				<edge>
-					<vertex1 x="200" y="150"/>
-					<vertex2 x="200" y="-150"/>
-					<restitution value="0"/>
-					<friction value="0"/>
-					<category value="0"/>
-					<mask default="0" bit1="1" bit2="1"/>
-				</edge>
-				<edge>
-					<vertex1 x="200" y="-150"/>
-					<vertex2 x="-200" y="-150"/>
-					<restitution value="0"/>
-					<friction value="0"/>
-					<category value="0"/>
-					<mask default="0" bit1="1" bit2="1"/>
-				</edge>
-				<edge>
-					<vertex1 x="-200" y="-150"/>
-					<vertex2 x="-200" y="150"/>
-					<restitution value="0"/>
-					<friction value="0"/>
-					<category value="0"/>
-					<mask default="0" bit1="1" bit2="1"/>
-				</edge>
+				</edgechain>
 			</body>
 		</collidable>
 	</entity>
-	
-	
+
+
 	<!-- sounds -->
 	<import name="sound/stargate-warpin.xml" />
 	<import name="sound/stargate-playershot.xml" />
@@ -114,7 +67,7 @@
 
 
 	<!-- draw lists -->
-	
+
 	<import name="drawlist/square.xml" />
 	<import name="drawlist/diamond.xml" />
 	<import name="drawlist/circle8.xml" />
@@ -126,12 +79,12 @@
 	<import name="drawlist/shiptiny.xml" />
 
 	<!-- reticule -->
-	
+
 	<import name="drawlist/reticule.xml" />
 
 
 	<!-- starfield -->
-	
+
 	<import name="template/starfield.xml" />
 	<tilemap x="768" y="768" dx="-512" dy="-512">
 		<tile name="*" spawn="starfield"/>
@@ -143,7 +96,7 @@
 
 
 	<!-- reference grid -->
-	
+
 	<entity name="playfield">
 		<renderable radius="512">
 			<drawlist>
@@ -158,8 +111,8 @@
 			</drawlist>
 		</renderable>
 	</entity>
-	
-	
+
+
 	<!-- music -->
 
 	<entity name="soundtrack">
@@ -168,7 +121,7 @@
 
 
 	<!-- collidable filters -->
-	
+
 	<collidablefilter name="inert">
 		<category value="-1" />
 	</collidablefilter>
@@ -197,8 +150,8 @@
 		<category value="4" />
 		<mask bit2="0" bit3="0" bit4="0" />
 	</collidablefilter>
-	
-	
+
+
 	<!-- player weapon -->
 
 	<import name="template/playerbulletexplosion.xml" />
@@ -211,13 +164,13 @@
 	</template>
 
 	<!-- player ship -->
-	
+
 	<import name="template/playership.xml" />
 	<import name="template/playershipwarp.xml" />
 	<import name="template/playershipdeath.xml" />
 	<import name="template/playershipexplosion.xml" />
 
-	
+
 	<!-- power core -->
 
 	<import name="template/powercorebase.xml" />
@@ -268,7 +221,7 @@
 
 	<!-- enemy warp-in -->
 	<import name="template/enemywarpin.xml" />
-	
+
 	<!-- enemy bullet explosion -->
 	<import name="template/enemybulletexplosion.xml" />
 
@@ -1128,5 +1081,5 @@
 			</repeat>
 		</wavesequence>
 	</entity>
-	
+
 </world>

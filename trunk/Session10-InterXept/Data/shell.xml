@@ -30,7 +30,7 @@
 	</soundcue>
 	
 	<!-- music -->
-	<entity name="title">
+	<entity name="music">
 		<!--music file="karsten_koch-jupiters_orbit.s3m" /-->
 		<music file="bzl-funky_escalator.xm" />
 	</entity>
@@ -38,6 +38,24 @@
 	<!-- reticule -->
 	<import name="drawlist/reticule.xml" />
 
+	<!-- title -->
+	<entity name="title">
+		<shelltitle>
+			<row data="                                                     1111        1111                                   " bar="0.0"/>
+			<row data="                                                      1111      1111                                    " bar="0.1"/>
+			<row data="0000   00000000   000000000    000000000   00000000    1111    1111    000000000  000000000   000000000 " bar="0.2"/>
+			<row data="0000  0000000000  0000000000  0000000000  0000000000    1111  1111    0000000000  0000000000  0000000000" bar="0.4"/>
+			<row data="0000  0000  0000        0000  0000        0000           11111111     0000              0000        0000" bar="0.6"/>
+			<row data="0000  0000  0000        0000  00000000    0000            111111      00000000     000000000        0000" bar="0.8"/>
+			<row data="0000  0000  0000        0000  00000000    0000            111111      00000000    000000000         0000" bar="0.8"/>
+			<row data="0000  0000  0000        0000  0000        0000           11111111     0000        0000              0000" bar="0.6"/>
+			<row data="0000  0000  0000        0000  0000000000  0000          1111  1111    0000000000  0000              0000" bar="0.4"/>
+			<row data="0000  0000  0000        0000   000000000  0000         1111    1111    000000000  0000              0000" bar="0.2"/>
+			<row data="                                                      1111      1111                                    " bar="0.1"/>
+			<row data="                                                     1111        1111                                   " bar="0.0"/>
+		</shelltitle>
+	</entity>
+	
 	<!-- starfield -->
 	<entity name="starfield">
 		<renderable radius="1536">
