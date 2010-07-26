@@ -4,7 +4,7 @@
 #include "ShellMenuItem.h"
 #include "GameState.h"
 #include "VarItem.h"
-#include "Title.h"
+#include "Overlay.h"
 #include "Sound.h"
 #include "Collidable.h"
 #include "Library.h"
@@ -75,11 +75,6 @@ void EnterShellState()
 	// start audio
 	Sound::Resume();
 
-	// create title overlay
-	ShellTitle *title = new ShellTitle(0x9865b509 /* "title" */);
-	Database::overlay.Put(0x9865b509 /* "title" */, title);
-	title->Show();
-
 	// create options overlay
 	shellmenu.mActive = NULL;
 	shellmenu.Push(&shellmenumainpage);
@@ -101,8 +96,6 @@ void ExitShellState()
 	StopSoundCue(0x94326baa /* "startup" */);
 
 	// clear overlays
-	delete Database::overlay.Get(0x9865b509 /* "title" */);
-	Database::overlay.Delete(0x9865b509 /* "title" */);
 	delete Database::overlay.Get(0xef286ca5 /* "options" */);
 	Database::overlay.Delete(0xef286ca5 /* "options" */);
 
