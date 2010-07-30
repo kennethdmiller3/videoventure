@@ -357,7 +357,7 @@ void Input::ConfigureItem(const TiXmlElement *element)
 				const char *controlname = element->Attribute("control");
 				for (int i = 0; i < physicalnamecount; ++i)
 				{
-					if (physicalname[i] != NULL && stricmp(controlname, physicalname[i]) == 0)
+					if (physicalname[i] != NULL && _stricmp(controlname, physicalname[i]) == 0)
 					{
 						control = i;
 						break;
