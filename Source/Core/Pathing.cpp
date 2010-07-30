@@ -129,7 +129,7 @@ void BuildPathingGrid(const int aZoneSize, const int aCellSize)
 	b2FixtureDef probefixturedef;
 	probefixturedef.shape = &probeshape;
 	probefixturedef.isSensor = true;
-	b2Fixture *probe = probebody->CreateFixture(&probefixturedef);
+	probebody->CreateFixture(&probefixturedef);
 
 	// for each zone row...
 	for (int zy = zy0; zy < zy1; ++zy)
