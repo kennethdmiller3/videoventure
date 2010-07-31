@@ -78,7 +78,9 @@ namespace Expression
 // configure conversion
 template <typename T, typename A> void ConfigureConvert(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
 {
+#ifdef PRINT_CONFIGURE_EXPRESSION
 	DebugPrint("%s convert %s\n", Expression::Schema<T>::NAME, Expression::Schema<A>::NAME);
+#endif
 
 	const TiXmlElement *arg1 = element->FirstChildElement();
 	if (!arg1)

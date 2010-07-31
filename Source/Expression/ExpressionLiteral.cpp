@@ -20,6 +20,8 @@ void ConfigureLiteral(const TiXmlElement *element, std::vector<unsigned int> &bu
 		float value = defaults[i];
 		element->QueryFloatAttribute(names[i], &value);
 		buffer.push_back(*reinterpret_cast<unsigned int *>(&value));
+#ifdef PRINT_CONFIGURE_EXPRESSION
 		DebugPrint(" %s=%f", names[i], value);
+#endif
 	}
 }

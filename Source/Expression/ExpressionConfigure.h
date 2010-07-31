@@ -45,7 +45,9 @@ namespace ExpressionConfigure
 // configure an expression
 template <typename T> void ConfigureExpression(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
 {
+#ifdef PRINT_CONFIGURE_EXPRESSION
 	DebugPrint("%s expression %s\n", Expression::Schema<T>::NAME, element->Value());
+#endif
 
 	// width in floats (HACK)
 	const int width = (sizeof(T)+sizeof(float)-1)/sizeof(float);
@@ -147,7 +149,9 @@ template <typename T> void ConfigureExpression(const TiXmlElement *element, std:
 // configure an expression root (the tag hosting the expression)
 template <typename T> void ConfigureExpressionRoot(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
 {
+#ifdef PRINT_CONFIGURE_EXPRESSION
 	DebugPrint("%s root %s\n", Expression::Schema<T>::NAME, element->Value());
+#endif
 
 	// width in floats (HACK)
 	const int width = (sizeof(T)+sizeof(float)-1)/sizeof(float);

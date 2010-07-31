@@ -31,7 +31,9 @@ template <typename T> static const T EvaluateVariable(EntityContext &aContext)
 template <typename T> void ConfigureInlineVariable(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
 {
 	// append a variable expression
+#ifdef PRINT_CONFIGURE_EXPRESSION
 	DebugPrint("%s variable %s (inline)\n", Expression::Schema<T>::NAME, element->Attribute("variable"));
+#endif
 	Expression::Append(buffer, EvaluateVariable<T>, Hash(element->Attribute("variable")));
 }
 
@@ -39,7 +41,9 @@ template <typename T> void ConfigureInlineVariable(const TiXmlElement *element, 
 template <typename T> void ConfigureVariable(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
 {
 	// append a variable expression
+#ifdef PRINT_CONFIGURE_EXPRESSION
 	DebugPrint("%s variable %s\n", Expression::Schema<T>::NAME, element->Attribute("name"));
+#endif
 	Expression::Append(buffer, EvaluateVariable<T>, Hash(element->Attribute("name")));
 }
 
@@ -47,6 +51,8 @@ template <typename T> void ConfigureVariable(const TiXmlElement *element, std::v
 template <typename T> void ConfigureTagVariable(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
 {
 	// append a variable expression
+#ifdef PRINT_CONFIGURE_EXPRESSION
 	DebugPrint("%s variable %s (tag)\n", Expression::Schema<T>::NAME, element->Value());
+#endif
 	Expression::Append(buffer, EvaluateVariable<T>, Hash(element->Value()));
 }
