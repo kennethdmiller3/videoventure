@@ -53,7 +53,7 @@ namespace Command
 typedef void (*ProcessCommandPostFunc)(void);
 
 // process a string command
-static int ProcessCommandString(std::string &aValue, const char * const aParam[], int aCount, ProcessCommandPostFunc aAction, const char *aFormat)
+int ProcessCommandString(std::string &aValue, const char * const aParam[], int aCount, ProcessCommandPostFunc aAction, const char *aFormat)
 {
 	if (aCount >= 1)
 	{
@@ -70,7 +70,7 @@ static int ProcessCommandString(std::string &aValue, const char * const aParam[]
 }
 
 // process a boolean command
-static int ProcessCommandBool(bool &aValue, const char * const aParam[], int aCount, ProcessCommandPostFunc aAction, const char *aFormat)
+int ProcessCommandBool(bool &aValue, const char * const aParam[], int aCount, ProcessCommandPostFunc aAction, const char *aFormat)
 {
 	if (aCount >= 1)
 	{
@@ -81,13 +81,13 @@ static int ProcessCommandBool(bool &aValue, const char * const aParam[], int aCo
 	}
 	else
 	{
-		console->Print(aFormat, aValue);
+		console->Print(aFormat, aValue ? "true" : "false");
 		return 0;
 	}
 }
 
 // process an integer command
-static int ProcessCommandInt(int &aValue, const char * const aParam[], int aCount, ProcessCommandPostFunc aAction, const char *aFormat)
+int ProcessCommandInt(int &aValue, const char * const aParam[], int aCount, ProcessCommandPostFunc aAction, const char *aFormat)
 {
 	if (aCount >= 1)
 	{
@@ -104,7 +104,7 @@ static int ProcessCommandInt(int &aValue, const char * const aParam[], int aCoun
 }
 
 // process a two-integer command
-static int ProcessCommandInt2(int &aValue1, int &aValue2, const char * const aParam[], int aCount, ProcessCommandPostFunc aAction, const char *aFormat)
+int ProcessCommandInt2(int &aValue1, int &aValue2, const char * const aParam[], int aCount, ProcessCommandPostFunc aAction, const char *aFormat)
 {
 	if (aCount >= 2)
 	{
@@ -122,7 +122,7 @@ static int ProcessCommandInt2(int &aValue1, int &aValue2, const char * const aPa
 }
 
 // process a float command
-static int ProcessCommandFloat(float &aValue, const char * const aParam[], int aCount, ProcessCommandPostFunc aAction, const char *aFormat)
+int ProcessCommandFloat(float &aValue, const char * const aParam[], int aCount, ProcessCommandPostFunc aAction, const char *aFormat)
 {
 	if (aCount >= 1)
 	{
