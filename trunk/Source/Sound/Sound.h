@@ -30,6 +30,31 @@ public:
 	~SoundTemplate(void);
 
 	bool Configure(const TiXmlElement *element, unsigned int id);
+
+	void Reserve(size_t count);
+	void Trim(void);
+
+	inline void Append(short value)
+	{
+		// append sample
+		static_cast<short *>(mData)[mLength++] = value;
+	}
+
+	inline void Append(short value, size_t count)
+	{
+		// append samples
+		for (size_t i = 0; i < count; ++i)
+		{
+			static_cast<short *>(mData)[mLength++] = value;
+		}
+	}
+
+	inline void Append(short *data, size_t count)
+	{
+		// append data
+		memcpy(static_cast<short *>(mData) + mLength, data, count * sizeof(short));
+		mLength += count;
+	}
 };
 
 class Sound

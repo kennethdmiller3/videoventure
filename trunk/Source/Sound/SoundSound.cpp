@@ -11,9 +11,8 @@ static bool Configure(SoundTemplate &self, const TiXmlElement *element, unsigned
 	if (sound.mLength)
 	{
 		// append sound data
-		self.mSize = (self.mLength + sound.mLength) * sizeof(short);
-		self.mData = realloc(self.mData, self.mSize);
-		memcpy(static_cast<short *>(self.mData) + self.mLength, sound.mData, sound.mLength * sizeof(short));
+		self.Reserve(sound.mLength);
+		self.Append(static_cast<short *>(sound.mData), sound.mLength);
 	}
 	return true;
 }

@@ -58,12 +58,7 @@ static bool Configure(SoundTemplate &self, const TiXmlElement *element, unsigned
 
 	// pre-compute size
 	int count = xs_FloorToInt(outersteps * (innersteps * (innerdelay + innerdelta * (outersteps - 1) / 2) + outerdelay) * samplespertick);
-	size_t newsize = (self.mLength + count) * sizeof(short);
-	if (self.mSize < newsize)
-	{
-		self.mSize = newsize;
-		self.mData = realloc(self.mData, self.mSize);
-	}
+	self.Reserve(count);
 
 	// for each outer step...
 	for (int outer = outersteps; outer > 0; --outer)

@@ -9,11 +9,10 @@ static bool Configure(SoundTemplate &self, const TiXmlElement *element, unsigned
 	// get sound length
 	float length;
 	element->QueryFloatAttribute("length", &length);
-
-	// allocate space
 	size_t count = xs_CeilToInt(length * AUDIO_FREQUENCY);
-	self.mSize = (self.mLength + count) * sizeof(short);
-	self.mData = realloc(self.mData, self.mSize);
+
+	// reserve space
+	self.Reserve(count);
 
 	// get expression
 	std::vector<unsigned int> buffer;
@@ -30,7 +29,7 @@ static bool Configure(SoundTemplate &self, const TiXmlElement *element, unsigned
 		float value = Expression::Evaluate<float>(context);
 
 		// add a sample
-		static_cast<short *>(self.mData)[self.mLength++] = short(Clamp(xs_RoundToInt(value * SHRT_MAX), SHRT_MIN, SHRT_MAX));
+		self.Append(short(Clamp(xs_RoundToInt(value * SHRT_MAX), SHRT_MIN, SHRT_MAX)));
 	}
 
 	return true;
