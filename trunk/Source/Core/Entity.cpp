@@ -22,14 +22,16 @@ namespace Database
 
 	namespace Loader
 	{
-		static void ConfigureTemplateItem(const TiXmlElement *element, unsigned int aId)
+		static bool ConfigureTemplateItem(const TiXmlElement *element, unsigned int aId)
 		{
 			const char *value = element->Value();
 			const Database::Loader::Entry &configure = Database::Loader::GetConfigure(Hash(value));
 			if (configure)
+			{
 				configure(aId, element);
-			else
-				DebugPrint("Unrecognized tag \"%s\"\n", value);
+				return true;
+			}
+			return false;
 		}
 
 		class InheritLoader
@@ -88,7 +90,8 @@ namespace Database
 				for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 				{
 					// process the template item
-					ConfigureTemplateItem(child, aId);
+					if (!ConfigureTemplateItem(child, aId))
+						DebugPrint("template \"%s\" skipping item \"%s\"\n", element->Attribute("name"), child->Value());
 				}
 			}
 		}
@@ -135,7 +138,8 @@ namespace Database
 						continue;
 
 					// process the template item
-					ConfigureTemplateItem(child, aId);
+					if (!ConfigureTemplateItem(child, aId))
+						DebugPrint("entity \"%s\" skipping item \"%s\"\n", element->Attribute("name"), child->Value());
 				}
 
 				// activate the instance

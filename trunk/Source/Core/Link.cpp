@@ -198,7 +198,7 @@ bool LinkTemplate::Configure(const TiXmlElement *element, unsigned int aId, unsi
 					if (!custom)
 					{
 						// create a customized template
-						DebugPrint("Link custom template \"%s:%s\"\n", Database::name.Get(aId).c_str(), element->Attribute("name"));
+						DebugPrint("link custom template \"%s:%s\"\n", Database::name.Get(aId).c_str(), element->Attribute("name"));
 						custom = Hash(":", aId);
 						custom = Hash(element->Attribute("name"), custom);
 						Database::Inherit(custom, mSecondary);
@@ -208,7 +208,7 @@ bool LinkTemplate::Configure(const TiXmlElement *element, unsigned int aId, unsi
 				}
 				else
 				{
-					DebugPrint("Unrecognized tag \"%s\"\n", value);
+					DebugPrint("warning: link \"%s:%s\" skipping item \"%s\"\n", Database::name.Get(aId).c_str(), element->Attribute("name"), value);
 				}
 			}
 			break;
