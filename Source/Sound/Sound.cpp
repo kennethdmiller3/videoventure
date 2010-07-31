@@ -4,6 +4,7 @@
 #include "Entity.h"
 
 #define DISTANCE_FALLOFF
+#define PROFILE_SOUND_SYNTHESIS
 
 #if defined(USE_BASS)
 
@@ -449,8 +450,7 @@ public:
 	BASS_SampleGetInfo(handle, &info);
 
 	// allocate space for data
-	self.mSize = self.mLength * sizeof(short) + info.length * ((info.flags & BASS_SAMPLE_8BITS) ? sizeof(short) : 1) / info.chans;
-	self.mData = realloc(self.mData, self.mSize);
+	self.Reserve(info.length / info.chans);
 
 	// set frequency
 	self.mFrequency = info.freq;
@@ -466,12 +466,12 @@ public:
 		int accum = 0;
 		if (info.flags & BASS_SAMPLE_8BITS)
 		{
-			for (unsigned int in = 0, out = self.mLength, samp = 0; in < info.length; ++in)
+			for (unsigned int in = 0, samp = 0; in < info.length; ++in)
 			{
 				accum += static_cast<unsigned char *>(buf)[in];
 				if (++samp >= info.chans)
 				{
-					static_cast<short *>(self.mData)[out++] = short(accum * 257 / samp - 32768);
+					self.Append(short(accum * 257 / samp - 32768));
 					accum = 0;
 					samp = 0;
 				}
@@ -479,12 +479,12 @@ public:
 		}
 		else
 		{
-			for (unsigned int in = 0, out = self.mLength, samp = 0; in < info.length / sizeof(short); ++in)
+			for (unsigned int in = 0, samp = 0; in < info.length / sizeof(short); ++in)
 			{
 				accum += static_cast<short *>(buf)[in];
 				if (++samp >= info.chans)
 				{
-					static_cast<short *>(self.mData)[out++] = short(accum / samp);
+					self.Append(short(accum / samp));
 					accum = 0;
 					samp = 0;
 				}
@@ -496,7 +496,6 @@ public:
 		// copy sound data
 		BASS_SampleGetData(handle, static_cast<short *>(self.mData) + self.mLength);
 	}
-	self.mLength = self.mSize / sizeof(short);
 
 	// free loaded data
 	BASS_SampleFree(handle);
@@ -562,6 +561,11 @@ soundfileloader;
 
 bool SoundTemplate::Configure(const TiXmlElement *element, unsigned int id)
 {
+#ifdef PROFILE_SOUND_SYNTHESIS
+	LARGE_INTEGER freq;
+	QueryPerformanceFrequency(&freq);
+#endif
+
 	// clear sound data
 	mData = NULL;
 	mSize = 0;
@@ -579,8 +583,23 @@ bool SoundTemplate::Configure(const TiXmlElement *element, unsigned int id)
 		unsigned int hash = Hash(child->Value());
 		const SoundConfigure::Entry &configure = SoundConfigure::Get(hash);
 		if (configure)
+		{
+#ifdef PROFILE_SOUND_SYNTHESIS
+			LARGE_INTEGER count0;
+			QueryPerformanceCounter(&count0);
+#endif
 			configure(*this, child, id);
+#ifdef PROFILE_SOUND_SYNTHESIS
+			LARGE_INTEGER count1;
+			QueryPerformanceCounter(&count1);
+
+			DebugPrint("%s %dus\n", child->Value(), (count1.QuadPart - count0.QuadPart) * 1000000 / freq.QuadPart);
+#endif
+		}
 	}
+
+	// trim excess space
+	Trim();
 
 	// output total length
 	DebugPrint("size=%d length=%d (%fs)\n", mSize, mLength, float(mLength) / AUDIO_FREQUENCY);
@@ -693,6 +712,22 @@ bool SoundTemplate::Configure(const TiXmlElement *element, unsigned int id)
 #endif
 
 	return true;
+}
+
+void SoundTemplate::Reserve(size_t count)
+{
+	if (mSize < (mLength + count) * sizeof(short))
+	{
+		// reallocate
+		mSize = std::max(((mLength + count) * sizeof(short) + 255) & ~255, (mSize * 3 + 1) / 2);
+		mData = realloc(mData, mSize);
+	}
+}
+
+void SoundTemplate::Trim(void)
+{
+	mSize = mLength * sizeof(short);
+	mData = realloc(mData, mSize);
 }
 
 static Sound *sHead;

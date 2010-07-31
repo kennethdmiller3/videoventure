@@ -12,9 +12,8 @@ static bool Configure(SoundTemplate &self, const TiXmlElement *element, unsigned
 	element->QueryFloatAttribute("length", &length);
 	int samples = xs_CeilToInt(length * AUDIO_FREQUENCY);
 
-	// append sound data
-	self.mSize = (self.mLength + samples) * sizeof(short);
-	self.mData = realloc(self.mData, self.mSize);
+	// reserve space
+	self.Reserve(samples);
 
 	// clock frequency
 	int frequency = 0;
@@ -49,6 +48,7 @@ static bool Configure(SoundTemplate &self, const TiXmlElement *element, unsigned
 	}
 	if (samplekey.empty())
 	{
+		samplekey.reserve(3);
 		samplekey.push_back(1);
 		samplekey.push_back(0);
 		samplekey.push_back(*reinterpret_cast<unsigned int *>(&sample));
@@ -81,8 +81,7 @@ static bool Configure(SoundTemplate &self, const TiXmlElement *element, unsigned
 		}
 
 		// append sample
-		short sample = short(Clamp(xs_RoundToInt(accum * 32767.0f / oversample), SHRT_MIN, SHRT_MAX));
-		static_cast<short *>(self.mData)[self.mLength++] = sample;
+		self.Append(short(Clamp(xs_RoundToInt(SHRT_MAX * accum / oversample), SHRT_MIN, SHRT_MAX)));
 	}
 
 	return true;

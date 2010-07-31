@@ -11,19 +11,10 @@ float OutputPulse(SoundTemplate &self, int ticks, float samplespertick, float sa
 	int count = xs_FloorToInt(samples);
 	if (count > 0)
 	{
+		// append samples
 		samples -= count;
-
-		// round up
-		size_t newsize = ((self.mLength + count) * sizeof(short) + 255) & ~255;
-		if (self.mSize < newsize)
-		{
-			self.mSize = newsize;
-			self.mData = realloc(self.mData, self.mSize);
-		}
-		for (int i = 0; i < count; ++i)
-		{
-			static_cast<short *>(self.mData)[self.mLength++] = value;
-		}
+		self.Reserve(count);
+		self.Append(value, count);
 	}
 	return samples;
 }
