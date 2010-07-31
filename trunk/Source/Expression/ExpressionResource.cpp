@@ -33,7 +33,9 @@ float EvaluateResource(EntityContext &aContext)
 void ConfigureInlineResource(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
 {
 	// append a resource expression
+#ifdef PRINT_CONFIGURE_EXPRESSION
 	DebugPrint("%s resource %s (inline)\n", Expression::Schema<float>::NAME, element->Attribute("resource"));
+#endif
 	Expression::Append(buffer, EvaluateResource, Hash(element->Attribute("resource")));
 }
 
@@ -41,6 +43,8 @@ void ConfigureInlineResource(const TiXmlElement *element, std::vector<unsigned i
 void ConfigureResource(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
 {
 	// append a resource expression
+#ifdef PRINT_CONFIGURE_EXPRESSION
 	DebugPrint("%s resource %s\n", Expression::Schema<float>::NAME, element->Attribute("name"));
+#endif
 	Expression::Append(buffer, EvaluateResource, Hash(element->Attribute("name")));
 }

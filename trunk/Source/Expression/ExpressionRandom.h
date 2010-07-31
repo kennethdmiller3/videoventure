@@ -21,7 +21,9 @@ template <typename T> void ConfigureRandom(const TiXmlElement *element, std::vec
 	int count = 1;
 	element->QueryIntAttribute("rand", &count);
 
+#ifdef PRINT_CONFIGURE_EXPRESSION
 	DebugPrint("%s random %d:", Expression::Schema<T>::NAME, count);
+#endif
 
 	// offset factor
 	float offset[width];
@@ -91,7 +93,9 @@ template <typename T> void ConfigureRandom(const TiXmlElement *element, std::vec
 				need_scale = true;
 		}
 
+#ifdef PRINT_CONFIGURE_EXPRESSION
 		DebugPrint(" %f+%f*%s", offset[i], scale[i], names[i]);
+#endif
 	}
 
 	if (need_offset || !need_rand)
@@ -134,5 +138,7 @@ template <typename T> void ConfigureRandom(const TiXmlElement *element, std::vec
 		}
 	}
 
+#ifdef PRINT_CONFIGURE_EXPRESSION
 	DebugPrint("\n");
+#endif
 }

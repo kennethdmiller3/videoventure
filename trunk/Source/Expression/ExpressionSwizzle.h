@@ -23,7 +23,9 @@ namespace Expression
 // configure swizzle expression
 template <typename T> void ConfigureSwizzle(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
 {
+#ifdef PRINT_CONFIGURE_EXPRESSION
 	DebugPrint("%s swizzle\n", Expression::Schema<T>::NAME);
+#endif
 
 	const TiXmlElement *arg1 = element->FirstChildElement();
 	if (!arg1)

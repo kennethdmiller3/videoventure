@@ -66,7 +66,9 @@ void ConfigureNoise(const TiXmlElement *element, std::vector<unsigned int> &buff
 	const TiXmlElement *arg1 = element->FirstChildElement();
 	if (!arg1)
 	{
+#ifdef PRINT_CONFIGURE_EXPRESSION
 		DebugPrint("%s noise ->", Expression::Schema<float>::NAME);
+#endif
 		ConfigureLiteral<float>(element, buffer, names, defaults);
 		return;
 	}
@@ -74,7 +76,9 @@ void ConfigureNoise(const TiXmlElement *element, std::vector<unsigned int> &buff
 	const TiXmlElement *arg2 = arg1->NextSiblingElement();
 	if (!arg2)
 	{
+#ifdef PRINT_CONFIGURE_EXPRESSION
 		DebugPrint("%s noise1\n", Expression::Schema<float>::NAME);
+#endif
 		Expression::Append(buffer, Expression::ComponentUnary<float, Expression::Schema<float>::COUNT>::Evaluate<float, float, Noise>);
 		ConfigureExpression<float>(arg1, buffer, names, defaults);
 		return;
@@ -83,7 +87,9 @@ void ConfigureNoise(const TiXmlElement *element, std::vector<unsigned int> &buff
 	const TiXmlElement *arg3 = arg2->NextSiblingElement();
 	if (!arg3)
 	{
+#ifdef PRINT_CONFIGURE_EXPRESSION
 		DebugPrint("%s noise2\n", Expression::Schema<float>::NAME);
+#endif
 		Expression::Append(buffer, Expression::ComponentBinary<float, Expression::Schema<float>::COUNT>::Evaluate<float, float, float, Noise>);
 		ConfigureExpression<float>(arg1, buffer, names, defaults);
 		ConfigureExpression<float>(arg2, buffer, names, defaults);
@@ -93,7 +99,9 @@ void ConfigureNoise(const TiXmlElement *element, std::vector<unsigned int> &buff
 	const TiXmlElement *arg4 = arg3->NextSiblingElement();
 	if (!arg4)
 	{
+#ifdef PRINT_CONFIGURE_EXPRESSION
 		DebugPrint("%s noise3\n", Expression::Schema<float>::NAME);
+#endif
 		Expression::Append(buffer, Expression::ComponentTernary<float, Expression::Schema<float>::COUNT>::Evaluate<float, float, float, float, Noise>);
 		ConfigureExpression<float>(arg1, buffer, names, defaults);
 		ConfigureExpression<float>(arg2, buffer, names, defaults);
@@ -101,6 +109,8 @@ void ConfigureNoise(const TiXmlElement *element, std::vector<unsigned int> &buff
 		return;
 	}
 
+#ifdef PRINT_CONFIGURE_EXPRESSION
 	DebugPrint("%s noise4\n", Expression::Schema<float>::NAME);
+#endif
 	assert(false);
 }
