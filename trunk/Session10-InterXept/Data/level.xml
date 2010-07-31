@@ -1,6 +1,6 @@
 <?xml version="1.0" standalone="no"?>
 <!-- Test Level -->
-<world xmin="-384" ymin="-192" xmax="384" ymax="192" wall="0">
+<world xmin="-200" ymin="-110" xmax="200" ymax="110" wall="0">
 	<library name="session10.dll"/>
 	
 	<!-- disable fog-->
@@ -10,38 +10,16 @@
 	<entity name="perimeter">
 		<collidable>
 			<body>
-				<edge>
-					<vertex1 x="-200" y="110"/>
-					<vertex2 x="200" y="110"/>
+				<edgechain loop="1">
+					<vertex x="-200" y="110"/>
+					<vertex x="200" y="110"/>
+					<vertex x="200" y="-110"/>
+					<vertex x="-200" y="-110"/>
 					<restitution value="0"/>
 					<friction value="0"/>
 					<category value="0"/>
 					<mask default="0" bit1="1"/>
-				</edge>
-				<edge>
-					<vertex1 x="200" y="110"/>
-					<vertex2 x="200" y="-110"/>
-					<restitution value="0"/>
-					<friction value="0"/>
-					<category value="0"/>
-					<mask default="0" bit1="1"/>
-				</edge>
-				<edge>
-					<vertex1 x="200" y="-110"/>
-					<vertex2 x="-200" y="-110"/>
-					<restitution value="0"/>
-					<friction value="0"/>
-					<category value="0"/>
-					<mask default="0" bit1="1"/>
-				</edge>
-				<edge>
-					<vertex1 x="-200" y="-110"/>
-					<vertex2 x="-200" y="110"/>
-					<restitution value="0"/>
-					<friction value="0"/>
-					<category value="0"/>
-					<mask default="0" bit1="1"/>
-				</edge>
+				</edgechain>
 			</body>
 		</collidable>
 	</entity>
