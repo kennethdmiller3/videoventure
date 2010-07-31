@@ -289,6 +289,7 @@ bool Configure(SoundTemplate &self, const TiXmlElement *element, unsigned int id
 
 	if (dividerkey.empty())
 	{
+		dividerkey.reserve(3);
 		dividerkey.push_back(1);
 		dividerkey.push_back(0);
 		dividerkey.push_back(*reinterpret_cast<unsigned int *>(&divider));
@@ -296,6 +297,7 @@ bool Configure(SoundTemplate &self, const TiXmlElement *element, unsigned int id
 	}
 	if (amplitudekey.empty())
 	{
+		amplitudekey.reserve(3);
 		amplitudekey.push_back(1);
 		amplitudekey.push_back(0);
 		amplitudekey.push_back(*reinterpret_cast<unsigned int *>(&amplitude));
@@ -303,6 +305,7 @@ bool Configure(SoundTemplate &self, const TiXmlElement *element, unsigned int id
 	}
 	if (offsetkey.empty())
 	{
+		offsetkey.reserve(3);
 		offsetkey.push_back(1);
 		offsetkey.push_back(0);
 		offsetkey.push_back(*reinterpret_cast<unsigned int *>(&offset));
@@ -376,16 +379,17 @@ bool Configure(SoundTemplate &self, const TiXmlElement *element, unsigned int id
 		break;
 	}
 
-	const int oversample = 4;
-	const float stepticks = float(frequency) / float(AUDIO_FREQUENCY * oversample);
+	const float sampleticks = float(frequency) / float(AUDIO_FREQUENCY);
+	const float ticksamples = float(AUDIO_FREQUENCY) / float(frequency);
+	const int startindex = xs_FloorToInt(self.mLength * ticksamples);
 
 	float counter = 0;
-	int poly1index = xs_FloorToInt(self.mLength * oversample * stepticks) % poly1size;
-	int poly2index = xs_FloorToInt(self.mLength * oversample * stepticks) % poly2size;
+	int poly1index = startindex % poly1size;
+	int poly2index = startindex % poly2size;
 	bool outputhigh = true;
 
 	float time = 0.0f;
-	const float steptime = 1.0f / float(AUDIO_FREQUENCY * oversample);
+	const float steptime = 1.0f / float(AUDIO_FREQUENCY);
 	int dividerhint = 0;
 	int amplitudehint = 0;
 	int offsethint = 0;
@@ -393,54 +397,70 @@ bool Configure(SoundTemplate &self, const TiXmlElement *element, unsigned int id
 	// for each sample...
 	for (int i = 0; i < samples; ++i)
 	{
-		// for each oversample...
-		float accum = 0;
-		for (int j = 0; j < oversample; ++j)
+		// get current divider value
+		float divider;
+		dividerfunc(&divider, 1, dividerkey[0], reinterpret_cast<const float * __restrict>(&dividerkey[1]), time, dividerhint);
+		divider = xs_RoundToInt(divider / dividerquant) * dividerquant;
+
+		// get current amplitude value
+		float amplitude;
+		amplitudefunc(&amplitude, 1, amplitudekey[0], reinterpret_cast<const float * __restrict>(&amplitudekey[1]), time, amplitudehint);
+		amplitude = xs_RoundToInt(amplitude / amplitudequant) * amplitudequant;
+
+		// get current offset value
+		float offset;
+		offsetfunc(&offset, 1, offsetkey[0], reinterpret_cast<const float * __restrict>(&offsetkey[1]), time, offsethint);
+		offset = xs_RoundToInt(offset / offsetquant) * offsetquant;
+
+		// advance time
+		time += steptime;
+
+		// accumulator
+		float accum = 0.0f;
+
+		// remaining subsample ticks
+		float ticks = sampleticks;
+
+		// if a transition will happen this sample...
+		while (ticks >= divider - counter)
 		{
-			// get current divider value
-			float divider;
-			dividerfunc(&divider, 1, dividerkey[0], reinterpret_cast<const float * __restrict>(&dividerkey[1]), time, dividerhint);
-			divider = xs_RoundToInt(divider / dividerquant) * dividerquant;
+			// accumulate value over interval
+			if (outputhigh)
+				accum += divider - counter;
 
-			// if the counter reaches the divider...
-			if (counter >= divider)
+			// use up ticks
+			ticks -= divider - counter;
+
+			// reset counter
+			counter = 0.0f;
+
+			// perform one update tick
+			if ((!poly1data) ||
+				(poly1data[poly1index = xs_FloorToInt(poly1index + divider) % poly1size]))
 			{
-				// update the counter
-				counter -= divider;
-
-				// perform one update tick
-				if ((!poly1data) ||
-					(poly1data[poly1index = xs_FloorToInt(poly1index + divider) % poly1size]))
-				{
-					if (poly2data)
-						outputhigh = poly2data[poly2index = xs_FloorToInt(poly2index + divider) % poly2size];
-					else
-						outputhigh = !outputhigh;
-				}
+				if (poly2data)
+					outputhigh = poly2data[poly2index = xs_FloorToInt(poly2index + divider) % poly2size];
+				else
+					outputhigh = !outputhigh;
 			}
-
-			// get current amplitude value
-			float amplitude;
-			amplitudefunc(&amplitude, 1, amplitudekey[0], reinterpret_cast<const float * __restrict>(&amplitudekey[1]), time, amplitudehint);
-			amplitude = xs_RoundToInt(amplitude / amplitudequant) * amplitudequant;
-
-			// get current offset value
-			float offset;
-			offsetfunc(&offset, 1, offsetkey[0], reinterpret_cast<const float * __restrict>(&offsetkey[1]), time, offsethint);
-			offset = xs_RoundToInt(offset / offsetquant) * offsetquant;
-
-			// accumulate value
-			accum += offset + (outputhigh ? amplitude : -amplitude);
-
-			// advance the counter
-			counter += stepticks;
-
-			// advance time
-			time += steptime;
 		}
 
+		// accumulate value over interval
+		if (outputhigh)
+			accum += ticks;
+
+		// use up remaining fraction
+		counter += ticks;
+
+		// normalize accumulator to [-1..1]
+		accum *= ticksamples;
+		accum += accum;
+		accum -= 1.0f;
+
+		// compute sample value
+		short sample = short(Clamp(xs_RoundToInt(SHRT_MAX * (offset + amplitude * accum)), SHRT_MIN, SHRT_MAX));
+
 		// append sample
-		short sample = short(Clamp(xs_RoundToInt(accum * 32767.0f / oversample), SHRT_MIN, SHRT_MAX));
 		static_cast<short *>(self.mData)[self.mLength++] = sample;
 	}
 
