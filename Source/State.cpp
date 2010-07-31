@@ -143,7 +143,6 @@ bool StateTemplate::Configure(const TiXmlElement *element, unsigned int aId, uns
 	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
 		const char *value = child->Value();
-		DebugPrint("Processing %s (%s)\n", child->Value(), name);
 
 		switch (Hash(value))
 		{
@@ -166,7 +165,7 @@ bool StateTemplate::Configure(const TiXmlElement *element, unsigned int aId, uns
 				if (configure)
 					configure(mStateId, child);
 				else
-					DebugPrint("Unrecognized tag \"%s\"\n", value);
+					DebugPrint("state \"%s\" skipping item \"%s\"\n", namestring.c_str(), value);
 			}
 			break;
 		}

@@ -137,14 +137,18 @@ void ConfigureWorldItem(const TiXmlElement *element)
 	const char *name = element->Attribute("name");
 	if (name)
 		Database::name.Put(Hash(name), name);
-	DebugPrint("Processing %s (%s)\n", element->Value(), name);
 
 	// process world item
 	const Database::Loader::Entry &configure = Database::Loader::GetConfigure(Hash(value));
 	if (configure)
+	{
+		DebugPrint("processing %s \"%s\"\n", value, name);
 		configure(Hash(name), element);
+	}
 	else
-		DebugPrint("Unrecognized tag \"%s\"\n", value);
+	{
+		DebugPrint("skipping %s \"%s\"\n", value, name);
+	}
 }
 
 void ConfigureWorldItems(const TiXmlElement *element)

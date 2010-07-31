@@ -126,7 +126,7 @@ bool AimerTemplate::Configure(const TiXmlElement *element, unsigned int aId)
 				}
 				else
 				{
-					DebugPrint("Unrecognized behavior \"%s\"\n", child->Value());
+					DebugPrint("\"%s\" aimer skipping item \"%s\"\n", child->Value());
 				}
 			}
 			break;
