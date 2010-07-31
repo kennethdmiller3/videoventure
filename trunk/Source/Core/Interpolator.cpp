@@ -164,6 +164,7 @@ bool ConfigureInterpolatorItem(const TiXmlElement *element, std::vector<unsigned
 	}
 
 	// push into the buffer
+	buffer.reserve(buffer.size() + 1 + interpolator.mCount * interpolator.mStride);
 	buffer.push_back(interpolator.mCount);
 	for (int i = 0; i < interpolator.mCount * interpolator.mStride; i++)
 		buffer.push_back(*reinterpret_cast<unsigned int *>(&interpolator.mKeys[i]));
