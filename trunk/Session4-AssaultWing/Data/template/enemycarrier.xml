@@ -1,0 +1,131 @@
+<?xml version="1.0" ?>
+<template name="enemycarrier">
+	<collidable>
+		<body name="main">
+			<poly>
+				<vertex x="-4" y="48" />
+				<vertex x="-16" y="24" />
+				<vertex x="-16" y="-36" />
+				<vertex x="-10" y="-48" />
+				<vertex x="10" y="-48" />
+				<vertex x="16" y="-36" />
+				<vertex x="16" y="24" />
+				<vertex x="4" y="48" />
+				<density value="5" />
+				<friction value="0.5" />
+				<restitution value="0.5" />
+				<category value="3" />
+				<mask bit2="0" bit4="0" />
+			</poly>
+			<poly>
+				<vertex x="-4" y="-24" />
+				<vertex x="-8" y="-28" />
+				<vertex x="-8" y="-36" />
+				<vertex x="-4" y="-44" />
+				<vertex x="4" y="-44" />
+				<vertex x="8" y="-36" />
+				<vertex x="8" y="-28" />
+				<vertex x="4" y="-24" />
+				<density value="1" />
+				<friction value="0.5" />
+				<restitution value="0.5" />
+				<category value="3" />
+			</poly>
+		</body>
+	</collidable>
+	<renderable radius="50">
+		<drawlist>
+			<color r="1.0" g="0.2" b="0.1" a="1.0" />
+			<triangle_strip>
+				<vertex x="4" y="-24" />
+				<vertex x="-4" y="-24" />
+				<vertex x="8" y="-28" />
+				<vertex x="-8" y="-28" />
+				<vertex x="8" y="-36" />
+				<vertex x="-8" y="-36" />
+				<vertex x="4" y="-44" />
+				<vertex x="-4" y="-44" />
+			</triangle_strip>
+			<color r="0.3" g="0.3" b="0.3" a="1.0" />
+			<triangle_strip>
+				<vertex x="4" y="48" />
+				<vertex x="-4" y="48" />
+				<vertex x="16" y="24" />
+				<vertex x="-16" y="24" />
+				<vertex x="16" y="12" />
+				<vertex x="-16" y="12" />
+				<vertex x="12" y="10" />
+				<vertex x="-12" y="10" />
+				<vertex x="12" y="-2" />
+				<vertex x="-12" y="-2" />
+				<vertex x="16" y="-4" />
+				<vertex x="-16" y="-4" />
+				<vertex x="16" y="-12" />
+				<vertex x="-16" y="-12" />
+				<vertex x="12" y="-14" />
+				<vertex x="-12" y="-14" />
+				<vertex x="12" y="-26" />
+				<vertex x="-12" y="-26" />
+				<vertex x="16" y="-28" />
+				<vertex x="-16" y="-28" />
+				<vertex x="16" y="-36" />
+				<vertex x="-16" y="-36" />
+				<vertex x="12" y="-44" />
+				<vertex x="-12" y="-44" />
+				<vertex x="10" y="-48" />
+				<vertex x="-10" y="-48" />
+			</triangle_strip>
+		</drawlist>
+	</renderable>
+	<aimer range="512" attack1="192" attack2="256" angle1="90" angle2="180" drift="0.5" wanderturn="0.25" wanderturnrate="0.25" leading="0" close="96" />
+	<ship maxveloc="90" maxaccel="10" minaccel="10" maxomega="0.1" />
+	<damagable health="200" spawnondeath="enemycarrierexplosion" />
+	<link name="lgun" secondary="enemyweaponmissile">
+		<offset x="10" y="36" angle="-30" />
+	</link>
+	<link name="rgun" secondary="enemyweaponmissile">
+		<offset x="-10" y="36" angle="30" />
+	</link>
+	<link name="lfbay" secondary="enemylaunchbay">
+		<offset x="16" y="4" angle="-90" />
+		<weapon>
+			<shot phase="0" cycle="2" />
+		</weapon>
+	</link>
+	<link name="rfbay" secondary="enemylaunchbay">
+		<offset x="-16" y="4" angle="90" />
+		<weapon>
+			<shot phase="0" cycle="2" />
+		</weapon>
+	</link>
+	<link name="lbbay" secondary="enemylaunchbay">
+		<offset x="16" y="-20" angle="-90" />
+		<weapon>
+			<shot phase="1" cycle="2" />
+		</weapon>
+	</link>
+	<link name="rbbay" secondary="enemylaunchbay">
+		<offset x="-16" y="-20" angle="90" />
+		<weapon>
+			<shot phase="1" cycle="2" />
+		</weapon>
+	</link>
+	<link name="ffturret" secondary="enemyturretmount3" updateangle="0">
+		<offset x="0" y="32" angle="0" />
+	</link>
+	<link name="lfturret" secondary="enemyturretmount1" updateangle="0">
+		<offset x="8" y="20" angle="-30" />
+	</link>
+	<link name="rfturret" secondary="enemyturretmount1" updateangle="0">
+		<offset x="-8" y="20" angle="30" />
+	</link>
+	<link name="mturret" secondary="enemyturretmount2" updateangle="0">
+		<offset x="0" y="8" angle="0" />
+	</link>
+	<link name="bturret" secondary="enemyturretmount2" updateangle="0">
+		<offset x="0" y="-10" angle="0" />
+	</link>
+	<team name="red" />
+	<points value="2500" />
+	<capturable resistance="200" spawnoncapture="friendcarrier" />
+</template>

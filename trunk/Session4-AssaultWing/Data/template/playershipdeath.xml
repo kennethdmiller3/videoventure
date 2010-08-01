@@ -1,0 +1,29 @@
+<?xml version="1.0" ?>
+<template name="playershipdeath">
+	<collidable>
+		<body name="main">
+			<circle radius="8">
+				<density value="1" />
+				<friction value="0.5" />
+				<restitution value="0.5" />
+				<category value="1" />
+				<mask bit2="0" bit4="0" />
+			</circle>
+			<damping linear="5.0" angular="5.0" />
+		</body>
+	</collidable>
+	<renderable radius="8" period="0.05">
+		<color>
+			<key time="0.000000" r="1.0" g="1.0" b="1.0" a="1.0" />
+			<key time="0.033333" r="1.0" g="1.0" b="1.0" a="1.0" />
+			<key time="0.033333" r="0.0" g="0.0" b="0.0" a="1.0" />
+			<key time="0.050000" r="0.0" g="0.0" b="0.0" a="1.0" />
+		</color>
+		<calllist name="playership" />
+	</renderable>
+	<expire time="0.3" spawnonexpire="playershipexplosion" />
+	<soundcue>
+		<cue sound="stargate-playershipdeath" />
+	</soundcue>
+	<playercontroller />
+</template>

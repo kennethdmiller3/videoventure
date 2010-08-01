@@ -1,0 +1,157 @@
+<?xml version="1.0" ?>
+<template name="enemyspawncluster">
+	<link name="enemyshipshieldwingwarp">
+		<offset x="0" y="32" />
+		<spawner>
+			<velocity x="0" y="60" />
+			<spawn name="enemyshipshieldwingwarp" start="2" cycle="30" track="1" />
+		</spawner>
+	</link>
+	<link name="enemyshiprocketwingwarp">
+		<offset x="112" y="32" />
+		<spawner>
+			<velocity x="0" y="60" />
+			<spawn name="enemyshiprocketwingwarp" start="2" cycle="30" track="1" />
+		</spawner>
+	</link>
+	<link name="enemyshipmissilewingwarp">
+		<offset x="-112" y="32" />
+		<spawner>
+			<velocity x="0" y="60" />
+			<spawn name="enemyshipmissilewingwarp" start="2" cycle="30" track="1" />
+		</spawner>
+	</link>
+	<link name="enemybomberspawn1">
+		<offset x="-48" y="32" />
+		<spawner>
+			<velocity x="0" y="60" />
+			<spawn name="enemybomberwarp" start="30" cycle="30" track="2" />
+		</spawner>
+	</link>
+	<link name="enemybomberspawn2">
+		<offset x="48" y="32" />
+		<spawner>
+			<velocity x="0" y="60" />
+			<spawn name="enemybomberwarp" start="30" cycle="30" track="2" />
+		</spawner>
+	</link>
+	<link name="enemyfirebomberspawn1">
+		<offset x="-64" y="32" />
+		<spawner>
+			<velocity x="0" y="60" />
+			<spawn name="enemyfirebomberwarp" start="60" cycle="30" track="1" />
+		</spawner>
+	</link>
+	<link name="enemyfirebomberspawn2">
+		<offset x="64" y="32" />
+		<spawner>
+			<velocity x="0" y="60" />
+			<spawn name="enemyfirebomberwarp" start="60" cycle="30" track="1" />
+		</spawner>
+	</link>
+	<link name="enemydynamospawn1">
+		<offset x="-80" y="32" />
+		<spawner>
+			<velocity x="0" y="60" />
+			<spawn name="enemydynamowarp" start="90" cycle="30" track="1" />
+		</spawner>
+	</link>
+	<link name="enemydynamospawn2">
+		<offset x="80" y="32" />
+		<spawner>
+			<velocity x="0" y="60" />
+			<spawn name="enemydynamowarp" start="90" cycle="30" track="1" />
+		</spawner>
+	</link>
+	<link name="enemyshipsmallspawn1">
+		<offset x="-96" y="32" />
+		<spawner>
+			<velocity x="0" y="60" />
+			<spawn name="enemyshipsmallwarp" start="120" cycle="30" track="1" />
+		</spawner>
+	</link>
+	<link name="enemyshipsmallspawn2">
+		<offset x="96" y="32" />
+		<spawner>
+			<velocity x="0" y="60" />
+			<spawn name="enemyshipsmallwarp" start="120" cycle="30" track="1" />
+		</spawner>
+	</link>
+	<link name="enemypodspawn1">
+		<offset x="-64" y="32" />
+		<spawner>
+			<velocity x="0" y="60" />
+			<spawn name="enemypodwarp" start="180" cycle="30" track="1" />
+		</spawner>
+	</link>
+	<link name="enemypodspawn2">
+		<offset x="64" y="32" />
+		<spawner>
+			<velocity x="0" y="60" />
+			<spawn name="enemypodwarp" start="180" cycle="30" track="1" />
+		</spawner>
+	</link>
+	<link name="enemycommandshipspawn1">
+		<offset x="-80" y="32" />
+		<spawner>
+			<velocity x="0" y="60" />
+			<spawn name="enemycommandshipwarp" start="240" cycle="60" track="1" />
+		</spawner>
+	</link>
+	<link name="enemycommandshipspawn2">
+		<offset x="80" y="32" />
+		<spawner>
+			<velocity x="0" y="60" />
+			<spawn name="enemycommandshipwarp" start="240" cycle="60" track="1" />
+		</spawner>
+	</link>
+	<link name="enemywarriorspawn1">
+		<offset x="-80" y="32" />
+		<spawner>
+			<velocity x="0" y="60" />
+			<spawn name="enemywarriorwarp" start="360" cycle="60" track="1" />
+		</spawner>
+	</link>
+	<link name="enemywarriorspawn2">
+		<offset x="80" y="32" />
+		<spawner>
+			<velocity x="0" y="60" />
+			<spawn name="enemywarriorwarp" start="360" cycle="60" track="1" />
+		</spawner>
+	</link>
+	<link name="enemyshipspawn1">
+		<offset x="-32" y="32" />
+		<spawner>
+			<velocity x="0" y="60" />
+			<spawn name="enemyshipwarp" start="480" cycle="60" track="1" />
+		</spawner>
+	</link>
+	<link name="enemyshipspawn2">
+		<offset x="32" y="32" />
+		<spawner>
+			<velocity x="0" y="60" />
+			<spawn name="enemyshipwarp" start="480" cycle="60" track="1" />
+		</spawner>
+	</link>
+	<link name="enemylasershipspawn1">
+		<offset x="-128" y="32" />
+		<spawner>
+			<velocity x="0" y="60" />
+			<spawn name="enemylasershipwarp" start="540" cycle="60" track="1" />
+		</spawner>
+	</link>
+	<link name="enemylasershipspawn2">
+		<offset x="128" y="32" />
+		<spawner>
+			<velocity x="0" y="60" />
+			<spawn name="enemylasershipwarp" start="540" cycle="60" track="1" />
+		</spawner>
+	</link>
+	<link name="enemycarrierspawn">
+		<offset x="0" y="48" />
+		<spawner>
+			<velocity x="0" y="60" />
+			<spawn name="enemycarrier" start="600" cycle="120" track="1" />
+		</spawner>
+	</link>
+</template>

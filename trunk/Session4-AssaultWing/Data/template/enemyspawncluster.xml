@@ -1,0 +1,60 @@
+<?xml version="1.0" ?>
+<template name="enemyspawncluster">
+	<link name="enemyshipsmallspawn1" secondary="enemyshipsmallspawn">
+		<offset x="-192" y="8" />
+	</link>
+	<link name="enemyshipsmallspawn2" secondary="enemyshipsmallspawn">
+		<offset x="192" y="8" />
+	</link>
+	<link name="enemyfirebomberspawn1" secondary="enemyfirebomberspawn">
+		<offset x="-128" y="8" />
+	</link>
+	<link name="enemyfirebomberspawn2" secondary="enemyfirebomberspawn">
+		<offset x="128" y="8" />
+	</link>
+	<link name="enemybomberspawn1" secondary="enemybomberspawn">
+		<offset x="-96" y="8" />
+	</link>
+	<link name="enemybomberspawn2" secondary="enemybomberspawn">
+		<offset x="96" y="8" />
+	</link>
+	<link name="enemydynamospawn1" secondary="enemydynamospawn">
+		<offset x="-160" y="8" />
+	</link>
+	<link name="enemydynamospawn2" secondary="enemydynamospawn">
+		<offset x="160" y="8" />
+	</link>
+	<link name="enemypodspawn1" secondary="enemypodspawn">
+		<offset x="-128" y="8" />
+	</link>
+	<link name="enemypodspawn2" secondary="enemypodspawn">
+		<offset x="128" y="8" />
+	</link>
+	<link name="enemycommandshipspawn1" secondary="enemycommandshipspawn">
+		<offset x="-160" y="8" />
+	</link>
+	<link name="enemycommandshipspawn2" secondary="enemycommandshipspawn">
+		<offset x="160" y="8" />
+	</link>
+	<link name="enemywarriorspawn1" secondary="enemywarriorspawn">
+		<offset x="-160" y="8" />
+	</link>
+	<link name="enemywarriorspawn2" secondary="enemywarriorspawn">
+		<offset x="160" y="8" />
+	</link>
+	<link name="enemyshipspawn1" secondary="enemyshipspawn">
+		<offset x="-64" y="8" />
+	</link>
+	<link name="enemyshipspawn2" secondary="enemyshipspawn">
+		<offset x="64" y="8" />
+	</link>
+	<link name="enemylasershipspawn1" secondary="enemylasershipspawn">
+		<offset x="-256" y="8" />
+	</link>
+	<link name="enemylasershipspawn2" secondary="enemylasershipspawn">
+		<offset x="256" y="8" />
+	</link>
+	<link name="enemycarrierspawn" secondary="enemycarrierspawn">
+		<offset x="0" y="0" />
+	</link>
+</template>

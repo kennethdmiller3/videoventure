@@ -1,0 +1,6 @@
+<?xml version="1.0" ?>
+<template name="enemyshipshieldwing" type="enemyshipwing">
+	<damagable spawnondeath="pickupshieldwing" />
+	<link name="lwing" secondary="enemyshieldwing_l" />
+	<link name="rwing" secondary="enemyshieldwing_r" />
+</template>

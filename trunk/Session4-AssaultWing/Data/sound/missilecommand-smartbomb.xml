@@ -1,0 +1,56 @@
+<?xml version="1.0" ?>
+<sound name="missilecommand-smartbomb">
+	<pokey length="0.097536" frequency="1250000" tone="pure">
+		<divider quantize="28" rate="1250000" interpolate="0">
+			<step time="4942" value="1372" />
+			<step time="138" value="28" />
+			<step time="4942" value="1316" />
+			<step time="138" value="28" />
+			<step time="4942" value="1260" />
+			<step time="138" value="28" />
+			<step time="4942" value="1204" />
+			<step time="138" value="28" />
+			<step time="4942" value="1148" />
+			<step time="138" value="28" />
+			<step time="4942" value="1092" />
+			<step time="138" value="28" />
+			<step time="4942" value="1036" />
+			<step time="138" value="28" />
+			<step time="4942" value="980" />
+			<step time="138" value="28" />
+			<step time="4942" value="924" />
+			<step time="138" value="28" />
+			<step time="4942" value="868" />
+			<step time="138" value="28" />
+			<step time="4942" value="812" />
+			<step time="138" value="28" />
+			<step time="4942" value="756" />
+			<step time="138" value="28" />
+			<step time="4942" value="700" />
+			<step time="138" value="28" />
+			<step time="4942" value="644" />
+			<step time="138" value="28" />
+			<step time="4942" value="588" />
+			<step time="138" value="28" />
+			<step time="4942" value="532" />
+			<step time="138" value="28" />
+			<step time="4942" value="476" />
+			<step time="138" value="28" />
+			<step time="4942" value="420" />
+			<step time="138" value="28" />
+			<step time="4942" value="364" />
+			<step time="138" value="28" />
+			<step time="4942" value="308" />
+			<step time="138" value="28" />
+			<step time="4942" value="252" />
+			<step time="138" value="28" />
+			<step time="4942" value="196" />
+			<step time="138" value="28" />
+			<step time="4942" value="140" />
+			<step time="138" value="28" />
+			<step time="4942" value="84" />
+			<step time="138" value="28" />
+		</divider>
+		<amplitude value="0.266667" />
+	</pokey>
+</sound>
