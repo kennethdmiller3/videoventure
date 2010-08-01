@@ -13,8 +13,8 @@
 	</collidable>
 	<renderable radius="7">
 		<scale x="-1" />
-		<calllist name="enemyrocketwing" />
 		<calllist name="rocketwing" />
+		<calllist name="enemyrocketwing" />
 	</renderable>
 	<link name="fire1">
 		<offset x="-1.5" />

@@ -13,16 +13,9 @@
 	</collidable>
 	<renderable radius="4">
 		<drawlist>
-			<color r="0.5" g="0.5" b="0.5" a="1.0" />
-			<quads>
-				<vertex x="0.5" y="4" />
-				<vertex x="-0.5" y="4" />
-				<vertex x="-1" y="1" />
-				<vertex x="1" y="1" />
-			</quads>
 			<pushmatrix>
-				<color r="0.7" g="0.7" b="0.7" a="1.0" />
-				<scale x="2" y="2" />
+				<color r="0.1" g="0.2" b="1.0" a="1.0" />
+				<scale x="3" y="3" />
 				<calllist name="circle12" />
 			</pushmatrix>
 			<pushmatrix>
@@ -31,10 +24,17 @@
 				<calllist name="circle12" />
 			</pushmatrix>
 			<pushmatrix>
-				<color r="0.1" g="0.2" b="1.0" a="1.0" />
-				<scale x="3" y="3" />
+				<color r="0.7" g="0.7" b="0.7" a="1.0" />
+				<scale x="2" y="2" />
 				<calllist name="circle12" />
 			</pushmatrix>
+			<color r="0.5" g="0.5" b="0.5" a="1.0" />
+			<quads>
+				<vertex x="0.5" y="4" />
+				<vertex x="-0.5" y="4" />
+				<vertex x="-1" y="1" />
+				<vertex x="1" y="1" />
+			</quads>
 		</drawlist>
 	</renderable>
 	<link name="lgun">

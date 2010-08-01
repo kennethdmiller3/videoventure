@@ -1,8 +1,8 @@
 <?xml version="1.0" ?>
 <drawlist name="bitcore">
 	<pushmatrix>
-		<color r="1.0" g="1.0" b="1.0" a="1.0" />
-		<scale x="1.5" y="1.5" />
+		<color r="0.5" g="1.0" b="0.0" a="0.25" />
+		<scale x="2.5" y="2.5" />
 		<calllist name="circle16" />
 	</pushmatrix>
 	<pushmatrix>
@@ -11,8 +11,8 @@
 		<calllist name="circle16" />
 	</pushmatrix>
 	<pushmatrix>
-		<color r="0.5" g="1.0" b="0.0" a="0.25" />
-		<scale x="2.5" y="2.5" />
+		<color r="1.0" g="1.0" b="1.0" a="1.0" />
+		<scale x="1.5" y="1.5" />
 		<calllist name="circle16" />
 	</pushmatrix>
 </drawlist>

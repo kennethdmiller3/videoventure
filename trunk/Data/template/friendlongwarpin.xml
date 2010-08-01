@@ -1,19 +1,6 @@
 <?xml version="1.0" ?>
 <template name="friendlongwarpin">
 	<renderable radius="20">
-		<block start="2.0" length="0.4">
-			<pushmatrix>
-				<color>
-					<key time="0.0" r="0.0" g="5.0" b="1.0" a="0.0" />
-					<key time="0.4" r="1.0" g="1.0" b="1.0" a="1.0" />
-				</color>
-				<scale>
-					<key time="0.0" x="0.0" y="0.0" />
-					<key time="0.4" x="8.0" y="8.0" />
-				</scale>
-				<calllist name="circle16" />
-			</pushmatrix>
-		</block>
 		<pushmatrix>
 			<color>
 				<key time="0.0" r="0.0" g="0.0" b="1.0" a="0.0" />
@@ -39,6 +26,19 @@
 				<clear name="p" />
 			</quads>
 		</pushmatrix>
+		<block start="2.0" length="0.4">
+			<pushmatrix>
+				<color>
+					<key time="0.0" r="0.0" g="5.0" b="1.0" a="0.0" />
+					<key time="0.4" r="1.0" g="1.0" b="1.0" a="1.0" />
+				</color>
+				<scale>
+					<key time="0.0" x="0.0" y="0.0" />
+					<key time="0.4" x="8.0" y="8.0" />
+				</scale>
+				<calllist name="circle16" />
+			</pushmatrix>
+		</block>
 	</renderable>
 	<expire time="2.4" />
 	<playercontroller />

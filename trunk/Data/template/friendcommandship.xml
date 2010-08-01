@@ -11,6 +11,30 @@
 		</body>
 	</collidable>
 	<renderable radius="6" period="0.4">
+		<pushmatrix>
+			<rotate>
+				<key time="0.0" angle="0" />
+				<key time="0.4" angle="180" />
+			</rotate>
+			<drawlist>
+				<pushmatrix>
+					<scale x="6" y="6" />
+
+					<color r="0.1" g="0.2" b="1.0" a="1.0" />
+					<calllist name="circle8" />
+					<color r="0.1" g="0.8" b="1.0" a="1.0" />
+					<calllist name="diamond" />
+					<rotate angle="45" />
+					<calllist name="diamond" />
+				</pushmatrix>
+				<pushmatrix>
+					<rotate angle="22.5" />
+					<scale x="4.24" y="4.24" />
+					<color r="0.1" g="0.2" b="1.0" a="1.0" />
+					<calllist name="circle8" />
+				</pushmatrix>
+			</drawlist>
+		</pushmatrix>
 		<color>
 			<key time="0.0" r="1.0" g="1.0" b="1.0" a="1.0" />
 			<key time="0.2" r="0.1" g="0.8" b="1.0" a="1.0" />
@@ -21,29 +45,6 @@
 			<vertex x="-2" y="-1" />
 			<vertex x="2" y="-1" />
 		</triangles>
-		<pushmatrix>
-			<rotate>
-				<key time="0.0" angle="0" />
-				<key time="0.4" angle="180" />
-			</rotate>
-			<drawlist>
-				<pushmatrix>
-					<rotate angle="22.5" />
-					<scale x="4.24" y="4.24" />
-					<color r="0.1" g="0.2" b="1.0" a="1.0" />
-					<calllist name="circle8" />
-				</pushmatrix>
-				<pushmatrix>
-					<scale x="6" y="6" />
-					<color r="0.1" g="0.8" b="1.0" a="1.0" />
-					<calllist name="diamond" />
-					<rotate angle="45" />
-					<calllist name="diamond" />
-					<color r="0.1" g="0.2" b="1.0" a="1.0" />
-					<calllist name="circle8" />
-				</pushmatrix>
-			</drawlist>
-		</pushmatrix>
 	</renderable>
 	<!--aimer range="256" attack1="128" attack2="128" angle2="180" drift="0.25" wanderturn="0.5" wanderturnrate="0.25" leading="240" evade="1" close="64" /-->
 	<aimer>
@@ -56,7 +57,8 @@
 		<aim strength="1" leading="240" />
 		<evade strength="1" />
 		<close range="64" />
-	</aimer>	<ship maxveloc="45" maxaccel="90" minaccel="10" maxomega="2.0" />
+	</aimer>
+	<ship maxveloc="45" maxaccel="90" minaccel="10" maxomega="2.0" />
 	<damagable health="10" spawnondeath="friendexplosion" />
 	<link name="gun" secondary="friendweapon">
 		<offset x="0" y="4" angle="0" />

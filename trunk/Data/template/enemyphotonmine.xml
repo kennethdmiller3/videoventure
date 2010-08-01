@@ -12,6 +12,14 @@
 		</body>
 	</collidable>
 	<renderable radius="3.5" period="0.066667">
+		<drawlist>
+			<color r="1.0" g="1.0" b="1.0" a="1.0" />
+			<triangles>
+				<vertex x="0" y="3" />
+				<vertex x="-3" y="-1.5" />
+				<vertex x="3" y="-1.5" />
+			</triangles>
+		</drawlist>
 		<color>
 			<key time="0.000000" r="1.0" g="0.8" b="0.1" a="1.0" />
 			<key time="0.033333" r="1.0" g="0.8" b="0.1" a="1.0" />
@@ -23,12 +31,6 @@
 				<vertex x="0" y="2" />
 				<vertex x="-2" y="-1" />
 				<vertex x="2" y="-1" />
-			</triangles>
-			<color r="1.0" g="1.0" b="1.0" a="1.0" />
-			<triangles>
-				<vertex x="0" y="3" />
-				<vertex x="-3" y="-1.5" />
-				<vertex x="3" y="-1.5" />
 			</triangles>
 		</drawlist>
 	</renderable>

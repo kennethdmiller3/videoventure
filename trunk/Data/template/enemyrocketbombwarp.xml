@@ -2,45 +2,6 @@
 <template name="enemyrocketbombwarp">
 	<expire time="1.0" switchonexpire="enemyrocketbomb" />
 	<renderable radius="64">
-		<block start="0.8" length="0.2">
-			<pushmatrix>
-				<color>
-					<key time="0.0" r="1.0" g="0.7" b="0.4" a="0.0" />
-					<key time="0.2" r="1.0" g="1.0" b="1.0" a="1.0" />
-				</color>
-				<scale>
-					<key time="0.0" x="0.0" y="0.0" />
-					<key time="0.2" x="3.0" y="3.0" />
-				</scale>
-				<calllist name="circle16" />
-			</pushmatrix>
-		</block>
-		<block start="0.6" length="0.4">
-			<pushmatrix>
-				<color>
-					<key time="0.0" r="1.0" g="0.0" b="0.0" a="0.0" />
-					<key time="0.4" r="1.0" g="0.7" b="0.4" a="0.5" />
-				</color>
-				<scale>
-					<key time="0.0" x="0.0" y="0.0" />
-					<key time="0.4" x="5.0" y="5.0" />
-				</scale>
-				<calllist name="circle16" />
-			</pushmatrix>
-		</block>
-		<block start="0.4" length="0.6">
-			<pushmatrix>
-				<color>
-					<key time="0.0" r="1.0" g="0.0" b="0.0" a="0.0" />
-					<key time="0.6" r="1.0" g="0.5" b="0.0" a="0.25" />
-				</color>
-				<scale>
-					<key time="0.0" x="0.0" y="0.0" />
-					<key time="0.6" x="8.0" y="8.0" />
-				</scale>
-				<calllist name="circle16" />
-			</pushmatrix>
-		</block>
 		<pushmatrix>
 			<color>
 				<key time="0.0" r="1.0" g="0.0" b="0.0" a="0.0" />
@@ -65,6 +26,45 @@
 				<rotate angle="18" />
 			</repeat>
 		</pushmatrix>
+		<block start="0.4" length="0.6">
+			<pushmatrix>
+				<color>
+					<key time="0.0" r="1.0" g="0.0" b="0.0" a="0.0" />
+					<key time="0.6" r="1.0" g="0.5" b="0.0" a="0.25" />
+				</color>
+				<scale>
+					<key time="0.0" x="0.0" y="0.0" />
+					<key time="0.6" x="8.0" y="8.0" />
+				</scale>
+				<calllist name="circle16" />
+			</pushmatrix>
+		</block>
+		<block start="0.6" length="0.4">
+			<pushmatrix>
+				<color>
+					<key time="0.0" r="1.0" g="0.0" b="0.0" a="0.0" />
+					<key time="0.4" r="1.0" g="0.7" b="0.4" a="0.5" />
+				</color>
+				<scale>
+					<key time="0.0" x="0.0" y="0.0" />
+					<key time="0.4" x="5.0" y="5.0" />
+				</scale>
+				<calllist name="circle16" />
+			</pushmatrix>
+		</block>
+		<block start="0.8" length="0.2">
+			<pushmatrix>
+				<color>
+					<key time="0.0" r="1.0" g="0.7" b="0.4" a="0.0" />
+					<key time="0.2" r="1.0" g="1.0" b="1.0" a="1.0" />
+				</color>
+				<scale>
+					<key time="0.0" x="0.0" y="0.0" />
+					<key time="0.2" x="3.0" y="3.0" />
+				</scale>
+				<calllist name="circle16" />
+			</pushmatrix>
+		</block>
 	</renderable>
 	<sound volume="0.25">
 		<!-- innerdelay: 39+6*delay, +6 when bit flips -->

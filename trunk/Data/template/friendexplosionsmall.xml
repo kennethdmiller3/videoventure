@@ -5,44 +5,17 @@
 		<cue sound="stargate-landerkill" />
 	</soundcue>
 	<renderable radius="200">
-		<block length="0.3">
+		<block length="1.0">
 			<pushmatrix>
 				<color>
-					<key time="0.0" r="1.0" g="1.0" b="1.0" a="1.0" />
-					<key time="0.3" r="1.0" g="1.0" b="1.0" a="0.0" />
-				</color>
-				<scale>
-					<key time="0.0" x="20.0" y="20.0" />
-					<key time="0.3" x="0.0" y="0.0" />
-				</scale>
-				<calllist name="circle16" />
-			</pushmatrix>
-		</block>
-		<block length="0.2">
-			<pushmatrix>
-				<color>
-					<key time="0.0" r="1.0" g="1.0" b="1.0" a="0.1" />
-					<key time="0.2" r="1.0" g="1.0" b="1.0" a="0.0" />
-				</color>
-				<scale>
-					<key time="0.0" x="20.0" y="20.0" />
-					<key time="0.2" x="100.0" y="100.0" />
-				</scale>
-				<calllist name="circle32" />
-			</pushmatrix>
-		</block>
-		<block length="2.0">
-			<pushmatrix>
-				<color>
-					<key time="0.0" r="0.8" g="0.9" b="1.0" a="1.0" />
-					<key time="1.0" r="0.0" g="0.5" b="1.0" a="0.25" />
-					<key time="2.0" r="0.0" g="0.0" b="1.0" a="0.0" />
+					<key time="0.0" r="0.4" g="0.7" b="1.0" a="0.5" />
+					<key time="1.0" r="0.0" g="0.0" b="1.0" a="0.0" />
 				</color>
 				<scale>
 					<key time="0.0" x="10.0" y="10.0" />
-					<key time="2.0" x="0.0" y="0.0" />
+					<key time="1.0" x="30.0" y="30.0" />
 				</scale>
-				<calllist name="circle16" />
+				<calllist name="circle32" />
 			</pushmatrix>
 		</block>
 		<block length="0.5">
@@ -71,17 +44,44 @@
 				</repeat>
 			</pushmatrix>
 		</block>
-		<block length="1.0">
+		<block length="2.0">
 			<pushmatrix>
 				<color>
-					<key time="0.0" r="0.4" g="0.7" b="1.0" a="0.5" />
-					<key time="1.0" r="0.0" g="0.0" b="1.0" a="0.0" />
+					<key time="0.0" r="0.8" g="0.9" b="1.0" a="1.0" />
+					<key time="1.0" r="0.0" g="0.5" b="1.0" a="0.25" />
+					<key time="2.0" r="0.0" g="0.0" b="1.0" a="0.0" />
 				</color>
 				<scale>
 					<key time="0.0" x="10.0" y="10.0" />
-					<key time="1.0" x="30.0" y="30.0" />
+					<key time="2.0" x="0.0" y="0.0" />
+				</scale>
+				<calllist name="circle16" />
+			</pushmatrix>
+		</block>
+		<block length="0.2">
+			<pushmatrix>
+				<color>
+					<key time="0.0" r="1.0" g="1.0" b="1.0" a="0.1" />
+					<key time="0.2" r="1.0" g="1.0" b="1.0" a="0.0" />
+				</color>
+				<scale>
+					<key time="0.0" x="20.0" y="20.0" />
+					<key time="0.2" x="100.0" y="100.0" />
 				</scale>
 				<calllist name="circle32" />
+			</pushmatrix>
+		</block>
+		<block length="0.3">
+			<pushmatrix>
+				<color>
+					<key time="0.0" r="1.0" g="1.0" b="1.0" a="1.0" />
+					<key time="0.3" r="1.0" g="1.0" b="1.0" a="0.0" />
+				</color>
+				<scale>
+					<key time="0.0" x="20.0" y="20.0" />
+					<key time="0.3" x="0.0" y="0.0" />
+				</scale>
+				<calllist name="circle16" />
 			</pushmatrix>
 		</block>
 	</renderable>
