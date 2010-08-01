@@ -2,7 +2,7 @@
 #include "Shield.h"
 #include "Damagable.h"
 #include "Link.h"
-#include "Drawlist.h"
+#include "Variable.h"
 #include "Resource.h"
 
 
@@ -120,15 +120,15 @@ Shield::Shield(const ShieldTemplate &aTemplate, unsigned int aId)
 , mAmmo(0)
 {
 	// add a damage listener
-	Database::Typed<Damagable::DamageListener> &listeners = Database::damagelistener.Open(mId);
-	listeners.Put(0x337519b0 /* "shield" */, Damagable::DamageListener(this, &Shield::Damage));
-	Database::damagelistener.Close(mId);
+	Damagable::DamageSignal &signal = Database::damagesignal.Open(mId);
+	signal.Connect(this, &Shield::Damage);
+	Database::damagesignal.Close(mId);
 
 	// if the shield uses ammo...
 	if (aTemplate.mCost)
 	{
 		// find the specified resource
-		mAmmo = FindResource(aId, aTemplate.mType);
+		mAmmo = FindResourceContainer(aId, aTemplate.mType);
 
 		// if found...
 		if (mAmmo)
@@ -141,11 +141,11 @@ Shield::Shield(const ShieldTemplate &aTemplate, unsigned int aId)
 			variables.Put(0x337519b0 /* "shield" */, resourcetemplate.mInitial / resourcetemplate.mMaximum);
 
 			// add a resource listener
-			Database::Typed<Database::Typed<Resource::ChangeListener> > &changelisteners = Database::resourcechangelistener.Open(mAmmo);
-			Database::Typed<Resource::ChangeListener> &changelistener = changelisteners.Open(aTemplate.mType);
-			changelistener.Put(0x337519b0 /* "shield" */, Resource::ChangeListener(this, &Shield::Change));
-			changelisteners.Close(aTemplate.mType);
-			Database::resourcechangelistener.Close(mAmmo);
+			Database::Typed<Resource::ChangeSignal> &changesignals = Database::resourcechange.Open(mAmmo);
+			Resource::ChangeSignal &changesignal = changesignals.Open(aTemplate.mType);
+			changesignal.Connect(this, &Shield::Change);
+			changesignals.Close(aTemplate.mType);
+			Database::resourcechange.Close(mAmmo);
 		}
 	}
 }
