@@ -28,35 +28,35 @@ namespace Platform
 		}
 	 
 		// components per pixel
-		aTexture.mComponents = surface->format->BytesPerPixel;
+		aTexture.mFormat = surface->format->BytesPerPixel;
 
 		// texture dimensions
 		aTexture.mWidth = surface->w;
 		aTexture.mHeight = surface->h;
 
 		// get the number of channels in the SDL surface
-		if (aTexture.mComponents == 4)     // contains an alpha channel
+		if (aTexture.mFormat == 4)     // contains an alpha channel
 		{
 			if (surface->format->Rmask == 0x000000ff)
-				aTexture.mFormat = GL_RGBA;
+				aTexture.mInternalFormat = GL_RGBA;
 			else
-				aTexture.mFormat = GL_BGRA;
+				aTexture.mInternalFormat = GL_BGRA;
 		}
-		else if (aTexture.mComponents == 3)     // no alpha channel
+		else if (aTexture.mFormat == 3)     // no alpha channel
 		{
 			if (surface->format->Rmask == 0x000000ff)
-				aTexture.mFormat = GL_RGB;
+				aTexture.mInternalFormat = GL_RGB;
 			else
-				aTexture.mFormat = GL_BGR;
+				aTexture.mInternalFormat = GL_BGR;
 		}
 		else
 		{
 			DebugPrint("warning: %s is not truecolor\n", aName);
-			aTexture.mFormat = GL_LUMINANCE;
+			aTexture.mInternalFormat = GL_LUMINANCE;
 		}
 
 		// copy pixel data
-		size_t count = aTexture.mWidth * aTexture.mHeight * aTexture.mComponents;
+		size_t count = aTexture.mWidth * aTexture.mHeight * surface->format->BytesPerPixel;
 		aTexture.mPixels = static_cast<unsigned char *>(malloc(count));
 		memcpy(aTexture.mPixels, surface->pixels, count);
 
