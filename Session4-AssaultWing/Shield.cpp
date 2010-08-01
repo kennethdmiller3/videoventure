@@ -35,6 +35,11 @@ namespace Database
 				AddConfigure(0x337519b0 /* "shield" */, Entry(this, &ShieldLoader::Configure));
 			}
 
+			~ShieldLoader()
+			{
+				RemoveConfigure(0x337519b0 /* "shield" */, Entry(this, &ShieldLoader::Configure));
+			}
+
 			void Configure(unsigned int aId, const TiXmlElement *element)
 			{
 				ShieldTemplate &shield = Database::shieldtemplate.Open(aId);
@@ -54,6 +59,12 @@ namespace Database
 			{
 				AddActivate(0xf7eb1c5a /* "shieldtemplate" */, Entry(this, &ShieldInitializer::Activate));
 				AddDeactivate(0xf7eb1c5a /* "shieldtemplate" */, Entry(this, &ShieldInitializer::Deactivate));
+			}
+
+			~ShieldInitializer()
+			{
+				RemoveActivate(0xf7eb1c5a /* "shieldtemplate" */, Entry(this, &ShieldInitializer::Activate));
+				RemoveDeactivate(0xf7eb1c5a /* "shieldtemplate" */, Entry(this, &ShieldInitializer::Deactivate));
 			}
 
 			void Activate(unsigned int aId)
