@@ -697,6 +697,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Source\Sound\SoundFile.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\Source\Sound\SoundMixer.cpp"
 				>
 			</File>
