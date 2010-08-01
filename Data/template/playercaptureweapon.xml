@@ -1,169 +1,169 @@
 <?xml version="1.0" ?>
 <template name="playercaptureweapon">
 	<renderable period="0.3">
-		<set name="dLL" type="translate" x="-0.382683" y="0.923880"/>
-		<set name="dL" type="translate" x="-0.195090" y="0.980785"/>
-		<set name="dC" type="translate" x="0.000000" y="1.000000"/>
-		<set name="dR" type="translate" x="0.195090" y="0.980785"/>
-		<set name="dRR" type="translate" x="0.382683" y="0.923880"/>
-		<set name="d3LL" type="translate" x="-1.148049" y="2.771640"/>
-		<set name="d3L" type="translate" x="-0.585270" y="2.942355"/>
-		<set name="d3C" type="translate" x="0.000000" y="3.000000"/>
-		<set name="d3R" type="translate" x="0.585270" y="2.942355"/>
-		<set name="d3RR" type="translate" x="1.148049" y="2.771640"/>
+		<set name="dLL" type="translate" x="-0.382683" y="0.923880" />
+		<set name="dL" type="translate" x="-0.195090" y="0.980785" />
+		<set name="dC" type="translate" x="0.000000" y="1.000000" />
+		<set name="dR" type="translate" x="0.195090" y="0.980785" />
+		<set name="dRR" type="translate" x="0.382683" y="0.923880" />
+		<set name="d3LL" type="translate" x="-1.148049" y="2.771640" />
+		<set name="d3L" type="translate" x="-0.585270" y="2.942355" />
+		<set name="d3C" type="translate" x="0.000000" y="3.000000" />
+		<set name="d3R" type="translate" x="0.585270" y="2.942355" />
+		<set name="d3RR" type="translate" x="1.148049" y="2.771640" />
 		<set name="pLL" type="position">
-			<key time="0.0" x="0.000000" y="0.000000"/>
-			<key time="0.1" x="-1.530732" y="3.695520"/>
-			<key time="0.1" x="0.000000" y="0.000000"/>
-			<key time="0.2" x="-1.530732" y="3.695520"/>
-			<key time="0.2" x="0.000000" y="0.000000"/>
-			<key time="0.3" x="-1.530732" y="3.695520"/>
+			<key time="0.0" x="0.000000" y="0.000000" />
+			<key time="0.1" x="-1.530732" y="3.695520" />
+			<key time="0.1" x="0.000000" y="0.000000" />
+			<key time="0.2" x="-1.530732" y="3.695520" />
+			<key time="0.2" x="0.000000" y="0.000000" />
+			<key time="0.3" x="-1.530732" y="3.695520" />
 		</set>
 		<set name="pL" type="position">
-			<key time="0.0" x="0.000000" y="0.000000"/>
-			<key time="0.1" x="-0.780360" y="3.923140"/>
-			<key time="0.1" x="0.000000" y="0.000000"/>
-			<key time="0.2" x="-0.780360" y="3.923140"/>
-			<key time="0.2" x="0.000000" y="0.000000"/>
-			<key time="0.3" x="-0.780360" y="3.923140"/>
+			<key time="0.0" x="0.000000" y="0.000000" />
+			<key time="0.1" x="-0.780360" y="3.923140" />
+			<key time="0.1" x="0.000000" y="0.000000" />
+			<key time="0.2" x="-0.780360" y="3.923140" />
+			<key time="0.2" x="0.000000" y="0.000000" />
+			<key time="0.3" x="-0.780360" y="3.923140" />
 		</set>
 		<set name="pC" type="position">
-			<key time="0.0" x="0.000000" y="0.000000"/>
-			<key time="0.1" x="0.000000" y="4.000000"/>
-			<key time="0.1" x="0.000000" y="0.000000"/>
-			<key time="0.2" x="0.000000" y="4.000000"/>
-			<key time="0.2" x="0.000000" y="0.000000"/>
-			<key time="0.3" x="0.000000" y="4.000000"/>
+			<key time="0.0" x="0.000000" y="0.000000" />
+			<key time="0.1" x="0.000000" y="4.000000" />
+			<key time="0.1" x="0.000000" y="0.000000" />
+			<key time="0.2" x="0.000000" y="4.000000" />
+			<key time="0.2" x="0.000000" y="0.000000" />
+			<key time="0.3" x="0.000000" y="4.000000" />
 		</set>
 		<set name="pR" type="position">
-			<key time="0.0" x="0.000000" y="0.000000"/>
-			<key time="0.1" x="0.780360" y="3.923140"/>
-			<key time="0.1" x="0.000000" y="0.000000"/>
-			<key time="0.2" x="0.780360" y="3.923140"/>
-			<key time="0.2" x="0.000000" y="0.000000"/>
-			<key time="0.3" x="0.780360" y="3.923140"/>
+			<key time="0.0" x="0.000000" y="0.000000" />
+			<key time="0.1" x="0.780360" y="3.923140" />
+			<key time="0.1" x="0.000000" y="0.000000" />
+			<key time="0.2" x="0.780360" y="3.923140" />
+			<key time="0.2" x="0.000000" y="0.000000" />
+			<key time="0.3" x="0.780360" y="3.923140" />
 		</set>
 		<set name="pRR" type="position">
-			<key time="0.0" x="0.000000" y="0.000000"/>
-			<key time="0.1" x="1.530732" y="3.695520"/>
-			<key time="0.1" x="0.000000" y="0.000000"/>
-			<key time="0.2" x="1.530732" y="3.695520"/>
-			<key time="0.2" x="0.000000" y="0.000000"/>
-			<key time="0.3" x="1.530732" y="3.695520"/>
+			<key time="0.0" x="0.000000" y="0.000000" />
+			<key time="0.1" x="1.530732" y="3.695520" />
+			<key time="0.1" x="0.000000" y="0.000000" />
+			<key time="0.2" x="1.530732" y="3.695520" />
+			<key time="0.2" x="0.000000" y="0.000000" />
+			<key time="0.3" x="1.530732" y="3.695520" />
 		</set>
 		<repeat count="10">
-			<add name="pLL" type="translate" variable="d3LL"/>
-			<add name="pL" type="translate" variable="d3L"/>
-			<add name="pC" type="translate" variable="d3C"/>
-			<add name="pR" type="translate" variable="d3R"/>
-			<add name="pRR" type="translate" variable="d3RR"/>
+			<add name="pLL" type="translate" variable="d3LL" />
+			<add name="pL" type="translate" variable="d3L" />
+			<add name="pC" type="translate" variable="d3C" />
+			<add name="pR" type="translate" variable="d3R" />
+			<add name="pRR" type="translate" variable="d3RR" />
 			<color>
-				<key time="0.0" r="0.0" g="1.0" b="0.85" a="1.0"/>
-				<key time="0.1" r="0.0" g="1.0" b="0.85" a="1.0"/>
-				<key time="0.1" r="0.0" g="0.45" b="0.85" a="1.0"/>
-				<key time="0.2" r="0.0" g="0.45" b="0.85" a="1.0"/>
-				<key time="0.2" r="0.0" g="0.85" b="1.0" a="1.0"/>
-				<key time="0.3" r="0.0" g="0.85" b="1.0" a="1.0"/>
+				<key time="0.0" r="0.0" g="0.45" b="0.85" a="1.0" />
+				<key time="0.1" r="0.0" g="0.45" b="0.85" a="1.0" />
+				<key time="0.1" r="0.0" g="0.85" b="1.0" a="1.0" />
+				<key time="0.2" r="0.0" g="0.85" b="1.0" a="1.0" />
+				<key time="0.2" r="0.0" g="1.0" b="0.85" a="1.0" />
+				<key time="0.3" r="0.0" g="1.0" b="0.85" a="1.0" />
 			</color>
 			<triangle_strip>
-				<vertex variable="pLL"/>
-				<add name="pLL" type="translate" variable="dLL"/>
-				<vertex variable="pLL"/>
-				<vertex variable="pL"/>
-				<add name="pL" type="translate" variable="dL"/>
-				<vertex variable="pL"/>
-				<vertex variable="pC"/>
-				<add name="pC" type="translate" variable="dC"/>
-				<vertex variable="pC"/>
-				<vertex variable="pR"/>
-				<add name="pR" type="translate" variable="dR"/>
-				<vertex variable="pR"/>
-				<vertex variable="pRR"/>
-				<add name="pRR" type="translate" variable="dRR"/>
-				<vertex variable="pRR"/>
+				<vertex variable="pLL" />
+				<add name="pLL" type="translate" variable="dLL" />
+				<vertex variable="pLL" />
+				<vertex variable="pL" />
+				<add name="pL" type="translate" variable="dL" />
+				<vertex variable="pL" />
+				<vertex variable="pC" />
+				<add name="pC" type="translate" variable="dC" />
+				<vertex variable="pC" />
+				<vertex variable="pR" />
+				<add name="pR" type="translate" variable="dR" />
+				<vertex variable="pR" />
+				<vertex variable="pRR" />
+				<add name="pRR" type="translate" variable="dRR" />
+				<vertex variable="pRR" />
 			</triangle_strip>
-			<add name="pLL" type="translate" variable="d3LL"/>
-			<add name="pL" type="translate" variable="d3L"/>
-			<add name="pC" type="translate" variable="d3C"/>
-			<add name="pR" type="translate" variable="d3R"/>
-			<add name="pRR" type="translate" variable="d3RR"/>
+			<add name="pLL" type="translate" variable="d3LL" />
+			<add name="pL" type="translate" variable="d3L" />
+			<add name="pC" type="translate" variable="d3C" />
+			<add name="pR" type="translate" variable="d3R" />
+			<add name="pRR" type="translate" variable="d3RR" />
 			<color>
-				<key time="0.0" r="0.0" g="0.85" b="1.0" a="1.0"/>
-				<key time="0.1" r="0.0" g="0.85" b="1.0" a="1.0"/>
-				<key time="0.1" r="0.0" g="1.0" b="0.85" a="1.0"/>
-				<key time="0.2" r="0.0" g="1.0" b="0.85" a="1.0"/>
-				<key time="0.2" r="0.0" g="0.45" b="0.85" a="1.0"/>
-				<key time="0.3" r="0.0" g="0.45" b="0.85" a="1.0"/>
+				<key time="0.0" r="0.0" g="0.85" b="1.0" a="1.0" />
+				<key time="0.1" r="0.0" g="0.85" b="1.0" a="1.0" />
+				<key time="0.1" r="0.0" g="1.0" b="0.85" a="1.0" />
+				<key time="0.2" r="0.0" g="1.0" b="0.85" a="1.0" />
+				<key time="0.2" r="0.0" g="0.45" b="0.85" a="1.0" />
+				<key time="0.3" r="0.0" g="0.45" b="0.85" a="1.0" />
 			</color>
 			<triangle_strip>
-				<vertex variable="pLL"/>
-				<add name="pLL" type="translate" variable="dLL"/>
-				<vertex variable="pLL"/>
-				<vertex variable="pL"/>
-				<add name="pL" type="translate" variable="dL"/>
-				<vertex variable="pL"/>
-				<vertex variable="pC"/>
-				<add name="pC" type="translate" variable="dC"/>
-				<vertex variable="pC"/>
-				<vertex variable="pR"/>
-				<add name="pR" type="translate" variable="dR"/>
-				<vertex variable="pR"/>
-				<vertex variable="pRR"/>
-				<add name="pRR" type="translate" variable="dRR"/>
-				<vertex variable="pRR"/>
+				<vertex variable="pLL" />
+				<add name="pLL" type="translate" variable="dLL" />
+				<vertex variable="pLL" />
+				<vertex variable="pL" />
+				<add name="pL" type="translate" variable="dL" />
+				<vertex variable="pL" />
+				<vertex variable="pC" />
+				<add name="pC" type="translate" variable="dC" />
+				<vertex variable="pC" />
+				<vertex variable="pR" />
+				<add name="pR" type="translate" variable="dR" />
+				<vertex variable="pR" />
+				<vertex variable="pRR" />
+				<add name="pRR" type="translate" variable="dRR" />
+				<vertex variable="pRR" />
 			</triangle_strip>
-			<add name="pLL" type="translate" variable="d3LL"/>
-			<add name="pL" type="translate" variable="d3L"/>
-			<add name="pC" type="translate" variable="d3C"/>
-			<add name="pR" type="translate" variable="d3R"/>
-			<add name="pRR" type="translate" variable="d3RR"/>
+			<add name="pLL" type="translate" variable="d3LL" />
+			<add name="pL" type="translate" variable="d3L" />
+			<add name="pC" type="translate" variable="d3C" />
+			<add name="pR" type="translate" variable="d3R" />
+			<add name="pRR" type="translate" variable="d3RR" />
 			<color>
-				<key time="0.0" r="0.0" g="0.45" b="0.85" a="1.0"/>
-				<key time="0.1" r="0.0" g="0.45" b="0.85" a="1.0"/>
-				<key time="0.1" r="0.0" g="0.85" b="1.0" a="1.0"/>
-				<key time="0.2" r="0.0" g="0.85" b="1.0" a="1.0"/>
-				<key time="0.2" r="0.0" g="1.0" b="0.85" a="1.0"/>
-				<key time="0.3" r="0.0" g="1.0" b="0.85" a="1.0"/>
+				<key time="0.0" r="0.0" g="1.0" b="0.85" a="1.0" />
+				<key time="0.1" r="0.0" g="1.0" b="0.85" a="1.0" />
+				<key time="0.1" r="0.0" g="0.45" b="0.85" a="1.0" />
+				<key time="0.2" r="0.0" g="0.45" b="0.85" a="1.0" />
+				<key time="0.2" r="0.0" g="0.85" b="1.0" a="1.0" />
+				<key time="0.3" r="0.0" g="0.85" b="1.0" a="1.0" />
 			</color>
 			<triangle_strip>
-				<vertex variable="pLL"/>
-				<add name="pLL" type="translate" variable="dLL"/>
-				<vertex variable="pLL"/>
-				<vertex variable="pL"/>
-				<add name="pL" type="translate" variable="dL"/>
-				<vertex variable="pL"/>
-				<vertex variable="pC"/>
-				<add name="pC" type="translate" variable="dC"/>
-				<vertex variable="pC"/>
-				<vertex variable="pR"/>
-				<add name="pR" type="translate" variable="dR"/>
-				<vertex variable="pR"/>
-				<vertex variable="pRR"/>
-				<add name="pRR" type="translate" variable="dRR"/>
-				<vertex variable="pRR"/>
+				<vertex variable="pLL" />
+				<add name="pLL" type="translate" variable="dLL" />
+				<vertex variable="pLL" />
+				<vertex variable="pL" />
+				<add name="pL" type="translate" variable="dL" />
+				<vertex variable="pL" />
+				<vertex variable="pC" />
+				<add name="pC" type="translate" variable="dC" />
+				<vertex variable="pC" />
+				<vertex variable="pR" />
+				<add name="pR" type="translate" variable="dR" />
+				<vertex variable="pR" />
+				<vertex variable="pRR" />
+				<add name="pRR" type="translate" variable="dRR" />
+				<vertex variable="pRR" />
 			</triangle_strip>
 		</repeat>
-		<clear name="pLL"/>
-		<clear name="pL"/>
-		<clear name="pC"/>
-		<clear name="pR"/>
-		<clear name="pRR"/>
-		<clear name="dLL"/>
-		<clear name="dL"/>
-		<clear name="dC"/>
-		<clear name="dR"/>
-		<clear name="dRR"/>
-		<clear name="d3LL"/>
-		<clear name="d3L"/>
-		<clear name="d3C"/>
-		<clear name="d3R"/>
-		<clear name="d3RR"/>
+		<clear name="pLL" />
+		<clear name="pL" />
+		<clear name="pC" />
+		<clear name="pR" />
+		<clear name="pRR" />
+		<clear name="dLL" />
+		<clear name="dL" />
+		<clear name="dC" />
+		<clear name="dR" />
+		<clear name="dRR" />
+		<clear name="d3LL" />
+		<clear name="d3L" />
+		<clear name="d3C" />
+		<clear name="d3R" />
+		<clear name="d3RR" />
 	</renderable>
-	<capture energy="10" consume="0" recover="0" strength="10" radius="128" angle="22.5"/>
+	<capture energy="10" consume="0" recover="0" strength="10" radius="128" angle="22.5" />
 	<sound volume="0.5" repeat="1">
-		<file name="galaga-tractorbeam.wav"/>
+		<file name="galaga-tractorbeam.wav" />
 	</sound>
 	<soundcue>
-		<cue name="fire" sound="playercaptureweapon"/>
+		<cue name="fire" sound="playercaptureweapon" />
 	</soundcue>
 </template>

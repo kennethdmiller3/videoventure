@@ -12,8 +12,8 @@
 		</body>
 	</collidable>
 	<renderable radius="7">
-		<calllist name="friendrocketwing" />
 		<calllist name="rocketwing" />
+		<calllist name="friendrocketwing" />
 	</renderable>
 	<link name="fire1">
 		<offset x="1.5" />

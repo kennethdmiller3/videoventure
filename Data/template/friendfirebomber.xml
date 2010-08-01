@@ -11,27 +11,31 @@
 		</body>
 	</collidable>
 	<renderable radius="6" period="1.0">
+		<rotate>
+			<key time="0.0" angle="0" />
+			<key time="1.0" angle="2700" />
+		</rotate>
 		<pushmatrix>
-			<rotate>
-				<key time="0.0" angle="0" />
-				<key time="1.0" angle="2700" />
-			</rotate>
+			<color>
+				<key time="0.0" r="0.1" g="0.2" b="1.0" a="1.0" />
+				<key time="0.5" r="0.1" g="0.8" b="1.0" a="1.0" />
+				<key time="1.0" r="0.1" g="0.2" b="1.0" a="1.0" />
+			</color>
+			<scale x="5.5" y="5.5" />
+			<calllist name="bowtie" />
+		</pushmatrix>
+		<pushmatrix>
+			<color r="1.0" g="1.0" b="1.0" a="1.0" />
+			<scale x="3.75" y="3.75" />
+			<calllist name="bowtie" />
+		</pushmatrix>
+		<pushmatrix>
 			<color>
 				<key time="0.0" r="0.1" g="0.8" b="1.0" a="1.0" />
 				<key time="0.5" r="0.1" g="0.2" b="1.0" a="1.0" />
 				<key time="1.0" r="0.1" g="0.8" b="1.0" a="1.0" />
 			</color>
 			<scale x="2.5" y="2.5" />
-			<calllist name="bowtie" />
-			<scale x="1.5" y="1.5" />
-			<color r="1.0" g="1.0" b="1.0" a="1.0" />
-			<calllist name="bowtie" />
-			<color>
-				<key time="0.0" r="0.1" g="0.2" b="1.0" a="1.0" />
-				<key time="0.5" r="0.1" g="0.8" b="1.0" a="1.0" />
-				<key time="1.0" r="0.1" g="0.2" b="1.0" a="1.0" />
-			</color>
-			<scale x="1.5" y="1.5" />
 			<calllist name="bowtie" />
 		</pushmatrix>
 	</renderable>

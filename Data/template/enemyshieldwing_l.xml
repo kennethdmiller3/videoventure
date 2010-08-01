@@ -22,6 +22,8 @@
 		</body>
 	</collidable>
 	<renderable radius="7" period="0.033333">
+		<calllist name="shieldwing" />
+		<calllist name="enemyshieldwing" />
 		<pushmatrix>
 			<translate x="1.25" />
 			<set name="s" type="scale" variable="shield" />
@@ -36,10 +38,10 @@
 					<key time="0.000000" r="0.0" g="1.0" b="0.5" a="5.0" />
 					<key time="0.033333" r="0.0" g="0.5" b="0.0" a="0.0" />
 				</set>
-				<mul name="c1" variable="cm" />
+				<mul name="c1" type="color" variable="cm" />
 				<add name="c1" type="color" r="1.0" g="0.0" b="0.0" a="0.0" />
 				<min name="c1" type="color" r="1.0" g="1.0" b="1.0" a="0.75" />
-				<set name="c0" variable="c1" />
+				<set name="c0" type="color" variable="c1" />
 				<mul name="c0" type="color" r="1.0" g="0.75" b="0.5" a="0.0" />
 				<color variable="c0" />
 				<vertex x="0.0" y="0" />
@@ -57,7 +59,5 @@
 				<vertex x="0.0" y="-4.75" />
 			</triangle_fan>
 		</pushmatrix>
-		<calllist name="enemyshieldwing" />
-		<calllist name="shieldwing" />
 	</renderable>
 </template>

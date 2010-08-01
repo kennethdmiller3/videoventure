@@ -15,13 +15,8 @@
 	<renderable>
 		<drawlist>
 			<pushmatrix>
-				<color r="1.0" g="1.0" b="1.0" a="1.0" />
-				<scale x="2" y="2" />
-				<calllist name="circle16" />
-			</pushmatrix>
-			<pushmatrix>
-				<color r="0.9" g="1.0" b="0.8" a="0.75" />
-				<scale x="3" y="3" />
+				<color r="0.5" g="1.0" b="0.0" a="0.25" />
+				<scale x="5" y="5" />
 				<calllist name="circle16" />
 			</pushmatrix>
 			<pushmatrix>
@@ -30,8 +25,13 @@
 				<calllist name="circle16" />
 			</pushmatrix>
 			<pushmatrix>
-				<color r="0.5" g="1.0" b="0.0" a="0.25" />
-				<scale x="5" y="5" />
+				<color r="0.9" g="1.0" b="0.8" a="0.75" />
+				<scale x="3" y="3" />
+				<calllist name="circle16" />
+			</pushmatrix>
+			<pushmatrix>
+				<color r="1.0" g="1.0" b="1.0" a="1.0" />
+				<scale x="2" y="2" />
 				<calllist name="circle16" />
 			</pushmatrix>
 		</drawlist>

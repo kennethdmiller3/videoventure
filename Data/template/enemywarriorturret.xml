@@ -12,25 +12,25 @@
 	</collidable>
 	<renderable radius="3">
 		<drawlist>
-			<color r="1.0" g="0.2" b="0.1" a="1.0" />
-			<pushmatrix>
-				<scale x="1.0" y="1.0" />
-				<calllist name="circle16" />
-			</pushmatrix>
-			<color r="0.8" g="0.8" b="0.8" a="1.0" />
-			<pushmatrix>
-				<scale x="2.0" y="2.0" />
-				<calllist name="circle16" />
-			</pushmatrix>
 			<color r="0.7" g="0.7" b="0.7" a="1.0" />
+			<pushmatrix>
+				<scale x="3.0" y="3.0" />
+				<calllist name="circle16" />
+			</pushmatrix>
 			<quads>
 				<vertex x="1" y="2" />
 				<vertex x="-1" y="2" />
 				<vertex x="-0.5" y="5.5" />
 				<vertex x="0.5" y="5.5" />
 			</quads>
+			<color r="0.8" g="0.8" b="0.8" a="1.0" />
 			<pushmatrix>
-				<scale x="3.0" y="3.0" />
+				<scale x="2.0" y="2.0" />
+				<calllist name="circle16" />
+			</pushmatrix>
+			<color r="1.0" g="0.2" b="0.1" a="1.0" />
+			<pushmatrix>
+				<scale x="1.0" y="1.0" />
 				<calllist name="circle16" />
 			</pushmatrix>
 		</drawlist>

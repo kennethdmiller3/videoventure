@@ -4,22 +4,22 @@
 	<renderable radius="20">
 		<pushmatrix>
 			<color>
-				<key time="0.00" r="1.0" g="1.0" b="1.0" a="0.0" />
-				<key time="0.25" r="1.0" g="1.0" b="1.0" a="1.0" />
+				<key time="0.0" r="0.2" g="1.0" b="0.1" a="0.0" />
+				<key time="0.25" r="0.2" g="1.0" b="0.1" a="0.5" />
 			</color>
 			<scale>
-				<key time="0.0" x="1.0" y="1.0" />
+				<key time="0.0" x="20.0" y="20.0" />
 				<key time="0.25" x="4.0" y="4.0" />
 			</scale>
 			<calllist name="circle16" />
 		</pushmatrix>
 		<pushmatrix>
 			<color>
-				<key time="0.0" r="0.2" g="1.0" b="0.1" a="0.0" />
-				<key time="0.25" r="0.2" g="1.0" b="0.1" a="0.5" />
+				<key time="0.00" r="1.0" g="1.0" b="1.0" a="0.0" />
+				<key time="0.25" r="1.0" g="1.0" b="1.0" a="1.0" />
 			</color>
 			<scale>
-				<key time="0.0" x="20.0" y="20.0" />
+				<key time="0.0" x="1.0" y="1.0" />
 				<key time="0.25" x="4.0" y="4.0" />
 			</scale>
 			<calllist name="circle16" />
