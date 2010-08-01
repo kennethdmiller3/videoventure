@@ -51,60 +51,61 @@ void Sound::operator delete(void *aPtr)
 #endif
 
 #if defined(USE_BASS)
+static const char * const sErrorCodeString[] =
+{
+	"ERROR_UNKNOWN",	// BASS_ERROR_UNKNOWN	-1	// some other mystery problem
+	"OK",				// BASS_OK				0	// all is OK
+	"ERROR_MEM",		// BASS_ERROR_MEM		1	// memory error
+	"ERROR_FILEOPEN",	// BASS_ERROR_FILEOPEN	2	// can't open the file
+	"ERROR_DRIVER",		// BASS_ERROR_DRIVER	3	// can't find a free/valid driver
+	"ERROR_BUFLOST",	// BASS_ERROR_BUFLOST	4	// the sample buffer was lost
+	"ERROR_HANDLE",		// BASS_ERROR_HANDLE	5	// invalid handle
+	"ERROR_FORMAT",		// BASS_ERROR_FORMAT	6	// unsupported sample format
+	"ERROR_POSITION",	// BASS_ERROR_POSITION	7	// invalid position
+	"ERROR_INIT",		// BASS_ERROR_INIT		8	// BASS_Init has not been successfully called
+	"ERROR_START",		// BASS_ERROR_START		9	// BASS_Start has not been successfully called
+	"",
+	"",
+	"",
+	"",
+	"ERROR_ALREADY",	// BASS_ERROR_ALREADY	14	// already initialized/paused/whatever
+	"",
+	"",
+	"",
+	"ERROR_NOCHAN",		// BASS_ERROR_NOCHAN	18	// can't get a free channel
+	"ERROR_ILLTYPE",	// BASS_ERROR_ILLTYPE	19	// an illegal type was specified
+	"ERROR_ILLPARAM",	// BASS_ERROR_ILLPARAM	20	// an illegal parameter was specified
+	"ERROR_NO3D",		// BASS_ERROR_NO3D		21	// no 3D support
+	"ERROR_NOEAX",		// BASS_ERROR_NOEAX		22	// no EAX support
+	"ERROR_DEVICE",		// BASS_ERROR_DEVICE	23	// illegal device number
+	"ERROR_NOPLAY",		// BASS_ERROR_NOPLAY	24	// not playing
+	"ERROR_FREQ",		// BASS_ERROR_FREQ		25	// illegal sample rate
+	"",
+	"ERROR_NOTFILE",	// BASS_ERROR_NOTFILE	27	// the stream is not a file stream
+	"",
+	"ERROR_NOHW",		// BASS_ERROR_NOHW		29	// no hardware voices available
+	"",
+	"ERROR_EMPTY",		// BASS_ERROR_EMPTY		31	// the MOD music has no sequence data
+	"ERROR_NONET",		// BASS_ERROR_NONET		32	// no internet connection could be opened
+	"ERROR_CREATE",		// BASS_ERROR_CREATE	33	// couldn't create the file
+	"ERROR_NOFX",		// BASS_ERROR_NOFX		34	// effects are not available
+	"",
+	"",
+	"ERROR_NOTAVAIL",	// BASS_ERROR_NOTAVAIL	37	// requested data is not available
+	"ERROR_DECODE",		// BASS_ERROR_DECODE	38	// the channel is a "decoding channel"
+	"ERROR_DX",			// BASS_ERROR_DX		39	// a sufficient DirectX version is not installed
+	"ERROR_TIMEOUT",	// BASS_ERROR_TIMEOUT	40	// connection timedout
+	"ERROR_FILEFORM",	// BASS_ERROR_FILEFORM	41	// unsupported file format
+	"ERROR_SPEAKER",	// BASS_ERROR_SPEAKER	42	// unavailable speaker
+	"ERROR_VERSION",	// BASS_ERROR_VERSION	43	// invalid BASS version (used by add-ons)
+	"ERROR_CODEC",		// BASS_ERROR_CODEC		44	// codec is not available/supported
+	"ERROR_ENDED",		// BASS_ERROR_ENDED		45	// the channel/file has ended
+	"ERROR_BUSY",		// BASS_ERROR_BUSY		46	// the device is busy
+};
 const char * BASS_ErrorGetString()
 {
-	const char * const sCodeString[] =
-	{
-		"ERROR_UNKNOWN",	// BASS_ERROR_UNKNOWN	-1	// some other mystery problem
-		"OK",				// BASS_OK				0	// all is OK
-		"ERROR_MEM",		// BASS_ERROR_MEM		1	// memory error
-		"ERROR_FILEOPEN",	// BASS_ERROR_FILEOPEN	2	// can't open the file
-		"ERROR_DRIVER",		// BASS_ERROR_DRIVER	3	// can't find a free/valid driver
-		"ERROR_BUFLOST",	// BASS_ERROR_BUFLOST	4	// the sample buffer was lost
-		"ERROR_HANDLE",		// BASS_ERROR_HANDLE	5	// invalid handle
-		"ERROR_FORMAT",		// BASS_ERROR_FORMAT	6	// unsupported sample format
-		"ERROR_POSITION",	// BASS_ERROR_POSITION	7	// invalid position
-		"ERROR_INIT",		// BASS_ERROR_INIT		8	// BASS_Init has not been successfully called
-		"ERROR_START",		// BASS_ERROR_START		9	// BASS_Start has not been successfully called
-		"",
-		"",
-		"",
-		"",
-		"ERROR_ALREADY",	// BASS_ERROR_ALREADY	14	// already initialized/paused/whatever
-		"",
-		"",
-		"",
-		"ERROR_NOCHAN",		// BASS_ERROR_NOCHAN	18	// can't get a free channel
-		"ERROR_ILLTYPE",	// BASS_ERROR_ILLTYPE	19	// an illegal type was specified
-		"ERROR_ILLPARAM",	// BASS_ERROR_ILLPARAM	20	// an illegal parameter was specified
-		"ERROR_NO3D",		// BASS_ERROR_NO3D		21	// no 3D support
-		"ERROR_NOEAX",		// BASS_ERROR_NOEAX		22	// no EAX support
-		"ERROR_DEVICE",		// BASS_ERROR_DEVICE	23	// illegal device number
-		"ERROR_NOPLAY",		// BASS_ERROR_NOPLAY	24	// not playing
-		"ERROR_FREQ",		// BASS_ERROR_FREQ		25	// illegal sample rate
-		"",
-		"ERROR_NOTFILE",	// BASS_ERROR_NOTFILE	27	// the stream is not a file stream
-		"",
-		"ERROR_NOHW",		// BASS_ERROR_NOHW		29	// no hardware voices available
-		"",
-		"ERROR_EMPTY",		// BASS_ERROR_EMPTY		31	// the MOD music has no sequence data
-		"ERROR_NONET",		// BASS_ERROR_NONET		32	// no internet connection could be opened
-		"ERROR_CREATE",		// BASS_ERROR_CREATE	33	// couldn't create the file
-		"ERROR_NOFX",		// BASS_ERROR_NOFX		34	// effects are not available
-		"",
-		"",
-		"ERROR_NOTAVAIL",	// BASS_ERROR_NOTAVAIL	37	// requested data is not available
-		"ERROR_DECODE",		// BASS_ERROR_DECODE	38	// the channel is a "decoding channel"
-		"ERROR_DX",			// BASS_ERROR_DX		39	// a sufficient DirectX version is not installed
-		"ERROR_TIMEOUT",	// BASS_ERROR_TIMEOUT	40	// connection timedout
-		"ERROR_FILEFORM",	// BASS_ERROR_FILEFORM	41	// unsupported file format
-		"ERROR_SPEAKER",	// BASS_ERROR_SPEAKER	42	// unavailable speaker
-		"ERROR_VERSION",	// BASS_ERROR_VERSION	43	// invalid BASS version (used by add-ons)
-		"ERROR_CODEC",		// BASS_ERROR_CODEC		44	// codec is not available/supported
-		"ERROR_ENDED",		// BASS_ERROR_ENDED		45	// the channel/file has ended
-	};
 	int code = BASS_ErrorGetCode();
-	return sCodeString[code+1];
+	return sErrorCodeString[code+1];
 }
 #endif
 
@@ -828,16 +829,28 @@ void Sound::Init(void)
 #endif
 	if (!BASS_Init(-1,AUDIO_FREQUENCY,flags,0,NULL))
 	{
-		DebugPrint("Can't initialize device");
+		DebugPrint("Can't initialize device: %s", BASS_ErrorGetString());
 		return;
 	}
 
 	// get info
 	BASS_INFO info;
 	BASS_GetInfo(&info);
-	DebugPrint("device latency: %dms\n", info.latency);
-	DebugPrint("device minbuf: %dms\n", info.minbuf);
-	DebugPrint("ds version: %d (effects %s)\n", info.dsver, info.dsver<8 ? "disabled" : "enabled");
+	DebugPrint("BASS device info\n");
+	DebugPrint("capabilities: %08x\n", info.flags);
+	DebugPrint("total memory: %dB\n", info.hwsize);
+	DebugPrint("free memory: %dB\n", info.hwfree);
+	DebugPrint("free sample slots: %d\n", info.freesam);
+	DebugPrint("free 3D sample slots: %d\n", info.free3d);
+	DebugPrint("minimum rate: %dHz\n", info.minrate);
+	DebugPrint("maximum rate: %dHz\n", info.maxrate);
+	DebugPrint("support EAX: %s\n", info.eax ? "yes" : "no");
+	DebugPrint("minimum buffer: %dms\n", info.minbuf);
+	DebugPrint("directsound: %d (effects %s)\n", info.dsver, info.dsver<8 ? "disabled" : "enabled");
+	DebugPrint("latency: %dms\n", info.latency);
+	DebugPrint("initialization: %08x\n", info.initflags);
+	DebugPrint("speakers: %d\n", info.speakers);
+	DebugPrint("output rate: %d\n", info.freq);
 
 	// initialize sound volume
 	UpdateSoundVolume();
