@@ -651,6 +651,8 @@ bool WeaponTemplate::ConfigureAction(const TiXmlElement *element, unsigned int a
 
 bool WeaponTemplate::Configure(const TiXmlElement *element, unsigned int aId)
 {
+	bool buildOldWeaponAction = false;
+
 	// process child elements
 	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
@@ -707,8 +709,14 @@ bool WeaponTemplate::Configure(const TiXmlElement *element, unsigned int aId)
 			// clear any existing action
 			// TO DO: support inheritance
 			// TO DO: support "call"
-			mAction.clear();
-			ConfigureAction(child, aId);
+			{
+				int inherit = 0;
+				child->QueryIntAttribute("inherit", &inherit);
+				if (!inherit)
+					mAction.clear();
+
+				ConfigureAction(child, aId);
+			}
 			break;
 
 			//
@@ -721,6 +729,7 @@ bool WeaponTemplate::Configure(const TiXmlElement *element, unsigned int aId)
 				child->QueryFloatAttribute("x", &old.mOffset.p.x);
 				child->QueryFloatAttribute("y", &old.mOffset.p.y);
 				Database::weapontemplateold.Close(aId);
+				buildOldWeaponAction = true;
 			}
 			break;
 
@@ -731,6 +740,7 @@ bool WeaponTemplate::Configure(const TiXmlElement *element, unsigned int aId)
 				child->QueryFloatAttribute("x", &old.mScatter.p.x);
 				child->QueryFloatAttribute("y", &old.mScatter.p.y);
 				Database::weapontemplateold.Close(aId);
+				buildOldWeaponAction = true;
 			}
 			break;
 
@@ -741,6 +751,7 @@ bool WeaponTemplate::Configure(const TiXmlElement *element, unsigned int aId)
 				child->QueryFloatAttribute("x", &old.mInherit.p.x);
 				child->QueryFloatAttribute("y", &old.mInherit.p.y);
 				Database::weapontemplateold.Close(aId);
+				buildOldWeaponAction = true;
 			}
 			break;
 
@@ -750,7 +761,6 @@ bool WeaponTemplate::Configure(const TiXmlElement *element, unsigned int aId)
 				child->QueryFloatAttribute("angle", &old.mVelocity.a);
 				child->QueryFloatAttribute("x", &old.mVelocity.p.x);
 				child->QueryFloatAttribute("y", &old.mVelocity.p.y);
-
 #if 0	// Dreadnought Crisis
 				// if the property has keyframes...
 				// (TO DO: handle this in a smarter way)
@@ -766,6 +776,7 @@ bool WeaponTemplate::Configure(const TiXmlElement *element, unsigned int aId)
 				}
 #endif
 				Database::weapontemplateold.Close(aId);
+				buildOldWeaponAction = true;
 			}
 			break;
 
@@ -776,6 +787,7 @@ bool WeaponTemplate::Configure(const TiXmlElement *element, unsigned int aId)
 				child->QueryFloatAttribute("x", &old.mVariance.p.x);
 				child->QueryFloatAttribute("y", &old.mVariance.p.y);
 				Database::weapontemplateold.Close(aId);
+				buildOldWeaponAction = true;
 			}
 			break;
 
@@ -786,6 +798,7 @@ bool WeaponTemplate::Configure(const TiXmlElement *element, unsigned int aId)
 					WeaponTemplateOld &old = Database::weapontemplateold.Open(aId);
 					old.mOrdnance = Hash(ordnance);
 					Database::weapontemplateold.Close(aId);
+					buildOldWeaponAction = true;
 				}
 			}
 			break;
@@ -797,6 +810,7 @@ bool WeaponTemplate::Configure(const TiXmlElement *element, unsigned int aId)
 					WeaponTemplateOld &old = Database::weapontemplateold.Open(aId);
 					old.mFlash = Hash(flash);
 					Database::weapontemplateold.Close(aId);
+					buildOldWeaponAction = true;
 				}
 			}
 			break;
@@ -808,6 +822,7 @@ bool WeaponTemplate::Configure(const TiXmlElement *element, unsigned int aId)
 				child->QueryIntAttribute("length", &old.mBurstLength);
 				child->QueryFloatAttribute("delay", &old.mBurstDelay);
 				Database::weapontemplateold.Close(aId);
+				buildOldWeaponAction = true;
 			}
 			break;
 
@@ -816,17 +831,19 @@ bool WeaponTemplate::Configure(const TiXmlElement *element, unsigned int aId)
 				WeaponTemplateOld &old = Database::weapontemplateold.Open(aId);
 				child->QueryIntAttribute("shots", &old.mSalvoShots);
 				Database::weapontemplateold.Close(aId);
-		}
+				buildOldWeaponAction = true;
+			}
 			break;
 
 			//
 		}
 	}
 
-	// if no action specified...
-	if (mAction.empty())
+	// if using backwards compatibility...
+	if (buildOldWeaponAction)
 	{
 		// generate compatibility action
+		mAction.clear();
 		Database::weapontemplateold.Get(aId).BuildAction(mAction, aId);
 	}
 
