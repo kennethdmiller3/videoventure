@@ -1,0 +1,41 @@
+<?xml version="1.0" ?>
+<template name="dreadcannonturretweapondestroyed">
+	<renderable radius="192" depth="256">
+		<drawlist>
+			<translate z="256" />
+			<quads>
+				<color r="0.1" g="0.1" b="0.1" a="1.0" />
+				<vertex x="8" y="-3" />
+				<vertex x="-8" y="-3" />
+				<vertex x="-8" y="11" />
+				<vertex x="8" y="11" />
+				<color r="0.2" g="0.2" b="0.2" a="1.0" />
+				<vertex x="10" y="-6" />
+				<vertex x="-10" y="-6" />
+				<vertex x="-10" y="14" />
+				<vertex x="10" y="14" />
+			</quads>
+			<triangle_fan>
+				<color r="0.0" g="0.0" b="0.0" a="1.0" />
+				<vertex x="0" y="4" />
+				<color r="0.0" g="0.0" b="0.0" a="0.0" />
+				<vertex x="10" y="-14" />
+				<vertex x="14" y="-8" />
+				<vertex x="14" y="14" />
+				<vertex x="10" y="20" />
+				<vertex x="-10" y="20" />
+				<vertex x="-14" y="14" />
+				<vertex x="-14" y="-8" />
+				<vertex x="-10" y="-14" />
+				<vertex x="10" y="-14" />
+			</triangle_fan>
+		</drawlist>
+	</renderable>
+	<spawner>
+		<offset x="0" y="4" />
+		<scatter x="4" y="4" />
+		<velocity x="0" y="-24" />
+		<variance x="4" y="4" />
+		<spawn name="dreadsmokepuff" start="0" cycle="0.3" track="0" />
+	</spawner>
+</template>

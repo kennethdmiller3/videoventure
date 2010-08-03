@@ -1,0 +1,17 @@
+<?xml version="1.0" ?>
+<template name="playerbombhit">
+	<collidable>
+		<body name="main">
+			<circle radius="8">
+				<friction value="0" />
+				<restitution value="0" />
+				<density value="1.0" />
+				<filter name="ground" />
+				<sensor value="1" />
+			</circle>
+			<fixedrotation value="1" />
+		</body>
+	</collidable>
+	<expire time="0.1" />
+	<bullet damage="10" spawnondeath="playerbombexplosion" />
+</template>
