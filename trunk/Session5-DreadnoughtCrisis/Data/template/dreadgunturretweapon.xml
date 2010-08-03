@@ -1,0 +1,15 @@
+<?xml version="1.0" ?>
+<template name="dreadgunturretweapon">
+	<weapon>
+		<velocity>
+			<key time="0" x="0" y="0" />
+			<key time="1" x="0" y="256" />
+		</velocity>
+		<variance x="16" y="16" />
+		<ordnance name="dreadgunturretbullet" />
+		<shot delay="4.0" phase="0" cycle="4" />
+	</weapon>
+	<soundcue>
+		<cue name="fire" sound="stargate-landerfire" />
+	</soundcue>
+</template>

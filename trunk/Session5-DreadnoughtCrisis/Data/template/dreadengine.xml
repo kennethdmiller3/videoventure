@@ -1,0 +1,54 @@
+<?xml version="1.0" ?>
+<template name="dreadengine">
+	<collidable>
+		<body name="main">
+			<box w="32" h="32">
+				<density value="1" />
+				<friction value="0.5" />
+				<restitution value="0.5" />
+				<filter name="ground" />
+			</box>
+			<fixedrotation value="1" />
+		</body>
+	</collidable>
+	<renderable radius="192" depth="256" period="0.066667">
+		<translate z="256" />
+		<quads>
+			<color>
+				<key time="0.000000" r="1.0" g="0.2" b="0.1" a="1.0" />
+				<key time="0.033333" r="1.0" g="0.2" b="0.1" a="0.0" />
+				<key time="0.066667" r="1.0" g="0.2" b="0.1" a="1.0" />
+			</color>
+			<vertex x="20" y="-16" />
+			<vertex x="-20" y="-16" />
+			<color r="1.0" g="0.2" b="0.1" a="0.0" />
+			<vertex x="-16" y="-64" />
+			<vertex x="16" y="-64" />
+			<color r="0.2" g="0.2" b="0.2" a="1.0" />
+			<vertex x="16" y="32" />
+			<vertex x="-16" y="32" />
+			<vertex x="-16" y="-16" />
+			<vertex x="16" y="-16" />
+		</quads>
+		<triangle_strip>
+			<color r="0.4" g="0.4" b="0.4" a="1.0" />
+			<vertex x="24" y="32" />
+			<vertex x="-24" y="32" />
+			<vertex x="32" y="0" />
+			<vertex x="-32" y="0" />
+			<vertex x="24" y="-16" />
+			<vertex x="-24" y="-16" />
+		</triangle_strip>
+		<quads>
+			<color r="0.0" g="0.0" b="0.0" a="1.0" />
+			<vertex x="32" y="32" />
+			<vertex x="-32" y="32" />
+			<vertex x="-32" y="0" />
+			<vertex x="32" y="0" />
+		</quads>
+	</renderable>
+	<engineadd speed="2" />
+	<damagable health="10" spawnondeath="dreadpartexplosion" switchondeath="dreadenginedestroyed" />
+	<points value="25" />
+	<team name="red" />
+</template>

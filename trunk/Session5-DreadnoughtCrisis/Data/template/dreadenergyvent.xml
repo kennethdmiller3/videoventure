@@ -1,0 +1,40 @@
+<?xml version="1.0" ?>
+<template name="dreadenergyvent">
+	<collidable>
+		<body name="main">
+			<box w="12" h="24">
+				<density value="1" />
+				<friction value="0" />
+				<restitution value="0" />
+				<filter name="ground" />
+			</box>
+		</body>
+	</collidable>
+	<renderable radius="192" depth="256" period="0.066667">
+		<translate z="256" />
+		<color>
+			<key time="0.000000" r="1.0" g="0.8" b="0.1" a="0.5" />
+			<key time="0.033333" r="1.0" g="0.8" b="0.1" a="0.0" />
+			<key time="0.066667" r="1.0" g="0.8" b="0.1" a="0.5" />
+		</color>
+		<pushmatrix>
+			<scale x="6" y="12" />
+			<calllist name="circle16" />
+		</pushmatrix>
+		<drawlist>
+			<color r="0.2" g="0.2" b="0.2" a="1.0" />
+			<pushmatrix>
+				<scale x="10" y="20" />
+				<calllist name="circle16" />
+			</pushmatrix>
+			<color r="0.8" g="0.8" b="0.8" a="1.0" />
+			<pushmatrix>
+				<scale x="12" y="24" />
+				<calllist name="circle16" />
+			</pushmatrix>
+		</drawlist>
+	</renderable>
+	<damagable health="10" spawnondeath="dreadpartexplosion" switchondeath="dreadenergyventdestroyed" propagatedeath="10" />
+	<points value="20" />
+	<team name="red" />
+</template>

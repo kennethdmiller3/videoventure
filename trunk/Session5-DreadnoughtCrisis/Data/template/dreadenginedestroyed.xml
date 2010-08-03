@@ -1,0 +1,43 @@
+<?xml version="1.0" ?>
+<template name="dreadenginedestroyed">
+	<renderable radius="192" depth="256" period="0.066667">
+		<translate z="256" />
+		<quads>
+			<color r="0.2" g="0.2" b="0.2" a="1.0" />
+			<vertex x="16" y="32" />
+			<vertex x="-16" y="32" />
+			<color r="0.0" g="0.0" b="0.0" a="1.0" />
+			<vertex x="-16" y="8" />
+			<vertex x="16" y="8" />
+		</quads>
+		<triangle_strip>
+			<color r="0.1" g="0.1" b="0.1" a="1.0" />
+			<vertex x="32" y="0" />
+			<vertex x="28" y="-4" />
+			<color r="0.4" g="0.4" b="0.4" a="1.0" />
+			<vertex x="24" y="32" />
+			<color r="0.1" g="0.1" b="0.1" a="1.0" />
+			<vertex x="16" y="8" />
+			<color r="0.4" g="0.4" b="0.4" a="1.0" />
+			<vertex x="-24" y="32" />
+			<color r="0.1" g="0.1" b="0.1" a="1.0" />
+			<vertex x="-16" y="8" />
+			<vertex x="-32" y="0" />
+			<vertex x="-28" y="-4" />
+		</triangle_strip>
+		<quads>
+			<color r="0.0" g="0.0" b="0.0" a="1.0" />
+			<vertex x="32" y="32" />
+			<vertex x="-32" y="32" />
+			<vertex x="-32" y="0" />
+			<vertex x="32" y="0" />
+		</quads>
+	</renderable>
+	<spawner>
+		<offset x="0" y="8" />
+		<scatter x="24" y="16" />
+		<velocity x="0" y="-24" />
+		<variance x="4" y="4" />
+		<spawn name="dreadsmokepuff" start="0" cycle="0.1" track="0" />
+	</spawner>
+</template>

@@ -1,0 +1,17 @@
+<?xml version="1.0" ?>
+<template name="dreadsmokepuff">
+	<expire time="3.0" />
+	<renderable radius="192" depth="255">
+		<translate z="256" />
+		<scale>
+			<key time="0.0" x="8" y="8" />
+			<key time="3.0" x="16" y="16" />
+		</scale>
+		<color>
+			<key time="0.0" r="0.2" g="0.2" b="0.2" a="0.25" />
+			<key time="3.0" r="0.1" g="0.1" b="0.1" a="0.0" />
+		</color>
+		<calllist name="circle12" />
+	</renderable>
+	<particle />
+</template>
