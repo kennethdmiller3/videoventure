@@ -13,14 +13,18 @@
 	</collidable>
 	<renderable radius="7" period="0.6">
 		<pushmatrix>
-			<scale>
-				<key time="0.0" x="0.0" y="0.0" />
-				<key time="0.2" x="1.5" y="1.5" />
-				<key time="0.2" x="0.0" y="0.0" />
-				<key time="0.4" x="1.5" y="1.5" />
-				<key time="0.4" x="0.0" y="0.0" />
-				<key time="0.6" x="1.5" y="1.5" />
-			</scale>
+			<translate x="0" y="-3" />
+			<color r="1.0" g="0.2" b="0.1" a="1.0" />
+			<scale x="4" y="4" />
+			<calllist name="diamond" />
+		</pushmatrix>
+		<pushmatrix>
+			<color r="1.0" g="0.5" b="0.1" a="1.0" />
+			<scale x="5" y="5" />
+			<calllist name="diamond" />
+		</pushmatrix>
+		<pushmatrix>
+			<scale x="4.5" y="4.5" />
 			<color>
 				<key time="0.0" r="1.0" g="1.0" b="1.0" a="1.0" />
 				<key time="0.2" r="1.0" g="1.0" b="1.0" a="1.0" />
@@ -28,6 +32,25 @@
 				<key time="0.4" r="1.0" g="0.8" b="0.1" a="1.0" />
 				<key time="0.4" r="1.0" g="0.2" b="0.1" a="1.0" />
 				<key time="0.6" r="1.0" g="0.2" b="0.1" a="1.0" />
+			</color>
+			<calllist name="diamond" />
+		</pushmatrix>
+		<pushmatrix>
+			<scale>
+				<key time="0.0" x="3.0" y="3.0" />
+				<key time="0.2" x="4.5" y="4.5" />
+				<key time="0.2" x="3.0" y="3.0" />
+				<key time="0.4" x="4.5" y="4.5" />
+				<key time="0.4" x="3.0" y="3.0" />
+				<key time="0.6" x="4.5" y="4.5" />
+			</scale>
+			<color>
+				<key time="0.0" r="1.0" g="0.8" b="0.1" a="1.0" />
+				<key time="0.2" r="1.0" g="0.8" b="0.1" a="1.0" />
+				<key time="0.2" r="1.0" g="0.2" b="0.1" a="1.0" />
+				<key time="0.4" r="1.0" g="0.2" b="0.1" a="1.0" />
+				<key time="0.4" r="1.0" g="1.0" b="1.0" a="1.0" />
+				<key time="0.6" r="1.0" g="1.0" b="1.0" a="1.0" />
 			</color>
 			<calllist name="diamond" />
 		</pushmatrix>
@@ -52,25 +75,13 @@
 		</pushmatrix>
 		<pushmatrix>
 			<scale>
-				<key time="0.0" x="3.0" y="3.0" />
-				<key time="0.2" x="4.5" y="4.5" />
-				<key time="0.2" x="3.0" y="3.0" />
-				<key time="0.4" x="4.5" y="4.5" />
-				<key time="0.4" x="3.0" y="3.0" />
-				<key time="0.6" x="4.5" y="4.5" />
+				<key time="0.0" x="0.0" y="0.0" />
+				<key time="0.2" x="1.5" y="1.5" />
+				<key time="0.2" x="0.0" y="0.0" />
+				<key time="0.4" x="1.5" y="1.5" />
+				<key time="0.4" x="0.0" y="0.0" />
+				<key time="0.6" x="1.5" y="1.5" />
 			</scale>
-			<color>
-				<key time="0.0" r="1.0" g="0.8" b="0.1" a="1.0" />
-				<key time="0.2" r="1.0" g="0.8" b="0.1" a="1.0" />
-				<key time="0.2" r="1.0" g="0.2" b="0.1" a="1.0" />
-				<key time="0.4" r="1.0" g="0.2" b="0.1" a="1.0" />
-				<key time="0.4" r="1.0" g="1.0" b="1.0" a="1.0" />
-				<key time="0.6" r="1.0" g="1.0" b="1.0" a="1.0" />
-			</color>
-			<calllist name="diamond" />
-		</pushmatrix>
-		<pushmatrix>
-			<scale x="4.5" y="4.5" />
 			<color>
 				<key time="0.0" r="1.0" g="1.0" b="1.0" a="1.0" />
 				<key time="0.2" r="1.0" g="1.0" b="1.0" a="1.0" />
@@ -79,17 +90,6 @@
 				<key time="0.4" r="1.0" g="0.2" b="0.1" a="1.0" />
 				<key time="0.6" r="1.0" g="0.2" b="0.1" a="1.0" />
 			</color>
-			<calllist name="diamond" />
-		</pushmatrix>
-		<pushmatrix>
-			<color r="1.0" g="0.5" b="0.1" a="1.0" />
-			<scale x="5" y="5" />
-			<calllist name="diamond" />
-		</pushmatrix>
-		<pushmatrix>
-			<translate x="0" y="-3" />
-			<color r="1.0" g="0.2" b="0.1" a="1.0" />
-			<scale x="4" y="4" />
 			<calllist name="diamond" />
 		</pushmatrix>
 	</renderable>

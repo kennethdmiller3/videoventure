@@ -36,17 +36,6 @@
 	</collidable>
 	<renderable radius="50">
 		<drawlist>
-			<color r="1.0" g="0.2" b="0.1" a="1.0" />
-			<triangle_strip>
-				<vertex x="4" y="-24" />
-				<vertex x="-4" y="-24" />
-				<vertex x="8" y="-28" />
-				<vertex x="-8" y="-28" />
-				<vertex x="8" y="-36" />
-				<vertex x="-8" y="-36" />
-				<vertex x="4" y="-44" />
-				<vertex x="-4" y="-44" />
-			</triangle_strip>
 			<color r="0.3" g="0.3" b="0.3" a="1.0" />
 			<triangle_strip>
 				<vertex x="4" y="48" />
@@ -76,17 +65,18 @@
 				<vertex x="10" y="-48" />
 				<vertex x="-10" y="-48" />
 			</triangle_strip>
+			<color r="1.0" g="0.2" b="0.1" a="1.0" />
+			<triangle_strip>
+				<vertex x="4" y="-24" />
+				<vertex x="-4" y="-24" />
+				<vertex x="8" y="-28" />
+				<vertex x="-8" y="-28" />
+				<vertex x="8" y="-36" />
+				<vertex x="-8" y="-36" />
+				<vertex x="4" y="-44" />
+				<vertex x="-4" y="-44" />
+			</triangle_strip>
 		</drawlist>
-		<pushmatrix>
-			<translate x="4" y="-48"/>
-			<scale x="2" y="2"/>
-			<calldynamiclist name="enemyengineflame"/>
-		</pushmatrix>
-		<pushmatrix>
-			<translate x="-4" y="-48"/>
-			<scale x="2" y="2"/>
-			<calldynamiclist name="enemyengineflame"/>
-		</pushmatrix>
 	</renderable>
 	<!--aimer range="512" attack1="192" attack2="256" angle1="90" angle2="180" drift="0.5" wanderturn="0.25" wanderturnrate="0.25" leading="0" close="96" /-->
 	<aimer>

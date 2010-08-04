@@ -12,6 +12,29 @@
 		</body>
 	</collidable>
 	<renderable radius="6" period="0.4">
+		<pushmatrix>
+			<rotate>
+				<key time="0.0" angle="0" />
+				<key time="0.4" angle="180" />
+			</rotate>
+			<drawlist>
+				<pushmatrix>
+					<scale x="6" y="6" />
+					<color r="1.0" g="0.2" b="0.1" a="1.0" />
+					<calllist name="circle8" />
+					<color r="1.0" g="0.8" b="0.1" a="1.0" />
+					<calllist name="diamond" />
+					<rotate angle="45" />
+					<calllist name="diamond" />
+				</pushmatrix>
+				<pushmatrix>
+					<rotate angle="22.5" />
+					<scale x="4.24" y="4.24" />
+					<color r="1.0" g="0.2" b="0.1" a="1.0" />
+					<calllist name="circle8" />
+				</pushmatrix>
+			</drawlist>
+		</pushmatrix>
 		<color>
 			<key time="0.0" r="1.0" g="1.0" b="1.0" a="1.0" />
 			<key time="0.2" r="1.0" g="0.8" b="0.1" a="1.0" />
@@ -22,29 +45,6 @@
 			<vertex x="-2" y="-1" />
 			<vertex x="2" y="-1" />
 		</triangles>
-		<pushmatrix>
-			<rotate>
-				<key time="0.0" angle="0" />
-				<key time="0.4" angle="180" />
-			</rotate>
-			<drawlist>
-				<pushmatrix>
-					<rotate angle="22.5" />
-					<scale x="4.24" y="4.24" />
-					<color r="1.0" g="0.2" b="0.1" a="1.0" />
-					<calllist name="circle8" />
-				</pushmatrix>
-				<pushmatrix>
-					<scale x="6" y="6" />
-					<color r="1.0" g="0.8" b="0.1" a="1.0" />
-					<calllist name="diamond" />
-					<rotate angle="45" />
-					<calllist name="diamond" />
-					<color r="1.0" g="0.2" b="0.1" a="1.0" />
-					<calllist name="circle8" />
-				</pushmatrix>
-			</drawlist>
-		</pushmatrix>
 	</renderable>
 	<aimer>
 		<wander side="0.5" siderate="0.25" front="0.5" frontrate="0.25" />

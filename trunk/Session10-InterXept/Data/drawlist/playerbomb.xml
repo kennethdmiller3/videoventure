@@ -1,6 +1,30 @@
 <?xml version="1.0" ?>
 <!-- player bomb -->
 <dynamicdrawlist name="playerbomb">
+	<drawlist>
+		<color r="1.0" g="1.0" b="1.0" a="1.0" />
+		<triangle_strip>
+			<vertex x="0" y="2" />
+			<vertex x="1.5" y="1.5" />
+			<vertex x="-1.5" y="1.5" />
+			<vertex x="1.5" y="-1" />
+			<vertex x="-1.5" y="-1" />
+			<vertex x="0.5" y="-1.5" />
+			<vertex x="-0.5" y="-1.5" />
+			<vertex x="0.5" y="-2.5" />
+			<vertex x="-0.5" y="-2.5" />
+		</triangle_strip>
+		<quads>
+			<vertex x="0.5" y="-2.0" />
+			<vertex x="1.5" y="-2.5" />
+			<vertex x="1.5" y="-3.5" />
+			<vertex x="0.5" y="-3.0" />
+			<vertex x="-0.5" y="-2.0" />
+			<vertex x="-1.5" y="-2.5" />
+			<vertex x="-1.5" y="-3.5" />
+			<vertex x="-0.5" y="-3.0" />
+		</quads>
+	</drawlist>
 	<triangle_strip>
 		<color>
 			<param>
@@ -39,28 +63,4 @@
 		<vertex x="0.625" y="1"/>
 		<vertex x="-0.625" y="1"/>
 	</triangle_strip>
-	<drawlist>
-		<color r="1.0" g="1.0" b="1.0" a="1.0" />
-		<triangle_strip>
-			<vertex x="0" y="2" />
-			<vertex x="1.5" y="1.5" />
-			<vertex x="-1.5" y="1.5" />
-			<vertex x="1.5" y="-1" />
-			<vertex x="-1.5" y="-1" />
-			<vertex x="0.5" y="-1.5" />
-			<vertex x="-0.5" y="-1.5" />
-			<vertex x="0.5" y="-2.5" />
-			<vertex x="-0.5" y="-2.5" />
-		</triangle_strip>
-		<quads>
-			<vertex x="0.5" y="-2.0" />
-			<vertex x="1.5" y="-2.5" />
-			<vertex x="1.5" y="-3.5" />
-			<vertex x="0.5" y="-3.0" />
-			<vertex x="-0.5" y="-2.0" />
-			<vertex x="-1.5" y="-2.5" />
-			<vertex x="-1.5" y="-3.5" />
-			<vertex x="-0.5" y="-3.0" />
-		</quads>
-	</drawlist>
 </dynamicdrawlist>
