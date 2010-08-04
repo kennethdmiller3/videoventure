@@ -12,5 +12,5 @@
 		</color>
 		<calllist name="circle12" />
 	</renderable>
-	<particle/>
+	<particle />
 </template>
