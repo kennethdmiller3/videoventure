@@ -7,8 +7,7 @@
 				<friction value="1" />
 				<restitution value="0" />
 				<density value="1.0" />
-				<category value="4" />
-				<mask bit2="0" bit3="0" bit4="0" />
+				<filter name="redbullet" />
 			</circle>
 			<fixedrotation value="1" />
 			<damping linear="1.0" />
@@ -16,19 +15,19 @@
 	</collidable>
 	<renderable radius="2.5">
 		<drawlist>
-			<color r="1.0" g="1.0" b="1.0" a="1.0" />
 			<pushmatrix>
-				<scale x="1.5" y="1.5" />
+				<color r="1.0" g="0.0" b="0.0" a="0.25" />
+				<scale x="2.5" y="2.5" />
 				<calllist name="diamond" />
 			</pushmatrix>
-			<color r="1.0" g="0.7" b="0.4" a="0.5" />
 			<pushmatrix>
+				<color r="1.0" g="1.0" b="0.0" a="0.5" />
 				<scale x="2.0" y="2.0" />
 				<calllist name="diamond" />
 			</pushmatrix>
-			<color r="1.0" g="0.5" b="0.0" a="0.25" />
 			<pushmatrix>
-				<scale x="2.5" y="2.5" />
+				<color r="1.0" g="1.0" b="1.0" a="1.0" />
+				<scale x="1.5" y="1.5" />
 				<calllist name="diamond" />
 			</pushmatrix>
 		</drawlist>

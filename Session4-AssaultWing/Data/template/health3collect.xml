@@ -7,12 +7,12 @@
 	<renderable radius="45">
 		<pushmatrix>
 			<color>
-				<key time="0.0" r="0.9" g="1.0" b="0.8" a="1.0" />
-				<key time="0.5" r="0.5" g="1.0" b="0.0" a="0.0" />
+				<key time="0.00" r="0.7" g="1.0" b="0.4" a="0.5" />
+				<key time="0.25" r="0.0" g="1.0" b="0.0" a="0.0" />
 			</color>
 			<scale>
-				<key time="0.0" x="6.0" y="6.0" />
-				<key time="0.5" x="3.0" y="3.0" />
+				<key time="0.00" x="8.0" y="8.0" />
+				<key time="0.25" x="16.0" y="16.0" />
 			</scale>
 			<calllist name="circle16" />
 		</pushmatrix>
@@ -48,12 +48,12 @@
 		</pushmatrix>
 		<pushmatrix>
 			<color>
-				<key time="0.00" r="0.7" g="1.0" b="0.4" a="0.5" />
-				<key time="0.25" r="0.0" g="1.0" b="0.0" a="0.0" />
+				<key time="0.0" r="0.9" g="1.0" b="0.8" a="1.0" />
+				<key time="0.5" r="0.5" g="1.0" b="0.0" a="0.0" />
 			</color>
 			<scale>
-				<key time="0.00" x="8.0" y="8.0" />
-				<key time="0.25" x="16.0" y="16.0" />
+				<key time="0.0" x="6.0" y="6.0" />
+				<key time="0.5" x="3.0" y="3.0" />
 			</scale>
 			<calllist name="circle16" />
 		</pushmatrix>

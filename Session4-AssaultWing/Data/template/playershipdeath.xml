@@ -6,8 +6,8 @@
 				<density value="1" />
 				<friction value="0.5" />
 				<restitution value="0.5" />
-				<category value="1" />
-				<mask bit2="0" bit4="0" />
+				<filter name="blueunit" />
+				<mask bit4="0" />
 			</circle>
 			<damping linear="5.0" angular="5.0" />
 		</body>
@@ -21,7 +21,7 @@
 		</color>
 		<calllist name="playership" />
 	</renderable>
-	<expire time="0.3" spawnonexpire="playershipexplosion" />
+	<expire time="0.3" switchonexpire="playershipexplosion" />
 	<soundcue>
 		<cue sound="stargate-playershipdeath" />
 	</soundcue>

@@ -12,33 +12,11 @@
 				<friction value="1" />
 				<restitution value="0" />
 				<density value="1.0" />
-				<category value="1" />
-				<mask bit1="0" bit2="0" />
+				<filter name="bluemissile" />
 			</poly>
 		</body>
 	</collidable>
 	<renderable radius="11" period="0.066667">
-		<drawlist>
-			<triangle_strip>
-				<color r="0.7" g="0.7" b="0.7" a="1.0" />
-				<vertex x="0.25" y="5" />
-				<vertex x="-0.25" y="5" />
-				<vertex x="0.8" y="4" />
-				<vertex x="-0.8" y="4" />
-				<vertex x="0.8" y="3" />
-				<vertex x="-0.8" y="3" />
-				<color r="0.1" g="0.2" b="1.0" a="1.0" />
-				<vertex x="0.8" y="3" />
-				<vertex x="-0.8" y="3" />
-				<vertex x="0.8" y="2" />
-				<vertex x="-0.8" y="2" />
-				<color r="0.7" g="0.7" b="0.7" a="1.0" />
-				<vertex x="0.8" y="2" />
-				<vertex x="-0.8" y="2" />
-				<vertex x="0.8" y="0" />
-				<vertex x="-0.8" y="0" />
-			</triangle_strip>
-		</drawlist>
 		<pushmatrix>
 			<scale>
 				<key time="0.000000" x="0.5" y="0.5" />
@@ -69,17 +47,44 @@
 				<key time="0.033333" x="0.75" y="0.75" />
 				<key time="0.066667" x="1.25" y="1.25" />
 			</scale>
-			<color r="0.4" g="0.7" b="1.0" a="0.5" />
-			<calllist name="circle12" />
-			<scale x="2" y="2" />
-			<color r="0.0" g="0.5" b="1.0" a="0.375" />
-			<calllist name="circle12" />
-			<scale x="1.5" y="1.5" />
-			<color r="0.0" g="0.0" b="1.0" a="0.25" />
-			<calllist name="circle12" />
+			<pushmatrix>
+				<scale x="1.5" y="1.5" />
+				<color r="0.0" g="0.0" b="1.0" a="0.25" />
+				<calllist name="circle12" />
+			</pushmatrix>
+			<pushmatrix>
+				<scale x="2" y="2" />
+				<color r="0.0" g="0.5" b="1.0" a="0.375" />
+				<calllist name="circle12" />
+			</pushmatrix>
+			<pushmatrix>
+				<color r="0.4" g="0.7" b="1.0" a="0.5" />
+				<calllist name="circle12" />
+			</pushmatrix>
 		</pushmatrix>
+		<drawlist>
+			<triangle_strip>
+				<color r="0.7" g="0.7" b="0.7" a="1.0" />
+				<vertex x="0.25" y="5" />
+				<vertex x="-0.25" y="5" />
+				<vertex x="0.8" y="4" />
+				<vertex x="-0.8" y="4" />
+				<vertex x="0.8" y="3" />
+				<vertex x="-0.8" y="3" />
+				<color r="0.1" g="0.2" b="1.0" a="1.0" />
+				<vertex x="0.8" y="3" />
+				<vertex x="-0.8" y="3" />
+				<vertex x="0.8" y="2" />
+				<vertex x="-0.8" y="2" />
+				<color r="0.7" g="0.7" b="0.7" a="1.0" />
+				<vertex x="0.8" y="2" />
+				<vertex x="-0.8" y="2" />
+				<vertex x="0.8" y="0" />
+				<vertex x="-0.8" y="0" />
+			</triangle_strip>
+		</drawlist>
 	</renderable>
-	<expire time="2" spawnonexpire="friendbulletexplosion" />
+	<expire time="2" switchonexpire="friendbulletexplosion" />
 	<bullet damage="3" spawnondeath="friendfireballexplosion" />
 	<damagable health="1" spawnondeath="friendfireballexplosion" />
 	<ship forwardveloc="480" neutralveloc="480" reverseveloc="480" strafeveloc="0" maxaccel="240" minaccel="240" maxomega="0" />

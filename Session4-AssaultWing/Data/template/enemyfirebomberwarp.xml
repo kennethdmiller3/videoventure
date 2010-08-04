@@ -1,4 +1,4 @@
 <?xml version="1.0" ?>
 <template name="enemyfirebomberwarp" type="enemywarpin">
-	<expire spawnonexpire="enemyfirebomber" />
+	<expire switchonexpire="enemyfirebomber" />
 </template>

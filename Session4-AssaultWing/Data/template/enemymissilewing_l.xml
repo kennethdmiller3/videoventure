@@ -7,13 +7,13 @@
 				<density value="0.5" />
 				<friction value="0.5" />
 				<restitution value="0.5" />
-				<category value="3" />
+				<filter name="redunit" />
 			</box>
 		</body>
 	</collidable>
 	<renderable radius="7">
-		<calllist name="enemymissilewing" />
 		<calllist name="missilewing" />
+		<calllist name="enemymissilewing" />
 	</renderable>
 	<link name="fire1">
 		<offset x="4.5" y="6.0" angle="-30" />

@@ -6,34 +6,29 @@
 				<friction value="0.5" />
 				<restitution value="0.5" />
 				<density value="0" />
-				<category value="3" />
-				<mask bit3="0" bit4="0" />
+				<filter name="redmissile" />
 			</circle>
 			<fixedrotation value="1" />
 		</body>
 	</collidable>
 	<renderable radius="3.5" period="0.066667">
-		<color>
-			<key time="0.000000" r="1.0" g="0.8" b="0.1" a="1.0" />
-			<key time="0.033333" r="1.0" g="0.8" b="0.1" a="1.0" />
-			<key time="0.033333" r="1.0" g="0.2" b="0.1" a="1.0" />
-			<key time="0.066667" r="1.0" g="0.2" b="0.1" a="1.0" />
-		</color>
-		<drawlist>
-			<triangles>
-				<vertex x="0" y="2" />
-				<vertex x="-2" y="-1" />
-				<vertex x="2" y="-1" />
-			</triangles>
+		<triangles>
 			<color r="1.0" g="1.0" b="1.0" a="1.0" />
-			<triangles>
-				<vertex x="0" y="3" />
-				<vertex x="-3" y="-1.5" />
-				<vertex x="3" y="-1.5" />
-			</triangles>
-		</drawlist>
+			<vertex x="0" y="3" />
+			<vertex x="-3" y="-1.5" />
+			<vertex x="3" y="-1.5" />
+			<color>
+				<key time="0.000000" r="1.0" g="0.8" b="0.1" a="1.0" />
+				<key time="0.033333" r="1.0" g="0.8" b="0.1" a="1.0" />
+				<key time="0.033333" r="1.0" g="0.2" b="0.1" a="1.0" />
+				<key time="0.066667" r="1.0" g="0.2" b="0.1" a="1.0" />
+			</color>
+			<vertex x="0" y="2" />
+			<vertex x="-2" y="-1" />
+			<vertex x="2" y="-1" />
+		</triangles>
 	</renderable>
-	<expire time="5" spawnonexpire="enemyvapormine" />
+	<expire time="5" switchonexpire="enemyvapormine" />
 	<bullet damage="1" spawnondeath="enemymineexplosion" />
 	<damagable health="3" spawnondeath="enemymineexplosion" />
 	<team name="red" />

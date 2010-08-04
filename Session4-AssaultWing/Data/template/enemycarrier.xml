@@ -14,7 +14,7 @@
 				<density value="5" />
 				<friction value="0.5" />
 				<restitution value="0.5" />
-				<category value="3" />
+				<filter name="redunit" />
 				<mask bit2="0" bit4="0" />
 			</poly>
 			<poly>
@@ -29,23 +29,12 @@
 				<density value="1" />
 				<friction value="0.5" />
 				<restitution value="0.5" />
-				<category value="3" />
+				<filter name="redunit" />
 			</poly>
 		</body>
 	</collidable>
 	<renderable radius="50">
 		<drawlist>
-			<color r="1.0" g="0.2" b="0.1" a="1.0" />
-			<triangle_strip>
-				<vertex x="4" y="-24" />
-				<vertex x="-4" y="-24" />
-				<vertex x="8" y="-28" />
-				<vertex x="-8" y="-28" />
-				<vertex x="8" y="-36" />
-				<vertex x="-8" y="-36" />
-				<vertex x="4" y="-44" />
-				<vertex x="-4" y="-44" />
-			</triangle_strip>
 			<color r="0.3" g="0.3" b="0.3" a="1.0" />
 			<triangle_strip>
 				<vertex x="4" y="48" />
@@ -75,9 +64,30 @@
 				<vertex x="10" y="-48" />
 				<vertex x="-10" y="-48" />
 			</triangle_strip>
+			<color r="1.0" g="0.2" b="0.1" a="1.0" />
+			<triangle_strip>
+				<vertex x="4" y="-24" />
+				<vertex x="-4" y="-24" />
+				<vertex x="8" y="-28" />
+				<vertex x="-8" y="-28" />
+				<vertex x="8" y="-36" />
+				<vertex x="-8" y="-36" />
+				<vertex x="4" y="-44" />
+				<vertex x="-4" y="-44" />
+			</triangle_strip>
 		</drawlist>
 	</renderable>
-	<aimer range="512" attack1="192" attack2="256" angle1="90" angle2="180" drift="0.5" wanderturn="0.25" wanderturnrate="0.25" leading="0" close="96" />
+	<!--aimer range="512" attack1="192" attack2="256" angle1="90" angle2="180" drift="0.5" wanderturn="0.25" wanderturnrate="0.25" leading="0" close="96" /-->
+	<aimer>
+		<drift strength="0.5" />
+		<wander turn="0.25" turnrate="0.25" />
+		<target range="512" filter="redmissile" />
+		<pursue strength="1" leading="0" />
+		<aim strength="1" leading="0" />
+		<fire channel="1" range="192" angle="90" />
+		<fire channel="2" range="256" angle="180" />
+		<close range="96" />
+	</aimer>
 	<ship maxveloc="90" maxaccel="10" minaccel="10" maxomega="0.1" />
 	<damagable health="200" spawnondeath="enemycarrierexplosion" />
 	<link name="lgun" secondary="enemyweaponmissile">
