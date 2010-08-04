@@ -13,59 +13,6 @@
 	</collidable>
 	<renderable radius="9">
 		<drawlist>
-			<pushmatrix>
-				<repeat count="4">
-					<color r="1.0" g="0.2" b="0.1" a="1.0" />
-					<triangle_strip>
-						<vertex x="6.5" y="0.5" />
-						<vertex x="6.5" y="-0.5" />
-						<vertex x="5.5" y="0.5" />
-						<vertex x="5.5" y="-0.5" />
-					</triangle_strip>
-					<triangle_strip>
-						<vertex x="5.5" y="3.5" />
-						<vertex x="5.5" y="4.5" />
-						<vertex x="4.5" y="3.5" />
-						<vertex x="4.5" y="4.5" />
-						<vertex x="3.5" y="3.5" />
-						<vertex x="4.5" y="4.5" />
-						<vertex x="3.5" y="4.5" />
-						<vertex x="3.5" y="5.5" />
-						<vertex x="4.5" y="5.5" />
-					</triangle_strip>
-					<color r="0.45" g="0.15" b="0.35" a="1.0" />
-					<triangle_strip>
-						<vertex x="7.5" y="0.5" />
-						<vertex x="7.5" y="-0.5" />
-						<vertex x="6.5" y="1.5" />
-						<vertex x="6.5" y="-1.5" />
-						<vertex x="4.5" y="1.5" />
-						<vertex x="4.5" y="-1.5" />
-						<vertex x="4.5" y="0.5" />
-						<vertex x="4.5" y="-0.5" />
-						<vertex x="3.5" y="0.5" />
-						<vertex x="3.5" y="-0.5" />
-						<vertex x="3.5" y="1.5" />
-						<vertex x="3.5" y="-1.5" />
-						<vertex x="2.5" y="1.5" />
-						<vertex x="2.5" y="-1.5" />
-					</triangle_strip>
-					<triangle_strip>
-						<vertex x="5.5" y="5.5" />
-						<vertex x="2.5" y="5.5" />
-						<vertex x="5.5" y="2.5" />
-						<vertex x="2.5" y="4.5" />
-						<vertex x="4.5" y="2.5" />
-					</triangle_strip>
-					<triangle_strip>
-						<vertex x="3.5" y="3.5" />
-						<vertex x="2.5" y="3.5" />
-						<vertex x="3.5" y="2.5" />
-						<vertex x="2.5" y="2.5" />
-					</triangle_strip>
-					<rotate angle="90" />
-				</repeat>
-			</pushmatrix>
 			<color r="0.3" g="0.3" b="0.3" a="1.0" />
 			<triangle_strip>
 				<vertex x="8.5" y="2.5" />
@@ -93,6 +40,59 @@
 				<vertex x="-2.5" y="-8.5" />
 				<vertex x="-8.5" y="-2.5" />
 			</triangle_strip>
+			<pushmatrix>
+				<repeat count="4">
+					<color r="0.45" g="0.15" b="0.35" a="1.0" />
+					<triangle_strip>
+						<vertex x="3.5" y="3.5" />
+						<vertex x="2.5" y="3.5" />
+						<vertex x="3.5" y="2.5" />
+						<vertex x="2.5" y="2.5" />
+					</triangle_strip>
+					<triangle_strip>
+						<vertex x="5.5" y="5.5" />
+						<vertex x="2.5" y="5.5" />
+						<vertex x="5.5" y="2.5" />
+						<vertex x="2.5" y="4.5" />
+						<vertex x="4.5" y="2.5" />
+					</triangle_strip>
+					<triangle_strip>
+						<vertex x="7.5" y="0.5" />
+						<vertex x="7.5" y="-0.5" />
+						<vertex x="6.5" y="1.5" />
+						<vertex x="6.5" y="-1.5" />
+						<vertex x="4.5" y="1.5" />
+						<vertex x="4.5" y="-1.5" />
+						<vertex x="4.5" y="0.5" />
+						<vertex x="4.5" y="-0.5" />
+						<vertex x="3.5" y="0.5" />
+						<vertex x="3.5" y="-0.5" />
+						<vertex x="3.5" y="1.5" />
+						<vertex x="3.5" y="-1.5" />
+						<vertex x="2.5" y="1.5" />
+						<vertex x="2.5" y="-1.5" />
+					</triangle_strip>
+					<color r="1.0" g="0.2" b="0.1" a="1.0" />
+					<triangle_strip>
+						<vertex x="5.5" y="3.5" />
+						<vertex x="5.5" y="4.5" />
+						<vertex x="4.5" y="3.5" />
+						<vertex x="4.5" y="4.5" />
+						<vertex x="3.5" y="3.5" />
+						<vertex x="4.5" y="4.5" />
+						<vertex x="3.5" y="4.5" />
+						<vertex x="3.5" y="5.5" />
+						<vertex x="4.5" y="5.5" />
+					</triangle_strip>
+					<triangle_strip>
+						<vertex x="6.5" y="0.5" />
+						<vertex x="6.5" y="-0.5" />
+						<vertex x="5.5" y="0.5" />
+						<vertex x="5.5" y="-0.5" />
+					</triangle_strip>
+					<rotate angle="90" />
+				</repeat>
+			</pushmatrix>
 		</drawlist>
 	</renderable>
 	<link name="turret" secondary="enemywarriorturret" updateangle="0" />
