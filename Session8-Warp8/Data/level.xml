@@ -92,31 +92,6 @@
 			<pushattrib texture="1">
 				<bindtexture name="nebula" />
 				<quads>
-					<color r="0.0" g="0.0" b="1.0" a="0.25" />
-					<texcoord variable="t" />
-					<vertex x="512" y="512" z="256" />
-					<add name="t" type="texcoord" s="0.25" t="0" r="0" q="0"/>
-					<texcoord variable="t" />
-					<vertex x="-512" y="512" z="256" />
-					<add name="t" type="texcoord" s="0" t="0.25" r="0" q="0"/>
-					<texcoord variable="t" />
-					<vertex x="-512" y="-512" z="256" />
-					<add name="t" type="texcoord" s="-0.25" t="0" r="0" q="0"/>
-					<texcoord variable="t" />
-					<vertex x="512" y="-512" z="256" />
-					<color r="0.0" g="1.0" b="0.0" a="0.25" />
-					<add name="t" type="texcoord" s="0.25" t="-0.75" r="0" q="0"/>
-					<texcoord variable="t" />
-					<vertex x="768" y="768" z="384" />
-					<add name="t" type="texcoord" s="0.375" t="0" r="0" q="0"/>
-					<texcoord variable="t" />
-					<vertex x="-768" y="768" z="384" />
-					<add name="t" type="texcoord" s="0" t="0.375" r="0" q="0"/>
-					<texcoord variable="t" />
-					<vertex x="-768" y="-768" z="384" />
-					<add name="t" type="texcoord" s="-0.375" t="0" r="0" q="0"/>
-					<texcoord variable="t" />
-					<vertex x="768" y="-768" z="384" />
 					<color r="1.0" g="0.0" b="0.0" a="0.25" />
 					<add name="t" type="texcoord" s="0.375" t="-1.25" r="0" q="0"/>
 					<texcoord variable="t" />
@@ -130,6 +105,31 @@
 					<add name="t" type="texcoord" s="-0.5" t="0" r="0" q="0"/>
 					<texcoord variable="t" />
 					<vertex x="1024" y="-1024" z="512" />
+					<color r="0.0" g="1.0" b="0.0" a="0.25" />
+					<add name="t" type="texcoord" s="0.25" t="-0.75" r="0" q="0"/>
+					<texcoord variable="t" />
+					<vertex x="768" y="768" z="384" />
+					<add name="t" type="texcoord" s="0.375" t="0" r="0" q="0"/>
+					<texcoord variable="t" />
+					<vertex x="-768" y="768" z="384" />
+					<add name="t" type="texcoord" s="0" t="0.375" r="0" q="0"/>
+					<texcoord variable="t" />
+					<vertex x="-768" y="-768" z="384" />
+					<add name="t" type="texcoord" s="-0.375" t="0" r="0" q="0"/>
+					<texcoord variable="t" />
+					<vertex x="768" y="-768" z="384" />
+					<color r="0.0" g="0.0" b="1.0" a="0.25" />
+					<texcoord variable="t" />
+					<vertex x="512" y="512" z="256" />
+					<add name="t" type="texcoord" s="0.25" t="0" r="0" q="0"/>
+					<texcoord variable="t" />
+					<vertex x="-512" y="512" z="256" />
+					<add name="t" type="texcoord" s="0" t="0.25" r="0" q="0"/>
+					<texcoord variable="t" />
+					<vertex x="-512" y="-512" z="256" />
+					<add name="t" type="texcoord" s="-0.25" t="0" r="0" q="0"/>
+					<texcoord variable="t" />
+					<vertex x="512" y="-512" z="256" />
 				</quads>
 			</pushattrib>
 			<clear name="t" />
@@ -144,7 +144,7 @@
 			</translate>
 			<drawlist>
 				<quads>
-					<set name="a" type="color" r="1" g="1" b="1" a="1"/>
+					<set name="a" type="color" r="1" g="1" b="1" a="0"/>
 					<repeat count="1024">
 						<set name="c" type="color" rand="1" r_avg="0.75" r_var="0.25" g_avg="0.75" g_var="0.25" b_avg="0.75" b_var="0.25" a_avg="1" a_var="0" />
 						<mul name="c" type="color" variable="a"/>
@@ -161,7 +161,7 @@
 							<vertex variable="p0" />
 							<add name="p0" type="translate" x="0" y="1024"/>
 						</repeat>
-						<add name="a" type="color" a="-0.0009765625"/>
+						<add name="a" type="color" a="0.0009765625"/>
 					</repeat>
 				</quads>
 				<clear name="p0" />
@@ -266,51 +266,61 @@
 			</triangle_strip>
 		</drawlist>
 		<renderable radius="8" period="0.066667">
+			<pushmatrix>
+				<translate y="-8"/>
+				<set name="s" type="scale" variable="thrust"/>
+				<add name="s" type="scale" y="3.0"/>
+				<mul name="s" type="scale" y="0.25"/>
+				<swizzle name="s" type="scale" x="y" y="y"/>
+				<scale variable="s"/>
+				<pushmatrix>
+					<translate y="-1"/>
+					<scale>
+						<key time="0.000000" x="2" y="2"/>
+						<key time="0.033333" x="1" y="1"/>
+						<key time="0.066667" x="2" y="2"/>
+					</scale>
+					<pushmatrix>
+						<scale x="3" y="3"/>
+						<color r="0.0" g="0.0" b="1.0" a="0.25"/>
+						<calllist name="circle12"/>
+					</pushmatrix>
+					<pushmatrix>
+						<scale x="2" y="2"/>
+						<color r="0.0" g="0.5" b="1.0" a="0.5"/>
+						<calllist name="circle12"/>
+					</pushmatrix>
+					<pushmatrix>
+						<color r="0.4" g="0.7" b="1.0" a="0.75"/>
+						<calllist name="circle12"/>
+					</pushmatrix>
+				</pushmatrix>
+				<pushmatrix>
+					<scale>
+						<key time="0.000000" x="0.5" y="0.5"/>
+						<key time="0.033333" x="1.0" y="1.0"/>
+						<key time="0.066667" x="0.5" y="0.5"/>
+					</scale>
+					<drawlist>
+						<triangles>
+							<color r="0.0" g="0.0" b="1.0" a="0.25"/>
+							<vertex x="3" y="0"/>
+							<vertex x="0" y="-24"/>
+							<vertex x="-3" y="0"/>
+							<color r="0.0" g="0.5" b="1.0" a="0.5"/>
+							<vertex x="2" y="0"/>
+							<vertex x="0" y="-16"/>
+							<vertex x="-2" y="0"/>
+							<color r="0.4" g="0.7" b="1.0" a="1.0"/>
+							<vertex x="1" y="0"/>
+							<vertex x="0" y="-8"/>
+							<vertex x="-1" y="0"/>
+						</triangles>
+					</drawlist>
+				</pushmatrix>
+			</pushmatrix>
 			<color r="0.4" g="0.5" b="1.0" a="1.0"/>
 			<calllist name="playership"/>
-			<translate y="-8"/>
-			<set name="s" type="scale" variable="thrust"/>
-			<add name="s" type="scale" y="3.0"/>
-			<mul name="s" type="scale" y="0.25"/>
-			<swizzle name="s" type="scale" x="y" y="y"/>
-			<scale variable="s"/>
-			<pushmatrix>
-				<scale>
-					<key time="0.000000" x="0.5" y="0.5"/>
-					<key time="0.033333" x="1.0" y="1.0"/>
-					<key time="0.066667" x="0.5" y="0.5"/>
-				</scale>
-				<drawlist>
-					<triangles>
-						<color r="0.4" g="0.7" b="1.0" a="1.0"/>
-						<vertex x="1" y="0"/>
-						<vertex x="0" y="-8"/>
-						<vertex x="-1" y="0"/>
-						<color r="0.0" g="0.5" b="1.0" a="0.5"/>
-						<vertex x="2" y="0"/>
-						<vertex x="0" y="-16"/>
-						<vertex x="-2" y="0"/>
-						<color r="0.0" g="0.0" b="1.0" a="0.25"/>
-						<vertex x="3" y="0"/>
-						<vertex x="0" y="-24"/>
-						<vertex x="-3" y="0"/>
-					</triangles>
-				</drawlist>
-			</pushmatrix>
-			<translate y="-1"/>
-			<scale>
-				<key time="0.000000" x="2" y="2"/>
-				<key time="0.033333" x="1" y="1"/>
-				<key time="0.066667" x="2" y="2"/>
-			</scale>
-			<color r="0.4" g="0.7" b="1.0" a="0.75"/>
-			<calllist name="circle12"/>
-			<scale x="2" y="2"/>
-			<color r="0.0" g="0.5" b="1.0" a="0.5"/>
-			<calllist name="circle12"/>
-			<scale x="1.5" y="1.5"/>
-			<color r="0.0" g="0.0" b="1.0" a="0.25"/>
-			<calllist name="circle12"/>
 		</renderable>
 		<damagable health="10" spawnondeath="playershipdeath"/>
 		<playercontroller>
