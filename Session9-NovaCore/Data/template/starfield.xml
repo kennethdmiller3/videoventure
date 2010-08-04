@@ -3,11 +3,11 @@
 	<renderable radius="768">
 		<drawlist>
 			<quads>
-				<set name="a" type="color" r="1" g="1" b="1" a="1"/>
+				<set name="a" type="color" r="1" g="1" b="1" a="0" />
 				<repeat count="128">
 					<set name="c" type="color" rand="1" r_avg="0.75" r_var="0.25" g_avg="0.75" g_var="0.25" b_avg="0.75" b_var="0.25" a_avg="1" a_var="0" />
-					<mul name="c" type="color" variable="a"/>
-					<color variable="c"/>
+					<mul name="c" type="color" variable="a" />
+					<color variable="c" />
 					<set name="p0" type="position" rand="1" x_avg="0" x_var="256" y_avg="0" y_var="256" z_avg="640" z_var="384" />
 					<add name="p0" type="translate" x="-1" y="-1" />
 					<vertex variable="p0" />
@@ -17,7 +17,7 @@
 					<vertex variable="p0" />
 					<add name="p0" type="translate" x="-2" y="0" />
 					<vertex variable="p0" />
-					<add name="a" type="color" a="-0.0078125"/>
+					<add name="a" type="color" a="0.0078125" />
 				</repeat>
 			</quads>
 			<clear name="p0" />
