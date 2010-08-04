@@ -51,13 +51,13 @@ template <typename T> const T EvaluateInterpolator(EntityContext &aContext)
 	// end of data
 	const unsigned int *end = aContext.mStream + size;
 
-	// get keyframe data
-	const int aCount = Expression::Read<int>(aContext);
-	const float * __restrict aKeys = reinterpret_cast<const float * __restrict>(aContext.mStream);
-
 	// get keyframe hint
 	Database::Key hintkey((aContext.mStream - aContext.mBegin)*4);
 	int &aHint = *reinterpret_cast<int *>(&aContext.mVars->Open(hintkey));
+
+	// get keyframe data
+	const int aCount = Expression::Read<int>(aContext);
+	const float * __restrict aKeys = reinterpret_cast<const float * __restrict>(aContext.mStream);
 
 	// get interpolated value
 	T value = EvaluateApplyInterpolator<T>(aCount, aKeys, aTime, aHint);
@@ -84,13 +84,13 @@ template <typename T> const T EvaluateInterpolatorConstant(EntityContext &aConte
 	// end of data
 	const unsigned int *end = aContext.mStream + size;
 
-	// get keyframe data
-	const int aCount = Expression::Read<int>(aContext);
-	const float * __restrict aKeys = reinterpret_cast<const float * __restrict>(aContext.mStream);
-
 	// get keyframe hint
 	Database::Key hintkey((aContext.mStream - aContext.mBegin)*4);
 	int &aHint = *reinterpret_cast<int *>(&aContext.mVars->Open(hintkey));
+
+	// get keyframe data
+	const int aCount = Expression::Read<int>(aContext);
+	const float * __restrict aKeys = reinterpret_cast<const float * __restrict>(aContext.mStream);
 
 	// get interpolated value
 	T value = EvaluateApplyInterpolatorConstant<T>(aCount, aKeys, aTime, aHint);
