@@ -33,11 +33,11 @@
 			<key time="0.066667" x="1" y="1" />
 		</scale>
 		<drawlist>
-			<color r="1.0" g="0.7" b="0.4" a="1.0" />
+			<color r="1.0" g="0.0" b="0.0" a="0.25" />
 			<triangles>
-				<vertex x="1.0" y="0" />
-				<vertex x="0.0" y="-5" />
-				<vertex x="-1.0" y="0" />
+				<vertex x="2.0" y="0" />
+				<vertex x="0.0" y="-15" />
+				<vertex x="-2.0" y="0" />
 			</triangles>
 			<color r="1.0" g="0.5" b="0.0" a="0.5" />
 			<triangles>
@@ -45,11 +45,11 @@
 				<vertex x="0.0" y="-10" />
 				<vertex x="-1.5" y="0" />
 			</triangles>
-			<color r="1.0" g="0.0" b="0.0" a="0.25" />
+			<color r="1.0" g="0.7" b="0.4" a="1.0" />
 			<triangles>
-				<vertex x="2.0" y="0" />
-				<vertex x="0.0" y="-15" />
-				<vertex x="-2.0" y="0" />
+				<vertex x="1.0" y="0" />
+				<vertex x="0.0" y="-5" />
+				<vertex x="-1.0" y="0" />
 			</triangles>
 		</drawlist>
 	</renderable>

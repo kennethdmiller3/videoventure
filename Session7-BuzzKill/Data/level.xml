@@ -78,24 +78,6 @@
 				<pushattrib texture="1">
 					<bindtexture name="nebula" />
 					<quads>
-						<color r="0.0" g="0.0" b="1.0" a="0.5" />
-						<texcoord s="0" t="0" />
-						<vertex x="1024" y="1024" z="256" />
-						<texcoord s="2" t="0" />
-						<vertex x="-1024" y="1024" z="256" />
-						<texcoord s="2" t="2" />
-						<vertex x="-1024" y="-1024" z="256" />
-						<texcoord s="0" t="2" />
-						<vertex x="1024" y="-1024" z="256" />
-						<color r="0.0" g="1.0" b="0.0" a="0.5" />
-						<texcoord s="2.5" t="0.5" />
-						<vertex x="1536" y="1536" z="384" />
-						<texcoord s="0.5" t="0.5" />
-						<vertex x="-1536" y="1536" z="384" />
-						<texcoord s="0.5" t="2.5" />
-						<vertex x="-1536" y="-1536" z="384" />
-						<texcoord s="2.5" t="2.5" />
-						<vertex x="1536" y="-1536" z="384" />
 						<color r="1.0" g="0.0" b="0.0" a="0.5" />
 						<texcoord s="1" t="3" />
 						<vertex x="2048" y="2048" z="512" />
@@ -105,6 +87,24 @@
 						<vertex x="-2048" y="-2048" z="512" />
 						<texcoord s="1" t="1" />
 						<vertex x="2048" y="-2048" z="512" />
+						<color r="0.0" g="1.0" b="0.0" a="0.5" />
+						<texcoord s="2.5" t="0.5" />
+						<vertex x="1536" y="1536" z="384" />
+						<texcoord s="0.5" t="0.5" />
+						<vertex x="-1536" y="1536" z="384" />
+						<texcoord s="0.5" t="2.5" />
+						<vertex x="-1536" y="-1536" z="384" />
+						<texcoord s="2.5" t="2.5" />
+						<vertex x="1536" y="-1536" z="384" />
+						<color r="0.0" g="0.0" b="1.0" a="0.5" />
+						<texcoord s="0" t="0" />
+						<vertex x="1024" y="1024" z="256" />
+						<texcoord s="2" t="0" />
+						<vertex x="-1024" y="1024" z="256" />
+						<texcoord s="2" t="2" />
+						<vertex x="-1024" y="-1024" z="256" />
+						<texcoord s="0" t="2" />
+						<vertex x="1024" y="-1024" z="256" />
 					</quads>
 				</pushattrib>
 			</drawlist>
@@ -234,9 +234,9 @@
 		</collidable>
 		<renderable radius="6">
 			<drawlist>
-				<color r="1.0" g="1.0" b="1.0" a="1.0" />
+				<color r="0.0" g="0.5" b="1.0" a="0.25" />
 				<pushmatrix>
-					<scale x="0.5" y="4" />
+					<scale x="1.5" y="6" />
 					<calllist name="circle8" />
 				</pushmatrix>
 				<color r="0.4" g="0.7" b="1.0" a="0.5" />
@@ -244,9 +244,9 @@
 					<scale x="1.0" y="5" />
 					<calllist name="circle8" />
 				</pushmatrix>
-				<color r="0.0" g="0.5" b="1.0" a="0.25" />
+				<color r="1.0" g="1.0" b="1.0" a="1.0" />
 				<pushmatrix>
-					<scale x="1.5" y="6" />
+					<scale x="0.5" y="4" />
 					<calllist name="circle8" />
 				</pushmatrix>
 			</drawlist>
@@ -295,15 +295,8 @@
 	<template name="playership">
 		<renderable radius="12" inherit="0">
 			<pushmatrix>
-				<translate y="-2"/>
-				<color r="1.0" g="1.0" b="1.0" a="1.0" />
-				<calllist name="square" />
-			</pushmatrix>
-			<color r="0.4" g="0.5" b="1.0" a="1.0" />
-			<calllist name="playership" />
-			<pushmatrix>
-				<color r="0.7" g="0.4" b="1.0" a="0.125" />
-				<scale x="8" y="8"/>
+				<color r="0.0" g="0.0" b="1.0" a="0.125" />
+				<scale x="16" y="16"/>
 				<calllist name="circle16"/>
 			</pushmatrix>
 			<pushmatrix>
@@ -312,16 +305,24 @@
 				<calllist name="circle16"/>
 			</pushmatrix>
 			<pushmatrix>
-				<color r="0.0" g="0.0" b="1.0" a="0.125" />
-				<scale x="16" y="16"/>
+				<color r="0.7" g="0.4" b="1.0" a="0.125" />
+				<scale x="8" y="8"/>
 				<calllist name="circle16"/>
+			</pushmatrix>
+			<color r="0.4" g="0.5" b="1.0" a="1.0" />
+			<calllist name="playership" />
+			<pushmatrix>
+				<translate y="-2"/>
+				<color r="1.0" g="1.0" b="1.0" a="1.0" />
+				<calllist name="square" />
 			</pushmatrix>
 		</renderable>
 		<ship maxveloc="120" maxaccel="3600" minaccel="3600" maxomega="20" />
+		<resource name="level" initial="1" maximum="2"/>
 		<graze>
 			<category value="0"/>
 			<mask default="0" bit4="1"/>
-			<ammo type="ammo"/>
+			<ammo type="level"/>
 			<radius inner="4" outer="16"/>
 			<value inner="1" outer="0"/>
 			<inherit x="0.1" y="0.1"/>
@@ -339,6 +340,45 @@
 	<!-- player ship downgrade effect -->
 	<template name="playershipdowngrade">
 		<renderable radius="100">
+			<block start="0.4" length="0.5">
+				<pushmatrix>
+					<color>
+						<key time="0.0" r="0.4" g="0.7" b="1.0" a="0.125" />
+						<key time="0.5" r="0.0" g="0.0" b="1.0" a="0.0" />
+					</color>
+					<scale>
+						<key time="0.0" x="4.0" y="4.0" />
+						<key time="0.5" x="24.0" y="24.0" />
+					</scale>
+					<calllist name="circle32" />
+				</pushmatrix>
+			</block>
+			<block start="0.2" length="0.5">
+				<pushmatrix>
+					<color>
+						<key time="0.0" r="0.4" g="0.7" b="1.0" a="0.25" />
+						<key time="0.5" r="0.0" g="0.0" b="1.0" a="0.0" />
+					</color>
+					<scale>
+						<key time="0.0" x="4.0" y="4.0" />
+						<key time="0.5" x="24.0" y="24.0" />
+					</scale>
+					<calllist name="circle32" />
+				</pushmatrix>
+			</block>
+			<block start="0.0" length="0.5">
+				<pushmatrix>
+					<color>
+						<key time="0.0" r="0.4" g="0.7" b="1.0" a="0.375" />
+						<key time="0.5" r="0.0" g="0.0" b="1.0" a="0.0" />
+					</color>
+					<scale>
+						<key time="0.0" x="4.0" y="4.0" />
+						<key time="0.5" x="24.0" y="24.0" />
+					</scale>
+					<calllist name="circle32" />
+				</pushmatrix>
+			</block>
 			<block length="0.5">
 				<pushmatrix>
 					<color>
@@ -365,45 +405,6 @@
 					</repeat>
 				</pushmatrix>
 			</block>
-			<block start="0.0" length="0.5">
-				<pushmatrix>
-					<color>
-						<key time="0.0" r="0.4" g="0.7" b="1.0" a="0.375" />
-						<key time="0.5" r="0.0" g="0.0" b="1.0" a="0.0" />
-					</color>
-					<scale>
-						<key time="0.0" x="4.0" y="4.0" />
-						<key time="0.5" x="24.0" y="24.0" />
-					</scale>
-					<calllist name="circle32" />
-				</pushmatrix>
-			</block>
-			<block start="0.2" length="0.5">
-				<pushmatrix>
-					<color>
-						<key time="0.0" r="0.4" g="0.7" b="1.0" a="0.25" />
-						<key time="0.5" r="0.0" g="0.0" b="1.0" a="0.0" />
-					</color>
-					<scale>
-						<key time="0.0" x="4.0" y="4.0" />
-						<key time="0.5" x="24.0" y="24.0" />
-					</scale>
-					<calllist name="circle32" />
-				</pushmatrix>
-			</block>
-			<block start="0.4" length="0.5">
-				<pushmatrix>
-					<color>
-						<key time="0.0" r="0.4" g="0.7" b="1.0" a="0.125" />
-						<key time="0.5" r="0.0" g="0.0" b="1.0" a="0.0" />
-					</color>
-					<scale>
-						<key time="0.0" x="4.0" y="4.0" />
-						<key time="0.5" x="24.0" y="24.0" />
-					</scale>
-					<calllist name="circle32" />
-				</pushmatrix>
-			</block>
 		</renderable>
 		<expire time="2.0" />
 		<soundcue>
@@ -418,9 +419,10 @@
 		<link name="rgun2" secondary="playershipweapon">
 			<offset x="-5" y="-3" angle="5"/>
 		</link>
-		<resource name="ammo" initial="0" maximum="2"/>
-		<resource name="level" initial="2"/>
-		<graze switchonfull="playership3"/>
+		<resource name="level" initial="2" maximum="3"/>
+		<graze switchonfull="playership3">
+			<value inner="0.5" outer="0"/>
+		</graze>
 		<damagable health="1" switchondeath="playership" spawnondeath="playershipdowngrade" />
 	</template>
 	<!-- level 3 player ship: 6 guns -->
@@ -437,9 +439,10 @@
 		<link name="rgun3" secondary="playershipweapon">
 			<offset x="-8" y="-6" angle="10"/>
 		</link>
-		<resource name="ammo" initial="0" maximum="3"/>
-		<resource name="level" initial="3"/>
-		<graze switchonfull="playership4"/>
+		<resource name="level" initial="3" maximum="4"/>
+		<graze switchonfull="playership4">
+			<value inner="0.333333" outer="0"/>
+		</graze>
 		<damagable health="1" switchondeath="playership2" spawnondeath="playershipdowngrade" />
 	</template>
 	<!-- player missile -->
@@ -502,36 +505,44 @@
 					<key time="0.033333" x="0.5" y="0.5" />
 					<key time="0.066667" x="1" y="1" />
 				</scale>
-				<color r="0.4" g="0.7" b="1.0" a="1.0" />
-				<calllist name="circle12" />
-				<scale x="2" y="2" />
-				<color r="0.0" g="0.5" b="1.0" a="0.5" />
-				<calllist name="circle12" />
-				<scale x="1.5" y="1.5" />
-				<color r="0.0" g="0.0" b="1.0" a="0.25" />
-				<calllist name="circle12" />
-			</pushmatrix>
-			<scale>
-				<key time="0.000000" x="0.5" y="0.5" />
-				<key time="0.033333" x="1.0" y="1.0" />
-				<key time="0.066667" x="0.5" y="0.5" />
-			</scale>
-			<drawlist>
-				<triangles>
-					<color r="0.4" g="0.7" b="1.0" a="1.0" />
-					<vertex x="0.375" y="0" />
-					<vertex x="0.0" y="-5" />
-					<vertex x="-0.375" y="0" />
-					<color r="0.0" g="0.5" b="1.0" a="0.5" />
-					<vertex x="0.75" y="0" />
-					<vertex x="0.75" y="-10" />
-					<vertex x="-1.0" y="0" />
+				<pushmatrix>
+					<scale x="3" y="3" />
 					<color r="0.0" g="0.0" b="1.0" a="0.25" />
-					<vertex x="1.125" y="0" />
-					<vertex x="0.0" y="-15" />
-					<vertex x="-1.125" y="0" />
-				</triangles>
-			</drawlist>
+					<calllist name="circle12" />
+				</pushmatrix>
+				<pushmatrix>
+					<scale x="2" y="2" />
+					<color r="0.0" g="0.5" b="1.0" a="0.5" />
+					<calllist name="circle12" />
+				</pushmatrix>
+				<pushmatrix>
+					<color r="0.4" g="0.7" b="1.0" a="1.0" />
+					<calllist name="circle12" />
+				</pushmatrix>
+			</pushmatrix>
+			<pushmatrix>
+				<scale>
+					<key time="0.000000" x="0.5" y="0.5" />
+					<key time="0.033333" x="1.0" y="1.0" />
+					<key time="0.066667" x="0.5" y="0.5" />
+				</scale>
+				<drawlist>
+					<triangles>
+						<color r="0.0" g="0.0" b="1.0" a="0.25" />
+						<vertex x="1.125" y="0" />
+						<vertex x="0.0" y="-15" />
+						<vertex x="-1.125" y="0" />
+						<color r="0.0" g="0.5" b="1.0" a="0.5" />
+						<vertex x="0.75" y="0" />
+						<vertex x="0.75" y="-10" />
+						<vertex x="-1.0" y="0" />
+						<color r="0.4" g="0.7" b="1.0" a="1.0" />
+						<vertex x="0.375" y="0" />
+						<vertex x="0.0" y="-5" />
+						<vertex x="-0.375" y="0" />
+					</triangles>
+				</drawlist>
+			</pushmatrix>
 		</renderable>
 		<expire time="1.5" switchonexpire="friendbulletexplosion" />
 		<bullet damage="1" spawnondeath="friendfireballexplosion" />
@@ -570,9 +581,10 @@
 		<link name="rmsl" secondary="playerweaponmissile">
 			<offset x="-4" y="-2" angle="45"/>
 		</link>
-		<resource name="ammo" initial="0" maximum="4"/>
-		<resource name="level" initial="4"/>
-		<graze switchonfull="playership5"/>
+		<resource name="level" initial="4" maximum="5"/>
+		<graze switchonfull="playership5">
+			<value inner="0.25" outer="0"/>
+		</graze>
 		<damagable health="1" switchondeath="playership3" spawnondeath="playershipdowngrade" />
 	</template>
 	<!-- level 4 player ship: 6 guns + 4 missiles -->
@@ -601,13 +613,11 @@
 		<link name="rmsl2" secondary="playerweaponmissile">
 			<offset x="-6" y="-4" angle="90"/>
 		</link>
-		<resource name="ammo" initial="4" maximum="4"/>
-		<resource name="level" initial="5"/>
+		<resource name="level" initial="5" maximum="5"/>
 		<damagable health="1" switchondeath="playership4" spawnondeath="playershipdowngrade" />
 	</template>
 	<!-- finalize player ship -->
 	<template name="playership">
-		<resource name="ammo" initial="0" maximum="1"/>
 		<resource name="level" initial="1"/>
 		<graze switchonfull="playership2"/>
 		<damagable health="3" />
