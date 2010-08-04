@@ -6,7 +6,7 @@
 				<density value="1" />
 				<friction value="0.5" />
 				<restitution value="0.5" />
-				<category value="3" />
+				<filter name="redunit" />
 			</circle>
 			<damping linear="0.5" angular="0.5" />
 		</body>
@@ -18,5 +18,5 @@
 			<calllist name="circle16" />
 		</drawlist>
 	</renderable>
-	<expire time="0.5" spawnonexpire="enemyswarmer" />
+	<expire time="0.5" switchonexpire="enemyswarmer" />
 </template>

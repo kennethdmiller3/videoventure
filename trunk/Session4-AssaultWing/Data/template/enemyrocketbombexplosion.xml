@@ -14,15 +14,15 @@
 			<pushmatrix>
 				<block length="0.1" repeat="10">
 					<color>
-						<key time="0.00" r="1.0" g="0.8" b="0.1" a="1.0" />
-						<key time="0.05" r="1.0" g="0.3" b="0.1" a="1.0" />
-						<key time="0.10" r="1.0" g="0.8" b="0.1" a="1.0" />
+						<key time="0.00" r="1.0" g="0.8" b="0.1" a="0.375" />
+						<key time="0.05" r="1.0" g="0.3" b="0.1" a="0.375" />
+						<key time="0.10" r="1.0" g="0.8" b="0.1" a="0.375" />
 					</color>
 				</block>
 				<scale>
-					<key time="0.0" x="4.0" y="4.0" />
-					<key time="0.5" x="32.0" y="32.0" />
-					<key time="1.0" x="4.0" y="4.0" />
+					<key time="0.0" x="6.0" y="6.0" />
+					<key time="0.5" x="34.0" y="34.0" />
+					<key time="1.0" x="6.0" y="6.0" />
 				</scale>
 				<calllist name="circle32" />
 			</pushmatrix>
@@ -44,15 +44,15 @@
 			<pushmatrix>
 				<block length="0.1" repeat="10">
 					<color>
-						<key time="0.00" r="1.0" g="0.8" b="0.1" a="0.375" />
-						<key time="0.05" r="1.0" g="0.3" b="0.1" a="0.375" />
-						<key time="0.10" r="1.0" g="0.8" b="0.1" a="0.375" />
+						<key time="0.00" r="1.0" g="0.8" b="0.1" a="1.0" />
+						<key time="0.05" r="1.0" g="0.3" b="0.1" a="1.0" />
+						<key time="0.10" r="1.0" g="0.8" b="0.1" a="1.0" />
 					</color>
 				</block>
 				<scale>
-					<key time="0.0" x="6.0" y="6.0" />
-					<key time="0.5" x="34.0" y="34.0" />
-					<key time="1.0" x="6.0" y="6.0" />
+					<key time="0.0" x="4.0" y="4.0" />
+					<key time="0.5" x="32.0" y="32.0" />
+					<key time="1.0" x="4.0" y="4.0" />
 				</scale>
 				<calllist name="circle32" />
 			</pushmatrix>

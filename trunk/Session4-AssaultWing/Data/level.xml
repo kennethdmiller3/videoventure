@@ -1,6 +1,7 @@
 <?xml version="1.0" standalone="no" ?>
 <!-- Test Level -->
 <world xmin="-512" ymin="-512" xmax="512" ymax="512">
+	<library name="session4.dll" />
 	<fog enable="0" mode="linear" r="0" g="0" b="0" a="0" start="512" end="1280" />
 	<!-- sounds -->
 	<import name="sound/stargate-start.xml" />
@@ -55,13 +56,10 @@
 	<!-- nebula -->
 	<entity name="nebula">
 		<texture mode="modulate" minfilter="linear" magfilter="linear" wraps="repeat" wrapt="repeat">
-			<perlin width="256" height="256">
-				<octaves r="0" g="0" b="0" a="8" />
-				<frequency r="0" g="0" b="0" a="0.00390625" />
-				<persistence r="0" g="0" b="0" a="0.625" />
-				<amplitude r="0" g="0" b="0" a="0.75" />
-				<average r="1" g="1" b="1" a="0.25" />
-				<seed r="0" g="0" b="0" a="64" />
+			<perlin width="256" height="256" octaves="8" frequency="0.00390625" persistence="0.625">
+				<key time="-1.000000" r="1" g="1" b="1" a="0.00" />
+				<key time="-0.333333" r="1" g="1" b="1" a="0.00" />
+				<key time="1.000000" r="1" g="1" b="1" a="1.00" />
 			</perlin>
 		</texture>
 		<renderable radius="512">
@@ -117,6 +115,35 @@
 		<row data="****" />
 		<row data="****" />
 	</tilemap>
+	<!-- collidable filters -->
+	<collidablefilter name="inert">
+		<category value="-1" />
+	</collidablefilter>
+	<collidablefilter name="environment">
+		<category value="0" />
+	</collidablefilter>
+	<collidablefilter name="blueunit">
+		<category value="1" />
+	</collidablefilter>
+	<collidablefilter name="bluemissile">
+		<category value="1" />
+		<mask bit1="0" bit2="0" />
+	</collidablefilter>
+	<collidablefilter name="bluebullet">
+		<category value="2" />
+		<mask bit1="0" bit2="0" bit4="0" />
+	</collidablefilter>
+	<collidablefilter name="redunit">
+		<category value="3" />
+	</collidablefilter>
+	<collidablefilter name="redmissile">
+		<category value="3" />
+		<mask bit3="0" bit4="0" />
+	</collidablefilter>
+	<collidablefilter name="redbullet">
+		<category value="4" />
+		<mask bit2="0" bit3="0" bit4="0" />
+	</collidablefilter>
 	<!-- 1-health powerup -->
 	<import name="template/health1expire.xml" />
 	<import name="template/health1collect.xml" />

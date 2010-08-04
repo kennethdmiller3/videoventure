@@ -5,20 +5,75 @@
 			<fast value="1" />
 			<poly>
 				<vertex x="0" y="6" />
-				<vertex x="-0.5" y="5" />
-				<vertex x="-0.5" y="0" />
-				<vertex x="0.5" y="0" />
-				<vertex x="0.5" y="5" />
+				<vertex x="-1" y="5" />
+				<vertex x="-1" y="0" />
+				<vertex x="1" y="0" />
+				<vertex x="1" y="5" />
 				<friction value="1" />
 				<restitution value="0" />
 				<density value="1.0" />
-				<category value="1" />
-				<mask bit1="0" bit2="0" />
+				<filter name="bluemissile" />
 			</poly>
 		</body>
 	</collidable>
 	<renderable radius="11" period="0.066667">
+		<pushmatrix>
+			<scale>
+				<key time="0.000000" x="0.5" y="0.5" />
+				<key time="0.033333" x="1.0" y="1.0" />
+				<key time="0.066667" x="0.5" y="0.5" />
+			</scale>
+			<drawlist>
+				<triangles>
+					<color r="0.4" g="0.7" b="1.0" a="1.0" />
+					<vertex x="0.375" y="0" />
+					<vertex x="0.0" y="-5" />
+					<vertex x="-0.375" y="0" />
+					<color r="0.0" g="0.5" b="1.0" a="0.5" />
+					<vertex x="0.75" y="0" />
+					<vertex x="0.75" y="-10" />
+					<vertex x="-1.0" y="0" />
+					<color r="0.0" g="0.0" b="1.0" a="0.25" />
+					<vertex x="1.125" y="0" />
+					<vertex x="0.0" y="-15" />
+					<vertex x="-1.125" y="0" />
+				</triangles>
+			</drawlist>
+		</pushmatrix>
+		<pushmatrix>
+			<translate y="-0.5" />
+			<scale>
+				<key time="0.000000" x="1" y="1" />
+				<key time="0.033333" x="0.5" y="0.5" />
+				<key time="0.066667" x="1" y="1" />
+			</scale>
+			<pushmatrix>
+				<scale x="1.5" y="1.5" />
+				<color r="0.0" g="0.0" b="1.0" a="0.25" />
+				<calllist name="circle12" />
+			</pushmatrix>
+			<pushmatrix>
+				<scale x="2" y="2" />
+				<color r="0.0" g="0.5" b="1.0" a="0.5" />
+				<calllist name="circle12" />
+			</pushmatrix>
+			<pushmatrix>
+				<color r="0.4" g="0.7" b="1.0" a="1.0" />
+				<calllist name="circle12" />
+			</pushmatrix>
+		</pushmatrix>
 		<drawlist>
+			<quads>
+				<color r="0.6" g="0.6" b="0.6" a="1.0" />
+				<vertex x="0.5" y="1.5" />
+				<vertex x="1.5" y="1.0" />
+				<vertex x="1.5" y="0" />
+				<vertex x="0.5" y="0" />
+				<vertex x="-0.5" y="1.5" />
+				<vertex x="-1.5" y="1.0" />
+				<vertex x="-1.5" y="0" />
+				<vertex x="-0.5" y="0" />
+			</quads>
 			<triangle_strip>
 				<color r="0.7" g="0.7" b="0.7" a="1.0" />
 				<vertex x="0.25" y="6" />
@@ -38,62 +93,16 @@
 				<vertex x="0.5" y="0" />
 				<vertex x="-0.5" y="0" />
 			</triangle_strip>
-			<quads>
-				<color r="0.6" g="0.6" b="0.6" a="1.0" />
-				<vertex x="0.5" y="1.5" />
-				<vertex x="1.5" y="1.0" />
-				<vertex x="1.5" y="0" />
-				<vertex x="0.5" y="0" />
-				<vertex x="-0.5" y="1.5" />
-				<vertex x="-1.5" y="1.0" />
-				<vertex x="-1.5" y="0" />
-				<vertex x="-0.5" y="0" />
-			</quads>
 		</drawlist>
-		<pushmatrix>
-			<scale>
-				<key time="0.000000" x="0.5" y="0.5" />
-				<key time="0.033333" x="1.0" y="1.0" />
-				<key time="0.066667" x="0.5" y="0.5" />
-			</scale>
-			<drawlist>
-				<triangles>
-					<color r="0.4" g="0.7" b="1.0" a="1.0" />
-					<vertex x="0.375" y="0" />
-					<vertex x="0.0" y="-5" />
-					<vertex x="-0.375" y="0" />
-					<color r="0.0" g="0.5" b="1.0" a="0.5" />
-					<vertex x="0.75" y="0" />
-					<vertex x="0.0" y="-10" />
-					<vertex x="-0.75" y="0" />
-					<color r="0.0" g="0.0" b="1.0" a="0.25" />
-					<vertex x="1.125" y="0" />
-					<vertex x="0.0" y="-15" />
-					<vertex x="-1.125" y="0" />
-				</triangles>
-			</drawlist>
-		</pushmatrix>
-		<pushmatrix>
-			<translate y="-0.5" />
-			<scale>
-				<key time="0.000000" x="1" y="1" />
-				<key time="0.033333" x="0.5" y="0.5" />
-				<key time="0.066667" x="1" y="1" />
-			</scale>
-			<color r="0.4" g="0.7" b="1.0" a="1.0" />
-			<calllist name="circle12" />
-			<scale x="2" y="2" />
-			<color r="0.0" g="0.5" b="1.0" a="0.5" />
-			<calllist name="circle12" />
-			<scale x="1.5" y="1.5" />
-			<color r="0.0" g="0.0" b="1.0" a="0.25" />
-			<calllist name="circle12" />
-		</pushmatrix>
 	</renderable>
-	<expire time="1.5" spawnonexpire="friendbulletexplosion" />
+	<expire time="1.5" switchonexpire="friendbulletexplosion" />
 	<bullet damage="1" spawnondeath="friendfireballexplosion" />
 	<damagable health="1" spawnondeath="friendfireballexplosion" />
-	<aimer period="0.2" range="256" focus="2" leading="0" category="1" bit1="0" bit2="0" bit4="0" />
+	<!--aimer period="0.2" range="256" focus="2" leading="0" category="1" bit1="0" bit2="0" bit4="0" /-->
+	<aimer>
+		<target period="0.2" range="256" focus="2" category="1" bit1="0" bit2="0" bit4="0" />
+		<aim strength="1" leading="0" />
+	</aimer>
 	<ship forwardveloc="240" neutralveloc="240" reverseveloc="240" strafeveloc="0" maxaccel="480" minaccel="480" maxomega="6" />
 	<!-- spawner>
 			<offset x="0" y="0"/>

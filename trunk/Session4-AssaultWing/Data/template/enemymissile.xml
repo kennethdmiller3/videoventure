@@ -12,8 +12,7 @@
 				<friction value="1" />
 				<restitution value="0" />
 				<density value="1.0" />
-				<category value="3" />
-				<mask bit3="0" bit4="0" />
+				<filter name="redmissile" />
 			</poly>
 		</body>
 	</collidable>
@@ -34,11 +33,11 @@
 			<key time="0.066667" x="1" y="1" />
 		</scale>
 		<drawlist>
-			<color r="1.0" g="0.7" b="0.4" a="1.0" />
+			<color r="1.0" g="0.0" b="0.0" a="0.25" />
 			<triangles>
-				<vertex x="1.0" y="0" />
-				<vertex x="0.0" y="-5" />
-				<vertex x="-1.0" y="0" />
+				<vertex x="2.0" y="0" />
+				<vertex x="0.0" y="-15" />
+				<vertex x="-2.0" y="0" />
 			</triangles>
 			<color r="1.0" g="0.5" b="0.0" a="0.5" />
 			<triangles>
@@ -46,18 +45,22 @@
 				<vertex x="0.0" y="-10" />
 				<vertex x="-1.5" y="0" />
 			</triangles>
-			<color r="1.0" g="0.0" b="0.0" a="0.25" />
+			<color r="1.0" g="0.7" b="0.4" a="1.0" />
 			<triangles>
-				<vertex x="2.0" y="0" />
-				<vertex x="0.0" y="-15" />
-				<vertex x="-2.0" y="0" />
+				<vertex x="1.0" y="0" />
+				<vertex x="0.0" y="-5" />
+				<vertex x="-1.0" y="0" />
 			</triangles>
 		</drawlist>
 	</renderable>
-	<expire time="6" spawnonexpire="enemybulletexplosion" />
+	<expire time="6" switchonexpire="enemybulletexplosion" />
 	<bullet damage="1" spawnondeath="enemyfireballexplosion" />
 	<damagable health="1" spawnondeath="enemyfireballexplosion" />
-	<aimer range="512" leading="0" category="3" bit3="0" bit4="0" />
+	<!--aimer range="512" leading="0" category="3" bit3="0" bit4="0" /-->
+	<aimer>
+		<target range="512" leading="0" category="3" bit3="0" bit4="0" />
+		<aim strength="1" leading="0" />
+	</aimer>
 	<ship forwardveloc="120" neutralveloc="120" reverseveloc="120" strafeveloc="0" maxaccel="360" minaccel="360" maxomega="6" />
 	<team name="red" />
 	<soundcue>
@@ -67,6 +70,9 @@
 	<capturable resistance="1" spawnoncapture="friendmissile" />
 	<spawner>
 		<offset x="0" y="0" />
+		<scatter x="1" angle="180" />
+		<inherit x="0" y="0" />
+		<variance x="4" y="4" />
 		<spawn name="missiletrail" start="0" cycle="0.016667" track="0" />
 	</spawner>
 </template>

@@ -7,14 +7,14 @@
 				<density value="0.5" />
 				<friction value="0.5" />
 				<restitution value="0.5" />
-				<category value="1" />
+				<filter name="blueunit" />
 			</box>
 		</body>
 	</collidable>
 	<renderable radius="7">
 		<scale x="-1" />
-		<calllist name="friendrocketwing" />
 		<calllist name="rocketwing" />
+		<calllist name="friendrocketwing" />
 	</renderable>
 	<link name="fire1">
 		<offset x="-1.5" />

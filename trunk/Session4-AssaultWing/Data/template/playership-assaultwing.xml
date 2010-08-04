@@ -93,7 +93,11 @@
 		</block>
 	</renderable>
 	<damagable health="10" spawnondeath="playershipdeath"/>
-	<playercontroller alignmove="1"/>
+	<playercontroller>
+		<scale turn="1" />
+		<aim type="moveworld" />
+		<move type="moveworld" />
+	</playercontroller>
 	<team name="blue"/>
 	<ship forwardveloc="150" neutralveloc="0" reverseveloc="-90" strafeveloc="90"  maxaccel="360" minaccel="60" maxomega="3"/>
 	<soundcue>
@@ -281,7 +285,11 @@
 				<trigger channel="1"/>
 			</weapon>
 		</link>
-		<playercontroller/>
+		<playercontroller>
+			<scale turn="0.05" />
+			<aim type="aimcursor" />
+			<move type="none" />
+		</playercontroller>
 		<team name="blue"/>
 	</link>
 	<link name="lgun" secondary="playermachinegun">
