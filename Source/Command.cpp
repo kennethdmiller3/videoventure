@@ -295,7 +295,7 @@ int CommandMerge(const char * const aParam[], int aCount)
 	}
 	return 0;
 }
-Command::Auto commandmerge(0x87b82de3 /* "merge" */, CommandMerge);
+Command::Auto commandmerge(0xb9764627 /* "merge" */, CommandMerge);
 
 int CommandRecord(const char * const aParam[], int aCount)
 {
