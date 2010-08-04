@@ -14,13 +14,13 @@
 	</collidable>
 	<renderable radius="4" period="0.1">
 		<pushmatrix>
-			<color r="0.2" g="0.2" b="0.2" a="1.0" />
-			<scale>
-				<key time="0.000000" x="0.0" y="0.0" />
-				<key time="0.033333" x="2.5" y="2.5" />
-				<key time="0.066667" x="2.5" y="2.5" />
-				<key time="0.100000" x="0.0" y="0.0" />
-			</scale>
+			<scale x="4" y="1.5" />
+			<color r="1.0" g="0.2" b="0.1" a="1.0" />
+			<calllist name="diamond" />
+		</pushmatrix>
+		<pushmatrix>
+			<scale x="1.5" y="4" />
+			<color r="1.0" g="0.2" b="0.1" a="1.0" />
 			<calllist name="diamond" />
 		</pushmatrix>
 		<pushmatrix>
@@ -33,13 +33,14 @@
 			</scale>
 			<calllist name="diamond" />
 		</pushmatrix>
-		<color r="1.0" g="0.2" b="0.1" a="1.0" />
 		<pushmatrix>
-			<scale x="1.5" y="4" />
-			<calllist name="diamond" />
-		</pushmatrix>
-		<pushmatrix>
-			<scale x="4" y="1.5" />
+			<color r="0.2" g="0.2" b="0.2" a="1.0" />
+			<scale>
+				<key time="0.000000" x="0.0" y="0.0" />
+				<key time="0.033333" x="2.5" y="2.5" />
+				<key time="0.066667" x="2.5" y="2.5" />
+				<key time="0.100000" x="0.0" y="0.0" />
+			</scale>
 			<calllist name="diamond" />
 		</pushmatrix>
 	</renderable>

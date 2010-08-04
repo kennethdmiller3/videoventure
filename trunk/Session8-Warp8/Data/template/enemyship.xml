@@ -12,10 +12,12 @@
 		</body>
 	</collidable>
 	<renderable radius="8" period="0.066667">
+		<pushmatrix>
+			<translate y="-8" />
+			<calldynamiclist name="enemyengineflame" />
+		</pushmatrix>
 		<color r="1.0" g="0.2" b="0.1" a="1.0" />
 		<calllist name="ship" />
-		<translate y="-8" />
-		<calldynamiclist name="enemyengineflame" />
 	</renderable>
 	<aimer>
 		<wander side="0.25" siderate="0.25" front="0.25" frontrate="0.25"/>
