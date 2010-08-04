@@ -1,15 +1,5 @@
 <?xml version="1.0" ?>
 <template name="dreadcommandbridge">
-	<collidable>
-		<body name="main">
-			<circle radius="14">
-				<density value="1" />
-				<friction value="0" />
-				<restitution value="0" />
-				<filter name="inert" />
-			</circle>
-		</body>
-	</collidable>
 	<link name="lbridge" secondary="dreadcommandbridgeleft">
 		<offset x="16" y="0" />
 	</link>

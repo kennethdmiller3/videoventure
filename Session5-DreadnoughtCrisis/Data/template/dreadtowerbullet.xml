@@ -25,9 +25,9 @@
 				<repeat count="3">
 					<pushmatrix>
 						<translate y="5" />
-						<color r="1.0" g="1.0" b="1.0" a="1.0" />
+						<color r="1.0" g="0.0" b="0.5" a="0.25" />
 						<pushmatrix>
-							<scale x="2" y="2" />
+							<scale x="4" y="4" />
 							<calllist name="circle8" />
 						</pushmatrix>
 						<color r="1.0" g="0.4" b="0.7" a="0.5" />
@@ -35,9 +35,9 @@
 							<scale x="3" y="3" />
 							<calllist name="circle8" />
 						</pushmatrix>
-						<color r="1.0" g="0.0" b="0.5" a="0.25" />
+						<color r="1.0" g="1.0" b="1.0" a="1.0" />
 						<pushmatrix>
-							<scale x="4" y="4" />
+							<scale x="2" y="2" />
 							<calllist name="circle8" />
 						</pushmatrix>
 					</pushmatrix>

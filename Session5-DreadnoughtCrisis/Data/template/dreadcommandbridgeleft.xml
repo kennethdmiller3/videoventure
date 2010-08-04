@@ -12,17 +12,15 @@
 	</collidable>
 	<renderable radius="192" depth="256" period="0.066667">
 		<translate z="256" />
-		<quads>
-			<color>
-				<key time="0.000000" r="0.1" g="1.0" b="0.1" a="1.0" />
-				<key time="0.033333" r="0.1" g="0.1" b="0.1" a="1.0" />
-				<key time="0.066667" r="0.1" g="1.0" b="0.1" a="1.0" />
-			</color>
-			<vertex x="-16" y="0" />
-			<vertex x="8" y="0" />
-			<vertex x="8" y="-4" />
-			<vertex x="-16" y="-4" />
-		</quads>
+		<triangle_strip>
+			<color r="0.6" g="0.8" b="0.15" a="1.0" />
+			<vertex x="16" y="12" />
+			<vertex x="16" y="-12" />
+			<vertex x="12" y="16" />
+			<vertex x="12" y="-16" />
+			<vertex x="-16" y="16" />
+			<vertex x="-16" y="-16" />
+		</triangle_strip>
 		<triangle_strip>
 			<color r="1.00" g="1.00" b="0.33" a="1.0" />
 			<vertex x="-16" y="-16" />
@@ -34,15 +32,17 @@
 			<vertex x="16" y="-4" />
 			<vertex x="8" y="16" />
 		</triangle_strip>
-		<triangle_strip>
-			<color r="0.6" g="0.8" b="0.15" a="1.0" />
-			<vertex x="16" y="12" />
-			<vertex x="16" y="-12" />
-			<vertex x="12" y="16" />
-			<vertex x="12" y="-16" />
-			<vertex x="-16" y="16" />
-			<vertex x="-16" y="-16" />
-		</triangle_strip>
+		<quads>
+			<color>
+				<key time="0.000000" r="0.1" g="1.0" b="0.1" a="1.0" />
+				<key time="0.033333" r="0.1" g="0.1" b="0.1" a="1.0" />
+				<key time="0.066667" r="0.1" g="1.0" b="0.1" a="1.0" />
+			</color>
+			<vertex x="-16" y="0" />
+			<vertex x="8" y="0" />
+			<vertex x="8" y="-4" />
+			<vertex x="-16" y="-4" />
+		</quads>
 	</renderable>
 	<damagable health="10" spawnondeath="dreadpartexplosion" switchondeath="dreadcommandbridgeleftdestroyed" />
 	<points value="10" />

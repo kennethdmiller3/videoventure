@@ -13,6 +13,40 @@
 	</collidable>
 	<renderable radius="192" depth="256" period="1">
 		<translate z="256" />
+		<drawlist>
+			<quads>
+				<color r="0.1" g="0.5" b="1.0" a="1.0" />
+				<vertex x="10" y="-6" />
+				<vertex x="-10" y="-6" />
+				<vertex x="-10" y="12" />
+				<vertex x="10" y="12" />
+				<color r="0.6" g="0.6" b="0.6" a="1.0" />
+				<vertex x="8" y="-4" />
+				<vertex x="-8" y="-4" />
+				<vertex x="-8" y="-2" />
+				<vertex x="8" y="-2" />
+				<color r="0.1" g="0.5" b="1.0" a="1.0" />
+				<vertex x="8" y="-2" />
+				<vertex x="-8" y="-2" />
+				<vertex x="-8" y="16" />
+				<vertex x="8" y="16" />
+				<color r="0.6" g="0.6" b="0.6" a="1.0" />
+				<vertex x="6" y="2" />
+				<vertex x="-6" y="2" />
+				<vertex x="-6" y="10" />
+				<vertex x="6" y="10" />
+				<color r="0.8" g="0.8" b="0.8" a="1.0" />
+				<vertex x="6" y="10" />
+				<vertex x="-6" y="10" />
+				<vertex x="-6" y="24" />
+				<vertex x="6" y="24" />
+				<color r="0.6" g="0.6" b="0.6" a="1.0" />
+				<vertex x="4" y="20" />
+				<vertex x="-4" y="20" />
+				<vertex x="-4" y="22" />
+				<vertex x="4" y="22" />
+			</quads>
+		</drawlist>
 		<quads>
 			<color>
 				<key time="0.0" r="1.0" g="0.2" b="0.1" a="1.0" />
@@ -24,40 +58,6 @@
 			<vertex x="-4" y="20" />
 			<vertex x="4" y="20" />
 		</quads>
-		<drawlist>
-			<quads>
-				<color r="0.6" g="0.6" b="0.6" a="1.0" />
-				<vertex x="4" y="20" />
-				<vertex x="-4" y="20" />
-				<vertex x="-4" y="22" />
-				<vertex x="4" y="22" />
-				<color r="0.8" g="0.8" b="0.8" a="1.0" />
-				<vertex x="6" y="10" />
-				<vertex x="-6" y="10" />
-				<vertex x="-6" y="24" />
-				<vertex x="6" y="24" />
-				<color r="0.6" g="0.6" b="0.6" a="1.0" />
-				<vertex x="6" y="2" />
-				<vertex x="-6" y="2" />
-				<vertex x="-6" y="10" />
-				<vertex x="6" y="10" />
-				<color r="0.1" g="0.5" b="1.0" a="1.0" />
-				<vertex x="8" y="-2" />
-				<vertex x="-8" y="-2" />
-				<vertex x="-8" y="16" />
-				<vertex x="8" y="16" />
-				<color r="0.6" g="0.6" b="0.6" a="1.0" />
-				<vertex x="8" y="-4" />
-				<vertex x="-8" y="-4" />
-				<vertex x="-8" y="-2" />
-				<vertex x="8" y="-2" />
-				<color r="0.1" g="0.5" b="1.0" a="1.0" />
-				<vertex x="10" y="-6" />
-				<vertex x="-10" y="-6" />
-				<vertex x="-10" y="12" />
-				<vertex x="10" y="12" />
-			</quads>
-		</drawlist>
 	</renderable>
 	<damagable health="10" spawnondeath="dreadpartexplosion" switchondeath="dreadcannonturretweapondestroyed" />
 	<weapon>

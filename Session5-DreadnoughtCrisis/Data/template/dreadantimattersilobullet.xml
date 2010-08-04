@@ -14,9 +14,9 @@
 	<renderable radius="192" depth="255">
 		<translate z="256" />
 		<drawlist>
-			<color r="0.1" g="0.1" b="0.1" a="1.0" />
+			<color r="0.5" g="0.0" b="1.0" a="0.25" />
 			<pushmatrix>
-				<scale x="12.0" y="12.0" />
+				<scale x="20.0" y="20.0" />
 				<calllist name="circle16" />
 			</pushmatrix>
 			<color r="0.0" g="0.0" b="0.5" a="0.5" />
@@ -24,9 +24,9 @@
 				<scale x="16.0" y="16.0" />
 				<calllist name="circle16" />
 			</pushmatrix>
-			<color r="0.5" g="0.0" b="1.0" a="0.25" />
+			<color r="0.1" g="0.1" b="0.1" a="1.0" />
 			<pushmatrix>
-				<scale x="20.0" y="20.0" />
+				<scale x="12.0" y="12.0" />
 				<calllist name="circle16" />
 			</pushmatrix>
 		</drawlist>

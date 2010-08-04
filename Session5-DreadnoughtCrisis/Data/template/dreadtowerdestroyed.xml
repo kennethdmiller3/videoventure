@@ -3,29 +3,6 @@
 	<renderable radius="192" depth="256">
 		<drawlist>
 			<translate z="256" />
-			<quads>
-				<color r="0.1" g="0.1" b="0.1" a="1.0" />
-				<vertex x="4" y="2" />
-				<vertex x="-4" y="2" />
-				<vertex x="-4" y="-2" />
-				<vertex x="4" y="-2" />
-			</quads>
-			<color r="0.2" g="0.2" b="0.2" a="1.0" />
-			<pushmatrix>
-				<scale x="12" y="10" />
-				<calllist name="circle16" />
-			</pushmatrix>
-			<triangle_strip>
-				<color r="0.1" g="0.1" b="0.1" a="1.0" />
-				<vertex x="16" y="12" />
-				<vertex x="16" y="-12" />
-				<vertex x="12" y="16" />
-				<vertex x="12" y="-16" />
-				<vertex x="-12" y="16" />
-				<vertex x="-12" y="-16" />
-				<vertex x="-16" y="12" />
-				<vertex x="-16" y="-12" />
-			</triangle_strip>
 			<pushmatrix>
 				<scale x="16" y="16" />
 				<triangle_fan>
@@ -52,6 +29,29 @@
 				</triangle_fan>
 			</pushmatrix>
 		</drawlist>
+		<triangle_strip>
+			<color r="0.1" g="0.1" b="0.1" a="1.0" />
+			<vertex x="16" y="12" />
+			<vertex x="16" y="-12" />
+			<vertex x="12" y="16" />
+			<vertex x="12" y="-16" />
+			<vertex x="-12" y="16" />
+			<vertex x="-12" y="-16" />
+			<vertex x="-16" y="12" />
+			<vertex x="-16" y="-12" />
+		</triangle_strip>
+		<color r="0.2" g="0.2" b="0.2" a="1.0" />
+		<pushmatrix>
+			<scale x="12" y="10" />
+			<calllist name="circle16" />
+		</pushmatrix>
+		<quads>
+			<color r="0.1" g="0.1" b="0.1" a="1.0" />
+			<vertex x="4" y="2" />
+			<vertex x="-4" y="2" />
+			<vertex x="-4" y="-2" />
+			<vertex x="4" y="-2" />
+		</quads>
 	</renderable>
 	<spawner>
 		<offset x="0" y="-3" />

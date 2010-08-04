@@ -50,11 +50,31 @@
 	<renderable radius="1024" depth="256">
 		<translate z="256" />
 		<triangle_strip>
-			<color r="0.27" g="0.60" b="0.92" a="1.0" />
-			<vertex x="16" y="-416" />
-			<vertex x="-16" y="-416" />
-			<vertex x="48" y="-480" />
-			<vertex x="-48" y="-480" />
+			<color r="0.4" g="0.4" b="0.4" a="1.0" />
+			<vertex x="16" y="0" />
+			<vertex x="-16" y="0" />
+			<vertex x="336" y="-640" />
+			<vertex x="-336" y="-640" />
+			<vertex x="336" y="-672" />
+			<vertex x="-336" y="-672" />
+			<vertex x="352" y="-704" />
+			<vertex x="-352" y="-704" />
+			<vertex x="352" y="-768" />
+			<vertex x="-352" y="-768" />
+			<vertex x="336" y="-800" />
+			<vertex x="-336" y="-800" />
+		</triangle_strip>
+		<triangle_strip>
+			<color r="0.0" g="0.33" b="0.65" a="1.0" />
+			<vertex x="0" y="-240" />
+			<vertex x="32" y="-256" />
+			<vertex x="-32" y="-256" />
+			<vertex x="240" y="-672" />
+			<vertex x="-240" y="-672" />
+			<vertex x="240" y="-736" />
+			<vertex x="-240" y="-736" />
+			<vertex x="224" y="-768" />
+			<vertex x="-224" y="-768" />
 		</triangle_strip>
 		<triangle_strip>
 			<color r="0.27" g="0.60" b="0.92" a="1.0" />
@@ -70,31 +90,11 @@
 			<vertex x="-128" y="-704" />
 		</triangle_strip>
 		<triangle_strip>
-			<color r="0.0" g="0.33" b="0.65" a="1.0" />
-			<vertex x="0" y="-240" />
-			<vertex x="32" y="-256" />
-			<vertex x="-32" y="-256" />
-			<vertex x="240" y="-672" />
-			<vertex x="-240" y="-672" />
-			<vertex x="240" y="-736" />
-			<vertex x="-240" y="-736" />
-			<vertex x="224" y="-768" />
-			<vertex x="-224" y="-768" />
-		</triangle_strip>
-		<triangle_strip>
-			<color r="0.4" g="0.4" b="0.4" a="1.0" />
-			<vertex x="16" y="0" />
-			<vertex x="-16" y="0" />
-			<vertex x="336" y="-640" />
-			<vertex x="-336" y="-640" />
-			<vertex x="336" y="-672" />
-			<vertex x="-336" y="-672" />
-			<vertex x="352" y="-704" />
-			<vertex x="-352" y="-704" />
-			<vertex x="352" y="-768" />
-			<vertex x="-352" y="-768" />
-			<vertex x="336" y="-800" />
-			<vertex x="-336" y="-800" />
+			<color r="0.27" g="0.60" b="0.92" a="1.0" />
+			<vertex x="16" y="-416" />
+			<vertex x="-16" y="-416" />
+			<vertex x="48" y="-480" />
+			<vertex x="-48" y="-480" />
 		</triangle_strip>
 	</renderable>
 	<aimer>
