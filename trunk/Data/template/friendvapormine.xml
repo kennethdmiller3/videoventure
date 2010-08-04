@@ -19,33 +19,27 @@
 		</body>
 	</collidable>
 	<renderable radius="4" period="0.066667">
-		<drawlist>
+		<triangles>
 			<color r="1.0" g="1.0" b="1.0" a="1.0" />
-			<triangles>
-				<vertex x="0" y="4" />
-				<vertex x="-3" y="0" />
-				<vertex x="3" y="0" />
-				<vertex x="0" y="-4" />
-				<vertex x="-3" y="0" />
-				<vertex x="3" y="0" />
-			</triangles>
-		</drawlist>
-		<color>
-			<key time="0.000000" r="0.1" g="1.0" b="1.0" a="1.0" />
-			<key time="0.033333" r="0.1" g="1.0" b="1.0" a="1.0" />
-			<key time="0.033333" r="0.1" g="0.8" b="1.0" a="1.0" />
-			<key time="0.066667" r="0.1" g="0.8" b="1.0" a="1.0" />
-		</color>
-		<drawlist>
-			<triangles>
-				<vertex x="0" y="3" />
-				<vertex x="-2" y="0.5" />
-				<vertex x="2" y="0.5" />
-				<vertex x="0" y="-3" />
-				<vertex x="-2" y="-0.5" />
-				<vertex x="2" y="-0.5" />
-			</triangles>
-		</drawlist>
+			<vertex x="0" y="4" />
+			<vertex x="-3" y="0" />
+			<vertex x="3" y="0" />
+			<vertex x="0" y="-4" />
+			<vertex x="-3" y="0" />
+			<vertex x="3" y="0" />
+			<color>
+				<key time="0.000000" r="0.1" g="1.0" b="1.0" a="1.0" />
+				<key time="0.033333" r="0.1" g="1.0" b="1.0" a="1.0" />
+				<key time="0.033333" r="0.1" g="0.8" b="1.0" a="1.0" />
+				<key time="0.066667" r="0.1" g="0.8" b="1.0" a="1.0" />
+			</color>
+			<vertex x="0" y="3" />
+			<vertex x="-2" y="0.5" />
+			<vertex x="2" y="0.5" />
+			<vertex x="0" y="-3" />
+			<vertex x="-2" y="-0.5" />
+			<vertex x="2" y="-0.5" />
+		</triangles>
 	</renderable>
 	<bullet damage="3" spawnondeath="friendvapormineexplosion" />
 	<damagable health="5" spawnondeath="friendvapormineexplosion" />
