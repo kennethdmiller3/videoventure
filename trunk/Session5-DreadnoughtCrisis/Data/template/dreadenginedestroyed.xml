@@ -3,12 +3,11 @@
 	<renderable radius="192" depth="256" period="0.066667">
 		<translate z="256" />
 		<quads>
-			<color r="0.2" g="0.2" b="0.2" a="1.0" />
-			<vertex x="16" y="32" />
-			<vertex x="-16" y="32" />
 			<color r="0.0" g="0.0" b="0.0" a="1.0" />
-			<vertex x="-16" y="8" />
-			<vertex x="16" y="8" />
+			<vertex x="32" y="32" />
+			<vertex x="-32" y="32" />
+			<vertex x="-32" y="0" />
+			<vertex x="32" y="0" />
 		</quads>
 		<triangle_strip>
 			<color r="0.1" g="0.1" b="0.1" a="1.0" />
@@ -26,11 +25,12 @@
 			<vertex x="-28" y="-4" />
 		</triangle_strip>
 		<quads>
+			<color r="0.2" g="0.2" b="0.2" a="1.0" />
+			<vertex x="16" y="32" />
+			<vertex x="-16" y="32" />
 			<color r="0.0" g="0.0" b="0.0" a="1.0" />
-			<vertex x="32" y="32" />
-			<vertex x="-32" y="32" />
-			<vertex x="-32" y="0" />
-			<vertex x="32" y="0" />
+			<vertex x="-16" y="8" />
+			<vertex x="16" y="8" />
 		</quads>
 	</renderable>
 	<spawner>

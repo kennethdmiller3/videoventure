@@ -33,30 +33,34 @@
 			<key time="0.80" z="256" />
 		</translate>
 		<block length="0.1" repeat="8">
-			<color>
-				<key time="0.00" r="0.8" g="0.9" b="1.0" a="1.0" />
-				<key time="0.05" r="0.4" g="0.7" b="1.0" a="1.0" />
-				<key time="0.10" r="0.8" g="0.9" b="1.0" a="1.0" />
-			</color>
 			<scale>
 				<key time="0.00" x="2.5" y="2.5" />
 				<key time="0.05" x="1.5" y="1.5" />
 				<key time="0.10" x="2.5" y="2.5" />
 			</scale>
-			<calllist name="circle8" />
+			<pushmatrix>
+				<scale x="1.5" y="1.5" />
+				<color>
+					<key time="0.00" r="0.0" g="0.5" b="1.0" a="1.0" />
+					<key time="0.05" r="0.0" g="0.0" b="1.0" a="1.0" />
+					<key time="0.10" r="0.0" g="0.5" b="1.0" a="1.0" />
+				</color>
+				<calllist name="circle8" />
+			</pushmatrix>
+			<pushmatrix>
+				<scale x="1.25" y="1.25" />
+				<color>
+					<key time="0.00" r="0.4" g="0.7" b="1.0" a="1.0" />
+					<key time="0.05" r="0.0" g="0.5" b="1.0" a="1.0" />
+					<key time="0.10" r="0.4" g="0.7" b="1.0" a="1.0" />
+				</color>
+				<calllist name="circle8" />
+			</pushmatrix>
 			<color>
-				<key time="0.00" r="0.4" g="0.7" b="1.0" a="1.0" />
-				<key time="0.05" r="0.0" g="0.5" b="1.0" a="1.0" />
-				<key time="0.10" r="0.4" g="0.7" b="1.0" a="1.0" />
+				<key time="0.00" r="0.8" g="0.9" b="1.0" a="1.0" />
+				<key time="0.05" r="0.4" g="0.7" b="1.0" a="1.0" />
+				<key time="0.10" r="0.8" g="0.9" b="1.0" a="1.0" />
 			</color>
-			<scale x="1.25" y="1.25" />
-			<calllist name="circle8" />
-			<color>
-				<key time="0.00" r="0.0" g="0.5" b="1.0" a="1.0" />
-				<key time="0.05" r="0.0" g="0.0" b="1.0" a="1.0" />
-				<key time="0.10" r="0.0" g="0.5" b="1.0" a="1.0" />
-			</color>
-			<scale x="1.2" y="1.2" />
 			<calllist name="circle8" />
 		</block>
 	</renderable>

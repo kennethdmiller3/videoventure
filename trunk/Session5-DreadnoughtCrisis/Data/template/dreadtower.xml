@@ -13,25 +13,6 @@
 	</collidable>
 	<renderable radius="192" depth="256" period="1">
 		<translate z="256" />
-		<quads>
-			<color>
-				<key time="0.0" r="1.0" g="0.2" b="0.1" a="1.0" />
-				<key time="0.5" r="0.1" g="0.1" b="0.1" a="1.0" />
-				<key time="1.0" r="1.0" g="0.2" b="0.1" a="1.0" />
-			</color>
-			<vertex x="4" y="0" />
-			<vertex x="-4" y="0" />
-			<vertex x="-4" y="-4" />
-			<vertex x="4" y="-4" />
-		</quads>
-		<drawlist>
-			<color r="1.0" g="1.0" b="0.3" a="1.0" />
-			<pushmatrix>
-				<translate y="-2" />
-				<scale x="12" y="10" />
-				<calllist name="circle16" />
-			</pushmatrix>
-		</drawlist>
 		<triangle_strip>
 			<color r="0.6" g="0.8" b="0.15" a="1.0" />
 			<vertex x="16" y="12" />
@@ -43,6 +24,25 @@
 			<vertex x="-16" y="12" />
 			<vertex x="-16" y="-12" />
 		</triangle_strip>
+		<drawlist>
+			<color r="1.0" g="1.0" b="0.3" a="1.0" />
+			<pushmatrix>
+				<translate y="-2" />
+				<scale x="12" y="10" />
+				<calllist name="circle16" />
+			</pushmatrix>
+		</drawlist>
+		<quads>
+			<color>
+				<key time="0.0" r="1.0" g="0.2" b="0.1" a="1.0" />
+				<key time="0.5" r="0.1" g="0.1" b="0.1" a="1.0" />
+				<key time="1.0" r="1.0" g="0.2" b="0.1" a="1.0" />
+			</color>
+			<vertex x="4" y="0" />
+			<vertex x="-4" y="0" />
+			<vertex x="-4" y="-4" />
+			<vertex x="4" y="-4" />
+		</quads>
 	</renderable>
 	<damagable health="10" spawnondeath="dreadpartexplosion" switchondeath="dreadtowerdestroyed" />
 	<weapon>

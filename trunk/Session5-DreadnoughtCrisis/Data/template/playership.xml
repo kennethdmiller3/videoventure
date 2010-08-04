@@ -45,14 +45,39 @@
 			<vertex x="-8" y="-8" />
 		</triangle_strip>
 	</drawlist>
-	<renderable radius="8">
-		<color r="0.4" g="0.5" b="1.0" a="1.0" />
-		<calllist name="playership" />
+	<renderable radius="8" inherit="0" period="0.066667">
+		<color r="0.4" g="0.5" b="1.0" a="1.0"/>
+		<calllist name="playership"/>
+		<translate y="-8"/>
+		<set name="s" type="scale" variable="thrust"/>
+		<max name="s" type="scale" y="0"/>
+		<swizzle name="s" type="scale" x="y" y="y"/>
+		<scale variable="s"/>
+		<pushmatrix>
+			<scale>
+				<key time="0.000000" x="0.5" y="0.5"/>
+				<key time="0.033333" x="1.0" y="1.0"/>
+				<key time="0.066667" x="0.5" y="0.5"/>
+			</scale>
+			<drawlist>
+				<triangles>
+					<color r="0.4" g="0.7" b="1.0" a="1.0"/>
+					<vertex x="1.5" y="0"/>
+					<vertex x="0" y="-8"/>
+					<vertex x="-1.5" y="0"/>
+					<color r="0.0" g="0.5" b="1.0" a="0.5"/>
+					<vertex x="3" y="0"/>
+					<vertex x="0" y="-16"/>
+					<vertex x="-3" y="0"/>
+				</triangles>
+			</drawlist>
+		</pushmatrix>
 	</renderable>
 	<playercontroller>
-		<scale turn="0.05"/>
+		<aim type="up"/>
+		<move type="moveworld"/>
 	</playercontroller>
-	<ship maxveloc="150" maxaccel="1200" minaccel="150" maxomega="20" />
+	<ship forwardveloc="360" neutralveloc="90" reverseveloc="15" strafeveloc="240" maxaccel="360"/>
 	<damagable health="10" spawnondeath="playershipdeath" />
 	<soundcue>
 		<cue name="idle" sound="stargate-playershipidle" />
@@ -60,4 +85,68 @@
 		<cue name="extralife" sound="stargate-extralife" />
 	</soundcue>
 	<team name="blue" />
+	<link name="gun">
+		<offset x="0" y="8" angle="0"/>
+		<weapon>
+			<inherit x="0" y="0" />
+			<velocity x="0" y="480" />
+			<ordnance name="playerbullet" />
+			<shot delay="0.2" />
+			<track count="2" />
+		</weapon>
+	</link>
+	<link name="bomb">
+		<offset x="0" y="0" angle="0"/>
+		<weapon>
+			<inherit x="0" y="0"/>
+			<velocity x="0" y="60"/>
+			<ordnance name="playerbomb"/>
+			<shot delay="0.5"/>
+			<trigger channel="2"/>
+		</weapon>
+		<renderable depth="1">
+			<translate y="40" z="256"/>
+			<quads>
+				<color r="1.0" g="1.0" b="1.0" a="1.0" />
+				<vertex x="0" y="2" />
+				<vertex x="2" y="0" />
+				<vertex x="0" y="-2" />
+				<vertex x="-2" y="0" />
+				<color r="0.4" g="0.5" b="1.0" a="0.5" />
+				<vertex x="-10" y="-8" />
+				<vertex x="-4" y="-8" />
+				<vertex x="-4" y="-10" />
+				<vertex x="-10" y="-10" />
+				<vertex x="-8" y="-8" />
+				<vertex x="-10" y="-8" />
+				<vertex x="-10" y="-4" />
+				<vertex x="-8" y="-4" />
+				<vertex x="+10" y="-8" />
+				<vertex x="+4" y="-8" />
+				<vertex x="+4" y="-10" />
+				<vertex x="+10" y="-10" />
+				<vertex x="+8" y="-8" />
+				<vertex x="+10" y="-8" />
+				<vertex x="+10" y="-4" />
+				<vertex x="+8" y="-4" />
+				<vertex x="-10" y="+8" />
+				<vertex x="-4" y="+8" />
+				<vertex x="-4" y="+10" />
+				<vertex x="-10" y="+10" />
+				<vertex x="-8" y="+8" />
+				<vertex x="-10" y="+8" />
+				<vertex x="-10" y="+4" />
+				<vertex x="-8" y="+4" />
+				<vertex x="+10" y="+8" />
+				<vertex x="+4" y="+8" />
+				<vertex x="+4" y="+10" />
+				<vertex x="+10" y="+10" />
+				<vertex x="+8" y="+8" />
+				<vertex x="+10" y="+8" />
+				<vertex x="+10" y="+4" />
+				<vertex x="+8" y="+4" />
+			</quads>
+		</renderable>
+	</link>
+	<team name="blue"/>
 </template>

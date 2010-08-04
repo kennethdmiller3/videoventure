@@ -3,18 +3,6 @@
 	<renderable radius="192" depth="256">
 		<drawlist>
 			<translate z="256" />
-			<quads>
-				<color r="0.1" g="0.1" b="0.1" a="1.0" />
-				<vertex x="8" y="-3" />
-				<vertex x="-8" y="-3" />
-				<vertex x="-8" y="11" />
-				<vertex x="8" y="11" />
-				<color r="0.2" g="0.2" b="0.2" a="1.0" />
-				<vertex x="10" y="-6" />
-				<vertex x="-10" y="-6" />
-				<vertex x="-10" y="14" />
-				<vertex x="10" y="14" />
-			</quads>
 			<triangle_fan>
 				<color r="0.0" g="0.0" b="0.0" a="1.0" />
 				<vertex x="0" y="4" />
@@ -29,6 +17,18 @@
 				<vertex x="-10" y="-14" />
 				<vertex x="10" y="-14" />
 			</triangle_fan>
+			<quads>
+				<color r="0.2" g="0.2" b="0.2" a="1.0" />
+				<vertex x="10" y="-6" />
+				<vertex x="-10" y="-6" />
+				<vertex x="-10" y="14" />
+				<vertex x="10" y="14" />
+				<color r="0.1" g="0.1" b="0.1" a="1.0" />
+				<vertex x="8" y="-3" />
+				<vertex x="-8" y="-3" />
+				<vertex x="-8" y="11" />
+				<vertex x="8" y="11" />
+			</quads>
 		</drawlist>
 	</renderable>
 	<spawner>

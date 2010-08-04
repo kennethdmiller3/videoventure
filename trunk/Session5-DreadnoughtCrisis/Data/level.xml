@@ -187,7 +187,6 @@
 	<import name="template/playerbomb.xml" />
 	<!-- player ship -->
 	<import name="template/playership.xml" />
-	<import name="template/playership.xml" />
 	<!-- player ship death -->
 	<import name="template/playershipdeath.xml" />
 	<!-- player ship explosion -->

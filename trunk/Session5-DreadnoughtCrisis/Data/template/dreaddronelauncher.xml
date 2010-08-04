@@ -14,27 +14,27 @@
 	<renderable radius="192" depth="256" period="1">
 		<translate z="256" />
 		<pushmatrix>
-			<translate x="0" y="4" />
-			<color r="0.6" g="0.8" b="0.15" a="1.0" />
-			<calllist name="dreaddronelaunchermissile" />
-			<translate x="0" y="4" />
+			<translate x="0" y="8" />
 			<color r="0.1" g="0.1" b="0.1" a="0.25" />
+			<calllist name="dreaddronelaunchermissile" />
+			<translate x="0" y="-4" />
+			<color r="0.6" g="0.8" b="0.15" a="1.0" />
 			<calllist name="dreaddronelaunchermissile" />
 		</pushmatrix>
 		<pushmatrix>
-			<translate x="10" y="-2" />
-			<color r="0.6" g="0.8" b="0.15" a="1.0" />
-			<calllist name="dreaddronelaunchermissile" />
-			<translate x="0" y="4" />
+			<translate x="10" y="2" />
 			<color r="0.1" g="0.1" b="0.1" a="0.25" />
+			<calllist name="dreaddronelaunchermissile" />
+			<translate x="0" y="-4" />
+			<color r="0.6" g="0.8" b="0.15" a="1.0" />
 			<calllist name="dreaddronelaunchermissile" />
 		</pushmatrix>
 		<pushmatrix>
-			<translate x="-10" y="-2" />
-			<color r="0.6" g="0.8" b="0.15" a="1.0" />
-			<calllist name="dreaddronelaunchermissile" />
-			<translate x="0" y="4" />
+			<translate x="-10" y="2" />
 			<color r="0.1" g="0.1" b="0.1" a="0.25" />
+			<calllist name="dreaddronelaunchermissile" />
+			<translate x="0" y="-4" />
+			<color r="0.6" g="0.8" b="0.15" a="1.0" />
 			<calllist name="dreaddronelaunchermissile" />
 		</pushmatrix>
 	</renderable>
