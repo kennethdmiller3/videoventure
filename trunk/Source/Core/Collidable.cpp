@@ -944,7 +944,7 @@ void Collidable::CollideAll(float aStep)
 		return;
 
 	// step the physics world
-	world->Step(aStep, 16, 16);
+	world->Step(aStep, 8, 3);
 
 	// for each body...
 	for (b2Body* body = world->GetBodyList(); body; body = body->GetNext())
