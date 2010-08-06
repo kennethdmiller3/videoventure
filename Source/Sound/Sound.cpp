@@ -615,7 +615,10 @@ Sound::Sound(void)
 #endif
 , mVolume(0)
 , mRepeat(0)
+#if !defined(USE_BASS)
 , mPosition(0, 0)
+, mVelocity(0, 0)
+#endif
 #if defined(USE_SDL_MIXER)
 , mPlaying(-1)
 #else
@@ -642,8 +645,10 @@ Sound::Sound(const SoundTemplate &aTemplate, unsigned int aId)
 #endif
 , mVolume(aTemplate.mVolume)
 , mRepeat(aTemplate.mRepeat)
+#if !defined(USE_BASS)
 , mPosition(0, 0)
 , mVelocity(0, 0)
+#endif
 #if defined(USE_BASS)
 , mPlaying(0)
 #elif defined(USE_SDL_MIXER)
@@ -673,6 +678,7 @@ void Sound::Play(unsigned int aOffset)
 		DebugPrint("error getting channel: %s\n", BASS_ErrorGetString());
 		return;
 	}
+	BASS_ChannelSet3DAttributes(mPlaying, Database::entity.Get(mId) ? BASS_3DMODE_NORMAL : BASS_3DMODE_RELATIVE, -1, -1, -1, -1, -1);
 	if (!BASS_ChannelPlay(mPlaying, true))
 	{
 		DebugPrint("error playing sound: %s\n", BASS_ErrorGetString());
@@ -767,51 +773,54 @@ void Sound::Update(float aStep)
 	}
 #endif
 
+#if defined(USE_BASS)
+//	BASS_ChannelSetAttribute(mPlaying, BASS_ATTRIB_VOL, mVolume);
+
 #if defined(DISTANCE_FALLOFF)
 	if (Entity *entity = Database::entity.Get(mId))
 	{
-		mPosition = entity->GetPosition();
-		mVelocity = entity->GetVelocity();
-	}
-	else
-	{
-		mPosition = listenerpos;
-		mVelocity = listenervel;
-	}
-#endif
-
-#if defined(USE_BASS)
-	if (mPlaying)
-	{
-//		BASS_ChannelSetAttribute(mPlaying, BASS_ATTRIB_VOL, mVolume);
-
-#if defined(DISTANCE_FALLOFF)
-		BASS_3DVECTOR pos(mPosition.x, mPosition.y, 0.0f);
-		BASS_3DVECTOR vel(mVelocity.x, mVelocity.y, 0.0f);
+		const Vector2 &position = entity->GetPosition();
+		const Vector2 &velocity = entity->GetVelocity();
+		BASS_3DVECTOR pos(position.x, position.y, 0.0f);
+		BASS_3DVECTOR vel(velocity.x, velocity.y, 0.0f);
 		if (!BASS_ChannelSet3DPosition(mPlaying, &pos, NULL, &vel))
 			DebugPrint("error setting channel 3d position: %s\n", BASS_ErrorGetString());
-#endif
 	}
+#endif
 #elif defined(USE_SDL_MIXER)
-	if (mPlaying >= 0)
-	{
-		float volume = SOUND_VOLUME_EFFECT;
+	float volume = SOUND_VOLUME_EFFECT;
 #if defined(DISTANCE_FALLOFF)
-		if (mId && SOUND_ROLLOFF_FACTOR)
+	if (mId && SOUND_ROLLOFF_FACTOR)
+	{
+		if (Entity *entity = Database::entity.Get(mId))
 		{
-			// get distance
-			const float dist = sqrtf(listenerpos.DistSq(mPosition) + CAMERA_DISTANCE * CAMERA_DISTANCE);
-
-			// if outside the near distance...
-			if (dist > mNear)
-			{
-				// apply sound fall-off
-				volume *= mNear / (mNear + SOUND_ROLLOFF_FACTOR * (dist - mNear));
-			}
+			mPosition = entity->GetPosition();
+			mVelocity = entity->GetVelocity();
 		}
-#endif
-		Mix_Volume(mPlaying, xs_RoundToInt(volume * MIX_MAX_VOLUME));
+
+		// get distance
+		const float dist = sqrtf(listenerpos.DistSq(mPosition) + CAMERA_DISTANCE * CAMERA_DISTANCE);
+
+		// if outside the near distance...
+		if (dist > mNear)
+		{
+			// apply sound fall-off
+			volume *= mNear / (mNear + SOUND_ROLLOFF_FACTOR * (dist - mNear));
+		}
 	}
+#endif
+	Mix_Volume(mPlaying, xs_RoundToInt(volume * MIX_MAX_VOLUME));
+#else
+#if defined(DISTANCE_FALLOFF)
+	if (mId && SOUND_ROLLOFF_FACTOR)
+	{
+		if (Entity *entity = Database::entity.Get(mId))
+		{
+			mPosition = entity->GetPosition();
+			mVelocity = entity->GetVelocity();
+		}
+	}
+#endif
 #endif
 }
 
@@ -833,10 +842,28 @@ void Sound::Init(void)
 		return;
 	}
 
-	// get info
+	DebugPrint("\nBASS " BASSVERSIONTEXT " info\n");
+
+	// get version
+	DWORD version = BASS_GetVersion();
+	DebugPrint("library version: %d.%d.%d.%d\n", 
+		(version >> 24) & 255, 
+		(version >> 16) & 255, 
+		(version >> 8 ) & 255, 
+		(version      ) & 255);
+
+	// get device info
+	DWORD device = BASS_GetDevice();
+	BASS_DEVICEINFO deviceinfo;
+	BASS_GetDeviceInfo(device, &deviceinfo);
+	DebugPrint("device index: %d\n", device);
+	DebugPrint("device name: %s\n", deviceinfo.name);
+	DebugPrint("device driver: %s\n", deviceinfo.driver);
+	DebugPrint("device flags: %08x\n", deviceinfo.flags);
+
+	// get general info
 	BASS_INFO info;
 	BASS_GetInfo(&info);
-	DebugPrint("BASS device info\n");
 	DebugPrint("capabilities: %08x\n", info.flags);
 	DebugPrint("total memory: %dB\n", info.hwsize);
 	DebugPrint("free memory: %dB\n", info.hwfree);

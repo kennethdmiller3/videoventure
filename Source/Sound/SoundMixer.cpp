@@ -105,8 +105,8 @@ void MixSound(void *userdata, unsigned char *stream, int len)
 		float volume = sound->mVolume;
 
 #if defined(DISTANCE_FALLOFF)
-		// if associated with an identifier
-		if (sound->mId)
+		// if associated with an identifier, and applying rolloff
+		if (sound->mId && SOUND_ROLLOFF_FACTOR)
 		{
 			// get distance
 			const float dist = sqrtf(listenerpos.DistSq(mPosition) + CAMERA_DISTANCE * CAMERA_DISTANCE);
