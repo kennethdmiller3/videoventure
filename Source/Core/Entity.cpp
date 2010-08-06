@@ -81,10 +81,14 @@ namespace Database
 					Database::Inherit(aId, aParentId);
 				}
 
-				// set name
-				std::string &namebuf = Database::name.Open(aId);
-				namebuf = element->Attribute("name");
-				Database::name.Close(aId);
+				// get instance name
+				if (const char *name = element->Attribute("name"))
+				{
+					// set name
+					std::string &namebuf = Database::name.Open(aId);
+					namebuf = element->Attribute("name");
+					Database::name.Close(aId);
+				}
 
 				// for each child element...
 				for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
@@ -119,10 +123,14 @@ namespace Database
 					Database::parent.Put(aId, aParentId);
 				}
 
-				// set name
-				std::string &namebuf = Database::name.Open(aId);
-				namebuf = element->Attribute("name");
-				Database::name.Close(aId);
+				// get instance name
+				if (const char *name = element->Attribute("name"))
+				{
+					// set name
+					std::string &namebuf = Database::name.Open(aId);
+					namebuf = name;
+					Database::name.Close(aId);
+				}
 
 				// objects default to owning themselves
 				Database::owner.Put(aId, aId);
