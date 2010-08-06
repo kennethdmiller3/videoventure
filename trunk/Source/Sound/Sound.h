@@ -12,10 +12,10 @@ public:
 	void *mData;		// data buffer
 	size_t mSize;		// data buffer size in bytes
 	size_t mLength;		// sound length
-	float mVolume;
-	float mNear;
-	float mFar;
-	int mRepeat;
+	float mVolume;		// intrinsic volume
+	float mNear;		// maximum volume closer than this
+	float mFar;			// minimum volume further than this
+	int mRepeat;		// repeat count
 
 #if defined(USE_BASS)
 	int mFrequency;
@@ -79,8 +79,10 @@ public:
 #endif
 	int mRepeat;
 	float mVolume;
+#if !defined(USE_BASS)
 	Vector2 mPosition;
 	Vector2 mVelocity;
+#endif
 	int mPlaying;
 
 public:
