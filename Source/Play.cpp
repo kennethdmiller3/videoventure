@@ -18,7 +18,7 @@ bool InitInput(const char *config)
 	input.Clear();
 
 	// load input binding file
-	DebugPrint("Input %s\n", config);
+	DebugPrint("\nInput %s\n", config);
 	TiXmlDocument document(config);
 	if (!document.LoadFile())
 		DebugPrint("error loading input file \"%s\": %s\n", config, document.ErrorDesc());
@@ -158,7 +158,7 @@ bool MergeLevel(const char *config, const char *output)
 bool InitLevel(const char *config)
 {
 	// load level data file
-	DebugPrint("Level %s\n", config);
+	DebugPrint("\nLevel %s\n", config);
 	TiXmlDocument document(config);
 	if (!document.LoadFile())
 		DebugPrint("error loading level file \"%s\": %s\n", config, document.ErrorDesc());
