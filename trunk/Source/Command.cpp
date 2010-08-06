@@ -81,7 +81,7 @@ int ProcessCommandBool(bool &aValue, const char * const aParam[], int aCount, Pr
 	}
 	else
 	{
-		console->Print(aFormat, aValue ? "true" : "false");
+		console->Print(aFormat, aValue);
 		return 0;
 	}
 }
