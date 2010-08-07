@@ -758,7 +758,7 @@ void TiXmlElement::Print( FILE* cfile, int depth ) const
 	int i;
 	assert( cfile );
 	for ( i=0; i<depth; i++ ) {
-		fprintf( cfile, "    " );
+		fprintf( cfile, "\t" );
 	}
 
 	fprintf( cfile, "<%s", value.c_str() );
@@ -799,7 +799,7 @@ void TiXmlElement::Print( FILE* cfile, int depth ) const
 		}
 		fprintf( cfile, "\n" );
 		for( i=0; i<depth; ++i ) {
-			fprintf( cfile, "    " );
+			fprintf( cfile, "\t" );
 		}
 		fprintf( cfile, "</%s>", value.c_str() );
 	}
@@ -1253,7 +1253,7 @@ void TiXmlComment::Print( FILE* cfile, int depth ) const
 	assert( cfile );
 	for ( int i=0; i<depth; i++ )
 	{
-		fprintf( cfile,  "    " );
+		fprintf( cfile,  "\t" );
 	}
 	fprintf( cfile, "<!--%s-->", value.c_str() );
 }
@@ -1291,7 +1291,7 @@ void TiXmlText::Print( FILE* cfile, int depth ) const
 		int i;
 		fprintf( cfile, "\n" );
 		for ( i=0; i<depth; i++ ) {
-			fprintf( cfile, "    " );
+			fprintf( cfile, "\t" );
 		}
 		fprintf( cfile, "<![CDATA[%s]]>\n", value.c_str() );	// unformatted output
 	}
@@ -1421,7 +1421,7 @@ TiXmlNode* TiXmlDeclaration::Clone() const
 void TiXmlUnknown::Print( FILE* cfile, int depth ) const
 {
 	for ( int i=0; i<depth; i++ )
-		fprintf( cfile, "    " );
+		fprintf( cfile, "\t" );
 	fprintf( cfile, "<%s>", value.c_str() );
 }
 
