@@ -17,8 +17,7 @@ bool Scheduler::Run(Task &aTask, TaskObserver aObserver, Task aNext)
 	Entry entry = { &aTask, aNext, NULL, aObserver, false, 0 };
 
 	// add to entry queue
-	mEntries.push_back(entry);
-	SortQueue();
+	Insert(entry);
 
 	// success
 	return true;
@@ -54,8 +53,7 @@ bool Scheduler::Resume(Task &aTask, Task aNext)
 	if (Entry::Activate(&entry, aNext))
 	{
 		mEntries.erase(it);
-		mEntries.push_back(entry);
-		SortQueue();
+		Insert(entry);
 		return true;
 	}
 
@@ -75,8 +73,7 @@ bool Scheduler::Halt(Task &aTask, TaskObserver aObserver)
 	if (Entry::Deactivate(&entry, aObserver))
 	{
 		mEntries.erase(it);
-		mEntries.push_back(entry);
-		SortQueue();
+		Insert(entry);
 		return true;
 	}
 
@@ -133,7 +130,6 @@ bool Scheduler::Step()
 	{
 		// stop the current update
 		mEntries.push_front(e);
-		SortQueue();
 		return false;
 	}
 
@@ -208,9 +204,10 @@ void Scheduler::Stop()
 	}
 }
 
-// sort tasks
-void Scheduler::SortQueue()
+// insert a task into the queue
+void Scheduler::Insert(const Scheduler::Entry &aEntry)
 {
+#ifdef SCHEDULER_USE_BINARY_SEARCH
 	Entries::iterator i = mEntries.begin();
 
 	// find the boundary marker
@@ -219,8 +216,21 @@ void Scheduler::SortQueue()
 		++i;
 	}
 
-	// sort entries past the marker
-	stable_sort(++i, mEntries.end());
+	// find the insertion point
+	i = std::upper_bound(++i, mEntries.end(), aEntry);
+
+	// insert the new entry
+	mEntries.insert(i, aEntry);
+#else
+	Entries::const_iterator i = mEntries.end() - 1;
+
+	// find the insertion point
+	while (i->mTask && aEntry.mPriority < i->mPriority)
+		--i;
+
+	// insert the new entry
+	mEntries.insert(++i, aEntry);
+#endif
 }
 
 

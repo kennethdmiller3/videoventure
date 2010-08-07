@@ -74,11 +74,6 @@ private:
 		bool mProcessing;		// status recently changed
 		int mPriority;			// task priority level
 
-		bool operator<(const Entry &aRHS) const
-		{
-			return mPriority < aRHS.mPriority;
-		}
-
 		static bool Activate(Entry *aEntry, Task aNext);
 		static bool Deactivate(Entry *aEntry, TaskObserver aObserver = TaskObserver());
 	};
@@ -90,8 +85,8 @@ private:
 	// notify observers
 	void Notify(Entry &aEntry);
 
-	// sort the task queue
-	void SortQueue(void);
+	// insert a task
+	void Insert(const Entry &aEntry);
 
 	// task entries
 	typedef std::deque<Entry> Entries;
