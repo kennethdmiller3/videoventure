@@ -470,7 +470,7 @@ bool SoundTemplate::Configure(const TiXmlElement *element, unsigned int id)
 
 #if defined(USE_BASS)
 	// create a sample
-	unsigned int flags = BASS_SAMPLE_OVER_POS;
+	unsigned int flags = BASS_SAMPLE_OVER_POS | BASS_SAMPLE_VAM;
 #if defined(DISTANCE_FALLOFF)
 	flags |= BASS_SAMPLE_3D;
 #endif
