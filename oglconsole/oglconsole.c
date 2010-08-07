@@ -74,6 +74,7 @@ int OGLCONSOLE_CreateFont()
 		unsigned int x, y;
 		unsigned char *buf = _alloca(OGLCONSOLE_FontData.height*OGLCONSOLE_FontData.width/8);
 		unsigned char *dst = buf;
+		FILE *file;
 		for (y = 0; y < OGLCONSOLE_FontData.height; ++y)
 		{
 			for (x = 0; x < OGLCONSOLE_FontData.width; ++x)
@@ -87,33 +88,36 @@ int OGLCONSOLE_CreateFont()
 			}
 		}
 
-		OutputDebugStringA(
-			"static const struct {\n"
-			"  unsigned int 	 width;\n"
-			"  unsigned int 	 height;\n"
-			"  unsigned char	 pixel_data["
-			);
+		file = fopen("packedfont.c", "w");
+		if (file != NULL)
 		{
-			char number[16];
-			sprintf(number, "%d", dst - buf + 1);
-			OutputDebugStringA(number);
+			fprintf(file, 
+				"static const struct\n"
+				"{\n"
+				"\tunsigned int 	 width;\n"
+				"\tunsigned int 	 height;\n"
+				"\tunsigned char	 pixel_data[%d];\n"
+				"}\n"
+				"OGLCONSOLE_FontData =\n"
+				"{\n"
+				"\t%d, %d,\n",
+				dst - buf,
+				128, 64
+				);
+			//OutputDebugStringA("  \"");
+			for (x = 0; x < dst - buf; ++x)
+			{
+				if ((x & 15) == 0)
+					fputs("\t", file);
+				fprintf(file, "0x%02x, ", buf[x]);
+				if ((x & 15) == 15)
+					fputs("\n", file);
+			}
+			//OutputDebugStringA("\"\n");
+			if ((x & 15) != 0)
+				fputs("\n", file);
+			fputs("};\n", file);
 		}
-		OutputDebugStringA(
-			"];\n"
-			"} OGLCONSOLE_FontData = {\n"
-			"  128, 64,\n"
-			);
-		OutputDebugStringA("  \"");
-		for (x = 0; x < dst - buf; ++x)
-		{
-			char text[8];
-			sprintf(text, "\\%o", buf[x]);
-			OutputDebugStringA(text);
-			if ((x & 15) == 15)
-				OutputDebugStringA("\"\n  \"");
-		}
-		OutputDebugStringA("\"\n");
-		OutputDebugStringA("};\n");
 	}
 #endif
 
