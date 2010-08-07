@@ -1,0 +1,82 @@
+<?xml version="1.0" ?>
+<template name="enemydynamo">
+	<collidable>
+		<body name="main">
+			<circle radius="5">
+				<density value="1" />
+				<friction value="0.5" />
+				<restitution value="0.5" />
+				<filter name="redunit" />
+			</circle>
+		</body>
+	</collidable>
+	<renderable radius="8" period="0.133333">
+		<repeat count="2">
+			<pushmatrix>
+				<translate>
+					<key time="0.000000" x="0" y="3" />
+					<key time="0.033333" x="3" y="0" />
+					<key time="0.066667" x="0" y="-3" />
+					<key time="0.100000" x="-3" y="0" />
+					<key time="0.133333" x="0" y="3" />
+				</translate>
+				<drawlist>
+					<pushmatrix>
+						<scale x="4" y="4" />
+						<color r="1.0" g="0.2" b="0.1" a="1.0" />
+						<calllist name="diamond" />
+					</pushmatrix>
+					<pushmatrix>
+						<scale x="2" y="2" />
+						<color r="0.3" g="0.3" b="0.3" a="1.0" />
+						<calllist name="diamond" />
+					</pushmatrix>
+					<pushmatrix>
+						<translate x="0" y="-3" />
+						<color r="1.0" g="1.0" b="1.0" a="1.0" />
+						<calllist name="diamond" />
+					</pushmatrix>
+					<pushmatrix>
+						<translate x="-3" y="0" />
+						<color r="1.0" g="1.0" b="1.0" a="1.0" />
+						<calllist name="diamond" />
+					</pushmatrix>
+					<pushmatrix>
+						<translate x="0" y="3" />
+						<color r="1.0" g="1.0" b="1.0" a="1.0" />
+						<calllist name="diamond" />
+					</pushmatrix>
+					<pushmatrix>
+						<translate x="3" y="0" />
+						<color r="1.0" g="1.0" b="1.0" a="1.0" />
+						<calllist name="diamond" />
+					</pushmatrix>
+				</drawlist>
+			</pushmatrix>
+			<rotate angle="180" />
+		</repeat>
+	</renderable>
+	<!--aimer range="256" attack="128" leading="0" drift="0.5" wanderturn="1.0" wanderturnrate="0.25" wanderside="0.5" wandersiderate="0.25" wanderfront="0.5" wanderfrontrate="0.25" evade="0" close="64" category="3" bit3="0" bit4="0" /-->
+	<aimer>
+		<drift strength="0.5" />
+		<wander turn="1" turnrate="0.25" side="0.5" siderate="0.25" front="0.5" frontrate="0.25" />
+		<target range="256" category="3" bit3="0" bit4="0" />
+		<aim strength="1" leading="0" />
+		<pursue strength="1" leading="0" />
+		<fire channel="1" range="128" angle="180" />
+		<close range="64" />
+	</aimer>
+	<ship maxveloc="30" maxaccel="120" minaccel="10" maxomega="2" />
+	<damagable health="3" spawnondeath="enemyexplosion" />
+	<weapon>
+		<velocity x="0" y="60" />
+		<ordnance name="enemyspacehum" />
+		<shot delay="1.0" track="4" />
+	</weapon>
+	<soundcue>
+		<cue name="fire" sound="stargate-dynamofire" />
+	</soundcue>
+	<team name="red" />
+	<points value="200" />
+	<capturable resistance="3" spawnoncapture="frienddynamo" />
+</template>

@@ -1,0 +1,78 @@
+<?xml version="1.0" ?>
+<template name="enemyrocketbomb">
+	<collidable>
+		<body name="main">
+			<poly>
+				<vertex x="0" y="6" />
+				<vertex x="-3" y="0" />
+				<vertex x="0" y="-3" />
+				<vertex x="3" y="0" />
+				<density value="1" />
+				<friction value="0.5" />
+				<restitution value="0.5" />
+				<filter name="redmissile" />
+			</poly>
+		</body>
+	</collidable>
+	<renderable radius="6" period="0.3">
+		<pushmatrix>
+			<color r="1.0" g="0.2" b="0.1" a="1.0" />
+			<quads>
+				<vertex x="0" y="6" />
+				<vertex x="-3" y="0" />
+				<vertex x="0" y="-3" />
+				<vertex x="3" y="0" />
+			</quads>
+		</pushmatrix>
+		<pushmatrix>
+			<scale>
+				<key time="0.00" x="3" y="3" />
+				<key time="0.15" x="2" y="2" />
+				<key time="0.30" x="3" y="3" />
+			</scale>
+			<color>
+				<key time="0.00" r="1.0" g="0.8" b="0.1" a="1.0" />
+				<key time="0.15" r="1.0" g="0.2" b="0.1" a="1.0" />
+				<key time="0.30" r="1.0" g="0.8" b="0.1" a="1.0" />
+			</color>
+			<quads>
+				<vertex x="0" y="2" />
+				<vertex x="-1" y="0" />
+				<vertex x="0" y="-1" />
+				<vertex x="1" y="-0" />
+			</quads>
+		</pushmatrix>
+		<pushmatrix>
+			<scale>
+				<key time="0.00" x="1" y="1" />
+				<key time="0.15" x="2" y="2" />
+				<key time="0.30" x="1" y="1" />
+			</scale>
+			<color>
+				<key time="0.00" r="1.0" g="1.0" b="1.0" a="1.0" />
+				<key time="0.15" r="1.0" g="0.8" b="0.1" a="1.0" />
+				<key time="0.30" r="1.0" g="1.0" b="1.0" a="1.0" />
+			</color>
+			<quads>
+				<vertex x="0" y="2" />
+				<vertex x="-1" y="0" />
+				<vertex x="0" y="-1" />
+				<vertex x="1" y="-0" />
+			</quads>
+		</pushmatrix>
+	</renderable>
+	<!--aimer range="512" attack="0" drift="1" leading="0" category="3" bit2="0" bit3="0" bit4="0" /-->
+	<aimer>
+		<target range="512" category="3" bit2="0" bit3="0" bit4="0" />
+		<aim strength="1" leading="0" />
+	</aimer>
+	<ship forwardveloc="60" neutralveloc="60" reverseveloc="60" strafeveloc="0" maxaccel="120" minaccel="120" maxomega="2.0" />
+	<bullet damage="0" spawnondeath="enemyrocketbombexplosion" />
+	<damagable health="1" spawnondeath="enemyrocketbombexplosion" />
+	<spawner>
+		<offset x="0" y="-4" />
+		<spawn name="enemyrocketbombtrail" start="0" cycle="0.1" track="0" />
+	</spawner>
+	<team name="red" />
+	<points value="10" />
+</template>

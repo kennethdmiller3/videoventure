@@ -1,0 +1,4 @@
+<?xml version="1.0" ?>
+<sound name="stargate-playershipidle" volume="0.125" repeat="1">
+	<trianglenoise frequency="3579000" divider="4" outerdelay="61" innerdelay="30" slope="1" duration="16384" decay="0" sputter="0" />
+</sound>
