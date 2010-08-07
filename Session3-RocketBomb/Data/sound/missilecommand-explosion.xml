@@ -1,0 +1,26 @@
+<?xml version="1.0" ?>
+<sound name="missilecommand-explosion">
+	<pokey length="0.8" frequency="1250000" tone="poly17">
+		<divider quantize="28" interpolate="0">
+			<key time="0.000000" value="4508" />
+			<key time="0.066667" value="4620" />
+			<key time="0.133333" value="4732" />
+			<key time="0.200000" value="4844" />
+			<key time="0.266667" value="4956" />
+			<key time="0.333333" value="5068" />
+			<key time="0.400000" value="5180" />
+			<key time="0.466667" value="5292" />
+			<key time="0.533333" value="5404" />
+			<key time="0.600000" value="5516" />
+			<key time="0.666666" value="5628" />
+			<key time="0.733333" value="5740" />
+			<key time="0.800000" value="5852" />
+		</divider>
+		<amplitude quantize="0.066667" interpolate="0">
+			<key time="0.000000" value="0.400000" />
+			<key time="0.266667" value="0.266667" />
+			<key time="0.533333" value="0.200000" />
+			<key time="0.800000" value="0.000000" />
+		</amplitude>
+	</pokey>
+</sound>

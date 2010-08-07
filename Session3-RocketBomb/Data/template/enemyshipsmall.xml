@@ -1,0 +1,39 @@
+<?xml version="1.0" ?>
+<template name="enemyshipsmall">
+	<collidable>
+		<body name="main">
+			<circle radius="6">
+				<density value="1" />
+				<friction value="0.5" />
+				<restitution value="0.5" />
+				<filter name="redunit" />
+			</circle>
+		</body>
+	</collidable>
+	<renderable radius="6">
+		<color r="1.0" g="0.2" b="0.1" a="1.0" />
+		<calllist name="shipsmall" />
+	</renderable>
+	<!--aimer range="256" attack="128" drift="0.5" wanderturn="0.25" wanderturnrate="0.25" leading="240" evade="1" close="64" filter="redbullet" /-->
+	<aimer>
+		<drift strength="0.5" />
+		<wander turn="0.25" turnrate="0.25" />
+		<target range="256" filter="redbullet" />
+		<aim strength="1" leading="240" />
+		<pursue strength="1" leading="0" />
+		<fire channel="1" range="128" angle="30" />
+		<evade strength="1" />
+		<close range="64" />
+	</aimer>
+	<ship maxveloc="90" maxaccel="90" minaccel="10" maxomega="1.5" />
+	<damagable health="3" spawnondeath="enemyexplosionsmall" />
+	<link name="lgun" secondary="enemyweapon">
+		<offset x="2" y="0" angle="0" />
+	</link>
+	<link name="rgun" secondary="enemyweapon">
+		<offset x="-2" y="0" angle="0" />
+	</link>
+	<team name="red" />
+	<points value="200" />
+	<capturable resistance="3" spawnoncapture="friendshipsmall" />
+</template>
