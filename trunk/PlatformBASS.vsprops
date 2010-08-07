@@ -12,6 +12,6 @@
 	<Tool
 		Name="VCLinkerTool"
 		AdditionalDependencies="bass.lib"
-		AdditionalLibraryDirectories="$(SolutionDir)\..\Bass\c"
+		AdditionalLibraryDirectories="&quot;$(SolutionDir)\..\BASS\c&quot;"
 	/>
 </VisualStudioPropertySheet>
