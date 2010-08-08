@@ -172,9 +172,6 @@ bool InitLevel(const char *config)
 		// get the reticule draw list (HACK)
 		reticule_handle = Database::drawlist.Get(0x170e4c58 /* "reticule" */);
 
-		// play the startup sound (HACK)
-		PlaySoundCue(0x94326baa /* "startup" */);
-
 		return true;
 	}
 
@@ -260,13 +257,16 @@ void EnterPlayState()
 	if (!InitLevel(LEVEL_CONFIG.c_str()))
 		setgamestate = STATE_SHELL;
 
-	// start audio
-	Sound::Resume();
-
 	// create escape overlay
 	Overlay *escape = new Overlay(0x9e212406 /* "escape" */);
 	Database::overlay.Put(0x9e212406 /* "escape" */, escape);
 	escape->SetAction(Overlay::Action(RenderEscapeOptions));
+
+	// start audio
+	Sound::Resume();
+
+	// play the startup sound (HACK)
+	PlaySoundCue(0x94326baa /* "startup" */);
 
 	// set to runtime mode
 	runtime = true;
