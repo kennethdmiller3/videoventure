@@ -11,6 +11,8 @@
 // returns interpolated value based on parameter
 //
 
+//#define EVALUATE_INTERPOLATOR_USE_HINT
+
 // apply keyframe interpolator (typed)
 template <typename T> inline T EvaluateApplyInterpolator(int aCount, const float aKeys[], float aTime, int &aHint)
 {
@@ -52,8 +54,12 @@ template <typename T> const T EvaluateInterpolator(EntityContext &aContext)
 	const unsigned int *end = aContext.mStream + size;
 
 	// get keyframe hint
-	Database::Key hintkey((aContext.mStream - aContext.mBegin)*4);
+#ifdef EVALUATE_INTERPOLATOR_USE_HINT
+	Database::Key hintkey(0x586a05fc /* "interpolator@" */ + (aContext.mStream - aContext.mBegin));
 	int &aHint = *reinterpret_cast<int *>(&aContext.mVars->Open(hintkey));
+#else
+	int aHint = 0;
+#endif
 
 	// get keyframe data
 	const int aCount = Expression::Read<int>(aContext);
@@ -62,8 +68,10 @@ template <typename T> const T EvaluateInterpolator(EntityContext &aContext)
 	// get interpolated value
 	T value = EvaluateApplyInterpolator<T>(aCount, aKeys, aTime, aHint);
 
+#ifdef EVALUATE_INTERPOLATOR_USE_HINT
 	// close keyframe hint
 	aContext.mVars->Close(hintkey);
+#endif
 
 	// advance stream
 	aContext.mStream = end;
@@ -85,8 +93,12 @@ template <typename T> const T EvaluateInterpolatorConstant(EntityContext &aConte
 	const unsigned int *end = aContext.mStream + size;
 
 	// get keyframe hint
-	Database::Key hintkey((aContext.mStream - aContext.mBegin)*4);
+#ifdef EVALUATE_INTERPOLATOR_USE_HINT
+	Database::Key hintkey(0x586a05fc /* "interpolator@" */ + (aContext.mStream - aContext.mBegin));
 	int &aHint = *reinterpret_cast<int *>(&aContext.mVars->Open(hintkey));
+#else
+	int aHint = 0;
+#endif
 
 	// get keyframe data
 	const int aCount = Expression::Read<int>(aContext);
@@ -95,8 +107,10 @@ template <typename T> const T EvaluateInterpolatorConstant(EntityContext &aConte
 	// get interpolated value
 	T value = EvaluateApplyInterpolatorConstant<T>(aCount, aKeys, aTime, aHint);
 
+#ifdef EVALUATE_INTERPOLATOR_USE_HINT
 	// close keyframe hint
 	aContext.mVars->Close(hintkey);
+#endif
 
 	// advance stream
 	aContext.mStream = end;
