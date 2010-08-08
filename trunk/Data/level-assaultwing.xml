@@ -1,19 +1,10 @@
 <?xml version="1.0" standalone="no" ?>
 <!-- Test Level -->
 <world xmin="-512" ymin="-512" xmax="512" ymax="512">
+	<library name="session4.dll" />
 	<fog enable="0" mode="linear" r="0" g="0" b="0" a="0" start="512" end="1280" />
 	<!-- sounds -->
 	<import name="sound/stargate-start.xml" />
-	<import name="sound/missilecommand-alert.xml" />
-	<import name="sound/missilecommand-fire.xml" />
-	<import name="sound/missilecommand-explosion.xml" />
-	<import name="sound/missilecommand-explosion2.xml" />
-	<import name="sound/missilecommand-lowammo.xml" />
-	<import name="sound/missilecommand-empty.xml" />
-	<import name="sound/missilecommand-ammobonus.xml" />
-	<import name="sound/missilecommand-citybonus.xml" />
-	<import name="sound/missilecommand-bomber.xml" />
-	<import name="sound/missilecommand-smartbomb.xml" />
 	<import name="sound/stargate-warpin.xml" />
 	<import name="sound/stargate-playershot.xml" />
 	<import name="sound/stargate-playershipidle.xml" />
