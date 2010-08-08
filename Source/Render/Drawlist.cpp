@@ -378,6 +378,12 @@ void DO_glLineWidth(EntityContext &aContext)
 	glLineWidth(width);
 }
 
+void DO_glLineWidthWorld(EntityContext &aContext)
+{
+	GLfloat width(Expression::Read<GLfloat>(aContext) * float(SCREEN_HEIGHT) / VIEW_SIZE);
+	glLineWidth(width);
+}
+
 void DO_glLoadIdentity(EntityContext &aContext)
 {
 	glLoadIdentity();
@@ -412,6 +418,12 @@ void DO_glNormalPointer(EntityContext &aContext)
 void DO_glPointSize(EntityContext &aContext)
 {
 	GLfloat size(Expression::Read<GLfloat>(aContext));
+	glPointSize(size);
+}
+
+void DO_glPointSizeWorld(EntityContext &aContext)
+{
+	GLfloat size(Expression::Read<GLfloat>(aContext) * float(SCREEN_HEIGHT) / VIEW_SIZE);
 	glPointSize(size);
 }
 
@@ -642,7 +654,7 @@ void ConfigureFloatData(const TiXmlElement *element, std::vector<unsigned int> &
 	while (element)
 	{
 		float value = float(atof(item));
-		buffer.push_back(*reinterpret_cast<unsigned int *>(&value));
+		Expression::Append(buffer, value);
 		item = strtok(NULL, " \t\n\r,;");
 	}
 }
@@ -656,9 +668,7 @@ void ConfigureVariableOperator(const TiXmlElement *element, std::vector<unsigned
 	const float *data;
 	GetTypeData(type, width, names, data);
 
-	Expression::Append(buffer, op);
-	Expression::Append(buffer, name);
-	Expression::Append(buffer, width);
+	Expression::Append(buffer, op, name, width);
 	if (drawdata)
 	{
 		switch (width)
@@ -680,9 +690,7 @@ void ConfigurePrimitive(const TiXmlElement *element, std::vector<unsigned int> &
 
 void ConfigureArray(const TiXmlElement *element, std::vector<unsigned int> &buffer, void (*op)(EntityContext &), size_t size, size_t stride)
 {
-	Expression::Append(buffer, op);
-	Expression::Append(buffer, size);
-	Expression::Append(buffer, stride);
+	Expression::Append(buffer, op, size, stride);
 
 	buffer.push_back(0);
 	int start = buffer.size();
@@ -822,7 +830,7 @@ void ConfigureDrawItem(const TiXmlElement *element, std::vector<unsigned int> &b
 				sprintf(name, "m%d", i);
 				float m = sMatrixDefault[i];
 				element->QueryFloatAttribute(name, &m);
-				buffer.push_back(*reinterpret_cast<unsigned int *>(&m));
+				Expression::Append(buffer, m);
 			}
 		}
 		break;
@@ -836,7 +844,7 @@ void ConfigureDrawItem(const TiXmlElement *element, std::vector<unsigned int> &b
 				sprintf(name, "m%d", i);
 				float m = sMatrixDefault[i];
 				element->QueryFloatAttribute(name, &m);
-				buffer.push_back(*reinterpret_cast<unsigned int *>(&m));
+				Expression::Append(buffer, m);
 			}
 		}
 		break;
@@ -881,8 +889,7 @@ void ConfigureDrawItem(const TiXmlElement *element, std::vector<unsigned int> &b
 			int flag;
 			if (element->QueryIntAttribute("flag", &flag) == TIXML_SUCCESS)
 			{
-				Expression::Append(buffer, DO_glEdgeFlag);
-				buffer.push_back(flag ? GL_TRUE : GL_FALSE);
+				Expression::Append(buffer, DO_glEdgeFlag, flag ? GL_TRUE : GL_FALSE);
 			}
 		}
 		break;
@@ -896,11 +903,8 @@ void ConfigureDrawItem(const TiXmlElement *element, std::vector<unsigned int> &b
 				if (texture)
 				{
 					// bind the texture object
-					Expression::Append(buffer, DO_glEnable);
-					buffer.push_back(GL_TEXTURE_2D);
-					Expression::Append(buffer, DO_glBindTexture);
-					buffer.push_back(GL_TEXTURE_2D);
-					buffer.push_back(texture);
+					Expression::Append(buffer, DO_glEnable, GL_TEXTURE_2D);
+					Expression::Append(buffer, DO_glBindTexture, GL_TEXTURE_2D, texture);
 				}
 			}
 		}
@@ -912,14 +916,13 @@ void ConfigureDrawItem(const TiXmlElement *element, std::vector<unsigned int> &b
 			element->QueryFloatAttribute("size", &size);
 			if (size != 0.0f)
 			{
-				Expression::Append(buffer, DO_glPointSize);
-				Expression::Append(buffer, size * float(SCREEN_HEIGHT) / 240.0f);
+				Expression::Append(buffer, DO_glPushAttrib, GL_POINT_BIT);
+				Expression::Append(buffer, DO_glPointSizeWorld, size);
 			}
 			ConfigurePrimitive(element, buffer, GL_POINTS);
 			if (size != 0.0f)
 			{
-				Expression::Append(buffer, DO_glPointSize);
-				Expression::Append(buffer, 1.0f);
+				Expression::Append(buffer, DO_glPopAttrib);
 			}
 		}
 		break;
@@ -930,14 +933,13 @@ void ConfigureDrawItem(const TiXmlElement *element, std::vector<unsigned int> &b
 			element->QueryFloatAttribute("width", &width);
 			if (width != 0.0f)
 			{
-				Expression::Append(buffer, DO_glLineWidth);
-				Expression::Append(buffer, width * float(SCREEN_HEIGHT) / 240.0f);
+				Expression::Append(buffer, DO_glPushAttrib, GL_LINE_BIT);
+				Expression::Append(buffer, DO_glLineWidthWorld, width);
 			}
 			ConfigurePrimitive(element, buffer, GL_LINES);
 			if (width != 0.0f)
 			{
-				Expression::Append(buffer, DO_glLineWidth);
-				Expression::Append(buffer, 1.0f);
+				Expression::Append(buffer, DO_glPopAttrib);
 			}
 		}
 		break;
@@ -948,14 +950,13 @@ void ConfigureDrawItem(const TiXmlElement *element, std::vector<unsigned int> &b
 			element->QueryFloatAttribute("width", &width);
 			if (width != 0.0f)
 			{
-				Expression::Append(buffer, DO_glLineWidth);
-				Expression::Append(buffer, width * float(SCREEN_HEIGHT) / 240.0f);
+				Expression::Append(buffer, DO_glPushAttrib, GL_LINE_BIT);
+				Expression::Append(buffer, DO_glLineWidthWorld, width);
 			}
 			ConfigurePrimitive(element, buffer, GL_LINE_LOOP);
 			if (width != 0.0f)
 			{
-				Expression::Append(buffer, DO_glLineWidth);
-				Expression::Append(buffer, 1.0f);
+				Expression::Append(buffer, DO_glPopAttrib);
 			}
 		}
 		break;
@@ -966,14 +967,13 @@ void ConfigureDrawItem(const TiXmlElement *element, std::vector<unsigned int> &b
 			element->QueryFloatAttribute("width", &width);
 			if (width != 0.0f)
 			{
-				Expression::Append(buffer, DO_glLineWidth);
-				Expression::Append(buffer, width * float(SCREEN_HEIGHT) / 240.0f);
+				Expression::Append(buffer, DO_glPushAttrib, GL_LINE_BIT);
+				Expression::Append(buffer, DO_glLineWidthWorld, width);
 			}
 			ConfigurePrimitive(element, buffer, GL_LINE_STRIP);
 			if (width != 0.0f)
 			{
-				Expression::Append(buffer, DO_glLineWidth);
-				Expression::Append(buffer, 1.0f);
+				Expression::Append(buffer, DO_glPopAttrib);
 			}
 		}
 		break;
@@ -1047,9 +1047,7 @@ void ConfigureDrawItem(const TiXmlElement *element, std::vector<unsigned int> &b
 			case 0x1ad7d24f /* "one_minus_dst_alpha" */:	dstfactor = GL_ONE_MINUS_DST_ALPHA; break;
 			}
 
-			Expression::Append(buffer, DO_glBlendFunc);
-			buffer.push_back(srcfactor);
-			buffer.push_back(dstfactor);
+			Expression::Append(buffer, DO_glBlendFunc, srcfactor, dstfactor);
 		}
 		break;
 
@@ -1061,8 +1059,7 @@ void ConfigureDrawItem(const TiXmlElement *element, std::vector<unsigned int> &b
 				GLuint drawlist = Database::drawlist.Get(Hash(name));
 				if (drawlist)
 				{
-					Expression::Append(buffer, DO_glCallList);
-					buffer.push_back(drawlist);
+					Expression::Append(buffer, DO_glCallList, drawlist);
 				}
 				else
 				{
@@ -1078,13 +1075,11 @@ void ConfigureDrawItem(const TiXmlElement *element, std::vector<unsigned int> &b
 			const char *name = element->Attribute("name");
 			if (name)
 			{
+				// TO DO: call drawlist at runtime instead of "inlining" it
 				const std::vector<unsigned int> &drawlist = Database::dynamicdrawlist.Get(Hash(name));
 				if (drawlist.size())
 				{
-					for (size_t i = 0; i < drawlist.size(); ++i)
-					{
-						buffer.push_back(drawlist[i]);
-					}
+					buffer.insert(buffer.end(), drawlist.begin(), drawlist.end());
 				}
 				else
 				{
@@ -1136,8 +1131,7 @@ void ConfigureDrawItem(const TiXmlElement *element, std::vector<unsigned int> &b
 			glEndList();
 
 			// use the anonymous drawlist
-			Expression::Append(buffer, DO_glCallList);
-			buffer.push_back(handle);
+			Expression::Append(buffer, DO_glCallList, handle);
 		}
 		break;
 
@@ -1236,11 +1230,9 @@ void ConfigureDrawItem(const TiXmlElement *element, std::vector<unsigned int> &b
 				element = strtok(NULL, " \t\n\r,;");
 			}
 
-			Expression::Append(buffer, DO_glEdgeFlagPointer);
-			buffer.push_back(stride);
-			buffer.push_back(count);
-			for (size_t i = 0; i < (count+sizeof(unsigned int)/sizeof(bool)-1)/(sizeof(unsigned int)/sizeof(bool)); i++)
-				buffer.push_back(*reinterpret_cast<unsigned int *>(&data[i*sizeof(unsigned int)/sizeof(bool)]));
+			Expression::Append(buffer, DO_glEdgeFlagPointer, stride, count);
+			for (size_t i = 0; i < count+sizeof(unsigned int)/sizeof(bool)-1; i += sizeof(unsigned int)/sizeof(bool))
+				buffer.push_back(*reinterpret_cast<unsigned int *>(&data[i]));
 		}
 		break;
 
@@ -1249,8 +1241,7 @@ void ConfigureDrawItem(const TiXmlElement *element, std::vector<unsigned int> &b
 			int index;
 			if (element->QueryIntAttribute("index", &index) == TIXML_SUCCESS)
 			{
-				Expression::Append(buffer, DO_glArrayElement);
-				buffer.push_back(index);
+				Expression::Append(buffer, DO_glArrayElement, index);
 			}
 		}
 		break;
@@ -1262,10 +1253,7 @@ void ConfigureDrawItem(const TiXmlElement *element, std::vector<unsigned int> &b
 			int first = 0, count = 0;
 			element->QueryIntAttribute("first", &first);
 			element->QueryIntAttribute("count", &count);
-			Expression::Append(buffer, DO_glDrawArrays);
-			buffer.push_back(mode);
-			buffer.push_back(first);
-			buffer.push_back(count);
+			Expression::Append(buffer, DO_glDrawArrays, mode, first, count);
 		}
 		break;
 
@@ -1286,11 +1274,9 @@ void ConfigureDrawItem(const TiXmlElement *element, std::vector<unsigned int> &b
 				element = strtok(NULL, " \t\n\r,;");
 			}
 
-			Expression::Append(buffer, DO_glDrawElements);
-			buffer.push_back(mode);
-			buffer.push_back(count);
-			for (size_t i = 0; i < (count+sizeof(unsigned int)/sizeof(unsigned short)-1)/(sizeof(unsigned int)/sizeof(unsigned short)); i++)
-				buffer.push_back(*reinterpret_cast<unsigned int *>(&indices[i*sizeof(unsigned int)/sizeof(unsigned short)]));
+			Expression::Append(buffer, DO_glDrawElements, mode, count);
+			for (size_t i = 0; i < count+sizeof(unsigned int)/sizeof(unsigned short)-1; i += sizeof(unsigned int)/sizeof(unsigned short))
+				buffer.push_back(*reinterpret_cast<unsigned int *>(&indices[i]));
 		}
 		break;
 
@@ -1299,8 +1285,7 @@ void ConfigureDrawItem(const TiXmlElement *element, std::vector<unsigned int> &b
 			int count = 1;
 			element->QueryIntAttribute("count", &count);
 
-			Expression::Append(buffer, DO_Repeat);
-			buffer.push_back(count);
+			Expression::Append(buffer, DO_Repeat, count);
 
 			buffer.push_back(0);
 			int start = buffer.size();
@@ -1320,11 +1305,7 @@ void ConfigureDrawItem(const TiXmlElement *element, std::vector<unsigned int> &b
 			int repeat = 0;
 			element->QueryIntAttribute("repeat", &repeat);
 
-			Expression::Append(buffer, DO_Block);
-			buffer.push_back(*reinterpret_cast<unsigned int *>(&start));
-			buffer.push_back(*reinterpret_cast<unsigned int *>(&length));
-			buffer.push_back(*reinterpret_cast<unsigned int *>(&scale));
-			buffer.push_back(*reinterpret_cast<unsigned int *>(&repeat));
+			Expression::Append(buffer, DO_Block, start, length, scale, repeat);
 
 			buffer.push_back(0);
 			int size = buffer.size();
@@ -1384,9 +1365,7 @@ void ConfigureDrawItem(const TiXmlElement *element, std::vector<unsigned int> &b
 			const float *data;
 			GetTypeData(type, width, names, data);
 
-			Expression::Append(buffer, DO_Swizzle);
-			buffer.push_back(name);
-			buffer.push_back(width);
+			Expression::Append(buffer, DO_Swizzle, name, width);
 
 			for (int i = 0; i < width; ++i)
 			{
@@ -1439,11 +1418,7 @@ void ConfigureDrawItem(const TiXmlElement *element, std::vector<unsigned int> &b
 				break;
 			}
 
-			Expression::Append(buffer, DO_Loop);
-			buffer.push_back(name);
-			buffer.push_back(*reinterpret_cast<unsigned int *>(&from));
-			buffer.push_back(*reinterpret_cast<unsigned int *>(&to));
-			buffer.push_back(*reinterpret_cast<unsigned int *>(&by));
+			Expression::Append(buffer, DO_Loop, name, from, to, by);
 
 			buffer.push_back(0);
 			int start = buffer.size();
@@ -1465,12 +1440,7 @@ void ConfigureDrawItem(const TiXmlElement *element, std::vector<unsigned int> &b
 			element->QueryFloatAttribute("y", &y);
 			element->QueryFloatAttribute("angle", &a);
 
-			Expression::Append(buffer, DO_Emitter);
-			buffer.push_back(count);
-			buffer.push_back(*reinterpret_cast<unsigned int *>(&period));
-			buffer.push_back(*reinterpret_cast<unsigned int *>(&x));
-			buffer.push_back(*reinterpret_cast<unsigned int *>(&y));
-			buffer.push_back(*reinterpret_cast<unsigned int *>(&a));
+			Expression::Append(buffer, DO_Emitter, count, period, x, y, a);
 
 			buffer.push_back(0);
 			int start = buffer.size();
