@@ -455,24 +455,22 @@ void RunState()
 
 	// input logging
 	TiXmlDocument inputlog(RECORD_CONFIG.c_str());
-	TiXmlElement *inputlogroot;
-	TiXmlElement *inputlognext;
-	if (playback)
+	TiXmlElement *inputlogroot = NULL;
+	TiXmlElement *inputlognext = NULL;
+	if (curgamestate == STATE_PLAY)
 	{
-		if (!inputlog.LoadFile())
-			DebugPrint("error loading recording file \"%s\": %s\n", RECORD_CONFIG.c_str(), inputlog.ErrorDesc());
-		inputlogroot = inputlog.RootElement();
-		inputlognext = inputlogroot->FirstChildElement();
-	}
-	else if (record)
-	{
-		inputlogroot = inputlog.LinkEndChild(new TiXmlElement("journal"))->ToElement();
-		inputlognext = NULL;
-	}
-	else
-	{
-		inputlogroot = NULL;
-		inputlognext = NULL;
+		if (playback)
+		{
+			if (!inputlog.LoadFile())
+				DebugPrint("error loading recording file \"%s\": %s\n", RECORD_CONFIG.c_str(), inputlog.ErrorDesc());
+			inputlogroot = inputlog.RootElement();
+			inputlognext = inputlogroot->FirstChildElement();
+		}
+		else if (record)
+		{
+			inputlogroot = inputlog.LinkEndChild(new TiXmlElement("journal"))->ToElement();
+			inputlognext = NULL;
+		}
 	}
 
 #ifdef GET_PERFORMANCE_DETAILS
@@ -996,6 +994,44 @@ void RunState()
 #endif
 #endif
 
+#if defined(DRAW_SOUND_USAGE)
+		if (SOUND_OUTPUTSCREEN)
+		{
+			FontDrawBegin(sDefaultFontHandle);
+
+			int active = 0, total = 0, y = 16+8;
+			for (Database::Typed<Database::Typed<Sound *> >::Iterator outer(&Database::sound); outer.IsValid(); ++outer)
+			{
+				for (Database::Typed<Sound *>::Iterator inner(&outer.GetValue()); inner.IsValid(); ++inner)
+				{
+					Sound *sound = inner.GetValue();
+					if (sound->IsActive())
+					{
+						++active;
+						glColor4f(0.0f, 0.5f, 1.0f, 1.0f);
+					}
+					else
+					{
+						glColor4f(0.5f, 0.5f, 0.5f, 1.0f);
+					}
+					const char *name = Database::name.Get(outer.GetKey()).c_str();
+					const char *cue = Database::name.Get(inner.GetKey()).c_str();
+					FontDrawString(name, 200, y, 8, -8, 0);
+					FontDrawString(cue, 400, y, 8, -8, 0);
+					++total;
+					y += 8;
+				}
+			}
+
+			char buf[64];
+			sprintf(buf, "sound: %d/%d", active, total);
+
+			glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+			FontDrawString(buf, 200, 16, 8, -8, 0);
+			FontDrawEnd();
+		}
+#endif
+
 		// reset camera transform
 		glMatrixMode(GL_PROJECTION);
 		glPopMatrix();
@@ -1021,9 +1057,12 @@ void RunState()
 	}
 	while( setgamestate == curgamestate );
 
-	if (record)
+	if (curgamestate == STATE_PLAY)
 	{
-		// save input log
-		inputlog.SaveFile();
+		if (record)
+		{
+			// save input log
+			inputlog.SaveFile();
+		}
 	}
 }
