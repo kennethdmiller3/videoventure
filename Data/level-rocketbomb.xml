@@ -61,8 +61,8 @@
 	<entity name="clouds">
 		<renderable radius="512">
 			<drawlist>
-				<set name="d" type="translate" x="0" y="0" z="256" />
-				<set name="c0" type="color" r="0.125" g="0.125" b="0.125" a="0.75" />
+				<set name="d" type="translate" x="0" y="0" z="640" />
+				<set name="c0" type="color" r="0.0" g="0.0" b="0.0" a="0.75" />
 				<quads>
 					<repeat count="64">
 						<set name="c" type="color" rand="1" r_avg="1" r_var="0.5" g_avg="1" g_var="0.5" b_avg="1" b_var="0.5" a_avg="1" a_var="0" />
@@ -83,8 +83,8 @@
 						<vertex variable="p0" />
 						<sub name="p0" type="translate" variable="w" />
 						<vertex variable="p0" />
-						<add name="d" type="translate" x="0" y="0" z="6" />
-						<add name="c0" type="color" r="-0.001953125" g="-0.001953125" b="-0.001953125" a="0.0" />
+						<add name="d" type="translate" x="0" y="0" z="-6" />
+						<add name="c0" type="color" r="0.001953125" g="0.001953125" b="0.001953125" a="0.0" />
 					</repeat>
 				</quads>
 				<clear name="c" />
@@ -111,14 +111,14 @@
 			<drawlist>
 				<scale x="16" y="16" />
 				<color r="1.0" g="1.0" b="1.0" a="1.0" />
-				<line_loop>
+				<line_loop width="1">
 					<!-- perimeter -->
 					<vertex x="-32" y="-32" />
 					<vertex x="32" y="-32" />
 					<vertex x="32" y="32" />
 					<vertex x="-32" y="32" />
 				</line_loop>
-				<lines>
+				<lines width="0.5">
 					<!-- vertical lines -->
 					<set name="p0" type="position" x="-31" y="-32" />
 					<set name="p1" type="position" x="-31" y="32" />
@@ -633,4 +633,8 @@
 	<import name="template/playershipdeath.xml" />
 	<!-- player ship explosion -->
 	<import name="template/playershipexplosion.xml" />
+
+	<entity name="soundtrack">
+		<music file="dualtrax&amp;paledeth-world_of_chip.xm"/>
+	</entity>
 </world>
