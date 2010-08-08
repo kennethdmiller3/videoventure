@@ -5,16 +5,7 @@
 	<fog enable="0" mode="linear" r="0" g="0" b="0" a="0" start="512" end="1280" />
 	<!-- sounds -->
 	<import name="sound/stargate-start.xml" />
-	<import name="sound/missilecommand-alert.xml" />
 	<import name="sound/missilecommand-fire.xml" />
-	<import name="sound/missilecommand-explosion.xml" />
-	<import name="sound/missilecommand-explosion2.xml" />
-	<import name="sound/missilecommand-lowammo.xml" />
-	<import name="sound/missilecommand-empty.xml" />
-	<import name="sound/missilecommand-ammobonus.xml" />
-	<import name="sound/missilecommand-citybonus.xml" />
-	<import name="sound/missilecommand-bomber.xml" />
-	<import name="sound/missilecommand-smartbomb.xml" />
 	<import name="sound/stargate-warpin.xml" />
 	<import name="sound/stargate-playershot.xml" />
 	<import name="sound/stargate-playershipidle.xml" />
@@ -262,10 +253,6 @@
 	<import name="template/enemylasershipweapon.xml" />
 	<!-- enemy laser ship -->
 	<import name="template/enemylasership.xml" />
-	<!-- enemy rocket bomb -->
-	<import name="template/enemyrocketbombexplosion.xml" />
-	<import name="template/enemyrocketbombtrail.xml" />
-	<import name="template/enemyrocketbomb.xml" />
 	<!-- enemy carrier -->
 	<import name="template/enemycarrierexplosion.xml" />
 	<import name="template/enemylaunchbay.xml" />
