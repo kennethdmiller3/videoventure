@@ -237,11 +237,6 @@ Status TargetBehavior::Execute(void)
 {
 	const TargetBehaviorTemplate &target = Database::targetbehaviortemplate.Get(mId);
 
-	// get the owner entity
-	Entity *entity = Database::entity.Get(mId);
-	if (!entity)
-		return runningTask;
-
 	// if ready to search...
 	mDelay -= sim_step;
 	if (mDelay > 0.0f)
@@ -249,6 +244,11 @@ Status TargetBehavior::Execute(void)
 
 	// update the timer
 	mDelay += target.mPeriod;
+
+	// get the owner entity
+	Entity *entity = Database::entity.Get(mId);
+	if (!entity)
+		return runningTask;
 
 	// get transform
 	const Transform2 &transform = entity->GetTransform();
