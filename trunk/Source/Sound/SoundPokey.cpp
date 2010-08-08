@@ -3,7 +3,13 @@
 #include "Sound.h"
 #include "SoundConfigure.h"
 #include "SoundUtilities.h"
+
+#define SOUND_POKEY_USE_EXPRESSION
+#ifdef SOUND_POKEY_USE_EXPRESSION
+#include "ExpressionConfigure.h"
+#else
 #include "Interpolator.h"
+#endif
 
 #define POKEY_TYPE_MAME 0
 #define POKEY_TYPE_ATARI800 1
@@ -218,6 +224,55 @@ bool Configure(SoundTemplate &self, const TiXmlElement *element, unsigned int id
 	int frequency = 0;
 	element->QueryIntAttribute("frequency", &frequency);
 
+#ifdef SOUND_POKEY_USE_EXPRESSION
+	// expression stream
+	std::vector<unsigned int> stream;
+
+	// element names
+	const char *names[1] = { "value" };
+
+	// frequency divider
+	float dividerdefault = 1.0f;
+	float dividerquant = 1;
+	element->QueryFloatAttribute("divider", &dividerdefault);
+	if (const TiXmlElement *child = element->FirstChildElement("divider"))
+	{
+		ConfigureExpressionRoot<float>(child, stream, names, &dividerdefault);
+		child->QueryFloatAttribute("quantize", &dividerquant);
+	}
+	else
+	{
+		Expression::Append(stream, Expression::Constant<float>, dividerdefault);
+	}
+
+	// amplitude
+	float amplitudedefault = 1.0f;
+	float amplitudequant = 1.0f/65536.0f;
+	element->QueryFloatAttribute("amplitude", &amplitudedefault);
+	if (const TiXmlElement *child = element->FirstChildElement("amplitude"))
+	{
+		ConfigureExpressionRoot<float>(child, stream, names, &amplitudedefault);
+		child->QueryFloatAttribute("quantize", &amplitudequant);
+	}
+	else
+	{
+		Expression::Append(stream, Expression::Constant<float>, amplitudedefault);
+	}
+
+	// offset
+	float offsetdefault = 0.0f;
+	float offsetquant = 1.0f/65536.0f;
+	element->QueryFloatAttribute("offset", &offsetdefault);
+	if (const TiXmlElement *child = element->FirstChildElement("offset"))
+	{
+		ConfigureExpressionRoot<float>(child, stream, names, &offsetdefault);
+		child->QueryFloatAttribute("quantize", &offsetquant);
+	}
+	else
+	{
+		Expression::Append(stream, Expression::Constant<float>, offsetdefault);
+	}
+#else
 	// frequency divider
 	float divider = 1;
 	element->QueryFloatAttribute("divider", &divider);
@@ -310,6 +365,7 @@ bool Configure(SoundTemplate &self, const TiXmlElement *element, unsigned int id
 		offsetkey.push_back(*reinterpret_cast<unsigned int *>(&offset));
 		offsetfunc = ApplyConstant;
 	}
+#endif
 
 	bool *poly1data = NULL;
 	int poly1size = 1;
@@ -387,15 +443,37 @@ bool Configure(SoundTemplate &self, const TiXmlElement *element, unsigned int id
 	int poly2index = startindex % poly2size;
 	bool outputhigh = true;
 
+#ifdef SOUND_POKEY_USE_EXPRESSION
+	EntityContext context(&stream[0], stream.size(), 0, id);
+#else
 	float time = 0.0f;
 	const float steptime = 1.0f / float(AUDIO_FREQUENCY);
 	int dividerhint = 0;
 	int amplitudehint = 0;
 	int offsethint = 0;
+#endif
 
 	// for each sample...
 	for (int i = 0; i < samples; ++i)
 	{
+#ifdef SOUND_POKEY_USE_EXPRESSION
+		// set up context
+		context.Restart();
+		context.mParam = i / float(AUDIO_FREQUENCY);
+
+		// get current divider value
+		float divider = Expression::Evaluate<float>(context);
+		divider = xs_RoundToInt(divider / dividerquant) * dividerquant;
+		_ASSERTE(divider > 0);
+
+		// get current amplitude value
+		float amplitude = Expression::Evaluate<float>(context);
+		amplitude = xs_RoundToInt(amplitude / amplitudequant) * amplitudequant;
+
+		// get current offset value
+		float offset = Expression::Evaluate<float>(context);
+		offset = xs_RoundToInt(offset / offsetquant) * offsetquant;
+#else
 		// get current divider value
 		float divider;
 		dividerfunc(&divider, 1, dividerkey[0], reinterpret_cast<const float * __restrict>(&dividerkey[1]), time, dividerhint);
@@ -413,6 +491,7 @@ bool Configure(SoundTemplate &self, const TiXmlElement *element, unsigned int id
 
 		// advance time
 		time += steptime;
+#endif
 
 		// accumulator
 		float accum = 0.0f;
