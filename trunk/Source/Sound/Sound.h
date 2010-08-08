@@ -60,12 +60,15 @@ public:
 class Sound
 	: public Updatable
 {
+#if !defined(USE_BASS) && !defined(USE_SDL_MIXER)
 private:
 	// linked list
 	Sound *mNext;
 	Sound *mPrev;
+#endif
 
 public:
+	unsigned int mSubId;
 #if defined(USE_BASS)
 	unsigned long mHandle;
 #elif defined(USE_SDL_MIXER)
@@ -96,7 +99,7 @@ public:
 	Sound(void);
 
 	// constructor
-	Sound(const SoundTemplate &aTemplate, unsigned int aId);
+	Sound(const SoundTemplate &aTemplate, unsigned int aId, unsigned int aSubId);
 
 	// destructor
 	~Sound(void);
@@ -108,7 +111,13 @@ public:
 	// is playing?
 	bool IsPlaying(void)
 	{
-		return mRepeat > 0;
+#if defined(USE_BASS)
+		return mPlaying != 0;
+#elif defined(USE_SDL_MIXER)
+		return mPlaying >= 0;
+#else
+		return mPlaying != 0;
+#endif
 	}
 
 	// update
