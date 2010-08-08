@@ -26,14 +26,14 @@ float *InterpolatorTemplate::AddKey(float aParam)
 	return data;
 }
 
-static float ConfigureInterpolatorKeyItem(const TiXmlElement *element, InterpolatorTemplate &interpolator, float time, float scale, const char * const names[], const float values[])
+static float ConfigureInterpolatorKeyItem(const TiXmlElement *element, InterpolatorTemplate &interpolator, float offset, float scale, float prev, const char * const names[], const float values[])
 {
-	// get local time value
-	float frame = 0.0f;
-	element->QueryFloatAttribute("time", &frame);
+	// get key time
+	float keytime = prev;
+	element->QueryFloatAttribute("time", &keytime);
 
 	// add a new key
-	float *key = interpolator.AddKey(time + frame * scale);
+	float *key = interpolator.AddKey(offset + scale * keytime);
 	memcpy(&key[1], interpolator.mCount > 1 ? interpolator.GetValues(interpolator.mCount - 2) : values, interpolator.mWidth*sizeof(float));
 
 	// modify values
@@ -42,14 +42,22 @@ static float ConfigureInterpolatorKeyItem(const TiXmlElement *element, Interpola
 		element->QueryFloatAttribute(names[i], &key[1+i]);
 	}
 
-	// return the new key time
-	return time + frame * scale;
+	// apply key step
+	float step;
+	if (element->QueryFloatAttribute("step", &step) == TIXML_SUCCESS)
+		keytime += step;
+
+	// return key time
+	return keytime;
 }
 
-static float ConfigureInterpolatorKeyItems(const TiXmlElement *element, InterpolatorTemplate &interpolator, float time, float scale, const char * const names[], const float values[])
+static float ConfigureInterpolatorKeyItems(const TiXmlElement *element, InterpolatorTemplate &interpolator, float offset, float scale, const char * const names[], const float values[])
 {
 	// get default duration
 	float duration = 0.0f;
+
+	// last key time (relative to offset)
+	float last = 0.0f;
 
 	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
@@ -72,22 +80,15 @@ static float ConfigureInterpolatorKeyItems(const TiXmlElement *element, Interpol
 
 		case 0x6815c86c /* "key" */:
 			{
-				duration = std::max(duration, ConfigureInterpolatorKeyItem(child, interpolator, time, scale, names, values) - time);
-			}
-			break;
-
-		case 0xc7441a0f /* "step" */:
-			{
-				ConfigureInterpolatorKeyItem(child, interpolator, time, 0, names, values);
-				element->QueryFloatAttribute("time", &duration);
-				time += duration;
+				last = ConfigureInterpolatorKeyItem(child, interpolator, offset, scale, last, names, values);
+				duration = std::max(duration, last);
 			}
 			break;
 		}
 	}
 
-	// return the new key
-	return time + duration;
+	// return the new offset
+	return offset + duration * scale;
 }
 
 bool ConfigureInterpolatorItem(const TiXmlElement *element, std::vector<unsigned int> &buffer, int width, const char * const names[], const float data[])
@@ -98,9 +99,9 @@ bool ConfigureInterpolatorItem(const TiXmlElement *element, std::vector<unsigned
 	// temporary interpolator
 	InterpolatorTemplate interpolator(width);
 
-	// start at zero time
-	float time = 0.0f;
-	element->QueryFloatAttribute("time", &time);
+	// get time offset
+	float offset = 0.0f;
+	element->QueryFloatAttribute("timeoffset", &offset);
 
 	// get time scale
 	float scale = 1.0f;
@@ -109,58 +110,22 @@ bool ConfigureInterpolatorItem(const TiXmlElement *element, std::vector<unsigned
 		scale = 1.0f / scale;
 
 	// process child elements
-	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+	float end = ConfigureInterpolatorKeyItems(element, interpolator, offset, scale, names, data);
+
+	// if no key data...
+	if (interpolator.mCount == 0)
 	{
-		const char *label = child->Value();
-		switch (Hash(label))
-		{
-		case 0x0691ea25 /* "constant" */:
-			{
-				// TO DO: process constant interpolator
-			}
-			break;
-
-		case 0xd00594c0 /* "linear" */:
-			{
-				// process linear interpolator
-				time = ConfigureInterpolatorKeyItems(child, interpolator, time, scale, names, data);
-			}
-			break;
-
-		case 0x9c265311 /* "hermite" */:
-			{
-				// TO DO: process hermite interpolator
-			}
-			break;
-
-		case 0x6815c86c /* "key" */:
-			{
-				ConfigureInterpolatorKeyItem(child, interpolator, time, scale, names, data);
-			}
-			break;
-
-		case 0xc7441a0f /* "step" */:
-			{
-				ConfigureInterpolatorKeyItem(child, interpolator, time, 0, names, data);
-				float duration = 0.0f;
-				if (child->QueryFloatAttribute("time", &duration) == TIXML_SUCCESS)
-					time += duration * scale;
-			}
-			break;
-		}
+		// add first key
+		float *key = interpolator.AddKey(offset);
+		memcpy(&key[1], data, interpolator.mWidth*sizeof(float));
 	}
 
-	// if not enough keys...
-	if (interpolator.mCount < 2)
+	// if only one key, or the last key had duration...
+	if (interpolator.mCount == 1 || interpolator.GetKey(interpolator.mCount-1)[0] < end)
 	{
-		// add a final key
-		float *key = interpolator.AddKey(time);
-		if (interpolator.mCount == 1)
-		{
-			memcpy(&key[1], data, interpolator.mWidth*sizeof(float));
-			key = interpolator.AddKey(time);
-		}
-		memcpy(&key[1], interpolator.GetValues(interpolator.mCount-2), interpolator.mWidth*sizeof(float));
+		// add last key
+		float *key = interpolator.AddKey(end);
+		memcpy(&key[1], interpolator.GetValues(interpolator.mCount-1), interpolator.mWidth*sizeof(float));
 	}
 
 	// push into the buffer
