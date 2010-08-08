@@ -218,7 +218,10 @@ namespace Database
 					case 0xe5561300 /* "cue" */:
 						{
 							// assign cue
-							unsigned int subid = Hash(child->Attribute("name"));
+							const char *name = child->Attribute("name");
+							unsigned int subid = Hash(name);
+							if (name)
+								Database::name.Put(subid, name);
 							unsigned int &cue = soundcue.Open(subid);
 							cue = Hash(child->Attribute("sound"));
 							soundcue.Close(subid);
@@ -594,14 +597,19 @@ void SoundTemplate::Trim(void)
 	mData = realloc(mData, mSize);
 }
 
+#if !defined(USE_BASS) && !defined(USE_SDL_MIXER)
 static Sound *sHead;
 static Sound *sTail;
 static Sound *sNext;
+#endif
 
 Sound::Sound(void)
 : Updatable(0)
+#if !defined(USE_BASS) && !defined(USE_SDL_MIXER)
 , mNext(NULL)
 , mPrev(NULL)
+#endif
+, mSubId(0)
 #if defined(USE_BASS)
 , mHandle(0)
 #elif defined(USE_SDL_MIXER)
@@ -628,10 +636,13 @@ Sound::Sound(void)
 	SetAction(Action(this, &Sound::Update));
 }
 
-Sound::Sound(const SoundTemplate &aTemplate, unsigned int aId)
+Sound::Sound(const SoundTemplate &aTemplate, unsigned int aId, unsigned int aSubId)
 : Updatable(aId)
+#if !defined(USE_BASS) && !defined(USE_SDL_MIXER)
 , mNext(NULL)
 , mPrev(NULL)
+#endif
+, mSubId(aSubId)
 #if defined(USE_BASS)
 , mHandle(aTemplate.mHandle)
 #elif defined(USE_SDL_MIXER)
@@ -657,11 +668,16 @@ Sound::Sound(const SoundTemplate &aTemplate, unsigned int aId)
 , mPlaying(false)
 #endif
 {
+	// set updatable action
 	SetAction(Action(this, &Sound::Update));
+
+	// auto-play
+	Play(0);
 }
 
 Sound::~Sound(void)
 {
+	// auto-stop
 	Stop();
 }
 
@@ -669,64 +685,122 @@ Sound::~Sound(void)
 void Sound::Play(unsigned int aOffset)
 {
 #if defined(USE_BASS)
+
+	// do nothing if the sound has no sample
 	if (mHandle == 0)
 		return;
-	if (mPlaying == 0)
-		mPlaying = BASS_SampleGetChannel(mHandle, false);
+
+	// if not already playing...
 	if (mPlaying == 0)
 	{
+		// get a channel
+		mPlaying = BASS_SampleGetChannel(mHandle, false);
+	}
+
+	// if no channel...
+	if (mPlaying == 0)
+	{
+		// cannot proceed
 		DebugPrint("error getting channel: %s\n", BASS_ErrorGetString());
 		return;
 	}
-	BASS_ChannelSet3DAttributes(mPlaying, Database::entity.Get(mId) ? BASS_3DMODE_NORMAL : BASS_3DMODE_RELATIVE, -1, -1, -1, -1, -1);
+
+	// use normal 3d for entities, and listener-relative for non-entities
+	BASS_ChannelSet3DAttributes(mPlaying, mId ? BASS_3DMODE_NORMAL : BASS_3DMODE_RELATIVE, -1, -1, -1, -1, -1);
+
+	// (re)play the channel
 	if (!BASS_ChannelPlay(mPlaying, true))
 	{
 		DebugPrint("error playing sound: %s\n", BASS_ErrorGetString());
 		return;
 	}
-	Update(0.0f);
-	Activate();
+
+	// if not active...
+	if (!IsActive())
+	{
+		// pre-update to set 3D position
+		Update(0.0f);
+
+		// activate update
+		Activate();
+	}
+
 #elif defined(USE_SDL_MIXER)
+
+	// do nothing if the sound has no sample
 	if (!mChunk)
 		return;
+
+	// if already playing...
 	if (mPlaying >= 0)
+	{
+		// halt the channel
 		Mix_HaltChannel(mPlaying);
+	}
+
+	// (re)play the channel
 	mPlaying = Mix_PlayChannel(-1, mChunk, mRepeat);
 	if (mPlaying < 0)
 	{
 		DebugPrint("%s\n", Mix_GetError());
 		return;
 	}
-	Update(0.0f);
-	Activate();
 #elif defined(USE_SDL)
+	// if not playing...
 	if (!mPlaying)
 	{
+		// add to the active sound list
 		SDL_LockAudio();
+		mPrev = sTail;
+		if (sTail)
+			sTail->mNext = this;
+		sTail = this;
+		if (!sHead)
+			sHead = this;
+		if (!sNext)
+			sNext = this;
 		Activate();
 		SDL_UnlockAudio();
 	}
+
+	// set playback position
 	mOffset = aOffset;
 #endif
+
+	// if not active...
+	if (!IsActive())
+	{
+		// pre-update to set 3D position
+		Update(0.0f);
+
+		// activate update
+		Activate();
+	}
 }
 
 void Sound::Stop(void)
 {
 #if defined(USE_BASS)
+	// if playing
 	if (mPlaying != 0)
 	{
+		// stop the channel
 		BASS_ChannelStop(mPlaying);
 		mPlaying = 0;
 	}
 #elif defined(USE_SDL_MIXER)
+	// if playing...
 	if (mPlaying >= 0)
 	{
+		// stop the channel
 		Mix_HaltChannel(mPlaying);
 		mPlaying = -1;
 	}
 #elif defined(USE_SDL)
+	// if playing...
 	if (mPlaying)
 	{
+		// remove from the active sound list
 		SDL_LockAudio();
 		mPlaying = false;
 		if (sHead == this)
@@ -753,32 +827,32 @@ void Sound::Stop(void)
 void Sound::Update(float aStep)
 {
 #if defined(USE_BASS)
+	// if stopped playing...
 	if (BASS_ChannelIsActive(mPlaying) == BASS_ACTIVE_STOPPED)
-	{
-		Stop();
-		return;
-	}
 #elif defined(USE_SDL_MIXER)
+	// if stopped playing...
 	if (!Mix_Playing(mPlaying))
-	{
-		mPlaying = -1;
-		Deactivate();
-		return;
-	}
 #else
+	// if stopped playing...
 	if (!mRepeat && mOffset >= mLength)
+#endif
 	{
-		Stop();
+		// auto-delete
+		Database::Typed<Sound *> &sounds = Database::sound.Open(mId);
+		sounds.Delete(mSubId);
+		Database::sound.Close(mId);
+		delete this;
 		return;
 	}
-#endif
 
 #if defined(USE_BASS)
 //	BASS_ChannelSetAttribute(mPlaying, BASS_ATTRIB_VOL, mVolume);
 
 #if defined(DISTANCE_FALLOFF)
+	// if attached to an entity...
 	if (Entity *entity = Database::entity.Get(mId))
 	{
+		// update sound position
 		const Vector2 &position = entity->GetPosition();
 		const Vector2 &velocity = entity->GetVelocity();
 		BASS_3DVECTOR pos(position.x, position.y, 0.0f);
@@ -788,12 +862,16 @@ void Sound::Update(float aStep)
 	}
 #endif
 #elif defined(USE_SDL_MIXER)
+	// default to effect volume
 	float volume = SOUND_VOLUME_EFFECT;
 #if defined(DISTANCE_FALLOFF)
+	// if named and appying rolloff...
 	if (mId && SOUND_ROLLOFF_FACTOR)
 	{
+		// if attached to an entity...
 		if (Entity *entity = Database::entity.Get(mId))
 		{
+			// update sound position
 			mPosition = entity->GetPosition();
 			mVelocity = entity->GetVelocity();
 		}
@@ -809,13 +887,17 @@ void Sound::Update(float aStep)
 		}
 	}
 #endif
+	// update volume
 	Mix_Volume(mPlaying, xs_RoundToInt(volume * MIX_MAX_VOLUME));
 #else
 #if defined(DISTANCE_FALLOFF)
+	// if named and applying rolloff...
 	if (mId && SOUND_ROLLOFF_FACTOR)
 	{
+		// if attached to an entity...
 		if (Entity *entity = Database::entity.Get(mId))
 		{
+			// update sound position
 			mPosition = entity->GetPosition();
 			mVelocity = entity->GetVelocity();
 		}
@@ -842,6 +924,7 @@ void Sound::Init(void)
 		return;
 	}
 
+	// info header
 	DebugPrint("\nBASS " BASSVERSIONTEXT " info\n");
 
 	// get version
@@ -957,10 +1040,12 @@ void Sound::Resume(void)
 void Sound::Listener(Vector2 aPos, Vector2 aVel)
 {
 #if defined(DISTANCE_FALLOFF)
+	// update listener position
 	listenerpos = aPos;
 	listenervel = aVel;
 
 #if defined(USE_BASS)
+	// apply position
 	BASS_3DVECTOR pos(listenerpos.x, listenerpos.y, -CAMERA_DISTANCE);
 	BASS_3DVECTOR vel(listenervel.x, listenervel.y, 0.0f);
 	BASS_3DVECTOR front(0.0f, 1.0f, 0.0f);
@@ -976,21 +1061,26 @@ void Sound::Listener(Vector2 aPos, Vector2 aVel)
 void UpdateSoundVolume(void)
 {
 #if defined(USE_BASS)
+	// update effect and music volumes
 	BASS_SetConfig(BASS_CONFIG_GVOL_SAMPLE, xs_CeilToInt(SOUND_VOLUME_EFFECT * 10000));
 	BASS_SetConfig(BASS_CONFIG_GVOL_MUSIC, xs_CeilToInt(SOUND_VOLUME_MUSIC * 10000));
 #elif defined(USE_SDL_MIXER)
+	// compute music volume
 	Mix_VolumeMusic(xs_CeilToInt(SOUND_VOLUME_MUSIC * MIX_MAX_VOLUME));
 #endif
 }
 
 void PlaySoundCue(unsigned int aId, unsigned int aCueId)
 {
+	// map identifier and cue to sound
 	const Database::Typed<unsigned int> &soundcues = Database::soundcue.Get(aId);
 	unsigned int aSoundId = soundcues.Get(aCueId);
 	const SoundTemplate &soundtemplate = Database::soundtemplate.Get(aSoundId);
+
+	// if the sound data is valid...
 	if (soundtemplate.mSize > 0)
 	{
-		/* Put the sound data in the slot (it starts playing immediately) */
+		// if a sound instance already exists...
 		Database::Typed<Sound *> &sounds = Database::sound.Open(aId);
 		if (Sound *s = sounds.Get(aCueId))
 		{
@@ -999,20 +1089,21 @@ void PlaySoundCue(unsigned int aId, unsigned int aCueId)
 		}
 		else
 		{
-			// start new
-			s = new Sound(soundtemplate, aId);
-			sounds.Put(aCueId, s);
-			s->Play(0);
+			// create a new instance
+			sounds.Put(aCueId, new Sound(soundtemplate, aId, aCueId));
 		}
 	}
 }
 
 void StopSoundCue(unsigned int aId, unsigned int aCueId)
 {
-	const Database::Typed<Sound *> &sounds = Database::sound.Get(aId);
+	// if a sound instance already exists...
+	Database::Typed<Sound *> &sounds = Database::sound.Open(aId);
 	if (Sound *s = sounds.Get(aCueId))
 	{
-		// stop
-		s->Stop();
+		// stop and delete
+		sounds.Delete(aCueId);
+		delete s;
 	}
+	Database::sound.Close(aId);
 }
