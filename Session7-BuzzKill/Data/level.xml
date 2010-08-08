@@ -9,16 +9,6 @@
 	</soundsystem>
 	<!-- sounds -->
 	<import name="sound/robotron-start.xml" />
-	<import name="sound/missilecommand-alert.xml" />
-	<import name="sound/missilecommand-fire.xml" />
-	<import name="sound/missilecommand-explosion.xml" />
-	<import name="sound/missilecommand-explosion2.xml" />
-	<import name="sound/missilecommand-lowammo.xml" />
-	<import name="sound/missilecommand-empty.xml" />
-	<import name="sound/missilecommand-ammobonus.xml" />
-	<import name="sound/missilecommand-citybonus.xml" />
-	<import name="sound/missilecommand-bomber.xml" />
-	<import name="sound/missilecommand-smartbomb.xml" />
 	<import name="sound/stargate-warpin.xml" />
 	<import name="sound/stargate-playershot.xml" />
 	<import name="sound/stargate-playershipidle.xml" />
