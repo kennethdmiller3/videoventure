@@ -72,9 +72,6 @@ void EnterShellState()
 	// level configuration
 	InitLevel("shell.xml");
 
-	// start audio
-	Sound::Resume();
-
 	// create options overlay
 	shellmenu.mActive = NULL;
 	shellmenu.Push(&shellmenumainpage);
@@ -82,6 +79,12 @@ void EnterShellState()
 	Database::overlay.Put(0xef286ca5 /* "options" */, options);
 	options->SetAction(Overlay::Action(RenderShellOptions));
 	options->Show();
+
+	// start audio
+	Sound::Resume();
+
+	// play the startup sound (HACK)
+	PlaySoundCue(0x94326baa /* "startup" */);
 
 	// set to runtime mode
 	runtime = true;

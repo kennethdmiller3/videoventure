@@ -6,12 +6,10 @@
 
 	<import name="sound/missilecommand-fire.xml" />
 	<import name="sound/missilecommand-explosion.xml" />
-	<entity name="startup">
-		<sound>
-			<sound name="missilecommand-fire" />
-			<sound name="missilecommand-explosion" />
-		</sound>
-	</entity>
+	<sound name="startup">
+		<sound name="missilecommand-fire" />
+		<sound name="missilecommand-explosion" />
+	</sound>
 
 	
 	<!-- reticule -->
