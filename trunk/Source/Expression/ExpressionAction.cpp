@@ -126,8 +126,7 @@ static void ConfigureActionItem(const TiXmlElement *element, std::vector<unsigne
 			int count = 1;
 			element->QueryIntAttribute("count", &count);
 
-			Expression::Append(buffer, Expression::Repeat);
-			buffer.push_back(count);
+			Expression::Append(buffer, Expression::Repeat, count);
 
 			buffer.push_back(0);
 			int start = buffer.size();
@@ -152,11 +151,7 @@ static void ConfigureActionItem(const TiXmlElement *element, std::vector<unsigne
 				break;
 			}
 
-			Expression::Append(buffer, Expression::Loop);
-			buffer.push_back(name);
-			buffer.push_back(*reinterpret_cast<unsigned int *>(&from));
-			buffer.push_back(*reinterpret_cast<unsigned int *>(&to));
-			buffer.push_back(*reinterpret_cast<unsigned int *>(&by));
+			Expression::Append(buffer, Expression::Loop, name, from, to, by);
 
 			buffer.push_back(0);
 			int start = buffer.size();
