@@ -322,7 +322,7 @@ static void ConfigureParameter(const TiXmlElement *element, const char *param, s
 	if (const TiXmlElement *child = element->FirstChildElement(param))
 	{
 		// configure the expression
-		ConfigureExpressionRoot<float>(child, buffer, names, &value);
+		Expression::Loader<float>::ConfigureRoot(child, buffer, names, &value);
 	}
 	else
 	{
@@ -355,7 +355,7 @@ bool ChargeStateTemplate::ConfigureAction(const TiXmlElement *element, unsigned 
 		case 0x892e4ca0 /* "wait" */:
 			{
 				Expression::Append(mAction, WeaponWait);
-				ConfigureExpressionRoot<float>(child, mAction, sScalarNames, sScalarDefault);
+				Expression::Loader<float>::ConfigureRoot(child, mAction, sScalarNames, sScalarDefault);
 			}
 			break;
 
@@ -395,13 +395,13 @@ bool ChargeStateTemplate::ConfigureAction(const TiXmlElement *element, unsigned 
 
 		case 0x63734e77 /* "recoil" */:
 			Expression::Append(mAction, WeaponRecoil);
-			ConfigureExpressionRoot<float>(child, mAction, sScalarNames, sScalarDefault);
+			Expression::Loader<float>::ConfigureRoot(child, mAction, sScalarNames, sScalarDefault);
 			break;
 
 		case 0xaf85ad29 /* "flash" */:
 			Expression::Append(mAction, WeaponFlash, Hash(child->Attribute("name")));
 			if (const TiXmlElement *param = child->FirstChildElement("position"))
-				ConfigureExpressionRoot<__m128>(param, mAction, sTransformNames, sTransformDefault);
+				Expression::Loader<__m128>::ConfigureRoot(param, mAction, sTransformNames, sTransformDefault);
 			else
 				Expression::Append(mAction, Expression::Constant<__m128>, _mm_setzero_ps());
 			break;
@@ -409,11 +409,11 @@ bool ChargeStateTemplate::ConfigureAction(const TiXmlElement *element, unsigned 
 		case 0x399bf05d /* "ordnance" */:
 			Expression::Append(mAction, WeaponOrdnance, Hash(child->Attribute("name")));
 			if (const TiXmlElement *param = child->FirstChildElement("position"))
-				ConfigureExpressionRoot<__m128>(param, mAction, sTransformNames, sTransformDefault);
+				Expression::Loader<__m128>::ConfigureRoot(param, mAction, sTransformNames, sTransformDefault);
 			else
 				Expression::Append(mAction, Expression::Constant<__m128>, _mm_setzero_ps());
 			if (const TiXmlElement *param = child->FirstChildElement("velocity"))
-				ConfigureExpressionRoot<__m128>(param, mAction, sTransformNames, sTransformDefault);
+				Expression::Loader<__m128>::ConfigureRoot(param, mAction, sTransformNames, sTransformDefault);
 			else
 				Expression::Append(mAction, Expression::Constant<__m128>, _mm_setzero_ps());
 			break;
