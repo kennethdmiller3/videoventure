@@ -1017,11 +1017,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\Source\Expression\ExpressionBoolean.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\Source\Expression\ExpressionBoolean.h"
+				RelativePath=".\Source\Expression\ExpressionConfigure.cpp"
 				>
 			</File>
 			<File
@@ -1034,6 +1030,10 @@
 			</File>
 			<File
 				RelativePath=".\Source\Expression\ExpressionConstruct.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Expression\ExpressionConvert.cpp"
 				>
 			</File>
 			<File
@@ -1129,6 +1129,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Source\Expression\ExpressionRelational.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\Source\Expression\ExpressionRelational.h"
 				>
 			</File>
@@ -1190,6 +1194,14 @@
 			</File>
 			<File
 				RelativePath=".\Source\Physics\PhysicsDistanceJoint.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Physics\PhysicsFrictionJoint.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Physics\PhysicsFrictionJoint.h"
 				>
 			</File>
 			<File
