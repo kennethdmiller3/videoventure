@@ -14,8 +14,8 @@ template<typename T> static void ConfigureNoise(const TiXmlElement *element, std
 	ConfigureNoise(element, buffer, names, defaults);
 }
 
-static ExpressionConfigure::Auto<float> noisefloat(0x904416d1 /* "noise" */, ConfigureNoise<float>);
-static ExpressionConfigure::Auto<__m128> noisevector(0x904416d1 /* "noise" */, ConfigureNoise<__m128>);
+static Expression::Loader<float>::Auto noisefloat(0x904416d1 /* "noise" */, ConfigureNoise<float>);
+static Expression::Loader<__m128>::Auto noisevector(0x904416d1 /* "noise" */, ConfigureNoise<__m128>);
 
 // configue a parameter
 static bool ConfigureParameter(const TiXmlElement *element, const char *param, std::vector<unsigned int> &buffer, float (*op)(Expression::Context &), const char * const names[], const float defvalue, const float identity)
@@ -32,7 +32,7 @@ static bool ConfigureParameter(const TiXmlElement *element, const char *param, s
 			Expression::Append(buffer, op);
 
 		// configure the expression
-		ConfigureExpressionRoot<float>(child, buffer, names, &value);
+		Expression::Loader<float>::ConfigureRoot(child, buffer, names, &value);
 		return true;
 	}
 
@@ -80,7 +80,7 @@ void ConfigureNoise(const TiXmlElement *element, std::vector<unsigned int> &buff
 		DebugPrint("%s noise1\n", Expression::Schema<float>::NAME);
 #endif
 		Expression::Append(buffer, Expression::ComponentUnary<float, Expression::Schema<float>::COUNT>::Evaluate<float, float, Noise>);
-		ConfigureExpression<float>(arg1, buffer, names, defaults);
+		Expression::Loader<float>::Configure(arg1, buffer, names, defaults);
 		return;
 	}
 
@@ -91,8 +91,8 @@ void ConfigureNoise(const TiXmlElement *element, std::vector<unsigned int> &buff
 		DebugPrint("%s noise2\n", Expression::Schema<float>::NAME);
 #endif
 		Expression::Append(buffer, Expression::ComponentBinary<float, Expression::Schema<float>::COUNT>::Evaluate<float, float, float, Noise>);
-		ConfigureExpression<float>(arg1, buffer, names, defaults);
-		ConfigureExpression<float>(arg2, buffer, names, defaults);
+		Expression::Loader<float>::Configure(arg1, buffer, names, defaults);
+		Expression::Loader<float>::Configure(arg2, buffer, names, defaults);
 		return;
 	}
 
@@ -103,9 +103,9 @@ void ConfigureNoise(const TiXmlElement *element, std::vector<unsigned int> &buff
 		DebugPrint("%s noise3\n", Expression::Schema<float>::NAME);
 #endif
 		Expression::Append(buffer, Expression::ComponentTernary<float, Expression::Schema<float>::COUNT>::Evaluate<float, float, float, float, Noise>);
-		ConfigureExpression<float>(arg1, buffer, names, defaults);
-		ConfigureExpression<float>(arg2, buffer, names, defaults);
-		ConfigureExpression<float>(arg3, buffer, names, defaults);
+		Expression::Loader<float>::Configure(arg1, buffer, names, defaults);
+		Expression::Loader<float>::Configure(arg2, buffer, names, defaults);
+		Expression::Loader<float>::Configure(arg3, buffer, names, defaults);
 		return;
 	}
 

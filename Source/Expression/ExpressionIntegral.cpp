@@ -16,7 +16,6 @@ float EvaluateIntegral(EntityContext &aContext)
 	prev_value = result;
 	aContext.mVars->Close(key);
 	aContext.mVars->Close(key+1);
-	aContext.mVars->Close(key+2);
 	return result;
 }
 

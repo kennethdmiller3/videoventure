@@ -11,72 +11,31 @@ namespace Expression
 	//
 
 	// add
-	template <typename T> T Add(Context &aContext)
-	{
-		T arg1(Evaluate<T>(aContext));
-		T arg2(Evaluate<T>(aContext));
-		return arg1 + arg2;
-	}
+	template <typename T> T Add(Context &aContext);
 
 	// subtract
-	template <typename T> T Sub(Context &aContext)
-	{
-		T arg1(Evaluate<T>(aContext));
-		T arg2(Evaluate<T>(aContext));
-		return arg1 - arg2;
-	}
+	template <typename T> T Sub(Context &aContext);
 
 	// multiply
-	template <typename T> T Mul(Context &aContext)
-	{
-		T arg1(Evaluate<T>(aContext));
-		T arg2(Evaluate<T>(aContext));
-		return arg1 * arg2;
-	}
+	template <typename T> T Mul(Context &aContext);
 
 	// divide
-	template <typename T> T Div(Context &aContext)
-	{
-		T arg1(Evaluate<T>(aContext));
-		T arg2(Evaluate<T>(aContext));
-		return arg1 / arg2;
-	}
+	template <typename T> T Div(Context &aContext);
 
 	// reverse divide
-	template <typename T> T DivR(Context &aContext)
-	{
-		T arg1(Evaluate<T>(aContext));
-		T arg2(Evaluate<T>(aContext));
-		return arg2 / arg1;
-	}
+	template <typename T> T DivR(Context &aContext);
 
 	// negate
-	template <typename T> T Neg(Context &aContext)
-	{
-		T arg1(Evaluate<T>(aContext));
-		return -arg1;
-	}
+	template <typename T> T Neg(Context &aContext);
 
 	// reciprocal
-	inline float Rcp(float v) { return 1.0f / v; };
-	template <typename T> T Rcp(Context &aContext)
-	{
-		return ComponentUnary<T, Schema<T>::COUNT>::Evaluate<float, float, Rcp>(aContext);
-	}
+	template <typename T> T Rcp(Context &aContext);
 
 	// increment
-	inline float Inc(float v) { return v + 1.0f; };
-	template <typename T> T Inc(Context &aContext)
-	{
-		return ComponentUnary<T, Schema<T>::COUNT>::Evaluate<float, float, Inc>(aContext);
-	}
+	template <typename T> T Inc(Context &aContext);
 
 	// decrement
-	inline float Dec(float v) { return v - 1.0f; };
-	template <typename T> T Dec(Context &aContext)
-	{
-		return ComponentUnary<T, Schema<T>::COUNT>::Evaluate<float, float, Dec>(aContext);
-	}
+	template <typename T> T Dec(Context &aContext);
 
 
 	//
@@ -84,46 +43,25 @@ namespace Expression
 	//
 
 	// sine
-	template <typename T> T Sin(Context &aContext)
-	{
-		return ComponentUnary<T, Schema<T>::COUNT>::Evaluate<float, float, sinf>(aContext);
-	}
+	template <typename T> T Sin(Context &aContext);
 
 	// cosine
-	template <typename T> T Cos(Context &aContext)
-	{
-		return ComponentUnary<T, Schema<T>::COUNT>::Evaluate<float, float, cosf>(aContext);
-	}
+	template <typename T> T Cos(Context &aContext);
 
 	// tangent
-	template <typename T> T Tan(Context &aContext)
-	{
-		return ComponentUnary<T, Schema<T>::COUNT>::Evaluate<float, float, tanf>(aContext);
-	}
+	template <typename T> T Tan(Context &aContext);
 
 	// arcsine
-	template <typename T> T Asin(Context &aContext)
-	{
-		return ComponentUnary<T, Schema<T>::COUNT>::Evaluate<float, float, asinf>(aContext);
-	}
+	template <typename T> T Asin(Context &aContext);
 
 	// arccosine
-	template <typename T> T Acos(Context &aContext)
-	{
-		return ComponentUnary<T, Schema<T>::COUNT>::Evaluate<float, float, acosf>(aContext);
-	}
+	template <typename T> T Acos(Context &aContext);
 
 	// arctangent (1 argument)
-	template <typename T> T Atan(Context &aContext)
-	{
-		return ComponentUnary<T, Schema<T>::COUNT>::Evaluate<float, float, atanf>(aContext);
-	}
+	template <typename T> T Atan(Context &aContext);
 
 	// arctangent (2 arguments)
-	template <typename T> T Atan2(Context &aContext)
-	{
-		return ComponentBinary<T, Schema<T>::COUNT>::Evaluate<float, float, float, atan2f>(aContext);
-	}
+	template <typename T> T Atan2(Context &aContext);
 
 
 	//
@@ -131,22 +69,13 @@ namespace Expression
 	//
 
 	// hyperbolic sine
-	template <typename T> T Sinh(Context &aContext)
-	{
-		return ComponentUnary<T, Schema<T>::COUNT>::Evaluate<float, float, sinhf>(aContext);
-	}
+	template <typename T> T Sinh(Context &aContext);
 
 	// hyperbolic cosine
-	template <typename T> T Cosh(Context &aContext)
-	{
-		return ComponentUnary<T, Schema<T>::COUNT>::Evaluate<float, float, coshf>(aContext);
-	}
+	template <typename T> T Cosh(Context &aContext);
 
 	// hyperbolic tangent
-	template <typename T> T Tanh(Context &aContext)
-	{
-		return ComponentUnary<T, Schema<T>::COUNT>::Evaluate<float, float, tanhf>(aContext);
-	}
+	template <typename T> T Tanh(Context &aContext);
 
 
 	//
@@ -154,34 +83,19 @@ namespace Expression
 	//
 
 	// power
-	template <typename T> T Pow(Context &aContext)
-	{
-		return ComponentBinary<T, Schema<T>::COUNT>::Evaluate<float, float, float, powf>(aContext);
-	}
+	template <typename T> T Pow(Context &aContext);
 
 	// natural exponent
-	template <typename T> T Exp(Context &aContext)
-	{
-		return ComponentUnary<T, Schema<T>::COUNT>::Evaluate<float, float, expf>(aContext);
-	}
+	template <typename T> T Exp(Context &aContext);
 
 	// natural log
-	template <typename T> T Log(Context &aContext)
-	{
-		return ComponentUnary<T, Schema<T>::COUNT>::Evaluate<float, float, logf>(aContext);
-	}
+	template <typename T> T Log(Context &aContext);
 
 	// square root
-	template <typename T> T Sqrt(Context &aContext)
-	{
-		return ComponentUnary<T, Schema<T>::COUNT>::Evaluate<float, float, sqrtf>(aContext);
-	}
+	template <typename T> T Sqrt(Context &aContext);
 
 	// reciprocal square root
-	template <typename T> T InvSqrt(Context &aContext)
-	{
-		return ComponentUnary<T, Schema<T>::COUNT>::Evaluate<float, float, ::InvSqrt>(aContext);
-	}
+	template <typename T> T InvSqrt(Context &aContext);
 
 
 	//
@@ -189,86 +103,40 @@ namespace Expression
 	//
 	
 	// absolute value
-	template <typename T> T Abs(Context &aContext)
-	{
-		return ComponentUnary<T, Schema<T>::COUNT>::Evaluate<float, float, fabsf>(aContext);
-	}
+	template <typename T> T Abs(Context &aContext);
 
 	// sign
-	inline float Sign(float v) { return (v == 0) ? (0.0f) : ((v > 0) ? (1.0f) : (-1.0f)); }
-	template <typename T> T Sign(Context &aContext)
-	{
-		return ComponentUnary<T, Schema<T>::COUNT>::Evaluate<float, float, Sign>(aContext);
-	}
+	template <typename T> T Sign(Context &aContext);
 
 	// floor
-	template <typename T> T Floor(Context &aContext)
-	{
-		return ComponentUnary<T, Schema<T>::COUNT>::Evaluate<float, float, floorf>(aContext);
-	}
+	template <typename T> T Floor(Context &aContext);
 
 	// ceiling
-	template <typename T> T Ceil(Context &aContext)
-	{
-		return ComponentUnary<T, Schema<T>::COUNT>::Evaluate<float, float, ceilf>(aContext);
-	}
+	template <typename T> T Ceil(Context &aContext);
 
 	// fraction
-	inline float Frac(float v) { return v - xs_FloorToInt(v); }
-	template <typename T> T Frac(Context &aContext)
-	{
-		return ComponentUnary<T, Schema<T>::COUNT>::Evaluate<float, float, Frac>(aContext);
-	}
+	template <typename T> T Frac(Context &aContext);
 
 	// modulo
-	template <typename T> T Mod(Context &aContext)
-	{
-		return ComponentBinary<T, Schema<T>::COUNT>::Evaluate<float, float, float, fmodf>(aContext);
-	}
+	template <typename T> T Mod(Context &aContext);
 
 	// minimum
-	template <typename T> T Min(Context &aContext)
-	{
-		return ComponentBinary<T, Schema<T>::COUNT>::Evaluate<const float &, const float &, const float &, std::min<float> >(aContext);
-	}
+	template <typename T> T Min(Context &aContext);
 
 	// maximum
-	template <typename T> T Max(Context &aContext)
-	{
-		return ComponentBinary<T, Schema<T>::COUNT>::Evaluate<const float &, const float &, const float &, std::max<float> >(aContext);
-	}
+	template <typename T> T Max(Context &aContext);
 
 	// clamp
-	template <typename T> T Clamp(Context &aContext)
-	{
-		return ComponentTernary<T, Schema<T>::COUNT>::Evaluate<const float, const float, const float, const float, ::Clamp<float> >(aContext);
-	}
+	template <typename T> T Clamp(Context &aContext);
 
 	// linear interpolate
-	template <typename T> T Lerp(Context &aContext)
-	{
-		return Ternary<T, T, T, float>::Evaluate<const T, const T, const T, float, ::Lerp<T> >(aContext);
-	}
+	template <typename T> T Lerp(Context &aContext);
 
 	// step
-	inline float Step(float e, float v) { return v < e ? 0.0f : 1.0f; }
-	template <typename T> T Step(Context &aContext)
-	{
-		return ComponentBinary<T, Schema<T>::COUNT>::Evaluate<float, float, float, Step >(aContext);
-	}
+	template <typename T> T Step(Context &aContext);
 
 	// smooth step
-	inline float SmoothStep(float e0, float e1, float v)
-	{
-		if (v <= e0) return 0.0f;
-		if (v >= e1) return 1.0f;
-		float t = (v - e0) / (e1 - e0);
-		return t * t * (3 - 2 * t);
-	}
-	template <typename T> T SmoothStep(Context &aContext)
-	{
-		return ComponentTernary<T, Schema<T>::COUNT>::Evaluate<float, float, float, float, SmoothStep >(aContext);
-	}
+	template <typename T> T SmoothStep(Context &aContext);
 }
 
 //
@@ -281,7 +149,7 @@ template <typename T, typename A, typename C> void ConfigureUnary(T (expr)(C), c
 	if (!arg1)
 	{
 		// no first argument: treat element as a literal (HACK)
-		assert(!"no argument for unary operator");
+		DebugPrint("no argument for unary operator %s", element->Value());
 		ConfigureLiteral<T>(element, buffer, names, defaults);
 		return;
 	}
@@ -290,7 +158,7 @@ template <typename T, typename A, typename C> void ConfigureUnary(T (expr)(C), c
 	Expression::Append(buffer, expr);
 
 	// append first argument
-	ConfigureExpression<A>(arg1, buffer, names, defaults);
+	Expression::Loader<A>::Configure(arg1, buffer, names, defaults);
 }
 
 
@@ -304,7 +172,7 @@ template <typename T, typename A1, typename A2, typename C> void ConfigureBinary
 	if (!arg1)
 	{
 		// no first argument: treat element as a literal (HACK)
-		assert(!"no first argument for binary operator");
+		DebugPrint("no first argument for binary operator %s", element->Value());
 		ConfigureLiteral<T>(element, buffer, names, defaults);
 		return;
 	}
@@ -313,7 +181,7 @@ template <typename T, typename A1, typename A2, typename C> void ConfigureBinary
 	if (!arg2)
 	{
 		// no second argument: treat element as a literal (HACK)
-		assert(!"no second argument for binary operator");
+		DebugPrint("no second argument for binary operator %s", element->Value());
 		ConfigureLiteral<T>(element, buffer, names, defaults);
 		return;
 	}
@@ -322,10 +190,10 @@ template <typename T, typename A1, typename A2, typename C> void ConfigureBinary
 	Expression::Append(buffer, expr);
 
 	// append first argument
-	ConfigureExpression<A1>(arg1, buffer, names, defaults);
+	Expression::Loader<A1>::Configure(arg1, buffer, names, defaults);
 
 	// append second argument
-	ConfigureExpression<A2>(arg2, buffer, names, defaults);
+	Expression::Loader<A2>::Configure(arg2, buffer, names, defaults);
 }
 
 
@@ -339,7 +207,7 @@ template <typename T, typename A1, typename A2, typename A3, typename C> void Co
 	if (!arg1)
 	{
 		// no first argument: treat element as a literal (HACK)
-		assert(!"no first argument for ternary operator");
+		DebugPrint("no first argument for ternary operator %s", element->Value());
 		ConfigureLiteral<T>(element, buffer, names, defaults);
 		return;
 	}
@@ -348,7 +216,7 @@ template <typename T, typename A1, typename A2, typename A3, typename C> void Co
 	if (!arg2)
 	{
 		// no second argument: treat element as a literal (HACK)
-		assert(!"no second argument for ternary operator");
+		DebugPrint("no second argument for ternary operator %s", element->Value());
 		ConfigureLiteral<T>(element, buffer, names, defaults);
 		return;
 	}
@@ -357,7 +225,7 @@ template <typename T, typename A1, typename A2, typename A3, typename C> void Co
 	if (!arg3)
 	{
 		// no third argument: treat element as a literal (HACK)
-		assert(!"no third argument for ternary operator");
+		DebugPrint("no third argument for ternary operator %s", element->Value());
 		ConfigureLiteral<T>(element, buffer, names, defaults);
 		return;
 	}
@@ -366,13 +234,13 @@ template <typename T, typename A1, typename A2, typename A3, typename C> void Co
 	Expression::Append(buffer, expr);
 
 	// append first argument
-	ConfigureExpression<A1>(arg1, buffer, names, defaults);
+	Expression::Loader<A1>::Configure(arg1, buffer, names, defaults);
 
 	// append second argument
-	ConfigureExpression<A2>(arg2, buffer, names, defaults);
+	Expression::Loader<A2>::Configure(arg2, buffer, names, defaults);
 
 	// append third argument
-	ConfigureExpression<A3>(arg3, buffer, names, defaults);
+	Expression::Loader<A3>::Configure(arg3, buffer, names, defaults);
 }
 
 
@@ -388,7 +256,7 @@ template <typename T, typename A, typename C> void ConfigureVariadic(T (expr)(C)
 	if (!arg1)
 	{
 		// no first argument: treat element as a literal (HACK)
-		DebugPrint("no first argument for variadic operator");
+		DebugPrint("no first argument for variadic operator %s", element->Value());
 		ConfigureLiteral<T>(element, buffer, names, defaults);
 		return;
 	}
@@ -397,9 +265,9 @@ template <typename T, typename A, typename C> void ConfigureVariadic(T (expr)(C)
 	if (!arg2)
 	{
 		// no second argument: convert type of first argument (HACK)
-		DebugPrint("no second argument for variadic operator: performing type conversion");
+		DebugPrint("no second argument for variadic operator %s", element->Value());
 		Expression::Convert<T, A>::Append(buffer);
-		ConfigureExpression<A>(arg1, buffer, names, defaults);
+		Expression::Loader<A>::Configure(arg1, buffer, names, defaults);
 		return;
 	}
 
@@ -419,7 +287,7 @@ template <typename T, typename A, typename C> void ConfigureVariadic(T (expr)(C)
 		}
 
 		// append first argument
-		ConfigureExpression<A>(arg1, buffer, names, defaults);
+		Expression::Loader<A>::Configure(arg1, buffer, names, defaults);
 	}
 	while (arg2);
 }

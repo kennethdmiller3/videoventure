@@ -117,7 +117,7 @@ bool ExplosionTemplate::Configure(const TiXmlElement *element, unsigned int id)
 				{
 					const char * const names[] = { "inner", "outer", "", "" };
 					const float data[] = { mRadiusInner, mRadiusOuter, 0.0f, 0.0f };
-					ConfigureExpressionRoot<__m128>(child, mRadius, names, data);
+					Expression::Loader<__m128>::ConfigureRoot(child, mRadius, names, data);
 				}
 				break;
 
@@ -125,7 +125,7 @@ bool ExplosionTemplate::Configure(const TiXmlElement *element, unsigned int id)
 				{
 					const char * const names[] = { "inner", "outer", "", "" };
 					const float data[] = { mRadiusInner, mRadiusOuter, 0.0f, 0.0f };
-					ConfigureExpressionRoot<__m128>(child, mDamage, names, data);
+					Expression::Loader<__m128>::ConfigureRoot(child, mDamage, names, data);
 				}
 				break;
 

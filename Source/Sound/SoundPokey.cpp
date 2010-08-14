@@ -237,7 +237,7 @@ bool Configure(SoundTemplate &self, const TiXmlElement *element, unsigned int id
 	element->QueryFloatAttribute("divider", &dividerdefault);
 	if (const TiXmlElement *child = element->FirstChildElement("divider"))
 	{
-		ConfigureExpressionRoot<float>(child, stream, names, &dividerdefault);
+		Expression::Loader<float>::ConfigureRoot(child, stream, names, &dividerdefault);
 		child->QueryFloatAttribute("quantize", &dividerquant);
 	}
 	else
@@ -251,7 +251,7 @@ bool Configure(SoundTemplate &self, const TiXmlElement *element, unsigned int id
 	element->QueryFloatAttribute("amplitude", &amplitudedefault);
 	if (const TiXmlElement *child = element->FirstChildElement("amplitude"))
 	{
-		ConfigureExpressionRoot<float>(child, stream, names, &amplitudedefault);
+		Expression::Loader<float>::ConfigureRoot(child, stream, names, &amplitudedefault);
 		child->QueryFloatAttribute("quantize", &amplitudequant);
 	}
 	else
@@ -265,7 +265,7 @@ bool Configure(SoundTemplate &self, const TiXmlElement *element, unsigned int id
 	element->QueryFloatAttribute("offset", &offsetdefault);
 	if (const TiXmlElement *child = element->FirstChildElement("offset"))
 	{
-		ConfigureExpressionRoot<float>(child, stream, names, &offsetdefault);
+		Expression::Loader<float>::ConfigureRoot(child, stream, names, &offsetdefault);
 		child->QueryFloatAttribute("quantize", &offsetquant);
 	}
 	else

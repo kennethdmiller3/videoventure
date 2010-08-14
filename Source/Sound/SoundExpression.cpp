@@ -16,7 +16,7 @@ static bool Configure(SoundTemplate &self, const TiXmlElement *element, unsigned
 
 	// get expression
 	std::vector<unsigned int> buffer;
-	ConfigureExpressionRoot<float>(element, buffer, sScalarNames, sScalarDefault);
+	Expression::Loader<float>::ConfigureRoot(element, buffer, sScalarNames, sScalarDefault);
 
 	// set up a context
 	EntityContext context(&buffer[0], buffer.size(), 0, id);

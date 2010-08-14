@@ -8,8 +8,8 @@ template<typename T> static void ConfigureExtend(const TiXmlElement *element, st
 	ConfigureUnary<const T, float, Expression::Context &>(Expression::Extend<T, float>, element, buffer, sScalarNames, sScalarDefault);
 }
 
-static ExpressionConfigure::Auto<float> extendfloat(0xaa7d7949 /* "extend" */, ConfigureExtend<float>);
-static ExpressionConfigure::Auto<__m128> extendvector(0xaa7d7949 /* "extend" */, ConfigureExtend<__m128>);
+static Expression::Loader<float>::Auto extendfloat(0xaa7d7949 /* "extend" */, ConfigureExtend<float>);
+static Expression::Loader<__m128>::Auto extendvector(0xaa7d7949 /* "extend" */, ConfigureExtend<__m128>);
 
 namespace Expression
 {

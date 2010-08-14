@@ -3,7 +3,6 @@
 #include "Updatable.h"
 //#include "ExpressionSchema.h"
 #include "ExpressionConfigure.h"
-#include "ExpressionBoolean.h"
 #include "ExpressionAction.h"
 
 class ConditionTemplate
@@ -100,7 +99,7 @@ bool ConditionTemplate::Configure(const TiXmlElement *element, unsigned int aId,
 		switch (Hash(child->Value()))
 		{
 		case 0xd212fabe /* "condition" */:
-			ConfigureExpression<bool>(child->FirstChildElement(), mCondition, sScalarNames, sScalarDefault);
+			Expression::Loader<bool>::Configure(child->FirstChildElement(), mCondition, sScalarNames, sScalarDefault);
 			break;
 
 		case 0xc4642eff /* "action" */:

@@ -114,7 +114,7 @@ namespace Database
 							child->QueryFloatAttribute("seed", &seed);
 
 							std::vector<unsigned int> buffer;
-							ConfigureExpressionRoot<__m128>(child, buffer, sColorNames, sColorDefault);
+							Expression::Loader<__m128>::ConfigureRoot(child, buffer, sColorNames, sColorDefault);
 
 							EntityContext context(&buffer[0], buffer.size(), 0, aId);
 
@@ -173,7 +173,7 @@ namespace Database
 							texture.mFormat = GL_RGBA;
 
 							std::vector<unsigned int> buffer;
-							ConfigureExpressionRoot<__m128>(child, buffer, sColorNames, sColorDefault);
+							Expression::Loader<__m128>::ConfigureRoot(child, buffer, sColorNames, sColorDefault);
 
 							EntityContext context(&buffer[0], buffer.size(), 0, aId);
 

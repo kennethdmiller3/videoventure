@@ -12,8 +12,8 @@ template<typename T> static void ConfigureWorldTime(const TiXmlElement *element,
 	Expression::Append(buffer, EvaluateWorldTime);
 }
 
-static ExpressionConfigure::Auto<float> worldtimefloat(0xf667bf8a /* "worldtime" */, ConfigureWorldTime<float>);
-static ExpressionConfigure::Auto<__m128> worldtimevector(0xf667bf8a /* "worldtime" */, ConfigureWorldTime<__m128>);
+static Expression::Loader<float>::Auto worldtimefloat(0xf667bf8a /* "worldtime" */, ConfigureWorldTime<float>);
+static Expression::Loader<__m128>::Auto worldtimevector(0xf667bf8a /* "worldtime" */, ConfigureWorldTime<__m128>);
 
 template<typename T> static void ConfigureTime(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
 {
@@ -21,8 +21,8 @@ template<typename T> static void ConfigureTime(const TiXmlElement *element, std:
 	Expression::Append(buffer, EvaluateTime);
 }
 
-static ExpressionConfigure::Auto<float> timefloat(0x5d3c9be4 /* "time" */, ConfigureTime<float>);
-static ExpressionConfigure::Auto<__m128> timevector(0x5d3c9be4 /* "time" */, ConfigureTime<__m128>);
+static Expression::Loader<float>::Auto timefloat(0x5d3c9be4 /* "time" */, ConfigureTime<float>);
+static Expression::Loader<__m128>::Auto timevector(0x5d3c9be4 /* "time" */, ConfigureTime<__m128>);
 
 //
 // TIME EXPRESSION
