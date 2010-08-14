@@ -36,13 +36,13 @@ static inline unsigned char Permute(register unsigned char i)
 
 // 1D gradient
 // (16 slopes between -1.5 and +1.5)
+static const float g[16] =
+{
+	  1.f*0.1875f,  2.f*0.1875f,  3.f*0.1875f,  4.f*0.1875f,  5.f*0.1875f,  6.f*0.1875f,  7.f*0.1875f,  8.f*0.1875f,
+	 -1.f*0.1875f, -2.f*0.1875f, -3.f*0.1875f, -4.f*0.1875f, -5.f*0.1875f, -6.f*0.1875f, -7.f*0.1875f, -8.f*0.1875f,
+};
 static float Gradient(int hash, float x)
 {
-	static const float g[16] =
-	{
-		  1.f*0.1875f,  2.f*0.1875f,  3.f*0.1875f,  4.f*0.1875f,  5.f*0.1875f,  6.f*0.1875f,  7.f*0.1875f,  8.f*0.1875f,
-		 -1.f*0.1875f, -2.f*0.1875f, -3.f*0.1875f, -4.f*0.1875f, -5.f*0.1875f, -6.f*0.1875f, -7.f*0.1875f, -8.f*0.1875f,
-	};
 	return g[hash & 15] * x;
 }
 

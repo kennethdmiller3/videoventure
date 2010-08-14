@@ -21,34 +21,4 @@ namespace Expression
 }
 
 // configure construct expression
-template <typename T> void ConfigureConstruct(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
-{
-#ifdef PRINT_CONFIGURE_EXPRESSION
-	DebugPrint("%s construct\n", Expression::Schema<T>::NAME);
-#endif
-
-	// width in floats (HACK)
-	const int width = (sizeof(T)+sizeof(float)-1)/sizeof(float);
-
-	// append the operator
-	Expression::Append(buffer, Expression::Construct<T, float>);
-
-	// for each component...
-	for (int i = 0; i < width; ++i)
-	{
-		// if there is a corresponding tag...
-		if (const TiXmlElement *component = element->FirstChildElement(names[i]))
-		{
-			// configure the expression
-			ConfigureExpressionRoot<float>(component, buffer, sScalarNames, &defaults[i]);
-		}
-		else
-		{
-			// use default value
-#ifdef PRINT_CONFIGURE_EXPRESSION
-			DebugPrint("%s default %s: %f\n", Expression::Schema<float>::NAME, names[i], defaults[i]);
-#endif
-			Expression::Append(buffer, Expression::Constant<float>, defaults[i]);
-		}
-	}
-}
+template <typename T> void ConfigureConstruct(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[]);

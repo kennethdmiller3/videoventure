@@ -263,7 +263,7 @@ bool TransitionTemplate::Configure(const TiXmlElement *element, unsigned int aId
 		mTargetId = Hash(target);
 
 	if (const TiXmlElement *arg1 = element->FirstChildElement())
-		ConfigureExpression<bool>(arg1, mGuard, sScalarNames, sScalarDefault);
+		Expression::Loader<bool>::Configure(arg1, mGuard, sScalarNames, sScalarDefault);
 
 	return false;
 }

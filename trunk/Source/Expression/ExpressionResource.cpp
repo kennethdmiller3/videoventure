@@ -12,8 +12,8 @@ template<typename T> static void ConfigureResource(const TiXmlElement *element, 
 	::ConfigureResource(element, buffer, sScalarNames, sScalarDefault);
 }
 
-static ExpressionConfigure::Auto<float> resourcefloat(0x29df7ff5 /* "resource" */, ConfigureResource<float>);
-static ExpressionConfigure::Auto<__m128> resourcevector(0x29df7ff5 /* "resource" */, ConfigureResource<__m128>);
+static Expression::Loader<float>::Auto resourcefloat(0x29df7ff5 /* "resource" */, ConfigureResource<float>);
+static Expression::Loader<__m128>::Auto resourcevector(0x29df7ff5 /* "resource" */, ConfigureResource<__m128>);
 
 //
 // RESOURCE EXPRESSION

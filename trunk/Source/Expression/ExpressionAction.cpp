@@ -98,11 +98,11 @@ static void ConfigureActionItem(const TiXmlElement *element, std::vector<unsigne
 		{
 			Expression::Append(buffer, Expression::Spawn, Hash(element->Attribute("name")));
 			if (const TiXmlElement *param = element->FirstChildElement("offset"))
-				ConfigureExpressionRoot<__m128>(param, buffer, sTransformNames, sTransformDefault);
+				Expression::Loader<__m128>::ConfigureRoot(param, buffer, sTransformNames, sTransformDefault);
 			else
 				Expression::Append(buffer, Expression::Constant<__m128>, _mm_setzero_ps());
 			if (const TiXmlElement *param = element->FirstChildElement("velocity"))
-				ConfigureExpressionRoot<__m128>(param, buffer, sTransformNames, sTransformDefault);
+				Expression::Loader<__m128>::ConfigureRoot(param, buffer, sTransformNames, sTransformDefault);
 			else
 				Expression::Append(buffer, Expression::Constant<__m128>, _mm_setzero_ps());
 		}
@@ -117,7 +117,7 @@ static void ConfigureActionItem(const TiXmlElement *element, std::vector<unsigne
 	case 0xfd5e91a8 /* "addresource" */:
 		{
 			Expression::Append(buffer, Expression::AddResource, Hash(element->Attribute("name")));
-			ConfigureExpressionRoot<float>(element, buffer, sScalarNames, sScalarDefault);
+			Expression::Loader<float>::ConfigureRoot(element, buffer, sScalarNames, sScalarDefault);
 		}
 		break;
 

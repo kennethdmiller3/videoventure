@@ -9,7 +9,7 @@ namespace Expression
 	// read unaligned value from an expression stream
 	template <> inline const __m128 Read<__m128>(Context &aContext)
 	{
-		__m128 value(_mm_loadu_ps(reinterpret_cast<const float *>(aContext.mStream)));
+		const __m128 value(_mm_loadu_ps(reinterpret_cast<const float *>(aContext.mStream)));
 		aContext.mStream += (sizeof(__m128) + sizeof(unsigned int) - 1) / sizeof(unsigned int);
 		return value;
 	}
@@ -37,12 +37,12 @@ namespace Expression
 	{
 		template <typename OR, typename O1, OR Op(O1)> static const __m128 Evaluate(Context &aContext)
 		{
-			__m128 arg1(Expression::Evaluate<__m128>(aContext));
-			return _mm_setr_ps(
-				Op(reinterpret_cast<float *>(&arg1)[0]),
-				Op(reinterpret_cast<float *>(&arg1)[1]),
-				Op(reinterpret_cast<float *>(&arg1)[2]),
-				Op(reinterpret_cast<float *>(&arg1)[3])
+			const __m128 arg1(Expression::Evaluate<__m128>(aContext));
+			return _mm_set_ps(
+				Op(reinterpret_cast<const float *>(&arg1)[3]),
+				Op(reinterpret_cast<const float *>(&arg1)[2]),
+				Op(reinterpret_cast<const float *>(&arg1)[1]),
+				Op(reinterpret_cast<const float *>(&arg1)[0])
 				);
 		}
 	};
@@ -52,13 +52,13 @@ namespace Expression
 	{
 		template <typename OR, typename O1, typename O2, OR Op(O1, O2)> static const __m128 Evaluate(Context &aContext)
 		{
-			__m128 arg1(Expression::Evaluate<__m128>(aContext));
-			__m128 arg2(Expression::Evaluate<__m128>(aContext));
-			return _mm_setr_ps(
-				Op(reinterpret_cast<float *>(&arg1)[0], reinterpret_cast<float *>(&arg2)[0]),
-				Op(reinterpret_cast<float *>(&arg1)[1], reinterpret_cast<float *>(&arg2)[1]),
-				Op(reinterpret_cast<float *>(&arg1)[2], reinterpret_cast<float *>(&arg2)[2]),
-				Op(reinterpret_cast<float *>(&arg1)[3], reinterpret_cast<float *>(&arg2)[3])
+			const __m128 arg1(Expression::Evaluate<__m128>(aContext));
+			const __m128 arg2(Expression::Evaluate<__m128>(aContext));
+			return _mm_set_ps(
+				Op(reinterpret_cast<const float *>(&arg1)[3], reinterpret_cast<const float *>(&arg2)[3]),
+				Op(reinterpret_cast<const float *>(&arg1)[2], reinterpret_cast<const float *>(&arg2)[2]),
+				Op(reinterpret_cast<const float *>(&arg1)[1], reinterpret_cast<const float *>(&arg2)[1]),
+				Op(reinterpret_cast<const float *>(&arg1)[0], reinterpret_cast<const float *>(&arg2)[0])
 				);
 		}
 	};
@@ -69,14 +69,14 @@ namespace Expression
 		// requres that T support operator[]
 		template <typename OR, typename O1, typename O2, typename O3, OR Op(O1, O2, O3)> static const __m128 Evaluate(Context &aContext)
 		{
-			__m128 arg1(Expression::Evaluate<__m128>(aContext));
-			__m128 arg2(Expression::Evaluate<__m128>(aContext));
-			__m128 arg3(Expression::Evaluate<__m128>(aContext));
-			return _mm_setr_ps(
-				Op(reinterpret_cast<float *>(&arg1)[0], reinterpret_cast<float *>(&arg2)[0], reinterpret_cast<float *>(&arg3)[0]),
-				Op(reinterpret_cast<float *>(&arg1)[1], reinterpret_cast<float *>(&arg2)[1], reinterpret_cast<float *>(&arg3)[1]),
-				Op(reinterpret_cast<float *>(&arg1)[2], reinterpret_cast<float *>(&arg2)[2], reinterpret_cast<float *>(&arg3)[2]),
-				Op(reinterpret_cast<float *>(&arg1)[3], reinterpret_cast<float *>(&arg2)[3], reinterpret_cast<float *>(&arg3)[3])
+			const __m128 arg1(Expression::Evaluate<__m128>(aContext));
+			const __m128 arg2(Expression::Evaluate<__m128>(aContext));
+			const __m128 arg3(Expression::Evaluate<__m128>(aContext));
+			return _mm_set_ps(
+				Op(reinterpret_cast<const float *>(&arg1)[3], reinterpret_cast<const float *>(&arg2)[0], reinterpret_cast<const float *>(&arg3)[3]),
+				Op(reinterpret_cast<const float *>(&arg1)[2], reinterpret_cast<const float *>(&arg2)[1], reinterpret_cast<const float *>(&arg3)[2]),
+				Op(reinterpret_cast<const float *>(&arg1)[1], reinterpret_cast<const float *>(&arg2)[2], reinterpret_cast<const float *>(&arg3)[1]),
+				Op(reinterpret_cast<const float *>(&arg1)[0], reinterpret_cast<const float *>(&arg2)[3], reinterpret_cast<const float *>(&arg3)[0])
 				);
 		}
 	};

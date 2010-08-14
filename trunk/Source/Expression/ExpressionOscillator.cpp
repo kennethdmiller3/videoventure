@@ -14,8 +14,8 @@ template<typename T> static void ConfigureSineWave(const TiXmlElement *element, 
 	ConfigureSineWave(element, buffer);
 }
 
-static ExpressionConfigure::Auto<float> sinewavefloat(0xb711f539 /* "sinewave" */, ConfigureSineWave<float>);
-static ExpressionConfigure::Auto<__m128> sinewavevector(0xb711f539 /* "sinewave" */, ConfigureSineWave<__m128>);
+static Expression::Loader<float>::Auto sinewavefloat(0xb711f539 /* "sinewave" */, ConfigureSineWave<float>);
+static Expression::Loader<__m128>::Auto sinewavevector(0xb711f539 /* "sinewave" */, ConfigureSineWave<__m128>);
 
 //
 template<typename T> static void ConfigureTriangleWave(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
@@ -24,8 +24,8 @@ template<typename T> static void ConfigureTriangleWave(const TiXmlElement *eleme
 	ConfigureTriangleWave(element, buffer);
 }
 
-static ExpressionConfigure::Auto<float> trianglewavefloat(0xd0308494 /* "trianglewave" */, ConfigureTriangleWave<float>);
-static ExpressionConfigure::Auto<__m128> trianglewavevector(0xd0308494 /* "trianglewave" */, ConfigureTriangleWave<__m128>);
+static Expression::Loader<float>::Auto trianglewavefloat(0xd0308494 /* "trianglewave" */, ConfigureTriangleWave<float>);
+static Expression::Loader<__m128>::Auto trianglewavevector(0xd0308494 /* "trianglewave" */, ConfigureTriangleWave<__m128>);
 
 //
 template<typename T> static void ConfigureSawtoothWave(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
@@ -34,8 +34,8 @@ template<typename T> static void ConfigureSawtoothWave(const TiXmlElement *eleme
 	ConfigureSawtoothWave(element, buffer);
 }
 
-static ExpressionConfigure::Auto<float> sawtoothwavefloat(0x705614d5 /* "sawtoothwave" */, ConfigureSawtoothWave<float>);
-static ExpressionConfigure::Auto<__m128> sawtoothwavevector(0x705614d5 /* "sawtoothwave" */, ConfigureSawtoothWave<__m128>);
+static Expression::Loader<float>::Auto sawtoothwavefloat(0x705614d5 /* "sawtoothwave" */, ConfigureSawtoothWave<float>);
+static Expression::Loader<__m128>::Auto sawtoothwavevector(0x705614d5 /* "sawtoothwave" */, ConfigureSawtoothWave<__m128>);
 
 
 //
@@ -45,8 +45,8 @@ template<typename T> static void ConfigurePulseWave(const TiXmlElement *element,
 	ConfigurePulseWave(element, buffer);
 }
 
-static ExpressionConfigure::Auto<float> pulsewavefloat(0x3f8dc467 /* "pulsewave" */, ConfigurePulseWave<float>);
-static ExpressionConfigure::Auto<__m128> pulsewavevector(0x3f8dc467 /* "pulsewave" */, ConfigurePulseWave<__m128>);
+static Expression::Loader<float>::Auto pulsewavefloat(0x3f8dc467 /* "pulsewave" */, ConfigurePulseWave<float>);
+static Expression::Loader<__m128>::Auto pulsewavevector(0x3f8dc467 /* "pulsewave" */, ConfigurePulseWave<__m128>);
 
 
 //
@@ -81,7 +81,7 @@ static bool ConfigureParameter(const TiXmlElement *element, const char *param, s
 			Expression::Append(buffer, op);
 
 		// configure the expression
-		ConfigureExpressionRoot<float>(child, buffer, names, &value);
+		Expression::Loader<float>::ConfigureRoot(child, buffer, names, &value);
 		return true;
 	}
 
@@ -135,7 +135,7 @@ void ConfigureSineWave(const TiXmlElement *element, std::vector<unsigned int> &b
 	if (const TiXmlElement *child = element->FirstChildElement("input"))
 	{
 		// get input expression
-		ConfigureExpressionRoot<float>(child, buffer, sScalarNames, sScalarDefault);
+		Expression::Loader<float>::ConfigureRoot(child, buffer, sScalarNames, sScalarDefault);
 	}
 	else if (const char *input = element->Attribute("input"))
 	{
@@ -187,7 +187,7 @@ void ConfigureTriangleWave(const TiXmlElement *element, std::vector<unsigned int
 	if (const TiXmlElement *child = element->FirstChildElement("input"))
 	{
 		// get input expression
-		ConfigureExpressionRoot<float>(child, buffer, sScalarNames, sScalarDefault);
+		Expression::Loader<float>::ConfigureRoot(child, buffer, sScalarNames, sScalarDefault);
 	}
 	else
 	{
@@ -234,7 +234,7 @@ void ConfigureSawtoothWave(const TiXmlElement *element, std::vector<unsigned int
 	if (const TiXmlElement *child = element->FirstChildElement("input"))
 	{
 		// get input expression
-		ConfigureExpressionRoot<float>(child, buffer, sScalarNames, sScalarDefault);
+		Expression::Loader<float>::ConfigureRoot(child, buffer, sScalarNames, sScalarDefault);
 	}
 	else
 	{
@@ -282,7 +282,7 @@ void ConfigurePulseWave(const TiXmlElement *element, std::vector<unsigned int> &
 	if (const TiXmlElement *child = element->FirstChildElement("input"))
 	{
 		// get input expression
-		ConfigureExpressionRoot<float>(child, buffer, sScalarNames, sScalarDefault);
+		Expression::Loader<float>::ConfigureRoot(child, buffer, sScalarNames, sScalarDefault);
 	}
 	else
 	{

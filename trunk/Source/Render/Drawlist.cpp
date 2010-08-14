@@ -673,10 +673,10 @@ void ConfigureVariableOperator(const TiXmlElement *element, std::vector<unsigned
 	{
 		switch (width)
 		{
-		case 1: ConfigureExpressionRoot<float>(element, buffer, names, data); break;
-		case 2: //ConfigureExpressionRoot<Vector2>(element, buffer, names, data); break;
-		case 3: //ConfigureExpressionRoot<Vector3>(element, buffer, names, data); break;
-		case 4: ConfigureExpressionRoot<__m128>(element, buffer, names, data); break;
+		case 1: Expression::Loader<float>::ConfigureRoot(element, buffer, names, data); break;
+		case 2: //Expression::Loader<Vector2>::ConfigureRoot(element, buffer, names, data); break;
+		case 3: //Expression::Loader<Vector3>::ConfigureRoot(element, buffer, names, data); break;
+		case 4: Expression::Loader<__m128>::ConfigureRoot(element, buffer, names, data); break;
 		}
 	}
 }
@@ -797,21 +797,21 @@ void ConfigureDrawItem(const TiXmlElement *element, std::vector<unsigned int> &b
 	case 0xad0ecfd5 /* "translate" */:
 		{
 			Expression::Append(buffer, DO_glTranslatef);
-			ConfigureExpressionRoot<DLTranslation>(element, buffer, sPositionNames, sPositionDefault);
+			Expression::Loader<DLTranslation>::ConfigureRoot(element, buffer, sPositionNames, sPositionDefault);
 		}
 		break;
 
 	case 0xa5f4fd0a /* "rotate" */:
 		{
 			Expression::Append(buffer, DO_glRotatef);
-			ConfigureExpressionRoot<DLRotation>(element, buffer, sRotationNames, sRotationDefault);
+			Expression::Loader<DLRotation>::ConfigureRoot(element, buffer, sRotationNames, sRotationDefault);
 		}
 		break;
 
 	case 0x82971c71 /* "scale" */:
 		{
 			Expression::Append(buffer, DO_glScalef);
-			ConfigureExpressionRoot<DLScale>(element, buffer, sScaleNames, sScaleDefault);
+			Expression::Loader<DLScale>::ConfigureRoot(element, buffer, sScaleNames, sScaleDefault);
 		}
 		break;
 
@@ -852,35 +852,35 @@ void ConfigureDrawItem(const TiXmlElement *element, std::vector<unsigned int> &b
 	case 0x945367a7 /* "vertex" */:
 		{
 			Expression::Append(buffer, DO_glVertex3fv);
-			ConfigureExpressionRoot<DLPosition>(element, buffer, sPositionNames, sPositionDefault);
+			Expression::Loader<DLPosition>::ConfigureRoot(element, buffer, sPositionNames, sPositionDefault);
 		}
 		break;
 
 	case 0xe68b9c52 /* "normal" */:
 		{
 			Expression::Append(buffer, DO_glNormal3fv);
-			ConfigureExpressionRoot<DLNormal>(element, buffer, sPositionNames, sPositionDefault);
+			Expression::Loader<DLNormal>::ConfigureRoot(element, buffer, sPositionNames, sPositionDefault);
 		}
 		break;
 
 	case 0x3d7e6258 /* "color" */:
 		{
 			Expression::Append(buffer, DO_glColor4fv);
-			ConfigureExpressionRoot<DLColor>(element, buffer, sColorNames, sColorDefault);
+			Expression::Loader<DLColor>::ConfigureRoot(element, buffer, sColorNames, sColorDefault);
 		}
 		break;
 
 	case 0x090aa9ab /* "index" */:
 		{
 			Expression::Append(buffer, DO_glIndexf);
-			ConfigureExpressionRoot<DLIndex>(element, buffer, sIndexNames, sIndexDefault);
+			Expression::Loader<DLIndex>::ConfigureRoot(element, buffer, sIndexNames, sIndexDefault);
 		}
 		break;
 
 	case 0xdd612dd3 /* "texcoord" */:
 		{
 			Expression::Append(buffer, DO_glTexCoord2fv);
-			ConfigureExpressionRoot<DLTexCoord>(element, buffer, sTexCoordNames, sTexCoordDefault);
+			Expression::Loader<DLTexCoord>::ConfigureRoot(element, buffer, sTexCoordNames, sTexCoordDefault);
 		}
 		break;
 
