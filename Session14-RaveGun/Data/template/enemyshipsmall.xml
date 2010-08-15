@@ -90,7 +90,7 @@
 		<fire channel="1" range="128" angle="30" />
 		<evade strength="1" />
 		<close range="64" />
-		<edge strength="0.015625" distance="64" />
+		<edge strength="0.0625" distance="16"/>
 	</aimer>
 	<ship forwardveloc="75" neutralveloc="0" reverseveloc="-30" strafeveloc="30" maxaccel="120" minaccel="60" maxomega="1.5" />
 	<damagable health="3" spawnondeath="enemyexplosionsmall" />
