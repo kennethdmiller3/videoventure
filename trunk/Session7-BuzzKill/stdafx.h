@@ -87,5 +87,5 @@ extern GAME_API Vector2 camerapos[2];
 #define USE_POOL_ALLOCATOR
 
 #ifdef USE_POOL_ALLOCATOR
-#include <boost/pool/pool.hpp>
+#include "MemoryPool.h"
 #endif

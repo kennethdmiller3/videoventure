@@ -13,14 +13,14 @@
 
 #ifdef USE_POOL_ALLOCATOR
 // capture pool
-static boost::pool<boost::default_user_allocator_malloc_free> pool(sizeof(Capture));
+static MemoryPool sPool(sizeof(Capture));
 void *Capture::operator new(size_t aSize)
 {
-	return pool.malloc();
+	return sPool.Alloc();
 }
 void Capture::operator delete(void *aPtr)
 {
-	pool.free(aPtr);
+	sPool.Free(aPtr);
 }
 #endif
 

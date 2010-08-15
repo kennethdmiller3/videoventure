@@ -19,8 +19,11 @@
 #include <malloc.h>
 
 // STL includes
+#pragma message( "vector" )
 #include <vector>
+#pragma message( "deque" )
 #include <deque>
+#pragma message( "algorithm" )
 #include <algorithm>
 
 // platform header
@@ -33,6 +36,7 @@
 #include "tinyxml.h"
 
 // Box2D includes
+#pragma message( "box2d" )
 #include "Box2d/Box2D.h"
 
 // FastDelegate includes
@@ -165,18 +169,19 @@ extern void OnTurn(unsigned int aTurn, float aFraction, fastdelegate::FastDelega
 #define ENABLE_FOG
 
 // for consistency between AA modes
-#define ENABLE_SRC_ALPHA_SATURATE
-#define DRAW_FRONT_TO_BACK
+//#define ENABLE_SRC_ALPHA_SATURATE
+//#define DRAW_FRONT_TO_BACK
 
 #define USE_POOL_ALLOCATOR
 #define USE_CHANGE_DYNAMIC_TYPE
 
 #define COLLECT_DEBUG_DRAW
-//#define COLLIDABLE_DEBUG_DRAW
+#define COLLIDABLE_DEBUG_DRAW
 
 const int AUDIO_FREQUENCY = 48000;
 
 
 #ifdef USE_POOL_ALLOCATOR
-#include <boost/pool/pool.hpp>
+#pragma message( "pool" )
+#include "MemoryPool.h"
 #endif

@@ -8,14 +8,14 @@
 
 #ifdef USE_POOL_ALLOCATOR
 // damagable pool
-static boost::pool<boost::default_user_allocator_malloc_free> pool(sizeof(Expire));
+static MemoryPool sPool(sizeof(Expire));
 void *Expire::operator new(size_t aSize)
 {
-	return pool.malloc();
+	return sPool.Alloc();
 }
 void Expire::operator delete(void *aPtr)
 {
-	pool.free(aPtr);
+	sPool.Free(aPtr);
 }
 #endif
 

@@ -12,14 +12,14 @@
 
 #ifdef USE_POOL_ALLOCATOR
 // beam pool
-static boost::pool<boost::default_user_allocator_malloc_free> pool(sizeof(Beam));
+static MemoryPool sPool(sizeof(Beam));
 void *Beam::operator new(size_t aSize)
 {
-	return pool.malloc();
+	return sPool.Alloc();
 }
 void Beam::operator delete(void *aPtr)
 {
-	pool.free(aPtr);
+	sPool.Free(aPtr);
 }
 #endif
 

@@ -16,14 +16,14 @@
 
 #ifdef USE_POOL_ALLOCATOR
 // chargeweapon pool
-static boost::pool<boost::default_user_allocator_malloc_free> pool(sizeof(ChargeWeapon));
+static MemoryPool sPool(sizeof(ChargeWeapon));
 void *ChargeWeapon::operator new(size_t aSize)
 {
-	return pool.malloc();
+	return sPool.Alloc();
 }
 void ChargeWeapon::operator delete(void *aPtr)
 {
-	pool.free(aPtr);
+	sPool.Free(aPtr);
 }
 #endif
 

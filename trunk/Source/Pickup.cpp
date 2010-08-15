@@ -13,14 +13,14 @@
 #ifdef USE_POOL_ALLOCATOR
 
 // pickup pool
-static boost::pool<boost::default_user_allocator_malloc_free> pool(sizeof(Pickup));
+static MemoryPool sPool(sizeof(Pickup));
 void *Pickup::operator new(size_t aSize)
 {
-	return pool.malloc();
+	return sPool.Alloc();
 }
 void Pickup::operator delete(void *aPtr)
 {
-	pool.free(aPtr);
+	sPool.Free(aPtr);
 }
 #endif
 
@@ -399,15 +399,15 @@ public:
 
 #ifdef USE_POOL_ALLOCATOR
 // kill update pool
-static boost::pool<boost::default_user_allocator_malloc_free> killpool(sizeof(PickupGrantUpdate));
+static MemoryPool sKillPool(sizeof(PickupGrantUpdate));
 
 void *PickupGrantUpdate::operator new(size_t aSize)
 {
-	return killpool.malloc();
+	return sKillPool.Alloc();
 }
 void PickupGrantUpdate::operator delete(void *aPtr)
 {
-	killpool.free(aPtr);
+	sKillPool.Free(aPtr);
 }
 #endif
 

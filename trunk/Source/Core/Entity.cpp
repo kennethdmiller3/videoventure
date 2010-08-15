@@ -1,17 +1,17 @@
 #include "StdAfx.h"
 #include "Entity.h"
-#include <algorithm>
+#include "MemoryPool.h"
 
 #ifdef USE_POOL_ALLOCATOR
 // entity pool
-static boost::pool<boost::default_user_allocator_malloc_free> pool(sizeof(Entity));
+static MemoryPool sPool(sizeof(Entity), 256, 16);
 void *Entity::operator new(size_t aSize)
 {
-	return pool.malloc();
+	return sPool.Alloc();
 }
 void Entity::operator delete(void *aPtr)
 {
-	pool.free(aPtr);
+	sPool.Free(aPtr);
 }
 #endif
 

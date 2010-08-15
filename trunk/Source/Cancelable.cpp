@@ -12,14 +12,14 @@
 
 #ifdef USE_POOL_ALLOCATOR
 // damagable pool
-static boost::pool<boost::default_user_allocator_malloc_free> pool(sizeof(Cancelable));
+static MemoryPool sPool(sizeof(Cancelable));
 void *Cancelable::operator new(size_t aSize)
 {
-	return pool.malloc();
+	return sPool.Alloc();
 }
 void Cancelable::operator delete(void *aPtr)
 {
-	pool.free(aPtr);
+	sPool.Free(aPtr);
 }
 #endif
 
@@ -120,15 +120,15 @@ public:
 
 #ifdef USE_POOL_ALLOCATOR
 // cancel update pool
-static boost::pool<boost::default_user_allocator_malloc_free> tetherburnpool(sizeof(TetherBurn));
+static MemoryPool sTetherBurnPool(sizeof(TetherBurn));
 
 void *TetherBurn::operator new(size_t aSize)
 {
-	return tetherburnpool.malloc();
+	return sTetherBurnPool.Alloc();
 }
 void TetherBurn::operator delete(void *aPtr)
 {
-	tetherburnpool.free(aPtr);
+	sTetherBurnPool.Free(aPtr);
 }
 #endif
 
@@ -251,15 +251,15 @@ public:
 
 #ifdef USE_POOL_ALLOCATOR
 // cancel update pool
-static boost::pool<boost::default_user_allocator_malloc_free> cancelpool(sizeof(CancelableCancelUpdate));
+static MemoryPool sCancelPool(sizeof(CancelableCancelUpdate));
 
 void *CancelableCancelUpdate::operator new(size_t aSize)
 {
-	return cancelpool.malloc();
+	return sCancelPool.Alloc();
 }
 void CancelableCancelUpdate::operator delete(void *aPtr)
 {
-	cancelpool.free(aPtr);
+	sCancelPool.Free(aPtr);
 }
 #endif
 
