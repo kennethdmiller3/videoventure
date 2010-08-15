@@ -54,6 +54,7 @@
 		<pursue strength="1" leading="0" y="-64" />
 		<evade strength="1" />
 		<close range="64" />
+		<edge strength="0.015625" distance="64" />
 	</aimer>
 	<ship maxveloc="45" maxaccel="90" minaccel="10" maxomega="0" />
 	<damagable health="10" spawnondeath="enemyexplosion" />
