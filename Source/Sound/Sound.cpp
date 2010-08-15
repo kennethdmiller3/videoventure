@@ -475,8 +475,7 @@ bool SoundTemplate::Configure(const TiXmlElement *element, unsigned int id)
 	// create a sample
 	unsigned int flags = BASS_SAMPLE_OVER_POS | BASS_SAMPLE_VAM;
 #if defined(DISTANCE_FALLOFF)
-	if (SOUND_ROLLOFF_FACTOR)
-		flags |= BASS_SAMPLE_3D;
+	flags |= BASS_SAMPLE_3D;
 #endif
 	if (mRepeat)
 		flags |= BASS_SAMPLE_LOOP;
@@ -706,10 +705,10 @@ void Sound::Play(unsigned int aOffset)
 		return;
 	}
 
-	if (SOUND_ROLLOFF_FACTOR)
+	// use normal 3d for entities, and listener-relative for non-entities
+	if (!BASS_ChannelSet3DAttributes(mPlaying, Database::entity.Get(mId) ? BASS_3DMODE_NORMAL : BASS_3DMODE_RELATIVE, -1, -1, -1, -1, -1))
 	{
-		// use normal 3d for entities, and listener-relative for non-entities
-		BASS_ChannelSet3DAttributes(mPlaying, mId ? BASS_3DMODE_NORMAL : BASS_3DMODE_RELATIVE, -1, -1, -1, -1, -1);
+		DebugPrint("error setting 3d attributes: %s\n", BASS_ErrorGetString());
 	}
 
 	// (re)play the channel
@@ -853,19 +852,16 @@ void Sound::Update(float aStep)
 //	BASS_ChannelSetAttribute(mPlaying, BASS_ATTRIB_VOL, mVolume);
 
 #if defined(DISTANCE_FALLOFF)
-	if (mId && SOUND_ROLLOFF_FACTOR)
+	// if attached to an entity...
+	if (Entity *entity = Database::entity.Get(mId))
 	{
-		// if attached to an entity...
-		if (Entity *entity = Database::entity.Get(mId))
-		{
-			// update sound position
-			const Vector2 &position = entity->GetPosition();
-			const Vector2 &velocity = entity->GetVelocity();
-			BASS_3DVECTOR pos(position.x, position.y, 0.0f);
-			BASS_3DVECTOR vel(velocity.x, velocity.y, 0.0f);
-			if (!BASS_ChannelSet3DPosition(mPlaying, &pos, NULL, &vel))
-				DebugPrint("error setting channel 3d position: %s\n", BASS_ErrorGetString());
-		}
+		// update sound position
+		const Vector2 &position = entity->GetPosition();
+		const Vector2 &velocity = entity->GetVelocity();
+		BASS_3DVECTOR pos(position.x, position.y, 0.0f);
+		BASS_3DVECTOR vel(velocity.x, velocity.y, 0.0f);
+		if (!BASS_ChannelSet3DPosition(mPlaying, &pos, NULL, &vel))
+			DebugPrint("error setting channel 3d position: %s\n", BASS_ErrorGetString());
 	}
 #endif
 #elif defined(USE_SDL_MIXER)
