@@ -241,6 +241,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Source\Core\MemoryPool.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Core\MemoryPool.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Source\Core\Noise.cpp"
 				>
 			</File>
@@ -1198,6 +1206,14 @@
 			</File>
 			<File
 				RelativePath=".\Source\Physics\PhysicsDistanceJoint.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Physics\PhysicsFrictionJoint.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Physics\PhysicsFrictionJoint.h"
 				>
 			</File>
 			<File
