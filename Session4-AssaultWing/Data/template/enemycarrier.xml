@@ -87,6 +87,7 @@
 		<fire channel="1" range="192" angle="90" />
 		<fire channel="2" range="256" angle="180" />
 		<close range="96" />
+		<edge strength="0.015625" distance="64" />
 	</aimer>
 	<ship maxveloc="90" maxaccel="10" minaccel="10" maxomega="0.1" />
 	<damagable health="200" spawnondeath="enemycarrierexplosion" />
