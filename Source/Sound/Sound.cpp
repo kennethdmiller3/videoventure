@@ -475,7 +475,8 @@ bool SoundTemplate::Configure(const TiXmlElement *element, unsigned int id)
 	// create a sample
 	unsigned int flags = BASS_SAMPLE_OVER_POS | BASS_SAMPLE_VAM;
 #if defined(DISTANCE_FALLOFF)
-	flags |= BASS_SAMPLE_3D;
+	if (SOUND_ROLLOFF_FACTOR)
+		flags |= BASS_SAMPLE_3D;
 #endif
 	if (mRepeat)
 		flags |= BASS_SAMPLE_LOOP;
@@ -705,8 +706,11 @@ void Sound::Play(unsigned int aOffset)
 		return;
 	}
 
-	// use normal 3d for entities, and listener-relative for non-entities
-	BASS_ChannelSet3DAttributes(mPlaying, mId ? BASS_3DMODE_NORMAL : BASS_3DMODE_RELATIVE, -1, -1, -1, -1, -1);
+	if (SOUND_ROLLOFF_FACTOR)
+	{
+		// use normal 3d for entities, and listener-relative for non-entities
+		BASS_ChannelSet3DAttributes(mPlaying, mId ? BASS_3DMODE_NORMAL : BASS_3DMODE_RELATIVE, -1, -1, -1, -1, -1);
+	}
 
 	// (re)play the channel
 	if (!BASS_ChannelPlay(mPlaying, true))
@@ -849,16 +853,19 @@ void Sound::Update(float aStep)
 //	BASS_ChannelSetAttribute(mPlaying, BASS_ATTRIB_VOL, mVolume);
 
 #if defined(DISTANCE_FALLOFF)
-	// if attached to an entity...
-	if (Entity *entity = Database::entity.Get(mId))
+	if (mId && SOUND_ROLLOFF_FACTOR)
 	{
-		// update sound position
-		const Vector2 &position = entity->GetPosition();
-		const Vector2 &velocity = entity->GetVelocity();
-		BASS_3DVECTOR pos(position.x, position.y, 0.0f);
-		BASS_3DVECTOR vel(velocity.x, velocity.y, 0.0f);
-		if (!BASS_ChannelSet3DPosition(mPlaying, &pos, NULL, &vel))
-			DebugPrint("error setting channel 3d position: %s\n", BASS_ErrorGetString());
+		// if attached to an entity...
+		if (Entity *entity = Database::entity.Get(mId))
+		{
+			// update sound position
+			const Vector2 &position = entity->GetPosition();
+			const Vector2 &velocity = entity->GetVelocity();
+			BASS_3DVECTOR pos(position.x, position.y, 0.0f);
+			BASS_3DVECTOR vel(velocity.x, velocity.y, 0.0f);
+			if (!BASS_ChannelSet3DPosition(mPlaying, &pos, NULL, &vel))
+				DebugPrint("error setting channel 3d position: %s\n", BASS_ErrorGetString());
+		}
 	}
 #endif
 #elif defined(USE_SDL_MIXER)
@@ -969,8 +976,11 @@ void Sound::Init(void)
 	// set default 3D factors
 	if (!BASS_Set3DFactors(SOUND_DISTANCE_FACTOR, SOUND_ROLLOFF_FACTOR, SOUND_DOPPLER_FACTOR))
 		DebugPrint("error setting 3d factors: %s\n", BASS_ErrorGetString());
-	BASS_Apply3D();
 #endif
+
+	// initialize listener
+	Sound::Listener(Vector2(0, 0), Vector2(0, 0));
+
 #elif defined(USE_SDL_MIXER)
 	// initialize mixer
 	if ( Mix_OpenAudio(AUDIO_FREQUENCY, AUDIO_S16SYS, 1, xs_CeilToInt(AUDIO_FREQUENCY / SIMULATION_RATE) ) < 0 )
@@ -1063,6 +1073,7 @@ void UpdateSoundVolume(void)
 #if defined(USE_BASS)
 	// update effect and music volumes
 	BASS_SetConfig(BASS_CONFIG_GVOL_SAMPLE, xs_CeilToInt(SOUND_VOLUME_EFFECT * 10000));
+	BASS_SetConfig(BASS_CONFIG_GVOL_STREAM, xs_CeilToInt(SOUND_VOLUME_EFFECT * 10000));
 	BASS_SetConfig(BASS_CONFIG_GVOL_MUSIC, xs_CeilToInt(SOUND_VOLUME_MUSIC * 10000));
 #elif defined(USE_SDL_MIXER)
 	// compute music volume
