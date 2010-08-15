@@ -90,6 +90,7 @@
 		<target range="256" category="3" bit2="0" bit3="0" bit4="0" />
 		<aim strength="1" leading="30" />
 		<pursue strength="0.25" leading="30" />
+		<edge strength="0.015625" distance="64" />
 	</aimer>
 	<ship maxveloc="30" maxaccel="30" minaccel="10" maxomega="0.5" />
 	<bullet damage="1" ricochet="1" spawnondeath="friendpodexplosion" />

@@ -57,6 +57,7 @@
 		<fire channel="1" range="128" />
 		<evade strength="0.25" />
 		<close range="32" />
+		<edge strength="0.015625" distance="64" />
 	</aimer>
 	<ship maxveloc="60" maxaccel="180" minaccel="10" maxomega="2" />
 	<damagable health="1" spawnondeath="friendfireballexplosion" />
