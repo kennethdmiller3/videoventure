@@ -7,14 +7,14 @@
 
 #ifdef USE_POOL_ALLOCATOR
 // damagable pool
-static boost::pool<boost::default_user_allocator_malloc_free> pool(sizeof(Damagable));
+static MemoryPool sPool(sizeof(Damagable));
 void *Damagable::operator new(size_t aSize)
 {
-	return pool.malloc();
+	return sPool.Alloc();
 }
 void Damagable::operator delete(void *aPtr)
 {
-	pool.free(aPtr);
+	sPool.Free(aPtr);
 }
 #endif
 
@@ -145,15 +145,15 @@ public:
 
 #ifdef USE_POOL_ALLOCATOR
 // kill update pool
-static boost::pool<boost::default_user_allocator_malloc_free> killpool(sizeof(DamagableKillUpdate));
+static MemoryPool sKillPool(sizeof(DamagableKillUpdate));
 
 void *DamagableKillUpdate::operator new(size_t aSize)
 {
-	return killpool.malloc();
+	return sKillPool.Alloc();
 }
 void DamagableKillUpdate::operator delete(void *aPtr)
 {
-	killpool.free(aPtr);
+	sKillPool.Free(aPtr);
 }
 #endif
 

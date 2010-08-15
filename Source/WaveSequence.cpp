@@ -22,14 +22,14 @@ WaveSequence
 
 #ifdef USE_POOL_ALLOCATOR
 // wavesequence pool
-static boost::pool<boost::default_user_allocator_malloc_free> pool(sizeof(WaveSequence));
+static MemoryPool sPool(sizeof(WaveSequence));
 void *WaveSequence::operator new(size_t aSize)
 {
-	return pool.malloc();
+	return sPool.Alloc();
 }
 void WaveSequence::operator delete(void *aPtr)
 {
-	pool.free(aPtr);
+	sPool.Free(aPtr);
 }
 #endif
 

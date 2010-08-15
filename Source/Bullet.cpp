@@ -14,14 +14,14 @@
 #ifdef USE_POOL_ALLOCATOR
 
 // bullet pool
-static boost::pool<boost::default_user_allocator_malloc_free> pool(sizeof(Bullet));
+static MemoryPool sPool(sizeof(Bullet));
 void *Bullet::operator new(size_t aSize)
 {
-	return pool.malloc();
+	return sPool.Alloc();
 }
 void Bullet::operator delete(void *aPtr)
 {
-	pool.free(aPtr);
+	sPool.Free(aPtr);
 }
 #endif
 
@@ -194,15 +194,15 @@ public:
 
 #ifdef USE_POOL_ALLOCATOR
 // kill update pool
-static boost::pool<boost::default_user_allocator_malloc_free> killpool(sizeof(BulletKillUpdate));
+static MemoryPool sKillPool(sizeof(BulletKillUpdate));
 
 void *BulletKillUpdate::operator new(size_t aSize)
 {
-	return killpool.malloc();
+	return sKillPool.Alloc();
 }
 void BulletKillUpdate::operator delete(void *aPtr)
 {
-	killpool.free(aPtr);
+	sKillPool.Free(aPtr);
 }
 #endif
 

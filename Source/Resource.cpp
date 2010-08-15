@@ -8,14 +8,14 @@
 
 #ifdef USE_POOL_ALLOCATOR
 // resource pool
-static boost::pool<boost::default_user_allocator_malloc_free> pool(sizeof(Resource));
+static MemoryPool sPool(sizeof(Resource));
 void *Resource::operator new(size_t aSize)
 {
-	return pool.malloc();
+	return sPool.Alloc();
 }
 void Resource::operator delete(void *aPtr)
 {
-	pool.free(aPtr);
+	sPool.Free(aPtr);
 }
 #endif
 

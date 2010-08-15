@@ -14,14 +14,14 @@
 
 #ifdef USE_POOL_ALLOCATOR
 // aimer pool
-static boost::pool<boost::default_user_allocator_malloc_free> pool(sizeof(Aimer));
+static MemoryPool sPool(sizeof(Aimer));
 void *Aimer::operator new(size_t aSize)
 {
-	return pool.malloc();
+	return sPool.Alloc();
 }
 void Aimer::operator delete(void *aPtr)
 {
-	pool.free(aPtr);
+	sPool.Free(aPtr);
 }
 #endif
 

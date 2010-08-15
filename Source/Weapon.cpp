@@ -16,14 +16,14 @@
 
 #ifdef USE_POOL_ALLOCATOR
 // weapon pool
-static boost::pool<boost::default_user_allocator_malloc_free> pool(sizeof(Weapon));
+static MemoryPool sPool(sizeof(Weapon));
 void *Weapon::operator new(size_t aSize)
 {
-	return pool.malloc();
+	return sPool.Alloc();
 }
 void Weapon::operator delete(void *aPtr)
 {
-	pool.free(aPtr);
+	sPool.Free(aPtr);
 }
 #endif
 

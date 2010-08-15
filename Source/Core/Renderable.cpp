@@ -5,14 +5,14 @@
 
 #ifdef USE_POOL_ALLOCATOR
 // renderable pool
-static boost::pool<boost::default_user_allocator_malloc_free> pool(sizeof(Renderable));
+static MemoryPool sPool(sizeof(Renderable));
 void *Renderable::operator new(size_t aSize)
 {
-	return pool.malloc();
+	return sPool.Alloc();
 }
 void Renderable::operator delete(void *aPtr)
 {
-	pool.free(aPtr);
+	sPool.Free(aPtr);
 }
 #endif
 

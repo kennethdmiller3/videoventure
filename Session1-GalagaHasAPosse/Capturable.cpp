@@ -5,14 +5,14 @@
 
 #ifdef USE_POOL_ALLOCATOR
 // capturable pool
-static boost::pool<boost::default_user_allocator_malloc_free> pool(sizeof(Capturable));
+static MemoryPool sPool(sizeof(Capturable));
 void *Capturable::operator new(size_t aSize)
 {
-	return pool.malloc();
+	return sPool.Alloc();
 }
 void Capturable::operator delete(void *aPtr)
 {
-	pool.free(aPtr);
+	sPool.Free(aPtr);
 }
 #endif
 
@@ -149,15 +149,15 @@ public:
 
 #ifdef USE_POOL_ALLOCATOR
 // capture update pool
-static boost::pool<boost::default_user_allocator_malloc_free> capturepool(sizeof(CapturableCaptureUpdate));
+static MemoryPool sCapturePool(sizeof(CapturableCaptureUpdate));
 
 void *CapturableCaptureUpdate::operator new(size_t aSize)
 {
-	return capturepool.malloc();
+	return sCapturePool.Alloc();
 }
 void CapturableCaptureUpdate::operator delete(void *aPtr)
 {
-	capturepool.free(aPtr);
+	sCapturePool.Free(aPtr);
 }
 #endif
 

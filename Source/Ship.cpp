@@ -9,14 +9,14 @@
 
 #ifdef USE_POOL_ALLOCATOR
 // ship pool
-static boost::pool<boost::default_user_allocator_malloc_free> pool(sizeof(Ship));
+static MemoryPool sPool(sizeof(Ship));
 void *Ship::operator new(size_t aSize)
 {
-	return pool.malloc();
+	return sPool.Alloc();
 }
 void Ship::operator delete(void *aPtr)
 {
-	pool.free(aPtr);
+	sPool.Free(aPtr);
 }
 #endif
 

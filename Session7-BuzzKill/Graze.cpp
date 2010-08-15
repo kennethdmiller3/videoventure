@@ -9,14 +9,14 @@
 
 #ifdef USE_POOL_ALLOCATOR
 // graze pool
-static boost::pool<boost::default_user_allocator_malloc_free> pool(sizeof(Graze));
+static MemoryPool sPool(sizeof(Graze));
 void *Graze::operator new(size_t aSize)
 {
-	return pool.malloc();
+	return sPool.Alloc();
 }
 void Graze::operator delete(void *aPtr)
 {
-	pool.free(aPtr);
+	sPool.Free(aPtr);
 }
 #endif
 

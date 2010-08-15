@@ -12,14 +12,14 @@
 
 #ifdef USE_POOL_ALLOCATOR
 // explosion pool
-static boost::pool<boost::default_user_allocator_malloc_free> pool(sizeof(Explosion));
+static MemoryPool sPool(sizeof(Explosion));
 void *Explosion::operator new(size_t aSize)
 {
-	return pool.malloc();
+	return sPool.Alloc();
 }
 void Explosion::operator delete(void *aPtr)
 {
-	pool.free(aPtr);
+	sPool.Free(aPtr);
 }
 #endif
 
