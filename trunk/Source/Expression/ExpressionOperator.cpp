@@ -572,7 +572,7 @@ static Expression::Loader<__m128>::Auto lerpvector(0x1e691468 /* "lerp" */, Conf
 //
 template<typename T> static void ConfigureStep(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float data[])
 {
-	ConfigureTernary<T, T, T, float>(Expression::Step<T>, element, buffer, names, data);
+	ConfigureBinary<T, T, float>(Expression::Step<T>, element, buffer, names, data);
 }
 
 static Expression::Loader<float>::Auto stepfloat(0xc7441a0f /* "step" */, ConfigureStep<float>);
