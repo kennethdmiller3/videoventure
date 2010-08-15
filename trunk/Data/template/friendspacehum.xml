@@ -50,6 +50,7 @@
 	<aimer>
 		<target range="512" category="1" bit1="0" bit2="0" bit4="0" />
 		<pursue strength="1" leading="0" />
+		<edge strength="0.015625" distance="64" />
 	</aimer>
 	<ship maxveloc="90" maxaccel="180" minaccel="10" maxomega="0" />
 	<team name="blue" />

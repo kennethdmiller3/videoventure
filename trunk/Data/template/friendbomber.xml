@@ -100,6 +100,7 @@
 		<aim strength="1" leading="15" />
 		<fire channel="1" range="128" angle="180" />
 		<close range="32" />
+		<edge strength="0.015625" distance="64" />
 	</aimer>
 	<ship maxveloc="30" maxaccel="60" minaccel="10" maxomega="1" />
 	<damagable health="5" spawnondeath="friendexplosion" />
