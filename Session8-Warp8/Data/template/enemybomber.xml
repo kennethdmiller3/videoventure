@@ -99,6 +99,7 @@
 		<pursue strength="0.5" y="-64" />
 		<fire channel="1" range="128" angle="180" />
 		<close range="32" />
+		<edge strength="0.015625" distance="64" />
 	</aimer>
 	<ship maxveloc="60" maxaccel="60" minaccel="10" maxomega="0" />
 	<damagable health="5" spawnondeath="enemyexplosion" />
