@@ -1256,6 +1256,14 @@
 				RelativePath=".\Source\Physics\PhysicsUtilities.h"
 				>
 			</File>
+			<File
+				RelativePath=".\Source\Physics\PhysicsWeldJoint.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Physics\PhysicsWeldJoint.h"
+				>
+			</File>
 		</Filter>
 		<File
 			RelativePath=".\Source\stdafx.cpp"
