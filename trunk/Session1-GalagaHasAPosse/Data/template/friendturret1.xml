@@ -1,0 +1,12 @@
+<?xml version="1.0" ?>
+<template name="friendturret1" type="friendturret">
+	<link name="gun" secondary="friendcannon">
+		<offset x="0" y="0" angle="0" />
+	</link>
+	<!--aimer range="256" attack="128" leading="240" filter="bluebullet" /-->
+	<aimer>
+		<target range="256" filter="bluebullet" />
+		<aim strength="1" leading="240" />
+		<fire channel="1" range="128" />
+	</aimer>
+</template>

@@ -1,0 +1,30 @@
+<?xml version="1.0" ?>
+<template name="friendpodexplosion" type="friendexplosionsmall">
+	<link name="spawn0" secondary="friendswarmerbreakoutspawn">
+		<offset x="0" y="0" angle="0" />
+	</link>
+	<link name="spawn1" secondary="friendswarmerbreakoutspawn">
+		<offset x="0" y="0" angle="45" />
+	</link>
+	<link name="spawn2" secondary="friendswarmerbreakoutspawn">
+		<offset x="0" y="0" angle="90" />
+	</link>
+	<link name="spawn3" secondary="friendswarmerbreakoutspawn">
+		<offset x="0" y="0" angle="135" />
+	</link>
+	<link name="spawn4" secondary="friendswarmerbreakoutspawn">
+		<offset x="0" y="0" angle="180" />
+	</link>
+	<link name="spawn5" secondary="friendswarmerbreakoutspawn">
+		<offset x="0" y="0" angle="225" />
+	</link>
+	<link name="spawn6" secondary="friendswarmerbreakoutspawn">
+		<offset x="0" y="0" angle="270" />
+	</link>
+	<link name="spawn7" secondary="friendswarmerbreakoutspawn">
+		<offset x="0" y="0" angle="315" />
+	</link>
+	<soundcue>
+		<cue sound="stargate-podkill" />
+	</soundcue>
+</template>
