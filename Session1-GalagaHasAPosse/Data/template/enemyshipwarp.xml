@@ -1,0 +1,4 @@
+<?xml version="1.0" ?>
+<template name="enemyshipwarp" type="enemywarpin">
+	<expire switchonexpire="enemyship" />
+</template>

@@ -1,0 +1,9 @@
+<?xml version="1.0" ?>
+<template name="friendweaponmissile">
+	<weapon>
+		<offset x="0" y="10" />
+		<velocity x="0" y="60" />
+		<ordnance name="friendmissile" />
+		<shot delay="1.5" />
+	</weapon>
+</template>
