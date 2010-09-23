@@ -49,6 +49,28 @@ struct CollisionPolygonDef
 		return fixture;
 	}
 };
+struct CollisionEdgeDef 
+{
+	b2FixtureDef mFixture;
+	b2EdgeShape mShape;
+
+	CollisionEdgeDef()
+	{
+		mFixture.shape = &mShape;
+	}
+	CollisionEdgeDef(const CollisionEdgeDef &aSrc)
+	{
+		mFixture = aSrc.mFixture;
+		mShape = aSrc.mShape;
+		mFixture.shape = &mShape;
+	}
+	b2Fixture *Instantiate(b2Body *aBody) const
+	{
+		b2Fixture *fixture = aBody->CreateFixture(&mFixture);
+		fixture->SetUserData(aBody->GetUserData());
+		return fixture;
+	}
+};
 
 namespace Database
 {
@@ -56,6 +78,7 @@ namespace Database
 	Typed<CollidableTemplate> collidabletemplate(0xa7380c00 /* "collidabletemplate" */);
 	Typed<Typed<CollisionCircleDef> > collidablecircles(0x67fa99ff /* "collidablecircles" */);
 	Typed<Typed<CollisionPolygonDef> > collidablepolygons(0xab54c159 /* "collidablepolygons" */);
+	Typed<Typed<CollisionEdgeDef> > collidableedges(0xae12a01c /* "collidableedges" */);
 	Typed<b2Body *> collidablebody(0x6ccc2b62 /* "collidablebody" */);
 	Typed<Collidable::ContactSignal> collidablecontactadd(0x7cf2c45d /* "collidablecontactadd" */);
 	Typed<Collidable::ContactSignal> collidablecontactremove(0x95ed5aba /* "collidablecontactremove" */);
@@ -329,7 +352,7 @@ bool CollidableTemplate::ConfigurePoly(const TiXmlElement *element, b2PolygonSha
 	return true;
 }
 
-bool CollidableTemplate::ConfigureEdge(const TiXmlElement *element, b2PolygonShape &shape)
+bool CollidableTemplate::ConfigureEdge(const TiXmlElement *element, b2EdgeShape &shape)
 {
 	// process child elements
 	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
@@ -338,18 +361,16 @@ bool CollidableTemplate::ConfigureEdge(const TiXmlElement *element, b2PolygonSha
 		switch (Hash(name))
 		{
 		case 0x154c1122 /* "vertex1" */:
-			child->QueryFloatAttribute("x", &shape.m_vertices[0].x);
-			child->QueryFloatAttribute("y", &shape.m_vertices[0].y);
+			child->QueryFloatAttribute("x", &shape.m_vertex1.x);
+			child->QueryFloatAttribute("y", &shape.m_vertex1.y);
 			break;
 
 		case 0x144c0f8f /* "vertex2" */:
-			child->QueryFloatAttribute("x", &shape.m_vertices[1].x);
-			child->QueryFloatAttribute("y", &shape.m_vertices[1].y);
+			child->QueryFloatAttribute("x", &shape.m_vertex2.x);
+			child->QueryFloatAttribute("y", &shape.m_vertex2.y);
 			break;
 		}
 	}
-
-	shape.SetAsEdge(shape.m_vertices[0], shape.m_vertices[1]);
 
 	return true;
 }
@@ -484,57 +505,89 @@ bool CollidableTemplate::ConfigureBodyItem(const TiXmlElement *element, b2BodyDe
 
 	case 0x56f6d83c /* "edge" */:
 		{
-			Database::Typed<CollisionPolygonDef> &shapes = Database::collidablepolygons.Open(id);
+			Database::Typed<CollisionEdgeDef> &shapes = Database::collidableedges.Open(id);
 			unsigned int subid;
 			if (const char *name = element->Attribute("name"))
 				subid = Hash(name);
 			else
 				subid = shapes.GetCount() + 1;
-			CollisionPolygonDef &def = shapes.Open(subid);
+			CollisionEdgeDef &def = shapes.Open(subid);
 			ConfigureFixture(element, def.mFixture);
 			ConfigureEdge(element, def.mShape);
 			shapes.Close(subid);
-			Database::collidablepolygons.Close(id);
+			Database::collidableedges.Close(id);
 		}
 		return true;
 
 	case 0x620c0b45 /* "edgechain" */:
 		{
-			Database::Typed<CollisionPolygonDef> &shapes = Database::collidablepolygons.Open(id);
+			Database::Typed<CollisionEdgeDef> &shapes = Database::collidableedges.Open(id);
 			unsigned int subid;
 			if (const char *name = element->Attribute("name"))
 				subid = Hash(name);
 			else
 				subid = shapes.GetCount() + 1;
+
 			if (const TiXmlElement *first = element->FirstChildElement("vertex"))
 			{
-				b2Vec2 vf;
-				first->QueryFloatAttribute("x", &vf.x);
-				first->QueryFloatAttribute("y", &vf.y);
+				int count = 0;
+				for (const TiXmlElement *child = first; child != NULL; child = child->NextSiblingElement("vertex"))
+					++count;
 
-				b2Vec2 v0 = vf;
-				for (const TiXmlElement *child = first->NextSiblingElement("vertex"); child != NULL; child = child->NextSiblingElement("vertex"))
+				if (count > 1)
 				{
-					b2Vec2 v1;
-					child->QueryFloatAttribute("x", &v1.x);
-					child->QueryFloatAttribute("y", &v1.y);
+					int loop = 0;
+					element->QueryIntAttribute("loop", &loop);
 
-					CollisionPolygonDef &def = shapes.Open(subid);
-					ConfigureFixture(element, def.mFixture);
-					def.mShape.SetAsEdge(v0, v1);
-					shapes.Close(subid);
+					if (loop)
+					{
+						++count;
+					}
 
-					v0 = v1;
-					++subid;
-				}
-				int loop = 0;
-				element->QueryIntAttribute("loop", &loop);
-				if (loop != 0)
-				{
-					CollisionPolygonDef &def = shapes.Open(subid++);
-					ConfigureFixture(element, def.mFixture);
-					def.mShape.SetAsEdge(v0, vf);
-					shapes.Close(subid);
+					b2Vec2 *vertices = (b2Vec2 *)_alloca(count * sizeof(b2Vec2));
+
+					int index = 0;
+					for (const TiXmlElement *child = first; child != NULL; child = child->NextSiblingElement("vertex"))
+					{
+						child->QueryFloatAttribute("x", &vertices[index].x);
+						child->QueryFloatAttribute("y", &vertices[index].y);
+						++index;
+					}
+
+					if (loop)
+					{
+						vertices[count-1] = vertices[0];
+					}
+
+					for (int i = 1; i < count; ++i)
+					{
+						CollisionEdgeDef &def = shapes.Open(subid);
+						ConfigureFixture(element, def.mFixture);
+						def.mShape.m_vertex1 = vertices[i-1];
+						def.mShape.m_vertex2 = vertices[i];
+						if (i > 1)
+						{
+							def.mShape.m_vertex0 = vertices[i-2];
+							def.mShape.m_hasVertex0 = true;
+						}
+						else if (loop)
+						{
+							def.mShape.m_vertex0 = vertices[count-2];
+							def.mShape.m_hasVertex0 = true;
+						}
+						if (i < count - 1)
+						{
+							def.mShape.m_vertex3 = vertices[i+1];
+							def.mShape.m_hasVertex3 = true;
+						}
+						else if (loop)
+						{
+							def.mShape.m_vertex3 = vertices[1];
+							def.mShape.m_hasVertex3 = true;
+						}
+						shapes.Close(subid);
+						++subid;
+					}
 				}
 			}
 		}
@@ -870,6 +923,8 @@ void Collidable::AddToWorld(unsigned int aId)
 		itor.GetValue().Instantiate(body);
 	for (Database::Typed<CollisionPolygonDef>::Iterator itor(Database::collidablepolygons.Find(aId)); itor.IsValid(); ++itor)
 		itor.GetValue().Instantiate(body);
+	for (Database::Typed<CollisionEdgeDef>::Iterator itor(Database::collidableedges.Find(aId)); itor.IsValid(); ++itor)
+		itor.GetValue().Instantiate(body);
 }
 
 void Collidable::RemoveFromWorld(unsigned int aId)
@@ -920,12 +975,17 @@ void Collidable::WorldInit(float aMinX, float aMinY, float aMaxX, float aMaxY, b
 			b2Vec2(aMinX, aMaxY)
 		};
 
-		b2PolygonShape shape;
+		b2EdgeShape shape;
 		b2FixtureDef fixture;
 		fixture.shape = &shape;
 		for (int i = 0; i < 4; ++i)
 		{
-			shape.SetAsEdge(vertex[i], vertex[(i+1)&3]);
+			shape.m_vertex0 = vertex[(i-1)&3];
+			shape.m_vertex1 = vertex[i];
+			shape.m_vertex2 = vertex[(i+1)&3];
+			shape.m_vertex3 = vertex[(i+2)&3];
+			shape.m_hasVertex0 = true;
+			shape.m_hasVertex3 = true;
 			body->CreateFixture(&fixture);
 		}
 	}
