@@ -32,7 +32,6 @@ float VIEW_SIZE = 240;
 
 // opengl attributes
 bool OPENGL_SWAPCONTROL = true;
-bool OPENGL_ANTIALIAS = false;
 int OPENGL_MULTISAMPLE = 4;
 
 // debug output
@@ -114,32 +113,6 @@ bool InitOpenGL()
 
 	// set viewport
 	glViewport( 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT );
-
-	if (OPENGL_ANTIALIAS)
-	{
-		// enable point smoothing
-		glEnable( GL_POINT_SMOOTH );
-		glHint( GL_POINT_SMOOTH_HINT, GL_NICEST );
-
-		// enable line smoothing
- 		glEnable( GL_LINE_SMOOTH );
-		glHint( GL_LINE_SMOOTH_HINT, GL_NICEST );
-
-		// enable polygon smoothing
-		glEnable( GL_POLYGON_SMOOTH );
-		glHint( GL_POLYGON_SMOOTH_HINT, GL_NICEST );
-	}
-	else
-	{
-		// disable point smoothing
-		glDisable( GL_POINT_SMOOTH );
-
-		// disable line smoothing
- 		glDisable( GL_LINE_SMOOTH );
-
-		// disable polygon smoothing
-		glDisable( GL_POLYGON_SMOOTH );
-	}
 
 	// disable lighting
 	glDisable( GL_LIGHTING );
