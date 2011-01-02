@@ -227,12 +227,6 @@ int CommandVsync(const char * const aParam[], int aCount)
 }
 Command::Auto commandvsync(0x06f8f066 /* "vsync" */, CommandVsync);
 
-int CommandAntialias(const char * const aParam[], int aCount)
-{
-	return ProcessCommandBool(OPENGL_ANTIALIAS, aParam, aCount, UpdateWindowAction, "antialias: %d\n");
-}
-Command::Auto commandantialias(0x35c8978f /* "antialias" */, CommandAntialias);
-
 int CommandMultisample(const char * const aParam[], int aCount)
 {
 	return ProcessCommandInt(OPENGL_MULTISAMPLE, aParam, aCount, UpdateWindowAction, "multisample: %d\n");

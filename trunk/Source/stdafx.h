@@ -86,7 +86,6 @@ extern float VIEW_SIZE;
 
 // opengl attributes
 extern bool OPENGL_SWAPCONTROL;
-extern bool OPENGL_ANTIALIAS;
 extern int OPENGL_MULTISAMPLE;
 
 // debug output
