@@ -5,36 +5,85 @@
 // alignment of memory pool data
 #define MEMORY_POOL_ALIGN 16
 
+#define MEMORY_POOL_VIRTUAL_ALLOC
+
 
 // MEMORY POOL
 
-// constructor
-MemoryPool::MemoryPool(size_t aSize, size_t aCount, size_t aGrow)
-: mSize(aSize), mGrow(aGrow), mChunk(NULL), mFree(NULL)
+// default constructor
+MemoryPool::MemoryPool(void)
+: mChunk(NULL), mFree(NULL)
 {
-	if (aCount > 0)
-	{
-		Grow(aCount);
-	}
+	Setup(0, 0, 0);
+}
+
+// constructor
+MemoryPool::MemoryPool(size_t aSize, size_t aStart, size_t aGrow)
+: mChunk(NULL), mFree(NULL)
+{
+	Setup(aSize, aStart, aGrow);
+	Init();
 }
 
 // destructor
 MemoryPool::~MemoryPool()
 {
+	Clean();
+}
+
+// setup
+void MemoryPool::Setup(size_t aSize, size_t aStart, size_t aGrow)
+{
+	// invalidate the pool
+	Clean();
+
+	// update properties
+	mSize = aSize;
+	mStart = aStart;
+	mGrow = aGrow;
+}
+
+// initialize
+void MemoryPool::Init(void)
+{
+	Clean();
+
+	// add an initial chunk
+	if (mStart > 0)
+	{
+		Grow(mStart);
+	}
+}
+
+// cleanup
+void MemoryPool::Clean(void)
+{
 	// free all chunks
 	while (mChunk)
 	{
 		void *next = *reinterpret_cast<void **>(mChunk);
+#ifdef MEMORY_POOL_VIRTUAL_ALLOC
+		VirtualFree(mChunk, 0, MEM_RELEASE);
+#else
 		free(mChunk);
+#endif
 		mChunk = next;
 	}
+
+	// clear
+	mChunk = NULL;
+	mFree = NULL;
 }
 
 // grow the memory pool
 void MemoryPool::Grow(size_t aCount)
 {
 	// create a new chunk
+#ifdef MEMORY_POOL_VIRTUAL_ALLOC
+	void *chunk = VirtualAlloc(NULL, MEMORY_POOL_ALIGN + mSize * aCount, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+#else
 	void *chunk = malloc(MEMORY_POOL_ALIGN + mSize * aCount);
+#endif
 
 	// add to the head of the chunk list
 	*reinterpret_cast<void **>(chunk) = mChunk;
