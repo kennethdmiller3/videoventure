@@ -48,6 +48,9 @@ public:
 	// free a block
 	GAME_API void Free(void * aPtr);
 
+	// is the specified pointer valid?
+	GAME_API bool IsValid(const void * aPtr);
+
 	// get block size
 	size_t GetSize(void) const
 	{

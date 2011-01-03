@@ -5,7 +5,7 @@
 // alignment of memory pool data
 #define MEMORY_POOL_ALIGN 16
 
-#define MEMORY_POOL_VIRTUAL_ALLOC
+//#define MEMORY_POOL_VIRTUAL_ALLOC
 
 
 // MEMORY POOL
@@ -38,7 +38,8 @@ void MemoryPool::Setup(size_t aSize, size_t aStart, size_t aGrow)
 	Clean();
 
 	// update properties
-	mSize = aSize;
+	// (and ensure a block is large enough to hold a freelist node)
+	mSize = std::max(sizeof(void *), aSize);
 	mStart = aStart;
 	mGrow = aGrow;
 }
@@ -143,11 +144,36 @@ void *MemoryPool::Alloc(void)
 void MemoryPool::Free(void *aPtr)
 {
 #ifdef _DEBUG
-	// fill with an freed pattern
+	// make sure it came from this pool
+	_ASSERT(IsValid(aPtr));
+
+	// fill with a freed pattern
 	memset(aPtr, 0xDD, mSize);
 #endif
 
 	// add to the head of the free list
 	*reinterpret_cast<void **>(aPtr) = mFree;
 	mFree = aPtr;
+}
+
+// is the pointer valid?
+bool MemoryPool::IsValid(const void *aPtr)
+{
+	// validate the pointer
+	for (void *chunk = mChunk; chunk != NULL; chunk = *reinterpret_cast<void **>(chunk))
+	{
+#ifdef MEMORY_POOL_VIRTUAL_ALLOC
+		MEMORY_BASIC_INFORMATION info;
+		VirtualQuery(chunk, &info, sizeof(info));
+		size_t size = info.RegionSize;
+#else
+		size_t size = _msize(chunk);
+#endif
+		if (reinterpret_cast<const unsigned char *>(aPtr) >= reinterpret_cast<const unsigned char *>(chunk) + MEMORY_POOL_ALIGN &&
+			reinterpret_cast<const unsigned char *>(aPtr) < reinterpret_cast<const unsigned char *>(chunk) + size)
+		{
+			return true;
+		}
+	}
+	return false;
 }
