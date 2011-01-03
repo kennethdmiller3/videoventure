@@ -413,8 +413,8 @@ int CommandDatabase(const char * const aParam[], int aCount)
 		if (db)
 		{
 			// list database properties
-			console->Print("stride=%d shift=%d bits=%d limit=%d count=%d\n",
-				db->GetStride(), db->GetShift(), db->GetBits(), db->GetLimit(), db->GetCount());
+			console->Print("stride=%d chunk=%d limit=%d count=%d\n",
+				db->GetStride(), db->GetChunk(), db->GetLimit(), db->GetCount());
 		}
 		else
 		{

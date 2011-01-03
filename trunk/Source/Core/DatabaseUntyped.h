@@ -1,9 +1,52 @@
 #pragma once
 
+#include "MemoryPool.h"
+
 namespace Database
 {
-	// database aKey
+	// database key
 	typedef unsigned int Key;
+
+	// reference-counted memory pool
+	class MemoryPoolRef : public MemoryPool
+	{
+	private:
+		size_t mRef;
+
+	private:
+		~MemoryPoolRef()
+		{
+		}
+
+	public:
+		MemoryPoolRef(void)
+			: MemoryPool(), mRef(1)
+		{
+		}
+
+		MemoryPoolRef(size_t aSize, size_t aStart, size_t aGrow)
+			: MemoryPool(aSize, aStart, aGrow), mRef(1)
+		{
+		}
+
+		size_t AddRef(void)
+		{
+			return ++mRef;
+		}
+
+		size_t Release(void)
+		{
+			if (--mRef > 0)
+				return mRef;
+			delete this;
+			return 0;
+		}
+
+#ifdef USE_POOL_ALLOCATOR
+		void *operator new(size_t aSize);
+		void operator delete(void *aPtr);
+#endif
+	};
 
 	// untyped (core) database
 	class GAME_API Untyped
@@ -12,15 +55,16 @@ namespace Database
 		const unsigned int mId;
 
 		static const size_t EMPTY = ~0U;
-		size_t mStride;		// size of a database record
-		size_t mShift;		// record block shift
+
+		MemoryPoolRef *mPool;	// (shared) memory pool
+
 		size_t mBits;		// bit count
 		size_t mLimit;		// maximum number of database records (1 << bit count)
 		size_t mCount;		// current number of database records
 		size_t mMask;		// map index mask
 		size_t *mMap;		// map key to database records (2x maximum)
 		Key *mKey;			// database record key pool
-		void **mPool;		// database record data pool
+		void **mData;		// database record data pool
 		void *mNil;			// database default record
 
 	protected:
@@ -71,34 +115,40 @@ namespace Database
 			return slot;
 		}
 
-		inline void *AllocRecord(Key aKey)
+		void *AllocRecord(Key aKey)
 		{
 			size_t slot = mCount++;
 			size_t index = FindIndex(aKey);
+			_ASSERTE(index >= 0 && index < mLimit * 2);
+			_ASSERTE(mMap[index] == EMPTY);
 			mMap[index] = slot;
+			_ASSERTE(slot >= 0 && slot < mCount);
+			_ASSERTE(mKey[slot] == 0);
 			mKey[slot] = aKey;
-			if (mPool[slot >> mShift] == NULL)
-				mPool[slot >> mShift] = malloc(mStride << mShift);
-			return memset(GetRecord(slot), 0, mStride);
+			_ASSERTE(mData[slot] == NULL);
+			mData[slot] = mPool->Alloc();
+			return memset(GetRecord(slot), 0, GetStride());
 		}
 
 		inline void *GetRecord(size_t aSlot) const
 		{
-			return static_cast<char *>(mPool[aSlot >> mShift]) + (aSlot & ((1 << mShift) - 1)) * mStride;
+			_ASSERTE(aSlot >= 0 && aSlot < mCount);
+			_ASSERTE(mData[aSlot] != NULL);
+			return mData[aSlot];
 		}
 		virtual void CreateRecord(void *aDest, const void *aSource = NULL)
 		{
 			if (aSource)
-				memcpy(aDest, aSource, mStride);
+				memcpy(aDest, aSource, GetStride());
 			else
-				memset(aDest, 0, mStride);
+				memset(aDest, 0, GetStride());
 		}
 		virtual void UpdateRecord(void *aDest, const void *aSource)
 		{
 			if (aSource)
-				memcpy(aDest, aSource, mStride);
+				memcpy(aDest, aSource, GetStride());
 			else
-				memset(aDest, 0, mStride);
+				memset(aDest, 0, GetStride());
 		}
 		virtual void DeleteRecord(void *aDest)
 		{
@@ -117,23 +167,19 @@ namespace Database
 
 		void Clear();
 
-		size_t GetStride(void)
+		size_t GetStride(void) const
 		{
-			return mStride;
+			return mPool->GetSize();
 		}
-		size_t GetShift(void)
+		size_t GetChunk(void) const
 		{
-			return mShift;
+			return mPool->GetGrow();
 		}
-		size_t GetBits(void)
-		{
-			return mBits;
-		}
-		size_t GetLimit(void)
+		size_t GetLimit(void) const
 		{
 			return mLimit;
 		}
-		size_t GetCount(void)
+		size_t GetCount(void) const
 		{
 			return mCount;
 		}
