@@ -8,19 +8,32 @@ namespace Database
 	// UNTYPED DATABASE
 	//
 
+#ifdef USE_POOL_ALLOCATOR
+	// pool of pools
+	static MemoryPool &GetPoolPool(void)
+	{
+		static MemoryPool sPoolPool(sizeof(MemoryPoolRef), 256, 16);
+		return sPoolPool;
+	}
+	void *MemoryPoolRef::operator new(size_t aSize)
+	{
+		return GetPoolPool().Alloc();
+	}
+	void MemoryPoolRef::operator delete(void *aPtr)
+	{
+		GetPoolPool().Free(aPtr);
+	}
+#endif
+
 	// constructor
 	Untyped::Untyped(unsigned int aId, size_t aStride, size_t aBits)
-		: mId(aId), mStride(aStride), mShift(0), mBits(aBits), mLimit(1 << mBits), mCount(0), mMask((2 << mBits) - 1)
+		: mId(aId), mBits(aBits), mLimit(1 << mBits), mCount(0), mMask((2 << mBits) - 1)
 	{
 		// if allocating...
 		if (signed(aBits) >= 0)
 		{
-			// adjust block shift
-			for (mShift = 0; mShift < mBits; ++mShift)
-			{
-				if ((mStride << mShift) >= 1024)
-					break;
-			}
+			// set up the memory pool
+			mPool = new MemoryPoolRef(aStride, 0, std::max<size_t>(16, 1024 / aStride));
 
 			// allocate memory
 			Alloc();
@@ -28,15 +41,18 @@ namespace Database
 			// fill with empty values
 			memset(mMap, EMPTY, mLimit * 2 * sizeof(size_t));
 			memset(mKey, 0, mLimit * sizeof(Key));
-			memset(mPool, 0, (mLimit >> mShift) * sizeof(void *));
-			memset(mNil, 0, mStride);
+			memset(mData, 0, mLimit * sizeof(void *));
+			memset(mNil, 0, GetStride());
 		}
 		else
 		{
+			// no pool (yet)
+			mPool = NULL;
+
 			// clear pointers
 			mMap = NULL;
 			mKey = NULL;
-			mPool = NULL;
+			mData = NULL;
 			mNil = NULL;
 		}
 
@@ -51,6 +67,12 @@ namespace Database
 			GetDatabases().Delete(mId);
 
 		Free();
+
+		if (mPool)
+		{
+			mPool->Release();
+			mPool = NULL;
+		}
 	}
 
 	// allocate pools
@@ -58,37 +80,47 @@ namespace Database
 	{
 		mMap = static_cast<size_t *>(malloc(mLimit * 2 * sizeof(size_t)));
 		mKey = static_cast<Key *>(malloc(mLimit * sizeof(Key)));
-		mPool = static_cast<void **>(malloc((mLimit >> mShift) * sizeof(void *)));
-		mNil = malloc(mStride);
+		mData = static_cast<void **>(malloc(mLimit * sizeof(void *)));
+		mNil = malloc(GetStride());
 	}
 
 	// free pools
 	void Untyped::Free()
 	{
 		if (mMap)
-			free(mMap);
-		if (mKey)
-			free(mKey);
-		if (mPool)
 		{
-			for (size_t slot = 0; slot < mLimit >> mShift; ++slot)
-				free(mPool[slot]);
-			free(mPool);
+			free(mMap);
+			mMap = NULL;
+		}
+		if (mKey)
+		{
+			free(mKey);
+			mKey = NULL;
+		}
+		if (mData)
+		{
+			free(mData);
+			mData = NULL;
 		}
 		if (mNil)
+		{
 			free(mNil);
+			mNil = NULL;
+		}
 	}
 
 	// clear all records
 	void Untyped::Clear(void)
 	{
+		for (size_t slot = 0; slot < mCount; ++slot)
+		{
+			void *record = GetRecord(slot);
+			DeleteRecord(record);
+			mPool->Free(record);
+		}
 		memset(mMap, EMPTY, mLimit * 2 * sizeof(size_t));
 		memset(mKey, 0, mLimit * sizeof(Key));
-		for (size_t slot = 0; slot < mCount; ++slot)
-			DeleteRecord(GetRecord(slot));
-		for (size_t slot = 0; slot < mLimit >> mShift; ++slot)
-			free(mPool[slot]);
-		memset(mPool, 0, (mLimit >> mShift) * sizeof(void *));
+		memset(mData, 0, mLimit * sizeof(void *));
 		mCount = 0;
 	}
 
@@ -101,7 +133,8 @@ namespace Database
 		mMask = (2 << mBits) - 1;
 		mLimit = 1 << mBits;
 
-		DebugPrint("Grow database %08x stride=%d shift=%d limit=%d count=%d\n", mId, mStride, mShift, mLimit, mCount);
+		DebugPrint("Grow database this=%p id=%08x stride=%d chunk=%d limit=%d count=%d\n",
+			this, mId, GetStride(), GetChunk(), GetLimit(), GetCount());
 
 		// reallocate map
 		free(mMap);
@@ -110,11 +143,11 @@ namespace Database
 
 		// reallocate keys
 		mKey = static_cast<Key *>(realloc(mKey, mLimit * sizeof(size_t)));
-		memset(mKey + (mLimit >> 1), 0, (mLimit >> 1) * sizeof(size_t));
+		memset(mKey + mCount, 0, (mLimit - mCount) * sizeof(size_t));
 
-		// reallocate pools
-		mPool = static_cast<void **>(realloc(mPool, (mLimit >> mShift) * sizeof(size_t)));
-		memset(mPool + (mLimit >> (mShift + 1)), 0, (mLimit >> (mShift + 1)) * sizeof(void *));
+		// reallocate data
+		mData = static_cast<void **>(realloc(mData, mLimit * sizeof(void *)));
+		memset(mData + mCount, 0, (mLimit - mCount) * sizeof(void *));
 
 		// rebuild hash
 		for (size_t record = 0; record < mCount; ++record)
@@ -137,8 +170,17 @@ namespace Database
 		// free existing arrays
 		Free();
 
+		// release pool
+		if (mPool)
+		{
+			mPool->Release();
+		}
+
+		// use the source pool
+		mPool = aSource.mPool;
+		mPool->AddRef();
+
 		// copy counts
-		mShift = aSource.mShift;
 		mBits = aSource.mBits;
 		mMask = aSource.mMask;
 		mLimit = aSource.mLimit;
@@ -152,17 +194,15 @@ namespace Database
 
 		// copy keys
 		memcpy(mKey, aSource.mKey, mLimit * sizeof(size_t));
+		memset(mKey + mCount, 0, (mLimit - mCount) * sizeof(size_t));
 
-		// copy pools
-		memset(mPool, 0, (mLimit >> mShift) * sizeof(void *));
+		// copy data
 		for (size_t slot = 0; slot < mCount; ++slot)
 		{
-			if ((slot & ((1 << mShift) - 1)) == 0)
-			{
-				mPool[slot >> mShift] = malloc(mStride << mShift);
-			}
+			mData[slot] = mPool->Alloc();
 			CreateRecord(GetRecord(slot), aSource.GetRecord(slot));
 		}
+		memset(mData + mCount, 0, (mLimit - mCount) * sizeof(void *));
 
 		// copy default
 		CreateRecord(mNil, aSource.mNil);
@@ -260,7 +300,7 @@ namespace Database
 		void *record = AllocRecord(aKey);
 
 		// check parent
-		const void *source = NULL;
+		const void *source = mNil;
 		if (this != &parent)
 			if (Key aParentKey = parent.Get(aKey))
 				source = Find(aParentKey);
@@ -316,18 +356,22 @@ namespace Database
 			return;
 		}
 
+		// delete the record
+		void *record = GetRecord(slot);
+		DeleteRecord(record);
+		mPool->Free(record);
+
 		// update record count
 		--mCount;
 
 		// if not the last record...
 		if (slot < mCount)
 		{
-			// move the last record into the slot
+			// move the last record into the vacant slot
 			Key key = mKey[slot] = mKey[mCount];
-			DeleteRecord(GetRecord(slot));
-			CreateRecord(GetRecord(slot), GetRecord(mCount));
+			mData[slot] = mData[mCount];
 
-			// update the entry
+			// update the map
 			for (size_t keyindex = Index(key); mMap[keyindex] != EMPTY; keyindex = Next(keyindex))
 			{
 				if (mMap[keyindex] == mCount)
@@ -338,8 +382,8 @@ namespace Database
 			}
 		}
 
-		// delete the last record
-		DeleteRecord(GetRecord(mCount));
+		// clear the last record
+		mData[mCount] = NULL;
 		mKey[mCount] = 0;
 
 		// for each entry in the cluster...
