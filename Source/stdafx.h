@@ -26,6 +26,31 @@
 #pragma message( "algorithm" )
 #include <algorithm>
 
+//
+// CONFIGURATION
+
+//#define ENABLE_DEPTH_TEST
+#define ENABLE_FOG
+
+// for consistency between AA modes
+//#define ENABLE_SRC_ALPHA_SATURATE
+//#define DRAW_FRONT_TO_BACK
+
+#define USE_POOL_ALLOCATOR
+#define USE_CHANGE_DYNAMIC_TYPE
+
+#define COLLECT_DEBUG_DRAW
+#define COLLIDABLE_DEBUG_DRAW
+
+const int AUDIO_FREQUENCY = 48000;
+
+//
+
+#ifdef USE_POOL_ALLOCATOR
+#pragma message( "pool" )
+#include "MemoryPool.h"
+#endif
+
 // platform header
 #include "Platform.h"
 
@@ -160,27 +185,3 @@ extern GLuint reticule_handle;
 
 // queue a turn action
 extern void OnTurn(unsigned int aTurn, float aFraction, fastdelegate::FastDelegate<void ()> aAction);
-
-
-// CONFIGURATION
-
-//#define ENABLE_DEPTH_TEST
-#define ENABLE_FOG
-
-// for consistency between AA modes
-//#define ENABLE_SRC_ALPHA_SATURATE
-//#define DRAW_FRONT_TO_BACK
-
-#define USE_POOL_ALLOCATOR
-#define USE_CHANGE_DYNAMIC_TYPE
-
-#define COLLECT_DEBUG_DRAW
-#define COLLIDABLE_DEBUG_DRAW
-
-const int AUDIO_FREQUENCY = 48000;
-
-
-#ifdef USE_POOL_ALLOCATOR
-#pragma message( "pool" )
-#include "MemoryPool.h"
-#endif
