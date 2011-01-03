@@ -36,7 +36,11 @@ int OPENGL_MULTISAMPLE = 4;
 
 // debug output
 bool DEBUGPRINT_OUTPUTCONSOLE = false;
+#ifdef _DEBUG
+bool DEBUGPRINT_OUTPUTDEBUG = true;
+#else
 bool DEBUGPRINT_OUTPUTDEBUG = false;
+#endif
 bool DEBUGPRINT_OUTPUTSTDERR = false;
 
 // default input configuration
