@@ -23,16 +23,15 @@ static bool ConfigureLineJointItem(const TiXmlElement *element, b2LineJointDef &
 		element->QueryFloatAttribute("y", &joint.localAxisA.y);
 		return true;
 
-	case 0x32dad934 /* "limit" */:
-		element->QueryFloatAttribute("lower", &joint.lowerTranslation);
-		element->QueryFloatAttribute("upper", &joint.upperTranslation);
-		joint.enableLimit = true;
-		return true;
-
 	case 0xcaf08472 /* "motor" */:
-		element->QueryFloatAttribute("force", &joint.maxMotorForce);
+		element->QueryFloatAttribute("torque", &joint.maxMotorTorque);
 		element->QueryFloatAttribute("speed", &joint.motorSpeed);
 		joint.enableMotor = true;
+		return true;
+
+	case 0x4dc817ac /* "suspension" */:
+		element->QueryFloatAttribute("frequency", &joint.frequencyHz);
+		element->QueryFloatAttribute("damping", &joint.dampingRatio);
 		return true;
 
 	default:
