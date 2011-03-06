@@ -672,7 +672,7 @@ contactListener;
 #ifdef COLLIDABLE_DEBUG_DRAW
 // This class implements debug drawing callbacks that are invoked
 // inside b2World::Step.
-class DebugDraw : public b2DebugDraw
+class DebugDraw : public b2Draw
 {
 public:
 	void DrawPolygon(const b2Vec2* vertices, int32 vertexCount, const b2Color& color);
@@ -837,11 +837,11 @@ int CommandDrawCollidable(const char * const aParam[], int aCount)
 	};
 	const Option options[] =
 	{
-		{ 0x9dc3d926 /* "shape" */, "shape", b2DebugDraw::e_shapeBit },
-		{ 0xaeae0877 /* "joint" */, "joint", b2DebugDraw::e_jointBit },
-		{ 0x63e91357 /* "aabb" */, "aabb", b2DebugDraw::e_aabbBit },
-		{ 0x7c445ab1 /* "pair" */, "pair", b2DebugDraw::e_pairBit },
-		{ 0x058c4484 /* "center" */, "center", b2DebugDraw::e_centerOfMassBit },
+		{ 0x9dc3d926 /* "shape" */, "shape", b2Draw::e_shapeBit },
+		{ 0xaeae0877 /* "joint" */, "joint", b2Draw::e_jointBit },
+		{ 0x63e91357 /* "aabb" */, "aabb", b2Draw::e_aabbBit },
+		{ 0x7c445ab1 /* "pair" */, "pair", b2Draw::e_pairBit },
+		{ 0x058c4484 /* "center" */, "center", b2Draw::e_centerOfMassBit },
 	};
 
 	unsigned int hash = (aCount >= 1) ? Hash(aParam[0]) : 0x13254bc4 /* "all" */;
