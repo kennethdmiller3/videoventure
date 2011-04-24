@@ -29,11 +29,11 @@ bool ConfigurePulleyJointItem(const TiXmlElement *element, b2PulleyJointDef &joi
 		return true;
 
 	case 0xa4c53aac /* "length1" */:
-		element->QueryFloatAttribute("max", &joint.maxLengthA);
+		element->QueryFloatAttribute("max", &joint.lengthA);
 		return true;
 
 	case 0xa7c53f65 /* "length2" */:
-		element->QueryFloatAttribute("max", &joint.maxLengthB);
+		element->QueryFloatAttribute("max", &joint.lengthB);
 		return true;
 
 	case 0xc1121e84 /* "ratio" */:

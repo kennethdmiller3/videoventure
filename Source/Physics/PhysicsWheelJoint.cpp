@@ -1,9 +1,9 @@
 #include "StdAfx.h"
 #include "Collidable.h"
 #include "PhysicsUtilities.h"
-#include "PhysicsLineJoint.h"
+#include "PhysicsWheelJoint.h"
 
-static bool ConfigureLineJointItem(const TiXmlElement *element, b2LineJointDef &joint)
+static bool ConfigureWheelJointItem(const TiXmlElement *element, b2WheelJointDef &joint)
 {
 	const char *name = element->Value();
 	switch (Hash(name))
@@ -41,21 +41,21 @@ static bool ConfigureLineJointItem(const TiXmlElement *element, b2LineJointDef &
 
 namespace Database
 {
-	Typed<Typed<b2LineJointDef> > linejointdef(0xce9fc310 /* "linejointdef" */);
+	Typed<Typed<b2WheelJointDef> > wheeljointdef(0xd2e0447f /* "wheeljointdef" */);
 
 	namespace Loader
 	{
-		class LineJointLoader
+		class WheelJointLoader
 		{
 		public:
-			LineJointLoader()
+			WheelJointLoader()
 			{
-				AddConfigure(0xa59c5ee9 /* "linejoint" */, Entry(this, &LineJointLoader::Configure));
+				AddConfigure(0xdafe5c18 /* "wheeljoint" */, Entry(this, &WheelJointLoader::Configure));
 			}
 
 			void Configure(unsigned int aId, const TiXmlElement *element)
 			{
-				Typed<b2LineJointDef> defs = Database::linejointdef.Open(aId);
+				Typed<b2WheelJointDef> defs = Database::wheeljointdef.Open(aId);
 
 				// get the sub-identifier
 				unsigned int aSubId;
@@ -65,34 +65,34 @@ namespace Database
 					aSubId = defs.GetCount() + 1;
 
 				// configure the joint definition
-				b2LineJointDef &def = defs.Open(aSubId);
+				b2WheelJointDef &def = defs.Open(aSubId);
 				for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 				{
-					ConfigureLineJointItem(child, def);
+					ConfigureWheelJointItem(child, def);
 				}
 				defs.Close(aSubId);
 
-				Database::linejointdef.Close(aId);
+				Database::wheeljointdef.Close(aId);
 			}
 		}
-		linejointloader;
+		wheeljointloader;
 	}
 
 	namespace Initializer
 	{
-		class LineJointInitializer
+		class WheelJointInitializer
 		{
 		public:
-			LineJointInitializer()
+			WheelJointInitializer()
 			{
-				AddPostActivate(0xce9fc310 /* "linejointdef" */, Entry(this, &LineJointInitializer::PostActivate));
+				AddPostActivate(0xd2e0447f /* "wheeljointdef" */, Entry(this, &WheelJointInitializer::PostActivate));
 			}
 
 			void PostActivate(unsigned int aId)
 			{
-				for (Database::Typed<b2LineJointDef>::Iterator itor(&Database::linejointdef.Get(aId)); itor.IsValid(); ++itor)
+				for (Database::Typed<b2WheelJointDef>::Iterator itor(&Database::wheeljointdef.Get(aId)); itor.IsValid(); ++itor)
 				{
-					b2LineJointDef def(itor.GetValue());
+					b2WheelJointDef def(itor.GetValue());
 					UnpackJointDef(def, aId);
 					if (def.bodyA && def.bodyB)
 					{
@@ -101,6 +101,6 @@ namespace Database
 				}
 			}
 		}
-		linejointinitializer;
+		wheeljointinitializer;
 	}
 }
