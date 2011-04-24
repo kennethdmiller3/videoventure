@@ -1217,14 +1217,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\Source\Physics\PhysicsLineJoint.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\Source\Physics\PhysicsLineJoint.h"
-				>
-			</File>
-			<File
 				RelativePath=".\Source\Physics\PhysicsPrismaticJoint.cpp"
 				>
 			</File>
@@ -1270,6 +1262,14 @@
 			</File>
 			<File
 				RelativePath=".\Source\Physics\PhysicsWeldJoint.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Physics\PhysicsWheelJoint.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Source\Physics\PhysicsWheelJoint.h"
 				>
 			</File>
 		</Filter>
