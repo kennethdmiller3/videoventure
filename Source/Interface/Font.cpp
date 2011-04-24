@@ -9,7 +9,7 @@ Rect<float> sDefaultFontUVs[LAST_CHARACTER-FIRST_CHARACTER];
 GLuint sDefaultFontHandle;
 
 // default font identifier
-static const unsigned int aId = 0x7bd2c61f /* "defaultfont" */;
+static const unsigned int aDefaultFontId = 0x7bd2c61f /* "defaultfont" */;
 
 // modified Atari 8-bit font
 // TO DO: support other fonts
@@ -83,7 +83,6 @@ static const unsigned char aTextureData[] =
 	0x06, 0x60, 0x06, 0x3e, 0x70, 0x7c, 0x18, 0x6c, 0x66, 0x30, 0x7e, 0x78, 0x18, 0x1e, 0x10, 0x08, 
 	0x06, 0x60, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1e, 0x00, 0x00, 0x18, 0x00, 0x00, 0x00, 
 };
-static unsigned char aTexturePixels[aTextureWidth*aTextureHeight*aTextureComponents];
 
 void CreateDefaultFont()
 {
@@ -91,7 +90,7 @@ void CreateDefaultFont()
 	glGenTextures(1, &sDefaultFontHandle);
 
 	// register the handle
-	Database::texture.Put(aId, sDefaultFontHandle);
+	Database::texture.Put(aDefaultFontId, sDefaultFontHandle);
 
 	// get a texture template
 	TextureTemplate &texture = Database::texturetemplate.Open(sDefaultFontHandle);
@@ -101,12 +100,13 @@ void CreateDefaultFont()
 	texture.mWidth = aTextureWidth;
 	texture.mHeight = aTextureHeight;
 	texture.mFormat = GL_ALPHA;
-	texture.mPixels = aTexturePixels;
-	texture.mEnvMode = GL_MODULATE;
 	texture.mMinFilter = GL_NEAREST;
 	texture.mMagFilter = GL_NEAREST;
 	texture.mWrapS = GL_CLAMP;
 	texture.mWrapT = GL_CLAMP;
+
+	// allocate space
+	texture.Allocate(aTextureComponents);
 
 	// unpack font data
 	const unsigned char * src = aTextureData;
@@ -164,6 +164,7 @@ void FontDrawBegin(GLuint handle)
 
     glEnable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, handle);
+	glTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
 
     glBegin(GL_QUADS);
 }

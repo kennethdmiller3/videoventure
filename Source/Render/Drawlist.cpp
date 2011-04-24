@@ -484,6 +484,13 @@ void DO_glTexCoordPointer(EntityContext &aContext)
 	aContext.mStream += (count*sizeof(GLfloat)+sizeof(unsigned int)-1)/sizeof(unsigned int);
 }
 
+void DO_glTexEnvi(EntityContext &aContext)
+{
+	GLenum pname(Expression::Read<GLint>(aContext));
+	GLint param(Expression::Read<GLint>(aContext));
+	glTexEnvi( GL_TEXTURE_ENV, pname, param );
+}
+
 void DO_glTranslatef(EntityContext &aContext)
 {
 	DLTranslation value(Expression::Evaluate<DLTranslation>(aContext));
@@ -906,6 +913,18 @@ void ConfigureDrawItem(const TiXmlElement *element, std::vector<unsigned int> &b
 					Expression::Append(buffer, DO_glEnable, GL_TEXTURE_2D);
 					Expression::Append(buffer, DO_glBindTexture, GL_TEXTURE_2D, texture);
 				}
+			}
+		}
+
+	case 0x059e3a91 /* "texenv" */:
+		{
+			// set blend mode
+			switch (Hash(element->Attribute("mode")))
+			{
+			case 0x818f75ae /* "modulate" */:	Expression::Append(buffer, DO_glTexEnvi, GL_TEXTURE_ENV_MODE, GL_MODULATE); break;
+			case 0xde15f6ae /* "decal" */:		Expression::Append(buffer, DO_glTexEnvi, GL_TEXTURE_ENV_MODE, GL_DECAL); break;
+			case 0x0bbc40d8 /* "blend" */:		Expression::Append(buffer, DO_glTexEnvi, GL_TEXTURE_ENV_MODE, GL_BLEND); break;
+			case 0xa13884c3 /* "replace" */:	Expression::Append(buffer, DO_glTexEnvi, GL_TEXTURE_ENV_MODE, GL_REPLACE); break;
 			}
 		}
 		break;
