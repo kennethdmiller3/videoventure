@@ -34,16 +34,6 @@ namespace Database
 				// get a texture template
 				TextureTemplate &texture = Database::texturetemplate.Open(handle);
 
-				// set blend mode
-				switch (Hash(element->Attribute("mode")))
-				{
-				default:
-				case 0x818f75ae /* "modulate" */:	texture.mEnvMode = GL_MODULATE; break;
-				case 0xde15f6ae /* "decal" */:		texture.mEnvMode = GL_DECAL; break;
-				case 0x0bbc40d8 /* "blend" */:		texture.mEnvMode = GL_BLEND; break;
-				case 0xa13884c3 /* "replace" */:	texture.mEnvMode = GL_REPLACE; break;
-				}
-
 				// set minification filter
 				switch (Hash(element->Attribute("minfilter")))
 				{
@@ -118,8 +108,7 @@ namespace Database
 
 							EntityContext context(&buffer[0], buffer.size(), 0, aId);
 
-							// TO DO: fix memory leak
-							texture.mPixels = static_cast<unsigned char *>(malloc(texture.mWidth * texture.mHeight * 4));
+							texture.Allocate(4);
 
 							unsigned char *pixel = texture.mPixels;
 
@@ -242,21 +231,15 @@ void BindTexture(GLuint handle, TextureTemplate const &texture)
 	glBindTexture(GL_TEXTURE_2D, handle);
 
 	// set texture properties
-	glTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, texture.mEnvMode );
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, texture.mMinFilter );
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, texture.mMagFilter );
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, texture.mWrapS );
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, texture.mWrapT );
+	//glTexParameteri( GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE ); 
 
 	// set texture image data
+	//glTexImage2D(GL_TEXTURE_2D, 0, texture.mInternalFormat, texture.mWidth, texture.mHeight, 0, texture.mFormat, GL_UNSIGNED_BYTE, texture.mPixels);
 	gluBuild2DMipmaps(GL_TEXTURE_2D, texture.mInternalFormat, texture.mWidth, texture.mHeight, texture.mFormat, GL_UNSIGNED_BYTE, texture.mPixels);
-
-	/*
-	glTexImage2D(
-		GL_TEXTURE_2D, 0, texture.mSurface->format->BytesPerPixel, texture.mSurface->w, texture.mSurface->h, 0,
-		texture.mFormat, GL_UNSIGNED_BYTE, texture.mSurface->pixels
-		);
-	*/
 
 	// restore texture state
 	glPopAttrib();

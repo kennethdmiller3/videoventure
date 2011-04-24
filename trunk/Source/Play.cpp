@@ -10,6 +10,7 @@
 #include "Drawlist.h"
 #include "Escape.h"
 #include "Library.h"
+#include "Font.h"
 
 
 bool InitInput(const char *config)
@@ -224,6 +225,9 @@ void PlayerQuitListener(unsigned int aId)
 // enter play state
 void EnterPlayState()
 {
+	// create default font
+	CreateDefaultFont();
+
 	// clear the screen
 	glClear(
 		GL_COLOR_BUFFER_BIT

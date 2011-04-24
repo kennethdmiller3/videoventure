@@ -8,6 +8,7 @@
 #include "Sound.h"
 #include "Collidable.h"
 #include "Library.h"
+#include "Font.h"
 
 
 extern bool InitInput(const char *config);
@@ -49,6 +50,9 @@ void RenderShellOptions(unsigned int aId, float aTime, const Transform2 &aTransf
 // enter shell state
 void EnterShellState()
 {
+	// create default font
+	CreateDefaultFont();
+
 	// clear the screen
 	glClear(
 		GL_COLOR_BUFFER_BIT

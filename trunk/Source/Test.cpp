@@ -9,7 +9,6 @@
 #include "Command.h"
 #include "Drawlist.h"
 #include "Texture.h"
-#include "Font.h"
 
 #include <cstdarg>
 
@@ -216,9 +215,6 @@ bool Init(void)
 
 	// create window
 	OpenWindow();
-
-	// create default font
-	CreateDefaultFont();
 
 	// hide the mouse cursor
 	Platform::ShowCursor(false);
