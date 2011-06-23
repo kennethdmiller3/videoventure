@@ -21,7 +21,7 @@ namespace Database
 {
 	Typed<CapturableTemplate> capturabletemplate(0xc19fcdd4 /* "capturabletemplate" */);
 	Typed<Capturable *> capturable(0xec2b4992 /* "capturable" */);
-	Typed<Typed<Capturable::CaptureListener> > capturelistener(0x520b0775 /* "capturelistener" */);
+	Typed<Typed<Capturable::CaptureSignal> > capturesignal(0x672ec99d /* "capturesignal" */);
 
 	namespace Loader
 	{
@@ -78,7 +78,7 @@ namespace Database
 				{
 					delete capturable;
 					Database::capturable.Delete(aId);
-					Database::capturelistener.Delete(aId);
+					Database::capturesignal.Delete(aId);
 				}
 			}
 		}
@@ -176,15 +176,15 @@ void Capturable::Persuade(unsigned int aSourceId, float aEffect)
 		// register a capture update
 		new CapturableCaptureUpdate(mId);
 
-		// notify all capture listeners
-		for (Database::Typed<CaptureListener>::Iterator itor(Database::capturelistener.Find(aSourceId)); itor.IsValid(); ++itor)
+		// notify all capture signals
+		for (Database::Typed<CaptureSignal>::Iterator itor(Database::capturesignal.Find(aSourceId)); itor.IsValid(); ++itor)
 		{
 			itor.GetValue()(aSourceId, mId);
 		}
 
-		// notify all owner capture listeners
+		// notify all owner capture signals
 		unsigned int aOwnerId = Database::owner.Get(aSourceId);
-		for (Database::Typed<CaptureListener>::Iterator itor(Database::capturelistener.Find(aOwnerId)); itor.IsValid(); ++itor)
+		for (Database::Typed<CaptureSignal>::Iterator itor(Database::capturesignal.Find(aOwnerId)); itor.IsValid(); ++itor)
 		{
 			itor.GetValue()(aOwnerId, mId);
 		}

@@ -24,7 +24,7 @@ protected:
 	float mResistance;
 
 public:
-	typedef fastdelegate::FastDelegate<void (unsigned int, unsigned int)> CaptureListener;
+	typedef Signal<void (unsigned int, unsigned int)> CaptureSignal;
 
 public:
 #ifdef USE_POOL_ALLOCATOR
@@ -51,5 +51,5 @@ namespace Database
 {
 	extern Typed<CapturableTemplate> capturabletemplate;
 	extern Typed<Capturable *> capturable;
-	extern Typed<Typed<Capturable::CaptureListener> > capturelistener;
+	extern Typed<Typed<Capturable::CaptureSignal> > capturesignal;
 }
