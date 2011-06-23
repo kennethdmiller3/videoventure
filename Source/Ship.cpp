@@ -205,7 +205,7 @@ void Ship::Simulate(float aStep)
 		float it = std::min(acc * InvSqrt(dv.LengthSq() + 0.0001f), 1.0f / aStep);
 		Vector2 new_accel(dv * it);
 		if (body)
-			body->ApplyForce(new_accel * body->GetMass(), body->GetTransform().position);
+			body->ApplyForce(new_accel * body->GetMass(), body->GetTransform().p);
 		else
 			entity->SetVelocity(entity->GetVelocity() + aStep * new_accel);
 
