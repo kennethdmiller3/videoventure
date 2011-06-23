@@ -19,8 +19,8 @@ static bool ConfigurePrismaticJointItem(const TiXmlElement *element, b2Prismatic
 		return true;
 
 	case 0x6d2badf4 /* "axis" */:
-		element->QueryFloatAttribute("x", &joint.localAxis1.x);
-		element->QueryFloatAttribute("y", &joint.localAxis1.y);
+		element->QueryFloatAttribute("x", &joint.localAxisA.x);
+		element->QueryFloatAttribute("y", &joint.localAxisA.y);
 		return true;
 
 	case 0xad544418 /* "angle" */:

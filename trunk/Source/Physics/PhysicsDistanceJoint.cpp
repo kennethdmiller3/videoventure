@@ -3,6 +3,16 @@
 #include "PhysicsUtilities.h"
 #include "PhysicsDistanceJoint.h"
 
+
+	/// The natural length between the anchor points.
+	float32 length;
+
+	/// The mass-spring-damper frequency in Hertz.
+	float32 frequencyHz;
+
+	/// The damping ratio. 0 = no damping, 1 = critical damping.
+	float32 dampingRatio;
+
 static bool ConfigureDistanceJointItem(const TiXmlElement *element, b2DistanceJointDef &joint)
 {
 	const char *name = element->Value();
@@ -16,6 +26,18 @@ static bool ConfigureDistanceJointItem(const TiXmlElement *element, b2DistanceJo
 	case 0xe255d0f2 /* "anchor2" */:
 		element->QueryFloatAttribute("x", &joint.localAnchorB.x);
 		element->QueryFloatAttribute("y", &joint.localAnchorB.y);
+		return true;
+
+	case 0x83d03615 /* "length" */:
+		element->QueryFloatAttribute("value", &joint.length);
+		return true;
+
+	case 0x2fb31c01 /* "frequency" */:
+		element->QueryFloatAttribute("value", &joint.frequencyHz);
+		return true;
+
+	case 0xfb1994b4 /* "dampingratio" */:
+		element->QueryFloatAttribute("value", &joint.dampingRatio);
 		return true;
 
 	default:
