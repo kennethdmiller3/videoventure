@@ -1,6 +1,0 @@
-<?xml version="1.0" ?>
-<template name="gunner1" type="gunner">
-	<link name="lgun" secondary="gunnerweapon1" />
-	<link name="mgun" secondary="gunnerweapon0" />
-	<link name="rgun" secondary="gunnerweapon1" />
-</template>
