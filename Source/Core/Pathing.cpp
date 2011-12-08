@@ -164,7 +164,7 @@ void BuildPathingGrid(const int aZoneSize, const int aCellSize)
 				for (int col = 0; col < cell_side; ++col)
 				{
 					// probe filter
-					static const b2Filter aFilter = { 1 << 0, 0xFFFF, 0 };
+					static const b2Filter aFilter;
 
 					// get fixtures intersecting the cell
 					b2AABB cell_aabb;

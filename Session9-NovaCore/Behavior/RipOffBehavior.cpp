@@ -240,8 +240,10 @@ Status RipOffBehavior::AvoidFriendly(void)
 {
 	const RipOffBehaviorTemplate &ripoffbehavior = Database::ripoffbehaviortemplate.Get(mId);
 
-	// close to an friendly?
-	b2Filter filter = { 0xFFFF, 1 << 3, 0 };
+	// close to a friendly?
+	b2Filter filter;
+	filter.categoryBits = 0xFFFF;
+	filter.maskBits = 1 << 3;
 	unsigned int friendly = ClosestEntity(ripoffbehavior.mAvoidRadius, filter);
 	if (!friendly)
 		return failedTask;
@@ -260,7 +262,9 @@ Status RipOffBehavior::AttackEnemy(void)
 	const RipOffBehaviorTemplate &ripoffbehavior = Database::ripoffbehaviortemplate.Get(mId);
 
 	// close to an enemy?
-	b2Filter filter = { 0xFFFF, 1 << 1, 0 };
+	b2Filter filter;
+	filter.categoryBits = 0xFFFF;
+	filter.maskBits = 1 << 1;
 	unsigned int enemy = ClosestEntity(mTarget ? ripoffbehavior.mAttackRadius : 65536.0f, filter);
 	if (!enemy)
 		return failedTask;
@@ -273,7 +277,9 @@ Status RipOffBehavior::AttackEnemy(void)
 	// check line of fire
 	b2Vec2 shotstart = mEntity->GetPosition();
 	b2Vec2 shotend = mEntity->GetTransform().Transform(Vector2(0, 64));
-	b2Filter shotfilter = { 1 << 4, 0xFFFF, 0 };
+	b2Filter shotfilter;
+	shotfilter.categoryBits = 0xFFFF;
+	shotfilter.maskBits = 1 << 4;
 	float lambda = 1.0f;
 	b2Vec2 normal;
 	b2Fixture *shape;

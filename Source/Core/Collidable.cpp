@@ -328,9 +328,9 @@ bool CollidableTemplate::ConfigurePolyItem(const TiXmlElement *element, b2Polygo
 	switch (Hash(name))
 	{
 	case 0x945367a7 /* "vertex" */:
-		element->QueryFloatAttribute("x", &shape.m_vertices[shape.m_vertexCount].x);
-		element->QueryFloatAttribute("y", &shape.m_vertices[shape.m_vertexCount].y);
-		++shape.m_vertexCount;
+		element->QueryFloatAttribute("x", &shape.m_vertices[shape.m_count].x);
+		element->QueryFloatAttribute("y", &shape.m_vertices[shape.m_count].y);
+		++shape.m_count;
 		return true;
 
 	default:
@@ -347,7 +347,7 @@ bool CollidableTemplate::ConfigurePoly(const TiXmlElement *element, b2PolygonSha
 	}
 
 	// update other properties
-	shape.Set(shape.m_vertices, shape.m_vertexCount);
+	shape.Set(shape.m_vertices, shape.m_count);
 
 	return true;
 }
@@ -950,8 +950,7 @@ void Collidable::WorldInit(float aMinX, float aMinY, float aMaxX, float aMaxY, b
 	// create physics world
 	b2Vec2 gravity;
 	gravity.Set(0.0f, 0.0f);
-	bool doSleep = true;
-	world = new b2World(gravity, doSleep);
+	world = new b2World(gravity);
 
 	// set contact listener
 	world->SetContactListener(&contactListener);

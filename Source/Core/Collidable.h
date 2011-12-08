@@ -65,7 +65,7 @@ namespace Collidable
 	// default filter
 	inline const b2Filter &GetDefaultFilter(void)
 	{
-		static b2Filter filter = { 0x0001, 0xFFFF, 0 };
+		static b2Filter filter;
 		return filter;
 	}
 
