@@ -1,0 +1,359 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{8281103E-F163-404B-ADA8-DDE1AADC17AF}</ProjectGuid>
+    <RootNamespace>TestGLFW</RootNamespace>
+    <Keyword>Win32Proj</Keyword>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <CharacterSet>Unicode</CharacterSet>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="PlatformGLFW_Release.props" />
+    <Import Project="PlatformBASS.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="PlatformGLFW_Debug.props" />
+    <Import Project="PlatformBASS.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.40219.1</_ProjectFileVersion>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>Source;Source\Behavior;Source\Core;Source\Expression;Source\Interface;Source\Physics;Source\Render;Source\Shell;Source\Sound;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <TargetMachine>MachineX86</TargetMachine>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>Source;Source\Behavior;Source\Core;Source\Expression;Source\Interface;Source\Physics;Source\Render;Source\Shell;Source\Sound;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <TargetMachine>MachineX86</TargetMachine>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="Source\Core\AlignedBox2.h" />
+    <ClInclude Include="Source\Core\Collidable.h" />
+    <ClInclude Include="Source\Core\Color4.h" />
+    <ClInclude Include="Source\Core\Controller.h" />
+    <ClInclude Include="Source\Core\Database.h" />
+    <ClInclude Include="Source\Core\DatabaseTyped.h" />
+    <ClInclude Include="Source\Core\DatabaseUntyped.h" />
+    <ClInclude Include="Source\Core\Entity.h" />
+    <ClInclude Include="Source\Core\Hash.h" />
+    <ClInclude Include="Source\Core\Input.h" />
+    <ClInclude Include="Source\Core\Interpolator.h" />
+    <ClInclude Include="Source\Core\Library.h" />
+    <ClInclude Include="Source\Core\Link.h" />
+    <ClInclude Include="Source\Core\Magic.h" />
+    <ClInclude Include="Source\Core\Matrix2.h" />
+    <ClInclude Include="Source\Core\MemoryPool.h" />
+    <ClInclude Include="Source\Core\Noise.h" />
+    <ClInclude Include="Source\Core\Overlay.h" />
+    <ClInclude Include="Source\Core\Pathing.h" />
+    <ClInclude Include="Source\Core\PerfTimer.h" />
+    <ClInclude Include="Source\Core\Random.h" />
+    <ClInclude Include="Source\Core\Renderable.h" />
+    <ClInclude Include="Source\Core\Signal.h" />
+    <ClInclude Include="Source\Core\Simulatable.h" />
+    <ClInclude Include="Source\Core\Sphere2.h" />
+    <ClInclude Include="Source\Core\targetver.h" />
+    <ClInclude Include="Source\Core\Transform2.h" />
+    <ClInclude Include="Source\Core\TreeNode.h" />
+    <ClInclude Include="Source\Core\Updatable.h" />
+    <ClInclude Include="Source\Core\Utility.h" />
+    <ClInclude Include="Source\Core\Variable.h" />
+    <ClInclude Include="Source\Core\VarItem.h" />
+    <ClInclude Include="Source\Core\Vector2.h" />
+    <ClInclude Include="Source\Core\Vector3.h" />
+    <ClInclude Include="Source\Core\Vector4.h" />
+    <ClInclude Include="Source\Core\World.h" />
+    <ClInclude Include="Source\Core\xs_Config.h" />
+    <ClInclude Include="Source\Core\xs_Float.h" />
+    <ClInclude Include="Source\Interface\Console.h" />
+    <ClInclude Include="Source\Interface\Font.h" />
+    <ClInclude Include="Source\Interface\PlayerHUD.h" />
+    <ClInclude Include="Source\Interface\PlayerOverlayAmmo.h" />
+    <ClInclude Include="Source\Interface\PlayerOverlayGameOver.h" />
+    <ClInclude Include="Source\Interface\PlayerOverlayHealth.h" />
+    <ClInclude Include="Source\Interface\PlayerOverlayLevel.h" />
+    <ClInclude Include="Source\Interface\PlayerOverlayLives.h" />
+    <ClInclude Include="Source\Interface\PlayerOverlayReticule.h" />
+    <ClInclude Include="Source\Interface\PlayerOverlayScore.h" />
+    <ClInclude Include="Source\Interface\PlayerOverlaySpecial.h" />
+    <ClInclude Include="Source\Interface\PointsOverlay.h" />
+    <ClInclude Include="Source\Behavior\AimBehavior.h" />
+    <ClInclude Include="Source\Behavior\Behavior.h" />
+    <ClInclude Include="Source\Behavior\BotUtilities.h" />
+    <ClInclude Include="Source\Behavior\Brain.h" />
+    <ClInclude Include="Source\Behavior\EdgeBehavior.h" />
+    <ClInclude Include="Source\Behavior\EvadeBehavior.h" />
+    <ClInclude Include="Source\Behavior\Parallel.h" />
+    <ClInclude Include="Source\Behavior\PursueBehavior.h" />
+    <ClInclude Include="Source\Behavior\RangeBehavior.h" />
+    <ClInclude Include="Source\Behavior\Scheduler.h" />
+    <ClInclude Include="Source\Behavior\Selector.h" />
+    <ClInclude Include="Source\Behavior\Sequence.h" />
+    <ClInclude Include="Source\Behavior\Tag.h" />
+    <ClInclude Include="Source\Behavior\TargetBehavior.h" />
+    <ClInclude Include="Source\Behavior\Task.h" />
+    <ClInclude Include="Source\Behavior\WanderBehavior.h" />
+    <ClInclude Include="Source\Render\Drawlist.h" />
+    <ClInclude Include="Source\Render\Texture.h" />
+    <ClInclude Include="Source\Shell\Escape.h" />
+    <ClInclude Include="Source\Shell\ShellMenu.h" />
+    <ClInclude Include="Source\Shell\ShellMenuItem.h" />
+    <ClInclude Include="Source\Shell\Title.h" />
+    <ClInclude Include="Source\Sound\Sound.h" />
+    <ClInclude Include="Source\Sound\SoundConfigure.h" />
+    <ClInclude Include="Source\Sound\SoundMixer.h" />
+    <ClInclude Include="Source\Sound\SoundStargate.h" />
+    <ClInclude Include="Source\Sound\SoundUtilities.h" />
+    <ClInclude Include="Source\Aimer.h" />
+    <ClInclude Include="Source\Beam.h" />
+    <ClInclude Include="Source\Bullet.h" />
+    <ClInclude Include="Source\Cancelable.h" />
+    <ClInclude Include="Source\Command.h" />
+    <ClInclude Include="Source\Damagable.h" />
+    <ClInclude Include="Source\Expire.h" />
+    <ClInclude Include="Source\Explosion.h" />
+    <ClInclude Include="Source\GameState.h" />
+    <ClInclude Include="Source\Gunner.h" />
+    <ClInclude Include="Source\Pickup.h" />
+    <ClInclude Include="Source\Player.h" />
+    <ClInclude Include="Source\PlayerCamera.h" />
+    <ClInclude Include="Source\PlayerController.h" />
+    <ClInclude Include="Source\Points.h" />
+    <ClInclude Include="Source\Preferences.h" />
+    <ClInclude Include="Source\Resource.h" />
+    <ClInclude Include="Source\Ship.h" />
+    <ClInclude Include="Source\Spawn.h" />
+    <ClInclude Include="Source\Spawner.h" />
+    <ClInclude Include="Source\State.h" />
+    <ClInclude Include="Source\Team.h" />
+    <ClInclude Include="Source\TurnAction.h" />
+    <ClInclude Include="Source\WaveSequence.h" />
+    <ClInclude Include="Source\Weapon.h" />
+    <ClInclude Include="PlatformGLFW\Platform.h" />
+    <ClInclude Include="Source\Expression\Expression.h" />
+    <ClInclude Include="Source\Expression\ExpressionAction.h" />
+    <ClInclude Include="Source\Expression\ExpressionConfigure.h" />
+    <ClInclude Include="Source\Expression\ExpressionConstruct.h" />
+    <ClInclude Include="Source\Expression\ExpressionConvert.h" />
+    <ClInclude Include="Source\Expression\ExpressionEntity.h" />
+    <ClInclude Include="Source\Expression\ExpressionExtend.h" />
+    <ClInclude Include="Source\Expression\ExpressionIntegral.h" />
+    <ClInclude Include="Source\Expression\ExpressionInterpolator.h" />
+    <ClInclude Include="Source\Expression\ExpressionLiteral.h" />
+    <ClInclude Include="Source\Expression\ExpressionLogical.h" />
+    <ClInclude Include="Source\Expression\ExpressionNoise.h" />
+    <ClInclude Include="Source\Expression\ExpressionOperator.h" />
+    <ClInclude Include="Source\Expression\ExpressionOperatorSIMD.h" />
+    <ClInclude Include="Source\Expression\ExpressionOscillator.h" />
+    <ClInclude Include="Source\Expression\ExpressionRandom.h" />
+    <ClInclude Include="Source\Expression\ExpressionRelational.h" />
+    <ClInclude Include="Source\Expression\ExpressionResource.h" />
+    <ClInclude Include="Source\Expression\ExpressionSchema.h" />
+    <ClInclude Include="Source\Expression\ExpressionSIMD.h" />
+    <ClInclude Include="Source\Expression\ExpressionSwizzle.h" />
+    <ClInclude Include="Source\Expression\ExpressionTime.h" />
+    <ClInclude Include="Source\Expression\ExpressionVariable.h" />
+    <ClInclude Include="Source\Physics\PhysicsDistanceJoint.h" />
+    <ClInclude Include="Source\Physics\PhysicsFrictionJoint.h" />
+    <ClInclude Include="Source\Physics\PhysicsPrismaticJoint.h" />
+    <ClInclude Include="Source\Physics\PhysicsPulleyJoint.h" />
+    <ClInclude Include="Source\Physics\PhysicsRevoluteJoint.h" />
+    <ClInclude Include="Source\Physics\PhysicsRopeJoint.h" />
+    <ClInclude Include="Source\Physics\PhysicsUtilities.h" />
+    <ClInclude Include="Source\Physics\PhysicsWeldJoint.h" />
+    <ClInclude Include="Source\Physics\PhysicsWheelJoint.h" />
+    <ClInclude Include="Source\stdafx.h" />
+    <ClInclude Include="Source\targetver.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Source\Core\Collidable.cpp" />
+    <ClCompile Include="Source\Core\Controller.cpp" />
+    <ClCompile Include="Source\Core\Database.cpp" />
+    <ClCompile Include="Source\Core\DatabaseUntyped.cpp" />
+    <ClCompile Include="Source\Core\Entity.cpp" />
+    <ClCompile Include="Source\Core\Input.cpp" />
+    <ClCompile Include="Source\Core\Interpolator.cpp" />
+    <ClCompile Include="Source\Core\Library.cpp" />
+    <ClCompile Include="Source\Core\Link.cpp" />
+    <ClCompile Include="Source\Core\MemoryPool.cpp" />
+    <ClCompile Include="Source\Core\Noise.cpp" />
+    <ClCompile Include="Source\Core\Overlay.cpp" />
+    <ClCompile Include="Source\Core\Particle.cpp" />
+    <ClCompile Include="Source\Core\Pathing.cpp" />
+    <ClCompile Include="Source\Core\PerfTimer.cpp" />
+    <ClCompile Include="Source\Core\Renderable.cpp" />
+    <ClCompile Include="Source\Core\Simulatable.cpp" />
+    <ClCompile Include="Source\Core\Updatable.cpp" />
+    <ClCompile Include="Source\Core\Variable.cpp" />
+    <ClCompile Include="Source\Core\VarItem.cpp" />
+    <ClCompile Include="Source\Core\World.cpp" />
+    <ClCompile Include="Source\Interface\Console.cpp" />
+    <ClCompile Include="Source\Interface\Font.cpp" />
+    <ClCompile Include="Source\Interface\PlayerHUD.cpp" />
+    <ClCompile Include="Source\Interface\PlayerOverlayAmmo.cpp" />
+    <ClCompile Include="Source\Interface\PlayerOverlayGameOver.cpp" />
+    <ClCompile Include="Source\Interface\PlayerOverlayHealth.cpp" />
+    <ClCompile Include="Source\Interface\PlayerOverlayLevel.cpp" />
+    <ClCompile Include="Source\Interface\PlayerOverlayLives.cpp" />
+    <ClCompile Include="Source\Interface\PlayerOverlayReticule.cpp" />
+    <ClCompile Include="Source\Interface\PlayerOverlayScore.cpp" />
+    <ClCompile Include="Source\Interface\PlayerOverlaySpecial.cpp" />
+    <ClCompile Include="Source\Interface\PointsOverlay.cpp" />
+    <ClCompile Include="Source\Behavior\AimBehavior.cpp" />
+    <ClCompile Include="Source\Behavior\Behavior.cpp" />
+    <ClCompile Include="Source\Behavior\BotUtilities.cpp" />
+    <ClCompile Include="Source\Behavior\EdgeBehavior.cpp" />
+    <ClCompile Include="Source\Behavior\EvadeBehavior.cpp" />
+    <ClCompile Include="Source\Behavior\PursueBehavior.cpp" />
+    <ClCompile Include="Source\Behavior\RangeBehavior.cpp" />
+    <ClCompile Include="Source\Behavior\Scheduler.cpp" />
+    <ClCompile Include="Source\Behavior\Tag.cpp" />
+    <ClCompile Include="Source\Behavior\TargetBehavior.cpp" />
+    <ClCompile Include="Source\Behavior\Task.cpp" />
+    <ClCompile Include="Source\Behavior\WanderBehavior.cpp" />
+    <ClCompile Include="Source\Render\Drawlist.cpp" />
+    <ClCompile Include="Source\Render\Texture.cpp" />
+    <ClCompile Include="Source\Shell\Escape.cpp" />
+    <ClCompile Include="Source\Shell\EscapeMenuMain.cpp" />
+    <ClCompile Include="Source\Shell\Shell.cpp" />
+    <ClCompile Include="Source\Shell\ShellMenu.cpp" />
+    <ClCompile Include="Source\Shell\ShellMenuAudio.cpp" />
+    <ClCompile Include="Source\Shell\ShellMenuItem.cpp" />
+    <ClCompile Include="Source\Shell\ShellMenuMain.cpp" />
+    <ClCompile Include="Source\Shell\ShellMenuOptions.cpp" />
+    <ClCompile Include="Source\Shell\ShellMenuVideo.cpp" />
+    <ClCompile Include="Source\Shell\Title.cpp" />
+    <ClCompile Include="Source\Sound\Sound.cpp" />
+    <ClCompile Include="Source\Sound\SoundBitNoiseRamp.cpp" />
+    <ClCompile Include="Source\Sound\SoundConfigure.cpp" />
+    <ClCompile Include="Source\Sound\SoundExpression.cpp" />
+    <ClCompile Include="Source\Sound\SoundFile.cpp" />
+    <ClCompile Include="Source\Sound\SoundMixer.cpp" />
+    <ClCompile Include="Source\Sound\SoundPokey.cpp" />
+    <ClCompile Include="Source\Sound\SoundPulseLoop.cpp" />
+    <ClCompile Include="Source\Sound\SoundSample.cpp" />
+    <ClCompile Include="Source\Sound\SoundSound.cpp" />
+    <ClCompile Include="Source\Sound\SoundStargate.cpp" />
+    <ClCompile Include="Source\Sound\SoundStargateF9A6.cpp" />
+    <ClCompile Include="Source\Sound\SoundStargateF9F3.cpp" />
+    <ClCompile Include="Source\Sound\SoundTriangleNoise.cpp" />
+    <ClCompile Include="Source\Sound\SoundUtilities.cpp" />
+    <ClCompile Include="Source\Sound\SoundWaveLoop.cpp" />
+    <ClCompile Include="Source\Aimer.cpp" />
+    <ClCompile Include="Source\Beam.cpp" />
+    <ClCompile Include="Source\Bullet.cpp" />
+    <ClCompile Include="Source\Cancelable.cpp" />
+    <ClCompile Include="Source\Command.cpp" />
+    <ClCompile Include="Source\Condition.cpp" />
+    <ClCompile Include="Source\Damagable.cpp" />
+    <ClCompile Include="Source\Expire.cpp" />
+    <ClCompile Include="Source\Explosion.cpp" />
+    <ClCompile Include="Source\GameState.cpp" />
+    <ClCompile Include="Source\Gunner.cpp" />
+    <ClCompile Include="Source\Pickup.cpp" />
+    <ClCompile Include="Source\Play.cpp" />
+    <ClCompile Include="Source\Player.cpp" />
+    <ClCompile Include="Source\PlayerCamera.cpp" />
+    <ClCompile Include="Source\PlayerController.cpp" />
+    <ClCompile Include="Source\Points.cpp" />
+    <ClCompile Include="Source\Preferences.cpp" />
+    <ClCompile Include="Source\Resource.cpp" />
+    <ClCompile Include="Source\Run.cpp" />
+    <ClCompile Include="Source\Ship.cpp" />
+    <ClCompile Include="Source\Spawn.cpp" />
+    <ClCompile Include="Source\Spawner.cpp" />
+    <ClCompile Include="Source\State.cpp" />
+    <ClCompile Include="Source\Team.cpp" />
+    <ClCompile Include="Source\Test.cpp" />
+    <ClCompile Include="Source\Tilemap.cpp" />
+    <ClCompile Include="Source\TurnAction.cpp" />
+    <ClCompile Include="Source\WaveSequence.cpp" />
+    <ClCompile Include="Source\Weapon.cpp" />
+    <ClCompile Include="PlatformGLFW\LoadTexture.cpp" />
+    <ClCompile Include="PlatformGLFW\OneTime.cpp" />
+    <ClCompile Include="PlatformGLFW\Window.cpp" />
+    <ClCompile Include="Source\Expression\ExpressionAction.cpp" />
+    <ClCompile Include="Source\Expression\ExpressionConfigure.cpp" />
+    <ClCompile Include="Source\Expression\ExpressionConstruct.cpp" />
+    <ClCompile Include="Source\Expression\ExpressionConvert.cpp" />
+    <ClCompile Include="Source\Expression\ExpressionEntity.cpp" />
+    <ClCompile Include="Source\Expression\ExpressionExtend.cpp" />
+    <ClCompile Include="Source\Expression\ExpressionIntegral.cpp" />
+    <ClCompile Include="Source\Expression\ExpressionInterpolator.cpp" />
+    <ClCompile Include="Source\Expression\ExpressionLiteral.cpp" />
+    <ClCompile Include="Source\Expression\ExpressionLogical.cpp" />
+    <ClCompile Include="Source\Expression\ExpressionNoise.cpp" />
+    <ClCompile Include="Source\Expression\ExpressionOperator.cpp" />
+    <ClCompile Include="Source\Expression\ExpressionOperatorSIMD.cpp" />
+    <ClCompile Include="Source\Expression\ExpressionOscillator.cpp" />
+    <ClCompile Include="Source\Expression\ExpressionRandom.cpp" />
+    <ClCompile Include="Source\Expression\ExpressionRelational.cpp" />
+    <ClCompile Include="Source\Expression\ExpressionResource.cpp" />
+    <ClCompile Include="Source\Expression\ExpressionSchema.cpp" />
+    <ClCompile Include="Source\Expression\ExpressionSwizzle.cpp" />
+    <ClCompile Include="Source\Expression\ExpressionTime.cpp" />
+    <ClCompile Include="Source\Expression\ExpressionVariable.cpp" />
+    <ClCompile Include="Source\Physics\PhysicsDistanceJoint.cpp" />
+    <ClCompile Include="Source\Physics\PhysicsFrictionJoint.cpp" />
+    <ClCompile Include="Source\Physics\PhysicsPrismaticJoint.cpp" />
+    <ClCompile Include="Source\Physics\PhysicsPulleyJoint.cpp" />
+    <ClCompile Include="Source\Physics\PhysicsRevoluteJoint.cpp" />
+    <ClCompile Include="Source\Physics\PhysicsRopeJoint.cpp" />
+    <ClCompile Include="Source\Physics\PhysicsUtilities.cpp" />
+    <ClCompile Include="Source\Physics\PhysicsWeldJoint.cpp" />
+    <ClCompile Include="Source\Physics\PhysicsWheelJoint.cpp" />
+    <ClCompile Include="Source\stdafx.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Box2D\Box2D\Build\Box2D\Box2D.vcxproj">
+      <Project>{088cdba2-268f-4db8-b80a-dc8ea62d1e98}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\glfw\support\msvc100\GLFW.vcxproj">
+      <Project>{4da03747-f505-4a98-9124-03b3b73b9b3b}</Project>
+    </ProjectReference>
+    <ProjectReference Include="tinyxml\tinyxml_lib.vcxproj">
+      <Project>{c406daec-0886-4771-8dea-9d7329b46cc1}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
