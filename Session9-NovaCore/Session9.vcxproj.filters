@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Behavior">
+      <UniqueIdentifier>{9c12d0eb-a1ab-4695-a767-7cf798963d0f}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Behavior\RipOffBehavior.cpp">
+      <Filter>Behavior</Filter>
+    </ClCompile>
+    <ClCompile Include="CriticalItem.cpp" />
+    <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="stdafx.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Behavior\RipOffBehavior.h">
+      <Filter>Behavior</Filter>
+    </ClInclude>
+    <ClInclude Include="stdafx.h" />
+  </ItemGroup>
+</Project>
