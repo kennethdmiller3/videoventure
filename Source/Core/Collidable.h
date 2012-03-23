@@ -35,6 +35,7 @@ public:
 	bool ConfigurePolyItem(const TiXmlElement *element, b2PolygonShape &shape);
 	bool ConfigurePoly(const TiXmlElement *element, b2PolygonShape &shape);
 	bool ConfigureEdge(const TiXmlElement *element, b2EdgeShape &shape);
+	bool ConfigureChain(const TiXmlElement *element, b2ChainShape &shape);
 	bool ConfigureBodyItem(const TiXmlElement *element, b2BodyDef &body, unsigned int id);
 	bool ConfigureBody(const TiXmlElement *element, b2BodyDef &body, unsigned int id);
 	bool Configure(const TiXmlElement *element, unsigned int id);
