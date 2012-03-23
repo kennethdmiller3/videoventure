@@ -71,6 +71,28 @@ struct CollisionEdgeDef
 		return fixture;
 	}
 };
+struct CollisionChainDef 
+{
+	b2FixtureDef mFixture;
+	b2ChainShape mShape;
+
+	CollisionChainDef()
+	{
+		mFixture.shape = &mShape;
+	}
+	CollisionChainDef(const CollisionChainDef &aSrc)
+	{
+		mFixture = aSrc.mFixture;
+		mShape = aSrc.mShape;
+		mFixture.shape = &mShape;
+	}
+	b2Fixture *Instantiate(b2Body *aBody) const
+	{
+		b2Fixture *fixture = aBody->CreateFixture(&mFixture);
+		fixture->SetUserData(aBody->GetUserData());
+		return fixture;
+	}
+};
 
 namespace Database
 {
@@ -79,6 +101,7 @@ namespace Database
 	Typed<Typed<CollisionCircleDef> > collidablecircles(0x67fa99ff /* "collidablecircles" */);
 	Typed<Typed<CollisionPolygonDef> > collidablepolygons(0xab54c159 /* "collidablepolygons" */);
 	Typed<Typed<CollisionEdgeDef> > collidableedges(0xae12a01c /* "collidableedges" */);
+	Typed<Typed<CollisionChainDef> > collidablechains(0xd2bae418 /* "collidablechains" */);
 	Typed<b2Body *> collidablebody(0x6ccc2b62 /* "collidablebody" */);
 	Typed<Collidable::ContactSignal> collidablecontactadd(0x7cf2c45d /* "collidablecontactadd" */);
 	Typed<Collidable::ContactSignal> collidablecontactremove(0x95ed5aba /* "collidablecontactremove" */);
@@ -375,6 +398,40 @@ bool CollidableTemplate::ConfigureEdge(const TiXmlElement *element, b2EdgeShape 
 	return true;
 }
 
+bool CollidableTemplate::ConfigureChain(const TiXmlElement *element, b2ChainShape &shape)
+{
+	if (const TiXmlElement *first = element->FirstChildElement("vertex"))
+	{
+		int count = 0;
+		for (const TiXmlElement *child = first; child != NULL; child = child->NextSiblingElement("vertex"))
+			++count;
+
+		if (count > 1)
+		{
+			int loop = 0;
+			element->QueryIntAttribute("loop", &loop);
+
+			b2Vec2 *vertices = (b2Vec2 *)_alloca(count * sizeof(b2Vec2));
+
+			int index = 0;
+			for (const TiXmlElement *child = first; child != NULL; child = child->NextSiblingElement("vertex"))
+			{
+				child->QueryFloatAttribute("x", &vertices[index].x);
+				child->QueryFloatAttribute("y", &vertices[index].y);
+				++index;
+			}
+
+			if (loop)
+				shape.CreateLoop(vertices, count);
+			else
+				shape.CreateChain(vertices, count);
+		}
+	}
+
+	return true;
+}
+
+
 bool CollidableTemplate::ConfigureBodyItem(const TiXmlElement *element, b2BodyDef &body, unsigned int id)
 {
 	const char *name = element->Value();
@@ -521,75 +578,17 @@ bool CollidableTemplate::ConfigureBodyItem(const TiXmlElement *element, b2BodyDe
 
 	case 0x620c0b45 /* "edgechain" */:
 		{
-			Database::Typed<CollisionEdgeDef> &shapes = Database::collidableedges.Open(id);
+			Database::Typed<CollisionChainDef> &shapes = Database::collidablechains.Open(id);
 			unsigned int subid;
 			if (const char *name = element->Attribute("name"))
 				subid = Hash(name);
 			else
 				subid = shapes.GetCount() + 1;
-
-			if (const TiXmlElement *first = element->FirstChildElement("vertex"))
-			{
-				int count = 0;
-				for (const TiXmlElement *child = first; child != NULL; child = child->NextSiblingElement("vertex"))
-					++count;
-
-				if (count > 1)
-				{
-					int loop = 0;
-					element->QueryIntAttribute("loop", &loop);
-
-					if (loop)
-					{
-						++count;
-					}
-
-					b2Vec2 *vertices = (b2Vec2 *)_alloca(count * sizeof(b2Vec2));
-
-					int index = 0;
-					for (const TiXmlElement *child = first; child != NULL; child = child->NextSiblingElement("vertex"))
-					{
-						child->QueryFloatAttribute("x", &vertices[index].x);
-						child->QueryFloatAttribute("y", &vertices[index].y);
-						++index;
-					}
-
-					if (loop)
-					{
-						vertices[count-1] = vertices[0];
-					}
-
-					for (int i = 1; i < count; ++i)
-					{
-						CollisionEdgeDef &def = shapes.Open(subid);
-						ConfigureFixture(element, def.mFixture);
-						def.mShape.m_vertex1 = vertices[i-1];
-						def.mShape.m_vertex2 = vertices[i];
-						if (i > 1)
-						{
-							def.mShape.m_vertex0 = vertices[i-2];
-							def.mShape.m_hasVertex0 = true;
-						}
-						else if (loop)
-						{
-							def.mShape.m_vertex0 = vertices[count-2];
-							def.mShape.m_hasVertex0 = true;
-						}
-						if (i < count - 1)
-						{
-							def.mShape.m_vertex3 = vertices[i+1];
-							def.mShape.m_hasVertex3 = true;
-						}
-						else if (loop)
-						{
-							def.mShape.m_vertex3 = vertices[1];
-							def.mShape.m_hasVertex3 = true;
-						}
-						shapes.Close(subid);
-						++subid;
-					}
-				}
-			}
+			CollisionChainDef &def = shapes.Open(subid);
+			ConfigureFixture(element, def.mFixture);
+			ConfigureChain(element, def.mShape);
+			shapes.Close(subid);
+			Database::collidablechains.Close(id);
 		}
 		return true;
 
@@ -924,6 +923,8 @@ void Collidable::AddToWorld(unsigned int aId)
 	for (Database::Typed<CollisionPolygonDef>::Iterator itor(Database::collidablepolygons.Find(aId)); itor.IsValid(); ++itor)
 		itor.GetValue().Instantiate(body);
 	for (Database::Typed<CollisionEdgeDef>::Iterator itor(Database::collidableedges.Find(aId)); itor.IsValid(); ++itor)
+		itor.GetValue().Instantiate(body);
+	for (Database::Typed<CollisionChainDef>::Iterator itor(Database::collidablechains.Find(aId)); itor.IsValid(); ++itor)
 		itor.GetValue().Instantiate(body);
 }
 
