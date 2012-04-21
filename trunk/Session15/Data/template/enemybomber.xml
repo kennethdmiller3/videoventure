@@ -94,8 +94,8 @@
 		</pushmatrix>
 	</renderable>
 	<aimer>
-		<drift front="0.125"/>
-		<wander side="1" siderate="0.5" front="0.125" frontrate="0.25" />
+		<drift front="0.25" />
+		<wander side="1" siderate="0.5" />
 	</aimer>
 	<ship maxveloc="60" maxaccel="240" minaccel="120" maxomega="0" />
 	<damagable health="5" spawnondeath="enemyexplosion" />
@@ -106,4 +106,5 @@
 	</spawner>
 	<team name="red" />
 	<points value="250" />
+  <expire time="20" />
 </template>

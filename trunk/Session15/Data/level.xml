@@ -1,6 +1,6 @@
 <?xml version="1.0" standalone="no"?>
 <!-- Test Level -->
-<world xmin="-384" ymin="-192" xmax="384" ymax="192" wall="0">
+<world xmin="-200" ymin="-110" xmax="200" ymax="110" wall="0">
 	<library name="session15.dll"/>
 	
 	<!-- disable fog-->
