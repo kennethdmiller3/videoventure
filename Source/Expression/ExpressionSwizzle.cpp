@@ -57,13 +57,13 @@ namespace Expression
 }
 
 // configure swizzle expression
-template <typename T> void ConfigureSwizzle(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
+template <typename T> void ConfigureSwizzle(const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
 {
 #ifdef PRINT_CONFIGURE_EXPRESSION
 	DebugPrint("%s swizzle\n", Expression::Schema<T>::NAME);
 #endif
 
-	const TiXmlElement *arg1 = element->FirstChildElement();
+	const tinyxml2::XMLElement *arg1 = element->FirstChildElement();
 	if (!arg1)
 	{
 		// no first argument: treat element as a literal (HACK)

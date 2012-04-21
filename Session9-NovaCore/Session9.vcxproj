@@ -79,8 +79,8 @@
       <Project>{8281103e-f163-404b-ada8-dde1aadc17af}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
-    <ProjectReference Include="..\tinyxml\tinyxml_lib.vcxproj">
-      <Project>{c406daec-0886-4771-8dea-9d7329b46cc1}</Project>
+    <ProjectReference Include="..\tinyxml2\tinyxml2\tinyxml2.vcxproj">
+      <Project>{16A1D446-5415-444E-A7B4-F35B7DA7EE8C}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
   </ItemGroup>

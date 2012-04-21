@@ -148,7 +148,7 @@ namespace Database
 				AddConfigure(0xc1804ae7 /* "cancelable" */, Entry(this, &CancelableLoader::Configure));
 			}
 
-			void Configure(unsigned int aId, const TiXmlElement *element)
+			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
 			{
 				CancelableTemplate &cancelable = Database::cancelabletemplate.Open(aId);
 				cancelable.Configure(element);
@@ -208,7 +208,7 @@ CancelableTemplate::~CancelableTemplate(void)
 }
 
 // configure
-bool CancelableTemplate::Configure(const TiXmlElement *element)
+bool CancelableTemplate::Configure(const tinyxml2::XMLElement *element)
 {
 	if (const char *spawn = element->Attribute("spawnoncancel"))
 		mSpawn = Hash(spawn);

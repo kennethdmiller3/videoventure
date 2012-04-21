@@ -22,7 +22,7 @@ namespace Database
 				AddConfigure(0x3c6468f4 /* "texture" */, Entry(this, &TextureLoader::Configure));
 			}
 
-			void Configure(unsigned int aId, const TiXmlElement *element)
+			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
 			{
 				// generate a handle object handle
 				GLuint handle;
@@ -70,7 +70,7 @@ namespace Database
 				case 0xd99ba82a /* "repeat" */:				texture.mWrapT = GL_REPEAT; break;
 				}
 
-				for (const TiXmlElement *child = element->FirstChildElement(); child; child = child->NextSiblingElement())
+				for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child; child = child->NextSiblingElement())
 				{
 					switch (Hash(child->Value()))
 					{

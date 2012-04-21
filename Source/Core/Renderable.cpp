@@ -32,7 +32,7 @@ namespace Database
 				AddConfigure(0x109dd1ad /* "renderable" */, Entry(this, &RenderableLoader::Configure));
 			}
 
-			void Configure(unsigned int aId, const TiXmlElement *element)
+			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
 			{
 				RenderableTemplate &renderable = Database::renderabletemplate.Open(aId);
 				renderable.Configure(element, aId);
@@ -108,7 +108,7 @@ RenderableTemplate::~RenderableTemplate(void)
 }
 
 // configure
-bool RenderableTemplate::Configure(const TiXmlElement *element, unsigned int aId)
+bool RenderableTemplate::Configure(const tinyxml2::XMLElement *element, unsigned int aId)
 {
 	// animation period
 	element->QueryFloatAttribute("period", &mPeriod);

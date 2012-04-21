@@ -143,9 +143,9 @@ namespace Expression
 // UNARY EXPRESSION
 // return the result of an expression taking one parameter
 //
-template <typename T, typename A, typename C> void ConfigureUnary(T (expr)(C), const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
+template <typename T, typename A, typename C> void ConfigureUnary(T (expr)(C), const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
 {
-	const TiXmlElement *arg1 = element->FirstChildElement();
+	const tinyxml2::XMLElement *arg1 = element->FirstChildElement();
 	if (!arg1)
 	{
 		// no first argument: treat element as a literal (HACK)
@@ -166,9 +166,9 @@ template <typename T, typename A, typename C> void ConfigureUnary(T (expr)(C), c
 // BINARY EXPRESSION
 // return the result of an expression taking two parameters
 //
-template <typename T, typename A1, typename A2, typename C> void ConfigureBinary(T (expr)(C), const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
+template <typename T, typename A1, typename A2, typename C> void ConfigureBinary(T (expr)(C), const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
 {
-	const TiXmlElement *arg1 = element->FirstChildElement();
+	const tinyxml2::XMLElement *arg1 = element->FirstChildElement();
 	if (!arg1)
 	{
 		// no first argument: treat element as a literal (HACK)
@@ -177,7 +177,7 @@ template <typename T, typename A1, typename A2, typename C> void ConfigureBinary
 		return;
 	}
 
-	const TiXmlElement *arg2 = arg1->NextSiblingElement();
+	const tinyxml2::XMLElement *arg2 = arg1->NextSiblingElement();
 	if (!arg2)
 	{
 		// no second argument: treat element as a literal (HACK)
@@ -201,9 +201,9 @@ template <typename T, typename A1, typename A2, typename C> void ConfigureBinary
 // TERNARY EXPRESSION
 // return the result of an expression taking three parameters
 //
-template <typename T, typename A1, typename A2, typename A3, typename C> void ConfigureTernary(T (expr)(C), const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
+template <typename T, typename A1, typename A2, typename A3, typename C> void ConfigureTernary(T (expr)(C), const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
 {
-	const TiXmlElement *arg1 = element->FirstChildElement();
+	const tinyxml2::XMLElement *arg1 = element->FirstChildElement();
 	if (!arg1)
 	{
 		// no first argument: treat element as a literal (HACK)
@@ -212,7 +212,7 @@ template <typename T, typename A1, typename A2, typename A3, typename C> void Co
 		return;
 	}
 
-	const TiXmlElement *arg2 = arg1->NextSiblingElement();
+	const tinyxml2::XMLElement *arg2 = arg1->NextSiblingElement();
 	if (!arg2)
 	{
 		// no second argument: treat element as a literal (HACK)
@@ -221,7 +221,7 @@ template <typename T, typename A1, typename A2, typename A3, typename C> void Co
 		return;
 	}
 
-	const TiXmlElement *arg3 = arg2->NextSiblingElement();
+	const tinyxml2::XMLElement *arg3 = arg2->NextSiblingElement();
 	if (!arg3)
 	{
 		// no third argument: treat element as a literal (HACK)
@@ -250,9 +250,9 @@ template <typename T, typename A1, typename A2, typename A3, typename C> void Co
 //
 
 // configure typed variadic
-template <typename T, typename A, typename C> void ConfigureVariadic(T (expr)(C), const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
+template <typename T, typename A, typename C> void ConfigureVariadic(T (expr)(C), const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
 {
-	const TiXmlElement *arg1 = element->FirstChildElement();
+	const tinyxml2::XMLElement *arg1 = element->FirstChildElement();
 	if (!arg1)
 	{
 		// no first argument: treat element as a literal (HACK)
@@ -261,7 +261,7 @@ template <typename T, typename A, typename C> void ConfigureVariadic(T (expr)(C)
 		return;
 	}
 
-	const TiXmlElement *arg2 = arg1->NextSiblingElement();
+	const tinyxml2::XMLElement *arg2 = arg1->NextSiblingElement();
 	if (!arg2)
 	{
 		// no second argument: convert type of first argument (HACK)

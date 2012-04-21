@@ -12,7 +12,7 @@ static Expression::Loader<__m128>::Auto literalvector(0x425ed3ca /* "value" */, 
 //
 
 // float[width] literal
-void ConfigureLiteral(const TiXmlElement *element, std::vector<unsigned int> &buffer, int width, const char * const names[], const float defaults[])
+void ConfigureLiteral(const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer, int width, const char * const names[], const float defaults[])
 {
 	// process literal data
 	for (int i = 0; i < width; ++i)

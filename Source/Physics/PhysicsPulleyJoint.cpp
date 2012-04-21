@@ -3,7 +3,7 @@
 #include "PhysicsUtilities.h"
 #include "PhysicsPulleyJoint.h"
 
-bool ConfigurePulleyJointItem(const TiXmlElement *element, b2PulleyJointDef &joint)
+bool ConfigurePulleyJointItem(const tinyxml2::XMLElement *element, b2PulleyJointDef &joint)
 {
 	const char *name = element->Value();
 	switch (Hash(name))
@@ -59,7 +59,7 @@ namespace Database
 				AddConfigure(0xdd003dc4 /* "pulleyjoint" */, Entry(this, &PulleyJointLoader::Configure));
 			}
 
-			void Configure(unsigned int aId, const TiXmlElement *element)
+			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
 			{
 				Typed<b2PulleyJointDef> defs = Database::pulleyjointdef.Open(aId);
 
@@ -72,7 +72,7 @@ namespace Database
 
 				// configure the joint definition
 				b2PulleyJointDef &def = defs.Open(aSubId);
-				for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+				for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 				{
 					ConfigurePulleyJointItem(child, def);
 				}

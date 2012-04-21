@@ -35,7 +35,7 @@ namespace Database
 				AddConfigure(0x80459822 /* "expire" */, Entry(this, &ExpireLoader::Configure));
 			}
 
-			void Configure(unsigned int aId, const TiXmlElement *element)
+			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
 			{
 				ExpireTemplate &expire = Database::expiretemplate.Open(aId);
 				expire.Configure(element);
@@ -96,7 +96,7 @@ ExpireTemplate::~ExpireTemplate(void)
 }
 
 // configure
-bool ExpireTemplate::Configure(const TiXmlElement *element)
+bool ExpireTemplate::Configure(const tinyxml2::XMLElement *element)
 {
 	element->QueryFloatAttribute("time", &mTime);
 	if (const char *spawn = element->Attribute("spawnonexpire"))

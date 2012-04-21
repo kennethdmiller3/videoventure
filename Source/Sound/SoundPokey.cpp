@@ -210,7 +210,7 @@ public:
 #error "Undefined POKEY type"
 #endif
 
-bool Configure(SoundTemplate &self, const TiXmlElement *element, unsigned int id)
+bool Configure(SoundTemplate &self, const tinyxml2::XMLElement *element, unsigned int id)
 {
 	// sample length
 	float length = 0;
@@ -235,7 +235,7 @@ bool Configure(SoundTemplate &self, const TiXmlElement *element, unsigned int id
 	float dividerdefault = 1.0f;
 	float dividerquant = 1;
 	element->QueryFloatAttribute("divider", &dividerdefault);
-	if (const TiXmlElement *child = element->FirstChildElement("divider"))
+	if (const tinyxml2::XMLElement *child = element->FirstChildElement("divider"))
 	{
 		Expression::Loader<float>::ConfigureRoot(child, stream, names, &dividerdefault);
 		child->QueryFloatAttribute("quantize", &dividerquant);
@@ -249,7 +249,7 @@ bool Configure(SoundTemplate &self, const TiXmlElement *element, unsigned int id
 	float amplitudedefault = 1.0f;
 	float amplitudequant = 1.0f/65536.0f;
 	element->QueryFloatAttribute("amplitude", &amplitudedefault);
-	if (const TiXmlElement *child = element->FirstChildElement("amplitude"))
+	if (const tinyxml2::XMLElement *child = element->FirstChildElement("amplitude"))
 	{
 		Expression::Loader<float>::ConfigureRoot(child, stream, names, &amplitudedefault);
 		child->QueryFloatAttribute("quantize", &amplitudequant);
@@ -263,7 +263,7 @@ bool Configure(SoundTemplate &self, const TiXmlElement *element, unsigned int id
 	float offsetdefault = 0.0f;
 	float offsetquant = 1.0f/65536.0f;
 	element->QueryFloatAttribute("offset", &offsetdefault);
-	if (const TiXmlElement *child = element->FirstChildElement("offset"))
+	if (const tinyxml2::XMLElement *child = element->FirstChildElement("offset"))
 	{
 		Expression::Loader<float>::ConfigureRoot(child, stream, names, &offsetdefault);
 		child->QueryFloatAttribute("quantize", &offsetquant);
@@ -299,7 +299,7 @@ bool Configure(SoundTemplate &self, const TiXmlElement *element, unsigned int id
 	ApplyInterpolatorFunc amplitudefunc = ApplyConstant;
 	ApplyInterpolatorFunc offsetfunc = ApplyConstant;
 
-	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+	for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
 		switch (Hash(child->Value()))
 		{

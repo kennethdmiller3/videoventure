@@ -63,7 +63,7 @@ namespace Database
 				AddConfigure(0x8a8743bf /* "particle" */, Entry(this, &ParticleLoader::Configure));
 			}
 
-			void Configure(unsigned int aId, const TiXmlElement *element)
+			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
 			{
 				ParticleTemplate &particle = Database::particletemplate.Open(aId);
 				particle = true;

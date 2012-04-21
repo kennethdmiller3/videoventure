@@ -71,7 +71,7 @@ namespace Database
 				AddConfigure(0x4936726f /* "spawner" */, Entry(this, &SpawnerLoader::Configure));
 			}
 
-			void Configure(unsigned int aId, const TiXmlElement *element)
+			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
 			{
 				SpawnerTemplate &spawner = Database::spawnertemplate.Open(aId);
 				spawner.Configure(element);
@@ -134,17 +134,17 @@ SpawnerTemplate::~SpawnerTemplate(void)
 }
 
 // spawner template configure
-bool SpawnerTemplate::Configure(const TiXmlElement *element)
+bool SpawnerTemplate::Configure(const tinyxml2::XMLElement *element)
 {
 	// process child elements
-	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+	for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
 		const char *label = child->Value();
 		switch (Hash(label))
 		{
 		case 0x14c8d3ca /* "offset" */:
 			{
-				if (child->QueryFloatAttribute("angle", &mOffset.a) == TIXML_SUCCESS)
+				if (child->QueryFloatAttribute("angle", &mOffset.a) == tinyxml2::XML_SUCCESS)
 					mOffset.a *= float(M_PI) / 180.0f;
 				child->QueryFloatAttribute("x", &mOffset.p.x);
 				child->QueryFloatAttribute("y", &mOffset.p.y);
@@ -153,7 +153,7 @@ bool SpawnerTemplate::Configure(const TiXmlElement *element)
 
 		case 0xcab7a341 /* "scatter" */:
 			{
-				if (child->QueryFloatAttribute("angle", &mScatter.a) == TIXML_SUCCESS)
+				if (child->QueryFloatAttribute("angle", &mScatter.a) == tinyxml2::XML_SUCCESS)
 					mScatter.a *= float(M_PI) / 180.0f;
 				child->QueryFloatAttribute("x", &mScatter.p.x);
 				child->QueryFloatAttribute("y", &mScatter.p.y);
@@ -162,7 +162,7 @@ bool SpawnerTemplate::Configure(const TiXmlElement *element)
 
 		case 0xca04efe0 /* "inherit" */:
 			{
-				if (child->QueryFloatAttribute("angle", &mInherit.a) == TIXML_SUCCESS)
+				if (child->QueryFloatAttribute("angle", &mInherit.a) == tinyxml2::XML_SUCCESS)
 					mInherit.a *= float(M_PI) / 180.0f;
 				child->QueryFloatAttribute("x", &mInherit.p.x);
 				child->QueryFloatAttribute("y", &mInherit.p.y);
@@ -171,7 +171,7 @@ bool SpawnerTemplate::Configure(const TiXmlElement *element)
 
 		case 0x32741c32 /* "velocity" */:
 			{
-				if (child->QueryFloatAttribute("angle", &mVelocity.a) == TIXML_SUCCESS)
+				if (child->QueryFloatAttribute("angle", &mVelocity.a) == tinyxml2::XML_SUCCESS)
 					mVelocity.a *= float(M_PI) / 180.0f;
 				child->QueryFloatAttribute("x", &mVelocity.p.x);
 				child->QueryFloatAttribute("y", &mVelocity.p.y);
@@ -180,7 +180,7 @@ bool SpawnerTemplate::Configure(const TiXmlElement *element)
 
 		case 0x0dd0b0be /* "variance" */:
 			{
-				if (child->QueryFloatAttribute("angle", &mVariance.a) == TIXML_SUCCESS)
+				if (child->QueryFloatAttribute("angle", &mVariance.a) == tinyxml2::XML_SUCCESS)
 					mVariance.a *= float(M_PI) / 180.0f;
 				child->QueryFloatAttribute("x", &mVariance.p.x);
 				child->QueryFloatAttribute("y", &mVariance.p.y);

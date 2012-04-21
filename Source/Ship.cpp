@@ -36,7 +36,7 @@ namespace Database
 				AddConfigure(0xac56f17f /* "ship" */, Entry(this, &ShipLoader::Configure));
 			}
 
-			void Configure(unsigned int aId, const TiXmlElement *element)
+			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
 			{
 				ShipTemplate &ship = Database::shiptemplate.Open(aId);
 				ship.Configure(element);
@@ -96,13 +96,13 @@ ShipTemplate::~ShipTemplate(void)
 }
 
 // Ship Template Configure
-bool ShipTemplate::Configure(const TiXmlElement *element)
+bool ShipTemplate::Configure(const tinyxml2::XMLElement *element)
 {
 	if (Hash(element->Value()) != 0xac56f17f /* "ship" */)
 		return false;
 
 	float mMaxVeloc;
-	if (element->QueryFloatAttribute("maxveloc", &mMaxVeloc) == TIXML_SUCCESS)
+	if (element->QueryFloatAttribute("maxveloc", &mMaxVeloc) == tinyxml2::XML_SUCCESS)
 	{
 		mReverseVeloc = -mMaxVeloc;
 		mNeutralVeloc = 0.0f;
@@ -117,7 +117,7 @@ bool ShipTemplate::Configure(const TiXmlElement *element)
 	element->QueryFloatAttribute("minaccel", &mMinAccel);
 	element->QueryFloatAttribute("maxomega", &mMaxOmega);
 
-	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+	for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
 		switch (Hash(child->Value()))
 		{

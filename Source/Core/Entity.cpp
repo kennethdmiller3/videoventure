@@ -22,7 +22,7 @@ namespace Database
 
 	namespace Loader
 	{
-		static bool ConfigureTemplateItem(const TiXmlElement *element, unsigned int aId)
+		static bool ConfigureTemplateItem(const tinyxml2::XMLElement *element, unsigned int aId)
 		{
 			const char *value = element->Value();
 			const Database::Loader::Entry &configure = Database::Loader::GetConfigure(Hash(value));
@@ -42,7 +42,7 @@ namespace Database
 				AddConfigure(0xca04efe0 /* "inherit" */, Entry(this, &InheritLoader::Configure));
 			}
 
-			void Configure(unsigned int aId, const TiXmlElement *element)
+			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
 			{
 				// get base type name
 				if (const char *type = element->Attribute("type"))
@@ -67,7 +67,7 @@ namespace Database
 				AddConfigure(0x694aaa0b /* "template" */, Entry(this, &TemplateLoader::Configure));
 			}
 
-			void Configure(unsigned int aId, const TiXmlElement *element)
+			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
 			{
 				// get base type name
 				if (const char *type = element->Attribute("type"))
@@ -91,7 +91,7 @@ namespace Database
 				}
 
 				// for each child element...
-				for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+				for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 				{
 					// process the template item
 					if (!ConfigureTemplateItem(child, aId))
@@ -109,7 +109,7 @@ namespace Database
 				AddConfigure(0xd33ff5da /* "entity" */, Entry(this, &EntityLoader::Configure));
 			}
 
-			void Configure(unsigned int aId, const TiXmlElement *element)
+			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
 			{
 				// get base type name
 				if (const char *type = element->Attribute("type"))
@@ -140,7 +140,7 @@ namespace Database
 				Database::entity.Put(aId, entity);
 
 				// process child elements
-				for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+				for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 				{
 					if (entity->Configure(child))
 						continue;
@@ -174,7 +174,7 @@ Entity::~Entity(void)
 }
 
 // configure
-bool Entity::Configure(const TiXmlElement *element)
+bool Entity::Configure(const tinyxml2::XMLElement *element)
 {
 	const char *label = element->Value();
 	switch (Hash(label))
@@ -182,14 +182,14 @@ bool Entity::Configure(const TiXmlElement *element)
 	case 0x934f4e0a /* "position" */:
 		element->QueryFloatAttribute("x", &trans[1].p.x);
 		element->QueryFloatAttribute("y", &trans[1].p.y);
-		if (element->QueryFloatAttribute("angle", &trans[1].a) == TIXML_SUCCESS)
+		if (element->QueryFloatAttribute("angle", &trans[1].a) == tinyxml2::XML_SUCCESS)
 			trans[1].a *= float(M_PI) / 180.0f;
 		return true;
 
 	case 0x32741c32 /* "velocity" */:
 		element->QueryFloatAttribute("x", &veloc.p.x);
 		element->QueryFloatAttribute("y", &veloc.p.y);
-		if (element->QueryFloatAttribute("angle", &veloc.a) == TIXML_SUCCESS)
+		if (element->QueryFloatAttribute("angle", &veloc.a) == tinyxml2::XML_SUCCESS)
 			veloc.a *= float(M_PI) / 180.0f;
 		return true;
 

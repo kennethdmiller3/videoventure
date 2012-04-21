@@ -38,7 +38,7 @@ namespace Database
 				AddConfigure(0x29df7ff5 /* "resource" */, Entry(this, &ResourceLoader::Configure));
 			}
 
-			void Configure(unsigned int aId, const TiXmlElement *element)
+			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
 			{
 				Database::Typed<ResourceTemplate> &resources = Database::resourcetemplate.Open(aId);
 				unsigned int aSubId = Hash(element->Attribute("name"));
@@ -107,7 +107,7 @@ ResourceTemplate::~ResourceTemplate(void)
 {
 }
 
-bool ResourceTemplate::Configure(const TiXmlElement *element, unsigned int aId, unsigned int aSubId)
+bool ResourceTemplate::Configure(const tinyxml2::XMLElement *element, unsigned int aId, unsigned int aSubId)
 {
 	mSubId = aSubId;
 
@@ -116,10 +116,10 @@ bool ResourceTemplate::Configure(const TiXmlElement *element, unsigned int aId, 
 	element->QueryFloatAttribute("delay", &mDelay);
 	element->QueryFloatAttribute("cycle", &mCycle);
 	element->QueryFloatAttribute("add", &mAdd);
-	if (element->QueryFloatAttribute("rate", &mAdd) == TIXML_SUCCESS)
+	if (element->QueryFloatAttribute("rate", &mAdd) == tinyxml2::XML_SUCCESS)
 		mAdd *= mCycle;
 
-	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+	for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
 		switch(Hash(child->Value()))
 		{

@@ -40,7 +40,7 @@ namespace Database
 				RemoveConfigure(0x337519b0 /* "shield" */, Entry(this, &ShieldLoader::Configure));
 			}
 
-			void Configure(unsigned int aId, const TiXmlElement *element)
+			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
 			{
 				ShieldTemplate &shield = Database::shieldtemplate.Open(aId);
 				shield.Configure(element);
@@ -98,10 +98,10 @@ ShieldTemplate::~ShieldTemplate(void)
 {
 }
 
-bool ShieldTemplate::Configure(const TiXmlElement *element)
+bool ShieldTemplate::Configure(const tinyxml2::XMLElement *element)
 {
 	// process child elements
-	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+	for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
 		const char *label = child->Value();
 		switch (Hash(label))

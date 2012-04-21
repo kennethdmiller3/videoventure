@@ -19,7 +19,7 @@ extern const char * BASS_ErrorGetString();
 
 #endif
 
-static bool Configure(SoundTemplate &self, const TiXmlElement *element, unsigned int id)
+static bool Configure(SoundTemplate &self, const tinyxml2::XMLElement *element, unsigned int id)
 {
 	const char *name = element->Attribute("name");
 	if (name == NULL)

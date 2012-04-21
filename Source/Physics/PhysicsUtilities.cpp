@@ -2,7 +2,7 @@
 #include "PhysicsUtilities.h"
 #include "Collidable.h"
 
-bool ConfigureJointItem(const TiXmlElement *element, b2JointDef &joint)
+bool ConfigureJointItem(const tinyxml2::XMLElement *element, b2JointDef &joint)
 {
 	const char *name = element->Value();
 	switch (Hash(name))

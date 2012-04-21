@@ -138,7 +138,7 @@ namespace Database
 				AddConfigure(0x45e6e74d /* "shelltitle" */, Entry(this, &ShellTitleLoader::Configure));
 			}
 
-			void Configure(unsigned int aId, const TiXmlElement *element)
+			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
 			{
 				ShellTitleTemplate &shelltitle = Database::shelltitletemplate.Open(aId);
 				shelltitle.Configure(element, aId);
@@ -201,12 +201,12 @@ ShellTitleTemplate::~ShellTitleTemplate()
 }
 
 // configure
-bool ShellTitleTemplate::Configure(const TiXmlElement *element, unsigned int aId)
+bool ShellTitleTemplate::Configure(const tinyxml2::XMLElement *element, unsigned int aId)
 {
 	OverlayTemplate::Configure(element, aId);
 
 	// get column and row count
-	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+	for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
 		switch (Hash(child->Value()))
 		{
@@ -237,7 +237,7 @@ bool ShellTitleTemplate::Configure(const TiXmlElement *element, unsigned int aId
 
 	// fill in
 	int row = 0;
-	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+	for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
 		switch (Hash(child->Value()))
 		{

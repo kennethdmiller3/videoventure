@@ -90,18 +90,18 @@ void Expression::Loop(EntityContext &aContext)
 }
 
 
-static void ConfigureActionItem(const TiXmlElement *element, std::vector<unsigned int> &buffer)
+static void ConfigureActionItem(const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer)
 {
 	switch (Hash(element->Value()))
 	{
 	case 0x3a224d98 /* "spawn" */:
 		{
 			Expression::Append(buffer, Expression::Spawn, Hash(element->Attribute("name")));
-			if (const TiXmlElement *param = element->FirstChildElement("offset"))
+			if (const tinyxml2::XMLElement *param = element->FirstChildElement("offset"))
 				Expression::Loader<__m128>::ConfigureRoot(param, buffer, sTransformNames, sTransformDefault);
 			else
 				Expression::Append(buffer, Expression::Constant<__m128>, _mm_setzero_ps());
-			if (const TiXmlElement *param = element->FirstChildElement("velocity"))
+			if (const tinyxml2::XMLElement *param = element->FirstChildElement("velocity"))
 				Expression::Loader<__m128>::ConfigureRoot(param, buffer, sTransformNames, sTransformDefault);
 			else
 				Expression::Append(buffer, Expression::Constant<__m128>, _mm_setzero_ps());
@@ -163,9 +163,9 @@ static void ConfigureActionItem(const TiXmlElement *element, std::vector<unsigne
 }
 
 
-void ConfigureAction(const TiXmlElement *element, std::vector<unsigned int> &buffer)
+void ConfigureAction(const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer)
 {
-	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+	for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
 		ConfigureActionItem(child, buffer);
 	}

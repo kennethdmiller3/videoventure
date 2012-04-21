@@ -41,7 +41,7 @@ namespace Database
 				AddConfigure(0xe894a379 /* "bullet" */, Entry(this, &BulletLoader::Configure));
 			}
 
-			void Configure(unsigned int aId, const TiXmlElement *element)
+			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
 			{
 				BulletTemplate &bullet = Database::bullettemplate.Open(aId);
 				bullet.Configure(element);
@@ -92,7 +92,7 @@ BulletTemplate::~BulletTemplate(void)
 {
 }
 
-bool BulletTemplate::Configure(const TiXmlElement *element)
+bool BulletTemplate::Configure(const tinyxml2::XMLElement *element)
 {
 	element->QueryFloatAttribute("damage", &mDamage);
 	int ricochet = mRicochet;

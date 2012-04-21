@@ -35,7 +35,7 @@ namespace Database
 				AddConfigure(0x0ddb0669 /* "link" */, Entry(this, &LinkLoader::Configure));
 			}
 
-			void Configure(unsigned int aId, const TiXmlElement *element)
+			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
 			{
 				Database::Typed<LinkTemplate> &links = Database::linktemplate.Open(aId);
 				unsigned int aSubId = Hash(element->Attribute("name"));
@@ -142,7 +142,7 @@ LinkTemplate::~LinkTemplate(void)
 {
 }
 
-bool LinkTemplate::Configure(const TiXmlElement *element, unsigned int aId, unsigned int aSubId)
+bool LinkTemplate::Configure(const tinyxml2::XMLElement *element, unsigned int aId, unsigned int aSubId)
 {
 	// set sub-identifier
 	mSub = aSubId;
@@ -174,7 +174,7 @@ bool LinkTemplate::Configure(const TiXmlElement *element, unsigned int aId, unsi
 	unsigned int custom = 0U;
 
 	// process child elements
-	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+	for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
 		const char *label = child->Value();
 		switch (Hash(label))
@@ -184,7 +184,7 @@ bool LinkTemplate::Configure(const TiXmlElement *element, unsigned int aId, unsi
 				child->QueryFloatAttribute("x", &mOffset.p.x);
 				child->QueryFloatAttribute("y", &mOffset.p.y);
 				float angle = 0.0f;
-				if (child->QueryFloatAttribute("angle", &angle) == TIXML_SUCCESS)
+				if (child->QueryFloatAttribute("angle", &angle) == tinyxml2::XML_SUCCESS)
 					mOffset = Transform2(angle * float(M_PI) / 180.0f, mOffset.p);
 			}
 			break;

@@ -3,7 +3,7 @@
 #include "PhysicsUtilities.h"
 #include "PhysicsWeldJoint.h"
 
-static bool ConfigureWeldJointItem(const TiXmlElement *element, b2WeldJointDef &joint)
+static bool ConfigureWeldJointItem(const tinyxml2::XMLElement *element, b2WeldJointDef &joint)
 {
 	const char *name = element->Value();
 	switch (Hash(name))
@@ -19,7 +19,7 @@ static bool ConfigureWeldJointItem(const TiXmlElement *element, b2WeldJointDef &
 		return true;
 
 	case 0xad544418 /* "angle" */:
-		if (element->QueryFloatAttribute("value", &joint.referenceAngle) == TIXML_SUCCESS)
+		if (element->QueryFloatAttribute("value", &joint.referenceAngle) == tinyxml2::XML_SUCCESS)
 			joint.referenceAngle *= float(M_PI)/180.0f;
 		return true;
 
@@ -42,7 +42,7 @@ namespace Database
 				AddConfigure(0x1190c943 /* "weldjoint" */, Entry(this, &WeldJointLoader::Configure));
 			}
 
-			void Configure(unsigned int aId, const TiXmlElement *element)
+			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
 			{
 				Typed<b2WeldJointDef> defs = Database::weldjointdef.Open(aId);
 
@@ -55,7 +55,7 @@ namespace Database
 
 				// configure the joint definition
 				b2WeldJointDef &def = defs.Open(aSubId);
-				for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+				for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 				{
 					ConfigureWeldJointItem(child, def);
 				}

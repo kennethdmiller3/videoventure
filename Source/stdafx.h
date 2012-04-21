@@ -58,7 +58,7 @@ const int AUDIO_FREQUENCY = 48000;
 #include "xs_Float.h"
 
 // TinyXML includes
-#include "tinyxml.h"
+#include "tinyxml2.h"
 
 // Box2D includes
 #pragma message( "box2d" )

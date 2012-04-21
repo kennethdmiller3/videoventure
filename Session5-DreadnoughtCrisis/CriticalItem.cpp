@@ -21,7 +21,7 @@ namespace Database
 				RemoveConfigure(0x26de6ef7 /* "criticalitem" */, Entry(this, &CriticalItemLoader::Configure));
 			}
 
-			void Configure(unsigned int aId, const TiXmlElement *element)
+			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
 			{
 				bool &criticalitem = Database::criticalitem.Open(aId);
 				int critical = criticalitem;

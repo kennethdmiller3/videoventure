@@ -27,7 +27,7 @@
 #include "xs_Float.h"
 
 // TinyXML includes
-#include "tinyxml.h"
+#include "tinyxml2.h"
 
 // Box2D includes
 #include "Box2d/Box2D.h"

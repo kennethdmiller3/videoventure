@@ -161,7 +161,7 @@ public:
 	}
 
 	// configure
-	virtual bool Configure(const TiXmlElement *element);
+	virtual bool Configure(const tinyxml2::XMLElement *element);
 
 	// init
 	virtual void Init(void)

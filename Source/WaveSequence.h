@@ -12,7 +12,7 @@ public:
 public:
 	WaveEntryTemplate(void);
 
-	bool Configure(const TiXmlElement *element, unsigned int aId, unsigned int aWaveId, unsigned int aEntryId);
+	bool Configure(const tinyxml2::XMLElement *element, unsigned int aId, unsigned int aWaveId, unsigned int aEntryId);
 };
 
 class WaveTemplate
@@ -25,7 +25,7 @@ public:
 public:
 	WaveTemplate(void);
 
-	bool Configure(const TiXmlElement *element, unsigned int aId, unsigned int aWaveId);
+	bool Configure(const tinyxml2::XMLElement *element, unsigned int aId, unsigned int aWaveId);
 };
 
 class WaveSequenceTemplate
@@ -40,7 +40,7 @@ public:
 	WaveSequenceTemplate(void);
 	~WaveSequenceTemplate(void);
 
-	bool Configure(const TiXmlElement *element, unsigned int aId);
+	bool Configure(const tinyxml2::XMLElement *element, unsigned int aId);
 };
 
 class WaveSequence

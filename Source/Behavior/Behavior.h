@@ -28,7 +28,7 @@ namespace BehaviorDatabase
 {
 	namespace Loader
 	{
-		typedef fastdelegate::FastDelegate<unsigned int (unsigned int, const TiXmlElement *)> Entry;
+		typedef fastdelegate::FastDelegate<unsigned int (unsigned int, const tinyxml2::XMLElement *)> Entry;
 		void GAME_API AddConfigure(unsigned int aTagId, Entry aEntry);
 		void GAME_API RemoveConfigure(unsigned int aTagId, Entry aEntry);
 		const Entry &GetConfigure(unsigned int aTagId);

@@ -22,7 +22,7 @@ public:
 	~AimerTemplate(void);
 
 	// configure
-	bool Configure(const TiXmlElement *element, unsigned int aId);
+	bool Configure(const tinyxml2::XMLElement *element, unsigned int aId);
 };
 
 // aimer controller

@@ -24,7 +24,7 @@ namespace BehaviorDatabase
 				AddConfigure(0x0297228f /* "pursue" */, Entry(this, &PursueBehaviorLoader::Configure));
 			}
 
-			unsigned int Configure(unsigned int aId, const TiXmlElement *element)
+			unsigned int Configure(unsigned int aId, const tinyxml2::XMLElement *element)
 			{
 				PursueBehaviorTemplate &pursue = Database::pursuebehaviortemplate.Open(aId);
 				pursue.Configure(element, aId);
@@ -74,11 +74,11 @@ PursueBehaviorTemplate::PursueBehaviorTemplate()
 {
 }
 
-bool PursueBehaviorTemplate::Configure(const TiXmlElement *element, unsigned int aId)
+bool PursueBehaviorTemplate::Configure(const tinyxml2::XMLElement *element, unsigned int aId)
 {
 	element->QueryFloatAttribute("strength", &mStrength);
 	element->QueryFloatAttribute("leading", &mLeading);
-	if (element->QueryFloatAttribute("angle", &mOffset.a) == TIXML_SUCCESS)
+	if (element->QueryFloatAttribute("angle", &mOffset.a) == tinyxml2::XML_SUCCESS)
 		mOffset.a *= float(M_PI) / 180.0f;
 	element->QueryFloatAttribute("x", &mOffset.p.x);
 	element->QueryFloatAttribute("y", &mOffset.p.y);

@@ -207,14 +207,14 @@ void Input::Update(void)
 	output[MENU_CLICK] = Clamp(value[MENU_CLICK], -1.0f, 1.0f);
 }
 
-void Input::Playback(const TiXmlElement *element)
+void Input::Playback(const tinyxml2::XMLElement *element)
 {
 	// update the control values
 	for (int i = 0; i < Input::NUM_LOGICAL; ++i)
 		element->QueryIntAttribute(logicalname[i], reinterpret_cast<int *>(&output[i]));
 }
 
-void Input::Record(TiXmlElement *element, float prev[])
+void Input::Record(tinyxml2::XMLElement *element, float prev[])
 {
 	// add changed control values
 	for (int i = 0; i < Input::NUM_LOGICAL; ++i)
@@ -295,7 +295,7 @@ void Input::OnRelease(int aType, int aDevice, int aControl)
 }
 
 // configure an item
-void Input::ConfigureItem(const TiXmlElement *element)
+void Input::ConfigureItem(const tinyxml2::XMLElement *element)
 {
 	const char *value = element->Value();
 	switch (Hash(value))
@@ -380,9 +380,9 @@ void Input::ConfigureItem(const TiXmlElement *element)
 }
 
 // configure
-void Input::Configure(const TiXmlElement *element)
+void Input::Configure(const tinyxml2::XMLElement *element)
 {
-	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+	for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
 		ConfigureItem(child);
 	}

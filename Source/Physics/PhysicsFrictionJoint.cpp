@@ -3,7 +3,7 @@
 #include "PhysicsUtilities.h"
 #include "PhysicsFrictionJoint.h"
 
-static bool ConfigureFrictionJointItem(const TiXmlElement *element, b2FrictionJointDef &joint)
+static bool ConfigureFrictionJointItem(const tinyxml2::XMLElement *element, b2FrictionJointDef &joint)
 {
 	const char *name = element->Value();
 	switch (Hash(name))
@@ -45,7 +45,7 @@ namespace Database
 				AddConfigure(0x6c34561d /* "frictionjoint" */, Entry(this, &FrictionJointLoader::Configure));
 			}
 
-			void Configure(unsigned int aId, const TiXmlElement *element)
+			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
 			{
 				Typed<b2FrictionJointDef> defs = Database::frictionjointdef.Open(aId);
 
@@ -58,7 +58,7 @@ namespace Database
 
 				// configure the joint definition
 				b2FrictionJointDef &def = defs.Open(aSubId);
-				for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+				for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 				{
 					ConfigureFrictionJointItem(child, def);
 				}

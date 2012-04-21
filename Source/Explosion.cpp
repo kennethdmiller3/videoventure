@@ -39,7 +39,7 @@ namespace Database
 				AddConfigure(0x02bb1fe0 /* "explosion" */, Entry(this, &ExplosionLoader::Configure));
 			}
 
-			void Configure(unsigned int aId, const TiXmlElement *element)
+			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
 			{
 				ExplosionTemplate &explosion = Database::explosiontemplate.Open(aId);
 				explosion.Configure(element, aId);
@@ -93,23 +93,23 @@ ExplosionTemplate::~ExplosionTemplate(void)
 }
 
 
-bool ExplosionTemplate::Configure(const TiXmlElement *element, unsigned int id)
+bool ExplosionTemplate::Configure(const tinyxml2::XMLElement *element, unsigned int id)
 {
 	element->QueryFloatAttribute("life", &mLifeSpan);
 
 	// backwards compatibility
 	float mRadiusInner = 0.0f, mRadiusOuter = 0.0f;
-	if (element->QueryFloatAttribute("radius", &mRadiusOuter) == TIXML_SUCCESS)
+	if (element->QueryFloatAttribute("radius", &mRadiusOuter) == tinyxml2::XML_SUCCESS)
 		mRadiusInner = mRadiusOuter * 0.5f;
 	float mDamageInner = 0.0f, mDamageOuter = 0.0f;
-	if (element->QueryFloatAttribute("damage", &mDamageInner) == TIXML_SUCCESS)
+	if (element->QueryFloatAttribute("damage", &mDamageInner) == tinyxml2::XML_SUCCESS)
 		mDamageOuter = 0.0f;
 
 	ConfigureFilterData(mFilter, element);
 
 	if (element->FirstChildElement())
 	{
-		for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+		for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 		{
 			switch (Hash(child->Value()))
 			{

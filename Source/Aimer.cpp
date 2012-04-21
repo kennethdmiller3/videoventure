@@ -41,7 +41,7 @@ namespace Database
 				AddConfigure(0x2ea90881 /* "aimer" */, Entry(this, &AimerLoader::Configure));
 			}
 
-			void Configure(unsigned int aId, const TiXmlElement *element)
+			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
 			{
 				AimerTemplate &aimer = Database::aimertemplate.Open(aId);
 				aimer.Configure(element, aId);
@@ -96,9 +96,9 @@ AimerTemplate::~AimerTemplate(void)
 {
 }
 
-bool AimerTemplate::Configure(const TiXmlElement *element, unsigned int aId)
+bool AimerTemplate::Configure(const tinyxml2::XMLElement *element, unsigned int aId)
 {
-	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+	for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
 		unsigned int hash = Hash(child->Value());
 		switch (hash)

@@ -8,7 +8,7 @@
 #include "ExpressionOscillator.h"
 
 //
-template<typename T> static void ConfigureSineWave(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
+template<typename T> static void ConfigureSineWave(const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
 {
 	Expression::Convert<T, float>::Append(buffer);
 	ConfigureSineWave(element, buffer);
@@ -18,7 +18,7 @@ static Expression::Loader<float>::Auto sinewavefloat(0xb711f539 /* "sinewave" */
 static Expression::Loader<__m128>::Auto sinewavevector(0xb711f539 /* "sinewave" */, ConfigureSineWave<__m128>);
 
 //
-template<typename T> static void ConfigureTriangleWave(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
+template<typename T> static void ConfigureTriangleWave(const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
 {
 	Expression::Convert<T, float>::Append(buffer);
 	ConfigureTriangleWave(element, buffer);
@@ -28,7 +28,7 @@ static Expression::Loader<float>::Auto trianglewavefloat(0xd0308494 /* "triangle
 static Expression::Loader<__m128>::Auto trianglewavevector(0xd0308494 /* "trianglewave" */, ConfigureTriangleWave<__m128>);
 
 //
-template<typename T> static void ConfigureSawtoothWave(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
+template<typename T> static void ConfigureSawtoothWave(const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
 {
 	Expression::Convert<T, float>::Append(buffer);
 	ConfigureSawtoothWave(element, buffer);
@@ -39,7 +39,7 @@ static Expression::Loader<__m128>::Auto sawtoothwavevector(0x705614d5 /* "sawtoo
 
 
 //
-template<typename T> static void ConfigurePulseWave(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
+template<typename T> static void ConfigurePulseWave(const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
 {
 	Expression::Convert<T, float>::Append(buffer);
 	ConfigurePulseWave(element, buffer);
@@ -54,11 +54,11 @@ static Expression::Loader<__m128>::Auto pulsewavevector(0x3f8dc467 /* "pulsewave
 //
 
 // configue a parameter
-static bool ConfigureParameter(const TiXmlElement *element, const char *param, std::vector<unsigned int> &buffer, float (*op)(Expression::Context &), const char * const names[], const float defvalue, const float identity)
+static bool ConfigureParameter(const tinyxml2::XMLElement *element, const char *param, std::vector<unsigned int> &buffer, float (*op)(Expression::Context &), const char * const names[], const float defvalue, const float identity)
 {
 	// get constant value from attribute
 	float value = defvalue;
-	if (element->QueryFloatAttribute(param, &value) == TIXML_WRONG_TYPE)
+	if (element->QueryFloatAttribute(param, &value) == tinyxml2::XML_WRONG_ATTRIBUTE_TYPE)
 	{
 		// not a number; try as a name
 		if (const char *name = element->Attribute(param))
@@ -74,7 +74,7 @@ static bool ConfigureParameter(const TiXmlElement *element, const char *param, s
 	}
 
 	// if there is a child tag for the parameter...
-	if (const TiXmlElement *child = element->FirstChildElement(param))
+	if (const tinyxml2::XMLElement *child = element->FirstChildElement(param))
 	{
 		// append the operation (if any)
 		if (op)
@@ -114,7 +114,7 @@ static float SineWave(Expression::Context &aContext)
 }
 
 // configure sine wave oscillator
-void ConfigureSineWave(const TiXmlElement *element, std::vector<unsigned int> &buffer)
+void ConfigureSineWave(const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer)
 {
 	// configure offset
 	ConfigureParameter(element, "offset", buffer, Expression::Add<float>, sScalarNames, 0.0f, 0.0f);
@@ -132,7 +132,7 @@ void ConfigureSineWave(const TiXmlElement *element, std::vector<unsigned int> &b
 	Expression::Append(buffer, EvaluateIntegral);
 
 	// get input
-	if (const TiXmlElement *child = element->FirstChildElement("input"))
+	if (const tinyxml2::XMLElement *child = element->FirstChildElement("input"))
 	{
 		// get input expression
 		Expression::Loader<float>::ConfigureRoot(child, buffer, sScalarNames, sScalarDefault);
@@ -166,7 +166,7 @@ static float TriangleWave(Expression::Context &aContext)
 }
 
 // configure triangle wave oscillator
-void ConfigureTriangleWave(const TiXmlElement *element, std::vector<unsigned int> &buffer)
+void ConfigureTriangleWave(const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer)
 {
 	// configure offset
 	ConfigureParameter(element, "offset", buffer, Expression::Add<float>, sScalarNames, 0.0f, 0.0f);
@@ -184,7 +184,7 @@ void ConfigureTriangleWave(const TiXmlElement *element, std::vector<unsigned int
 	Expression::Append(buffer, EvaluateIntegral);
 
 	// get input
-	if (const TiXmlElement *child = element->FirstChildElement("input"))
+	if (const tinyxml2::XMLElement *child = element->FirstChildElement("input"))
 	{
 		// get input expression
 		Expression::Loader<float>::ConfigureRoot(child, buffer, sScalarNames, sScalarDefault);
@@ -213,7 +213,7 @@ static float SawtoothWave(Expression::Context &aContext)
 }
 
 // configure sawtooth wave oscillator
-void ConfigureSawtoothWave(const TiXmlElement *element, std::vector<unsigned int> &buffer)
+void ConfigureSawtoothWave(const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer)
 {
 	// configure offset
 	ConfigureParameter(element, "offset", buffer, Expression::Add<float>, sScalarNames, 0.0f, 0.0f);
@@ -231,7 +231,7 @@ void ConfigureSawtoothWave(const TiXmlElement *element, std::vector<unsigned int
 	Expression::Append(buffer, EvaluateIntegral);
 
 	// get input
-	if (const TiXmlElement *child = element->FirstChildElement("input"))
+	if (const tinyxml2::XMLElement *child = element->FirstChildElement("input"))
 	{
 		// get input expression
 		Expression::Loader<float>::ConfigureRoot(child, buffer, sScalarNames, sScalarDefault);
@@ -261,7 +261,7 @@ static float PulseWave(Expression::Context &aContext)
 }
 
 // configure pulse wave oscillator
-void ConfigurePulseWave(const TiXmlElement *element, std::vector<unsigned int> &buffer)
+void ConfigurePulseWave(const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer)
 {
 	// configure offset
 	ConfigureParameter(element, "offset", buffer, Expression::Add<float>, sScalarNames, 0.0f, 0.0f);
@@ -279,7 +279,7 @@ void ConfigurePulseWave(const TiXmlElement *element, std::vector<unsigned int> &
 	Expression::Append(buffer, EvaluateIntegral);
 
 	// get input
-	if (const TiXmlElement *child = element->FirstChildElement("input"))
+	if (const tinyxml2::XMLElement *child = element->FirstChildElement("input"))
 	{
 		// get input expression
 		Expression::Loader<float>::ConfigureRoot(child, buffer, sScalarNames, sScalarDefault);

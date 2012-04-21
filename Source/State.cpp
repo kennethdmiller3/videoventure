@@ -25,7 +25,7 @@ namespace Database
 				AddConfigure(0x783132f6 /* "state" */, Entry(this, &StateLoader::Configure));
 			}
 
-			void Configure(unsigned int aId, const TiXmlElement *element)
+			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
 			{
 				Database::Typed<StateTemplate> &states = Database::statetemplate.Open(aId);
 				unsigned int aSubId = Hash(element->Attribute("name"));
@@ -49,7 +49,7 @@ namespace Database
 				AddConfigure(0xa62782e2 /* "transition" */, Entry(this, &TransitionLoader::Configure));
 			}
 
-			void Configure(unsigned int aId, const TiXmlElement *element)
+			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
 			{
 				Database::Typed<TransitionTemplate> &transitions = Database::transitiontemplate.Open(aId);
 				unsigned int aSubId = Hash(element->Attribute("name"));
@@ -108,7 +108,7 @@ StateTemplate::~StateTemplate(void)
 {
 }
 
-bool StateTemplate::Configure(const TiXmlElement *element, unsigned int aId, unsigned int aSubId)
+bool StateTemplate::Configure(const tinyxml2::XMLElement *element, unsigned int aId, unsigned int aSubId)
 {
 	// get the state name
 	const char *name = element->Attribute("name");
@@ -140,7 +140,7 @@ bool StateTemplate::Configure(const TiXmlElement *element, unsigned int aId, uns
 	}
 
 	// for each child tag...
-	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+	for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
 		const char *value = child->Value();
 
@@ -255,14 +255,14 @@ TransitionTemplate::~TransitionTemplate(void)
 {
 }
 
-bool TransitionTemplate::Configure(const TiXmlElement *element, unsigned int aId, unsigned int aSubId)
+bool TransitionTemplate::Configure(const tinyxml2::XMLElement *element, unsigned int aId, unsigned int aSubId)
 {
 	mStateId = aId;
 
 	if (const char *target = element->Attribute("target"))
 		mTargetId = Hash(target);
 
-	if (const TiXmlElement *arg1 = element->FirstChildElement())
+	if (const tinyxml2::XMLElement *arg1 = element->FirstChildElement())
 		Expression::Loader<bool>::Configure(arg1, mGuard, sScalarNames, sScalarDefault);
 
 	return false;

@@ -20,7 +20,7 @@ public:
 	~ShipTemplate(void);
 
 	// configure
-	bool Configure(const TiXmlElement *element);
+	bool Configure(const tinyxml2::XMLElement *element);
 };
 
 // ship actor

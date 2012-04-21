@@ -54,7 +54,7 @@ public:
 	}
 
 	// configure
-	virtual bool Configure(const TiXmlElement *element) { return false; }
+	virtual bool Configure(const tinyxml2::XMLElement *element) { return false; }
 
 	// control
 	static void ControlAll(float aStep);
