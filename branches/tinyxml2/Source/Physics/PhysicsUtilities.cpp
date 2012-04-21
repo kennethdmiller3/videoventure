@@ -23,9 +23,7 @@ bool ConfigureJointItem(const tinyxml2::XMLElement *element, b2JointDef &joint)
 
 	case 0x2c5d8028 /* "collideconnected" */:
 		{
-			int collide = joint.collideConnected;
-			element->QueryIntAttribute("value", &collide);
-			joint.collideConnected = collide != 0;
+			element->QueryBoolAttribute("value", &joint.collideConnected);
 		}
 		return true;
 

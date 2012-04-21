@@ -12,8 +12,8 @@ static bool Configure(SoundTemplate &self, const tinyxml2::XMLElement *element, 
 	// linear feedback shift register
 	unsigned short baseslope = 0;		// [0x13,0x15]
 	unsigned short duration = 0;		// [0x16,0x17]
-	unsigned char decay = 0;			// [0x18]
-	unsigned char sputter = 0;			// [0x19]
+	bool decay = false;					// [0x18]
+	bool sputter = false;				// [0x19]
 	unsigned char output = 0;			// [0x400]
 
 	// clock frequency
@@ -43,12 +43,10 @@ static bool Configure(SoundTemplate &self, const tinyxml2::XMLElement *element, 
 		duration = unsigned short(value);
 
 	// decay
-	if (element->QueryIntAttribute("decay", &value) == tinyxml2::XML_SUCCESS)
-		decay = value != 0;
+	element->QueryBoolAttribute("decay", &decay);
 
 	// sputter
-	if (element->QueryIntAttribute("sputter", &value) == tinyxml2::XML_SUCCESS)
-		sputter = value != 0;
+	element->QueryBoolAttribute("sputter", &sputter);
 
 	// clock tick counter
 	unsigned int prevticks = 0;

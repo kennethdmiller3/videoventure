@@ -95,9 +95,7 @@ BulletTemplate::~BulletTemplate(void)
 bool BulletTemplate::Configure(const tinyxml2::XMLElement *element)
 {
 	element->QueryFloatAttribute("damage", &mDamage);
-	int ricochet = mRicochet;
-	element->QueryIntAttribute("ricochet", &ricochet);
-	mRicochet = ricochet != 0;
+	element->QueryBoolAttribute("ricochet", &mRicochet);
 	if (const char *spawn = element->Attribute("spawnonimpact"))
 		mSpawnOnImpact = Hash(spawn);
 	if (const char *spawn = element->Attribute("spawnondeath"))

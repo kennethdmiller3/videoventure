@@ -22,19 +22,11 @@ bool ReadPreferences(const char *config)
 				break;
 
 			case 0x5032fb58 /* "fullscreen" */:
-				{
-					int enable = SCREEN_FULLSCREEN;
-					element->QueryIntAttribute("enable", &enable);
-					SCREEN_FULLSCREEN = enable != 0;
-				}
+				element->QueryBoolAttribute("enable", &SCREEN_FULLSCREEN);
 				break;
 
 			case 0x423e6b0c /* "verticalsync" */:
-				{
-					int enable = OPENGL_SWAPCONTROL;
-					element->QueryIntAttribute("enable", &enable);
-					OPENGL_SWAPCONTROL = enable != 0;
-				}
+				element->QueryBoolAttribute("enable", &OPENGL_SWAPCONTROL);
 				break;
 
 			case 0x47d0f228 /* "multisample" */:

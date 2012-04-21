@@ -214,9 +214,7 @@ bool CancelableTemplate::Configure(const tinyxml2::XMLElement *element)
 		mSpawn = Hash(spawn);
 	if (const char *spawn = element->Attribute("switchoncancel"))
 		mSwitch = Hash(spawn);
-	int tethered = mTethered;
-	element->QueryIntAttribute("tethered", &tethered);
-	mTethered = tethered != 0;
+	element->QueryBoolAttribute("tethered", &mTethered);
 	element->QueryFloatAttribute("backlash", &mBacklash);
 	return true;
 }

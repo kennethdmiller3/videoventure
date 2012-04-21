@@ -710,8 +710,8 @@ bool WeaponTemplate::Configure(const tinyxml2::XMLElement *element, unsigned int
 			// TO DO: support inheritance
 			// TO DO: support "call"
 			{
-				int inherit = 0;
-				child->QueryIntAttribute("inherit", &inherit);
+				bool inherit = false;
+				child->QueryBoolAttribute("inherit", &inherit);
 				if (!inherit)
 					mAction.clear();
 
