@@ -19,12 +19,12 @@ namespace Database
 			{
 				// set up the collidable world
 				float aMinX = -2048, aMinY = -2048, aMaxX = 2048, aMaxY = 2048;
-				int aWall = 1;
+				bool aWall = true;
 				element->QueryFloatAttribute("xmin", &aMinX);
 				element->QueryFloatAttribute("ymin", &aMinY);
 				element->QueryFloatAttribute("xmax", &aMaxX);
 				element->QueryFloatAttribute("ymax", &aMaxY);
-				element->QueryIntAttribute("wall", &aWall);
+				element->QueryBoolAttribute("wall", &aWall);
 				Collidable::WorldInit(aMinX, aMinY, aMaxX, aMaxY, aWall != 0);
 
 				// recurse on children
@@ -67,8 +67,8 @@ namespace Database
 			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
 			{
 				// set up depth fog
-				int enable = 0;
-				if (element->QueryIntAttribute("enable", &enable) == tinyxml2::XML_SUCCESS)
+				bool enable = false;
+				if (element->QueryBoolAttribute("enable", &enable) == tinyxml2::XML_SUCCESS)
 				{
 					if (enable)
 						glEnable( GL_FOG );

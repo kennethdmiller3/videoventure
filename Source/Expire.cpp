@@ -103,9 +103,7 @@ bool ExpireTemplate::Configure(const tinyxml2::XMLElement *element)
 		mSpawn = Hash(spawn);
 	if (const char *spawn = element->Attribute("switchonexpire"))
 		mSwitch = Hash(spawn);
-	int reticule = mReticule;
-	element->QueryIntAttribute("reticule", &reticule);
-	mReticule = reticule != 0;
+	element->QueryBoolAttribute("reticule", &mReticule);
 	return true;
 }
 

@@ -183,16 +183,16 @@ static void ConfigureFilterCategory(b2Filter &aFilter, const tinyxml2::XMLElemen
 
 static void ConfigureFilterMask(b2Filter &aFilter, const tinyxml2::XMLElement *element)
 {
-	int defvalue = 1;
-	if (element->QueryIntAttribute("default", &defvalue) == tinyxml2::XML_SUCCESS)
+	bool defvalue = true;
+	if (element->QueryBoolAttribute("default", &defvalue) == tinyxml2::XML_SUCCESS)
 		aFilter.maskBits = defvalue ? 0xFFFF : 0x0000;
 
 	char buf[16];
 	for (int i = 0; i < 16; i++)
 	{
 		sprintf(buf, "bit%d", i);
-		int bit = 0;
-		if (element->QueryIntAttribute(buf, &bit) == tinyxml2::XML_SUCCESS)
+		bool bit = false;
+		if (element->QueryBoolAttribute(buf, &bit) == tinyxml2::XML_SUCCESS)
 		{
 			if (bit)
 				aFilter.maskBits |= (1 << i);
@@ -288,11 +288,7 @@ bool CollidableTemplate::ConfigureFixtureItem(const tinyxml2::XMLElement *elemen
 		return true;
 
 	case 0x83b6367b /* "sensor" */:
-		{
-			int sensor = fixture.isSensor;
-			element->QueryIntAttribute("value", &sensor);
-			fixture.isSensor = sensor != 0;
-		}
+		element->QueryBoolAttribute("value", &fixture.isSensor);
 		return true;
 
 	default:
@@ -408,8 +404,8 @@ bool CollidableTemplate::ConfigureChain(const tinyxml2::XMLElement *element, b2C
 
 		if (count > 1)
 		{
-			int loop = 0;
-			element->QueryIntAttribute("loop", &loop);
+			bool loop = false;
+			element->QueryBoolAttribute("loop", &loop);
 
 			b2Vec2 *vertices = (b2Vec2 *)_alloca(count * sizeof(b2Vec2));
 
@@ -450,43 +446,23 @@ bool CollidableTemplate::ConfigureBodyItem(const tinyxml2::XMLElement *element, 
 		return true;
 
 	case 0xac01f355 /* "allowsleep" */:
-		{
-			int allowsleep = body.allowSleep;
-			element->QueryIntAttribute("value", &allowsleep);
-			body.allowSleep = allowsleep != 0;
-		}
+		element->QueryBoolAttribute("value", &body.allowSleep);
 		return true;
 
 	case 0xd71034dc /* "awake" */:
-		{
-			int awake = body.awake;
-			element->QueryIntAttribute("value", &awake);
-			body.awake = awake != 0;
-		}
+		element->QueryBoolAttribute("value", &body.awake);
 		return true;
 
 	case 0x7a04061b /* "fixedrotation" */:
-		{
-			int fixedrotation = body.fixedRotation;
-			element->QueryIntAttribute("value", &fixedrotation);
-			body.fixedRotation = fixedrotation != 0;
-		}
+		element->QueryBoolAttribute("value", &body.fixedRotation);
 		return true;
 
 	case 0x029402af /* "fast" */:
-		{
-			int bullet = body.bullet;
-			element->QueryIntAttribute("value", &bullet);
-			body.bullet = bullet != 0;
-		}
+		element->QueryBoolAttribute("value", &body.bullet);
 		return true;
 
 	case 0xd975992f /* "active" */:
-		{
-			int active = body.active;
-			element->QueryIntAttribute("value", &active);
-			body.active = active != 0;
-		}
+		element->QueryBoolAttribute("value", &body.active);
 		return true;
 
 	case 0x5127f14d /* "type" */:

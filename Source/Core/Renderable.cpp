@@ -38,8 +38,8 @@ namespace Database
 				renderable.Configure(element, aId);
 				Database::renderabletemplate.Close(aId);
 
-				int inherit = 1;
-				element->QueryIntAttribute("inherit", &inherit);
+				bool inherit = true;
+				element->QueryBoolAttribute("inherit", &inherit);
 
 				// process child elements
 				std::vector<unsigned int> &buffer = Database::dynamicdrawlist.Open(aId);

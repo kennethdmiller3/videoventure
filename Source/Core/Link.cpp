@@ -156,19 +156,13 @@ bool LinkTemplate::Configure(const tinyxml2::XMLElement *element, unsigned int a
 		mType = Hash(type);
 
 	// update linked angle?
-	int updateangle = mUpdateAngle;
-	element->QueryIntAttribute("updateangle", &updateangle);
-	mUpdateAngle = updateangle != 0;
+	element->QueryBoolAttribute("updateangle", &mUpdateAngle);
 
 	// update linked position?
-	int updateposition = mUpdatePosition;
-	element->QueryIntAttribute("updateposition", &updateposition);
-	mUpdatePosition = updateposition != 0;
+	element->QueryBoolAttribute("updateposition", &mUpdatePosition);
 
 	// delete linked secondary?
-	int deletesecondary = mDeleteSecondary;
-	element->QueryIntAttribute("deletesecondary", &deletesecondary);
-	mDeleteSecondary = deletesecondary != 0;
+	element->QueryBoolAttribute("deletesecondary", &mDeleteSecondary);
 
 	// custom template identifier (if any)
 	unsigned int custom = 0U;

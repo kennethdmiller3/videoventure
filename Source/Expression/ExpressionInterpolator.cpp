@@ -183,8 +183,8 @@ template <typename T> void ConfigureInterpolator(const tinyxml2::XMLElement *ele
 #ifdef PRINT_CONFIGURE_EXPRESSION
 	DebugPrint("%s interpolator\n", Expression::Schema<T>::NAME);
 #endif
-	int interpolate = 1;
-	element->QueryIntAttribute("interpolate", &interpolate);
+	bool interpolate = true;
+	element->QueryBoolAttribute("interpolate", &interpolate);
 	if (interpolate)
 		Expression::Append(buffer, EvaluateInterpolator<T>);
 	else

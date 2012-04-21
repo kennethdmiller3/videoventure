@@ -893,8 +893,8 @@ void ConfigureDrawItem(const tinyxml2::XMLElement *element, std::vector<unsigned
 
 	case 0x0135ab46 /* "edgeflag" */:
 		{
-			int flag;
-			if (element->QueryIntAttribute("flag", &flag) == tinyxml2::XML_SUCCESS)
+			bool flag;
+			if (element->QueryBoolAttribute("flag", &flag) == tinyxml2::XML_SUCCESS)
 			{
 				Expression::Append(buffer, DO_glEdgeFlag, flag ? GL_TRUE : GL_FALSE);
 			}
