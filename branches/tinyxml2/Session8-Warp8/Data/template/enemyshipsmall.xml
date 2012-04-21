@@ -1,0 +1,41 @@
+<?xml version="1.0" ?>
+<template name="enemyshipsmall">
+	<collidable>
+		<body name="main">
+			<circle radius="6">
+				<density value="1" />
+				<friction value="0.5" />
+				<restitution value="0.5" />
+				<filter name="redunit" />
+			</circle>
+			<fixedrotation value="1"/>
+		</body>
+	</collidable>
+	<renderable radius="6" period="0.066667">
+		<pushmatrix>
+			<translate y="-6" />
+			<calldynamiclist name="enemyengineflame" />
+		</pushmatrix>
+		<color r="1.0" g="0.2" b="0.1" a="1.0" />
+		<calllist name="shipsmall" />
+	</renderable>
+	<aimer>
+		<wander side="0.5" siderate="0.5" front="0.25" frontrate="0.5"/>
+		<target range="512" filter="redbullet" />
+		<pursue strength="0.75" leading="0" y="64" />
+		<evade strength="1" />
+		<close range="32" />
+		<fire channel="1" range="256" />
+		<edge strength="0.015625" distance="64" />
+	</aimer>
+	<ship maxveloc="90" maxaccel="90" minaccel="10" maxomega="0" />
+	<damagable health="3" spawnondeath="enemyexplosionsmall" />
+	<link name="lgun" secondary="enemyweapon">
+		<offset x="2" y="0" angle="0" />
+	</link>
+	<link name="rgun" secondary="enemyweapon">
+		<offset x="-2" y="0" angle="0" />
+	</link>
+	<team name="red" />
+	<points value="200" />
+</template>

@@ -1,0 +1,5 @@
+<?xml version="1.0" ?>
+<template name="friendturretmount3" type="friendturret3">
+	<damagable health="10" spawnondeath="friendexplosion" />
+	<points value="400" />
+</template>

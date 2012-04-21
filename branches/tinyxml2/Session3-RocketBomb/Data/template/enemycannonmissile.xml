@@ -1,0 +1,19 @@
+<?xml version="1.0" ?>
+<template name="enemycannonmissile" type="enemyweaponmissile">
+	<renderable radius="7">
+		<drawlist>
+			<quads>
+				<color r="0.5" g="0.5" b="0.5" a="1.0" />
+				<vertex x="2.5" y="6" />
+				<vertex x="2.5" y="-2" />
+				<vertex x="-2.5" y="-2" />
+				<vertex x="-2.5" y="6" />
+				<color r="0.4" g="0.4" b="0.4" a="1.0" />
+				<vertex x="1.5" y="-2" />
+				<vertex x="1.5" y="-3" />
+				<vertex x="-1.5" y="-3" />
+				<vertex x="-1.5" y="-2" />
+			</quads>
+		</drawlist>
+	</renderable>
+</template>

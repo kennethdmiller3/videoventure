@@ -1,0 +1,76 @@
+<?xml version="1.0" ?>
+<template name="enemyship">
+	<collidable>
+		<body name="main">
+			<circle radius="8">
+				<density value="1" />
+				<friction value="0.5" />
+				<restitution value="0.5" />
+				<filter name="redunit" />
+			</circle>
+			<fixedrotation value="1" />
+		</body>
+	</collidable>
+	<renderable radius="8" period="0.066667">
+		<color>
+			<param>
+				<min>
+					<sub>
+						<worldtime />
+						<lasthit />
+					</sub>
+					<value value="0.05" />
+				</min>
+			</param>
+			<key time="0.000000" r="1.0" g="1.0" b="1.0" a="1.0" />
+			<key time="0.033333" r="1.0" g="1.0" b="1.0" a="1.0" />
+			<key time="0.050000" r="1.0" g="0.2" b="0.1" a="1.0" />
+		</color>
+		<calllist name="ship" />
+		<translate y="-8" />
+		<calldynamiclist name="enemyengineflame" />
+	</renderable>
+	<aimer>
+		<wander side="0.25" siderate="0.125" front="0.25" frontrate="0.125"/>
+		<target range="512" filter="redbullet" />
+		<pursue strength="0.5" leading="0"/>
+		<evade strength="0.5" />
+		<close range="96" />
+		<edge strength="0.0625" distance="16"/>
+	</aimer>
+	<ship maxveloc="45" maxaccel="45" minaccel="10" maxomega="0" />
+	<damagable health="10" spawnondeath="enemyexplosion" />
+	<link name="gun" updateangle="0">
+		<collidable>
+			<body name="main">
+				<circle radius="2">
+					<density value="0.5"/>
+					<friction value="0.5"/>
+					<restitution value="0.5"/>
+					<filter name="inert"/>
+				</circle>
+			</body>
+		</collidable>
+		<aimer>
+			<target range="256" filter="redbullet" />
+			<aim strength="1" leading="0" />
+			<fire channel="1" range="128" angle="15" />
+		</aimer>
+		<ship maxveloc="0" maxaccel="0" minaccel="0" maxomega="3"/>
+		<weapon>
+			<action>
+				<ordnance name="enemybullet">
+					<position x="0" y="4" />
+					<velocity x="0" y="180" />
+				</ordnance>
+				<cue name="fire"/>
+				<wait value="0.15"/>
+			</action>
+		</weapon>
+		<soundcue>
+			<cue name="fire" sound="stargate-spaceguppyshot" />
+		</soundcue>
+	</link>
+	<team name="red" />
+	<points value="500" />
+</template>

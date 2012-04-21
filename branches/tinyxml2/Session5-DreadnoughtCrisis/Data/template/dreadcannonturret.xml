@@ -1,0 +1,31 @@
+<?xml version="1.0" ?>
+<template name="dreadcannonturret">
+	<renderable radius="192" depth="256">
+		<translate z="256" />
+		<drawlist>
+			<pushmatrix>
+				<scale x="30" y="30" />
+				<color r="0.6" g="0.8" b="0.15" a="1.0" />
+				<triangle_strip>
+					<vertex x="0.000000" y="-1.00000" />
+					<vertex x="-0.382683" y="-0.923880" />
+					<vertex x="0.382683" y="-0.923880" />
+					<vertex x="-0.707107" y="-0.707107" />
+					<vertex x="0.707107" y="-0.707107" />
+					<vertex x="-0.923880" y="-0.382683" />
+					<vertex x="0.923880" y="-0.382683" />
+					<vertex x="-1.000000" y="0.00000" />
+					<vertex x="1.000000" y="0.000000" />
+					<vertex x="-1.000000" y="0.333333" />
+					<vertex x="1.000000" y="0.333333" />
+				</triangle_strip>
+			</pushmatrix>
+		</drawlist>
+	</renderable>
+	<link name="rgun" secondary="dreadcannonturretweapon">
+		<offset x="12" y="0" angle="0" />
+	</link>
+	<link name="lgun" secondary="dreadcannonturretweapon">
+		<offset x="-12" y="0" angle="0" />
+	</link>
+</template>

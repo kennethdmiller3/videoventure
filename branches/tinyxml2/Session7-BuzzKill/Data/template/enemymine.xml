@@ -1,0 +1,103 @@
+<?xml version="1.0" ?>
+<template name="enemymine">
+	<collidable>
+		<body name="main">
+			<circle radius="8">
+				<friction value="0" />
+				<restitution value="1" />
+				<density value="0" />
+				<filter name="redbullet" />
+				<sensor value="1" />
+			</circle>
+			<fixedrotation value="1" />
+		</body>
+	</collidable>
+	<renderable radius="12" period="0.8">
+		<pushmatrix>
+			<color>
+				<key time="0.0" r="1.0" g="0.25" b="0.0" a="0.0625" />
+				<key time="0.4" r="1.0" g="0.75" b="0.0" a="0.0625" />
+				<key time="0.8" r="1.0" g="0.25" b="0.0" a="0.0625" />
+			</color>
+			<scale x="8" y="8" />
+			<calllist name="circle32" />
+		</pushmatrix>
+		<pushmatrix>
+			<color>
+				<key time="0.0" r="1.0" g="0.75" b="0.0" a="0.125" />
+				<key time="0.4" r="1.0" g="0.5" b="0.0" a="0.0" />
+				<key time="0.4" r="1.0" g="1.0" b="0.0" a="0.25" />
+				<key time="0.8" r="1.0" g="0.75" b="0.0" a="0.125" />
+			</color>
+			<scale>
+				<key time="0.0" x="7" y="7" />
+				<key time="0.4" x="12" y="12" />
+				<key time="0.4" x="2" y="2" />
+				<key time="0.8" x="7" y="7" />
+			</scale>
+			<line_loop>
+				<vertex x="1.000000" y="0.000000" />
+				<vertex x="0.000000" y="1.000000" />
+				<vertex x="-1.000000" y="0.00000" />
+				<vertex x="0.000000" y="-1.00000" />
+			</line_loop>
+		</pushmatrix>
+		<pushmatrix>
+			<color>
+				<key time="0.0" r="1.0" g="0.5" b="0.0" a="0.25" />
+				<key time="0.8" r="1.0" g="0.0" b="0.0" a="0.0" />
+			</color>
+			<scale>
+				<key time="0.0" x="2" y="2" />
+				<key time="0.8" x="12" y="12" />
+			</scale>
+			<line_loop>
+				<vertex x="1.000000" y="0.000000" />
+				<vertex x="0.000000" y="1.000000" />
+				<vertex x="-1.000000" y="0.00000" />
+				<vertex x="0.000000" y="-1.00000" />
+			</line_loop>
+		</pushmatrix>
+		<pushmatrix>
+			<color r="1.0" g="1.0" b="1.0" a="1.0" />
+			<repeat count="2">
+				<pushmatrix>
+					<scale>
+						<key time="0.0" x="1.0" y="3.0" />
+						<key time="0.1" x="1.0" y="1.0" />
+						<key time="0.2" x="1.0" y="3.0" />
+						<key time="0.3" x="1.0" y="1.0" />
+						<key time="0.4" x="1.0" y="3.0" />
+						<key time="0.5" x="1.0" y="1.0" />
+						<key time="0.6" x="1.0" y="3.0" />
+						<key time="0.7" x="1.0" y="1.0" />
+						<key time="0.8" x="1.0" y="3.0" />
+					</scale>
+					<calllist name="diamond" />
+				</pushmatrix>
+				<rotate angle="90" />
+			</repeat>
+			<rotate angle="45" />
+			<repeat count="2">
+				<pushmatrix>
+					<scale>
+						<key time="0.0" x="1.0" y="1.0" />
+						<key time="0.1" x="1.0" y="3.0" />
+						<key time="0.2" x="1.0" y="1.0" />
+						<key time="0.3" x="1.0" y="3.0" />
+						<key time="0.4" x="1.0" y="1.0" />
+						<key time="0.5" x="1.0" y="3.0" />
+						<key time="0.6" x="1.0" y="1.0" />
+						<key time="0.7" x="1.0" y="3.0" />
+						<key time="0.8" x="1.0" y="1.0" />
+					</scale>
+					<calllist name="diamond" />
+				</pushmatrix>
+				<rotate angle="90" />
+			</repeat>
+		</pushmatrix>
+	</renderable>
+	<expire time="5" switchonexpire="enemybulletexplosion" />
+	<bullet damage="1" spawnondeath="enemymineexplosion" />
+	<capturable resistance="1" spawnoncapture="friendmine" />
+</template>

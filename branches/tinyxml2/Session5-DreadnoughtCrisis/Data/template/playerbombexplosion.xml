@@ -1,0 +1,8 @@
+<?xml version="1.0" ?>
+<template name="playerbombexplosion" type="playerbulletexplosion">
+	<renderable inherit="0" depth="255">
+		<translate z="256" />
+		<scale x="2" y="2" />
+		<calldynamiclist name="playerbulletexplosion" />
+	</renderable>
+</template>

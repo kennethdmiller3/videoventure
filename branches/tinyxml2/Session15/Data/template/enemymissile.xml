@@ -1,0 +1,53 @@
+<?xml version="1.0" ?>
+<template name="enemymissile">
+	<collidable>
+		<body name="main">
+			<fast value="1" />
+			<poly>
+				<vertex x="0" y="10" />
+				<vertex x="-2" y="5" />
+				<vertex x="-2" y="0" />
+				<vertex x="2" y="0" />
+				<vertex x="2" y="5" />
+				<friction value="1" />
+				<restitution value="0" />
+				<density value="1.0" />
+				<filter name="redmissile" />
+			</poly>
+			<fixedrotation value="1"/>
+		</body>
+	</collidable>
+	<renderable radius="11" period="0.066667">
+		<drawlist>
+			<color r="1.0" g="0.2" b="0.1" a="1.0" />
+			<polygon>
+				<vertex x="0" y="10" />
+				<vertex x="2" y="5" />
+				<vertex x="2" y="0" />
+				<vertex x="-2" y="0" />
+				<vertex x="-2" y="5" />
+			</polygon>
+		</drawlist>
+		<calldynamiclist name="enemyengineflame"/>
+	</renderable>
+	<expire time="6" switchonexpire="enemybulletexplosion" />
+	<bullet damage="1" spawnondeath="enemyfireballexplosion" />
+	<damagable health="1" spawnondeath="enemyfireballexplosion" />
+	<aimer>
+		<drift front="0.25"/>
+		<wander side="0.25" siderate="1" front="0.25" frontrate="0.5" />
+		<target range="512" leading="0" filter="redmissile" />
+		<pursue strength="1" leading="0" y="16"/>
+	</aimer>
+	<ship maxveloc="90" maxaccel="180" minaccel="90" maxomega="0" />
+	<team name="red" />
+	<points value="50" />
+	<spawner>
+		<offset x="0" y="0" />
+		<scatter x="1" y="0" />
+		<inherit x="0" y="0" />
+		<variance x="4" y="4" />
+		<velocity x="0" y="-256" />
+		<spawn name="missiletrail" start="0" cycle="0.008333" track="0" />
+	</spawner>
+</template>

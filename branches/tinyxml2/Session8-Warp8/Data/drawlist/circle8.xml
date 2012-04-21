@@ -1,0 +1,14 @@
+<?xml version="1.0" ?>
+<drawlist name="circle8">
+	<!-- 8 vertex circle -->
+	<polygon>
+		<vertex x="1.000000" y="0.000000" />
+		<vertex x="0.707107" y="0.707107" />
+		<vertex x="0.000000" y="1.000000" />
+		<vertex x="-0.707107" y="0.707107" />
+		<vertex x="-1.000000" y="0.00000" />
+		<vertex x="-0.707107" y="-0.707107" />
+		<vertex x="0.000000" y="-1.00000" />
+		<vertex x="0.707107" y="-0.707107" />
+	</polygon>
+</drawlist>

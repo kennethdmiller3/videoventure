@@ -1,0 +1,72 @@
+<?xml version="1.0" ?>
+<template name="enemyshipwing">
+	<collidable>
+		<body name="main">
+			<box w="4" h="8">
+				<density value="1" />
+				<friction value="0.5" />
+				<restitution value="0.5" />
+				<filter name="redunit" />
+			</box>
+		</body>
+	</collidable>
+	<renderable radius="8">
+		<drawlist>
+			<color r="1.0" g="0.2" b="0.1" a="1.0" />
+			<triangle_strip>
+				<vertex x="4.5" y="-0.5" />
+				<vertex x="4.5" y="-3.5" />
+				<vertex x="3" y="-0.5" />
+				<vertex x="3" y="-5" />
+				<vertex x="2" y="2.5" />
+				<vertex x="2.5" y="-8" />
+				<vertex x="1.5" y="2.5" />
+				<vertex x="0.5" y="-8" />
+				<vertex x="1" y="8" />
+				<vertex x="0" y="-6.5" />
+				<vertex x="-1" y="8" />
+				<vertex x="-0.5" y="-8" />
+				<vertex x="-1.5" y="2.5" />
+				<vertex x="-2.5" y="-8" />
+				<vertex x="-2" y="2.5" />
+				<vertex x="-3" y="-5" />
+				<vertex x="-3" y="-0.5" />
+				<vertex x="-4.5" y="-3.5" />
+				<vertex x="-4.5" y="-0.5" />
+			</triangle_strip>
+		</drawlist>
+	</renderable>
+	<!--aimer range="256" attack="128" drift="0.5" wanderturn="0.25" wanderturnrate="0.25" leading="240" angle="30" evade="1" close="64" filter="redbullet" /-->
+	<aimer>
+		<drift strength="0.5" />
+		<wander turn="0.25" turnrate="0.25" />
+		<target range="256" filter="redbullet" />
+		<aim strength="1" leading="240" />
+		<pursue strength="1" leading="0" />
+		<fire channel="1" range="128" angle="30" />
+		<evade strength="1" />
+		<close range="64" />
+	</aimer>
+	<ship forwardveloc="120" neutralveloc="0" reverseveloc="-30" strafeveloc="30" maxaccel="60" minaccel="30" maxomega="1" />
+	<damagable health="10" switchondeath="enemyexplosion" />
+	<team name="red" />
+	<points value="500" />
+	<link name="lgun" secondary="enemyshipweapon">
+		<offset x="2" y="0" angle="0" />
+		<weapon>
+			<shot phase="0" cycle="2" />
+		</weapon>
+	</link>
+	<link name="rgun" secondary="enemyshipweapon">
+		<offset x="-2" y="0" angle="0" />
+		<weapon>
+			<shot phase="1" cycle="2" />
+		</weapon>
+	</link>
+	<link name="lwing">
+		<offset x="4" y="-2.5" angle="0" />
+	</link>
+	<link name="rwing">
+		<offset x="-4" y="-2.5" angle="0" />
+	</link>
+</template>

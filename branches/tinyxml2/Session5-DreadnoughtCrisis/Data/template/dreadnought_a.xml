@@ -1,0 +1,108 @@
+<?xml version="1.0" ?>
+<template name="dreadnought_a">
+	<collidable>
+		<body name="main">
+			<circle radius="1">
+				<friction value="1" />
+				<restitution value="0" />
+				<density value="1.0" />
+				<filter name="inert" />
+			</circle>
+			<fixedrotation value="1" />
+		</body>
+	</collidable>
+	<enginebase speed="4" />
+	<tilemap x="320" y="-800" dx="-32" dy="32">
+		<tile name="G" spawn="dreadgunturret" x="-16" y="16" />
+		<tile name="C" spawn="dreadcannonturret" x="-32" y="32" />
+		<tile name="T" spawn="dreadtower" x="-16" y="16" />
+		<tile name="D" spawn="dreaddronelauncher" x="-16" y="16" />
+		<tile name="Q" spawn="dreaddronelauncher" x="-16" y="16" />
+		<tile name="B" spawn="dreadcommandbridge" x="-32" y="16" />
+		<tile name="V" spawn="dreadenergyvent" x="-16" y="32" />
+		<tile name="E" spawn="dreadengine" x="-32" y="0" />
+		<tile name="S" spawn="dreadantimattersilo" x="-32" y="16" />
+		<row data="   E   E   E   E    " />
+		<row data="C                 C " />
+		<row data="   C  S TB TS  C    " />
+		<row data=" V                V " />
+		<row data="      GG    GG      " />
+		<row data="D V              V D" />
+		<row data="    G   GGGG   G    " />
+		<row data=" G V C  S S  C  V G " />
+		<row data="                    " />
+		<row data="  Q V   TB T   V Q  " />
+		<row data="       G    G       " />
+		<row data="   G V        V G   " />
+		<row data="                    " />
+		<row data="    D V GC G V D    " />
+		<row data="                    " />
+		<row data="     G V    V G     " />
+		<row data="         GG         " />
+		<row data="      Q V  V Q      " />
+		<row data="         S          " />
+		<row data="       G    G       " />
+		<row data="         C          " />
+		<row data="        G  G        " />
+		<row data="                    " />
+		<row data="         GG         " />
+	</tilemap>
+	<renderable radius="1024" depth="256">
+		<translate z="256" />
+		<triangle_strip>
+			<color r="0.4" g="0.4" b="0.4" a="1.0" />
+			<vertex x="16" y="0" />
+			<vertex x="-16" y="0" />
+			<vertex x="336" y="-640" />
+			<vertex x="-336" y="-640" />
+			<vertex x="336" y="-672" />
+			<vertex x="-336" y="-672" />
+			<vertex x="352" y="-704" />
+			<vertex x="-352" y="-704" />
+			<vertex x="352" y="-768" />
+			<vertex x="-352" y="-768" />
+			<vertex x="336" y="-800" />
+			<vertex x="-336" y="-800" />
+		</triangle_strip>
+		<triangle_strip>
+			<color r="0.0" g="0.33" b="0.65" a="1.0" />
+			<vertex x="0" y="-240" />
+			<vertex x="32" y="-256" />
+			<vertex x="-32" y="-256" />
+			<vertex x="240" y="-672" />
+			<vertex x="-240" y="-672" />
+			<vertex x="240" y="-736" />
+			<vertex x="-240" y="-736" />
+			<vertex x="224" y="-768" />
+			<vertex x="-224" y="-768" />
+		</triangle_strip>
+		<triangle_strip>
+			<color r="0.27" g="0.60" b="0.92" a="1.0" />
+			<vertex x="64" y="-576" />
+			<vertex x="-64" y="-576" />
+			<vertex x="96" y="-640" />
+			<vertex x="-96" y="-640" />
+			<vertex x="128" y="-640" />
+			<vertex x="-128" y="-640" />
+			<vertex x="144" y="-672" />
+			<vertex x="-144" y="-672" />
+			<vertex x="128" y="-704" />
+			<vertex x="-128" y="-704" />
+		</triangle_strip>
+		<triangle_strip>
+			<color r="0.27" g="0.60" b="0.92" a="1.0" />
+			<vertex x="16" y="-416" />
+			<vertex x="-16" y="-416" />
+			<vertex x="48" y="-480" />
+			<vertex x="-48" y="-480" />
+		</triangle_strip>
+	</renderable>
+	<aimer>
+		<target range="96" filter="planet" />
+		<fire channel="2" range="256" />
+	</aimer>
+	<damagable health="160" spawnondeath="dreadnoughtexplosion" />
+	<playerreset offset="800" />
+	<points value="1000" />
+	<team name="red" />
+</template>

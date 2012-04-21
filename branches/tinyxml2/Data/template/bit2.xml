@@ -1,0 +1,13 @@
+<?xml version="1.0" ?>
+<template name="bit2" type="bit">
+	<renderable radius="4">
+		<calllist name="bitcore" />
+		<pushmatrix>
+			<rotate angle="90" />
+			<calllist name="bitshell" />
+		</pushmatrix>
+	</renderable>
+	<weapon>
+		<shot phase="1" />
+	</weapon>
+</template>

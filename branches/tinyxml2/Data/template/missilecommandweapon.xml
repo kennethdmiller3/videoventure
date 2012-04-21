@@ -1,0 +1,12 @@
+<?xml version="1.0" ?>
+<template name="missilecommandweapon">
+	<weapon>
+		<velocity x="0" y="360" />
+		<inherit x="0" y="0" />
+		<ordnance name="missilecommandbullet" />
+		<shot delay="0.2" />
+	</weapon>
+	<soundcue>
+		<cue name="fire" sound="missilecommand-fire" />
+	</soundcue>
+</template>

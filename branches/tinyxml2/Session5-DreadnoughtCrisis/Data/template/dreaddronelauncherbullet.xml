@@ -1,0 +1,23 @@
+<?xml version="1.0" ?>
+<template name="dreaddronelauncherbullet">
+	<collidable>
+		<body name="main">
+			<circle radius="1">
+				<friction value="1" />
+				<restitution value="0" />
+				<density value="1.0" />
+				<filter name="inert" />
+			</circle>
+			<fixedrotation value="1" />
+		</body>
+	</collidable>
+	<renderable radius="64" depth="1">
+		<translate>
+			<key time="0" z="256" />
+			<key time="2" z="0" />
+		</translate>
+		<color r="0.7" g="0.7" b="0.7" a="1.0" />
+		<calllist name="dreaddronelaunchermissile" />
+	</renderable>
+	<expire time="2" switchonexpire="dreaddronelaunchermissile" />
+</template>

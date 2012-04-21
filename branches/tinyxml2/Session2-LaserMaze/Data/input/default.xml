@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" standalone="no"?>
+<!-- input binding -->
+<input>
+	
+	<!-- keyboard -->
+	<bind name="move_x" type="keyboard" control="a" scale="1"/>
+	<bind name="move_x" type="keyboard" control="d" scale="-1"/>
+	<bind name="move_y" type="keyboard" control="w" scale="1"/>
+	<bind name="move_y" type="keyboard" control="s" scale="-1"/>
+	<bind name="aim_x" type="mouse_axis" control="x" scale="-1"/>
+	<bind name="aim_y" type="mouse_axis" control="y" scale="-1"/>
+	<bind name="fire1" type="mouse_button" control="left" scale="1"/>
+	<bind name="fire2" type="mouse_button" control="right" scale="1"/>
+
+	<!-- dual-analog joystick -->
+	<bind name="move_x" type="joystick_axis" control="0" deadzone="0.1" scale="-1"/>
+	<bind name="move_y" type="joystick_axis" control="1" deadzone="0.1" scale="-1"/>
+	<bind name="aim_x" type="joystick_axis" control="2" deadzone="0.1"  scale="-1"/>
+	<bind name="aim_y" type="joystick_axis" control="3" deadzone="0.1" scale="-1"/>
+	<bind name="fire1" type="joystick_button" control="7" scale="1"/>
+	<bind name="fire2" type="joystick_button" control="6" scale="1"/>
+
+	<!-- mouse -->
+	<bind name="menu_x" type="mouse_axis" control="x" scale="-1"/>
+	<bind name="menu_y" type="mouse_axis" control="y" scale="-1"/>
+	<bind name="click" type="mouse_button" control="left" scale="1"/>
+
+</input>

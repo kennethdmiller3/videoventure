@@ -1,0 +1,63 @@
+<?xml version="1.0" ?>
+<template name="dreadtowerdestroyed">
+	<renderable radius="192" depth="256">
+		<drawlist>
+			<translate z="256" />
+			<pushmatrix>
+				<scale x="16" y="16" />
+				<triangle_fan>
+					<color r="0.0" g="0.0" b="0.0" a="1.0" />
+					<vertex x="0" y="0" />
+					<color r="0.0" g="0.0" b="0.0" a="0.0" />
+					<vertex x="1.000000" y="0.000000" />
+					<vertex x="0.923880" y="0.382683" />
+					<vertex x="0.707107" y="0.707107" />
+					<vertex x="0.382683" y="0.923880" />
+					<vertex x="0.000000" y="1.000000" />
+					<vertex x="-0.382683" y="0.923880" />
+					<vertex x="-0.707107" y="0.707107" />
+					<vertex x="-0.923880" y="0.382683" />
+					<vertex x="-1.000000" y="0.00000" />
+					<vertex x="-0.923880" y="-0.382683" />
+					<vertex x="-0.707107" y="-0.707107" />
+					<vertex x="-0.382683" y="-0.923880" />
+					<vertex x="0.000000" y="-1.00000" />
+					<vertex x="0.382683" y="-0.923880" />
+					<vertex x="0.707107" y="-0.707107" />
+					<vertex x="0.923880" y="-0.382683" />
+					<vertex x="1.000000" y="0.000000" />
+				</triangle_fan>
+			</pushmatrix>
+		</drawlist>
+		<triangle_strip>
+			<color r="0.1" g="0.1" b="0.1" a="1.0" />
+			<vertex x="16" y="12" />
+			<vertex x="16" y="-12" />
+			<vertex x="12" y="16" />
+			<vertex x="12" y="-16" />
+			<vertex x="-12" y="16" />
+			<vertex x="-12" y="-16" />
+			<vertex x="-16" y="12" />
+			<vertex x="-16" y="-12" />
+		</triangle_strip>
+		<color r="0.2" g="0.2" b="0.2" a="1.0" />
+		<pushmatrix>
+			<scale x="12" y="10" />
+			<calllist name="circle16" />
+		</pushmatrix>
+		<quads>
+			<color r="0.1" g="0.1" b="0.1" a="1.0" />
+			<vertex x="4" y="2" />
+			<vertex x="-4" y="2" />
+			<vertex x="-4" y="-2" />
+			<vertex x="4" y="-2" />
+		</quads>
+	</renderable>
+	<spawner>
+		<offset x="0" y="-3" />
+		<scatter x="3" y="3" />
+		<velocity x="0" y="-24" />
+		<variance x="4" y="4" />
+		<spawn name="dreadsmokepuff" start="0" cycle="0.3" track="0" />
+	</spawner>
+</template>
