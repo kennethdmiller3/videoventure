@@ -767,7 +767,7 @@ void ConfigureDrawItem(const tinyxml2::XMLElement *element, std::vector<unsigned
 				case 0x0adbc081 /* "scissor" */:			bit = GL_SCISSOR_BIT; break;
 				case 0x13254bc4 /* "all" */:				bit = GL_ALL_ATTRIB_BITS; break;
 				}
-				if (attrib->IntValue())
+				if (attrib->BoolValue())
 					mask |= bit;
 				else
 					mask &= ~bit;
@@ -790,7 +790,7 @@ void ConfigureDrawItem(const tinyxml2::XMLElement *element, std::vector<unsigned
 				case 0x20a16825 /* "vertex_array" */:	bit = GL_CLIENT_VERTEX_ARRAY_BIT; break;
 				case 0x13254bc4 /* "all" */:			bit = GL_CLIENT_ALL_ATTRIB_BITS; break;
 				}
-				if (attrib->IntValue())
+				if (attrib->BoolValue())
 					mask |= bit;
 				else
 					mask &= ~bit;
@@ -919,13 +919,16 @@ void ConfigureDrawItem(const tinyxml2::XMLElement *element, std::vector<unsigned
 	case 0x059e3a91 /* "texenv" */:
 		{
 			// set blend mode
+			GLenum blendmode;
 			switch (Hash(element->Attribute("mode")))
 			{
-			case 0x818f75ae /* "modulate" */:	Expression::Append(buffer, DO_glTexEnvi, GL_TEXTURE_ENV_MODE, GL_MODULATE); break;
-			case 0xde15f6ae /* "decal" */:		Expression::Append(buffer, DO_glTexEnvi, GL_TEXTURE_ENV_MODE, GL_DECAL); break;
-			case 0x0bbc40d8 /* "blend" */:		Expression::Append(buffer, DO_glTexEnvi, GL_TEXTURE_ENV_MODE, GL_BLEND); break;
-			case 0xa13884c3 /* "replace" */:	Expression::Append(buffer, DO_glTexEnvi, GL_TEXTURE_ENV_MODE, GL_REPLACE); break;
+			default:
+			case 0x818f75ae /* "modulate" */:	blendmode = GL_MODULATE; break;
+			case 0xde15f6ae /* "decal" */:		blendmode = GL_DECAL; break;
+			case 0x0bbc40d8 /* "blend" */:		blendmode = GL_BLEND; break;
+			case 0xa13884c3 /* "replace" */:	blendmode = GL_REPLACE; break;
 			}
+			Expression::Append(buffer, DO_glTexEnvi, GL_TEXTURE_ENV_MODE, blendmode);
 		}
 		break;
 
@@ -1171,7 +1174,7 @@ void ConfigureDrawItem(const tinyxml2::XMLElement *element, std::vector<unsigned
 				}
 				if (clientstate)
 				{
-					Expression::Append(buffer, attrib->IntValue() ? DO_glEnableClientState : DO_glDisableClientState, clientstate);
+					Expression::Append(buffer, attrib->BoolValue() ? DO_glEnableClientState : DO_glDisableClientState, clientstate);
 				}
 			}
 		}
