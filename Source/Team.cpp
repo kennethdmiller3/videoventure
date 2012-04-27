@@ -16,7 +16,7 @@ namespace Database
 				AddConfigure(0xa2fd7d0c /* "team" */, Entry(this, &TeamLoader::Configure));
 			}
 
-			void Configure(unsigned int aId, const TiXmlElement *element)
+			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
 			{
 				unsigned int &team = Database::team.Open(aId);
 				team = Hash(element->Attribute("name"));

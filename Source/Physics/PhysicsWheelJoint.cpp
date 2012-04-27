@@ -3,7 +3,7 @@
 #include "PhysicsUtilities.h"
 #include "PhysicsWheelJoint.h"
 
-static bool ConfigureWheelJointItem(const TiXmlElement *element, b2WheelJointDef &joint)
+static bool ConfigureWheelJointItem(const tinyxml2::XMLElement *element, b2WheelJointDef &joint)
 {
 	const char *name = element->Value();
 	switch (Hash(name))
@@ -53,7 +53,7 @@ namespace Database
 				AddConfigure(0xdafe5c18 /* "wheeljoint" */, Entry(this, &WheelJointLoader::Configure));
 			}
 
-			void Configure(unsigned int aId, const TiXmlElement *element)
+			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
 			{
 				Typed<b2WheelJointDef> defs = Database::wheeljointdef.Open(aId);
 
@@ -66,7 +66,7 @@ namespace Database
 
 				// configure the joint definition
 				b2WheelJointDef &def = defs.Open(aSubId);
-				for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+				for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 				{
 					ConfigureWheelJointItem(child, def);
 				}

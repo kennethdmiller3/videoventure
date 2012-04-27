@@ -12,4 +12,4 @@
 // TO DO: float[width] random
 
 // configure typed random
-template <typename T> void ConfigureRandom(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[]);
+template <typename T> void ConfigureRandom(const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[]);

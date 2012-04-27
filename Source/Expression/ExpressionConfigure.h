@@ -15,7 +15,7 @@ extern GAME_API const float sScalarDefault[];
 
 namespace Expression
 {
-	typedef fastdelegate::FastDelegate<void (const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])> Entry;
+	typedef fastdelegate::FastDelegate<void (const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])> Entry;
 
 	template <typename T> struct Loader
 	{
@@ -42,9 +42,9 @@ namespace Expression
 		};
 
 		// configure an expression
-		static void GAME_API Configure(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[]);
+		static void GAME_API Configure(const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[]);
 
 		// configure an expression root (the tag hosting the expression)
-		static void GAME_API ConfigureRoot(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[]);
+		static void GAME_API ConfigureRoot(const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[]);
 	};
 };

@@ -4,10 +4,10 @@
 #include "ExpressionSchema.h"
 
 // float[width] literal
-GAME_API void ConfigureLiteral(const TiXmlElement *element, std::vector<unsigned int> &buffer, int width, const char * const names[], const float defaults[]);
+GAME_API void ConfigureLiteral(const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer, int width, const char * const names[], const float defaults[]);
 
 // typed literal
-template <typename T> void ConfigureLiteral(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
+template <typename T> void ConfigureLiteral(const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
 {
 	// append a constant expression
 #ifdef PRINT_CONFIGURE_EXPRESSION

@@ -15,7 +15,7 @@ namespace Database
 				AddConfigure(0x90f6fbd0 /* "library" */, Entry(this, &LibraryLoader::Configure));
 			}
 
-			void Configure(unsigned int aId, const TiXmlElement *element)
+			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
 			{
 				// library configuration
 				const char *name = element->Attribute("name");

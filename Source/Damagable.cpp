@@ -38,7 +38,7 @@ namespace Database
 				AddConfigure(0x1b715375 /* "damagable" */, Entry(this, &DamagableLoader::Configure));
 			}
 
-			void Configure(unsigned int aId, const TiXmlElement *element)
+			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
 			{
 				DamagableTemplate &damagable = Database::damagabletemplate.Open(aId);
 				damagable.Configure(element);
@@ -92,7 +92,7 @@ DamagableTemplate::~DamagableTemplate(void)
 {
 }
 
-bool DamagableTemplate::Configure(const TiXmlElement *element)
+bool DamagableTemplate::Configure(const tinyxml2::XMLElement *element)
 {
 	element->QueryFloatAttribute("health", &mHealth);
 	if (const char *spawn = element->Attribute("spawnondeath"))

@@ -131,7 +131,7 @@ namespace Database
 				AddConfigure(0xbaf310c5 /* "tilemap" */, Entry(this, &TilemapLoader::Configure));
 			}
 
-			void Configure(unsigned int aId, const TiXmlElement *element)
+			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
 			{
 				// tilemap configuration
 				float x = 0.0f, y = 0.0f;
@@ -157,7 +157,7 @@ namespace Database
 				TilemapTemplate &tilemap = Database::tilemaptemplate.Open(aId);
 
 				// process child elements
-				for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+				for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 				{
 					switch(Hash(child->Value()))
 					{
@@ -171,7 +171,7 @@ namespace Database
 							tile.mSpawn = Hash(spawn);
 							child->QueryFloatAttribute("x", &tile.mOffset.p.x);
 							child->QueryFloatAttribute("y", &tile.mOffset.p.y);
-							if (child->QueryFloatAttribute("angle", &tile.mOffset.a) == TIXML_SUCCESS)
+							if (child->QueryFloatAttribute("angle", &tile.mOffset.a) == tinyxml2::XML_SUCCESS)
 								tile.mOffset.a *= float(M_PI) / 180.0f;
 						}
 						break;

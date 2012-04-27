@@ -20,7 +20,7 @@ namespace Database
 				AddConfigure(0xe063cbaa /* "gunner" */, Entry(this, &GunnerLoader::Configure));
 			}
 
-			void Configure(unsigned int aId, const TiXmlElement *element)
+			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
 			{
 				GunnerTemplate &gunner = Database::gunnertemplate.Open(aId);
 				gunner.Configure(element);
@@ -75,7 +75,7 @@ GunnerTemplate::~GunnerTemplate(void)
 }
 
 // Gunner Template Configure
-bool GunnerTemplate::Configure(const TiXmlElement *element)
+bool GunnerTemplate::Configure(const tinyxml2::XMLElement *element)
 {
 	element->QueryFloatAttribute("follow", &mFollowLength);
 	return true;

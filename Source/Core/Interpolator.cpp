@@ -26,7 +26,7 @@ float *InterpolatorTemplate::AddKey(float aParam)
 	return data;
 }
 
-static float ConfigureInterpolatorKeyItem(const TiXmlElement *element, InterpolatorTemplate &interpolator, float offset, float scale, float prev, const char * const names[], const float values[])
+static float ConfigureInterpolatorKeyItem(const tinyxml2::XMLElement *element, InterpolatorTemplate &interpolator, float offset, float scale, float prev, const char * const names[], const float values[])
 {
 	// get key time
 	float keytime = prev;
@@ -44,14 +44,14 @@ static float ConfigureInterpolatorKeyItem(const TiXmlElement *element, Interpola
 
 	// apply key step
 	float step;
-	if (element->QueryFloatAttribute("step", &step) == TIXML_SUCCESS)
+	if (element->QueryFloatAttribute("step", &step) == tinyxml2::XML_SUCCESS)
 		keytime += step;
 
 	// return key time
 	return keytime;
 }
 
-static float ConfigureInterpolatorKeyItems(const TiXmlElement *element, InterpolatorTemplate &interpolator, float offset, float scale, const char * const names[], const float values[])
+static float ConfigureInterpolatorKeyItems(const tinyxml2::XMLElement *element, InterpolatorTemplate &interpolator, float offset, float scale, const char * const names[], const float values[])
 {
 	// get default duration
 	float duration = 0.0f;
@@ -59,7 +59,7 @@ static float ConfigureInterpolatorKeyItems(const TiXmlElement *element, Interpol
 	// last key time (relative to offset)
 	float last = 0.0f;
 
-	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+	for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
 		switch (Hash(child->Value()))
 		{
@@ -91,7 +91,7 @@ static float ConfigureInterpolatorKeyItems(const TiXmlElement *element, Interpol
 	return offset + duration * scale;
 }
 
-bool ConfigureInterpolatorItem(const TiXmlElement *element, std::vector<unsigned int> &buffer, int width, const char * const names[], const float data[])
+bool ConfigureInterpolatorItem(const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer, int width, const char * const names[], const float data[])
 {
 	if (!element->FirstChildElement())
 		return false;
@@ -106,7 +106,7 @@ bool ConfigureInterpolatorItem(const TiXmlElement *element, std::vector<unsigned
 	// get time scale
 	float scale = 1.0f;
 	element->QueryFloatAttribute("timescale", &scale);
-	if (element->QueryFloatAttribute("rate", &scale) == TIXML_SUCCESS)
+	if (element->QueryFloatAttribute("rate", &scale) == tinyxml2::XML_SUCCESS)
 		scale = 1.0f / scale;
 
 	// process child elements

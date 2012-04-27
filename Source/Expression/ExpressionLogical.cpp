@@ -70,9 +70,9 @@ namespace Expression
 	}
 }
 
-static void ConfigureShortCircuit(bool (*expr)(Expression::Context &), const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
+static void ConfigureShortCircuit(bool (*expr)(Expression::Context &), const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
 {
-	const TiXmlElement *arg1 = element->FirstChildElement();
+	const tinyxml2::XMLElement *arg1 = element->FirstChildElement();
 	if (!arg1)
 	{
 		// no first argument: return false (HACK)
@@ -81,7 +81,7 @@ static void ConfigureShortCircuit(bool (*expr)(Expression::Context &), const TiX
 		return;
 	}
 
-	const TiXmlElement *arg2 = arg1->NextSiblingElement();
+	const tinyxml2::XMLElement *arg2 = arg1->NextSiblingElement();
 	if (!arg2)
 	{
 		// no second argument: pass first argument through (HACK)
@@ -105,25 +105,25 @@ static void ConfigureShortCircuit(bool (*expr)(Expression::Context &), const TiX
 	buffer[start - 1] = buffer.size() - start;
 }
 
-static void ConfigureAnd(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
+static void ConfigureAnd(const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
 {
 	ConfigureShortCircuit(Expression::And, element, buffer, names, defaults);
 }
 static Expression::Loader<bool>::Auto andbool(0x0f29c2a6 /* "and" */, ConfigureAnd);
 
-static void ConfigureOr(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
+static void ConfigureOr(const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
 {
 	ConfigureShortCircuit(Expression::Or, element, buffer, names, defaults);
 }
 static Expression::Loader<bool>::Auto orbool(0x5d342984 /* "or" */, ConfigureOr);
 
-static void ConfigureNot(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
+static void ConfigureNot(const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
 {
 	ConfigureUnary<bool, bool>(Expression::Not, element, buffer, names, defaults);
 }
 static Expression::Loader<bool>::Auto notbool(0x29b19c8a /* "not" */, ConfigureNot);
 
-static void ConfigureXor(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
+static void ConfigureXor(const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
 {
 	ConfigureVariadic<bool, bool>(Expression::Xor, element, buffer, names, defaults);
 }

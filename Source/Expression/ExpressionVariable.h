@@ -28,7 +28,7 @@ template <typename T> static const T EvaluateVariable(EntityContext &aContext)
 }
 
 // typed variable: attribute-inlined version
-template <typename T> void ConfigureInlineVariable(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
+template <typename T> void ConfigureInlineVariable(const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
 {
 	// append a variable expression
 #ifdef PRINT_CONFIGURE_EXPRESSION
@@ -38,7 +38,7 @@ template <typename T> void ConfigureInlineVariable(const TiXmlElement *element, 
 }
 
 // typed variable: normal version
-template <typename T> void ConfigureVariable(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
+template <typename T> void ConfigureVariable(const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
 {
 	// append a variable expression
 #ifdef PRINT_CONFIGURE_EXPRESSION
@@ -48,7 +48,7 @@ template <typename T> void ConfigureVariable(const TiXmlElement *element, std::v
 }
 
 // typed variable: tag-named version
-template <typename T> void ConfigureTagVariable(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
+template <typename T> void ConfigureTagVariable(const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
 {
 	// append a variable expression
 #ifdef PRINT_CONFIGURE_EXPRESSION

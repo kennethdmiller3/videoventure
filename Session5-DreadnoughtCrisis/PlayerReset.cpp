@@ -26,7 +26,7 @@ namespace Database
 				RemoveConfigure(0x006f2a3f /* "playerreset" */, Entry(this, &PlayerResetLoader::Configure));
 			}
 
-			void Configure(unsigned int aId, const TiXmlElement *element)
+			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
 			{
 				PlayerResetTemplate &playerreset = Database::playerresettemplate.Open(aId);
 				element->QueryFloatAttribute("offset", &playerreset.mOffset);

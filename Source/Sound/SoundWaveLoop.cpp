@@ -40,7 +40,7 @@ static size_t ReadBinaryData(const char *data, unsigned char buffer[], size_t si
 	return count;
 }
 
-static bool Configure(SoundTemplate &self, const TiXmlElement *element, unsigned int id)
+static bool Configure(SoundTemplate &self, const tinyxml2::XMLElement *element, unsigned int id)
 {
 	// clock frequency
 	int frequency = 3579000;
@@ -159,7 +159,7 @@ static bool Configure(SoundTemplate &self, const TiXmlElement *element, unsigned
 	int outerrepeat = 0;		// [0x17], record[4]
 	element->QueryIntAttribute("outerrepeat", &outerrepeat);
 
-	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+	for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
 		switch(Hash(child->Value()))
 		{
@@ -168,7 +168,7 @@ static bool Configure(SoundTemplate &self, const TiXmlElement *element, unsigned
 				if (const char *data = child->Attribute("data"))
 					wavelength = ReadBinaryData(data, wavesource, SDL_arraysize(wavesource));
 
-				for (const TiXmlElement *data = child->FirstChildElement(); data != NULL; data = data->NextSiblingElement())
+				for (const tinyxml2::XMLElement *data = child->FirstChildElement(); data != NULL; data = data->NextSiblingElement())
 				{
 					switch(Hash(data->Value()))
 					{
@@ -189,7 +189,7 @@ static bool Configure(SoundTemplate &self, const TiXmlElement *element, unsigned
 				if (const char *data = child->Attribute("data"))
 					pitchlength = ReadBinaryData(data, pitchsource, SDL_arraysize(pitchsource));
 
-				for (const TiXmlElement *data = child->FirstChildElement(); data != NULL; data = data->NextSiblingElement())
+				for (const tinyxml2::XMLElement *data = child->FirstChildElement(); data != NULL; data = data->NextSiblingElement())
 				{
 					switch(Hash(data->Value()))
 					{

@@ -20,12 +20,12 @@ bool InitInput(const char *config)
 
 	// load input binding file
 	DebugPrint("\nInput %s\n", config);
-	TiXmlDocument document(config);
-	if (!document.LoadFile())
-		DebugPrint("error loading input file \"%s\": %s\n", config, document.ErrorDesc());
+	tinyxml2::XMLDocument document;
+	if (document.LoadFile(config) != tinyxml2::XML_SUCCESS)
+		DebugPrint("error loading input file \"%s\": %s %s\n", config, document.GetErrorStr1(), document.GetErrorStr2());
 
 	// process child elements of the root
-	if (const TiXmlElement *root = document.FirstChildElement("input"))
+	if (const tinyxml2::XMLElement *root = document.FirstChildElement("input"))
 	{
 		input.Configure(root);
 		return true;
@@ -38,19 +38,18 @@ bool SplitLevel(const char *config, const char *output)
 {
 	// load level data file
 	DebugPrint("Level %s -> %s\n", config, output);
-	TiXmlDocument document(config);
-	document.SetCondenseWhiteSpace(false);
-	if (!document.LoadFile())
-		DebugPrint("error loading level file \"%s\": %s\n", config, document.ErrorDesc());
+	tinyxml2::XMLDocument document;
+	if (document.LoadFile(config) != tinyxml2::XML_SUCCESS)
+		DebugPrint("error loading level file \"%s\": %s %s\n", config, document.GetErrorStr1(), document.GetErrorStr2());
 
 	// if the document has a world section...
-	if (TiXmlElement *root = document.FirstChildElement("world"))
+	if (tinyxml2::XMLElement *root = document.FirstChildElement("world"))
 	{
 		// for each node...
-		for (TiXmlNode *node = root->FirstChild(); node != NULL; node = node->NextSibling())
+		for (tinyxml2::XMLNode *node = root->FirstChild(); node != NULL; node = node->NextSibling())
 		{
 			// if the node is an element...
-			if (TiXmlElement *element = node->ToElement())
+			if (tinyxml2::XMLElement *element = node->ToElement())
 			{
 				// if the element is not an instance
 				if (Hash(element->Value()) != 0xd33ff5da /* "entity" */)
@@ -64,26 +63,27 @@ bool SplitLevel(const char *config, const char *output)
 						DebugPrint("%s\n", path);
 
 						// create a new XML document
-						TiXmlDocument piece(path);
+						tinyxml2::XMLDocument piece;
 
 						// add XML declaration
-						TiXmlDeclaration * declaration = new TiXmlDeclaration( "1.0", "", "" );
+						tinyxml2::XMLDeclaration * declaration = piece.NewDeclaration( "1.0" );
 						piece.LinkEndChild(declaration);
 
 						// copy element contents
-						piece.InsertEndChild(*element);
+						piece.InsertEndChild(element);
 
 						// if the document saved...
-						if (piece.SaveFile())
+						if (piece.SaveFile(path) == tinyxml2::XML_SUCCESS)
 						{
 							// substitute an import element
-							TiXmlElement *import = new TiXmlElement("import");
+							tinyxml2::XMLElement *import = piece.NewElement("import");
 							import->SetAttribute("name", path);
-							node = root->ReplaceChild(node, *import);
+							root->InsertAfterChild(node, import);
+							root->DeleteChild(node);
 						}
 						else
 						{
-							DebugPrint("error loading import file \"%s\": %s\n", name, document.ErrorDesc());
+							DebugPrint("error loading import file \"%s\": %s %s\n", name, document.GetErrorStr1(), document.GetErrorStr2());
 						}
 					}
 				}
@@ -103,19 +103,18 @@ bool MergeLevel(const char *config, const char *output)
 {
 	// load level data file
 	DebugPrint("Level %s -> %s\n", config, output);
-	TiXmlDocument document(config);
-	document.SetCondenseWhiteSpace(false);
-	if (!document.LoadFile())
-		DebugPrint("error loading level file \"%s\": %s\n", config, document.ErrorDesc());
+	tinyxml2::XMLDocument document;
+	if (document.LoadFile(config) != tinyxml2::XML_SUCCESS)
+		DebugPrint("error loading level file \"%s\": %s %s\n", config, document.GetErrorStr1(), document.GetErrorStr2());
 
 	// if the document has a world section...
-	if (TiXmlElement *root = document.FirstChildElement("world"))
+	if (tinyxml2::XMLElement *root = document.FirstChildElement("world"))
 	{
 		// for each node...
-		for (TiXmlNode *node = root->FirstChild(); node != NULL; node = node->NextSibling())
+		for (tinyxml2::XMLNode *node = root->FirstChild(); node != NULL; node = node->NextSibling())
 		{
 			// if the node is an element...
-			if (TiXmlElement *element = node->ToElement())
+			if (tinyxml2::XMLElement *element = node->ToElement())
 			{
 				// if the element is an import
 				if (Hash(element->Value()) == 0x112a90d4 /* "import" */)
@@ -125,18 +124,19 @@ bool MergeLevel(const char *config, const char *output)
 					{
 						// import child element from a separate XML file
 						DebugPrint("%s\n", name);
-						TiXmlDocument piece(name);
-						if (!piece.LoadFile())
+						tinyxml2::XMLDocument piece;
+						if (piece.LoadFile(name) != tinyxml2::XML_SUCCESS)
 						{
-							DebugPrint("error loading import file \"%s\": %s\n", name, document.ErrorDesc());
+							DebugPrint("error loading import file \"%s\": %s %s\n", name, document.GetErrorStr1(), document.GetErrorStr2());
 							continue;
 						}
 
 						// get the first element
-						if (const TiXmlElement *import = piece.FirstChildElement())
+						if (tinyxml2::XMLElement *import = piece.FirstChildElement())
 						{
 							// substitute the element
-							node = root->ReplaceChild(node, *import);
+							root->InsertAfterChild(node, import);
+							root->DeleteChild(node);
 						}
 						else
 						{
@@ -160,12 +160,12 @@ bool InitLevel(const char *config)
 {
 	// load level data file
 	DebugPrint("\nLevel %s\n", config);
-	TiXmlDocument document(config);
-	if (!document.LoadFile())
-		DebugPrint("error loading level file \"%s\": %s\n", config, document.ErrorDesc());
+	tinyxml2::XMLDocument document;
+	if (document.LoadFile(config) != tinyxml2::XML_SUCCESS)
+		DebugPrint("error loading level file \"%s\": %s %s\n", config, document.GetErrorStr1(), document.GetErrorStr2());
 
 	// if the document has a world section...
-	if (const TiXmlElement *root = document.FirstChildElement("world"))
+	if (const tinyxml2::XMLElement *root = document.FirstChildElement("world"))
 	{
 		// process the world
 		ConfigureWorldItem(root);

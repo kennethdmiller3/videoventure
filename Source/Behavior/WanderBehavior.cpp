@@ -21,7 +21,7 @@ namespace BehaviorDatabase
 				AddConfigure(0xf23b7114 /* "wander" */, Entry(this, &WanderBehaviorLoader::Configure));
 			}
 
-			unsigned int Configure(unsigned int aId, const TiXmlElement *element)
+			unsigned int Configure(unsigned int aId, const tinyxml2::XMLElement *element)
 			{
 				WanderBehaviorTemplate &wander = Database::wanderbehaviortemplate.Open(aId);
 				wander.Configure(element, aId);
@@ -74,7 +74,7 @@ WanderBehaviorTemplate::WanderBehaviorTemplate()
 {
 }
 
-bool WanderBehaviorTemplate::Configure(const TiXmlElement *element, unsigned int aId)
+bool WanderBehaviorTemplate::Configure(const tinyxml2::XMLElement *element, unsigned int aId)
 {
 	element->QueryFloatAttribute("side", &mSide);
 	element->QueryFloatAttribute("siderate", &mSideRate);

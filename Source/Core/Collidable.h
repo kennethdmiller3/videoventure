@@ -11,7 +11,7 @@ const float sMetersPerLengthUnit = 1.0f/sLengthUnitsPerMeter;
 
 class LinkTemplate;
 
-extern GAME_API void ConfigureFilterData(b2Filter &aFilter, const TiXmlElement *element);
+extern GAME_API void ConfigureFilterData(b2Filter &aFilter, const tinyxml2::XMLElement *element);
 
 class GAME_API CollidableTemplate
 {
@@ -28,17 +28,17 @@ public:
 	~CollidableTemplate(void);
 
 	// configure
-	bool ConfigureFixtureItem(const TiXmlElement *element, b2FixtureDef &fixture);
-	bool ConfigureFixture(const TiXmlElement *element, b2FixtureDef &fixture);
-	bool ConfigureCircle(const TiXmlElement *element, b2CircleShape &shape);
-	bool ConfigureBox(const TiXmlElement *element, b2PolygonShape &shape);
-	bool ConfigurePolyItem(const TiXmlElement *element, b2PolygonShape &shape);
-	bool ConfigurePoly(const TiXmlElement *element, b2PolygonShape &shape);
-	bool ConfigureEdge(const TiXmlElement *element, b2EdgeShape &shape);
-	bool ConfigureChain(const TiXmlElement *element, b2ChainShape &shape);
-	bool ConfigureBodyItem(const TiXmlElement *element, b2BodyDef &body, unsigned int id);
-	bool ConfigureBody(const TiXmlElement *element, b2BodyDef &body, unsigned int id);
-	bool Configure(const TiXmlElement *element, unsigned int id);
+	bool ConfigureFixtureItem(const tinyxml2::XMLElement *element, b2FixtureDef &fixture);
+	bool ConfigureFixture(const tinyxml2::XMLElement *element, b2FixtureDef &fixture);
+	bool ConfigureCircle(const tinyxml2::XMLElement *element, b2CircleShape &shape);
+	bool ConfigureBox(const tinyxml2::XMLElement *element, b2PolygonShape &shape);
+	bool ConfigurePolyItem(const tinyxml2::XMLElement *element, b2PolygonShape &shape);
+	bool ConfigurePoly(const tinyxml2::XMLElement *element, b2PolygonShape &shape);
+	bool ConfigureEdge(const tinyxml2::XMLElement *element, b2EdgeShape &shape);
+	bool ConfigureChain(const tinyxml2::XMLElement *element, b2ChainShape &shape);
+	bool ConfigureBodyItem(const tinyxml2::XMLElement *element, b2BodyDef &body, unsigned int id);
+	bool ConfigureBody(const tinyxml2::XMLElement *element, b2BodyDef &body, unsigned int id);
+	bool Configure(const tinyxml2::XMLElement *element, unsigned int id);
 };
 
 namespace Collidable

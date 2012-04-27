@@ -45,7 +45,7 @@ namespace Database
 				RemoveConfigure(0xfc9819c1 /* "capture" */, Entry(this, &CaptureLoader::Configure));
 			}
 
-			void Configure(unsigned int aId, const TiXmlElement *element)
+			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
 			{
 				CaptureTemplate &capture = Database::capturetemplate.Open(aId);
 				capture.Configure(element, aId);
@@ -122,7 +122,7 @@ CaptureTemplate::~CaptureTemplate(void)
 }
 
 
-bool CaptureTemplate::Configure(const TiXmlElement *element, unsigned int id)
+bool CaptureTemplate::Configure(const tinyxml2::XMLElement *element, unsigned int id)
 {
 	element->QueryFloatAttribute("energy", &mEnergy);
 	element->QueryFloatAttribute("consume", &mConsume);
@@ -130,10 +130,10 @@ bool CaptureTemplate::Configure(const TiXmlElement *element, unsigned int id)
 
 	element->QueryFloatAttribute("strength", &mStrength);
 	element->QueryFloatAttribute("radius", &mRadius);
-	if (element->QueryFloatAttribute("angle", &mAngle) == TIXML_SUCCESS)
+	if (element->QueryFloatAttribute("angle", &mAngle) == tinyxml2::XML_SUCCESS)
 		mAngle *= float(M_PI) / 180.0f;
 
-	if (element->QueryIntAttribute("channel", &mChannel) == TIXML_SUCCESS)
+	if (element->QueryIntAttribute("channel", &mChannel) == tinyxml2::XML_SUCCESS)
 		--mChannel;
 
 	return true;

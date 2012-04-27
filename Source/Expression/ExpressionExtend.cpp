@@ -3,7 +3,7 @@
 #include "ExpressionExtend.h"
 #include "ExpressionConfigure.h"
 
-template<typename T> static void ConfigureExtend(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
+template<typename T> static void ConfigureExtend(const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
 {
 	ConfigureUnary<const T, float, Expression::Context &>(Expression::Extend<T, float>, element, buffer, sScalarNames, sScalarDefault);
 }

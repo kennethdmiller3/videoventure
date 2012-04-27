@@ -13,7 +13,7 @@ public:
 	std::vector<unsigned int> mAction;
 
 public:
-	bool Configure(const TiXmlElement *element, unsigned int aId, unsigned int aSubId);
+	bool Configure(const tinyxml2::XMLElement *element, unsigned int aId, unsigned int aSubId);
 };
 
 class Condition : public Updatable
@@ -43,7 +43,7 @@ namespace Database
 				AddConfigure(0xd212fabe /* "condition" */, Entry(this, &ConditionLoader::Configure));
 			}
 
-			void Configure(unsigned int aId, const TiXmlElement *element)
+			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
 			{
 				Database::Typed<ConditionTemplate> &conditions = Database::conditiontemplate.Open(aId);
 				unsigned int aSubId = Hash(element->Attribute("name"));
@@ -92,9 +92,9 @@ namespace Database
 	}
 }
 
-bool ConditionTemplate::Configure(const TiXmlElement *element, unsigned int aId, unsigned int aSubId)
+bool ConditionTemplate::Configure(const tinyxml2::XMLElement *element, unsigned int aId, unsigned int aSubId)
 {
-	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+	for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
 		switch (Hash(child->Value()))
 		{

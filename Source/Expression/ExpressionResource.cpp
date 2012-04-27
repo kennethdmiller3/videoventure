@@ -6,7 +6,7 @@
 #include "ExpressionConvert.h"
 #include "Resource.h"
 
-template<typename T> static void ConfigureResource(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
+template<typename T> static void ConfigureResource(const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
 {
 	Expression::Convert<T, float>::Append(buffer);
 	::ConfigureResource(element, buffer, sScalarNames, sScalarDefault);
@@ -30,7 +30,7 @@ float EvaluateResource(EntityContext &aContext)
 }
 
 // typed resource: attribute-inlined version
-void ConfigureInlineResource(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
+void ConfigureInlineResource(const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
 {
 	// append a resource expression
 #ifdef PRINT_CONFIGURE_EXPRESSION
@@ -40,7 +40,7 @@ void ConfigureInlineResource(const TiXmlElement *element, std::vector<unsigned i
 }
 
 // typed resource: normal version
-void ConfigureResource(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
+void ConfigureResource(const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
 {
 	// append a resource expression
 #ifdef PRINT_CONFIGURE_EXPRESSION

@@ -14,7 +14,7 @@ OverlayTemplate::~OverlayTemplate(void)
 }
 
 // configure
-bool OverlayTemplate::Configure(const TiXmlElement *element, unsigned int aId)
+bool OverlayTemplate::Configure(const tinyxml2::XMLElement *element, unsigned int aId)
 {
 	// animation period
 	element->QueryFloatAttribute("period", &mPeriod);
@@ -117,7 +117,7 @@ namespace Database
 				AddConfigure(0x2065d503 /* "overlay" */, Entry(this, &OverlayLoader::Configure));
 			}
 
-			void Configure(unsigned int aId, const TiXmlElement *element)
+			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
 			{
 				OverlayTemplate &overlay = Database::overlaytemplate.Open(aId);
 				overlay.Configure(element, aId);

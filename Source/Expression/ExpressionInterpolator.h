@@ -20,4 +20,4 @@ template <typename T> const T EvaluateInterpolator(EntityContext &aContext);
 template <typename T> const T EvaluateInterpolatorConstant(EntityContext &aContext);
 
 // configure typed interpolator
-template <typename T> void ConfigureInterpolator(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[]);
+template <typename T> void ConfigureInterpolator(const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[]);

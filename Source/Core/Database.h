@@ -8,7 +8,7 @@ namespace Database
 	// component loaders
 	namespace Loader
 	{
-		typedef fastdelegate::FastDelegate<void (unsigned int, const TiXmlElement *)> Entry;
+		typedef fastdelegate::FastDelegate<void (unsigned int, const tinyxml2::XMLElement *)> Entry;
 		GAME_API void AddConfigure(unsigned int aTagId, Entry aEntry);
 		GAME_API void RemoveConfigure(unsigned int aTagId, Entry aEntry);
 		GAME_API const Entry &GetConfigure(unsigned int aTagId);

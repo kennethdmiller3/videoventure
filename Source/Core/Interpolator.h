@@ -1,6 +1,6 @@
 #pragma once
 
-GAME_API bool ConfigureInterpolatorItem(const TiXmlElement *element, std::vector<unsigned int> &buffer, int width, const char * const names[], const float data[]);
+GAME_API bool ConfigureInterpolatorItem(const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer, int width, const char * const names[], const float data[]);
 
 GAME_API int FindKeyIndex(const int aStride, const int aCount, const float aKeys[], const float aTime, const int aHint);
 

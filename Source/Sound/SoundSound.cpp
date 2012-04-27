@@ -3,7 +3,7 @@
 #include "Sound.h"
 #include "SoundConfigure.h"
 
-static bool Configure(SoundTemplate &self, const TiXmlElement *element, unsigned int id)
+static bool Configure(SoundTemplate &self, const tinyxml2::XMLElement *element, unsigned int id)
 {
 	// get sound template
 	const char *name = element->Attribute("name");

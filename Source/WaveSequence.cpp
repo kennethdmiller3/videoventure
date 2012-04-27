@@ -86,7 +86,7 @@ namespace Database
 				AddConfigure(0x943e7789 /* "wavesequence" */, Entry(this, &WaveSequenceLoader::Configure));
 			}
 
-			void Configure(unsigned int aId, const TiXmlElement *element)
+			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
 			{
 				WaveSequenceTemplate &wavesequence = Database::wavesequencetemplate.Open(aId);
 				wavesequence.Configure(element, aId);
@@ -139,7 +139,7 @@ WaveEntryTemplate::WaveEntryTemplate(void)
 }
 
 // wave entry template configure
-bool WaveEntryTemplate::Configure(const TiXmlElement *element, unsigned int aId, unsigned int aWaveId, unsigned int aEntryId)
+bool WaveEntryTemplate::Configure(const tinyxml2::XMLElement *element, unsigned int aId, unsigned int aWaveId, unsigned int aEntryId)
 {
 	element->QueryFloatAttribute("time", &mTime);
 	mSpawn.Configure(element, aId);
@@ -157,13 +157,13 @@ WaveTemplate::WaveTemplate(void)
 }
 
 // wave template configure
-bool WaveTemplate::Configure(const TiXmlElement *element, unsigned int aId, unsigned int aWaveId)
+bool WaveTemplate::Configure(const tinyxml2::XMLElement *element, unsigned int aId, unsigned int aWaveId)
 {
 	element->QueryFloatAttribute("predelay", &mPreDelay);
 	element->QueryFloatAttribute("postdelay", &mPostDelay);
 
 	// process child elements
-	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+	for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
 		const char *label = child->Value();
 		switch (Hash(label))
@@ -196,13 +196,13 @@ WaveSequenceTemplate::~WaveSequenceTemplate(void)
 }
 
 // wavesequence template configure
-bool WaveSequenceTemplate::Configure(const TiXmlElement *element, unsigned int aId)
+bool WaveSequenceTemplate::Configure(const tinyxml2::XMLElement *element, unsigned int aId)
 {
 	element->QueryFloatAttribute("predelay", &mPreDelay);
 	element->QueryFloatAttribute("postdelay", &mPostDelay);
 
 	// process child elements
-	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+	for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
 		const char *label = child->Value();
 		switch (Hash(label))

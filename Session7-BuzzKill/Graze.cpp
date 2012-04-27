@@ -36,7 +36,7 @@ namespace Database
 				AddConfigure(0x9086d046 /* "graze" */, Entry(this, &GrazeLoader::Configure));
 			}
 
-			void Configure(unsigned int aId, const TiXmlElement *element)
+			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
 			{
 				GrazeTemplate &graze = Database::grazetemplate.Open(aId);
 				graze.Configure(element, aId);
@@ -98,18 +98,18 @@ GrazeTemplate::~GrazeTemplate(void)
 }
 
 
-bool GrazeTemplate::Configure(const TiXmlElement *element, unsigned int id)
+bool GrazeTemplate::Configure(const tinyxml2::XMLElement *element, unsigned int id)
 {
-	if (element->QueryFloatAttribute("radius", &mRadiusOuter) == TIXML_SUCCESS)
+	if (element->QueryFloatAttribute("radius", &mRadiusOuter) == tinyxml2::XML_SUCCESS)
 		mRadiusInner = mRadiusOuter * 0.5f;
-	if (element->QueryFloatAttribute("value", &mValueInner) == TIXML_SUCCESS)
+	if (element->QueryFloatAttribute("value", &mValueInner) == tinyxml2::XML_SUCCESS)
 		mValueOuter = 0.0f;
 
 	ConfigureFilterData(mFilter, element);
 
 	if (element->FirstChildElement())
 	{
-		for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+		for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 		{
 			switch (Hash(child->Value()))
 			{
@@ -119,7 +119,7 @@ bool GrazeTemplate::Configure(const TiXmlElement *element, unsigned int id)
 				break;
 
 			case 0x14c8d3ca /* "offset" */:
-				if (child->QueryFloatAttribute("angle", &mOffset.a) == TIXML_SUCCESS)
+				if (child->QueryFloatAttribute("angle", &mOffset.a) == tinyxml2::XML_SUCCESS)
 					mOffset.a *= float(M_PI) / 180.0f;
 				child->QueryFloatAttribute("x", &mOffset.p.x);
 				child->QueryFloatAttribute("y", &mOffset.p.y);
@@ -136,28 +136,28 @@ bool GrazeTemplate::Configure(const TiXmlElement *element, unsigned int id)
 				break;
 
 			case 0xcab7a341 /* "scatter" */:
-				if (child->QueryFloatAttribute("angle", &mScatter.a) == TIXML_SUCCESS)
+				if (child->QueryFloatAttribute("angle", &mScatter.a) == tinyxml2::XML_SUCCESS)
 					mScatter.a *= float(M_PI) / 180.0f;
 				child->QueryFloatAttribute("x", &mScatter.p.x);
 				child->QueryFloatAttribute("y", &mScatter.p.y);
 				break;
 
 			case 0xca04efe0 /* "inherit" */:
-				if (child->QueryFloatAttribute("angle", &mInherit.a) == TIXML_SUCCESS)
+				if (child->QueryFloatAttribute("angle", &mInherit.a) == tinyxml2::XML_SUCCESS)
 					mInherit.a *= float(M_PI) / 180.0f;
 				child->QueryFloatAttribute("x", &mInherit.p.x);
 				child->QueryFloatAttribute("y", &mInherit.p.y);
 				break;
 
 			case 0x32741c32 /* "velocity" */:
-				if (child->QueryFloatAttribute("angle", &mVelocity.a) == TIXML_SUCCESS)
+				if (child->QueryFloatAttribute("angle", &mVelocity.a) == tinyxml2::XML_SUCCESS)
 					mVelocity.a *= float(M_PI) / 180.0f;
 				child->QueryFloatAttribute("x", &mVelocity.p.x);
 				child->QueryFloatAttribute("y", &mVelocity.p.y);
 				break;
 
 			case 0x0dd0b0be /* "variance" */:
-				if (child->QueryFloatAttribute("angle", &mVariance.a) == TIXML_SUCCESS)
+				if (child->QueryFloatAttribute("angle", &mVariance.a) == tinyxml2::XML_SUCCESS)
 					mVariance.a *= float(M_PI) / 180.0f;
 				child->QueryFloatAttribute("x", &mVariance.p.x);
 				child->QueryFloatAttribute("y", &mVariance.p.y);

@@ -25,7 +25,7 @@ namespace BehaviorDatabase
 				AddConfigure(0x383251f6 /* "aim" */, Entry(this, &AimBehaviorLoader::Configure));
 			}
 
-			unsigned int Configure(unsigned int aId, const TiXmlElement *element)
+			unsigned int Configure(unsigned int aId, const tinyxml2::XMLElement *element)
 			{
 				AimBehaviorTemplate &aim = Database::aimbehaviortemplate.Open(aId);
 				aim.Configure(element, aId);
@@ -43,7 +43,7 @@ namespace BehaviorDatabase
 				AddConfigure(0x8eab16d9 /* "fire" */, Entry(this, &FireConeLoader::Configure));
 			}
 
-			unsigned int Configure(unsigned int aId, const TiXmlElement *element)
+			unsigned int Configure(unsigned int aId, const tinyxml2::XMLElement *element)
 			{
 				Database::Typed<FireConeTemplate> &firebehaviors = Database::fireconetemplate.Open(aId);
 				const char *name = element->Attribute("name");
@@ -102,14 +102,14 @@ FireConeTemplate::FireConeTemplate()
 {
 }
 
-bool FireConeTemplate::Configure(const TiXmlElement *element, unsigned int aId)
+bool FireConeTemplate::Configure(const tinyxml2::XMLElement *element, unsigned int aId)
 {
-	if (element->QueryIntAttribute("channel", &mChannel) == TIXML_SUCCESS)
+	if (element->QueryIntAttribute("channel", &mChannel) == tinyxml2::XML_SUCCESS)
 		--mChannel;
 	element->QueryFloatAttribute("range", &mRange);
-	if (element->QueryFloatAttribute("direction", &mDirection) == TIXML_SUCCESS)
+	if (element->QueryFloatAttribute("direction", &mDirection) == tinyxml2::XML_SUCCESS)
 		mDirection *= float(M_PI) / 180.0f;
-	if (element->QueryFloatAttribute("angle", &mAngle) == TIXML_SUCCESS)
+	if (element->QueryFloatAttribute("angle", &mAngle) == tinyxml2::XML_SUCCESS)
 		mAngle *= float(M_PI) / 180.0f;
 	return true;
 }
@@ -121,7 +121,7 @@ AimBehaviorTemplate::AimBehaviorTemplate()
 {
 }
 
-bool AimBehaviorTemplate::Configure(const TiXmlElement *element, unsigned int aId)
+bool AimBehaviorTemplate::Configure(const tinyxml2::XMLElement *element, unsigned int aId)
 {
 	element->QueryFloatAttribute("strength", &mStrength);
 	element->QueryFloatAttribute("leading", &mLeading);

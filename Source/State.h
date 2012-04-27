@@ -19,7 +19,7 @@ public:
 	StateTemplate(void);
 	~StateTemplate(void);
 
-	bool Configure(const TiXmlElement *element, unsigned int aId, unsigned int aSubId);
+	bool Configure(const tinyxml2::XMLElement *element, unsigned int aId, unsigned int aSubId);
 
 	void Enter(unsigned int aId) const;
 	void Exit(unsigned int aId) const;
@@ -37,7 +37,7 @@ public:
 	TransitionTemplate(void);
 	~TransitionTemplate(void);
 
-	bool Configure(const TiXmlElement *element, unsigned int aId, unsigned int aSubId);
+	bool Configure(const tinyxml2::XMLElement *element, unsigned int aId, unsigned int aSubId);
 
 	bool EvaluateGuard(unsigned int aId) const;
 };

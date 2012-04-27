@@ -27,7 +27,7 @@ namespace BehaviorDatabase
 				AddConfigure(0x32608848 /* "target" */, Entry(this, &TargetBehaviorLoader::Configure));
 			}
 
-			unsigned int Configure(unsigned int aId, const TiXmlElement *element)
+			unsigned int Configure(unsigned int aId, const tinyxml2::XMLElement *element)
 			{
 				TargetBehaviorTemplate &target = Database::targetbehaviortemplate.Open(aId);
 				target.Configure(element, aId);
@@ -81,7 +81,7 @@ TargetBehaviorTemplate::TargetBehaviorTemplate()
 {
 }
 
-bool TargetBehaviorTemplate::Configure(const TiXmlElement *element, unsigned int aId)
+bool TargetBehaviorTemplate::Configure(const tinyxml2::XMLElement *element, unsigned int aId)
 {
 	element->QueryFloatAttribute("period", &mPeriod);
 	element->QueryFloatAttribute("range", &mRange);

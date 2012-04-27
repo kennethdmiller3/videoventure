@@ -13,7 +13,7 @@
 	/// The damping ratio. 0 = no damping, 1 = critical damping.
 	float32 dampingRatio;
 
-static bool ConfigureDistanceJointItem(const TiXmlElement *element, b2DistanceJointDef &joint)
+static bool ConfigureDistanceJointItem(const tinyxml2::XMLElement *element, b2DistanceJointDef &joint)
 {
 	const char *name = element->Value();
 	switch (Hash(name))
@@ -59,7 +59,7 @@ namespace Database
 				AddConfigure(0x6932d1ee /* "distancejoint" */, Entry(this, &DistanceJointLoader::Configure));
 			}
 
-			void Configure(unsigned int aId, const TiXmlElement *element)
+			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
 			{
 				Typed<b2DistanceJointDef> defs = Database::distancejointdef.Open(aId);
 
@@ -72,7 +72,7 @@ namespace Database
 
 				// configure the joint definition
 				b2DistanceJointDef &def = defs.Open(aSubId);
-				for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+				for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 				{
 					ConfigureDistanceJointItem(child, def);
 				}

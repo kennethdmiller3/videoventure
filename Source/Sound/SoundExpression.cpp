@@ -4,7 +4,7 @@
 #include "SoundConfigure.h"
 #include "ExpressionConfigure.h"
 
-static bool Configure(SoundTemplate &self, const TiXmlElement *element, unsigned int id)
+static bool Configure(SoundTemplate &self, const tinyxml2::XMLElement *element, unsigned int id)
 {
 	// get sound length
 	float length;

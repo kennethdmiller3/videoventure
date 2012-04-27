@@ -108,7 +108,7 @@ namespace Database
 				AddConfigure(0xdf3cf9c0 /* "dynamicdrawlist" */, Entry(this, &DynamicDrawlistLoader::Configure));
 			}
 
-			void Configure(unsigned int aId, const TiXmlElement *element)
+			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
 			{
 				std::vector<unsigned int> &buffer = Database::dynamicdrawlist.Open(aId);
 				ConfigureDrawItems(element, buffer);
@@ -125,7 +125,7 @@ namespace Database
 				AddConfigure(0xc98b019b /* "drawlist" */, Entry(this, &DrawlistLoader::Configure));
 			}
 
-			void Configure(unsigned int aId, const TiXmlElement *element)
+			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
 			{
 				// create a new draw list
 				GLuint handle = glGenLists(1);
@@ -163,7 +163,7 @@ namespace Database
 				AddConfigure(0x19385305 /* "variable" */, Entry(this, &VariableLoader::Configure));
 			}
 
-			void Configure(unsigned int aId, const TiXmlElement *element)
+			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
 			{
 				Typed<float> &variables = Database::variable.Open(aId);
 
@@ -650,7 +650,7 @@ void DO_Loop(EntityContext &aContext)
 
 
 
-void ConfigureFloatData(const TiXmlElement *element, std::vector<unsigned int> &buffer)
+void ConfigureFloatData(const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer)
 {
 	const char *text = element->GetText();
 	size_t len = strlen(text)+1;
@@ -666,7 +666,7 @@ void ConfigureFloatData(const TiXmlElement *element, std::vector<unsigned int> &
 	}
 }
 
-void ConfigureVariableOperator(const TiXmlElement *element, std::vector<unsigned int> &buffer, void (*op)(EntityContext &), bool drawdata)
+void ConfigureVariableOperator(const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer, void (*op)(EntityContext &), bool drawdata)
 {
 	unsigned int name = Hash(element->Attribute("name"));
 	unsigned int type = Hash(element->Attribute("type"));
@@ -688,14 +688,14 @@ void ConfigureVariableOperator(const TiXmlElement *element, std::vector<unsigned
 	}
 }
 
-void ConfigurePrimitive(const TiXmlElement *element, std::vector<unsigned int> &buffer, GLenum mode)
+void ConfigurePrimitive(const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer, GLenum mode)
 {
 	Expression::Append(buffer, DO_glBegin, mode);
 	ConfigureDrawItems(element, buffer);
 	Expression::Append(buffer, DO_glEnd);
 }
 
-void ConfigureArray(const TiXmlElement *element, std::vector<unsigned int> &buffer, void (*op)(EntityContext &), size_t size, size_t stride)
+void ConfigureArray(const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer, void (*op)(EntityContext &), size_t size, size_t stride)
 {
 	Expression::Append(buffer, op, size, stride);
 
@@ -724,7 +724,7 @@ GLenum GetPrimitiveMode(const char *mode)
 }
 
 
-void ConfigureDrawItem(const TiXmlElement *element, std::vector<unsigned int> &buffer)
+void ConfigureDrawItem(const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer)
 {
 	const char *label = element->Value();
 	switch (Hash(label))
@@ -740,7 +740,7 @@ void ConfigureDrawItem(const TiXmlElement *element, std::vector<unsigned int> &b
 	case 0x937cff81 /* "pushattrib" */:
 		{
 			GLuint mask = 0U;
-			for (const TiXmlAttribute *attrib = element->FirstAttribute(); attrib != NULL; attrib = attrib->Next())
+			for (const tinyxml2::XMLAttribute *attrib = element->FirstAttribute(); attrib != NULL; attrib = attrib->Next())
 			{
 				GLuint bit = 0U;
 				switch (Hash(attrib->Name()))
@@ -767,7 +767,7 @@ void ConfigureDrawItem(const TiXmlElement *element, std::vector<unsigned int> &b
 				case 0x0adbc081 /* "scissor" */:			bit = GL_SCISSOR_BIT; break;
 				case 0x13254bc4 /* "all" */:				bit = GL_ALL_ATTRIB_BITS; break;
 				}
-				if (attrib->IntValue())
+				if (attrib->BoolValue())
 					mask |= bit;
 				else
 					mask &= ~bit;
@@ -781,7 +781,7 @@ void ConfigureDrawItem(const TiXmlElement *element, std::vector<unsigned int> &b
 	case 0x052eb8b2 /* "pushclientattrib" */:
 		{
 			GLuint mask = 0U;
-			for (const TiXmlAttribute *attrib = element->FirstAttribute(); attrib != NULL; attrib = attrib->Next())
+			for (const tinyxml2::XMLAttribute *attrib = element->FirstAttribute(); attrib != NULL; attrib = attrib->Next())
 			{
 				GLuint bit = 0U;
 				switch (Hash(attrib->Name()))
@@ -790,7 +790,7 @@ void ConfigureDrawItem(const TiXmlElement *element, std::vector<unsigned int> &b
 				case 0x20a16825 /* "vertex_array" */:	bit = GL_CLIENT_VERTEX_ARRAY_BIT; break;
 				case 0x13254bc4 /* "all" */:			bit = GL_CLIENT_ALL_ATTRIB_BITS; break;
 				}
-				if (attrib->IntValue())
+				if (attrib->BoolValue())
 					mask |= bit;
 				else
 					mask &= ~bit;
@@ -893,8 +893,8 @@ void ConfigureDrawItem(const TiXmlElement *element, std::vector<unsigned int> &b
 
 	case 0x0135ab46 /* "edgeflag" */:
 		{
-			int flag;
-			if (element->QueryIntAttribute("flag", &flag) == TIXML_SUCCESS)
+			bool flag;
+			if (element->QueryBoolAttribute("flag", &flag) == tinyxml2::XML_SUCCESS)
 			{
 				Expression::Append(buffer, DO_glEdgeFlag, flag ? GL_TRUE : GL_FALSE);
 			}
@@ -919,13 +919,16 @@ void ConfigureDrawItem(const TiXmlElement *element, std::vector<unsigned int> &b
 	case 0x059e3a91 /* "texenv" */:
 		{
 			// set blend mode
+			GLenum blendmode;
 			switch (Hash(element->Attribute("mode")))
 			{
-			case 0x818f75ae /* "modulate" */:	Expression::Append(buffer, DO_glTexEnvi, GL_TEXTURE_ENV_MODE, GL_MODULATE); break;
-			case 0xde15f6ae /* "decal" */:		Expression::Append(buffer, DO_glTexEnvi, GL_TEXTURE_ENV_MODE, GL_DECAL); break;
-			case 0x0bbc40d8 /* "blend" */:		Expression::Append(buffer, DO_glTexEnvi, GL_TEXTURE_ENV_MODE, GL_BLEND); break;
-			case 0xa13884c3 /* "replace" */:	Expression::Append(buffer, DO_glTexEnvi, GL_TEXTURE_ENV_MODE, GL_REPLACE); break;
+			default:
+			case 0x818f75ae /* "modulate" */:	blendmode = GL_MODULATE; break;
+			case 0xde15f6ae /* "decal" */:		blendmode = GL_DECAL; break;
+			case 0x0bbc40d8 /* "blend" */:		blendmode = GL_BLEND; break;
+			case 0xa13884c3 /* "replace" */:	blendmode = GL_REPLACE; break;
 			}
+			Expression::Append(buffer, DO_glTexEnvi, GL_TEXTURE_ENV_MODE, blendmode);
 		}
 		break;
 
@@ -1156,7 +1159,7 @@ void ConfigureDrawItem(const TiXmlElement *element, std::vector<unsigned int> &b
 
 	case 0x2610a4a3 /* "clientstate" */:
 		{
-			for (const TiXmlAttribute *attrib = element->FirstAttribute(); attrib != NULL; attrib = attrib->Next())
+			for (const tinyxml2::XMLAttribute *attrib = element->FirstAttribute(); attrib != NULL; attrib = attrib->Next())
 			{
 				GLenum clientstate;
 				switch (Hash(attrib->Name()))
@@ -1171,7 +1174,7 @@ void ConfigureDrawItem(const TiXmlElement *element, std::vector<unsigned int> &b
 				}
 				if (clientstate)
 				{
-					Expression::Append(buffer, attrib->IntValue() ? DO_glEnableClientState : DO_glDisableClientState, clientstate);
+					Expression::Append(buffer, attrib->BoolValue() ? DO_glEnableClientState : DO_glDisableClientState, clientstate);
 				}
 			}
 		}
@@ -1258,7 +1261,7 @@ void ConfigureDrawItem(const TiXmlElement *element, std::vector<unsigned int> &b
 	case 0x0a85bb5e /* "arrayelement" */:
 		{
 			int index;
-			if (element->QueryIntAttribute("index", &index) == TIXML_SUCCESS)
+			if (element->QueryIntAttribute("index", &index) == tinyxml2::XML_SUCCESS)
 			{
 				Expression::Append(buffer, DO_glArrayElement, index);
 			}
@@ -1474,10 +1477,10 @@ void ConfigureDrawItem(const TiXmlElement *element, std::vector<unsigned int> &b
 	}
 }
 
-void ConfigureDrawItems(const TiXmlElement *element, std::vector<unsigned int> &buffer)
+void ConfigureDrawItems(const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer)
 {
 	// process child elements
-	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+	for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
 		ConfigureDrawItem(child, buffer);
 	}

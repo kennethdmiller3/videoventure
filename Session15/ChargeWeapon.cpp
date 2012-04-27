@@ -48,7 +48,7 @@ namespace Database
 				RemoveConfigure(0xd416836d /* "chargeweapon" */, Entry(this, &ChargeWeaponLoader::Configure));
 			}
 
-			void Configure(unsigned int aId, const TiXmlElement *element)
+			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
 			{
 				ChargeWeaponTemplate &chargeweapon = Database::chargeweapontemplate.Open(aId);
 				chargeweapon.Configure(element, aId);
@@ -312,14 +312,14 @@ __m128 EvaluateVelocityLocal(EntityContext &aContext)
 }
 
 // configue a parameter
-static void ConfigureParameter(const TiXmlElement *element, const char *param, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
+static void ConfigureParameter(const tinyxml2::XMLElement *element, const char *param, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
 {
 	// get constant value from attribute
 	float value = defaults[0];
 	element->QueryFloatAttribute(param, &value);
 
 	// if there is a child tag for the parameter...
-	if (const TiXmlElement *child = element->FirstChildElement(param))
+	if (const tinyxml2::XMLElement *child = element->FirstChildElement(param))
 	{
 		// configure the expression
 		Expression::Loader<float>::ConfigureRoot(child, buffer, names, &value);
@@ -344,10 +344,10 @@ ChargeStateTemplate::~ChargeStateTemplate(void)
 }
 
 
-bool ChargeStateTemplate::ConfigureAction(const TiXmlElement *element, unsigned int aId)
+bool ChargeStateTemplate::ConfigureAction(const tinyxml2::XMLElement *element, unsigned int aId)
 {
 	// process child elements
-	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+	for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
 		unsigned int aPropId = Hash(child->Value());
 		switch (aPropId)
@@ -400,7 +400,7 @@ bool ChargeStateTemplate::ConfigureAction(const TiXmlElement *element, unsigned 
 
 		case 0xaf85ad29 /* "flash" */:
 			Expression::Append(mAction, WeaponFlash, Hash(child->Attribute("name")));
-			if (const TiXmlElement *param = child->FirstChildElement("position"))
+			if (const tinyxml2::XMLElement *param = child->FirstChildElement("position"))
 				Expression::Loader<__m128>::ConfigureRoot(param, mAction, sTransformNames, sTransformDefault);
 			else
 				Expression::Append(mAction, Expression::Constant<__m128>, _mm_setzero_ps());
@@ -408,11 +408,11 @@ bool ChargeStateTemplate::ConfigureAction(const TiXmlElement *element, unsigned 
 
 		case 0x399bf05d /* "ordnance" */:
 			Expression::Append(mAction, WeaponOrdnance, Hash(child->Attribute("name")));
-			if (const TiXmlElement *param = child->FirstChildElement("position"))
+			if (const tinyxml2::XMLElement *param = child->FirstChildElement("position"))
 				Expression::Loader<__m128>::ConfigureRoot(param, mAction, sTransformNames, sTransformDefault);
 			else
 				Expression::Append(mAction, Expression::Constant<__m128>, _mm_setzero_ps());
-			if (const TiXmlElement *param = child->FirstChildElement("velocity"))
+			if (const tinyxml2::XMLElement *param = child->FirstChildElement("velocity"))
 				Expression::Loader<__m128>::ConfigureRoot(param, mAction, sTransformNames, sTransformDefault);
 			else
 				Expression::Append(mAction, Expression::Constant<__m128>, _mm_setzero_ps());
@@ -469,7 +469,7 @@ bool ChargeStateTemplate::ConfigureAction(const TiXmlElement *element, unsigned 
 	return true;
 }
 
-bool ChargeStateTemplate::Configure(const TiXmlElement *element, unsigned int aId)
+bool ChargeStateTemplate::Configure(const tinyxml2::XMLElement *element, unsigned int aId)
 {
 	// clear any existing action
 	// TO DO: support inheritance
@@ -484,7 +484,7 @@ bool ChargeStateTemplate::Configure(const TiXmlElement *element, unsigned int aI
 		mNext = Hash(next);
 
 	// process child elements
-	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+	for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
 		unsigned int aPropId = Hash(child->Value());
 		switch (aPropId)
@@ -513,10 +513,10 @@ ChargeWeaponTemplate::~ChargeWeaponTemplate(void)
 {
 }
 
-bool ChargeWeaponTemplate::Configure(const TiXmlElement *element, unsigned int aId)
+bool ChargeWeaponTemplate::Configure(const tinyxml2::XMLElement *element, unsigned int aId)
 {
 	// process child elements
-	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+	for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
 		unsigned int aPropId = Hash(child->Value());
 		switch (aPropId)
@@ -541,7 +541,7 @@ bool ChargeWeaponTemplate::Configure(const TiXmlElement *element, unsigned int a
 			break;
 
 		case 0x75413203 /* "trigger" */:
-			if (child->QueryIntAttribute("channel", &mChannel) == TIXML_SUCCESS)
+			if (child->QueryIntAttribute("channel", &mChannel) == tinyxml2::XML_SUCCESS)
 				--mChannel;
 			break;
 

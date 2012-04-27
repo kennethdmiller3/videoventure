@@ -43,7 +43,7 @@ namespace Database
 				AddConfigure(0x6958f085 /* "pickup" */, Entry(this, &PickupLoader::Configure));
 			}
 
-			void Configure(unsigned int aId, const TiXmlElement *element)
+			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
 			{
 				PickupTemplate &pickup = Database::pickuptemplate.Open(aId);
 				pickup.Configure(element, aId);
@@ -95,14 +95,14 @@ PickupTemplate::~PickupTemplate(void)
 {
 }
 
-bool PickupTemplate::Configure(const TiXmlElement *element, unsigned int aId)
+bool PickupTemplate::Configure(const tinyxml2::XMLElement *element, unsigned int aId)
 {
 	if (const char *spawn = element->Attribute("spawnoncollect"))
 		mSpawnOnCollect = Hash(spawn);
 	if (const char *spawn = element->Attribute("switchoncollect"))
 		mSwitchOnCollect = Hash(spawn);
 
-	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+	for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
 		switch (Hash(child->Value()))
 		{
@@ -112,7 +112,7 @@ bool PickupTemplate::Configure(const TiXmlElement *element, unsigned int aId)
 				{
 					unsigned int aTeamId = Hash(teamname);
 
-					for (const TiXmlElement *param = child->FirstChildElement(); param != NULL; param = param->NextSiblingElement())
+					for (const tinyxml2::XMLElement *param = child->FirstChildElement(); param != NULL; param = param->NextSiblingElement())
 					{
 						switch (Hash(param->Value()))
 						{

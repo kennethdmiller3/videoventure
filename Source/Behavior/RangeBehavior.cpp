@@ -26,7 +26,7 @@ namespace BehaviorDatabase
 				AddConfigure(0x27cb3b23 /* "close" */, Entry(this, &CloseBehaviorLoader::Configure));
 			}
 
-			unsigned int Configure(unsigned int aId, const TiXmlElement *element)
+			unsigned int Configure(unsigned int aId, const tinyxml2::XMLElement *element)
 			{
 				CloseBehaviorTemplate &closebehavior = Database::closebehaviortemplate.Open(aId);
 				closebehavior.Configure(element, aId);
@@ -44,7 +44,7 @@ namespace BehaviorDatabase
 				AddConfigure(0xbcf819ee /* "far" */, Entry(this, &FarBehaviorLoader::Configure));
 			}
 
-			unsigned int Configure(unsigned int aId, const TiXmlElement *element)
+			unsigned int Configure(unsigned int aId, const tinyxml2::XMLElement *element)
 			{
 				FarBehaviorTemplate &farbehavior = Database::farbehaviortemplate.Open(aId);
 				farbehavior.Configure(element, aId);
@@ -99,7 +99,7 @@ CloseBehaviorTemplate::CloseBehaviorTemplate()
 {
 }
 
-bool CloseBehaviorTemplate::Configure(const TiXmlElement *element, unsigned int aId)
+bool CloseBehaviorTemplate::Configure(const tinyxml2::XMLElement *element, unsigned int aId)
 {
 	element->QueryFloatAttribute("range", &mRange);
 	element->QueryFloatAttribute("scaledist", &mScaleDist);
@@ -114,7 +114,7 @@ FarBehaviorTemplate::FarBehaviorTemplate()
 {
 }
 
-bool FarBehaviorTemplate::Configure(const TiXmlElement *element, unsigned int aId)
+bool FarBehaviorTemplate::Configure(const tinyxml2::XMLElement *element, unsigned int aId)
 {
 	element->QueryFloatAttribute("range", &mRange);
 	element->QueryFloatAttribute("scaledist", &mScaleDist);

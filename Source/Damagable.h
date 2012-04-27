@@ -17,7 +17,7 @@ public:
 	DamagableTemplate(void);
 	~DamagableTemplate(void);
 
-	bool Configure(const TiXmlElement *element);
+	bool Configure(const tinyxml2::XMLElement *element);
 };
 
 class GAME_API Damagable

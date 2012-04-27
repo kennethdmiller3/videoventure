@@ -24,7 +24,7 @@ namespace BehaviorDatabase
 				AddConfigure(0x56f6d83c /* "edge" */, Entry(this, &EdgeBehaviorLoader::Configure));
 			}
 
-			unsigned int Configure(unsigned int aId, const TiXmlElement *element)
+			unsigned int Configure(unsigned int aId, const tinyxml2::XMLElement *element)
 			{
 				EdgeBehaviorTemplate &edge = Database::edgebehaviortemplate.Open(aId);
 				edge.Configure(element, aId);
@@ -73,7 +73,7 @@ EdgeBehaviorTemplate::EdgeBehaviorTemplate()
 {
 }
 
-bool EdgeBehaviorTemplate::Configure(const TiXmlElement *element, unsigned int aId)
+bool EdgeBehaviorTemplate::Configure(const tinyxml2::XMLElement *element, unsigned int aId)
 {
 	element->QueryFloatAttribute("strength", &mStrength);
 	element->QueryFloatAttribute("distance", &mDistance);

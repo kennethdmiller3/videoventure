@@ -7,7 +7,7 @@ static Expression::Loader<float>::Auto randomfloat(0xa19b8cd6 /* "rand" */, Conf
 static Expression::Loader<__m128>::Auto randomvector(0xa19b8cd6 /* "rand" */, ConfigureRandom<__m128>);
 
 // configure typed random
-template <typename T> void ConfigureRandom(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
+template <typename T> void ConfigureRandom(const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
 {
 	// width in floats (HACK)
 	const int width = (sizeof(T)+sizeof(float)-1)/sizeof(float);
@@ -43,7 +43,7 @@ template <typename T> void ConfigureRandom(const TiXmlElement *element, std::vec
 		// average
 		sprintf(label, "%s_avg", names[i]);
 		float average = defaults[i];
-		if (element->QueryFloatAttribute(label, &average) == TIXML_SUCCESS)
+		if (element->QueryFloatAttribute(label, &average) == tinyxml2::XML_SUCCESS)
 		{
 			offset[i] = average;
 		}
@@ -51,7 +51,7 @@ template <typename T> void ConfigureRandom(const TiXmlElement *element, std::vec
 		// variance
 		sprintf(label, "%s_var", names[i]);
 		float variance = 0.0f;
-		if (element->QueryFloatAttribute(label, &variance) == TIXML_SUCCESS)
+		if (element->QueryFloatAttribute(label, &variance) == tinyxml2::XML_SUCCESS)
 		{
 			offset[i] = average - variance;
 			scale[i] = variance * 2;
@@ -60,7 +60,7 @@ template <typename T> void ConfigureRandom(const TiXmlElement *element, std::vec
 		// minimum
 		sprintf(label, "%s_min", names[i]);
 		float minimum = 0.0f;
-		if (element->QueryFloatAttribute(label, &minimum) == TIXML_SUCCESS)
+		if (element->QueryFloatAttribute(label, &minimum) == tinyxml2::XML_SUCCESS)
 		{
 			offset[i] = minimum;
 		}
@@ -68,7 +68,7 @@ template <typename T> void ConfigureRandom(const TiXmlElement *element, std::vec
 		// maximum
 		sprintf(label, "%s_max", names[i]);
 		float maximum = 0.0f;
-		if (element->QueryFloatAttribute(label, &maximum) == TIXML_SUCCESS)
+		if (element->QueryFloatAttribute(label, &maximum) == tinyxml2::XML_SUCCESS)
 		{
 			scale[i] = maximum - minimum;
 		}

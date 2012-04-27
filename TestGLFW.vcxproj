@@ -343,13 +343,27 @@
   <ItemGroup>
     <ProjectReference Include="..\Box2D\Box2D\Build\vs2010\Box2D.vcxproj">
       <Project>{98400d17-43a5-1a40-95be-c53ac78e7694}</Project>
+      <Private>true</Private>
+      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
+      <CopyLocalSatelliteAssemblies>false</CopyLocalSatelliteAssemblies>
+      <LinkLibraryDependencies>true</LinkLibraryDependencies>
+      <UseLibraryDependencyInputs>false</UseLibraryDependencyInputs>
     </ProjectReference>
     <ProjectReference Include="..\glfw\support\msvc100\GLFW.vcxproj">
       <Project>{4da03747-f505-4a98-9124-03b3b73b9b3b}</Project>
+      <Private>true</Private>
+      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
+      <CopyLocalSatelliteAssemblies>false</CopyLocalSatelliteAssemblies>
+      <LinkLibraryDependencies>true</LinkLibraryDependencies>
+      <UseLibraryDependencyInputs>false</UseLibraryDependencyInputs>
     </ProjectReference>
-    <ProjectReference Include="tinyxml\tinyxml_lib.vcxproj">
-      <Project>{c406daec-0886-4771-8dea-9d7329b46cc1}</Project>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    <ProjectReference Include="tinyxml2\tinyxml2\tinyxml2.vcxproj">
+      <Project>{16a1d446-5415-444e-a7b4-f35b7da7ee8c}</Project>
+      <Private>true</Private>
+      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
+      <CopyLocalSatelliteAssemblies>false</CopyLocalSatelliteAssemblies>
+      <LinkLibraryDependencies>true</LinkLibraryDependencies>
+      <UseLibraryDependencyInputs>false</UseLibraryDependencyInputs>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

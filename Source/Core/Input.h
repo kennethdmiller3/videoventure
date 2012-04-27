@@ -62,10 +62,10 @@ public:
 	void Update(void);
 
 	// playback inputs
-	void Playback(const TiXmlElement *element);
+	void Playback(const tinyxml2::XMLElement *element);
 
 	// record inputs
-	void Record(TiXmlElement *element, float prev[]);
+	void Record(tinyxml2::XMLElement *element, float prev[]);
 
 	// step inputs
 	void Step(void);
@@ -82,6 +82,6 @@ public:
 	}
 
 	// configure input
-	void ConfigureItem(const TiXmlElement *element);
-	void Configure(const TiXmlElement *element);
+	void ConfigureItem(const tinyxml2::XMLElement *element);
+	void Configure(const tinyxml2::XMLElement *element);
 };

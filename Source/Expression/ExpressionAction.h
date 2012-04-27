@@ -11,4 +11,4 @@ namespace Expression
 	void GAME_API Loop(EntityContext &aContext);
 }
 
-void GAME_API ConfigureAction(const TiXmlElement *element, std::vector<unsigned int> &buffer);
+void GAME_API ConfigureAction(const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer);

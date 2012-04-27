@@ -5,14 +5,14 @@ bool ReadPreferences(const char *config)
 {
 	// load input binding file
 	DebugPrint("Preferences %s\n", config);
-	TiXmlDocument document(config);
-	if (!document.LoadFile())
-		DebugPrint("error loading preferences file \"%s\": %s\n", config, document.ErrorDesc());
+	tinyxml2::XMLDocument document;
+	if (document.LoadFile(config) != tinyxml2::XML_SUCCESS)
+		DebugPrint("error loading preferences file \"%s\": %s %s\n", config, document.GetErrorStr1(), document.GetErrorStr2());
 
 	// process child elements of the root
-	if (const TiXmlElement *root = document.FirstChildElement("preferences"))
+	if (const tinyxml2::XMLElement *root = document.FirstChildElement("preferences"))
 	{
-		for (const TiXmlElement *element = root->FirstChildElement(); element != NULL; element = element->NextSiblingElement())
+		for (const tinyxml2::XMLElement *element = root->FirstChildElement(); element != NULL; element = element->NextSiblingElement())
 		{
 			switch (Hash(element->Value()))
 			{
@@ -22,19 +22,11 @@ bool ReadPreferences(const char *config)
 				break;
 
 			case 0x5032fb58 /* "fullscreen" */:
-				{
-					int enable = SCREEN_FULLSCREEN;
-					element->QueryIntAttribute("enable", &enable);
-					SCREEN_FULLSCREEN = enable != 0;
-				}
+				element->QueryBoolAttribute("enable", &SCREEN_FULLSCREEN);
 				break;
 
 			case 0x423e6b0c /* "verticalsync" */:
-				{
-					int enable = OPENGL_SWAPCONTROL;
-					element->QueryIntAttribute("enable", &enable);
-					OPENGL_SWAPCONTROL = enable != 0;
-				}
+				element->QueryBoolAttribute("enable", &OPENGL_SWAPCONTROL);
 				break;
 
 			case 0x47d0f228 /* "multisample" */:
@@ -43,17 +35,17 @@ bool ReadPreferences(const char *config)
 
 			case 0xf744f3b2 /* "motionblur" */:
 				element->QueryIntAttribute("steps", &MOTIONBLUR_STEPS);
-				if (element->QueryFloatAttribute("strength", &MOTIONBLUR_TIME) == TIXML_SUCCESS)
+				if (element->QueryFloatAttribute("strength", &MOTIONBLUR_TIME) == tinyxml2::XML_SUCCESS)
 					MOTIONBLUR_TIME /= 6000;
 				break;
 
 			case 0x0e0d9594 /* "sound" */:
 				element->QueryIntAttribute("channels", &SOUND_CHANNELS);
-				if (element->QueryFloatAttribute("volume", &SOUND_VOLUME_EFFECT) == TIXML_SUCCESS)
+				if (element->QueryFloatAttribute("volume", &SOUND_VOLUME_EFFECT) == tinyxml2::XML_SUCCESS)
 					SOUND_VOLUME_MUSIC = SOUND_VOLUME_EFFECT /= 100;
-				if (element->QueryFloatAttribute("effectvolume", &SOUND_VOLUME_EFFECT) == TIXML_SUCCESS)
+				if (element->QueryFloatAttribute("effectvolume", &SOUND_VOLUME_EFFECT) == tinyxml2::XML_SUCCESS)
 					SOUND_VOLUME_EFFECT /= 100;
-				if (element->QueryFloatAttribute("musicvolume", &SOUND_VOLUME_MUSIC) == TIXML_SUCCESS)
+				if (element->QueryFloatAttribute("musicvolume", &SOUND_VOLUME_MUSIC) == tinyxml2::XML_SUCCESS)
 					SOUND_VOLUME_MUSIC /= 100;
 				break;
 			}
@@ -69,42 +61,42 @@ bool WritePreferences(const char *config)
 {
 	// load input binding file
 	DebugPrint("Preferences %s\n", config);
-	TiXmlDocument document(config);
+	tinyxml2::XMLDocument document;
 
-	TiXmlDeclaration * declaration = new TiXmlDeclaration( "1.0", "", "" );
+	tinyxml2::XMLDeclaration * declaration = document.NewDeclaration( "1.0" );
 	document.LinkEndChild(declaration);
 
-	TiXmlElement *preferences = new TiXmlElement("preferences");
+	tinyxml2::XMLElement *preferences = document.NewElement("preferences");
 	document.LinkEndChild(preferences);
 
-	TiXmlElement *resolution = new TiXmlElement("resolution");
+	tinyxml2::XMLElement *resolution = document.NewElement("resolution");
 	resolution->SetAttribute("width", SCREEN_WIDTH);
 	resolution->SetAttribute("height", SCREEN_HEIGHT);
 	preferences->LinkEndChild(resolution);
 
-	TiXmlElement *fullscreen = new TiXmlElement("fullscreen");
+	tinyxml2::XMLElement *fullscreen = document.NewElement("fullscreen");
 	fullscreen->SetAttribute("enable", SCREEN_FULLSCREEN);
 	preferences->LinkEndChild(fullscreen);
 
-	TiXmlElement *verticalsync = new TiXmlElement("verticalsync");
+	tinyxml2::XMLElement *verticalsync = document.NewElement("verticalsync");
 	verticalsync->SetAttribute("enable", OPENGL_SWAPCONTROL);
 	preferences->LinkEndChild(verticalsync);
 
-	TiXmlElement *multisample = new TiXmlElement("multisample");
+	tinyxml2::XMLElement *multisample = document.NewElement("multisample");
 	multisample->SetAttribute("samples", OPENGL_MULTISAMPLE);
 	preferences->LinkEndChild(multisample);
 
-	TiXmlElement *motionblur = new TiXmlElement("motionblur");
+	tinyxml2::XMLElement *motionblur = document.NewElement("motionblur");
 	motionblur->SetAttribute("steps", MOTIONBLUR_STEPS);
 	motionblur->SetAttribute("strength", xs_RoundToInt(MOTIONBLUR_TIME*6000));
 	preferences->LinkEndChild(motionblur);
 
-	TiXmlElement *sound = new TiXmlElement("sound");
+	tinyxml2::XMLElement *sound = document.NewElement("sound");
 	sound->SetAttribute("channels", SOUND_CHANNELS);
 	sound->SetAttribute("effectvolume", xs_RoundToInt(SOUND_VOLUME_EFFECT*100));
 	sound->SetAttribute("musicvolume", xs_RoundToInt(SOUND_VOLUME_MUSIC*100));
 	preferences->LinkEndChild(sound);
 
-	document.SaveFile();
+	document.SaveFile(config);
 	return true;
 }

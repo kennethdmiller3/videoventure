@@ -22,8 +22,8 @@ public:
 	~ChargeStateTemplate();
 
 	// configure
-	bool ConfigureAction(const TiXmlElement *element, unsigned int aId);
-	bool Configure(const TiXmlElement *element, unsigned int aId);
+	bool ConfigureAction(const tinyxml2::XMLElement *element, unsigned int aId);
+	bool Configure(const tinyxml2::XMLElement *element, unsigned int aId);
 };
 
 class ChargeWeaponTemplate
@@ -43,7 +43,7 @@ public:
 	~ChargeWeaponTemplate(void);
 
 	// configure
-	bool Configure(const TiXmlElement *element, unsigned int aId);
+	bool Configure(const tinyxml2::XMLElement *element, unsigned int aId);
 };
 
 class ChargeWeapon

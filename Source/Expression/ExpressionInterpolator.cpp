@@ -177,20 +177,20 @@ template <typename T> const T EvaluateInterpolatorConstant(EntityContext &aConte
 }
 
 // configure typed interpolator
-template <typename T> void ConfigureInterpolator(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
+template <typename T> void ConfigureInterpolator(const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
 {
 	// append an interpolator expression
 #ifdef PRINT_CONFIGURE_EXPRESSION
 	DebugPrint("%s interpolator\n", Expression::Schema<T>::NAME);
 #endif
-	int interpolate = 1;
-	element->QueryIntAttribute("interpolate", &interpolate);
+	bool interpolate = true;
+	element->QueryBoolAttribute("interpolate", &interpolate);
 	if (interpolate)
 		Expression::Append(buffer, EvaluateInterpolator<T>);
 	else
 		Expression::Append(buffer, EvaluateInterpolatorConstant<T>);
 
-	if (const TiXmlElement *param = element->FirstChildElement("param"))
+	if (const tinyxml2::XMLElement *param = element->FirstChildElement("param"))
 	{
 		// get param expression
 		Expression::Loader<float>::ConfigureRoot(param, buffer, sScalarNames, sScalarDefault);

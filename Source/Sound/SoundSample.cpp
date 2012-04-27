@@ -5,7 +5,7 @@
 #include "SoundUtilities.h"
 #include "Interpolator.h"
 
-static bool Configure(SoundTemplate &self, const TiXmlElement *element, unsigned int id)
+static bool Configure(SoundTemplate &self, const tinyxml2::XMLElement *element, unsigned int id)
 {
 	// sample length
 	float length = 0;
