@@ -3,7 +3,7 @@
 #include "PhysicsUtilities.h"
 #include "PhysicsPrismaticJoint.h"
 
-static bool ConfigurePrismaticJointItem(const TiXmlElement *element, b2PrismaticJointDef &joint)
+static bool ConfigurePrismaticJointItem(const tinyxml2::XMLElement *element, b2PrismaticJointDef &joint)
 {
 	const char *name = element->Value();
 	switch (Hash(name))
@@ -24,7 +24,7 @@ static bool ConfigurePrismaticJointItem(const TiXmlElement *element, b2Prismatic
 		return true;
 
 	case 0xad544418 /* "angle" */:
-		if (element->QueryFloatAttribute("value", &joint.referenceAngle) == TIXML_SUCCESS)
+		if (element->QueryFloatAttribute("value", &joint.referenceAngle) == tinyxml2::XML_SUCCESS)
 			joint.referenceAngle *= float(M_PI)/180.0f;
 		return true;
 
@@ -59,7 +59,7 @@ namespace Database
 				AddConfigure(0x4954853d /* "prismaticjoint" */, Entry(this, &PrismaticJointLoader::Configure));
 			}
 
-			void Configure(unsigned int aId, const TiXmlElement *element)
+			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
 			{
 				Typed<b2PrismaticJointDef> defs = Database::prismaticjointdef.Open(aId);
 
@@ -72,7 +72,7 @@ namespace Database
 
 				// configure the joint definition
 				b2PrismaticJointDef &def = defs.Open(aSubId);
-				for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+				for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 				{
 					ConfigurePrismaticJointItem(child, def);
 				}

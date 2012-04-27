@@ -51,7 +51,7 @@ namespace BehaviorDatabase
 				RemoveConfigure(0xc4fc7791 /* "ripoff" */, Entry(this, &RipOffBehaviorLoader::Configure));
 			}
 
-			unsigned int Configure(unsigned int aId, const TiXmlElement *element)
+			unsigned int Configure(unsigned int aId, const tinyxml2::XMLElement *element)
 			{
 				RipOffBehaviorTemplate &ripoff = Database::ripoffbehaviortemplate.Open(aId);
 				ripoff.Configure(element, aId);
@@ -113,12 +113,12 @@ RipOffBehaviorTemplate::RipOffBehaviorTemplate(void)
 }
 
 // configure
-bool RipOffBehaviorTemplate::Configure(const TiXmlElement *element, unsigned int aId)
+bool RipOffBehaviorTemplate::Configure(const tinyxml2::XMLElement *element, unsigned int aId)
 {
 	if (const char *tag = element->Attribute("targettag"))
 		mTargetTag = Hash(tag);
 
-	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+	for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
 		switch (Hash(child->Value()))
 		{

@@ -21,4 +21,4 @@ namespace Expression
 }
 
 // configure construct expression
-template <typename T> void ConfigureConstruct(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[]);
+template <typename T> void ConfigureConstruct(const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[]);

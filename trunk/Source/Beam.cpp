@@ -40,7 +40,7 @@ namespace Database
 				AddConfigure(0xa75279fa /* "beam" */, Entry(this, &BeamLoader::Configure));
 			}
 
-			void Configure(unsigned int aId, const TiXmlElement *element)
+			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
 			{
 				BeamTemplate &beam = Database::beamtemplate.Open(aId);
 				beam.Configure(element, aId);
@@ -96,7 +96,7 @@ BeamTemplate::~BeamTemplate(void)
 }
 
 
-bool BeamTemplate::Configure(const TiXmlElement *element, unsigned int id)
+bool BeamTemplate::Configure(const tinyxml2::XMLElement *element, unsigned int id)
 {
 	element->QueryFloatAttribute("life", &mLifeSpan);
 	element->QueryFloatAttribute("damage", &mDamage);
@@ -109,7 +109,7 @@ bool BeamTemplate::Configure(const TiXmlElement *element, unsigned int id)
 	if (element->FirstChildElement())
 	{
 		Database::Typed<std::vector<unsigned int> > &properties = Database::beamproperty.Open(id);
-		for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+		for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 		{
 			unsigned int propId = Hash(child->Value());
 			std::vector<unsigned int> &buffer = properties.Open(propId);

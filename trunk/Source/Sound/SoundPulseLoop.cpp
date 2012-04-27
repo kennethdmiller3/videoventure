@@ -5,7 +5,7 @@
 #include "SoundUtilities.h"
 
 // 
-static bool Configure(SoundTemplate &self, const TiXmlElement *element, unsigned int id)
+static bool Configure(SoundTemplate &self, const tinyxml2::XMLElement *element, unsigned int id)
 {
 	// clock frequency
 	int frequency = 3579000;
@@ -48,35 +48,35 @@ static bool Configure(SoundTemplate &self, const TiXmlElement *element, unsigned
 	int value;
 
 	unsigned char pulse1delay = 0;			// [0x13]
-	if (element->QueryIntAttribute("pulse1delay", &value) == TIXML_SUCCESS)
+	if (element->QueryIntAttribute("pulse1delay", &value) == tinyxml2::XML_SUCCESS)
 		pulse1delay = unsigned char(value);
 
 	unsigned char pulse2delay = 0;			// [0x14]
-	if (element->QueryIntAttribute("pulse2delay", &value) == TIXML_SUCCESS)
+	if (element->QueryIntAttribute("pulse2delay", &value) == tinyxml2::XML_SUCCESS)
 		pulse2delay = unsigned char(value);
 
 	unsigned char pulse1innerdelta = 0;		// [0x15]
-	if (element->QueryIntAttribute("pulse1innerdelta", &value) == TIXML_SUCCESS)
+	if (element->QueryIntAttribute("pulse1innerdelta", &value) == tinyxml2::XML_SUCCESS)
 		pulse1innerdelta = unsigned char(value);
 
 	unsigned char pulse2innerdelta = 0;		// [0x16]
-	if (element->QueryIntAttribute("pulse2innerdelta", &value) == TIXML_SUCCESS)
+	if (element->QueryIntAttribute("pulse2innerdelta", &value) == tinyxml2::XML_SUCCESS)
 		pulse2innerdelta = unsigned char(value);
 
 	unsigned char pulse1outerdelta = 0;		// [0x1A]
-	if (element->QueryIntAttribute("pulse1outerdelta", &value) == TIXML_SUCCESS)
+	if (element->QueryIntAttribute("pulse1outerdelta", &value) == tinyxml2::XML_SUCCESS)
 		pulse1outerdelta = unsigned char(value);
 
 	unsigned char pulse2outerdelta = 0;		// new!
-	if (element->QueryIntAttribute("pulse2outerdelta", &value) == TIXML_SUCCESS)
+	if (element->QueryIntAttribute("pulse2outerdelta", &value) == tinyxml2::XML_SUCCESS)
 		pulse2outerdelta = unsigned char(value);
 
 	unsigned char pulse1output = 0;				// ~[0x1B]
-	if (element->QueryIntAttribute("pulse1output", &value) == TIXML_SUCCESS)
+	if (element->QueryIntAttribute("pulse1output", &value) == tinyxml2::XML_SUCCESS)
 		pulse1output = unsigned char(value);
 
 	unsigned char pulse2output = 0;				// [0x1B]
-	if (element->QueryIntAttribute("pulse2output", &value) == TIXML_SUCCESS)
+	if (element->QueryIntAttribute("pulse2output", &value) == tinyxml2::XML_SUCCESS)
 		pulse2output = unsigned char(value);
 
 	int totalpulsedelay = 0;				// [0x18,0x19]

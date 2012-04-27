@@ -20,10 +20,10 @@ namespace Database
 				AddConfigure(0x7a57caa8 /* "playercontroller" */, Entry(this, &PlayerControllerLoader::Configure));
 			}
 
-			void Configure(unsigned int aId, const TiXmlElement *element)
+			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
 			{
 				PlayerControllerTemplate &playercontroller = Database::playercontrollertemplate.Open(aId);
-				for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+				for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 				{
 					switch (Hash(child->Value()))
 					{

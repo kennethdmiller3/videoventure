@@ -4,7 +4,7 @@ class SoundTemplate;
 
 namespace SoundConfigure
 {
-	typedef fastdelegate::FastDelegate<bool (SoundTemplate &self, const TiXmlElement *element, unsigned int id)> Entry;
+	typedef fastdelegate::FastDelegate<bool (SoundTemplate &self, const tinyxml2::XMLElement *element, unsigned int id)> Entry;
 
 	void Add(unsigned int aTagId, Entry aEntry);
 	void Remove(unsigned int aTagId);

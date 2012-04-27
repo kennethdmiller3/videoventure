@@ -122,7 +122,7 @@ namespace Database
 				AddConfigure(0x6f332041 /* "weapon" */, Entry(this, &WeaponLoader::Configure));
 			}
 
-			void Configure(unsigned int aId, const TiXmlElement *element)
+			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
 			{
 				WeaponTemplate &weapon = Database::weapontemplate.Open(aId);
 				weapon.Configure(element, aId);
@@ -506,14 +506,14 @@ void WeaponTemplateOld::BuildAction(std::vector<unsigned int> &aAction, unsigned
 }
 
 // configue a parameter
-static void ConfigureParameter(const TiXmlElement *element, const char *param, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
+static void ConfigureParameter(const tinyxml2::XMLElement *element, const char *param, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
 {
 	// get constant value from attribute
 	float value = defaults[0];
 	element->QueryFloatAttribute(param, &value);
 
 	// if there is a child tag for the parameter...
-	if (const TiXmlElement *child = element->FirstChildElement(param))
+	if (const tinyxml2::XMLElement *child = element->FirstChildElement(param))
 	{
 		// configure the expression
 		Expression::Loader<float>::ConfigureRoot(child, buffer, names, &value);
@@ -525,10 +525,10 @@ static void ConfigureParameter(const TiXmlElement *element, const char *param, s
 	}
 }
 
-bool WeaponTemplate::ConfigureAction(const TiXmlElement *element, unsigned int aId)
+bool WeaponTemplate::ConfigureAction(const tinyxml2::XMLElement *element, unsigned int aId)
 {
 	// process child elements
-	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+	for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
 		unsigned int aPropId = Hash(child->Value());
 		switch (aPropId)
@@ -580,7 +580,7 @@ bool WeaponTemplate::ConfigureAction(const TiXmlElement *element, unsigned int a
 
 		case 0xaf85ad29 /* "flash" */:
 			Expression::Append(mAction, WeaponFlash, Hash(child->Attribute("name")));
-			if (const TiXmlElement *param = child->FirstChildElement("position"))
+			if (const tinyxml2::XMLElement *param = child->FirstChildElement("position"))
 				Expression::Loader<__m128>::ConfigureRoot(param, mAction, sTransformNames, sTransformDefault);
 			else
 				Expression::Append(mAction, Expression::Constant<__m128>, _mm_setzero_ps());
@@ -588,11 +588,11 @@ bool WeaponTemplate::ConfigureAction(const TiXmlElement *element, unsigned int a
 
 		case 0x399bf05d /* "ordnance" */:
 			Expression::Append(mAction, WeaponOrdnance, Hash(child->Attribute("name")), mTrack);
-			if (const TiXmlElement *param = child->FirstChildElement("position"))
+			if (const tinyxml2::XMLElement *param = child->FirstChildElement("position"))
 				Expression::Loader<__m128>::ConfigureRoot(param, mAction, sTransformNames, sTransformDefault);
 			else
 				Expression::Append(mAction, Expression::Constant<__m128>, _mm_setzero_ps());
-			if (const TiXmlElement *param = child->FirstChildElement("velocity"))
+			if (const tinyxml2::XMLElement *param = child->FirstChildElement("velocity"))
 				Expression::Loader<__m128>::ConfigureRoot(param, mAction, sTransformNames, sTransformDefault);
 			else
 				Expression::Append(mAction, Expression::Constant<__m128>, _mm_setzero_ps());
@@ -649,12 +649,12 @@ bool WeaponTemplate::ConfigureAction(const TiXmlElement *element, unsigned int a
 	return true;
 }
 
-bool WeaponTemplate::Configure(const TiXmlElement *element, unsigned int aId)
+bool WeaponTemplate::Configure(const tinyxml2::XMLElement *element, unsigned int aId)
 {
 	bool buildOldWeaponAction = false;
 
 	// process child elements
-	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+	for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
 		unsigned int aPropId = Hash(child->Value());
 		switch (aPropId)
@@ -692,7 +692,7 @@ bool WeaponTemplate::Configure(const TiXmlElement *element, unsigned int aId)
 				case 0x316c9fa1 /* "invert" */:		mTrigger = TRIGGER_INVERT; break;
 				case 0x6736afe4 /* "always" */:		mTrigger = TRIGGER_ALWAYS; break;
 				};
-				if (child->QueryIntAttribute("channel", &mChannel) == TIXML_SUCCESS)
+				if (child->QueryIntAttribute("channel", &mChannel) == tinyxml2::XML_SUCCESS)
 					--mChannel;
 			}
 			break;
@@ -710,8 +710,8 @@ bool WeaponTemplate::Configure(const TiXmlElement *element, unsigned int aId)
 			// TO DO: support inheritance
 			// TO DO: support "call"
 			{
-				int inherit = 0;
-				child->QueryIntAttribute("inherit", &inherit);
+				bool inherit = false;
+				child->QueryBoolAttribute("inherit", &inherit);
 				if (!inherit)
 					mAction.clear();
 

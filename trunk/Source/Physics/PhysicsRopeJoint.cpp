@@ -3,7 +3,7 @@
 #include "PhysicsUtilities.h"
 #include "PhysicsRopeJoint.h"
 
-static bool ConfigureRopeJointItem(const TiXmlElement *element, b2RopeJointDef &joint)
+static bool ConfigureRopeJointItem(const tinyxml2::XMLElement *element, b2RopeJointDef &joint)
 {
 	const char *name = element->Value();
 	switch (Hash(name))
@@ -41,7 +41,7 @@ namespace Database
 				AddConfigure(0x84e3150f /* "ropejoint" */, Entry(this, &RopeJointLoader::Configure));
 			}
 
-			void Configure(unsigned int aId, const TiXmlElement *element)
+			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
 			{
 				Typed<b2RopeJointDef> defs = Database::ropejointdef.Open(aId);
 
@@ -54,7 +54,7 @@ namespace Database
 
 				// configure the joint definition
 				b2RopeJointDef &def = defs.Open(aSubId);
-				for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+				for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 				{
 					ConfigureRopeJointItem(child, def);
 				}

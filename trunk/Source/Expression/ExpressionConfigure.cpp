@@ -8,7 +8,7 @@ template Expression::Loader<__m128>;
 
 //
 // configure an expression
-template <typename T> void Expression::Loader<T>::Configure(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
+template <typename T> void Expression::Loader<T>::Configure(const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
 {
 #ifdef PRINT_CONFIGURE_EXPRESSION
 	DebugPrint("%s expression %s\n", Expression::Schema<T>::NAME, element->Value());
@@ -28,7 +28,7 @@ template <typename T> void Expression::Loader<T>::Configure(const TiXmlElement *
 	bool overrided = false;
 	for (int i = 0; i < width; ++i)
 	{
-		if (element->QueryFloatAttribute(names[i], &data[i]) == TIXML_SUCCESS)
+		if (element->QueryFloatAttribute(names[i], &data[i]) == tinyxml2::XML_SUCCESS)
 			overrided = true;
 	}
 
@@ -46,7 +46,7 @@ template <typename T> void Expression::Loader<T>::Configure(const TiXmlElement *
 }
 
 // configure an expression root (the tag hosting the expression)
-template <typename T> void Expression::Loader<T>::ConfigureRoot(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
+template <typename T> void Expression::Loader<T>::ConfigureRoot(const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
 {
 #ifdef PRINT_CONFIGURE_EXPRESSION
 	DebugPrint("%s root %s\n", Expression::Schema<T>::NAME, element->Value());
@@ -63,7 +63,7 @@ template <typename T> void Expression::Loader<T>::ConfigureRoot(const TiXmlEleme
 	bool overrided = false;
 	for (int i = 0; i < width; ++i)
 	{
-		if (element->QueryFloatAttribute(names[i], &data[i]) == TIXML_SUCCESS)
+		if (element->QueryFloatAttribute(names[i], &data[i]) == tinyxml2::XML_SUCCESS)
 			overrided = true;
 	}
 
@@ -107,7 +107,7 @@ template <typename T> void Expression::Loader<T>::ConfigureRoot(const TiXmlEleme
 	}
 
 	// for each child node...
-	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+	for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
 		// recurse on child
 		Configure(child, buffer, names, data);
@@ -115,7 +115,7 @@ template <typename T> void Expression::Loader<T>::ConfigureRoot(const TiXmlEleme
 }
 
 // specialization for boolean
-template<> void Expression::Loader<bool>::Configure(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
+template<> void Expression::Loader<bool>::Configure(const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
 {
 	unsigned int hash = Hash(element->Value());
 

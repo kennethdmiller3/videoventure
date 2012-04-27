@@ -33,7 +33,7 @@ public:
 	~GrazeTemplate(void);
 
 	// configure
-	bool Configure(const TiXmlElement *element, unsigned int id);
+	bool Configure(const tinyxml2::XMLElement *element, unsigned int id);
 };
 
 

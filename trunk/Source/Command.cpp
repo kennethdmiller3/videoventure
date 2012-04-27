@@ -256,12 +256,12 @@ int CommandImport(const char * const aParam[], int aCount)
 	if (aCount > 0)
 	{
 		// level configuration
-		TiXmlDocument document(aParam[0]);
-		if (!document.LoadFile())
-			DebugPrint("error loading import file \"%s\": %s\n", aParam[0], document.ErrorDesc());
+		tinyxml2::XMLDocument document;
+		if (document.LoadFile(aParam[0]) != tinyxml2::XML_SUCCESS)
+			DebugPrint("error loading import file \"%s\": %s %s\n", aParam[0], document.GetErrorStr1(), document.GetErrorStr2());
 
 		// process child element
-		if (const TiXmlElement *root = document.FirstChildElement())
+		if (const tinyxml2::XMLElement *root = document.FirstChildElement())
 			ConfigureWorldItem(root);
 		return 1;
 	}

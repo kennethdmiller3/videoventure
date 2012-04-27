@@ -454,21 +454,22 @@ void RunState()
 #endif
 
 	// input logging
-	TiXmlDocument inputlog(RECORD_CONFIG.c_str());
-	TiXmlElement *inputlogroot = NULL;
-	TiXmlElement *inputlognext = NULL;
+	tinyxml2::XMLDocument inputlog;
+	tinyxml2::XMLElement *inputlogroot = NULL;
+	tinyxml2::XMLElement *inputlognext = NULL;
 	if (curgamestate == STATE_PLAY)
 	{
 		if (playback)
 		{
-			if (!inputlog.LoadFile())
-				DebugPrint("error loading recording file \"%s\": %s\n", RECORD_CONFIG.c_str(), inputlog.ErrorDesc());
+			if (inputlog.LoadFile(RECORD_CONFIG.c_str()) != tinyxml2::XML_SUCCESS)
+				DebugPrint("error loading recording file \"%s\": %s %s\n", RECORD_CONFIG.c_str(), inputlog.GetErrorStr1(), inputlog.GetErrorStr2());
 			inputlogroot = inputlog.RootElement();
 			inputlognext = inputlogroot->FirstChildElement();
 		}
 		else if (record)
 		{
-			inputlogroot = inputlog.LinkEndChild(new TiXmlElement("journal"))->ToElement();
+			inputlogroot = inputlog.NewElement("journal");
+			inputlog.LinkEndChild(inputlogroot);
 			inputlognext = NULL;
 		}
 	}
@@ -670,11 +671,11 @@ void RunState()
 						if (changed)
 						{
 							// create an input turn entry
-							TiXmlElement item( "input" );
-							item.SetAttribute( "turn", sim_turn );
+							tinyxml2::XMLElement *item = inputlog.NewElement("input");
+							item->SetAttribute( "turn", sim_turn );
 
 							// add changed control values
-							input.Record(&item, prev);
+							input.Record(item, prev);
 
 							// add the new input entry
 							inputlogroot->InsertEndChild(item);
@@ -1062,7 +1063,7 @@ void RunState()
 		if (record)
 		{
 			// save input log
-			inputlog.SaveFile();
+			inputlog.SaveFile(RECORD_CONFIG.c_str());
 		}
 	}
 }

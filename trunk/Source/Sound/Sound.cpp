@@ -131,9 +131,9 @@ namespace Database
 				AddConfigure(0x01ba332d /* "soundsystem" */, Entry(this, &SoundSystemLoader::Configure));
 			}
 
-			void Configure(unsigned int aId, const TiXmlElement *element)
+			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
 			{
-				for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+				for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 				{
 					switch (Hash(child->Value()))
 					{
@@ -167,7 +167,7 @@ namespace Database
 				AddConfigure(0x0e0d9594 /* "sound" */, Entry(this, &SoundLoader::Configure));
 			}
 
-			void Configure(unsigned int aId, const TiXmlElement *element)
+			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
 			{
 				// open sound template
 				SoundTemplate &sound = Database::soundtemplate.Open(aId);
@@ -198,7 +198,7 @@ namespace Database
 				AddConfigure(0xf23cbd5f /* "soundcue" */, Entry(this, &SoundCueLoader::Configure));
 			}
 
-			void Configure(unsigned int aId, const TiXmlElement *element)
+			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
 			{
 				// open soundcue
 				Typed<unsigned int> &soundcue = Database::soundcue.Open(aId);
@@ -211,7 +211,7 @@ namespace Database
 				}
 
 				// process sound cue configuration
-				for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+				for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 				{
 					switch (Hash(child->Value()))
 					{
@@ -244,7 +244,7 @@ namespace Database
 				AddConfigure(0x9f9c4fd4 /* "music" */, Entry(this, &MusicLoader::Configure));
 			}
 
-			void Configure(unsigned int aId, const TiXmlElement *element)
+			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
 			{
 				if (const char *file = element->Attribute("file"))
 					musictemplate.Put(aId, file);
@@ -426,7 +426,7 @@ SoundTemplate::~SoundTemplate(void)
 	free(mData);
 }
 
-bool SoundTemplate::Configure(const TiXmlElement *element, unsigned int id)
+bool SoundTemplate::Configure(const tinyxml2::XMLElement *element, unsigned int id)
 {
 #ifdef PROFILE_SOUND_SYNTHESIS
 	LARGE_INTEGER freq;
@@ -445,7 +445,7 @@ bool SoundTemplate::Configure(const TiXmlElement *element, unsigned int id)
 	element->QueryIntAttribute("repeat", &mRepeat);
 
 	// process sound configuration
-	for (const TiXmlElement *child = element->FirstChildElement(); child; child = child->NextSiblingElement())
+	for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child; child = child->NextSiblingElement())
 	{
 		unsigned int hash = Hash(child->Value());
 		const SoundConfigure::Entry &configure = SoundConfigure::Get(hash);

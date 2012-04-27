@@ -29,7 +29,7 @@ public:
 	SoundTemplate(const SoundTemplate &aTemplate);
 	~SoundTemplate(void);
 
-	bool Configure(const TiXmlElement *element, unsigned int id);
+	bool Configure(const tinyxml2::XMLElement *element, unsigned int id);
 
 	void Reserve(size_t count);
 	void Trim(void);

@@ -6,7 +6,7 @@
 #include "ExpressionConvert.h"
 #include "ExpressionConfigure.h"
 
-template<typename T> static void ConfigureWorldTime(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
+template<typename T> static void ConfigureWorldTime(const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
 {
 	Expression::Convert<T, float>::Append(buffer);
 	Expression::Append(buffer, EvaluateWorldTime);
@@ -15,7 +15,7 @@ template<typename T> static void ConfigureWorldTime(const TiXmlElement *element,
 static Expression::Loader<float>::Auto worldtimefloat(0xf667bf8a /* "worldtime" */, ConfigureWorldTime<float>);
 static Expression::Loader<__m128>::Auto worldtimevector(0xf667bf8a /* "worldtime" */, ConfigureWorldTime<__m128>);
 
-template<typename T> static void ConfigureTime(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
+template<typename T> static void ConfigureTime(const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
 {
 	Expression::Convert<T, float>::Append(buffer);
 	Expression::Append(buffer, EvaluateTime);

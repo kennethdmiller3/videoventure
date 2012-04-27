@@ -8,7 +8,7 @@
 #include "ExpressionNoise.h"
 #include "Noise.h"
 
-template<typename T> static void ConfigureNoise(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
+template<typename T> static void ConfigureNoise(const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
 {
 	Expression::Convert<T, float>::Append(buffer);
 	ConfigureNoise(element, buffer, names, defaults);
@@ -18,14 +18,14 @@ static Expression::Loader<float>::Auto noisefloat(0x904416d1 /* "noise" */, Conf
 static Expression::Loader<__m128>::Auto noisevector(0x904416d1 /* "noise" */, ConfigureNoise<__m128>);
 
 // configue a parameter
-static bool ConfigureParameter(const TiXmlElement *element, const char *param, std::vector<unsigned int> &buffer, float (*op)(Expression::Context &), const char * const names[], const float defvalue, const float identity)
+static bool ConfigureParameter(const tinyxml2::XMLElement *element, const char *param, std::vector<unsigned int> &buffer, float (*op)(Expression::Context &), const char * const names[], const float defvalue, const float identity)
 {
 	// get constant value from attribute
 	float value = defvalue;
 	element->QueryFloatAttribute(param, &value);
 
 	// if there is a child tag for the parameter...
-	if (const TiXmlElement *child = element->FirstChildElement(param))
+	if (const tinyxml2::XMLElement *child = element->FirstChildElement(param))
 	{
 		// append the operation (if any)
 		if (op)
@@ -55,7 +55,7 @@ static bool ConfigureParameter(const TiXmlElement *element, const char *param, s
 //
 // NOISE EXPRESSION
 //
-void ConfigureNoise(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
+void ConfigureNoise(const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
 {
 	// configure offset
 	ConfigureParameter(element, "offset", buffer, Expression::Add<float>, sScalarNames, 0.0f, 0.0f);
@@ -63,7 +63,7 @@ void ConfigureNoise(const TiXmlElement *element, std::vector<unsigned int> &buff
 	// configure scale
 	ConfigureParameter(element, "scale", buffer, Expression::Mul<float>, sScalarNames, 1.0f, 1.0f);
 
-	const TiXmlElement *arg1 = element->FirstChildElement();
+	const tinyxml2::XMLElement *arg1 = element->FirstChildElement();
 	if (!arg1)
 	{
 #ifdef PRINT_CONFIGURE_EXPRESSION
@@ -73,7 +73,7 @@ void ConfigureNoise(const TiXmlElement *element, std::vector<unsigned int> &buff
 		return;
 	}
 
-	const TiXmlElement *arg2 = arg1->NextSiblingElement();
+	const tinyxml2::XMLElement *arg2 = arg1->NextSiblingElement();
 	if (!arg2)
 	{
 #ifdef PRINT_CONFIGURE_EXPRESSION
@@ -84,7 +84,7 @@ void ConfigureNoise(const TiXmlElement *element, std::vector<unsigned int> &buff
 		return;
 	}
 
-	const TiXmlElement *arg3 = arg2->NextSiblingElement();
+	const tinyxml2::XMLElement *arg3 = arg2->NextSiblingElement();
 	if (!arg3)
 	{
 #ifdef PRINT_CONFIGURE_EXPRESSION
@@ -96,7 +96,7 @@ void ConfigureNoise(const TiXmlElement *element, std::vector<unsigned int> &buff
 		return;
 	}
 
-	const TiXmlElement *arg4 = arg3->NextSiblingElement();
+	const tinyxml2::XMLElement *arg4 = arg3->NextSiblingElement();
 	if (!arg4)
 	{
 #ifdef PRINT_CONFIGURE_EXPRESSION

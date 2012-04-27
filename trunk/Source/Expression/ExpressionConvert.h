@@ -76,4 +76,4 @@ namespace Expression
 }
 
 // configure conversion
-template <typename T, typename A> void ConfigureConvert(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[]);
+template <typename T, typename A> void ConfigureConvert(const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[]);

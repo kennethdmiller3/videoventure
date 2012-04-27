@@ -25,7 +25,7 @@ namespace Database
 				RemoveConfigure(0xeb9ca706 /* "enginebase" */, Entry(this, &EngineBaseLoader::Configure));
 			}
 
-			void Configure(unsigned int aId, const TiXmlElement *element)
+			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
 			{
 				float &enginebase = Database::enginebasetemplate.Open(aId);
 				element->QueryFloatAttribute("speed", &enginebase);
@@ -47,7 +47,7 @@ namespace Database
 				RemoveConfigure(0xc31e166e /* "engineadd" */, Entry(this, &EngineAddLoader::Configure));
 			}
 
-			void Configure(unsigned int aId, const TiXmlElement *element)
+			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
 			{
 				float &engineadd = Database::engineaddtemplate.Open(aId);
 				element->QueryFloatAttribute("speed", &engineadd);

@@ -120,7 +120,7 @@ namespace Database
 				Database::collidablefilter.CloseDefault();
 			}
 
-			void Configure(unsigned int aId, const TiXmlElement *element)
+			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
 			{
 				if (!Database::collidablefilter.Find(aId))
 					Database::collidablefilter.Put(aId, Collidable::GetDefaultFilter());
@@ -139,7 +139,7 @@ namespace Database
 				AddConfigure(0x74e9dbae /* "collidable" */, Entry(this, &CollidableLoader::Configure));
 			}
 
-			void Configure(unsigned int aId, const TiXmlElement *element)
+			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
 			{
 				CollidableTemplate &collidable = Database::collidabletemplate.Open(aId);
 				collidable.Configure(element, aId);
@@ -174,25 +174,25 @@ namespace Database
 	}
 }
 
-static void ConfigureFilterCategory(b2Filter &aFilter, const TiXmlElement *element, const char *name)
+static void ConfigureFilterCategory(b2Filter &aFilter, const tinyxml2::XMLElement *element, const char *name)
 {
 	int category = 0;
-	if (element->QueryIntAttribute(name, &category) == TIXML_SUCCESS)
+	if (element->QueryIntAttribute(name, &category) == tinyxml2::XML_SUCCESS)
 		aFilter.categoryBits = (category >= 0) ? (1<<category) : 0;
 }
 
-static void ConfigureFilterMask(b2Filter &aFilter, const TiXmlElement *element)
+static void ConfigureFilterMask(b2Filter &aFilter, const tinyxml2::XMLElement *element)
 {
-	int defvalue = 1;
-	if (element->QueryIntAttribute("default", &defvalue) == TIXML_SUCCESS)
+	bool defvalue = true;
+	if (element->QueryBoolAttribute("default", &defvalue) == tinyxml2::XML_SUCCESS)
 		aFilter.maskBits = defvalue ? 0xFFFF : 0x0000;
 
 	char buf[16];
 	for (int i = 0; i < 16; i++)
 	{
 		sprintf(buf, "bit%d", i);
-		int bit = 0;
-		if (element->QueryIntAttribute(buf, &bit) == TIXML_SUCCESS)
+		bool bit = false;
+		if (element->QueryBoolAttribute(buf, &bit) == tinyxml2::XML_SUCCESS)
 		{
 			if (bit)
 				aFilter.maskBits |= (1 << i);
@@ -202,14 +202,14 @@ static void ConfigureFilterMask(b2Filter &aFilter, const TiXmlElement *element)
 	}
 }
 
-static void ConfigureFilterGroup(b2Filter &aFilter, const TiXmlElement *element, const char *name)
+static void ConfigureFilterGroup(b2Filter &aFilter, const tinyxml2::XMLElement *element, const char *name)
 {
 	int group = aFilter.groupIndex;
 	element->QueryIntAttribute(name, &group);
 	aFilter.groupIndex = short(group);
 }
 
-void ConfigureFilterData(b2Filter &aFilter, const TiXmlElement *element)
+void ConfigureFilterData(b2Filter &aFilter, const tinyxml2::XMLElement *element)
 {
 	if (const char *name = (Hash(element->Value()) == 0xc7e16877 /* "filter" */) ? element->Attribute("name") : element->Attribute("filter"))
 		aFilter = Database::collidablefilter.Get(Hash(name));
@@ -218,7 +218,7 @@ void ConfigureFilterData(b2Filter &aFilter, const TiXmlElement *element)
 	ConfigureFilterMask(aFilter, element);
 	ConfigureFilterGroup(aFilter, element, "group");
 
-	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+	for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
 		switch(Hash(child->Value()))
 		{
@@ -254,7 +254,7 @@ CollidableTemplate::~CollidableTemplate(void)
 {
 }
 
-bool CollidableTemplate::ConfigureFixtureItem(const TiXmlElement *element, b2FixtureDef &fixture)
+bool CollidableTemplate::ConfigureFixtureItem(const tinyxml2::XMLElement *element, b2FixtureDef &fixture)
 {
 	const char *name = element->Value();
 	switch (Hash(name))
@@ -288,11 +288,7 @@ bool CollidableTemplate::ConfigureFixtureItem(const TiXmlElement *element, b2Fix
 		return true;
 
 	case 0x83b6367b /* "sensor" */:
-		{
-			int sensor = fixture.isSensor;
-			element->QueryIntAttribute("value", &sensor);
-			fixture.isSensor = sensor != 0;
-		}
+		element->QueryBoolAttribute("value", &fixture.isSensor);
 		return true;
 
 	default:
@@ -300,23 +296,23 @@ bool CollidableTemplate::ConfigureFixtureItem(const TiXmlElement *element, b2Fix
 	}
 }
 
-bool CollidableTemplate::ConfigureFixture(const TiXmlElement *element, b2FixtureDef &fixture)
+bool CollidableTemplate::ConfigureFixture(const tinyxml2::XMLElement *element, b2FixtureDef &fixture)
 {
 	// process child elements
-	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+	for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
 		ConfigureFixtureItem(child, fixture);
 	}
 	return true;
 }
 
-bool CollidableTemplate::ConfigureCircle(const TiXmlElement *element, b2CircleShape &shape)
+bool CollidableTemplate::ConfigureCircle(const tinyxml2::XMLElement *element, b2CircleShape &shape)
 {
 	element->QueryFloatAttribute("radius", &shape.m_radius);
 	return true;
 }
 
-bool CollidableTemplate::ConfigureBox(const TiXmlElement *element, b2PolygonShape &shape)
+bool CollidableTemplate::ConfigureBox(const tinyxml2::XMLElement *element, b2PolygonShape &shape)
 {
 	// half-width and half-height
 	float w = 0, h = 0;
@@ -328,14 +324,14 @@ bool CollidableTemplate::ConfigureBox(const TiXmlElement *element, b2PolygonShap
 	float rotation = 0.0f;
 
 	// process child elements
-	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+	for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
 		switch (Hash(child->Value()))
 		{
 		case 0x934f4e0a /* "position" */:
 			element->QueryFloatAttribute("x", &center.x);
 			element->QueryFloatAttribute("y", &center.y);
-			if (element->QueryFloatAttribute("angle", &rotation) == TIXML_SUCCESS)
+			if (element->QueryFloatAttribute("angle", &rotation) == tinyxml2::XML_SUCCESS)
 				 rotation *= float(M_PI)/180.0f;
 			break;
 		}
@@ -345,7 +341,7 @@ bool CollidableTemplate::ConfigureBox(const TiXmlElement *element, b2PolygonShap
 	return true;
 }
 
-bool CollidableTemplate::ConfigurePolyItem(const TiXmlElement *element, b2PolygonShape &shape)
+bool CollidableTemplate::ConfigurePolyItem(const tinyxml2::XMLElement *element, b2PolygonShape &shape)
 {
 	const char *name = element->Value();
 	switch (Hash(name))
@@ -361,10 +357,10 @@ bool CollidableTemplate::ConfigurePolyItem(const TiXmlElement *element, b2Polygo
 	}
 }
 
-bool CollidableTemplate::ConfigurePoly(const TiXmlElement *element, b2PolygonShape &shape)
+bool CollidableTemplate::ConfigurePoly(const tinyxml2::XMLElement *element, b2PolygonShape &shape)
 {
 	// process child elements
-	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+	for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
 		ConfigurePolyItem(child, shape);
 	}
@@ -375,10 +371,10 @@ bool CollidableTemplate::ConfigurePoly(const TiXmlElement *element, b2PolygonSha
 	return true;
 }
 
-bool CollidableTemplate::ConfigureEdge(const TiXmlElement *element, b2EdgeShape &shape)
+bool CollidableTemplate::ConfigureEdge(const tinyxml2::XMLElement *element, b2EdgeShape &shape)
 {
 	// process child elements
-	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+	for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
 		const char *name = child->Value();
 		switch (Hash(name))
@@ -398,23 +394,23 @@ bool CollidableTemplate::ConfigureEdge(const TiXmlElement *element, b2EdgeShape 
 	return true;
 }
 
-bool CollidableTemplate::ConfigureChain(const TiXmlElement *element, b2ChainShape &shape)
+bool CollidableTemplate::ConfigureChain(const tinyxml2::XMLElement *element, b2ChainShape &shape)
 {
-	if (const TiXmlElement *first = element->FirstChildElement("vertex"))
+	if (const tinyxml2::XMLElement *first = element->FirstChildElement("vertex"))
 	{
 		int count = 0;
-		for (const TiXmlElement *child = first; child != NULL; child = child->NextSiblingElement("vertex"))
+		for (const tinyxml2::XMLElement *child = first; child != NULL; child = child->NextSiblingElement("vertex"))
 			++count;
 
 		if (count > 1)
 		{
-			int loop = 0;
-			element->QueryIntAttribute("loop", &loop);
+			bool loop = false;
+			element->QueryBoolAttribute("loop", &loop);
 
 			b2Vec2 *vertices = (b2Vec2 *)_alloca(count * sizeof(b2Vec2));
 
 			int index = 0;
-			for (const TiXmlElement *child = first; child != NULL; child = child->NextSiblingElement("vertex"))
+			for (const tinyxml2::XMLElement *child = first; child != NULL; child = child->NextSiblingElement("vertex"))
 			{
 				child->QueryFloatAttribute("x", &vertices[index].x);
 				child->QueryFloatAttribute("y", &vertices[index].y);
@@ -432,7 +428,7 @@ bool CollidableTemplate::ConfigureChain(const TiXmlElement *element, b2ChainShap
 }
 
 
-bool CollidableTemplate::ConfigureBodyItem(const TiXmlElement *element, b2BodyDef &body, unsigned int id)
+bool CollidableTemplate::ConfigureBodyItem(const tinyxml2::XMLElement *element, b2BodyDef &body, unsigned int id)
 {
 	const char *name = element->Value();
 	switch (Hash(name))
@@ -440,7 +436,7 @@ bool CollidableTemplate::ConfigureBodyItem(const TiXmlElement *element, b2BodyDe
 	case 0x934f4e0a /* "position" */:
 		element->QueryFloatAttribute("x", &body.position.x);
 		element->QueryFloatAttribute("y", &body.position.y);
-		if (element->QueryFloatAttribute("angle", &body.angle) == TIXML_SUCCESS)
+		if (element->QueryFloatAttribute("angle", &body.angle) == tinyxml2::XML_SUCCESS)
 			 body.angle *= float(M_PI)/180.0f;
 		return true;
 
@@ -450,43 +446,23 @@ bool CollidableTemplate::ConfigureBodyItem(const TiXmlElement *element, b2BodyDe
 		return true;
 
 	case 0xac01f355 /* "allowsleep" */:
-		{
-			int allowsleep = body.allowSleep;
-			element->QueryIntAttribute("value", &allowsleep);
-			body.allowSleep = allowsleep != 0;
-		}
+		element->QueryBoolAttribute("value", &body.allowSleep);
 		return true;
 
 	case 0xd71034dc /* "awake" */:
-		{
-			int awake = body.awake;
-			element->QueryIntAttribute("value", &awake);
-			body.awake = awake != 0;
-		}
+		element->QueryBoolAttribute("value", &body.awake);
 		return true;
 
 	case 0x7a04061b /* "fixedrotation" */:
-		{
-			int fixedrotation = body.fixedRotation;
-			element->QueryIntAttribute("value", &fixedrotation);
-			body.fixedRotation = fixedrotation != 0;
-		}
+		element->QueryBoolAttribute("value", &body.fixedRotation);
 		return true;
 
 	case 0x029402af /* "fast" */:
-		{
-			int bullet = body.bullet;
-			element->QueryIntAttribute("value", &bullet);
-			body.bullet = bullet != 0;
-		}
+		element->QueryBoolAttribute("value", &body.bullet);
 		return true;
 
 	case 0xd975992f /* "active" */:
-		{
-			int active = body.active;
-			element->QueryIntAttribute("value", &active);
-			body.active = active != 0;
-		}
+		element->QueryBoolAttribute("value", &body.active);
 		return true;
 
 	case 0x5127f14d /* "type" */:
@@ -597,23 +573,23 @@ bool CollidableTemplate::ConfigureBodyItem(const TiXmlElement *element, b2BodyDe
 	}
 }
 
-bool CollidableTemplate::ConfigureBody(const TiXmlElement *element, b2BodyDef &body, unsigned int id)
+bool CollidableTemplate::ConfigureBody(const tinyxml2::XMLElement *element, b2BodyDef &body, unsigned int id)
 {
 	// process child elements
-	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+	for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
 		ConfigureBodyItem(child, body, id);
 	}
 	return true;
 }
 
-bool CollidableTemplate::Configure(const TiXmlElement *element, unsigned int id)
+bool CollidableTemplate::Configure(const tinyxml2::XMLElement *element, unsigned int id)
 {
 	// save identifier
 	this->id = id;
 
 	// process child elements
-	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+	for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
 		const char *name = child->Value();
 		switch (Hash(name))

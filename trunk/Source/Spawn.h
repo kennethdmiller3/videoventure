@@ -13,7 +13,7 @@ public:
 public:
 	SpawnTemplate(void);
 
-	bool Configure(const TiXmlElement *element, unsigned int aId);
+	bool Configure(const tinyxml2::XMLElement *element, unsigned int aId);
 
 	unsigned int Instantiate(unsigned int aId, const Transform2 &aPosition, const Transform2 &aVelocity) const;
 };

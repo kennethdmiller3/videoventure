@@ -1,4 +1,4 @@
 #pragma once
 
-void ConfigureWorldItem(const TiXmlElement *element);
-void ConfigureWorldItems(const TiXmlElement *element);
+void ConfigureWorldItem(const tinyxml2::XMLElement *element);
+void ConfigureWorldItems(const tinyxml2::XMLElement *element);

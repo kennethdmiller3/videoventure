@@ -29,7 +29,7 @@ namespace Database
 				AddConfigure(0x2c99c300 /* "player" */, Entry(this, &PlayerLoader::Configure));
 			}
 
-			void Configure(unsigned int aId, const TiXmlElement *element)
+			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
 			{
 				PlayerTemplate &player = Database::playertemplate.Open(aId);
 				player.Configure(element, aId);
@@ -92,7 +92,7 @@ PlayerTemplate::PlayerTemplate(void)
 }
 
 // player template configure
-bool PlayerTemplate::Configure(const TiXmlElement *element, unsigned int aId)
+bool PlayerTemplate::Configure(const tinyxml2::XMLElement *element, unsigned int aId)
 {
 	if (const char *spawn = element->Attribute("name"))
 		mSpawn = Hash(spawn);

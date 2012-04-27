@@ -24,7 +24,7 @@ namespace BehaviorDatabase
 				AddConfigure(0x3cf27f66 /* "evade" */, Entry(this, &EvadeBehaviorLoader::Configure));
 			}
 
-			unsigned int Configure(unsigned int aId, const TiXmlElement *element)
+			unsigned int Configure(unsigned int aId, const tinyxml2::XMLElement *element)
 			{
 				EvadeBehaviorTemplate &evade = Database::evadebehaviortemplate.Open(aId);
 				evade.Configure(element, aId);
@@ -73,7 +73,7 @@ EvadeBehaviorTemplate::EvadeBehaviorTemplate()
 {
 }
 
-bool EvadeBehaviorTemplate::Configure(const TiXmlElement *element, unsigned int aId)
+bool EvadeBehaviorTemplate::Configure(const tinyxml2::XMLElement *element, unsigned int aId)
 {
 	element->QueryFloatAttribute("strength", &mStrength);
 	return true;

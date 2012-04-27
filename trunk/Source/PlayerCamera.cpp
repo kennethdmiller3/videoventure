@@ -22,7 +22,7 @@ public:
 public:
 	PlayerCameraTemplate(void);
 
-	bool Configure(const TiXmlElement *element, unsigned int aId);
+	bool Configure(const tinyxml2::XMLElement *element, unsigned int aId);
 };
 
 PlayerCameraTemplate::PlayerCameraTemplate(void)
@@ -36,10 +36,10 @@ PlayerCameraTemplate::PlayerCameraTemplate(void)
 {
 }
 
-bool PlayerCameraTemplate::Configure(const TiXmlElement *element, unsigned int aId)
+bool PlayerCameraTemplate::Configure(const tinyxml2::XMLElement *element, unsigned int aId)
 {
 	// configure player camera
-	for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+	for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
 		switch(Hash(child->Value()))
 		{
@@ -89,7 +89,7 @@ namespace Database
 				AddConfigure(0xdc77fdcf /* "playercamera" */, Entry(this, &PlayerCameraLoader::Configure));
 			}
 
-			void Configure(unsigned int aId, const TiXmlElement *element)
+			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
 			{
 				PlayerCameraTemplate &playercamera = Database::playercameratemplate.Open(aId);
 				playercamera.Configure(element, aId);

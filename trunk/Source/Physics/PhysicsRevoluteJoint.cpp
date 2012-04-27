@@ -3,7 +3,7 @@
 #include "PhysicsUtilities.h"
 #include "PhysicsRevoluteJoint.h"
 
-static bool ConfigureRevoluteJointItem(const TiXmlElement *element, b2RevoluteJointDef &joint)
+static bool ConfigureRevoluteJointItem(const tinyxml2::XMLElement *element, b2RevoluteJointDef &joint)
 {
 	const char *name = element->Value();
 	switch (Hash(name))
@@ -19,21 +19,21 @@ static bool ConfigureRevoluteJointItem(const TiXmlElement *element, b2RevoluteJo
 		return true;
 
 	case 0xad544418 /* "angle" */:
-		if (element->QueryFloatAttribute("value", &joint.referenceAngle) == TIXML_SUCCESS)
+		if (element->QueryFloatAttribute("value", &joint.referenceAngle) == tinyxml2::XML_SUCCESS)
 			joint.referenceAngle *= float(M_PI)/180.0f;
 		return true;
 
 	case 0x32dad934 /* "limit" */:
-		if (element->QueryFloatAttribute("lower", &joint.lowerAngle) == TIXML_SUCCESS)
+		if (element->QueryFloatAttribute("lower", &joint.lowerAngle) == tinyxml2::XML_SUCCESS)
 			joint.lowerAngle *= float(M_PI) / 180.0f;
-		if (element->QueryFloatAttribute("upper", &joint.upperAngle) == TIXML_SUCCESS)
+		if (element->QueryFloatAttribute("upper", &joint.upperAngle) == tinyxml2::XML_SUCCESS)
 			joint.upperAngle *= float(M_PI) / 180.0f;
 		joint.enableLimit = true;
 		return true;
 
 	case 0xcaf08472 /* "motor" */:
 		element->QueryFloatAttribute("torque", &joint.maxMotorTorque);
-		if (element->QueryFloatAttribute("speed", &joint.motorSpeed) == TIXML_SUCCESS)
+		if (element->QueryFloatAttribute("speed", &joint.motorSpeed) == tinyxml2::XML_SUCCESS)
 			joint.motorSpeed *= float(M_PI) / 180.0f;
 		joint.enableMotor = true;
 		return true;
@@ -57,7 +57,7 @@ namespace Database
 				AddConfigure(0xef2f9539 /* "revolutejoint" */, Entry(this, &RevoluteJointLoader::Configure));
 			}
 
-			void Configure(unsigned int aId, const TiXmlElement *element)
+			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
 			{
 				Typed<b2RevoluteJointDef> defs = Database::revolutejointdef.Open(aId);
 
@@ -70,7 +70,7 @@ namespace Database
 
 				// configure the joint definition
 				b2RevoluteJointDef &def = defs.Open(aSubId);
-				for (const TiXmlElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+				for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 				{
 					ConfigureRevoluteJointItem(child, def);
 				}

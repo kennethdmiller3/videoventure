@@ -38,7 +38,7 @@ namespace Database
 				RemoveConfigure(0xec2b4992 /* "capturable" */, Entry(this, &CapturableLoader::Configure));
 			}
 
-			void Configure(unsigned int aId, const TiXmlElement *element)
+			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
 			{
 				CapturableTemplate &capturable = Database::capturabletemplate.Open(aId);
 				capturable.Configure(element);
@@ -98,7 +98,7 @@ CapturableTemplate::~CapturableTemplate(void)
 {
 }
 
-bool CapturableTemplate::Configure(const TiXmlElement *element)
+bool CapturableTemplate::Configure(const tinyxml2::XMLElement *element)
 {
 	element->QueryFloatAttribute("resistance", &mResistance);
 	if (const char *spawn = element->Attribute("spawnoncapture"))

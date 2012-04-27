@@ -21,4 +21,4 @@ namespace Expression
 }
 
 // configure swizzle expression
-template <typename T> void ConfigureSwizzle(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[]);
+template <typename T> void ConfigureSwizzle(const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[]);

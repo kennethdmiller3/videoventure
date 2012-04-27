@@ -9,7 +9,7 @@ static Expression::Loader<__m128>::Auto constructvector(0x40c09172 /* "construct
 
 
 // configure construct expression
-template <typename T> void ConfigureConstruct(const TiXmlElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
+template <typename T> void ConfigureConstruct(const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
 {
 #ifdef PRINT_CONFIGURE_EXPRESSION
 	DebugPrint("%s construct\n", Expression::Schema<T>::NAME);
@@ -25,7 +25,7 @@ template <typename T> void ConfigureConstruct(const TiXmlElement *element, std::
 	for (int i = 0; i < width; ++i)
 	{
 		// if there is a corresponding tag...
-		if (const TiXmlElement *component = element->FirstChildElement(names[i]))
+		if (const tinyxml2::XMLElement *component = element->FirstChildElement(names[i]))
 		{
 			// configure the expression
 			Expression::Loader<float>::ConfigureRoot(component, buffer, sScalarNames, &defaults[i]);
