@@ -223,7 +223,7 @@ namespace Database
 		}
 
 		// check parent
-		if (this != &parent)
+		if (this != &parent && parent.GetCount())
 			if (Key aParentKey = parent.Get(aKey))
 				return Find(aParentKey);
 
@@ -246,7 +246,7 @@ namespace Database
 		}
 
 		// check parent
-		if (this != &parent)
+		if (this != &parent && parent.GetCount())
 			if (Key aParentKey = parent.Get(aKey))
 				return Get(aParentKey);
 
@@ -301,7 +301,7 @@ namespace Database
 
 		// check parent
 		const void *source = mNil;
-		if (this != &parent)
+		if (this != &parent && parent.GetCount())
 			if (Key aParentKey = parent.Get(aKey))
 				source = Find(aParentKey);
 		CreateRecord(record, source);
