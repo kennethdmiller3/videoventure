@@ -28,6 +28,10 @@ namespace Expression
 		// requres that T support operator[]
 		template <typename OR, OR Op()> static const __m128 Evaluate(Context &aContext)
 		{
+			return Evaluate(aContext, Op);
+		}
+		template <typename OR> static const __m128 Evaluate(Context &aContext, OR (*Op)())
+		{
 			return _mm_set_ps(Op(), Op(), Op(), Op());
 		}
 	};
@@ -36,6 +40,10 @@ namespace Expression
 	template <> struct ComponentUnary<__m128, 4>
 	{
 		template <typename OR, typename O1, OR Op(O1)> static const __m128 Evaluate(Context &aContext)
+		{
+			return Evaluate(aContext, Op);
+		}
+		template <typename OR, typename O1> static const __m128 Evaluate(Context &aContext, OR (*Op)(O1))
 		{
 			const __m128 arg1(Expression::Evaluate<__m128>(aContext));
 			return _mm_set_ps(
@@ -51,6 +59,10 @@ namespace Expression
 	template <> struct ComponentBinary<__m128, 4>
 	{
 		template <typename OR, typename O1, typename O2, OR Op(O1, O2)> static const __m128 Evaluate(Context &aContext)
+		{
+			return Evaluate(aContext, Op);
+		}
+		template <typename OR, typename O1, typename O2> static const __m128 Evaluate(Context &aContext, OR (*Op)(O1, O2))
 		{
 			const __m128 arg1(Expression::Evaluate<__m128>(aContext));
 			const __m128 arg2(Expression::Evaluate<__m128>(aContext));
@@ -68,6 +80,10 @@ namespace Expression
 	{
 		// requres that T support operator[]
 		template <typename OR, typename O1, typename O2, typename O3, OR Op(O1, O2, O3)> static const __m128 Evaluate(Context &aContext)
+		{
+			return Evaluate(aContext, Op);
+		}
+		template <typename OR, typename O1, typename O2, typename O3> static const __m128 Evaluate(Context &aContext, OR (*Op)(O1, O2, O3))
 		{
 			const __m128 arg1(Expression::Evaluate<__m128>(aContext));
 			const __m128 arg2(Expression::Evaluate<__m128>(aContext));
