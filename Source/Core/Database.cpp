@@ -202,11 +202,18 @@ namespace Database
 		// for each activation initializer...
 		for (Typed<Initializer::Entry>::Iterator itor(&Initializer::GetActivate()); itor.IsValid(); ++itor)
 		{
-			// if the corresponding database has a record...
-			if (GetDatabases().Get(itor.GetKey())->Find(aId))
+			// get the initializer
+			if (Initializer::Entry initializer = itor.GetValue())
 			{
-				// call the initializer
-				itor.GetValue()(aId);
+				// get the corresponding database
+				Untyped *database = GetDatabases().Get(itor.GetKey());
+
+				// if the database exists and has a record...
+				if (database && database->Find(aId))
+				{
+					// call the initializer
+					initializer(aId);
+				}
 			}
 		}
 
@@ -224,11 +231,18 @@ namespace Database
 		// for each post-activation initializer...
 		for (Typed<Initializer::Entry>::Iterator itor(&Initializer::GetPostActivate()); itor.IsValid(); ++itor)
 		{
-			// if the corresponding database has a record...
-			if (GetDatabases().Get(itor.GetKey())->Find(aId))
+			// get the initializer
+			if (Initializer::Entry initializer = itor.GetValue())
 			{
-				// call the initializer
-				itor.GetValue()(aId);
+				// get the corresponding database
+				Untyped *database = GetDatabases().Get(itor.GetKey());
+
+				// if the database exists and has a record...
+				if (database && database->Find(aId))
+				{
+					// call the initializer
+					initializer(aId);
+				}
 			}
 		}
 	}
@@ -270,22 +284,36 @@ namespace Database
 		// for each pre-deactivation initializer...
 		for (Typed<Initializer::Entry>::Iterator itor(&Initializer::GetPreDeactivate()); itor.IsValid(); ++itor)
 		{
-			// if the corresponding database has a record...
-			if (GetDatabases().Get(itor.GetKey())->Find(aId))
+			// get the initializer
+			if (Initializer::Entry initializer = itor.GetValue())
 			{
-				// call the initializer
-				itor.GetValue()(aId);
+				// get the corresponding database
+				Untyped *database = GetDatabases().Get(itor.GetKey());
+
+				// if the database exists and has a record...
+				if (database && database->Find(aId))
+				{
+					// call the initializer
+					initializer(aId);
+				}
 			}
 		}
 
 		// for each deactivation initializer...
 		for (Typed<Initializer::Entry>::Iterator itor(&Initializer::GetDeactivate()); itor.IsValid(); ++itor)
 		{
-			// if the corresponding database has a record...
-			if (GetDatabases().Get(itor.GetKey())->Find(aId))
+			// get the initializer
+			if (Initializer::Entry initializer = itor.GetValue())
 			{
-				// call the initializer
-				itor.GetValue()(aId);
+				// get the corresponding database
+				Untyped *database = GetDatabases().Get(itor.GetKey());
+
+				// if the database exists and has a record...
+				if (database && database->Find(aId))
+				{
+					// call the initializer
+					initializer(aId);
+				}
 			}
 		}
 	}
