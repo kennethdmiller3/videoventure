@@ -115,6 +115,10 @@ namespace Expression
 	{
 		template <typename OR, OR Op()> static T Evaluate(Context &aContext)
 		{
+			return Evaluate(aContext, Op);
+		}
+		template <typename OR> static T Evaluate(Context &aContext, OR (*Op)())
+		{
 			return Op();
 		}
 	};
@@ -123,6 +127,10 @@ namespace Expression
 	template <typename T, typename A1> struct Unary
 	{
 		template <typename OR, typename O1, OR Op(O1)> static const T Evaluate(Context &aContext)
+		{
+			return Evaluate(aContext, Op);
+		}
+		template <typename OR, typename O1, OR Op(O1)> static const T Evaluate(Context &aContext, OR (*Op)(O1))
 		{
 			A1 arg1(Expression::Evaluate<A1>(aContext));
 			return Op(arg1);
@@ -134,6 +142,10 @@ namespace Expression
 	{
 		template <typename OR, typename O1, typename O2, OR Op(O1, O2)> static const T Evaluate(Context &aContext)
 		{
+			return Evaluate(aContext, Op);
+		}
+		template <typename OR, typename O1, typename O2> static const T Evaluate(Context &aContext, OR (*Op)(O1, O2))
+		{
 			A1 arg1(Expression::Evaluate<A1>(aContext));
 			A2 arg2(Expression::Evaluate<A2>(aContext));
 			return Op(arg1, arg2);
@@ -144,6 +156,10 @@ namespace Expression
 	template <typename T, typename A1, typename A2, typename A3> struct Ternary
 	{
 		template <typename OR, typename O1, typename O2, typename O3, OR Op(O1, O2, O3)> static const T Evaluate(Context &aContext)
+		{
+			return Evaluate(aContext, Op);
+		}
+		template <typename OR, typename O1, typename O2, typename O3> static const T Evaluate(Context &aContext, OR (*Op)(O1, O2, O3))
 		{
 			A1 arg1(Expression::Evaluate<A1>(aContext));
 			A2 arg2(Expression::Evaluate<A2>(aContext));
@@ -158,6 +174,10 @@ namespace Expression
 		// requres that T support operator[]
 		template <typename OR, OR Op()> static const T Evaluate(Context &aContext)
 		{
+			return Evaluate(aContext, Op);
+		}
+		template <typename OR> static const T Evaluate(Context &aContext, OR (*Op)())
+		{
 			T value = T();
 			for (int i = 0; i < W; ++i)
 				value[i] = Op();
@@ -169,6 +189,10 @@ namespace Expression
 		// specialization for scalar type
 		template <typename OR, OR Op()> static const T Evaluate(Context &aContext)
 		{
+			return Evaluate(aContext, Op);
+		}
+		template <typename OR> static const T Evaluate(Context &aContext, OR (*Op)())
+		{
 			return Op();
 		}
 	};
@@ -178,6 +202,10 @@ namespace Expression
 	{
 		// requres that T support operator[]
 		template <typename OR, typename O1, OR Op(O1)> static const T Evaluate(Context &aContext)
+		{
+			return Evaluate(aContext, Op);
+		}
+		template <typename OR, typename O1> static const T Evaluate(Context &aContext, OR (*Op)(O1))
 		{
 			T arg1(Expression::Evaluate<T>(aContext));
 			T value = T();
@@ -191,6 +219,10 @@ namespace Expression
 		// specialization for scalar type
 		template <typename OR, typename O1, OR Op(O1)> static const T Evaluate(Context &aContext)
 		{
+			return Evaluate(aContext, Op);
+		}
+		template <typename OR, typename O1> static const T Evaluate(Context &aContext, OR (*Op)(O1))
+		{
 			T arg1(Expression::Evaluate<T>(aContext));
 			return Op(arg1);
 		}
@@ -201,6 +233,10 @@ namespace Expression
 	{
 		// requres that T support operator[]
 		template <typename OR, typename O1, typename O2, OR Op(O1, O2)> static const T Evaluate(Context &aContext)
+		{
+			return Evaluate(aContext, Op);
+		}
+		template <typename OR, typename O1, typename O2> static const T Evaluate(Context &aContext, OR (*Op)(O1, O2))
 		{
 			T arg1(Expression::Evaluate<T>(aContext));
 			T arg2(Expression::Evaluate<T>(aContext));
@@ -215,6 +251,10 @@ namespace Expression
 		// specialization for scalar type
 		template <typename OR, typename O1, typename O2, OR Op(O1, O2)> static const T Evaluate(Context &aContext)
 		{
+			return Evaluate(aContext, Op);
+		}
+		template <typename OR, typename O1, typename O2> static const T Evaluate(Context &aContext, OR (*Op)(O1, O2))
+		{
 			T arg1(Expression::Evaluate<T>(aContext));
 			T arg2(Expression::Evaluate<T>(aContext));
 			return Op(arg1, arg2);
@@ -226,6 +266,10 @@ namespace Expression
 	{
 		// requres that T support operator[]
 		template <typename OR, typename O1, typename O2, typename O3, OR Op(O1, O2, O3)> static const T Evaluate(Context &aContext)
+		{
+			return Evaluate(aContext, Op);
+		}
+		template <typename OR, typename O1, typename O2, typename O3> static const T Evaluate(Context &aContext, OR (*Op)(O1, O2, O3))
 		{
 			T arg1(Expression::Evaluate<T>(aContext));
 			T arg2(Expression::Evaluate<T>(aContext));
@@ -240,6 +284,10 @@ namespace Expression
 	{
 		// specialization for scalar type
 		template <typename OR, typename O1, typename O2, typename O3, OR Op(O1, O2, O3)> static const T Evaluate(Context &aContext)
+		{
+			return Evaluate(aContext, Op);
+		}
+		template <typename OR, typename O1, typename O2, typename O3> static const T Evaluate(Context &aContext, OR (*Op)(O1, O2, O3))
 		{
 			T arg1(Expression::Evaluate<T>(aContext));
 			T arg2(Expression::Evaluate<T>(aContext));
