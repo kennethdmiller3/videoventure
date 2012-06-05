@@ -85,7 +85,7 @@ distribution.
 
 static const int TIXML2_MAJOR_VERSION = 1;
 static const int TIXML2_MINOR_VERSION = 0;
-static const int TIXML2_PATCH_VERSION = 1;
+static const int TIXML2_PATCH_VERSION = 2;
 
 namespace tinyxml2
 {
@@ -1327,9 +1327,11 @@ class XMLPrinter : public XMLVisitor
 public:
 	/** Construct the printer. If the FILE* is specified,
 		this will print to the FILE. Else it will print
-		to memory, and the result is available in CStr()
+		to memory, and the result is available in CStr().
+		If 'compact' is set to true, then output is created
+		with only required whitespace and newlines.
 	*/
-	XMLPrinter( FILE* file=0 );
+	XMLPrinter( FILE* file=0, bool compact = false );
 	~XMLPrinter()	{}
 
 	/** If streaming, write the BOM and declaration. */
@@ -1390,6 +1392,7 @@ private:
 	int depth;
 	int textDepth;
 	bool processEntities;
+	bool compactMode;
 
 	enum {
 		ENTITY_RANGE = 64,
