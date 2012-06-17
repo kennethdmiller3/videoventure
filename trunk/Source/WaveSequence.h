@@ -18,12 +18,15 @@ public:
 class WaveTemplate
 {
 public:
+	unsigned int mWaveId;
 	float mPreDelay;
-	Database::Typed<WaveEntryTemplate> mEntries;
+	WaveEntryTemplate *mEntries;
+	int mEntryCount;
 	float mPostDelay;
 
 public:
 	WaveTemplate(void);
+	~WaveTemplate(void);
 
 	bool Configure(const tinyxml2::XMLElement *element, unsigned int aId, unsigned int aWaveId);
 };
@@ -32,7 +35,8 @@ class WaveSequenceTemplate
 {
 public:
 	float mPreDelay;
-	Database::Typed<WaveTemplate> mWaves;
+	WaveTemplate *mWaves;
+	int mWaveCount;
 	unsigned int mRestart;
 	float mPostDelay;
 

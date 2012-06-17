@@ -154,13 +154,37 @@ WaveTemplate::WaveTemplate(void)
 : mPreDelay(0.0f)
 , mPostDelay(0.0f)
 {
+	mEntries = NULL;
+	mEntryCount = 0;
+}
+
+// wave template destructor
+WaveTemplate::~WaveTemplate(void)
+{
+	delete[] mEntries;
 }
 
 // wave template configure
 bool WaveTemplate::Configure(const tinyxml2::XMLElement *element, unsigned int aId, unsigned int aWaveId)
 {
+	mWaveId = aWaveId;
+
 	element->QueryFloatAttribute("predelay", &mPreDelay);
 	element->QueryFloatAttribute("postdelay", &mPostDelay);
+
+	// count entries
+	mEntryCount = 0;
+	for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+	{
+		const char *label = child->Value();
+		switch (Hash(label))
+		{
+		case 0xcac3d793 /* "entry" */:
+			++mEntryCount;
+		}
+	}
+	mEntries = new WaveEntryTemplate[mEntryCount];
+	mEntryCount = 0;
 
 	// process child elements
 	for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
@@ -169,12 +193,11 @@ bool WaveTemplate::Configure(const tinyxml2::XMLElement *element, unsigned int a
 		switch (Hash(label))
 		{
 		case 0xcac3d793 /* "entry" */:
-			if (const char *name = child->Attribute("name"))
 			{
+				const char *name = child->Attribute("name");
 				unsigned int aEntryId = Hash(name);
-				WaveEntryTemplate &entry = mEntries.Open(aEntryId);
+				WaveEntryTemplate &entry = mEntries[mEntryCount++];
 				entry.Configure(child, aId, aWaveId, aEntryId);
-				mEntries.Close(aEntryId);
 			}
 			break;
 		}
@@ -188,11 +211,14 @@ bool WaveTemplate::Configure(const tinyxml2::XMLElement *element, unsigned int a
 // wavesequence template constructor
 WaveSequenceTemplate::WaveSequenceTemplate(void)
 {
+	mWaves = NULL;
+	mWaveCount = 0;
 }
 
 // wavesequence template destructor
 WaveSequenceTemplate::~WaveSequenceTemplate(void)
 {
+	delete[] mWaves;
 }
 
 // wavesequence template configure
@@ -201,6 +227,20 @@ bool WaveSequenceTemplate::Configure(const tinyxml2::XMLElement *element, unsign
 	element->QueryFloatAttribute("predelay", &mPreDelay);
 	element->QueryFloatAttribute("postdelay", &mPostDelay);
 
+	// count entries
+	mWaveCount = 0;
+	for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+	{
+		const char *label = child->Value();
+		switch (Hash(label))
+		{
+		case 0xa9f017d4 /* "wave" */:
+			++mWaveCount;
+		}
+	}
+	mWaves = new WaveTemplate[mWaveCount];
+	mWaveCount = 0;
+
 	// process child elements
 	for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
@@ -208,18 +248,17 @@ bool WaveSequenceTemplate::Configure(const tinyxml2::XMLElement *element, unsign
 		switch (Hash(label))
 		{
 		case 0xa9f017d4 /* "wave" */:
-			if (const char *name = child->Attribute("name"))
 			{
+				const char *name = child->Attribute("name");
 				unsigned int aWaveId = Hash(name);
-				WaveTemplate &wave = mWaves.Open(aWaveId);
+				WaveTemplate &wave = mWaves[mWaveCount++];
 				wave.Configure(child, aId, aWaveId);
-				mWaves.Close(aWaveId);
 			}
 			break;
 
 		case 0xfe9c11ec /* "restart" */:
-			if (const char *name = child->Attribute("name"))
 			{
+				const char *name = child->Attribute("name");
 				mRestart = Hash(name);
 			}
 			break;
@@ -291,8 +330,7 @@ void WaveSequence::SequencePreDelay(float aStep)
 
 	mTimer -= aStep;
 	Deactivate();
-	Database::Typed<WaveTemplate>::Iterator waveitor(&wavesequence.mWaves, mWaveIndex);
-	if (waveitor.IsValid())
+	if (mWaveIndex < wavesequence.mWaveCount)
 		SetAction(Action(this, &WaveSequence::WaveEnter));
 	else
 		SetAction(Action(this, &WaveSequence::SequencePostDelay));
@@ -314,12 +352,11 @@ void WaveSequence::WaveStartPreDelay(float aStep)
 {
 	const WaveSequenceTemplate &wavesequence = Database::wavesequencetemplate.Get(mId);
 
-	Database::Typed<WaveTemplate>::Iterator waveitor(&wavesequence.mWaves, mWaveIndex);
-	assert(waveitor.IsValid());
+	const WaveTemplate &wave = wavesequence.mWaves[mWaveIndex];
 
-	mTimer -= waveitor.GetValue().mPreDelay;
+	mTimer -= wave.mPreDelay;
 
-	DebugPrint("\"%s\" wave %d start pre-delay: %.2fs\n", Database::name.Get(mId).c_str(), mWaveIndex, waveitor.GetValue().mPreDelay);
+	DebugPrint("\"%s\" wave %d start pre-delay: %.2fs\n", Database::name.Get(mId).c_str(), mWaveIndex, wave.mPreDelay);
 
 	Deactivate();
 	SetAction(Action(this, &WaveSequence::WavePreDelay));
@@ -336,13 +373,11 @@ void WaveSequence::WavePreDelay(float aStep)
 
 	const WaveSequenceTemplate &wavesequence = Database::wavesequencetemplate.Get(mId);
 
-	Database::Typed<WaveTemplate>::Iterator waveitor(&wavesequence.mWaves, mWaveIndex);
-	assert(waveitor.IsValid());
+	const WaveTemplate &wave = wavesequence.mWaves[mWaveIndex];
 
 	mTimer -= aStep;
 	Deactivate();
-	Database::Typed<WaveEntryTemplate>::Iterator entryitor(&waveitor.GetValue().mEntries, mEntryIndex);
-	if (entryitor.IsValid())
+	if (mEntryIndex < wave.mEntryCount)
 		SetAction(Action(this, &WaveSequence::WaveSpawn));
 	else
 		SetAction(Action(this, &WaveSequence::WaveStartPostDelay));
@@ -357,14 +392,12 @@ void WaveSequence::WaveSpawn(float aStep)
 
 	const WaveSequenceTemplate &wavesequence = Database::wavesequencetemplate.Get(mId);
 
-	Database::Typed<WaveTemplate>::Iterator waveitor(&wavesequence.mWaves, mWaveIndex);
-	assert(waveitor.IsValid());
+	const WaveTemplate &wave = wavesequence.mWaves[mWaveIndex];
 
-	Database::Typed<WaveEntryTemplate>::Iterator entryitor(&waveitor.GetValue().mEntries, mEntryIndex);
-	while (entryitor.IsValid())
+	while (mEntryIndex < wave.mEntryCount)
 	{
 		// get the entry
-		const WaveEntryTemplate &entry = entryitor.GetValue();
+		const WaveEntryTemplate &entry = wave.mEntries[mEntryIndex];
 
 		// assume the list is sorted :D
 		if (mTimer < entry.mTime)
@@ -382,8 +415,7 @@ void WaveSequence::WaveSpawn(float aStep)
 		// add a tracker
 		Database::wavesequencetracker.Put(spawnId, WaveSequenceTracker(mId));
 
-		++entryitor;
-		mEntryIndex = entryitor.GetSlot();
+		++mEntryIndex;
 	}
 
 	Deactivate();
@@ -407,12 +439,11 @@ void WaveSequence::WaveStartPostDelay(float aStep)
 {
 	const WaveSequenceTemplate &wavesequence = Database::wavesequencetemplate.Get(mId);
 
-	Database::Typed<WaveTemplate>::Iterator waveitor(&wavesequence.mWaves, mWaveIndex);
-	assert(waveitor.IsValid());
+	const WaveTemplate &wave = wavesequence.mWaves[mWaveIndex];
 
-	mTimer -= waveitor.GetValue().mPostDelay;
+	mTimer -= wave.mPostDelay;
 
-	DebugPrint("\"%s\" wave %d start post-delay: %.2fs\n", Database::name.Get(mId).c_str(), mWaveIndex, waveitor.GetValue().mPostDelay);
+	DebugPrint("\"%s\" wave %d start post-delay: %.2fs\n", Database::name.Get(mId).c_str(), mWaveIndex, wave.mPostDelay);
 
 	Deactivate();
 	SetAction(Action(this, &WaveSequence::WavePostDelay));
@@ -442,8 +473,7 @@ void WaveSequence::WaveExit(float aStep)
 	const WaveSequenceTemplate &wavesequence = Database::wavesequencetemplate.Get(mId);
 
 	Deactivate();
-	Database::Typed<WaveTemplate>::Iterator waveitor(&wavesequence.mWaves, mWaveIndex);
-	if (waveitor.IsValid())
+	if (mWaveIndex < wavesequence.mWaveCount)
 		SetAction(Action(this, &WaveSequence::WaveEnter));
 	else if (wavesequence.mRestart)
 		SetAction(Action(this, &WaveSequence::WaveRestart));
@@ -455,11 +485,10 @@ void WaveSequence::WaveExit(float aStep)
 void WaveSequence::WaveRestart(float aStep)
 {
 	const WaveSequenceTemplate &wavesequence = Database::wavesequencetemplate.Get(mId);
-	for (Database::Typed<WaveTemplate>::Iterator itor(&wavesequence.mWaves); itor.IsValid(); ++itor)
+	for (mWaveIndex = 0; mWaveIndex < wavesequence.mWaveCount; ++mWaveIndex)
 	{
-		if (itor.GetKey() == wavesequence.mRestart)
+		if (wavesequence.mWaves[mWaveIndex].mWaveId == wavesequence.mRestart)
 		{
-			mWaveIndex = itor.GetSlot();
 			Deactivate();
 			SetAction(Action(this, &WaveSequence::WaveEnter));
 			Activate();
