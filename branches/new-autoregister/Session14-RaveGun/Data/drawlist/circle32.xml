@@ -1,0 +1,24 @@
+<?xml version="1.0" ?>
+<drawlist name="circle32">
+	<!-- 32 vertex circle -->
+	<polygon>
+		<loop name="angle" from="0" to="32" by="1">
+			<vertex>
+				<x>
+					<sinewave period="32">
+						<input>
+							<angle/>
+						</input>
+					</sinewave>
+				</x>
+				<y>
+					<sinewave phase="0.25" period="32">
+						<input>
+							<angle/>
+						</input>
+					</sinewave>
+				</y>
+			</vertex>
+		</loop>
+	</polygon>
+</drawlist>

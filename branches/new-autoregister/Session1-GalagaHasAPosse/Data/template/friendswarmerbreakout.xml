@@ -1,0 +1,22 @@
+<?xml version="1.0" ?>
+<template name="friendswarmerbreakout">
+	<collidable>
+		<body name="main">
+			<circle radius="2">
+				<density value="1" />
+				<friction value="0.5" />
+				<restitution value="0.5" />
+				<filter name="blueunit" />
+			</circle>
+			<damping linear="0.5" angular="0.5" />
+		</body>
+	</collidable>
+	<renderable radius="2" period="1.0">
+		<drawlist>
+			<color r="0.1" g="0.2" b="1.0" a="1.0" />
+			<scale x="2" y="2" />
+			<calllist name="circle16" />
+		</drawlist>
+	</renderable>
+	<expire time="0.5" switchonexpire="friendswarmer" />
+</template>

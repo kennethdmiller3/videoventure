@@ -1,0 +1,14 @@
+<?xml version="1.0" ?>
+<template name="playerravegun">
+	<weapon>
+		<shot delay="0.25" />
+		<ammo type="level" cost="0.1" />
+		<trigger channel="2" type="press" />
+		<action>
+			<ordnance name="playerravebullet">
+				<position x="0" y="0" />
+				<velocity x="0" y="180" />
+			</ordnance>
+		</action>
+	</weapon>
+</template>

@@ -1,0 +1,81 @@
+Index: Box2D/Box2D/Common/b2Settings.h
+===================================================================
+--- Box2D/Box2D/Common/b2Settings.h	(revision 117)
++++ Box2D/Box2D/Common/b2Settings.h	(working copy)
+@@ -37,6 +37,14 @@
+ #define	b2_epsilon		FLT_EPSILON
+ #define b2_pi			3.14159265359f
+ 
++// Define your unit system here. The default system is
++// meters-kilograms-seconds. For the tuning to work well,
++// your dynamic objects should be bigger than a pebble and smaller
++// than a house.
++const float32 b2_lengthUnitsPerMeter = 16.0f;
++const float32 b2_massUnitsPerKilogram = 1.0f;
++const float32 b2_timeUnitsPerSecond = 1.0f;
++
+ /// @file
+ /// Global tuning constants based on meters-kilograms-seconds (MKS) units.
+ ///
+@@ -61,7 +69,7 @@
+ 
+ /// A small length used as a collision and constraint tolerance. Usually it is
+ /// chosen to be numerically significant, but visually insignificant.
+-#define b2_linearSlop			0.005f
++#define b2_linearSlop			(0.005f * b2_lengthUnitsPerMeter)
+ 
+ /// A small angle used as a collision and constraint tolerance. Usually it is
+ /// chosen to be numerically significant, but visually insignificant.
+@@ -80,11 +88,11 @@
+ 
+ /// A velocity threshold for elastic collisions. Any collision with a relative linear
+ /// velocity below this threshold will be treated as inelastic.
+-#define b2_velocityThreshold		1.0f
++#define b2_velocityThreshold		(1.0f * b2_lengthUnitsPerMeter / b2_timeUnitsPerSecond)
+ 
+ /// The maximum linear position correction used when solving constraints. This helps to
+ /// prevent overshoot.
+-#define b2_maxLinearCorrection		0.2f
++#define b2_maxLinearCorrection		(0.2f * b2_lengthUnitsPerMeter)
+ 
+ /// The maximum angular position correction used when solving constraints. This helps to
+ /// prevent overshoot.
+@@ -92,7 +100,7 @@
+ 
+ /// The maximum linear velocity of a body. This limit is very large and is used
+ /// to prevent numerical problems. You shouldn't need to adjust this.
+-#define b2_maxTranslation			2.0f
++#define b2_maxTranslation			(2.0f * b2_lengthUnitsPerMeter)
+ #define b2_maxTranslationSquared	(b2_maxTranslation * b2_maxTranslation)
+ 
+ /// The maximum angular velocity of a body. This limit is very large and is used
+@@ -108,10 +116,10 @@
+ // Sleep
+ 
+ /// The time that a body must be still before it will go to sleep.
+-#define b2_timeToSleep				0.5f
++#define b2_timeToSleep				(0.5f * b2_timeUnitsPerSecond)
+ 
+ /// A body cannot sleep if its linear velocity is above this tolerance.
+-#define b2_linearSleepTolerance		0.01f
++#define b2_linearSleepTolerance		(0.01f * b2_lengthUnitsPerMeter / b2_timeUnitsPerSecond)
+ 
+ /// A body cannot sleep if its angular velocity is above this tolerance.
+ #define b2_angularSleepTolerance	(2.0f / 180.0f * b2_pi)
+Index: Box2D/Box2D/Dynamics/b2Island.cpp
+===================================================================
+--- Box2D/Box2D/Dynamics/b2Island.cpp	(revision 117)
++++ Box2D/Box2D/Dynamics/b2Island.cpp	(working copy)
+@@ -202,8 +202,10 @@
+ 		// v2 = exp(-c * dt) * v1
+ 		// Taylor expansion:
+ 		// v2 = (1.0f - c * dt) * v1
+-		b->m_linearVelocity *= b2Clamp(1.0f - step.dt * b->m_linearDamping, 0.0f, 1.0f);
+-		b->m_angularVelocity *= b2Clamp(1.0f - step.dt * b->m_angularDamping, 0.0f, 1.0f);
++		//b->m_linearVelocity *= b2Clamp(1.0f - step.dt * b->m_linearDamping, 0.0f, 1.0f);
++		//b->m_angularVelocity *= b2Clamp(1.0f - step.dt * b->m_angularDamping, 0.0f, 1.0f);
++		b->m_linearVelocity *= expf(-b->m_linearDamping * step.dt);
++		b->m_angularVelocity *= expf(-b->m_angularDamping * step.dt);
+ 	}
+ 
+ 	// Partition contacts so that contacts with static bodies are solved last.

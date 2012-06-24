@@ -1,0 +1,55 @@
+<?xml version="1.0" ?>
+<template name="dreadtowerbullet">
+	<collidable>
+		<body name="main">
+			<circle radius="1">
+				<friction value="1" />
+				<restitution value="0" />
+				<density value="1.0" />
+				<filter name="inert" />
+			</circle>
+			<fixedrotation value="1" />
+		</body>
+	</collidable>
+	<renderable radius="64" depth="1">
+		<translate>
+			<key time="0" z="256" />
+			<key time="3" z="0" />
+		</translate>
+		<rotate>
+			<key time="0" angle="0" />
+			<key time="3" angle="2160" />
+		</rotate>
+		<drawlist>
+			<pushmatrix>
+				<repeat count="3">
+					<pushmatrix>
+						<translate y="5" />
+						<color r="1.0" g="0.0" b="0.5" a="0.25" />
+						<pushmatrix>
+							<scale x="4" y="4" />
+							<calllist name="circle8" />
+						</pushmatrix>
+						<color r="1.0" g="0.4" b="0.7" a="0.5" />
+						<pushmatrix>
+							<scale x="3" y="3" />
+							<calllist name="circle8" />
+						</pushmatrix>
+						<color r="1.0" g="1.0" b="1.0" a="1.0" />
+						<pushmatrix>
+							<scale x="2" y="2" />
+							<calllist name="circle8" />
+						</pushmatrix>
+					</pushmatrix>
+					<rotate angle="120" />
+				</repeat>
+			</pushmatrix>
+		</drawlist>
+	</renderable>
+	<expire time="3" spawnonexpire="dreadtowerblast" />
+	<aimer>
+		<target period="0.1" range="256" filter="blueunit" />
+		<pursue strength="1" />
+	</aimer>
+	<ship maxveloc="240" maxaccel="240" minaccel="120" maxomega="0" />
+</template>

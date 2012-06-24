@@ -1,0 +1,6 @@
+<?xml version="1.0" ?>
+<template name="force3" type="force">
+	<weapon>
+		<shot delay="0.333333" />
+	</weapon>
+</template>

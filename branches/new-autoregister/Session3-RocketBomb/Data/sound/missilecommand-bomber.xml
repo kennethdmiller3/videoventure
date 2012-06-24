@@ -1,0 +1,74 @@
+<?xml version="1.0" ?>
+<sound name="missilecommand-bomber">
+	<pokey length="0.135168" frequency="1250000" tone="pure">
+		<divider quantize="28" rate="1250000" interpolate="0">
+			<key step="4940" value="3164" />
+			<key step="180" value="28" />
+			<key step="4940" value="3108" />
+			<key step="180" value="28" />
+			<key step="4940" value="3052" />
+			<key step="180" value="28" />
+			<key step="4940" value="2996" />
+			<key step="180" value="28" />
+			<key step="4940" value="2940" />
+			<key step="180" value="28" />
+			<key step="4940" value="2884" />
+			<key step="180" value="28" />
+			<key step="4940" value="2828" />
+			<key step="180" value="28" />
+			<key step="4940" value="2772" />
+			<key step="180" value="28" />
+			<key step="4940" value="2716" />
+			<key step="180" value="28" />
+			<key step="4940" value="2660" />
+			<key step="180" value="28" />
+			<key step="4940" value="2604" />
+			<key step="180" value="28" />
+			<key step="4940" value="2548" />
+			<key step="180" value="28" />
+			<key step="4940" value="2492" />
+			<key step="180" value="28" />
+			<key step="4940" value="2436" />
+			<key step="180" value="28" />
+			<key step="4940" value="2380" />
+			<key step="180" value="28" />
+			<key step="4940" value="2324" />
+			<key step="180" value="28" />
+			<key step="4940" value="2268" />
+			<key step="180" value="28" />
+			<key step="4940" value="2212" />
+			<key step="180" value="28" />
+			<key step="4940" value="2156" />
+			<key step="180" value="28" />
+			<key step="4940" value="2100" />
+			<key step="180" value="28" />
+			<key step="4940" value="2044" />
+			<key step="180" value="28" />
+			<key step="4940" value="1988" />
+			<key step="180" value="28" />
+			<key step="4940" value="1932" />
+			<key step="180" value="28" />
+			<key step="4940" value="1876" />
+			<key step="180" value="28" />
+			<key step="4940" value="1820" />
+			<key step="180" value="28" />
+			<key step="4940" value="1764" />
+			<key step="180" value="28" />
+			<key step="4940" value="1708" />
+			<key step="180" value="28" />
+			<key step="4940" value="1652" />
+			<key step="180" value="28" />
+			<key step="4940" value="1596" />
+			<key step="180" value="28" />
+			<key step="4940" value="1540" />
+			<key step="180" value="28" />
+			<key step="4940" value="1484" />
+			<key step="180" value="28" />
+			<key step="4940" value="1428" />
+			<key step="180" value="28" />
+			<key step="4940" value="1372" />
+			<key step="180" value="28" />
+		</divider>
+		<amplitude value="0.266667" />
+	</pokey>
+</sound>

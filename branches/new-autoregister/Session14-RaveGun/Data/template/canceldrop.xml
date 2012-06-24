@@ -1,0 +1,55 @@
+<?xml version="1.0" ?>
+<template name="canceldrop">
+	<collidable>
+		<body name="main">
+			<circle radius="2">
+				<friction value="0.5" />
+				<restitution value="0.5" />
+				<density value="1" />
+				<filter name="environment" />
+				<mask default="0" bit0="1" />
+			</circle>
+			<circle radius="2">
+				<filter name="environment" />
+				<mask default="0" bit1="1" />
+				<sensor value="1" />
+			</circle>
+			<damping linear="3" angular="3" />
+		</body>
+	</collidable>
+	<renderable radius="3" period="1.0">
+		<quads>
+			<color r="0" g="0" b="0" a="0.5"/>
+			<vertex x="0" y="2.75"/>
+			<vertex x="2.75" y="0"/>
+			<vertex x="0" y="-2.75"/>
+			<vertex x="-2.75" y="0"/>
+			<color>
+				<param>
+					<frac>
+						<mul>
+							<worldtime/>
+							<value value="1.2"/>
+						</mul>
+					</frac>
+				</param>
+				<key time="0.0" r="0.2" g="0.1" b="1.0" a="1.0" />
+				<key time="0.4" r="0.7" g="0.4" b="1.0" a="1.0" />
+				<key time="0.5" r="0.9" g="0.8" b="1.0" a="1.0" />
+				<key time="0.6" r="0.7" g="0.4" b="1.0" a="1.0" />
+				<key time="1.0" r="0.2" g="0.1" b="1.0" a="1.0" />
+			</color>
+			<vertex x="0" y="2"/>
+			<vertex x="2" y="0"/>
+			<vertex x="0" y="-2"/>
+			<vertex x="-2" y="0"/>
+		</quads>
+	</renderable>
+	<expire time="10" switchonexpire="canceldropexpire" />
+	<pickup spawnoncollect="canceldropcollect">
+		<team name="blue">
+			<resource name="level" add="0.1"/>
+		</team>
+	</pickup>
+	<points value="10" />
+</template>

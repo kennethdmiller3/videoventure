@@ -1,0 +1,146 @@
+<?xml version="1.0" ?>
+<template name="playerbulletexplosion5">
+	<expire time="1.0" />
+	<explosion filter="bluebullet">
+		<radius inner="48" outer="64" />
+		<damage inner="5" outer="0" />
+	</explosion>
+	<soundcue>
+		<cue sound="stargate-explosion" />
+	</soundcue>
+	<renderable radius="100">
+		<block length="0.2">
+			<pushmatrix>
+				<color>
+					<key time="0.0" r="1.0" g="1.0" b="1.0" a="1.0" />
+					<key time="0.1" r="1.0" g="1.0" b="1.0" a="0.0" />
+				</color>
+				<scale>
+					<key time="0.0" x="8.0" y="8.0" />
+					<key time="0.1" x="0.0" y="0.0" />
+				</scale>
+				<calllist name="circle16" />
+			</pushmatrix>
+			<pushmatrix>
+				<color>
+					<key time="0.0" r="0.4" g="0.7" b="1.0" a="0.5" />
+					<key time="0.1" r="0.0" g="0.5" b="1.0" a="0.0" />
+				</color>
+				<scale>
+					<key time="0.0" x="48.0" y="48.0" />
+					<key time="0.1" x="64.0" y="64.0" />
+				</scale>
+				<calllist name="circle32" />
+			</pushmatrix>
+		</block>
+		<block length="0.3">
+			<pushmatrix>
+				<color>
+					<key time="0.0" r="0.4" g="0.7" b="1.0" a="0.5" />
+					<key time="0.3" r="0.0" g="0.0" b="1.0" a="0.0" />
+				</color>
+				<scale>
+					<key time="0.0" x="8.0" y="8.0" />
+					<key time="0.3" x="24.0" y="24.0" />
+				</scale>
+				<calllist name="circle32" />
+			</pushmatrix>
+			<pushmatrix>
+				<scale x="64" y="64"/>
+				<calldynamiclist name="playerbeatlightblue"/>
+			</pushmatrix>
+		</block>
+		<block length="0.4">
+			<pushmatrix>
+				<color>
+					<key time="0.0" r="0.4" g="0.7" b="1.0" a="0.5" />
+					<key time="0.4" r="0.0" g="0.0" b="1.0" a="0.0" />
+				</color>
+				<repeat count="3">
+					<repeat count="6">
+						<pushmatrix>
+							<translate>
+								<key time="0.0" x="0" y="0" />
+								<key time="0.4" x="96" y="0" />
+							</translate>
+							<scale>
+								<key time="0.0" x="10.0" y="1" />
+								<key time="0.4" x="1" y="1" />
+							</scale>
+							<calllist name="circle16" />
+						</pushmatrix>
+						<rotate angle="60" />
+					</repeat>
+					<scale x="0.8" y="0.8" />
+					<rotate angle="20" />
+				</repeat>
+			</pushmatrix>
+		</block>
+		<block length="1.0">
+			<pushmatrix>
+				<color>
+					<key time="0.0" r="0.8" g="0.9" b="1.0" a="1.0" />
+					<key time="1.0" r="0.0" g="0.5" b="1.0" a="0.0" />
+				</color>
+				<scale>
+					<key time="0.0" x="16.0" y="16.0" />
+					<key time="1.0" x="0.0" y="0.0" />
+				</scale>
+				<calllist name="circle16" />
+			</pushmatrix>
+		</block>
+		<block length="0.5">
+			<pushmatrix>
+				<color>
+					<key time="0.0" r="1.0" g="1.0" b="1.0" a="1.0" />
+					<key time="1.0" r="0.4" g="0.7" b="1.0" a="0.0" />
+				</color>
+				<scale>
+					<key time="0.0" x="8.0" y="8.0" />
+					<key time="0.5" x="0.0" y="0.0" />
+				</scale>
+				<calllist name="circle16" />
+			</pushmatrix>
+			<set name="t">
+				<sqrt>
+					<mul>
+						<time/>
+						<value value="2"/>
+					</mul>
+				</sqrt>
+			</set>
+			<color param="t">
+				<key time="0.0" r="1.0" g="1.0" b="1.0" a="1.0" />
+				<key time="0.5" r="1.0" g="1.0" b="1.0" a="0.0" />
+			</color>
+			<set name="r0" type="scalar" param="t">
+				<key time="0.0" value="0"/>
+				<key time="0.5" value="64"/>
+			</set>
+			<set name="r1" type="scalar" param="t">
+				<key time="0.0" value="8"/>
+				<key time="0.5" value="64"/>
+			</set>
+			<quad_strip>
+				<loop name="angle" from="0" to="32" by="1">
+					<vertex>
+						<x>
+							<sinewave scale="r0" input="angle" period="32"/>
+						</x>
+						<y>
+							<sinewave scale="r0" input="angle" phase="0.25" period="32"/>
+						</y>
+					</vertex>
+					<vertex>
+						<x>
+							<sinewave scale="r1" input="angle" period="32"/>
+						</x>
+						<y>
+							<sinewave scale="r1" input="angle" phase="0.25" period="32"/>
+						</y>
+					</vertex>
+				</loop>
+			</quad_strip>
+		</block>
+	</renderable>
+</template>

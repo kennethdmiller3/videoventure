@@ -1,0 +1,41 @@
+<?xml version="1.0" ?>
+<template name="enemyshipturreted" type="enemyshiplarge">
+	<link name="turret" updateangle="0">
+		<offset x="0" y="-2" angle="0"/>
+		<collidable>
+			<body name="main">
+				<circle radius="3">
+					<density value="1"/>
+					<friction value="0.5"/>
+					<restitution value="0.5"/>
+					<filter name="inert"/>
+				</circle>
+			</body>
+		</collidable>
+		<renderable>
+			<color r="0.5" g="0.5" b="0.5" a="1.0" />
+			<quads>
+				<vertex x="0.5" y="6" />
+				<vertex x="-0.5" y="6" />
+				<vertex x="-1.5" y="1.5" />
+				<vertex x="1.5" y="1.5" />
+			</quads>
+			<pushmatrix>
+				<color r="0.7" g="0.7" b="0.7" a="1.0" />
+				<scale x="3" y="3" />
+				<calllist name="circle12" />
+			</pushmatrix>
+			<pushmatrix>
+				<color r="1.0" g="1.0" b="1.0" a="1.0" />
+				<scale x="4" y="4" />
+				<calllist name="circle12" />
+			</pushmatrix>
+		</renderable>
+		<aimer>
+			<target range="256" filter="redbullet" />
+			<aim strength="1" leading="0" />
+			<fire channel="1" range="192" angle="15" />
+		</aimer>
+		<ship maxveloc="0" maxaccel="0" minaccel="0" maxomega="3"/>
+	</link>
+</template>

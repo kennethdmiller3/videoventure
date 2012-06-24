@@ -1,0 +1,73 @@
+<?xml version="1.0" ?>
+<template name="playership">
+	<collidable>
+		<body name="main">
+			<circle radius="8">
+				<density value="1" />
+				<friction value="0.5" />
+				<restitution value="0.5" />
+				<filter name="blueunit" />
+				<mask bit5="0" bit6="0"/>
+				<group value="-1" />
+			</circle>
+			<box w="1" h="1">
+				<position x="0" y="-2" />
+				<density value="0" />
+				<friction value="0.5" />
+				<restitution value="0.5" />
+				<filter name="blueunit" />
+				<group value="-1" />
+			</box>
+		</body>
+	</collidable>
+	<drawlist>
+		<triangle_strip>
+			<vertex x="8" y="-8" />
+			<vertex x="8" y="-5.5" />
+			<vertex x="2.5" y="-8" />
+			<vertex x="3" y="-3" />
+			<vertex x="2" y="-6.5" />
+			<vertex x="3" y="0.5" />
+			<vertex x="1.5" y="-6.5" />
+			<vertex x="1.5" y="2" />
+			<vertex x="1" y="-8" />
+			<vertex x="1" y="8" />
+			<vertex x="0" y="-8" />
+			<vertex x="-1" y="8" />
+			<vertex x="-1" y="-8" />
+			<vertex x="-1.5" y="2" />
+			<vertex x="-1.5" y="-6.5" />
+			<vertex x="-3" y="0.5" />
+			<vertex x="-2" y="-6.5" />
+			<vertex x="-3" y="-3" />
+			<vertex x="-2.5" y="-8" />
+			<vertex x="-8" y="-5.5" />
+			<vertex x="-8" y="-8" />
+		</triangle_strip>
+	</drawlist>
+	<renderable radius="8">
+		<color r="0.4" g="0.5" b="1.0" a="1.0"/>
+		<calllist name="playership"/>
+		<translate y="-8"/>
+		<calldynamiclist name="playerengineflame"/>
+	</renderable>
+	<playercontroller>
+		<scale turn="1"/>
+		<aim type="up"/>
+		<move type="moveworld"/>
+	</playercontroller>
+	<ship maxveloc="180" maxaccel="3600" minaccel="3600" maxomega="1"/>
+	<damagable health="1" spawnondeath="playersmartbombexplosion" />
+	<team name="blue" />
+	<soundcue>
+		<cue name="extralife" sound="stargate-extralife"/>
+	</soundcue>
+	<shield>
+		<ammo type="level" cost="1"/>
+		<absorb cost="0" spawn="playerautobombexplosion"/>
+		<invulnerable time="1"/>
+	</shield>
+	<link name="bomb" secondary="playersmartbombweapon"/>
+	<resource name="level" initial="3" maximum="8" cycle="0.016667" rate="0.1"/>
+	<inherit type="playershipweapon"/>
+</template>

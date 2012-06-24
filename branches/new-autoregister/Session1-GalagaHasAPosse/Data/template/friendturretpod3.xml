@@ -1,0 +1,10 @@
+<?xml version="1.0" ?>
+<template name="friendturretpod3" type="friendturret3">
+	<collidable>
+		<body name="main">
+			<damping linear="10.0" angular="10.0" />
+		</body>
+	</collidable>
+	<damagable health="10" spawnondeath="friendexplosion" />
+	<points value="400" />
+</template>

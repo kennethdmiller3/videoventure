@@ -1,0 +1,113 @@
+<?xml version="1.0" ?>
+<template name="enemycommandship">
+	<collidable>
+		<body name="main">
+			<circle radius="6">
+				<density value="1" />
+				<friction value="0.5" />
+				<restitution value="0.5" />
+				<filter name="redunit" />
+			</circle>
+		</body>
+	</collidable>
+	<renderable radius="6" period="0.4">
+		<pushmatrix>
+			<rotate>
+				<key time="0.0" angle="0" />
+				<key time="0.4" angle="180" />
+			</rotate>
+			<drawlist>
+				<pushmatrix>
+					<scale x="6.5" y="6.5" />
+					<color r="0.0" g="0.0" b="0.0" a="0.5" />
+					<calllist name="circle8" />
+				</pushmatrix>
+				<pushmatrix>
+					<scale x="6" y="6" />
+					<color r="1.0" g="0.2" b="0.1" a="1.0" />
+					<calllist name="circle8" />
+					<color r="1.0" g="0.8" b="0.1" a="1.0" />
+					<calllist name="diamond" />
+					<rotate angle="45" />
+					<calllist name="diamond" />
+				</pushmatrix>
+				<pushmatrix>
+					<rotate angle="22.5" />
+					<scale x="4.24" y="4.24" />
+					<color r="1.0" g="0.2" b="0.1" a="1.0" />
+					<calllist name="circle8" />
+				</pushmatrix>
+			</drawlist>
+		</pushmatrix>
+		<color>
+			<key time="0.0" r="1.0" g="1.0" b="1.0" a="1.0" />
+			<key time="0.2" r="1.0" g="0.8" b="0.1" a="1.0" />
+			<key time="0.4" r="1.0" g="1.0" b="1.0" a="1.0" />
+		</color>
+		<triangles>
+			<vertex x="0" y="2" />
+			<vertex x="-2" y="-1" />
+			<vertex x="2" y="-1" />
+		</triangles>
+	</renderable>
+	<aimer>
+		<drift strength="0.25" />
+		<wander turn="0.5" turnrate="0.25" />
+		<target range="256" filter="redbullet" />
+		<fire channel="1" range="128" angle="20" />
+		<fire channel="2" range="128" angle="180" />
+		<pursue strength="1" leading="0" />
+		<aim strength="1" leading="240" />
+		<evade strength="1" />
+		<close range="64" />
+		<edge strength="0.0625" distance="16"/>
+	</aimer>
+	<ship maxveloc="45" maxaccel="90" minaccel="10" maxomega="2.0" />
+	<damagable health="10" spawnondeath="enemyexplosion" />
+	<link name="gun" secondary="enemyweapon">
+		<offset x="0" y="4" angle="0" />
+		<weapon>
+			<shot delay="0.416667" />
+			<action>
+				<wait>
+					<mul>
+						<frac>
+							<mul>
+								<worldtime/>
+								<value value="-2.4"/>
+							</mul>
+						</frac>
+						<value value="0.416667"/>
+					</mul>
+				</wait>
+				<ordnance name="enemybullet">
+					<velocity x="0" y="120" />
+				</ordnance>
+				<cue name="fire"/>
+			</action>
+		</weapon>
+		<soundcue>
+			<cue name="fire" sound="stargate-landerfire" />
+		</soundcue>
+	</link>
+	<weapon>
+		<trigger channel="2" />
+		<shot delay="1.666667" track="4" />
+		<action>
+			<wait>
+				<mul>
+					<frac>
+						<mul>
+							<worldtime/>
+							<value value="-1.2"/>
+						</mul>
+					</frac>
+					<value value="0.833333"/>
+				</mul>
+			</wait>
+			<ordnance name="enemyphotonmine"/>
+		</action>
+	</weapon>
+	<team name="red" />
+	<points value="300" />
+</template>

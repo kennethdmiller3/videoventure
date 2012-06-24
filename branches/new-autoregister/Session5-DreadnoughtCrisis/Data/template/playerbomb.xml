@@ -1,0 +1,80 @@
+<?xml version="1.0" ?>
+<template name="playerbomb">
+	<collidable>
+		<body name="main">
+			<circle radius="1">
+				<friction value="0" />
+				<restitution value="0" />
+				<density value="1.0" />
+				<filter name="inert" />
+			</circle>
+			<fixedrotation value="1" />
+			<damping linear="0" />
+		</body>
+	</collidable>
+	<renderable depth="1">
+		<translate>
+			<key time="0.00" z="0" />
+			<key time="0.05" z="1" />
+			<key time="0.10" z="4" />
+			<key time="0.15" z="9" />
+			<key time="0.20" z="16" />
+			<key time="0.25" z="25" />
+			<key time="0.30" z="36" />
+			<key time="0.35" z="49" />
+			<key time="0.40" z="64" />
+			<key time="0.45" z="81" />
+			<key time="0.50" z="100" />
+			<key time="0.55" z="121" />
+			<key time="0.60" z="144" />
+			<key time="0.65" z="169" />
+			<key time="0.70" z="196" />
+			<key time="0.75" z="225" />
+			<key time="0.80" z="256" />
+		</translate>
+		<block length="0.1" repeat="8">
+			<scale>
+				<key time="0.00" x="2.5" y="2.5" />
+				<key time="0.05" x="1.5" y="1.5" />
+				<key time="0.10" x="2.5" y="2.5" />
+			</scale>
+			<pushmatrix>
+				<scale x="1.5" y="1.5" />
+				<color>
+					<key time="0.00" r="0.0" g="0.5" b="1.0" a="1.0" />
+					<key time="0.05" r="0.0" g="0.0" b="1.0" a="1.0" />
+					<key time="0.10" r="0.0" g="0.5" b="1.0" a="1.0" />
+				</color>
+				<calllist name="circle8" />
+			</pushmatrix>
+			<pushmatrix>
+				<scale x="1.25" y="1.25" />
+				<color>
+					<key time="0.00" r="0.4" g="0.7" b="1.0" a="1.0" />
+					<key time="0.05" r="0.0" g="0.5" b="1.0" a="1.0" />
+					<key time="0.10" r="0.4" g="0.7" b="1.0" a="1.0" />
+				</color>
+				<calllist name="circle8" />
+			</pushmatrix>
+			<color>
+				<key time="0.00" r="0.8" g="0.9" b="1.0" a="1.0" />
+				<key time="0.05" r="0.4" g="0.7" b="1.0" a="1.0" />
+				<key time="0.10" r="0.8" g="0.9" b="1.0" a="1.0" />
+			</color>
+			<calllist name="circle8" />
+		</block>
+	</renderable>
+	<expire time="0.8" switchonexpire="playerbombhit" />
+	<sound>
+		<pokey length="0.8" frequency="1250000" tone="pure">
+			<divider quantize="28">
+				<key time="0.0" value="2688" />
+				<key time="0.8" value="5376" />
+			</divider>
+			<amplitude quantize="0.066667">
+				<key time="0.0" value="0.4" />
+				<key time="0.8" value="0.0" />
+			</amplitude>
+		</pokey>
+	</sound>
+</template>

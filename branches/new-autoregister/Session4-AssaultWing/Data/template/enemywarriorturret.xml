@@ -1,0 +1,52 @@
+<?xml version="1.0" ?>
+<template name="enemywarriorturret">
+	<collidable>
+		<body name="main">
+			<circle radius="3">
+				<density value="1" />
+				<friction value="0.5" />
+				<restitution value="0.5" />
+				<filter name="redunit" />
+			</circle>
+		</body>
+	</collidable>
+	<renderable radius="3">
+		<drawlist>
+			<color r="0.7" g="0.7" b="0.7" a="1.0" />
+			<pushmatrix>
+				<scale x="3.0" y="3.0" />
+				<calllist name="circle16" />
+			</pushmatrix>
+			<quads>
+				<vertex x="1" y="2" />
+				<vertex x="-1" y="2" />
+				<vertex x="-0.5" y="5.5" />
+				<vertex x="0.5" y="5.5" />
+			</quads>
+			<color r="0.8" g="0.8" b="0.8" a="1.0" />
+			<pushmatrix>
+				<scale x="2.0" y="2.0" />
+				<calllist name="circle16" />
+			</pushmatrix>
+			<color r="1.0" g="0.2" b="0.1" a="1.0" />
+			<pushmatrix>
+				<scale x="1.0" y="1.0" />
+				<calllist name="circle16" />
+			</pushmatrix>
+		</drawlist>
+	</renderable>
+	<!--aimer range="512" attack="192" leading="240" filter="redbullet" /-->
+	<aimer>
+		<target range="256" filter="redbullet" />
+		<aim strength="1" leading="240" />
+		<fire channel="1" range="192" />
+	</aimer>
+	<team name="red" />
+	<ship maxveloc="0" maxaccel="0" minaccel="0" maxomega="2" />
+	<weapon>
+		<offset x="0" y="5" angle="0" />
+		<velocity x="0" y="180" />
+		<ordnance name="enemybullet" />
+		<shot delay="0.2" />
+	</weapon>
+</template>

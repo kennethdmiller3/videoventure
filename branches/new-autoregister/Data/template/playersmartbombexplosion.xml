@@ -1,0 +1,19 @@
+<?xml version="1.0" ?>
+<template name="playersmartbombexplosion">
+	<expire time="0.066667" />
+	<renderable radius="256">
+		<color>
+			<key time="0.000000" r="1.0" g="1.0" b="1.0" a="1.0" />
+			<key time="0.033334" r="1.0" g="1.0" b="1.0" a="1.0" />
+			<key time="0.033334" r="1.0" g="1.0" b="1.0" a="0.0" />
+			<key time="0.066667" r="1.0" g="1.0" b="1.0" a="0.0" />
+		</color>
+		<scale x="256" y="256" />
+		<calllist name="circle32" />
+	</renderable>
+	<explosion filter="bluebullet">
+		<radius inner="256" outer="256" />
+		<damage inner="10" outer="10" />
+	</explosion>
+	<team name="blue" />
+</template>

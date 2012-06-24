@@ -1,0 +1,55 @@
+<?xml version="1.0" ?>
+<drawlist name="reticule">
+	<quads>
+		<color r="0.4" g="0.5" b="1.0" a="1.0" />
+		<vertex x="-10" y="-8" />
+		<vertex x="-4" y="-8" />
+		<vertex x="-4" y="-10" />
+		<vertex x="-10" y="-10" />
+		<vertex x="-8" y="-10" />
+		<vertex x="-10" y="-10" />
+		<vertex x="-10" y="-4" />
+		<vertex x="-8" y="-4" />
+		<vertex x="+10" y="-8" />
+		<vertex x="+4" y="-8" />
+		<vertex x="+4" y="-10" />
+		<vertex x="+10" y="-10" />
+		<vertex x="+8" y="-10" />
+		<vertex x="+10" y="-10" />
+		<vertex x="+10" y="-4" />
+		<vertex x="+8" y="-4" />
+		<vertex x="-10" y="+8" />
+		<vertex x="-4" y="+8" />
+		<vertex x="-4" y="+10" />
+		<vertex x="-10" y="+10" />
+		<vertex x="-8" y="+10" />
+		<vertex x="-10" y="+10" />
+		<vertex x="-10" y="+4" />
+		<vertex x="-8" y="+4" />
+		<vertex x="+10" y="+8" />
+		<vertex x="+4" y="+8" />
+		<vertex x="+4" y="+10" />
+		<vertex x="+10" y="+10" />
+		<vertex x="+8" y="+10" />
+		<vertex x="+10" y="+10" />
+		<vertex x="+10" y="+4" />
+		<vertex x="+8" y="+4" />
+		<color r="0.4" g="0.5" b="1.0" a="0.25" />
+		<vertex x="-1" y="-480" />
+		<vertex x="+1" y="-480" />
+		<vertex x="+1" y="-8" />
+		<vertex x="-1" y="-8" />
+		<vertex x="-1" y="+8" />
+		<vertex x="+1" y="+8" />
+		<vertex x="+1" y="480" />
+		<vertex x="-1" y="480" />
+		<vertex x="-640" y="-1" />
+		<vertex x="-8" y="-1" />
+		<vertex x="-8" y="+1" />
+		<vertex x="-640" y="+1" />
+		<vertex x="+8" y="-1" />
+		<vertex x="640" y="-1" />
+		<vertex x="640" y="+1" />
+		<vertex x="+8" y="+1" />
+	</quads>
+</drawlist>
