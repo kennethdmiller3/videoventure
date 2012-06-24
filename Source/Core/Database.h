@@ -8,24 +8,74 @@ namespace Database
 	// component loaders
 	namespace Loader
 	{
-		typedef fastdelegate::FastDelegate<void (unsigned int, const tinyxml2::XMLElement *)> Entry;
-		GAME_API void AddConfigure(unsigned int aTagId, Entry aEntry);
-		GAME_API void RemoveConfigure(unsigned int aTagId, Entry aEntry);
-		GAME_API const Entry &GetConfigure(unsigned int aTagId);
+		typedef void (*Entry)(unsigned int, const tinyxml2::XMLElement *);
+
+		class GAME_API Configure
+		{
+		private:
+			unsigned int mTagId;	// tag hash id for the configure
+			Entry mPrev;			// entry that this replaced
+
+		public:
+			static Typed<Entry> &GetDB();
+			Configure(unsigned int aTagId, Entry aEntry);
+			~Configure();
+			static const Entry &Get(unsigned int aTagId);
+		};
 	}
 
 	// component initializers
 	namespace Initializer
 	{
-		typedef fastdelegate::FastDelegate<void (unsigned int)> Entry;
-		GAME_API void AddActivate(unsigned int aDatabaseId, Entry aEntry);
-		GAME_API void RemoveActivate(unsigned int aDatabaseId, Entry aEntry);
-		GAME_API void AddPostActivate(unsigned int aDatabaseId, Entry aEntry);
-		GAME_API void RemovePostActivate(unsigned int aDatabaseId, Entry aEntry);
-		GAME_API void AddPreDeactivate(unsigned int aDatabaseId, Entry aEntry);
-		GAME_API void RemovePreDeactivate(unsigned int aDatabaseId, Entry aEntry);
-		GAME_API void AddDeactivate(unsigned int aDatabaseId, Entry aEntry);
-		GAME_API void RemoveDeactivate(unsigned int aDatabaseId, Entry aEntry);
+		typedef void (*Entry)(unsigned int);
+
+		class GAME_API Activate
+		{
+		private:
+			unsigned int mDatabaseId;
+			Entry mPrev;
+
+		public:
+			static Typed<Entry> &GetDB();
+			Activate(unsigned int aDatabaseId, Entry aEntry);
+			~Activate();
+		};
+
+		class GAME_API PostActivate
+		{
+		private:
+			unsigned int mDatabaseId;
+			Entry mPrev;
+
+		public:
+			static Typed<Entry> &GetDB();
+			PostActivate(unsigned int aDatabaseId, Entry aEntry);
+			~PostActivate();
+		};
+
+		class GAME_API PreDeactivate
+		{
+		private:
+			unsigned int mDatabaseId;
+			Entry mPrev;
+
+		public:
+			static Typed<Entry> &GetDB();
+			PreDeactivate(unsigned int aDatabaseId, Entry aEntry);
+			~PreDeactivate();
+		};
+
+		class GAME_API Deactivate
+		{
+		private:
+			unsigned int mDatabaseId;
+			Entry mPrev;
+
+		public:
+			static Typed<Entry> &GetDB();
+			Deactivate(unsigned int aDatabaseId, Entry aEntry);
+			~Deactivate();
+		};
 	}
 
 	// get database of databases

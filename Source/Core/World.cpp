@@ -7,127 +7,100 @@ namespace Database
 {
 	namespace Loader
 	{
-		class WorldLoader
+		static void WorldConfigure(unsigned int aId, const tinyxml2::XMLElement *element)
 		{
-		public:
-			WorldLoader()
-			{
-				AddConfigure(0x37a3e893 /* "world" */, Entry(this, &WorldLoader::Configure));
-			}
+			// set up the collidable world
+			float aMinX = -2048, aMinY = -2048, aMaxX = 2048, aMaxY = 2048;
+			bool aWall = true;
+			element->QueryFloatAttribute("xmin", &aMinX);
+			element->QueryFloatAttribute("ymin", &aMinY);
+			element->QueryFloatAttribute("xmax", &aMaxX);
+			element->QueryFloatAttribute("ymax", &aMaxY);
+			element->QueryBoolAttribute("wall", &aWall);
+			Collidable::WorldInit(aMinX, aMinY, aMaxX, aMaxY, aWall != 0);
 
-			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
-			{
-				// set up the collidable world
-				float aMinX = -2048, aMinY = -2048, aMaxX = 2048, aMaxY = 2048;
-				bool aWall = true;
-				element->QueryFloatAttribute("xmin", &aMinX);
-				element->QueryFloatAttribute("ymin", &aMinY);
-				element->QueryFloatAttribute("xmax", &aMaxX);
-				element->QueryFloatAttribute("ymax", &aMaxY);
-				element->QueryBoolAttribute("wall", &aWall);
-				Collidable::WorldInit(aMinX, aMinY, aMaxX, aMaxY, aWall != 0);
-
-				// recurse on children
-				ConfigureWorldItems(element);
-			}
+			// recurse on children
+			ConfigureWorldItems(element);
 		}
-		worldloader;
+		Configure worldconfigure(0x37a3e893 /* "world" */, WorldConfigure);
 
-		class ImportLoader
+		static void ImportConfigure(unsigned int aId, const tinyxml2::XMLElement *element)
 		{
-		public:
-			ImportLoader()
-			{
-				AddConfigure(0x112a90d4 /* "import" */, Entry(this, &ImportLoader::Configure));
-			}
+			// level configuration
+			const char *name = element->Attribute("name");
+			tinyxml2::XMLDocument document;
+			if (document.LoadFile(name) != tinyxml2::XML_SUCCESS)
+				DebugPrint("error loading import file \"%s\": %s %s\n", name, document.GetErrorStr1(), document.GetErrorStr2());
 
-			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
-			{
-				// level configuration
-				const char *name = element->Attribute("name");
-				tinyxml2::XMLDocument document;
-				if (document.LoadFile(name) != tinyxml2::XML_SUCCESS)
-					DebugPrint("error loading import file \"%s\": %s %s\n", name, document.GetErrorStr1(), document.GetErrorStr2());
-
-				// process child elements
-				if (const tinyxml2::XMLElement *root = document.FirstChildElement())
-					ConfigureWorldItem(root);
-			}
+			// process child elements
+			if (const tinyxml2::XMLElement *root = document.FirstChildElement())
+				ConfigureWorldItem(root);
 		}
-		importloader;
+		Configure importconfigure(0x112a90d4 /* "import" */, ImportConfigure);
 
-		class FogLoader
+		static void FogConfigure(unsigned int aId, const tinyxml2::XMLElement *element)
 		{
-		public:
-			FogLoader()
+			// set up depth fog
+			bool enable = false;
+			if (element->QueryBoolAttribute("enable", &enable) == tinyxml2::XML_SUCCESS)
 			{
-				AddConfigure(0xa1f3723f /* "fog" */, Entry(this, &FogLoader::Configure));
+				if (enable)
+					glEnable( GL_FOG );
+				else
+					glDisable( GL_FOG );
 			}
+			glHint( GL_FOG_HINT, GL_DONT_CARE );
 
-			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
+			switch (Hash(element->Attribute("mode")))
 			{
-				// set up depth fog
-				bool enable = false;
-				if (element->QueryBoolAttribute("enable", &enable) == tinyxml2::XML_SUCCESS)
+			case 0:
+				break;
+
+			default:
+			case 0xd00594c0 /* "linear" */:
 				{
-					if (enable)
-						glEnable( GL_FOG );
-					else
-						glDisable( GL_FOG );
-				}
-				glHint( GL_FOG_HINT, GL_DONT_CARE );
+					glFogi( GL_FOG_MODE, GL_LINEAR );
 
-				switch (Hash(element->Attribute("mode")))
+					float start = 0;
+					if (element->QueryFloatAttribute("start", &start) == tinyxml2::XML_SUCCESS)
+						glFogf( GL_FOG_START, start );
+
+					float end = 1;
+					if (element->QueryFloatAttribute("end", &end) == tinyxml2::XML_SUCCESS)
+						glFogf( GL_FOG_END, end );
+				}
+				break;
+
+			case 0x72a68728 /* "exp" */:
 				{
-				case 0:
-					break;
+					glFogi( GL_FOG_MODE, GL_EXP );
 
-				default:
-				case 0xd00594c0 /* "linear" */:
-					{
-						glFogi( GL_FOG_MODE, GL_LINEAR );
-
-						float start = 0;
-						if (element->QueryFloatAttribute("start", &start) == tinyxml2::XML_SUCCESS)
-							glFogf( GL_FOG_START, start );
-
-						float end = 1;
-						if (element->QueryFloatAttribute("end", &end) == tinyxml2::XML_SUCCESS)
-							glFogf( GL_FOG_END, end );
-					}
-					break;
-
-				case 0x72a68728 /* "exp" */:
-					{
-						glFogi( GL_FOG_MODE, GL_EXP );
-
-						float density = 1.0f;
-						if (element->QueryFloatAttribute("density", &density) == tinyxml2::XML_SUCCESS)
-							glFogf( GL_FOG_DENSITY, density );
-					}
-					break;
-
-				case 0x9626adee /* "exp2" */:
-					{
-						glFogi( GL_FOG_MODE, GL_EXP2 );
-
-						float density = 1.0f;
-						if (element->QueryFloatAttribute("density", &density) == tinyxml2::XML_SUCCESS)
-							glFogf( GL_FOG_DENSITY, density );
-					}
-					break;
+					float density = 1.0f;
+					if (element->QueryFloatAttribute("density", &density) == tinyxml2::XML_SUCCESS)
+						glFogf( GL_FOG_DENSITY, density );
 				}
+				break;
 
-				GLfloat fogColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
-				element->QueryFloatAttribute("r", &fogColor[0]);
-				element->QueryFloatAttribute("g", &fogColor[1]);
-				element->QueryFloatAttribute("b", &fogColor[2]);
-				element->QueryFloatAttribute("a", &fogColor[3]);
-				glFogfv( GL_FOG_COLOR, fogColor );
-				glClearColor( fogColor[0], fogColor[1], fogColor[2], 0 );
+			case 0x9626adee /* "exp2" */:
+				{
+					glFogi( GL_FOG_MODE, GL_EXP2 );
+
+					float density = 1.0f;
+					if (element->QueryFloatAttribute("density", &density) == tinyxml2::XML_SUCCESS)
+						glFogf( GL_FOG_DENSITY, density );
+				}
+				break;
 			}
+
+			GLfloat fogColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
+			element->QueryFloatAttribute("r", &fogColor[0]);
+			element->QueryFloatAttribute("g", &fogColor[1]);
+			element->QueryFloatAttribute("b", &fogColor[2]);
+			element->QueryFloatAttribute("a", &fogColor[3]);
+			glFogfv( GL_FOG_COLOR, fogColor );
+			glClearColor( fogColor[0], fogColor[1], fogColor[2], 0 );
 		}
-		fogloader;
+		Configure fogconfigure(0xa1f3723f /* "fog" */, FogConfigure);
 	}
 }
 
@@ -139,7 +112,7 @@ void ConfigureWorldItem(const tinyxml2::XMLElement *element)
 		Database::name.Put(Hash(name), name);
 
 	// process world item
-	const Database::Loader::Entry &configure = Database::Loader::GetConfigure(Hash(value));
+	const Database::Loader::Entry &configure = Database::Loader::Configure::Get(Hash(value));
 	if (configure)
 	{
 		DebugPrint("processing %s \"%s\"\n", value, name);

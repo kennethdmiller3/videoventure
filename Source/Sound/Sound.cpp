@@ -123,258 +123,195 @@ namespace Database
 
 	namespace Loader
 	{
-		class SoundSystemLoader
+		static void SoundSystemConfigure(unsigned int aId, const tinyxml2::XMLElement *element)
 		{
-		public:
-			SoundSystemLoader()
+			for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 			{
-				AddConfigure(0x01ba332d /* "soundsystem" */, Entry(this, &SoundSystemLoader::Configure));
-			}
-
-			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
-			{
-				for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+				switch (Hash(child->Value()))
 				{
-					switch (Hash(child->Value()))
-					{
-					case 0x2eb31462 /* "distance" */:
-						child->QueryFloatAttribute("factor", &SOUND_DISTANCE_FACTOR);
-						break;
+				case 0x2eb31462 /* "distance" */:
+					child->QueryFloatAttribute("factor", &SOUND_DISTANCE_FACTOR);
+					break;
 
-					case 0xab59d4bb /* "rolloff" */:
-						child->QueryFloatAttribute("factor", &SOUND_ROLLOFF_FACTOR);
-						break;
+				case 0xab59d4bb /* "rolloff" */:
+					child->QueryFloatAttribute("factor", &SOUND_ROLLOFF_FACTOR);
+					break;
 
-					case 0xcca0ad5f /* "doppler" */:
-						child->QueryFloatAttribute("factor", &SOUND_DOPPLER_FACTOR);
-						break;
-					}
+				case 0xcca0ad5f /* "doppler" */:
+					child->QueryFloatAttribute("factor", &SOUND_DOPPLER_FACTOR);
+					break;
 				}
+			}
 
 #if defined(USE_BASS)
-				BASS_Set3DFactors(SOUND_DISTANCE_FACTOR, SOUND_ROLLOFF_FACTOR, SOUND_DOPPLER_FACTOR);
-				BASS_Apply3D();
+			BASS_Set3DFactors(SOUND_DISTANCE_FACTOR, SOUND_ROLLOFF_FACTOR, SOUND_DOPPLER_FACTOR);
+			BASS_Apply3D();
 #endif
-			}
 		}
-		soundsystemloader;
+		Configure soundsystemconfigure(0x01ba332d /* "soundsystem" */, SoundSystemConfigure);
 
-		class SoundLoader
+		static void SoundConfigure(unsigned int aId, const tinyxml2::XMLElement *element)
 		{
-		public:
-			SoundLoader()
+			// open sound template
+			SoundTemplate &sound = Database::soundtemplate.Open(aId);
+
+			// if there are no sound cues...
+			if (!Database::soundcue.Find(aId))
 			{
-				AddConfigure(0x0e0d9594 /* "sound" */, Entry(this, &SoundLoader::Configure));
-			}
-
-			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
-			{
-				// open sound template
-				SoundTemplate &sound = Database::soundtemplate.Open(aId);
-
-				// if there are no sound cues...
-				if (!Database::soundcue.Find(aId))
-				{
-					// add a default cue (HACK)
-					Typed<unsigned int> &soundcue = Database::soundcue.Open(aId);
-					soundcue.Put(0, aId);
-					Database::soundcue.Close(aId);
-				}
-
-				// configure the sound template
-				sound.Configure(element, aId);
-
-				// close sound template
-				Database::soundtemplate.Close(aId);
-			}
-		}
-		soundloader;
-
-		class SoundCueLoader
-		{
-		public:
-			SoundCueLoader()
-			{
-				AddConfigure(0xf23cbd5f /* "soundcue" */, Entry(this, &SoundCueLoader::Configure));
-			}
-
-			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
-			{
-				// open soundcue
+				// add a default cue (HACK)
 				Typed<unsigned int> &soundcue = Database::soundcue.Open(aId);
-
-				// if the object has an embedded sound...
-				if (Database::soundtemplate.Find(aId))
-				{
-					// remove the default cue (HACK)
-					soundcue.Delete(0);
-				}
-
-				// process sound cue configuration
-				for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
-				{
-					switch (Hash(child->Value()))
-					{
-					case 0xe5561300 /* "cue" */:
-						{
-							// assign cue
-							const char *name = child->Attribute("name");
-							unsigned int subid = Hash(name);
-							if (name)
-								Database::name.Put(subid, name);
-							unsigned int &cue = soundcue.Open(subid);
-							cue = Hash(child->Attribute("sound"));
-							soundcue.Close(subid);
-						}
-						break;
-					}
-				}
-
-				// close soundcue
+				soundcue.Put(0, aId);
 				Database::soundcue.Close(aId);
 			}
-		}
-		soundcueloader;
 
-		class MusicLoader
+			// configure the sound template
+			sound.Configure(element, aId);
+
+			// close sound template
+			Database::soundtemplate.Close(aId);
+		}
+		Configure soundconfigure(0x0e0d9594 /* "sound" */, SoundConfigure);
+
+		static void SoundCueConfigure(unsigned int aId, const tinyxml2::XMLElement *element)
 		{
-		public:
-			MusicLoader()
+			// open soundcue
+			Typed<unsigned int> &soundcue = Database::soundcue.Open(aId);
+
+			// if the object has an embedded sound...
+			if (Database::soundtemplate.Find(aId))
 			{
-				AddConfigure(0x9f9c4fd4 /* "music" */, Entry(this, &MusicLoader::Configure));
+				// remove the default cue (HACK)
+				soundcue.Delete(0);
 			}
 
-			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
+			// process sound cue configuration
+			for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 			{
-				if (const char *file = element->Attribute("file"))
-					musictemplate.Put(aId, file);
+				switch (Hash(child->Value()))
+				{
+				case 0xe5561300 /* "cue" */:
+					{
+						// assign cue
+						const char *name = child->Attribute("name");
+						unsigned int subid = Hash(name);
+						if (name)
+							Database::name.Put(subid, name);
+						unsigned int &cue = soundcue.Open(subid);
+						cue = Hash(child->Attribute("sound"));
+						soundcue.Close(subid);
+					}
+					break;
+				}
 			}
+
+			// close soundcue
+			Database::soundcue.Close(aId);
 		}
-		musicloader;
+		Configure soundcueconfigure(0xf23cbd5f /* "soundcue" */, SoundCueConfigure);
+
+		static void MusicConfigure(unsigned int aId, const tinyxml2::XMLElement *element)
+		{
+			if (const char *file = element->Attribute("file"))
+				musictemplate.Put(aId, file);
+		}
+		Configure musicconfigure(0x9f9c4fd4 /* "music" */, MusicConfigure);
 	}
 
 	namespace Initializer
 	{
-		class SoundInitializer
+		static void SoundActivate(unsigned int aId)
 		{
-		public:
-			SoundInitializer()
-			{
-				AddActivate(0xf23cbd5f /* "soundcue" */, Entry(this, &SoundInitializer::Activate));
-				AddPostActivate(0xf23cbd5f /* "soundcue" */, Entry(this, &SoundInitializer::PostActivate));
-				AddDeactivate(0xf23cbd5f /* "soundcue" */, Entry(this, &SoundInitializer::Deactivate));
-			}
-
-			void Activate(unsigned int aId)
-			{
 #ifdef SOUND_VALIDATE_CUE
-				for (Typed<unsigned int>::Iterator itor(soundcue.Find(aId)); itor.IsValid(); ++itor)
+			for (Typed<unsigned int>::Iterator itor(soundcue.Find(aId)); itor.IsValid(); ++itor)
+			{
+				if (const SoundTemplate *sound = soundtemplate.Find(itor.GetValue()))
 				{
-					if (const SoundTemplate *sound = soundtemplate.Find(itor.GetValue()))
+					if (sound->mLength == 0)
 					{
-						if (sound->mLength == 0)
-						{
-							DebugPrint("Entity %s cue %s empty sound %s\n", Database::name.Get(aId).c_str(), Database::name.Get(itor.GetKey()).c_str(), Database::name.Get(itor.GetValue()).c_str());
-						}
-					}
-					else
-					{
-						DebugPrint("Entity %s cue %s missing sound %s\n", Database::name.Get(aId).c_str(), Database::name.Get(itor.GetKey()).c_str(), Database::name.Get(itor.GetValue()).c_str());
+						DebugPrint("Entity %s cue %s empty sound %s\n", Database::name.Get(aId).c_str(), Database::name.Get(itor.GetKey()).c_str(), Database::name.Get(itor.GetValue()).c_str());
 					}
 				}
-#endif
-			}
-
-			void PostActivate(unsigned int aId)
-			{
-				PlaySoundCue(aId, 0);
-			}
-
-			void Deactivate(unsigned int aId)
-			{
-				if (Database::sound.Find(aId))
+				else
 				{
-#if defined(USE_SDL)
-					SDL_LockAudio();
-#endif
-					const Typed<Sound *> &sounds = Database::sound.Get(aId);
-					for (Typed<Sound *>::Iterator itor(&sounds); itor.IsValid(); ++itor)
-						delete itor.GetValue();
-					Database::sound.Delete(aId);
-#if defined(USE_SDL)
-					SDL_UnlockAudio();
-#endif
+					DebugPrint("Entity %s cue %s missing sound %s\n", Database::name.Get(aId).c_str(), Database::name.Get(itor.GetKey()).c_str(), Database::name.Get(itor.GetValue()).c_str());
 				}
+			}
+#endif
+		}
+		Activate soundactivate(0xf23cbd5f /* "soundcue" */, SoundActivate);
+
+		static void SoundPostActivate(unsigned int aId)
+		{
+			PlaySoundCue(aId, 0);
+		}
+		PostActivate soundpostactivate(0xf23cbd5f /* "soundcue" */, SoundPostActivate);
+
+		static void SoundDeactivate(unsigned int aId)
+		{
+			if (Database::sound.Find(aId))
+			{
+#if defined(USE_SDL)
+				SDL_LockAudio();
+#endif
+				const Typed<Sound *> &sounds = Database::sound.Get(aId);
+				for (Typed<Sound *>::Iterator itor(&sounds); itor.IsValid(); ++itor)
+					delete itor.GetValue();
+				Database::sound.Delete(aId);
+#if defined(USE_SDL)
+				SDL_UnlockAudio();
+#endif
 			}
 		}
-		soundinitializer;
+		Deactivate sounddeactivate(0xf23cbd5f /* "soundcue" */, SoundDeactivate);
 
 #if defined(USE_BASS)
-		class MusicInitializer
+		static void MusicActivate(unsigned int aId)
 		{
-		public:
-			MusicInitializer()
-			{
-				AddActivate(0x19706bfe /* "musictemplate" */, Entry(this, &MusicInitializer::Activate));
-				AddDeactivate(0x19706bfe /* "musictemplate" */, Entry(this, &MusicInitializer::Deactivate));
-			}
+			// HACK
+			const std::string &music = Database::musictemplate.Get(aId);
+			HMUSIC handle = BASS_MusicLoad(false, music.c_str(), 0, 0, BASS_MUSIC_RAMPS|BASS_MUSIC_LOOP, 0);
+			if (!handle)
+				DebugPrint("error loading music: %s\n", BASS_ErrorGetString());
+			if (!BASS_ChannelPlay(handle, true))
+				DebugPrint("error starting music: %s\n", BASS_ErrorGetString());
+			Database::music.Put(aId, handle);
+		}
+		Activate musicactivate(0x19706bfe /* "musictemplate" */, MusicActivate);
 
-			void Activate(unsigned int aId)
+		static void MusicDeactivate(unsigned int aId)
+		{
+			if (HMUSIC handle = Database::music.Get(aId))
 			{
-				// HACK
-				const std::string &music = Database::musictemplate.Get(aId);
-				HMUSIC handle = BASS_MusicLoad(false, music.c_str(), 0, 0, BASS_MUSIC_RAMPS|BASS_MUSIC_LOOP, 0);
-				if (!handle)
-					DebugPrint("error loading music: %s\n", BASS_ErrorGetString());
-				if (!BASS_ChannelPlay(handle, true))
-					DebugPrint("error starting music: %s\n", BASS_ErrorGetString());
-				Database::music.Put(aId, handle);
-			}
-
-			void Deactivate(unsigned int aId)
-			{
-				if (HMUSIC handle = Database::music.Get(aId))
-				{
-					BASS_ChannelStop(handle);
-					BASS_MusicFree(handle);
-					Database::music.Delete(aId);
-				}
+				BASS_ChannelStop(handle);
+				BASS_MusicFree(handle);
+				Database::music.Delete(aId);
 			}
 		}
-		musicinitializer;
+		Deactivate musicdeactivate(0x19706bfe /* "musictemplate" */, MusicDeactivate);
 #elif defined(USE_SDL_MIXER)
-		class MusicInitializer
+		static void MusicActivate(unsigned int aId)
 		{
-		public:
-			MusicInitializer()
-			{
-				AddActivate(0x19706bfe /* "musictemplate" */, Entry(this, &MusicInitializer::Activate));
-				AddDeactivate(0x19706bfe /* "musictemplate" */, Entry(this, &MusicInitializer::Deactivate));
-			}
+			// HACK
+			const std::string &music = Database::musictemplate.Get(aId);
+			Mix_Music *musicdata = Mix_LoadMUS(music.c_str());
+			if (!musicdata)
+				DebugPrint("%s\n", Mix_GetError());
+			if (Mix_PlayMusic(musicdata, -1) < 0)
+				DebugPrint("%s\n", Mix_GetError());
+			Database::music.Put(aId, musicdata);
+		}
+		Activate musicactivate(0x19706bfe /* "musictemplate" */, MusicActivate);
 
-			void Activate(unsigned int aId)
+		static void MusicDeactivate(unsigned int aId)
+		{
+			if (Mix_Music *musicdata = Database::music.Get(aId))
 			{
-				// HACK
-				const std::string &music = Database::musictemplate.Get(aId);
-				Mix_Music *musicdata = Mix_LoadMUS(music.c_str());
-				if (!musicdata)
-					DebugPrint("%s\n", Mix_GetError());
-				if (Mix_PlayMusic(musicdata, -1) < 0)
-					DebugPrint("%s\n", Mix_GetError());
-				Database::music.Put(aId, musicdata);
-			}
-
-			void Deactivate(unsigned int aId)
-			{
-				if (Mix_Music *musicdata = Database::music.Get(aId))
-				{
-					Mix_HaltMusic();
-					Mix_FreeMusic(musicdata);
-					Database::music.Delete(aId);
-				}
+				Mix_HaltMusic();
+				Mix_FreeMusic(musicdata);
+				Database::music.Delete(aId);
 			}
 		}
-		musicinitializer;
+		Deactivate musicdeactivate(0x19706bfe /* "musictemplate" */, MusicDeactivate);
 #endif
 	}
 }
@@ -448,7 +385,7 @@ bool SoundTemplate::Configure(const tinyxml2::XMLElement *element, unsigned int 
 	for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child; child = child->NextSiblingElement())
 	{
 		unsigned int hash = Hash(child->Value());
-		const SoundConfigure::Entry &configure = SoundConfigure::Get(hash);
+		const SoundConfigure::Entry &configure = SoundConfigure::Configure::Get(hash);
 		if (configure)
 		{
 #ifdef PROFILE_SOUND_SYNTHESIS

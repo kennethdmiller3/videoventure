@@ -8,23 +8,31 @@ namespace BehaviorDatabase
 	//
 	namespace Loader
 	{
-		Database::Typed<Entry> &GetConfigureDB()
+		Database::Typed<Entry> &Configure::GetDB()
 		{
-			static Database::Typed<Entry> configure;
-			return configure;
+			static Database::Typed<Entry> onactivate;
+			return onactivate;
 		}
-		void AddConfigure(unsigned int aTagId, Entry aEntry)
+		Configure::Configure(unsigned int aTagId, Entry aEntry)
+			: mTagId(aTagId)
 		{
-			GetConfigureDB().Put(aTagId, aEntry);
+			Database::Typed<Entry> &db = GetDB();
+			Entry &entry = db.Open(mTagId);
+			mPrev = entry;
+			entry = aEntry;
+			db.Close(mTagId);
 		}
-		void RemoveConfigure(unsigned int aTagId, Entry aEntry)
+		Configure::~Configure()
 		{
-			if (GetConfigureDB().Get(aTagId) == aEntry)
-				GetConfigureDB().Delete(aTagId);
+			Database::Typed<Entry> &db = GetDB();
+			if (mPrev)
+				db.Put(mTagId, mPrev);
+			else
+				db.Delete(mTagId);
 		}
-		const Entry &GetConfigure(unsigned int aTagId)
+		const Entry &Configure::Get(unsigned int aTagId)
 		{
-			return GetConfigureDB().Get(aTagId);
+			return GetDB().Get(aTagId);
 		}
 	}
 
@@ -33,42 +41,58 @@ namespace BehaviorDatabase
 	//
 	namespace Initializer
 	{
-		Database::Typed<ActivateEntry> &GetActivate()
+		Database::Typed<Activate::Entry> &Activate::GetDB()
 		{
-			static Database::Typed<ActivateEntry> onactivate;
+			static Database::Typed<Entry> onactivate;
 			return onactivate;
 		}
-		void AddActivate(unsigned int aDatabaseId, ActivateEntry aEntry)
+		Activate::Activate(unsigned int aDatabaseId, Entry aEntry)
+			: mDatabaseId(aDatabaseId)
 		{
-			GetActivate().Put(aDatabaseId, aEntry);
+			Database::Typed<Entry> &db = GetDB();
+			Entry &entry = db.Open(mDatabaseId);
+			mPrev = entry;
+			entry = aEntry;
+			db.Close(mDatabaseId);
 		}
-		void RemoveActivate(unsigned int aDatabaseId, ActivateEntry aEntry)
+		Activate::~Activate()
 		{
-			if (GetActivate().Get(aDatabaseId) == aEntry)
-				GetActivate().Delete(aDatabaseId);
+			Database::Typed<Entry> &db = GetDB();
+			if (mPrev)
+				db.Put(mDatabaseId, mPrev);
+			else
+				db.Delete(mDatabaseId);
 		}
-		const ActivateEntry &GetActivate(unsigned int aDatabaseId)
+		const Activate::Entry &Activate::Get(unsigned int aDatabaseId)
 		{
-			return GetActivate().Get(aDatabaseId);
+			return GetDB().Get(aDatabaseId);
 		}
 
-		Database::Typed<DeactivateEntry> &GetDeactivate()
+		Database::Typed<Deactivate::Entry> &Deactivate::GetDB()
 		{
-			static Database::Typed<DeactivateEntry> ondeactivate;
+			static Database::Typed<Entry> ondeactivate;
 			return ondeactivate;
 		}
-		void AddDeactivate(unsigned int aDatabaseId, DeactivateEntry aEntry)
+		Deactivate::Deactivate(unsigned int aDatabaseId, Entry aEntry)
+			: mDatabaseId(aDatabaseId)
 		{
-			GetDeactivate().Put(aDatabaseId, aEntry);
+			Database::Typed<Entry> &db = GetDB();
+			Entry &entry = db.Open(mDatabaseId);
+			mPrev = entry;
+			entry = aEntry;
+			db.Close(mDatabaseId);
 		}
-		void RemoveDeactivate(unsigned int aDatabaseId, DeactivateEntry aEntry)
+		Deactivate::~Deactivate()
 		{
-			if (GetDeactivate().Get(aDatabaseId) == aEntry)
-				GetDeactivate().Delete(aDatabaseId);
+			Database::Typed<Entry> &db = GetDB();
+			if (mPrev)
+				db.Put(mDatabaseId, mPrev);
+			else
+				db.Delete(mDatabaseId);
 		}
-		const DeactivateEntry &GetDeactivate(unsigned int aDatabaseId)
+		const Deactivate::Entry &Deactivate::Get(unsigned int aDatabaseId)
 		{
-			return GetDeactivate().Get(aDatabaseId);
+			return GetDB().Get(aDatabaseId);
 		}
 	}
 }

@@ -28,53 +28,35 @@ namespace Database
 
 	namespace Loader
 	{
-		class GrazeLoader
+		static void GrazeConfigure(unsigned int aId, const tinyxml2::XMLElement *element)
 		{
-		public:
-			GrazeLoader()
-			{
-				AddConfigure(0x9086d046 /* "graze" */, Entry(this, &GrazeLoader::Configure));
-			}
-
-			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
-			{
-				GrazeTemplate &graze = Database::grazetemplate.Open(aId);
-				graze.Configure(element, aId);
-				Database::grazetemplate.Close(aId);
-			}
+			GrazeTemplate &graze = Database::grazetemplate.Open(aId);
+			graze.Configure(element, aId);
+			Database::grazetemplate.Close(aId);
 		}
-		grazeloader;
+		Configure grazeconfigure(0x9086d046 /* "graze" */, GrazeConfigure);
 	}
 
 	namespace Initializer
 	{
-		class GrazeInitializer
+		static void GrazeActivate(unsigned int aId)
 		{
-		public:
-			GrazeInitializer()
-			{
-				AddActivate(0x9806b4d8 /* "grazetemplate" */, Entry(this, &GrazeInitializer::Activate));
-				AddDeactivate(0x9806b4d8 /* "grazetemplate" */, Entry(this, &GrazeInitializer::Deactivate));
-			}
+			const GrazeTemplate &grazetemplate = Database::grazetemplate.Get(aId);
+			Graze *graze = new Graze(grazetemplate, aId);
+			Database::graze.Put(aId, graze);
+			graze->Activate();
+		}
+		Activate grazeactivate(0x9806b4d8 /* "grazetemplate" */, GrazeActivate);
 
-			void Activate(unsigned int aId)
+		static void GrazeDeactivate(unsigned int aId)
+		{
+			if (Graze *graze = Database::graze.Get(aId))
 			{
-				const GrazeTemplate &grazetemplate = Database::grazetemplate.Get(aId);
-				Graze *graze = new Graze(grazetemplate, aId);
-				Database::graze.Put(aId, graze);
-				graze->Activate();
-			}
-
-			void Deactivate(unsigned int aId)
-			{
-				if (Graze *graze = Database::graze.Get(aId))
-				{
-					delete graze;
-					Database::graze.Delete(aId);
-				}
+				delete graze;
+				Database::graze.Delete(aId);
 			}
 		}
-		grazeinitializer;
+		Deactivate grazedeactivate(0x9806b4d8 /* "grazetemplate" */, GrazeDeactivate);
 	}
 }
 GrazeTemplate::GrazeTemplate(void)

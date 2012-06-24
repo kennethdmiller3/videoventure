@@ -8,21 +8,12 @@ namespace Database
 
 	namespace Loader
 	{
-		class TeamLoader
+		static void TeamConfigure(unsigned int aId, const tinyxml2::XMLElement *element)
 		{
-		public:
-			TeamLoader()
-			{
-				AddConfigure(0xa2fd7d0c /* "team" */, Entry(this, &TeamLoader::Configure));
-			}
-
-			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
-			{
-				unsigned int &team = Database::team.Open(aId);
-				team = Hash(element->Attribute("name"));
-				Database::team.Close(aId);
-			}
+			unsigned int &team = Database::team.Open(aId);
+			team = Hash(element->Attribute("name"));
+			Database::team.Close(aId);
 		}
-		teamloader;
+		Configure teamconfigure(0xa2fd7d0c /* "team" */, TeamConfigure);
 	}
 }

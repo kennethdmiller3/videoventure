@@ -2,9 +2,28 @@
 
 #include "ExpressionConfigure.h"
 
-// instantiate loader templates
-template Expression::Loader<float>;
-template Expression::Loader<__m128>;
+template <typename T> Database::Typed<Expression::Entry> &Expression::Loader<T>::GetDB()
+{
+	static Database::Typed<Entry> configure;
+	return configure;
+}
+template <typename T> Expression::Loader<T>::Loader(unsigned int aTagId, Expression::Entry aEntry)
+{
+	Database::Typed<Entry> &db = GetDB();
+	Entry &entry = db.Open(mTagId);
+	mPrev = entry;
+	entry = aEntry;
+	db.Close(mTagId);
+}
+template <typename T> Expression::Loader<T>::~Loader()
+{
+	Database::Typed<Entry> &db = GetDB();
+	if (mPrev)
+		db.Put(mTagId, mPrev);
+	else
+		db.Delete(mTagId);
+}
+
 
 //
 // configure an expression
@@ -129,3 +148,9 @@ template<> void Expression::Loader<bool>::Configure(const tinyxml2::XMLElement *
 	Expression::Convert<bool, float>::Append(buffer);
 	Expression::Loader<float>::Configure(element, buffer, sScalarNames, sScalarDefault);
 }
+
+// instantiate loader templates
+template Expression::Loader<float>;
+template Expression::Loader<__m128>;
+template Expression::Loader<bool>;
+

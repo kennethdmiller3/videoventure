@@ -87,4 +87,4 @@ static bool Configure(SoundTemplate &self, const tinyxml2::XMLElement *element, 
 	return true;
 }
 
-SoundConfigure::Auto soundsample(0x96e382a7 /* "sample" */, Configure);
+static SoundConfigure::Configure soundsample(0x96e382a7 /* "sample" */, Configure);

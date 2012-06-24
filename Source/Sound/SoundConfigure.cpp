@@ -3,20 +3,29 @@
 
 namespace SoundConfigure
 {
-	Database::Typed<Entry> &GetDB()
+	Database::Typed<Entry> &Configure::GetDB()
 	{
-		static Database::Typed<Entry> configure;
-		return configure;
+		static Database::Typed<Entry> onactivate;
+		return onactivate;
 	}
-	void Add(unsigned int aTagId, Entry aConfigure)
+	Configure::Configure(unsigned int aTagId, Entry aEntry)
+		: mTagId(aTagId)
 	{
-		GetDB().Put(aTagId, aConfigure);
+		Database::Typed<Entry> &db = GetDB();
+		Entry &entry = db.Open(mTagId);
+		mPrev = entry;
+		entry = aEntry;
+		db.Close(mTagId);
 	}
-	void Remove(unsigned int aTagId)
+	Configure::~Configure()
 	{
-		GetDB().Delete(aTagId);
+		Database::Typed<Entry> &db = GetDB();
+		if (mPrev)
+			db.Put(mTagId, mPrev);
+		else
+			db.Delete(mTagId);
 	}
-	const Entry &Get(unsigned int aTagId)
+	const Entry &Configure::Get(unsigned int aTagId)
 	{
 		return GetDB().Get(aTagId);
 	}

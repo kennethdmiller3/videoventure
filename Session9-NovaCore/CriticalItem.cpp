@@ -50,66 +50,37 @@ namespace Database
 
 	namespace Loader
 	{
-		class CriticalItemLoader
+		static void CriticalItemConfigure(unsigned int aId, const tinyxml2::XMLElement *element)
 		{
-		public:
-			CriticalItemLoader()
-			{
-				AddConfigure(0x26de6ef7 /* "criticalitem" */, Entry(this, &CriticalItemLoader::Configure));
-			}
-
-			~CriticalItemLoader()
-			{
-				RemoveConfigure(0x26de6ef7 /* "criticalitem" */, Entry(this, &CriticalItemLoader::Configure));
-			}
-
-			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
-			{
-				bool &criticalitem = Database::criticalitem.Open(aId);
-				element->QueryBoolAttribute("value", &criticalitem);
-				Database::criticalitem.Close(aId);
-			}
+			bool &criticalitem = Database::criticalitem.Open(aId);
+			element->QueryBoolAttribute("value", &criticalitem);
+			Database::criticalitem.Close(aId);
 		}
-		criticalitemloader;
+		Configure criticalitemconfigure(0x26de6ef7 /* "criticalitem" */, CriticalItemConfigure);
 	}
 
 	namespace Initializer
 	{
-		class CriticalItemInitializer
+		static void CriticalItemPostActivate(unsigned int aId)
 		{
-		public:
-			CriticalItemInitializer()
-			{
-				AddPostActivate(0x26de6ef7 /* "criticalitem" */, Entry(this, &CriticalItemInitializer::PostActivate));
-				AddPreDeactivate(0x26de6ef7 /* "criticalitem" */, Entry(this, &CriticalItemInitializer::PreDeactivate));
-			}
-
-			~CriticalItemInitializer()
-			{
-				RemovePostActivate(0x26de6ef7 /* "criticalitem" */, Entry(this, &CriticalItemInitializer::PostActivate));
-				RemovePreDeactivate(0x26de6ef7 /* "criticalitem" */, Entry(this, &CriticalItemInitializer::PreDeactivate));
-			}
-
-			void PostActivate(unsigned int aId)
-			{
-				unsigned int team = Database::team.Get(aId);
-				if (!Database::criticaltracker.Find(team))
-					new (Database::criticaltracker.Alloc(team)) CriticalTracker(team);
-				CriticalTracker &tracker = Database::criticaltracker.Open(team);
-				tracker.Track(1);
-				DebugPrint("critical item activate team=%0x8f count=%d\n", team, tracker.mCount); 
-				Database::criticaltracker.Close(team);
-			}
-
-			void PreDeactivate(unsigned int aId)
-			{
-				unsigned int team = Database::team.Get(aId);
-				CriticalTracker &tracker = Database::criticaltracker.Open(team);
-				tracker.Track(-1);
-				DebugPrint("critical item deactivate team=%0x8f count=%d\n", team, tracker.mCount); 
-				Database::criticaltracker.Close(team);
-			}
+			unsigned int team = Database::team.Get(aId);
+			if (!Database::criticaltracker.Find(team))
+				new (Database::criticaltracker.Alloc(team)) CriticalTracker(team);
+			CriticalTracker &tracker = Database::criticaltracker.Open(team);
+			tracker.Track(1);
+			DebugPrint("critical item activate team=%0x8f count=%d\n", team, tracker.mCount); 
+			Database::criticaltracker.Close(team);
 		}
-		criticaliteminitializer;
+		PostActivate criticalitempostactivate(0x26de6ef7 /* "criticalitem" */, CriticalItemPostActivate);
+
+		static void CriticalItemPreDeactivate(unsigned int aId)
+		{
+			unsigned int team = Database::team.Get(aId);
+			CriticalTracker &tracker = Database::criticaltracker.Open(team);
+			tracker.Track(-1);
+			DebugPrint("critical item deactivate team=%0x8f count=%d\n", team, tracker.mCount); 
+			Database::criticaltracker.Close(team);
+		}
+		PreDeactivate criticalitempredeactivate(0x26de6ef7 /* "criticalitem" */, CriticalItemPreDeactivate);
 	}
 }

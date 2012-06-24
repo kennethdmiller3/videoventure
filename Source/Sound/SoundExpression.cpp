@@ -35,4 +35,4 @@ static bool Configure(SoundTemplate &self, const tinyxml2::XMLElement *element, 
 	return true;
 }
 
-SoundConfigure::Auto soundexpression(0xcf15afeb /* "expression" */, Configure);
+static SoundConfigure::Configure soundexpression(0xcf15afeb /* "expression" */, Configure);

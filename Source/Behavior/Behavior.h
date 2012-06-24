@@ -28,21 +28,55 @@ namespace BehaviorDatabase
 {
 	namespace Loader
 	{
-		typedef fastdelegate::FastDelegate<unsigned int (unsigned int, const tinyxml2::XMLElement *)> Entry;
-		void GAME_API AddConfigure(unsigned int aTagId, Entry aEntry);
-		void GAME_API RemoveConfigure(unsigned int aTagId, Entry aEntry);
-		const Entry &GetConfigure(unsigned int aTagId);
+		typedef unsigned int (* Entry)(unsigned int, const tinyxml2::XMLElement *);
+
+		class GAME_API Configure
+		{
+		private:
+			unsigned int mTagId;	// tag hash id for the configure
+			Entry mPrev;			// entry that this replaced
+
+		public:
+			static Database::Typed<Entry> &GetDB();
+			Configure(unsigned int aTagId, Entry aEntry);
+			~Configure();
+			static const Entry &Get(unsigned int aTagId);
+		};
 	}
 
 	namespace Initializer
 	{
-		typedef fastdelegate::FastDelegate<Behavior *(unsigned int, Controller *)> ActivateEntry;
-		void GAME_API AddActivate(unsigned int aDatabaseId, ActivateEntry aEntry);
-		void GAME_API RemoveActivate(unsigned int aDatabaseId, ActivateEntry aEntry);
-		const ActivateEntry &GetActivate(unsigned int aDatabaseId);
-		typedef fastdelegate::FastDelegate<void (unsigned int)> DeactivateEntry;
-		void GAME_API AddDeactivate(unsigned int aDatabaseId, DeactivateEntry aEntry);
-		void GAME_API RemoveDeactivate(unsigned int aDatabaseId, DeactivateEntry aEntry);
-		const DeactivateEntry &GetDeactivate(unsigned int aDatabaseId);
+		class GAME_API Activate
+		{
+		public:
+			typedef Behavior * (* Entry)(unsigned int, Controller *);
+
+		private:
+			unsigned int mDatabaseId;
+			Entry mPrev;
+
+		public:
+			static Database::Typed<Entry> &GetDB();
+			Activate(unsigned int aDatabaseId, Entry aEntry);
+			~Activate();
+			static const Entry &Get(unsigned int aDatabaseId);
+		};
+
+
+		class GAME_API Deactivate
+		{
+		public:
+			typedef void (* Entry)(unsigned int);
+
+		private:
+			unsigned int mDatabaseId;
+			Entry mPrev;
+
+		public:
+			static Database::Typed<Entry> &GetDB();
+			Deactivate(unsigned int aDatabaseId, Entry aEntry);
+			~Deactivate();
+			static const Entry &Get(unsigned int aDatabaseId);
+		};
 	}
 }

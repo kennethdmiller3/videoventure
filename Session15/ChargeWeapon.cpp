@@ -35,80 +35,50 @@ namespace Database
 
 	namespace Loader
 	{
-		class ChargeWeaponLoader
+		static void ChargeWeaponConfigure(unsigned int aId, const tinyxml2::XMLElement *element)
 		{
-		public:
-			ChargeWeaponLoader()
-			{
-				AddConfigure(0xd416836d /* "chargeweapon" */, Entry(this, &ChargeWeaponLoader::Configure));
-			}
-
-			~ChargeWeaponLoader()
-			{
-				RemoveConfigure(0xd416836d /* "chargeweapon" */, Entry(this, &ChargeWeaponLoader::Configure));
-			}
-
-			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
-			{
-				ChargeWeaponTemplate &chargeweapon = Database::chargeweapontemplate.Open(aId);
-				chargeweapon.Configure(element, aId);
-				Database::chargeweapontemplate.Close(aId);
-			}
+			ChargeWeaponTemplate &chargeweapon = Database::chargeweapontemplate.Open(aId);
+			chargeweapon.Configure(element, aId);
+			Database::chargeweapontemplate.Close(aId);
 		}
-		chargeweaponloader;
+		Configure chargeweaponconfigure(0xd416836d /* "chargeweapon" */, ChargeWeaponConfigure);
 	}
 
 	namespace Initializer
 	{
-		class ChargeWeaponInitializer
+		static void ChargeWeaponActivate(unsigned int aId)
 		{
-		public:
-			ChargeWeaponInitializer()
-			{
-				AddActivate(0x272fa7f3 /* "chargeweapontemplate" */, Entry(this, &ChargeWeaponInitializer::Activate));
-				AddPostActivate(0x272fa7f3 /* "chargeweapontemplate" */, Entry(this, &ChargeWeaponInitializer::PostActivate));
-				AddDeactivate(0x272fa7f3 /* "chargeweapontemplate" */, Entry(this, &ChargeWeaponInitializer::Deactivate));
-			}
+			const ChargeWeaponTemplate &chargeweapontemplate = Database::chargeweapontemplate.Get(aId);
+			ChargeWeapon *chargeweapon = new ChargeWeapon(chargeweapontemplate, aId);
+			Database::chargeweapon.Put(aId, chargeweapon);
+			chargeweapon->SetControl(aId);
+		}
+		Activate chargeweaponactivate(0x272fa7f3 /* "chargeweapontemplate" */, ChargeWeaponActivate);
 
-			~ChargeWeaponInitializer()
+		static void ChargeWeaponPostActivate(unsigned int aId)
+		{
+			ChargeWeapon *chargeweapon = Database::chargeweapon.Get(aId);
+			for (unsigned int aControlId = aId; aControlId != 0; aControlId = Database::backlink.Get(aControlId))
 			{
-				RemoveActivate(0x272fa7f3 /* "chargeweapontemplate" */, Entry(this, &ChargeWeaponInitializer::Activate));
-				RemovePostActivate(0x272fa7f3 /* "chargeweapontemplate" */, Entry(this, &ChargeWeaponInitializer::PostActivate));
-				RemoveDeactivate(0x272fa7f3 /* "chargeweapontemplate" */, Entry(this, &ChargeWeaponInitializer::Deactivate));
-			}
-
-			void Activate(unsigned int aId)
-			{
-				const ChargeWeaponTemplate &chargeweapontemplate = Database::chargeweapontemplate.Get(aId);
-				ChargeWeapon *chargeweapon = new ChargeWeapon(chargeweapontemplate, aId);
-				Database::chargeweapon.Put(aId, chargeweapon);
-				chargeweapon->SetControl(aId);
-			}
-
-			void PostActivate(unsigned int aId)
-			{
-				ChargeWeapon *chargeweapon = Database::chargeweapon.Get(aId);
-				for (unsigned int aControlId = aId; aControlId != 0; aControlId = Database::backlink.Get(aControlId))
+				if (const Controller *controller = Database::controller.Get(aControlId))
 				{
-					if (const Controller *controller = Database::controller.Get(aControlId))
-					{
-						chargeweapon->SetControl(aControlId);
-						break;
-					}
+					chargeweapon->SetControl(aControlId);
+					break;
 				}
-				chargeweapon->Activate();
 			}
+			chargeweapon->Activate();
+		}
+		PostActivate chargeweaponpostactivate(0x272fa7f3 /* "chargeweapontemplate" */, ChargeWeaponPostActivate);
 
-			void Deactivate(unsigned int aId)
+		static void ChargeWeaponDeactivate(unsigned int aId)
+		{
+			if (ChargeWeapon *chargeweapon = Database::chargeweapon.Get(aId))
 			{
-				if (ChargeWeapon *chargeweapon = Database::chargeweapon.Get(aId))
-				{
-					delete chargeweapon;
-					Database::chargeweapon.Delete(aId);
-				}
+				delete chargeweapon;
+				Database::chargeweapon.Delete(aId);
 			}
 		}
-		chargeweaponinitializer;
+		Deactivate chargeweapondeactivate(0x272fa7f3 /* "chargeweapontemplate" */, ChargeWeaponDeactivate);
 	}
 }
 

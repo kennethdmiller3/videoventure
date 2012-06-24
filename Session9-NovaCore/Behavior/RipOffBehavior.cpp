@@ -38,64 +38,35 @@ namespace BehaviorDatabase
 {
 	namespace Loader
 	{
-		class RipOffBehaviorLoader
+		static unsigned int RipOffBehaviorConfigure(unsigned int aId, const tinyxml2::XMLElement *element)
 		{
-		public:
-			RipOffBehaviorLoader()
-			{
-				AddConfigure(0xc4fc7791 /* "ripoff" */, Entry(this, &RipOffBehaviorLoader::Configure));
-			}
-
-			~RipOffBehaviorLoader()
-			{
-				RemoveConfigure(0xc4fc7791 /* "ripoff" */, Entry(this, &RipOffBehaviorLoader::Configure));
-			}
-
-			unsigned int Configure(unsigned int aId, const tinyxml2::XMLElement *element)
-			{
-				RipOffBehaviorTemplate &ripoff = Database::ripoffbehaviortemplate.Open(aId);
-				ripoff.Configure(element, aId);
-				Database::ripoffbehaviortemplate.Close(aId);
-				return 0x574b0d09 /* "ripoffbehaviortemplate" */;
-			}
+			RipOffBehaviorTemplate &ripoff = Database::ripoffbehaviortemplate.Open(aId);
+			ripoff.Configure(element, aId);
+			Database::ripoffbehaviortemplate.Close(aId);
+			return 0x574b0d09 /* "ripoffbehaviortemplate" */;
 		}
-		ripoffbehaviorloader;
+		Configure ripoffbehaviorconfigure(0xc4fc7791 /* "ripoff" */, RipOffBehaviorConfigure);
 	}
 
 	namespace Initializer
 	{
-		class RipOffBehaviorInitializer
+		static Behavior *RipOffBehaviorActivate(unsigned int aId, Controller *aController)
 		{
-		public:
-			RipOffBehaviorInitializer()
-			{
-				AddActivate(0x574b0d09 /* "ripoffbehaviortemplate" */, ActivateEntry(this, &RipOffBehaviorInitializer::Activate));
-				AddDeactivate(0x574b0d09 /* "ripoffbehaviortemplate" */, DeactivateEntry(this, &RipOffBehaviorInitializer::Deactivate));
-			}
+			RipOffBehavior *ripoffbehavior = new RipOffBehavior(aId, aController);
+			Database::ripoffbehavior.Put(aId, ripoffbehavior);
+			return ripoffbehavior;
+		}
+		Activate ripoffbehavioractivate(0x574b0d09 /* "ripoffbehaviortemplate" */, RipOffBehaviorActivate);
 
-			~RipOffBehaviorInitializer()
+		static void RipOffBehaviorDeactivate(unsigned int aId)
+		{
+			if (RipOffBehavior *ripoffbehavior = Database::ripoffbehavior.Get(aId))
 			{
-				RemoveActivate(0x574b0d09 /* "ripoffbehaviortemplate" */, ActivateEntry(this, &RipOffBehaviorInitializer::Activate));
-				RemoveDeactivate(0x574b0d09 /* "ripoffbehaviortemplate" */, DeactivateEntry(this, &RipOffBehaviorInitializer::Deactivate));
-			}
-
-			Behavior *Activate(unsigned int aId, Controller *aController)
-			{
-				RipOffBehavior *ripoffbehavior = new RipOffBehavior(aId, aController);
-				Database::ripoffbehavior.Put(aId, ripoffbehavior);
-				return ripoffbehavior;
-			}
-
-			void Deactivate(unsigned int aId)
-			{
-				if (RipOffBehavior *ripoffbehavior = Database::ripoffbehavior.Get(aId))
-				{
-					delete ripoffbehavior;
-					Database::ripoffbehavior.Delete(aId);
-				}
+				delete ripoffbehavior;
+				Database::ripoffbehavior.Delete(aId);
 			}
 		}
-		ripoffbehaviorinitializer;
+		Deactivate ripoffbehaviordeactivate(0x574b0d09 /* "ripoffbehaviortemplate" */, RipOffBehaviorDeactivate);
 	}
 }
 

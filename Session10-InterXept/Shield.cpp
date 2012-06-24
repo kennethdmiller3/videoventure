@@ -28,63 +28,34 @@ namespace Database
 
 	namespace Loader
 	{
-		class ShieldLoader
+		static void ShieldConfigure(unsigned int aId, const tinyxml2::XMLElement *element)
 		{
-		public:
-			ShieldLoader()
-			{
-				AddConfigure(0x337519b0 /* "shield" */, Entry(this, &ShieldLoader::Configure));
-			}
-
-			~ShieldLoader()
-			{
-				RemoveConfigure(0x337519b0 /* "shield" */, Entry(this, &ShieldLoader::Configure));
-			}
-
-			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
-			{
-				ShieldTemplate &shield = Database::shieldtemplate.Open(aId);
-				shield.Configure(element);
-				Database::shieldtemplate.Close(aId);
-			}
+			ShieldTemplate &shield = Database::shieldtemplate.Open(aId);
+			shield.Configure(element);
+			Database::shieldtemplate.Close(aId);
 		}
-		shieldloader;
+		Configure shieldconfigure(0x337519b0 /* "shield" */, ShieldConfigure);
 	}
 
 	namespace Initializer
 	{
-		class ShieldInitializer
+		static void ShieldActivate(unsigned int aId)
 		{
-		public:
-			ShieldInitializer()
-			{
-				AddActivate(0xf7eb1c5a /* "shieldtemplate" */, Entry(this, &ShieldInitializer::Activate));
-				AddDeactivate(0xf7eb1c5a /* "shieldtemplate" */, Entry(this, &ShieldInitializer::Deactivate));
-			}
+			const ShieldTemplate &shieldtemplate = Database::shieldtemplate.Get(aId);
+			Shield *shield = new Shield(shieldtemplate, aId);
+			Database::shield.Put(aId, shield);
+		}
+		Activate shieldactivate(0xf7eb1c5a /* "shieldtemplate" */, ShieldActivate);
 
-			~ShieldInitializer()
+		static void ShieldDeactivate(unsigned int aId)
+		{
+			if (Shield *shield = Database::shield.Get(aId))
 			{
-				RemoveActivate(0xf7eb1c5a /* "shieldtemplate" */, Entry(this, &ShieldInitializer::Activate));
-				RemoveDeactivate(0xf7eb1c5a /* "shieldtemplate" */, Entry(this, &ShieldInitializer::Deactivate));
-			}
-
-			void Activate(unsigned int aId)
-			{
-				const ShieldTemplate &shieldtemplate = Database::shieldtemplate.Get(aId);
-				Shield *shield = new Shield(shieldtemplate, aId);
-				Database::shield.Put(aId, shield);
-			}
-
-			void Deactivate(unsigned int aId)
-			{
-				if (Shield *shield = Database::shield.Get(aId))
-				{
-					delete shield;
-					Database::shield.Delete(aId);
-				}
+				delete shield;
+				Database::shield.Delete(aId);
 			}
 		}
-		shieldinitializer;
+		Deactivate shielddeactivate(0xf7eb1c5a /* "shieldtemplate" */, ShieldDeactivate);
 	}
 }
 

@@ -19,54 +19,36 @@ namespace BehaviorDatabase
 {
 	namespace Loader
 	{
-		class TargetBehaviorLoader
+		static unsigned int TargetBehaviorConfigure(unsigned int aId, const tinyxml2::XMLElement *element)
 		{
-		public:
-			TargetBehaviorLoader()
-			{
-				AddConfigure(0x32608848 /* "target" */, Entry(this, &TargetBehaviorLoader::Configure));
-			}
-
-			unsigned int Configure(unsigned int aId, const tinyxml2::XMLElement *element)
-			{
-				TargetBehaviorTemplate &target = Database::targetbehaviortemplate.Open(aId);
-				target.Configure(element, aId);
-				Database::targetbehaviortemplate.Close(aId);
-				return 0x5dfd8444 /* "targetbehaviortemplate" */;
-			}
+			TargetBehaviorTemplate &target = Database::targetbehaviortemplate.Open(aId);
+			target.Configure(element, aId);
+			Database::targetbehaviortemplate.Close(aId);
+			return 0x5dfd8444 /* "targetbehaviortemplate" */;
 		}
-		targetbehaviorloader;
+		Configure targetbehaviorconfigure(0x32608848 /* "target" */, TargetBehaviorConfigure);
 	}
 
 	namespace Initializer
 	{
-		class TargetBehaviorInitializer
+		static Behavior *TargetBehaviorActivate(unsigned int aId, Controller *aController)
 		{
-		public:
-			TargetBehaviorInitializer()
-			{
-				AddActivate(0x5dfd8444 /* "targetbehaviortemplate" */, ActivateEntry(this, &TargetBehaviorInitializer::Activate));
-				AddDeactivate(0x5dfd8444 /* "targetbehaviortemplate" */, DeactivateEntry(this, &TargetBehaviorInitializer::Deactivate));
-			}
+			const TargetBehaviorTemplate &targetbehaviortemplate = Database::targetbehaviortemplate.Get(aId);
+			TargetBehavior *targetbehavior = new TargetBehavior(aId, targetbehaviortemplate, aController);
+			Database::targetbehavior.Put(aId, targetbehavior);
+			return targetbehavior;
+		}
+		Activate targetbehavioractivate(0x5dfd8444 /* "targetbehaviortemplate" */, TargetBehaviorActivate);
 
-			Behavior *Activate(unsigned int aId, Controller *aController)
+		static void TargetBehaviorDeactivate(unsigned int aId)
+		{
+			if (TargetBehavior *targetbehavior = Database::targetbehavior.Get(aId))
 			{
-				const TargetBehaviorTemplate &targetbehaviortemplate = Database::targetbehaviortemplate.Get(aId);
-				TargetBehavior *targetbehavior = new TargetBehavior(aId, targetbehaviortemplate, aController);
-				Database::targetbehavior.Put(aId, targetbehavior);
-				return targetbehavior;
-			}
-
-			void Deactivate(unsigned int aId)
-			{
-				if (TargetBehavior *targetbehavior = Database::targetbehavior.Get(aId))
-				{
-					delete targetbehavior;
-					Database::targetbehavior.Delete(aId);
-				}
+				delete targetbehavior;
+				Database::targetbehavior.Delete(aId);
 			}
 		}
-		targetbehaviorinitializer;
+		Deactivate targetbehaviordeactivate(0x5dfd8444 /* "targetbehaviortemplate" */, TargetBehaviorDeactivate);
 	}
 }
 

@@ -16,54 +16,36 @@ namespace BehaviorDatabase
 {
 	namespace Loader
 	{
-		class EvadeBehaviorLoader
+		static unsigned int EvadeBehaviorConfigure(unsigned int aId, const tinyxml2::XMLElement *element)
 		{
-		public:
-			EvadeBehaviorLoader()
-			{
-				AddConfigure(0x3cf27f66 /* "evade" */, Entry(this, &EvadeBehaviorLoader::Configure));
-			}
-
-			unsigned int Configure(unsigned int aId, const tinyxml2::XMLElement *element)
-			{
-				EvadeBehaviorTemplate &evade = Database::evadebehaviortemplate.Open(aId);
-				evade.Configure(element, aId);
-				Database::evadebehaviortemplate.Close(aId);
-				return 0xe0f0e10a /* "evadebehaviortemplate" */;
-			}
+			EvadeBehaviorTemplate &evade = Database::evadebehaviortemplate.Open(aId);
+			evade.Configure(element, aId);
+			Database::evadebehaviortemplate.Close(aId);
+			return 0xe0f0e10a /* "evadebehaviortemplate" */;
 		}
-		evadebehaviorloader;
+		Configure evadebehaviorconfigure(0x3cf27f66 /* "evade" */, EvadeBehaviorConfigure);
 	}
 
 	namespace Initializer
 	{
-		class EvadeBehaviorInitializer
+		static Behavior *EdgeBehaviorActivate(unsigned int aId, Controller *aController)
 		{
-		public:
-			EvadeBehaviorInitializer()
-			{
-				AddActivate(0xe0f0e10a /* "evadebehaviortemplate" */, ActivateEntry(this, &EvadeBehaviorInitializer::Activate));
-				AddDeactivate(0xe0f0e10a /* "evadebehaviortemplate" */, DeactivateEntry(this, &EvadeBehaviorInitializer::Deactivate));
-			}
+			const EvadeBehaviorTemplate &evadebehaviortemplate = Database::evadebehaviortemplate.Get(aId);
+			EvadeBehavior *evadebehavior = new EvadeBehavior(aId, evadebehaviortemplate, aController);
+			Database::evadebehavior.Put(aId, evadebehavior);
+			return evadebehavior;
+		}
+		Activate evadebehavioractivate(0xe0f0e10a /* "evadebehaviortemplate" */, EdgeBehaviorActivate);
 
-			Behavior *Activate(unsigned int aId, Controller *aController)
+		static void EdgeBehaviorDeactivate(unsigned int aId)
+		{
+			if (EvadeBehavior *evadebehavior = Database::evadebehavior.Get(aId))
 			{
-				const EvadeBehaviorTemplate &evadebehaviortemplate = Database::evadebehaviortemplate.Get(aId);
-				EvadeBehavior *evadebehavior = new EvadeBehavior(aId, evadebehaviortemplate, aController);
-				Database::evadebehavior.Put(aId, evadebehavior);
-				return evadebehavior;
-			}
-
-			void Deactivate(unsigned int aId)
-			{
-				if (EvadeBehavior *evadebehavior = Database::evadebehavior.Get(aId))
-				{
-					delete evadebehavior;
-					Database::evadebehavior.Delete(aId);
-				}
+				delete evadebehavior;
+				Database::evadebehavior.Delete(aId);
 			}
 		}
-		evadebehaviorinitializer;
+		Deactivate evadebehaviordeactivate(0xe0f0e10a /* "evadebehaviortemplate" */, EdgeBehaviorDeactivate);
 	}
 }
 

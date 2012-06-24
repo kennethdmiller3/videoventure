@@ -297,9 +297,6 @@ void ExitPlayState()
 	// clear all databases
 	Database::Cleanup();
 
-	// free any loaded libraries
-	FreeLibraries();
-
 	// remove the join listener
 	Player::sJoin.Disconnect(PlayerJoinListener);
 
@@ -308,6 +305,9 @@ void ExitPlayState()
 
 	// collidable done
 	Collidable::WorldDone();
+
+	// free any loaded libraries
+	FreeLibraries();
 
 	// set to non-runtime mode
 	runtime = false;

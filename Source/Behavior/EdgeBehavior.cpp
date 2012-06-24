@@ -16,54 +16,36 @@ namespace BehaviorDatabase
 {
 	namespace Loader
 	{
-		class EdgeBehaviorLoader
+		static unsigned int EdgeBehaviorConfigure(unsigned int aId, const tinyxml2::XMLElement *element)
 		{
-		public:
-			EdgeBehaviorLoader()
-			{
-				AddConfigure(0x56f6d83c /* "edge" */, Entry(this, &EdgeBehaviorLoader::Configure));
-			}
-
-			unsigned int Configure(unsigned int aId, const tinyxml2::XMLElement *element)
-			{
-				EdgeBehaviorTemplate &edge = Database::edgebehaviortemplate.Open(aId);
-				edge.Configure(element, aId);
-				Database::edgebehaviortemplate.Close(aId);
-				return 0xae05bb20 /* "edgebehaviortemplate" */;
-			}
+			EdgeBehaviorTemplate &edge = Database::edgebehaviortemplate.Open(aId);
+			edge.Configure(element, aId);
+			Database::edgebehaviortemplate.Close(aId);
+			return 0xae05bb20 /* "edgebehaviortemplate" */;
 		}
-		edgebehaviorloader;
+		Configure edgebehaviorconfigure(0x56f6d83c /* "edge" */, EdgeBehaviorConfigure);
 	}
 
 	namespace Initializer
 	{
-		class EdgeBehaviorInitializer
+		static Behavior *EdgeBehaviorActivate(unsigned int aId, Controller *aController)
 		{
-		public:
-			EdgeBehaviorInitializer()
-			{
-				AddActivate(0xae05bb20 /* "edgebehaviortemplate" */, ActivateEntry(this, &EdgeBehaviorInitializer::Activate));
-				AddDeactivate(0xae05bb20 /* "edgebehaviortemplate" */, DeactivateEntry(this, &EdgeBehaviorInitializer::Deactivate));
-			}
+			const EdgeBehaviorTemplate &edgebehaviortemplate = Database::edgebehaviortemplate.Get(aId);
+			EdgeBehavior *edgebehavior = new EdgeBehavior(aId, edgebehaviortemplate, aController);
+			Database::edgebehavior.Put(aId, edgebehavior);
+			return edgebehavior;
+		}
+		Activate edgebehavioractivate(0xae05bb20 /* "edgebehaviortemplate" */, EdgeBehaviorActivate);
 
-			Behavior *Activate(unsigned int aId, Controller *aController)
+		static void EdgeBehaviorDeactivate(unsigned int aId)
+		{
+			if (EdgeBehavior *edgebehavior = Database::edgebehavior.Get(aId))
 			{
-				const EdgeBehaviorTemplate &edgebehaviortemplate = Database::edgebehaviortemplate.Get(aId);
-				EdgeBehavior *edgebehavior = new EdgeBehavior(aId, edgebehaviortemplate, aController);
-				Database::edgebehavior.Put(aId, edgebehavior);
-				return edgebehavior;
-			}
-
-			void Deactivate(unsigned int aId)
-			{
-				if (EdgeBehavior *edgebehavior = Database::edgebehavior.Get(aId))
-				{
-					delete edgebehavior;
-					Database::edgebehavior.Delete(aId);
-				}
+				delete edgebehavior;
+				Database::edgebehavior.Delete(aId);
 			}
 		}
-		edgebehaviorinitializer;
+		Deactivate edgebehaviordeactivate(0xae05bb20 /* "edgebehaviortemplate" */, EdgeBehaviorDeactivate);
 	}
 }
 

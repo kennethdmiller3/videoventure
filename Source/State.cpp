@@ -17,80 +17,53 @@ namespace Database
 
 	namespace Loader
 	{
-		class StateLoader
+		static void StateConfigure(unsigned int aId, const tinyxml2::XMLElement *element)
 		{
-		public:
-			StateLoader()
-			{
-				AddConfigure(0x783132f6 /* "state" */, Entry(this, &StateLoader::Configure));
-			}
-
-			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
-			{
-				Database::Typed<StateTemplate> &states = Database::statetemplate.Open(aId);
-				unsigned int aSubId = Hash(element->Attribute("name"));
-				std::string name = Database::name.Get(aId);
-				name += ".";
-				name += element->Attribute("name");
-				Database::name.Put(Hash(name.c_str()), name);
-				StateTemplate &state = states.Open(aSubId);
-				state.Configure(element, aId, aSubId);
-				states.Close(aSubId);
-				Database::statetemplate.Close(aId);
-			}
+			Database::Typed<StateTemplate> &states = Database::statetemplate.Open(aId);
+			unsigned int aSubId = Hash(element->Attribute("name"));
+			std::string name = Database::name.Get(aId);
+			name += ".";
+			name += element->Attribute("name");
+			Database::name.Put(Hash(name.c_str()), name);
+			StateTemplate &state = states.Open(aSubId);
+			state.Configure(element, aId, aSubId);
+			states.Close(aSubId);
+			Database::statetemplate.Close(aId);
 		}
-		stateloader;
+		Configure stateconfigure(0x783132f6 /* "state" */, StateConfigure);
 
-		class TransitionLoader
+		static void TransitionConfigure(unsigned int aId, const tinyxml2::XMLElement *element)
 		{
-		public:
-			TransitionLoader()
-			{
-				AddConfigure(0xa62782e2 /* "transition" */, Entry(this, &TransitionLoader::Configure));
-			}
-
-			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
-			{
-				Database::Typed<TransitionTemplate> &transitions = Database::transitiontemplate.Open(aId);
-				unsigned int aSubId = Hash(element->Attribute("name"));
-				TransitionTemplate &transition = transitions.Open(aSubId);
-				transition.Configure(element, aId, aSubId);
-				transitions.Close(aSubId);
-				Database::transitiontemplate.Close(aId);
-			}
+			Database::Typed<TransitionTemplate> &transitions = Database::transitiontemplate.Open(aId);
+			unsigned int aSubId = Hash(element->Attribute("name"));
+			TransitionTemplate &transition = transitions.Open(aSubId);
+			transition.Configure(element, aId, aSubId);
+			transitions.Close(aSubId);
+			Database::transitiontemplate.Close(aId);
 		}
-		transitionloader;
+		Configure transitionconfigure(0xa62782e2 /* "transition" */, TransitionConfigure);
 	}
 
 	namespace Initializer
 	{
-		class StateInitializer
+		static void StateActivate(unsigned int aId)
 		{
-		public:
-			StateInitializer()
-			{
-				AddActivate(0xeb613ee8 /* "statetemplate" */, Entry(this, &StateInitializer::Activate));
-				AddDeactivate(0xeb613ee8 /* "statetemplate" */, Entry(this, &StateInitializer::Deactivate));
-			}
+			if (StateMachine *machine = Database::statemachine.Get(aId))
+				return;
+			StateMachine *machine = new StateMachine(aId);
+			Database::statemachine.Put(aId, machine);
+		}
+		Activate stateactivate(0xeb613ee8 /* "statetemplate" */, StateActivate);
 
-			void Activate(unsigned int aId)
+		static void StateDeactivate(unsigned int aId)
+		{
+			if (StateMachine *machine = Database::statemachine.Get(aId))
 			{
-				if (StateMachine *machine = Database::statemachine.Get(aId))
-					return;
-				StateMachine *machine = new StateMachine(aId);
-				Database::statemachine.Put(aId, machine);
-			}
-
-			void Deactivate(unsigned int aId)
-			{
-				if (StateMachine *machine = Database::statemachine.Get(aId))
-				{
-					delete machine;
-					Database::statemachine.Delete(aId);
-				}
+				delete machine;
+				Database::statemachine.Delete(aId);
 			}
 		}
-		stateinitializer;
+		Deactivate statedeactivate(0xeb613ee8 /* "statetemplate" */, StateDeactivate);
 	}
 }
 
@@ -161,7 +134,7 @@ bool StateTemplate::Configure(const tinyxml2::XMLElement *element, unsigned int 
 		default:
 			{
 				// process world item
-				const Database::Loader::Entry &configure = Database::Loader::GetConfigure(Hash(value));
+				const Database::Loader::Entry &configure = Database::Loader::Configure::Get(Hash(value));
 				if (configure)
 					configure(mStateId, child);
 				else

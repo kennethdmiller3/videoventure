@@ -16,54 +16,36 @@ namespace BehaviorDatabase
 {
 	namespace Loader
 	{
-		class PursueBehaviorLoader
+		static unsigned int PursueBehaviorConfigure(unsigned int aId, const tinyxml2::XMLElement *element)
 		{
-		public:
-			PursueBehaviorLoader()
-			{
-				AddConfigure(0x0297228f /* "pursue" */, Entry(this, &PursueBehaviorLoader::Configure));
-			}
-
-			unsigned int Configure(unsigned int aId, const tinyxml2::XMLElement *element)
-			{
-				PursueBehaviorTemplate &pursue = Database::pursuebehaviortemplate.Open(aId);
-				pursue.Configure(element, aId);
-				Database::pursuebehaviortemplate.Close(aId);
-				return 0xb9b0800f /* "pursuebehaviortemplate" */;
-			}
+			PursueBehaviorTemplate &pursue = Database::pursuebehaviortemplate.Open(aId);
+			pursue.Configure(element, aId);
+			Database::pursuebehaviortemplate.Close(aId);
+			return 0xb9b0800f /* "pursuebehaviortemplate" */;
 		}
-		pursuebehaviorloader;
+		Configure pursuebehaviorconfigure(0x0297228f /* "pursue" */, PursueBehaviorConfigure);
 	}
 
 	namespace Initializer
 	{
-		class PursueBehaviorInitializer
+		static Behavior *PursueBehaviorActivate(unsigned int aId, Controller *aController)
 		{
-		public:
-			PursueBehaviorInitializer()
-			{
-				AddActivate(0xb9b0800f /* "pursuebehaviortemplate" */, ActivateEntry(this, &PursueBehaviorInitializer::Activate));
-				AddDeactivate(0xb9b0800f /* "pursuebehaviortemplate" */, DeactivateEntry(this, &PursueBehaviorInitializer::Deactivate));
-			}
+			const PursueBehaviorTemplate &pursuebehaviortemplate = Database::pursuebehaviortemplate.Get(aId);
+			PursueBehavior *pursuebehavior = new PursueBehavior(aId, pursuebehaviortemplate, aController);
+			Database::pursuebehavior.Put(aId, pursuebehavior);
+			return pursuebehavior;
+		}
+		Activate pursuebehavioractivate(0xb9b0800f /* "pursuebehaviortemplate" */, PursueBehaviorActivate);
 
-			Behavior *Activate(unsigned int aId, Controller *aController)
+		static void PursueBehaviorDeactivate(unsigned int aId)
+		{
+			if (PursueBehavior *pursuebehavior = Database::pursuebehavior.Get(aId))
 			{
-				const PursueBehaviorTemplate &pursuebehaviortemplate = Database::pursuebehaviortemplate.Get(aId);
-				PursueBehavior *pursuebehavior = new PursueBehavior(aId, pursuebehaviortemplate, aController);
-				Database::pursuebehavior.Put(aId, pursuebehavior);
-				return pursuebehavior;
-			}
-
-			void Deactivate(unsigned int aId)
-			{
-				if (PursueBehavior *pursuebehavior = Database::pursuebehavior.Get(aId))
-				{
-					delete pursuebehavior;
-					Database::pursuebehavior.Delete(aId);
-				}
+				delete pursuebehavior;
+				Database::pursuebehavior.Delete(aId);
 			}
 		}
-		pursuebehaviorinitializer;
+		Deactivate pursuebehaviordeactivate(0xb9b0800f /* "pursuebehaviortemplate" */, PursueBehaviorDeactivate);
 	}
 }
 

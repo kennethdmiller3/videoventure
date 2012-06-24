@@ -4,23 +4,18 @@ class SoundTemplate;
 
 namespace SoundConfigure
 {
-	typedef fastdelegate::FastDelegate<bool (SoundTemplate &self, const tinyxml2::XMLElement *element, unsigned int id)> Entry;
+	typedef bool (*Entry)(SoundTemplate &self, const tinyxml2::XMLElement *element, unsigned int id);
 
-	void Add(unsigned int aTagId, Entry aEntry);
-	void Remove(unsigned int aTagId);
-	const Entry &Get(unsigned int aTagId);
-
-	struct Auto
+	class GAME_API Configure
 	{
-		unsigned int mTagId;
-		Auto(unsigned int aTagId, Entry aEntry)
-			: mTagId(aTagId)
-		{
-			Add(mTagId, aEntry);
-		}
-		~Auto()
-		{
-			Remove(mTagId);
-		}
+	private:
+		unsigned int mTagId;	// tag hash id for the configure
+		Entry mPrev;			// entry that this replaced
+
+	public:
+		static Database::Typed<Entry> &GetDB();
+		Configure(unsigned int aTagId, Entry aEntry);
+		~Configure();
+		static const Entry &Get(unsigned int aTagId);
 	};
 }

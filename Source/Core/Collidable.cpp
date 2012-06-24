@@ -108,69 +108,40 @@ namespace Database
 
 	namespace Loader
 	{
-		class FilterLoader
+		struct FilterDefault
 		{
-		public:
-			FilterLoader()
+			FilterDefault()
 			{
-				AddConfigure(0x5224d988 /* "collidablefilter" */, Entry(this, &FilterLoader::Configure));
-
 				b2Filter &filter = Database::collidablefilter.OpenDefault();
 				filter = Collidable::GetDefaultFilter();
 				Database::collidablefilter.CloseDefault();
 			}
-
-			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
-			{
-				if (!Database::collidablefilter.Find(aId))
-					Database::collidablefilter.Put(aId, Collidable::GetDefaultFilter());
-				b2Filter &filter = Database::collidablefilter.Open(aId);
-				ConfigureFilterData(filter, element);
-				Database::collidablefilter.Close(aId);
-			}
 		}
-		filterloader;
+		filterdefault;
 
-		class CollidableLoader
+		static void FilterConfigure(unsigned int aId, const tinyxml2::XMLElement *element)
 		{
-		public:
-			CollidableLoader()
-			{
-				AddConfigure(0x74e9dbae /* "collidable" */, Entry(this, &CollidableLoader::Configure));
-			}
-
-			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
-			{
-				CollidableTemplate &collidable = Database::collidabletemplate.Open(aId);
-				collidable.Configure(element, aId);
-				Database::collidabletemplate.Close(aId);
-			}
+			if (!Database::collidablefilter.Find(aId))
+				Database::collidablefilter.Put(aId, Collidable::GetDefaultFilter());
+			b2Filter &filter = Database::collidablefilter.Open(aId);
+			ConfigureFilterData(filter, element);
+			Database::collidablefilter.Close(aId);
 		}
-		collidableloader;
-	}
+		Configure filterconfigure(0x5224d988 /* "collidablefilter" */, FilterConfigure);
+
+		static void CollidableConfigure(unsigned int aId, const tinyxml2::XMLElement *element)
+		{
+			CollidableTemplate &collidable = Database::collidabletemplate.Open(aId);
+			collidable.Configure(element, aId);
+			Database::collidabletemplate.Close(aId);
+		}
+		Configure collidableconfigure(0x74e9dbae /* "collidable" */, CollidableConfigure);
+}
 
 	namespace Initializer
 	{
-		class CollidableInitializer
-		{
-		public:
-			CollidableInitializer()
-			{
-				AddActivate(0xa7380c00 /* "collidabletemplate" */, Entry(this, &CollidableInitializer::Activate));
-				AddDeactivate(0xa7380c00 /* "collidabletemplate" */, Entry(this, &CollidableInitializer::Deactivate));
-			}
-
-			void Activate(unsigned int aId)
-			{
-				Collidable::AddToWorld(aId);
-			}
-
-			void Deactivate(unsigned int aId)
-			{
-				Collidable::RemoveFromWorld(aId);
-			}
-		}
-		collidableinitializer;
+		Activate collidableactivate(0xa7380c00 /* "collidabletemplate" */, Entry(Collidable::AddToWorld));
+		Deactivate collidabledeactivate(0xa7380c00 /* "collidabletemplate" */, Entry(Collidable::RemoveFromWorld));
 	}
 }
 
@@ -841,7 +812,7 @@ int CommandDrawCollidable(const char * const aParam[], int aCount)
 
 	return std::min(aCount, 2);
 }
-Command::Auto commanddrawcollidable(0x38c5ac70 /* "drawcollidable" */, CommandDrawCollidable);
+Command commanddrawcollidable(0x38c5ac70 /* "drawcollidable" */, CommandDrawCollidable);
 
 #endif
 

@@ -17,80 +17,53 @@ namespace BehaviorDatabase
 {
 	namespace Loader
 	{
-		class AimBehaviorLoader
+		static unsigned int AimConfigure(unsigned int aId, const tinyxml2::XMLElement *element)
 		{
-		public:
-			AimBehaviorLoader()
-			{
-				AddConfigure(0x383251f6 /* "aim" */, Entry(this, &AimBehaviorLoader::Configure));
-			}
-
-			unsigned int Configure(unsigned int aId, const tinyxml2::XMLElement *element)
-			{
-				AimBehaviorTemplate &aim = Database::aimbehaviortemplate.Open(aId);
-				aim.Configure(element, aId);
-				Database::aimbehaviortemplate.Close(aId);
-				return 0x48ae5f7a /* "aimbehaviortemplate" */;
-			}
+			AimBehaviorTemplate &aim = Database::aimbehaviortemplate.Open(aId);
+			aim.Configure(element, aId);
+			Database::aimbehaviortemplate.Close(aId);
+			return 0x48ae5f7a /* "aimbehaviortemplate" */;
 		}
-		aimbehaviorloader;
+		Configure aimconfigure(0x383251f6 /* "aim" */, AimConfigure);
 
-		class FireConeLoader
+		static unsigned int FireConeConfigure(unsigned int aId, const tinyxml2::XMLElement *element)
 		{
-		public:
-			FireConeLoader()
-			{
-				AddConfigure(0x8eab16d9 /* "fire" */, Entry(this, &FireConeLoader::Configure));
-			}
-
-			unsigned int Configure(unsigned int aId, const tinyxml2::XMLElement *element)
-			{
-				Database::Typed<FireConeTemplate> &firebehaviors = Database::fireconetemplate.Open(aId);
-				const char *name = element->Attribute("name");
-				unsigned int aSubId = name ? Hash(name) : firebehaviors.GetCount() + 1;
-				FireConeTemplate &firebehavior = firebehaviors.Open(aSubId);
-				firebehavior.Configure(element, aId);
-				firebehaviors.Close(aSubId);
-				Database::fireconetemplate.Close(aId);
-				return 0x00dbebf8 /* "fireconetemplate" */;
-			}
+			Database::Typed<FireConeTemplate> &firebehaviors = Database::fireconetemplate.Open(aId);
+			const char *name = element->Attribute("name");
+			unsigned int aSubId = name ? Hash(name) : firebehaviors.GetCount() + 1;
+			FireConeTemplate &firebehavior = firebehaviors.Open(aSubId);
+			firebehavior.Configure(element, aId);
+			firebehaviors.Close(aSubId);
+			Database::fireconetemplate.Close(aId);
+			return 0x00dbebf8 /* "fireconetemplate" */;
 		}
-		fireconeloader;
+		Configure fireconeconfigure(0x8eab16d9 /* "fire" */, FireConeConfigure);
 	}
 
 	namespace Initializer
 	{
-		class AimBehaviorInitializer
+		static Behavior *AimBehaviorActivate(unsigned int aId, Controller *aController)
 		{
-		public:
-			AimBehaviorInitializer()
-			{
-				AddActivate(0x48ae5f7a /* "aimbehaviortemplate" */, ActivateEntry(this, &AimBehaviorInitializer::Activate));
-				AddDeactivate(0x48ae5f7a /* "aimbehaviortemplate" */, DeactivateEntry(this, &AimBehaviorInitializer::Deactivate));
-				AddActivate(0x00dbebf8 /* "fireconetemplate" */, ActivateEntry(this, &AimBehaviorInitializer::Activate));
-				AddDeactivate(0x00dbebf8 /* "fireconetemplate" */, DeactivateEntry(this, &AimBehaviorInitializer::Deactivate));
-			}
-
-			Behavior *Activate(unsigned int aId, Controller *aController)
-			{
-				const AimBehaviorTemplate &aimbehaviortemplate = Database::aimbehaviortemplate.Get(aId);
-				if (AimBehavior *aimbehavior = Database::aimbehavior.Get(aId))
-					return aimbehavior;
-				AimBehavior *aimbehavior = new AimBehavior(aId, aimbehaviortemplate, aController);
-				Database::aimbehavior.Put(aId, aimbehavior);
+			const AimBehaviorTemplate &aimbehaviortemplate = Database::aimbehaviortemplate.Get(aId);
+			if (AimBehavior *aimbehavior = Database::aimbehavior.Get(aId))
 				return aimbehavior;
-			}
+			AimBehavior *aimbehavior = new AimBehavior(aId, aimbehaviortemplate, aController);
+			Database::aimbehavior.Put(aId, aimbehavior);
+			return aimbehavior;
+		}
+		Activate aimbehavioractivate(0x48ae5f7a /* "aimbehaviortemplate" */, AimBehaviorActivate);
+		Activate fireconeactivate(0x00dbebf8 /* "fireconetemplate" */, AimBehaviorActivate);
 
-			void Deactivate(unsigned int aId)
+		static void AimBehaviorDeactivate(unsigned int aId)
+		{
+			if (AimBehavior *aimbehavior = Database::aimbehavior.Get(aId))
 			{
-				if (AimBehavior *aimbehavior = Database::aimbehavior.Get(aId))
-				{
-					delete aimbehavior;
-					Database::aimbehavior.Delete(aId);
-				}
+				delete aimbehavior;
+				Database::aimbehavior.Delete(aId);
 			}
 		}
-		aimbehaviorinitializer;
+		Deactivate aimbehaviordeactivate(0x48ae5f7a /* "aimbehaviortemplate" */, AimBehaviorDeactivate);
+		Deactivate fireconedeactivate(0x00dbebf8 /* "fireconetemplate" */, AimBehaviorDeactivate);
 	}
 }
 

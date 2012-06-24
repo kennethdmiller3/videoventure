@@ -21,53 +21,35 @@ namespace Database
 
 	namespace Loader
 	{
-		class PlayerLoader
+		static void PlayerConfigure(unsigned int aId, const tinyxml2::XMLElement *element)
 		{
-		public:
-			PlayerLoader()
-			{
-				AddConfigure(0x2c99c300 /* "player" */, Entry(this, &PlayerLoader::Configure));
-			}
-
-			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
-			{
-				PlayerTemplate &player = Database::playertemplate.Open(aId);
-				player.Configure(element, aId);
-				Database::playertemplate.Close(aId);
-			}
+			PlayerTemplate &player = Database::playertemplate.Open(aId);
+			player.Configure(element, aId);
+			Database::playertemplate.Close(aId);
 		}
-		playerloader;
+		Configure playerconfigure(0x2c99c300 /* "player" */, PlayerConfigure);
 	}
 
 	namespace Initializer
 	{
-		class PlayerInitializer
+		static void PlayerActivate(unsigned int aId)
 		{
-		public:
-			PlayerInitializer()
-			{
-				AddActivate(0x4893610a /* "playertemplate" */, Entry(this, &PlayerInitializer::Activate));
-				AddDeactivate(0x4893610a /* "playertemplate" */, Entry(this, &PlayerInitializer::Deactivate));
-			}
+			const PlayerTemplate &playertemplate = Database::playertemplate.Get(aId);
+			Player *player = new Player(playertemplate, aId);
+			Database::player.Put(aId, player);
+			player->Activate();
+		}
+		Activate playeractivate(0x4893610a /* "playertemplate" */, PlayerActivate);
 
-			void Activate(unsigned int aId)
+		static void PlayerDeactivate(unsigned int aId)
+		{
+			if (Player *player = Database::player.Get(aId))
 			{
-				const PlayerTemplate &playertemplate = Database::playertemplate.Get(aId);
-				Player *player = new Player(playertemplate, aId);
-				Database::player.Put(aId, player);
-				player->Activate();
-			}
-
-			void Deactivate(unsigned int aId)
-			{
-				if (Player *player = Database::player.Get(aId))
-				{
-					delete player;
-					Database::player.Delete(aId);
-				}
+				delete player;
+				Database::player.Delete(aId);
 			}
 		}
-		playerinitializer;
+		Deactivate playerdeactivate(0x4893610a /* "playertemplate" */, PlayerDeactivate);
 	}
 }
 

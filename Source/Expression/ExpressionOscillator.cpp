@@ -14,8 +14,8 @@ template<typename T> static void ConfigureSineWave(const tinyxml2::XMLElement *e
 	ConfigureSineWave(element, buffer);
 }
 
-static Expression::Loader<float>::Auto sinewavefloat(0xb711f539 /* "sinewave" */, ConfigureSineWave<float>);
-static Expression::Loader<__m128>::Auto sinewavevector(0xb711f539 /* "sinewave" */, ConfigureSineWave<__m128>);
+static Expression::Loader<float> sinewavefloat(0xb711f539 /* "sinewave" */, ConfigureSineWave<float>);
+static Expression::Loader<__m128> sinewavevector(0xb711f539 /* "sinewave" */, ConfigureSineWave<__m128>);
 
 //
 template<typename T> static void ConfigureTriangleWave(const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
@@ -24,8 +24,8 @@ template<typename T> static void ConfigureTriangleWave(const tinyxml2::XMLElemen
 	ConfigureTriangleWave(element, buffer);
 }
 
-static Expression::Loader<float>::Auto trianglewavefloat(0xd0308494 /* "trianglewave" */, ConfigureTriangleWave<float>);
-static Expression::Loader<__m128>::Auto trianglewavevector(0xd0308494 /* "trianglewave" */, ConfigureTriangleWave<__m128>);
+static Expression::Loader<float> trianglewavefloat(0xd0308494 /* "trianglewave" */, ConfigureTriangleWave<float>);
+static Expression::Loader<__m128> trianglewavevector(0xd0308494 /* "trianglewave" */, ConfigureTriangleWave<__m128>);
 
 //
 template<typename T> static void ConfigureSawtoothWave(const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
@@ -34,8 +34,8 @@ template<typename T> static void ConfigureSawtoothWave(const tinyxml2::XMLElemen
 	ConfigureSawtoothWave(element, buffer);
 }
 
-static Expression::Loader<float>::Auto sawtoothwavefloat(0x705614d5 /* "sawtoothwave" */, ConfigureSawtoothWave<float>);
-static Expression::Loader<__m128>::Auto sawtoothwavevector(0x705614d5 /* "sawtoothwave" */, ConfigureSawtoothWave<__m128>);
+static Expression::Loader<float> sawtoothwavefloat(0x705614d5 /* "sawtoothwave" */, ConfigureSawtoothWave<float>);
+static Expression::Loader<__m128> sawtoothwavevector(0x705614d5 /* "sawtoothwave" */, ConfigureSawtoothWave<__m128>);
 
 
 //
@@ -45,8 +45,8 @@ template<typename T> static void ConfigurePulseWave(const tinyxml2::XMLElement *
 	ConfigurePulseWave(element, buffer);
 }
 
-static Expression::Loader<float>::Auto pulsewavefloat(0x3f8dc467 /* "pulsewave" */, ConfigurePulseWave<float>);
-static Expression::Loader<__m128>::Auto pulsewavevector(0x3f8dc467 /* "pulsewave" */, ConfigurePulseWave<__m128>);
+static Expression::Loader<float> pulsewavefloat(0x3f8dc467 /* "pulsewave" */, ConfigurePulseWave<float>);
+static Expression::Loader<__m128> pulsewavevector(0x3f8dc467 /* "pulsewave" */, ConfigurePulseWave<__m128>);
 
 
 //

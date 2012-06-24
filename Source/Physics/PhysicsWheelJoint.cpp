@@ -45,62 +45,44 @@ namespace Database
 
 	namespace Loader
 	{
-		class WheelJointLoader
+		static void WheelJointConfigure(unsigned int aId, const tinyxml2::XMLElement *element)
 		{
-		public:
-			WheelJointLoader()
+			Typed<b2WheelJointDef> defs = Database::wheeljointdef.Open(aId);
+
+			// get the sub-identifier
+			unsigned int aSubId;
+			if (const char *name = element->Attribute("name"))
+				aSubId = Hash(name);
+			else
+				aSubId = defs.GetCount() + 1;
+
+			// configure the joint definition
+			b2WheelJointDef &def = defs.Open(aSubId);
+			for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 			{
-				AddConfigure(0xdafe5c18 /* "wheeljoint" */, Entry(this, &WheelJointLoader::Configure));
+				ConfigureWheelJointItem(child, def);
 			}
+			defs.Close(aSubId);
 
-			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
-			{
-				Typed<b2WheelJointDef> defs = Database::wheeljointdef.Open(aId);
-
-				// get the sub-identifier
-				unsigned int aSubId;
-				if (const char *name = element->Attribute("name"))
-					aSubId = Hash(name);
-				else
-					aSubId = defs.GetCount() + 1;
-
-				// configure the joint definition
-				b2WheelJointDef &def = defs.Open(aSubId);
-				for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
-				{
-					ConfigureWheelJointItem(child, def);
-				}
-				defs.Close(aSubId);
-
-				Database::wheeljointdef.Close(aId);
-			}
+			Database::wheeljointdef.Close(aId);
 		}
-		wheeljointloader;
+		Configure wheeljointconfigure(0xdafe5c18 /* "wheeljoint" */, WheelJointConfigure);
 	}
 
 	namespace Initializer
 	{
-		class WheelJointInitializer
+		static void WheelJointPostActivate(unsigned int aId)
 		{
-		public:
-			WheelJointInitializer()
+			for (Database::Typed<b2WheelJointDef>::Iterator itor(&Database::wheeljointdef.Get(aId)); itor.IsValid(); ++itor)
 			{
-				AddPostActivate(0xd2e0447f /* "wheeljointdef" */, Entry(this, &WheelJointInitializer::PostActivate));
-			}
-
-			void PostActivate(unsigned int aId)
-			{
-				for (Database::Typed<b2WheelJointDef>::Iterator itor(&Database::wheeljointdef.Get(aId)); itor.IsValid(); ++itor)
+				b2WheelJointDef def(itor.GetValue());
+				UnpackJointDef(def, aId);
+				if (def.bodyA && def.bodyB)
 				{
-					b2WheelJointDef def(itor.GetValue());
-					UnpackJointDef(def, aId);
-					if (def.bodyA && def.bodyB)
-					{
-						Collidable::GetWorld()->CreateJoint(&def);
-					}
+					Collidable::GetWorld()->CreateJoint(&def);
 				}
 			}
 		}
-		wheeljointinitializer;
+		PostActivate wheeljointpostactivate(0xd2e0447f /* "wheeljointdef" */, WheelJointPostActivate);
 	}
 }

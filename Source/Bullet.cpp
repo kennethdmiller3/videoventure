@@ -33,52 +33,34 @@ namespace Database
 
 	namespace Loader
 	{
-		class BulletLoader
+		static void BulletConfigure(unsigned int aId, const tinyxml2::XMLElement *element)
 		{
-		public:
-			BulletLoader()
-			{
-				AddConfigure(0xe894a379 /* "bullet" */, Entry(this, &BulletLoader::Configure));
-			}
-
-			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
-			{
-				BulletTemplate &bullet = Database::bullettemplate.Open(aId);
-				bullet.Configure(element);
-				Database::bullettemplate.Close(aId);
-			}
+			BulletTemplate &bullet = Database::bullettemplate.Open(aId);
+			bullet.Configure(element);
+			Database::bullettemplate.Close(aId);
 		}
-		bulletloader;
+		Configure bulletconfigure(0xe894a379 /* "bullet" */, BulletConfigure);
 	}
 
 	namespace Initializer
 	{
-		class BulletInitializer
+		void BulletActivate(unsigned int aId)
 		{
-		public:
-			BulletInitializer()
-			{
-				AddActivate(0xa270491f /* "bullettemplate" */, Entry(this, &BulletInitializer::Activate));
-				AddDeactivate(0xa270491f /* "bullettemplate" */, Entry(this, &BulletInitializer::Deactivate));
-			}
+			const BulletTemplate &bullettemplate = Database::bullettemplate.Get(aId);
+			Bullet *bullet = new Bullet(bullettemplate, aId);
+			Database::bullet.Put(aId, bullet);
+		}
+		Activate bulletactivate(0xa270491f /* "bullettemplate" */, BulletActivate);
 
-			void Activate(unsigned int aId)
+		void BulletDeactivate(unsigned int aId)
+		{
+			if (Bullet *bullet = Database::bullet.Get(aId))
 			{
-				const BulletTemplate &bullettemplate = Database::bullettemplate.Get(aId);
-				Bullet *bullet = new Bullet(bullettemplate, aId);
-				Database::bullet.Put(aId, bullet);
-			}
-
-			void Deactivate(unsigned int aId)
-			{
-				if (Bullet *bullet = Database::bullet.Get(aId))
-				{
-					delete bullet;
-					Database::bullet.Delete(aId);
-				}
+				delete bullet;
+				Database::bullet.Delete(aId);
 			}
 		}
-		bulletinitializer;
+		Deactivate bulletdeactivate(0xa270491f /* "bullettemplate" */, BulletDeactivate);
 	}
 }
 

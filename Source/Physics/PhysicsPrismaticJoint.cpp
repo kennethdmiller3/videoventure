@@ -51,62 +51,44 @@ namespace Database
 
 	namespace Loader
 	{
-		class PrismaticJointLoader
+		static void PrismaticJointConfigure(unsigned int aId, const tinyxml2::XMLElement *element)
 		{
-		public:
-			PrismaticJointLoader()
+			Typed<b2PrismaticJointDef> defs = Database::prismaticjointdef.Open(aId);
+
+			// get the sub-identifier
+			unsigned int aSubId;
+			if (const char *name = element->Attribute("name"))
+				aSubId = Hash(name);
+			else
+				aSubId = defs.GetCount() + 1;
+
+			// configure the joint definition
+			b2PrismaticJointDef &def = defs.Open(aSubId);
+			for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 			{
-				AddConfigure(0x4954853d /* "prismaticjoint" */, Entry(this, &PrismaticJointLoader::Configure));
+				ConfigurePrismaticJointItem(child, def);
 			}
+			defs.Close(aSubId);
 
-			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
-			{
-				Typed<b2PrismaticJointDef> defs = Database::prismaticjointdef.Open(aId);
-
-				// get the sub-identifier
-				unsigned int aSubId;
-				if (const char *name = element->Attribute("name"))
-					aSubId = Hash(name);
-				else
-					aSubId = defs.GetCount() + 1;
-
-				// configure the joint definition
-				b2PrismaticJointDef &def = defs.Open(aSubId);
-				for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
-				{
-					ConfigurePrismaticJointItem(child, def);
-				}
-				defs.Close(aSubId);
-
-				Database::prismaticjointdef.Close(aId);
-			}
+			Database::prismaticjointdef.Close(aId);
 		}
-		prismaticjointloader;
+		Configure prismaticjointconfigure(0x4954853d /* "prismaticjoint" */, PrismaticJointConfigure);
 	}
 
 	namespace Initializer
 	{
-		class PrismaticJointInitializer
+		static void PrismaticJointPostActivate(unsigned int aId)
 		{
-		public:
-			PrismaticJointInitializer()
+			for (Database::Typed<b2PrismaticJointDef>::Iterator itor(&Database::prismaticjointdef.Get(aId)); itor.IsValid(); ++itor)
 			{
-				AddPostActivate(0x85eb7374 /* "prismaticjointdef" */, Entry(this, &PrismaticJointInitializer::PostActivate));
-			}
-
-			void PostActivate(unsigned int aId)
-			{
-				for (Database::Typed<b2PrismaticJointDef>::Iterator itor(&Database::prismaticjointdef.Get(aId)); itor.IsValid(); ++itor)
+				b2PrismaticJointDef def(itor.GetValue());
+				UnpackJointDef(def, aId);
+				if (def.bodyA && def.bodyB)
 				{
-					b2PrismaticJointDef def(itor.GetValue());
-					UnpackJointDef(def, aId);
-					if (def.bodyA && def.bodyB)
-					{
-						Collidable::GetWorld()->CreateJoint(&def);
-					}
+					Collidable::GetWorld()->CreateJoint(&def);
 				}
 			}
 		}
-		prismaticjointinitializer;
+		PostActivate prismaticjointpostactivate(0x85eb7374 /* "prismaticjointdef" */, PrismaticJointPostActivate);
 	}
 }

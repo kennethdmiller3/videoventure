@@ -25,64 +25,35 @@ namespace Database
 
 	namespace Loader
 	{
-		class CapturableLoader
+		static void CapturableConfigure(unsigned int aId, const tinyxml2::XMLElement *element)
 		{
-		public:
-			CapturableLoader()
-			{
-				AddConfigure(0xec2b4992 /* "capturable" */, Entry(this, &CapturableLoader::Configure));
-			}
-
-			~CapturableLoader()
-			{
-				RemoveConfigure(0xec2b4992 /* "capturable" */, Entry(this, &CapturableLoader::Configure));
-			}
-
-			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
-			{
-				CapturableTemplate &capturable = Database::capturabletemplate.Open(aId);
-				capturable.Configure(element);
-				Database::capturabletemplate.Close(aId);
-			}
+			CapturableTemplate &capturable = Database::capturabletemplate.Open(aId);
+			capturable.Configure(element);
+			Database::capturabletemplate.Close(aId);
 		}
-		capturableloader;
+		Configure capturableconfigure(0xec2b4992 /* "capturable" */, CapturableConfigure);
 	}
 
 	namespace Initializer
 	{
-		class CapturableInitializer
+		static void CapturableActivate(unsigned int aId)
 		{
-		public:
-			CapturableInitializer()
-			{
-				AddActivate(0xc19fcdd4 /* "capturabletemplate" */, Entry(this, &CapturableInitializer::Activate));
-				AddDeactivate(0xc19fcdd4 /* "capturabletemplate" */, Entry(this, &CapturableInitializer::Deactivate));
-			}
+			const CapturableTemplate &capturabletemplate = Database::capturabletemplate.Get(aId);
+			Capturable *capturable = new Capturable(capturabletemplate, aId);
+			Database::capturable.Put(aId, capturable);
+		}
+		Activate capturableactivate(0xc19fcdd4 /* "capturabletemplate" */, CapturableActivate);
 
-			~CapturableInitializer()
+		static void CapturableDeactivate(unsigned int aId)
+		{
+			if (Capturable *capturable = Database::capturable.Get(aId))
 			{
-				RemoveActivate(0xc19fcdd4 /* "capturabletemplate" */, Entry(this, &CapturableInitializer::Activate));
-				RemoveDeactivate(0xc19fcdd4 /* "capturabletemplate" */, Entry(this, &CapturableInitializer::Deactivate));
-			}
-
-			void Activate(unsigned int aId)
-			{
-				const CapturableTemplate &capturabletemplate = Database::capturabletemplate.Get(aId);
-				Capturable *capturable = new Capturable(capturabletemplate, aId);
-				Database::capturable.Put(aId, capturable);
-			}
-
-			void Deactivate(unsigned int aId)
-			{
-				if (Capturable *capturable = Database::capturable.Get(aId))
-				{
-					delete capturable;
-					Database::capturable.Delete(aId);
-					Database::capturesignal.Delete(aId);
-				}
+				delete capturable;
+				Database::capturable.Delete(aId);
+				Database::capturesignal.Delete(aId);
 			}
 		}
-		capturableinitializer;
+		Deactivate capturabledeactivate(0xc19fcdd4 /* "capturabletemplate" */, CapturableDeactivate);
 	}
 }
 

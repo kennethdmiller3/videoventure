@@ -3,8 +3,8 @@
 #include "ExpressionInterpolator.h"
 #include "ExpressionConfigure.h"
 
-static Expression::Loader<float>::Auto interpolatorfloat(0x83588fd4 /* "interpolator" */, ConfigureInterpolator<float>);
-static Expression::Loader<__m128>::Auto interpolatorvector(0x83588fd4 /* "interpolator" */, ConfigureInterpolator<__m128>);
+static Expression::Loader<float> interpolatorfloat(0x83588fd4 /* "interpolator" */, ConfigureInterpolator<float>);
+static Expression::Loader<__m128> interpolatorvector(0x83588fd4 /* "interpolator" */, ConfigureInterpolator<__m128>);
 
 // apply keyframe interpolator (typed)
 template <typename T> inline T EvaluateApplyInterpolator(int aCount, const float aKeys[], float aTime, int &aHint)
@@ -211,4 +211,9 @@ template <typename T> void ConfigureInterpolator(const tinyxml2::XMLElement *ele
 	int start = buffer.size();
 	ConfigureInterpolatorItem(element, buffer, sizeof(T)/sizeof(float), names, defaults);
 	buffer[start - 1] = buffer.size() - start;
+}
+
+
+template <> void ConfigureInterpolator<bool>(const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
+{
 }

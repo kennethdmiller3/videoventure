@@ -31,53 +31,35 @@ namespace Database
 
 	namespace Loader
 	{
-		class ExplosionLoader
+		static void ExplosionConfigure(unsigned int aId, const tinyxml2::XMLElement *element)
 		{
-		public:
-			ExplosionLoader()
-			{
-				AddConfigure(0x02bb1fe0 /* "explosion" */, Entry(this, &ExplosionLoader::Configure));
-			}
-
-			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
-			{
-				ExplosionTemplate &explosion = Database::explosiontemplate.Open(aId);
-				explosion.Configure(element, aId);
-				Database::explosiontemplate.Close(aId);
-			}
+			ExplosionTemplate &explosion = Database::explosiontemplate.Open(aId);
+			explosion.Configure(element, aId);
+			Database::explosiontemplate.Close(aId);
 		}
-		explosionloader;
+		Configure explosionconfigure(0x02bb1fe0 /* "explosion" */, ExplosionConfigure);
 	}
 
 	namespace Initializer
 	{
-		class ExplosionInitializer
+		static void ExplosionActivate(unsigned int aId)
 		{
-		public:
-			ExplosionInitializer()
-			{
-				AddActivate(0xbde38dea /* "explosiontemplate" */, Entry(this, &ExplosionInitializer::Activate));
-				AddDeactivate(0xbde38dea /* "explosiontemplate" */, Entry(this, &ExplosionInitializer::Deactivate));
-			}
+			const ExplosionTemplate &explosiontemplate = Database::explosiontemplate.Get(aId);
+			Explosion *explosion = new Explosion(explosiontemplate, aId);
+			Database::explosion.Put(aId, explosion);
+			explosion->Activate();
+		}
+		Activate explosionactivate(0xbde38dea /* "explosiontemplate" */, ExplosionActivate);
 
-			void Activate(unsigned int aId)
+		static void ExplosionDeactivate(unsigned int aId)
+		{
+			if (Explosion *explosion = Database::explosion.Get(aId))
 			{
-				const ExplosionTemplate &explosiontemplate = Database::explosiontemplate.Get(aId);
-				Explosion *explosion = new Explosion(explosiontemplate, aId);
-				Database::explosion.Put(aId, explosion);
-				explosion->Activate();
-			}
-
-			void Deactivate(unsigned int aId)
-			{
-				if (Explosion *explosion = Database::explosion.Get(aId))
-				{
-					delete explosion;
-					Database::explosion.Delete(aId);
-				}
+				delete explosion;
+				Database::explosion.Delete(aId);
 			}
 		}
-		explosioninitializer;
+		Deactivate explosiondeactivate(0xbde38dea /* "explosiontemplate" */, ExplosionDeactivate);
 	}
 };
 

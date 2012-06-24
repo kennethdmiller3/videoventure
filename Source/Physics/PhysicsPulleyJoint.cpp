@@ -51,62 +51,44 @@ namespace Database
 
 	namespace Loader
 	{
-		class PulleyJointLoader
+		static void PulleyJointConfigure(unsigned int aId, const tinyxml2::XMLElement *element)
 		{
-		public:
-			PulleyJointLoader()
+			Typed<b2PulleyJointDef> defs = Database::pulleyjointdef.Open(aId);
+
+			// get the sub-identifier
+			unsigned int aSubId;
+			if (const char *name = element->Attribute("name"))
+				aSubId = Hash(name);
+			else
+				aSubId = defs.GetCount() + 1;
+
+			// configure the joint definition
+			b2PulleyJointDef &def = defs.Open(aSubId);
+			for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 			{
-				AddConfigure(0xdd003dc4 /* "pulleyjoint" */, Entry(this, &PulleyJointLoader::Configure));
+				ConfigurePulleyJointItem(child, def);
 			}
+			defs.Close(aSubId);
 
-			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
-			{
-				Typed<b2PulleyJointDef> defs = Database::pulleyjointdef.Open(aId);
-
-				// get the sub-identifier
-				unsigned int aSubId;
-				if (const char *name = element->Attribute("name"))
-					aSubId = Hash(name);
-				else
-					aSubId = defs.GetCount() + 1;
-
-				// configure the joint definition
-				b2PulleyJointDef &def = defs.Open(aSubId);
-				for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
-				{
-					ConfigurePulleyJointItem(child, def);
-				}
-				defs.Close(aSubId);
-
-				Database::pulleyjointdef.Close(aId);
-			}
+			Database::pulleyjointdef.Close(aId);
 		}
-		pulleyjointloader;
+		Configure pulleyjointconfigure(0xdd003dc4 /* "pulleyjoint" */, PulleyJointConfigure);
 	}
 
 	namespace Initializer
 	{
-		class PulleyJointInitializer
+		static void PulleyJointPostActivate(unsigned int aId)
 		{
-		public:
-			PulleyJointInitializer()
+			for (Database::Typed<b2PulleyJointDef>::Iterator itor(&Database::pulleyjointdef.Get(aId)); itor.IsValid(); ++itor)
 			{
-				AddPostActivate(0x5f072ebb /* "pulleyjointdef" */, Entry(this, &PulleyJointInitializer::PostActivate));
-			}
-
-			void PostActivate(unsigned int aId)
-			{
-				for (Database::Typed<b2PulleyJointDef>::Iterator itor(&Database::pulleyjointdef.Get(aId)); itor.IsValid(); ++itor)
+				b2PulleyJointDef def(itor.GetValue());
+				UnpackJointDef(def, aId);
+				if (def.bodyA && def.bodyB)
 				{
-					b2PulleyJointDef def(itor.GetValue());
-					UnpackJointDef(def, aId);
-					if (def.bodyA && def.bodyB)
-					{
-						Collidable::GetWorld()->CreateJoint(&def);
-					}
+					Collidable::GetWorld()->CreateJoint(&def);
 				}
 			}
 		}
-		pulleyjointinitializer;
+		PostActivate pulleyjointpostactivate(0x5f072ebb /* "pulleyjointdef" */, PulleyJointPostActivate);
 	}
 }
