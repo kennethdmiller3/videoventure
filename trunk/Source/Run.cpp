@@ -12,6 +12,7 @@
 #include "Overlay.h"
 #include "Sound.h"
 #include "Font.h"
+#include "Texture.h"
 
 #include "Console.h"
 
@@ -82,7 +83,7 @@ bool escape = false;
 #define PRINT_PERFORMANCE_FRAMERATE
 #define DRAW_PERFORMANCE_FRAMERATE
 //#define PRINT_SIMULATION_TIMER
-
+//#define USE_ACCUMULATION_BUFFER
 #ifdef GET_PERFORMANCE_DETAILS
 #include "PerfTimer.h"
 #endif
@@ -494,6 +495,27 @@ void RunState()
 	GLuint debugdraw = glGenLists(1);
 #endif
 
+#ifndef USE_ACCUMULATION_BUFFER
+	// pseudo-accumulation buffer
+
+	// generate a handle object handle
+	GLuint accumHandle;
+	glGenTextures( 1, &accumHandle );
+	Database::texture.Put(0x00703bf0 /* "accum" */, accumHandle);
+
+	// set up texture template
+	TextureTemplate &accumTexture = Database::texturetemplate.Open(accumHandle);
+	accumTexture.mInternalFormat = GL_RGB8;
+	accumTexture.mWidth = SCREEN_WIDTH;
+	accumTexture.mHeight = SCREEN_HEIGHT;
+	accumTexture.mFormat = GL_RGB;
+	accumTexture.mMinFilter = GL_NEAREST;
+	accumTexture.mMagFilter = GL_NEAREST;
+	accumTexture.mWrapS = GL_CLAMP;
+	accumTexture.mWrapT = GL_CLAMP;
+	BindTexture(accumHandle, accumTexture);
+#endif
+
 	// wait for user exit
 	do
 	{
@@ -787,12 +809,58 @@ void RunState()
 			// reset camera transform
 			glPopMatrix();
 
+#ifdef USE_ACCUMULATION_BUFFER
 			// if performing motion blur...
 			if (MOTIONBLUR_STEPS > 1)
 			{
 				// accumulate the image
 				glAccum(blur ? GL_ACCUM : GL_LOAD, 1.0f / float(MOTIONBLUR_STEPS));
 			}
+#else
+			if (blur > 0)
+			{
+				// push projection transform
+				glMatrixMode(GL_PROJECTION);
+				glLoadIdentity();
+				glOrtho(0, 1, 0, 1, -1, 1);
+
+				glMatrixMode(GL_MODELVIEW);
+				glLoadIdentity();
+
+				// save texture state
+				glPushAttrib(GL_COLOR_BUFFER_BIT | GL_TEXTURE_BIT);
+				glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
+
+				// bind the texture object
+				glEnable(GL_TEXTURE_2D);
+				glBindTexture(GL_TEXTURE_2D, accumHandle);
+
+				glBegin(GL_QUADS);
+
+				glColor4f(1.0f, 1.0f, 1.0f, float(blur) / float(blur + 1));
+
+				glTexCoord2f(0.0f, 0.0f);
+				glVertex2f(0.0f, 0.0f);
+				glTexCoord2f(1.0f, 0.0f);
+				glVertex2f(1.0f, 0.0f);
+				glTexCoord2f(1.0f, 1.0f);
+				glVertex2f(1.0f, 1.0f);
+				glTexCoord2f(0.0f, 1.0f);
+				glVertex2f(0.0f, 1.0f);
+
+				glEnd();
+
+				glPopAttrib();
+			}
+
+			if (blur < MOTIONBLUR_STEPS)
+			{
+				glPushAttrib(GL_TEXTURE_BIT);
+				glBindTexture(GL_TEXTURE_2D, accumHandle);
+				glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+				glPopAttrib();
+			}
+#endif
 
 #ifdef GET_PERFORMANCE_DETAILS
 			render_timer.Stop();
@@ -803,12 +871,14 @@ void RunState()
 		render_timer.Start();
 #endif
 
+#ifdef USE_ACCUMULATION_BUFFER
 		// if performing motion blur...
 		if (MOTIONBLUR_STEPS > 1)
 		{
 			// return the accumulated image
 			glAccum(GL_RETURN, 1);
 		}
+#endif
 
 		// switch blend mode
 		glPushAttrib(GL_COLOR_BUFFER_BIT | GL_TEXTURE_BIT);
