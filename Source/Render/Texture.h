@@ -7,6 +7,7 @@ struct TextureTemplate
 	GLint mWidth;
 	GLint mHeight;
 	GLenum mFormat;
+	bool mMipmaps;
 	bool mAllocated;
 	unsigned char *mPixels;
 	GLint mMinFilter;
@@ -19,6 +20,7 @@ struct TextureTemplate
 		, mWidth(0)
 		, mHeight(0)
 		, mFormat(0)
+		, mMipmaps(false)
 		, mAllocated(false)
 		, mPixels(NULL)
 		, mMinFilter(0)
