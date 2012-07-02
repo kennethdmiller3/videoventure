@@ -238,8 +238,10 @@ void BindTexture(GLuint handle, TextureTemplate const &texture)
 	//glTexParameteri( GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE ); 
 
 	// set texture image data
-	//glTexImage2D(GL_TEXTURE_2D, 0, texture.mInternalFormat, texture.mWidth, texture.mHeight, 0, texture.mFormat, GL_UNSIGNED_BYTE, texture.mPixels);
-	gluBuild2DMipmaps(GL_TEXTURE_2D, texture.mInternalFormat, texture.mWidth, texture.mHeight, texture.mFormat, GL_UNSIGNED_BYTE, texture.mPixels);
+	if (texture.mMipmaps)
+		gluBuild2DMipmaps(GL_TEXTURE_2D, texture.mInternalFormat, texture.mWidth, texture.mHeight, texture.mFormat, GL_UNSIGNED_BYTE, texture.mPixels);
+	else
+		glTexImage2D(GL_TEXTURE_2D, 0, texture.mInternalFormat, texture.mWidth, texture.mHeight, 0, texture.mFormat, GL_UNSIGNED_BYTE, texture.mPixels);
 
 	// restore texture state
 	glPopAttrib();
@@ -255,7 +257,7 @@ void RebuildTextures(void)
 
 		// get the corresponding template
 		const TextureTemplate &texture = Database::texturetemplate.Get(handle);
-		if (!texture.mPixels)
+		if (texture.mWidth == 0 || texture.mHeight == 0)
 			continue;
 
 		// bind the texture
