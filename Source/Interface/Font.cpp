@@ -4,7 +4,7 @@
 static const int FIRST_CHARACTER = '\x00';
 static const int LAST_CHARACTER  = '\x7F';
 
-Rect<float> sDefaultFontUVs[LAST_CHARACTER-FIRST_CHARACTER];
+Rect<float> sDefaultFontUVs[LAST_CHARACTER-FIRST_CHARACTER+1];
 
 GLuint sDefaultFontHandle;
 
@@ -96,7 +96,7 @@ void CreateDefaultFont()
 	TextureTemplate &texture = Database::texturetemplate.Open(sDefaultFontHandle);
 
 	// fill in values
-	texture.mInternalFormat = GL_ALPHA;
+	texture.mInternalFormat = GL_ALPHA8;
 	texture.mWidth = aTextureWidth;
 	texture.mHeight = aTextureHeight;
 	texture.mFormat = GL_ALPHA;
@@ -134,7 +134,7 @@ void CreateDefaultFont()
 	const int aCharacterWidth = 8;
 	const int aCharacterHeight = 8;
 	const int aCharacterPerRow = aTextureWidth / aCharacterWidth;
-	for (int c = 0; c < LAST_CHARACTER-FIRST_CHARACTER; ++c)
+	for (int c = 0; c < LAST_CHARACTER-FIRST_CHARACTER+1; ++c)
 	{
 		Rect<float> &uv = sDefaultFontUVs[c];
 		int row = c / aCharacterPerRow;

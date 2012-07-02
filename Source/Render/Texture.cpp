@@ -76,7 +76,7 @@ namespace Database
 					{
 					case 0x7494fdb7 /* "perlin" */:
 						{
-							texture.mInternalFormat = GL_RGBA;
+							texture.mInternalFormat = GL_RGBA8;
 
 							texture.mWidth = 64;
 							child->QueryIntAttribute("width", &texture.mWidth);
@@ -152,7 +152,7 @@ namespace Database
 
 					case 0xcf15afeb /* "expression" */:
 						{
-							texture.mInternalFormat = GL_RGBA;
+							texture.mInternalFormat = GL_RGBA8;
 
 							texture.mWidth = 64;
 							child->QueryIntAttribute("width", &texture.mWidth);
