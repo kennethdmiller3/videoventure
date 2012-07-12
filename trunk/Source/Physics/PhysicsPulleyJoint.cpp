@@ -3,7 +3,7 @@
 #include "PhysicsUtilities.h"
 #include "PhysicsPulleyJoint.h"
 
-bool ConfigurePulleyJointItem(const tinyxml2::XMLElement *element, b2PulleyJointDef &joint)
+static bool ConfigurePulleyJointItem(const tinyxml2::XMLElement *element, b2PulleyJointDef &joint)
 {
 	const char *name = element->Value();
 	switch (Hash(name))
