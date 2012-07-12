@@ -3,16 +3,6 @@
 #include "PhysicsUtilities.h"
 #include "PhysicsDistanceJoint.h"
 
-
-	/// The natural length between the anchor points.
-	float32 length;
-
-	/// The mass-spring-damper frequency in Hertz.
-	float32 frequencyHz;
-
-	/// The damping ratio. 0 = no damping, 1 = critical damping.
-	float32 dampingRatio;
-
 static bool ConfigureDistanceJointItem(const tinyxml2::XMLElement *element, b2DistanceJointDef &joint)
 {
 	const char *name = element->Value();
