@@ -25,7 +25,7 @@ namespace Database
 		static bool ConfigureTemplateItem(const tinyxml2::XMLElement *element, unsigned int aId)
 		{
 			const char *value = element->Value();
-			const Database::Loader::Entry &configure = Database::Loader::GetConfigure(Hash(value));
+			const Database::Loader::Entry &configure = Database::Loader::Configure::Get(Hash(value));
 			if (configure)
 			{
 				configure(aId, element);
@@ -34,128 +34,101 @@ namespace Database
 			return false;
 		}
 
-		class InheritLoader
+		static void InheritConfigure(unsigned int aId, const tinyxml2::XMLElement *element)
 		{
-		public:
-			InheritLoader()
+			// get base type name
+			if (const char *type = element->Attribute("type"))
 			{
-				AddConfigure(0xca04efe0 /* "inherit" */, Entry(this, &InheritLoader::Configure));
-			}
+				// get import identifier
+				unsigned int aImportId = Hash(type);
+				if (!Database::name.Find(aImportId))
+					DebugPrint("warning: \"%s\" base type \"%s\" not found\n", Database::name.Get(aId), type);
 
-			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
-			{
-				// get base type name
-				if (const char *type = element->Attribute("type"))
-				{
-					// get import identifier
-					unsigned int aImportId = Hash(type);
-					if (!Database::name.Find(aImportId))
-						DebugPrint("warning: \"%s\" base type \"%s\" not found\n", Database::name.Get(aId), type);
-
-					// inherit components
-					Database::Inherit(aId, aImportId);
-				}
+				// inherit components
+				Database::Inherit(aId, aImportId);
 			}
 		}
-		inheritloader;
+		Configure inheritconfigure(0xca04efe0 /* "inherit" */, InheritConfigure);
 
-		class TemplateLoader
+		void TemplateConfigure(unsigned int aId, const tinyxml2::XMLElement *element)
 		{
-		public:
-			TemplateLoader()
+			// get base type name
+			if (const char *type = element->Attribute("type"))
 			{
-				AddConfigure(0x694aaa0b /* "template" */, Entry(this, &TemplateLoader::Configure));
+				// get parent identifier
+				unsigned int aParentId = Hash(type);
+				if (!Database::name.Find(aParentId))
+					DebugPrint("warning: template \"%s\" base type \"%s\" not found\n", element->Attribute("name"), type);
+
+				// inherit parent components
+				Database::Inherit(aId, aParentId);
 			}
 
-			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
+			// get instance name
+			if (const char *name = element->Attribute("name"))
 			{
-				// get base type name
-				if (const char *type = element->Attribute("type"))
-				{
-					// get parent identifier
-					unsigned int aParentId = Hash(type);
-					if (!Database::name.Find(aParentId))
-						DebugPrint("warning: template \"%s\" base type \"%s\" not found\n", element->Attribute("name"), type);
+				// set name
+				std::string &namebuf = Database::name.Open(aId);
+				namebuf = element->Attribute("name");
+				Database::name.Close(aId);
+			}
 
-					// inherit parent components
-					Database::Inherit(aId, aParentId);
-				}
-
-				// get instance name
-				if (const char *name = element->Attribute("name"))
-				{
-					// set name
-					std::string &namebuf = Database::name.Open(aId);
-					namebuf = element->Attribute("name");
-					Database::name.Close(aId);
-				}
-
-				// for each child element...
-				for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
-				{
-					// process the template item
-					if (!ConfigureTemplateItem(child, aId))
-						DebugPrint("template \"%s\" skipping item \"%s\"\n", element->Attribute("name"), child->Value());
-				}
+			// for each child element...
+			for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+			{
+				// process the template item
+				if (!ConfigureTemplateItem(child, aId))
+					DebugPrint("template \"%s\" skipping item \"%s\"\n", element->Attribute("name"), child->Value());
 			}
 		}
-		templateloader;
+		Configure templateconfigure(0x694aaa0b /* "template" */, TemplateConfigure);
 
-		class EntityLoader
+		static void EntityConfigure(unsigned int aId, const tinyxml2::XMLElement *element)
 		{
-		public:
-			EntityLoader()
+			// get base type name
+			if (const char *type = element->Attribute("type"))
 			{
-				AddConfigure(0xd33ff5da /* "entity" */, Entry(this, &EntityLoader::Configure));
-			}
-
-			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
-			{
-				// get base type name
-				if (const char *type = element->Attribute("type"))
-				{
-					// get parent identifier
-					unsigned int aParentId = Hash(type);
-					if (!Database::name.Find(aParentId))
-						DebugPrint("warning: entity \"%s\" base type \"%s\" not found\n", element->Attribute("name"), type);
+				// get parent identifier
+				unsigned int aParentId = Hash(type);
+				if (!Database::name.Find(aParentId))
+					DebugPrint("warning: entity \"%s\" base type \"%s\" not found\n", element->Attribute("name"), type);
 					
-					// set parent
-					Database::parent.Put(aId, aParentId);
-				}
-
-				// get instance name
-				if (const char *name = element->Attribute("name"))
-				{
-					// set name
-					std::string &namebuf = Database::name.Open(aId);
-					namebuf = name;
-					Database::name.Close(aId);
-				}
-
-				// objects default to owning themselves
-				Database::owner.Put(aId, aId);
-
-				// create an entity
-				Entity *entity = new Entity(aId);
-				Database::entity.Put(aId, entity);
-
-				// process child elements
-				for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
-				{
-					if (entity->Configure(child))
-						continue;
-
-					// process the template item
-					if (!ConfigureTemplateItem(child, aId))
-						DebugPrint("entity \"%s\" skipping item \"%s\"\n", element->Attribute("name"), child->Value());
-				}
-
-				// activate the instance
-				// (create runtime components)
-				Database::Activate(aId);
+				// set parent
+				Database::parent.Put(aId, aParentId);
 			}
+
+			// get instance name
+			if (const char *name = element->Attribute("name"))
+			{
+				// set name
+				std::string &namebuf = Database::name.Open(aId);
+				namebuf = name;
+				Database::name.Close(aId);
+			}
+
+			// objects default to owning themselves
+			Database::owner.Put(aId, aId);
+
+			// create an entity
+			Entity *entity = new Entity(aId);
+			Database::entity.Put(aId, entity);
+
+			// process child elements
+			for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+			{
+				if (entity->Configure(child))
+					continue;
+
+				// process the template item
+				if (!ConfigureTemplateItem(child, aId))
+					DebugPrint("entity \"%s\" skipping item \"%s\"\n", element->Attribute("name"), child->Value());
+			}
+
+			// activate the instance
+			// (create runtime components)
+			Database::Activate(aId);
 		}
-		entityloader;
+		Configure entityconfigure (0xd33ff5da /* "entity" */, EntityConfigure);
 	}
 }
 

@@ -26,26 +26,40 @@ extern bool SplitLevel(const char *config, const char *output);
 extern bool MergeLevel(const char *config, const char *output);
 
 
-namespace Command
+// COMMAND INSTANCE
+
+// get the command database
+Database::Typed<Command::Entry> &Command::GetDB()
 {
-	typedef fastdelegate::FastDelegate<int (const char * const aParam[], int aCount)> Entry;
-	static Database::Typed<Entry> &GetDB()
-	{
-		static Database::Typed<Entry> database;
-		return database;
-	}
-	void Add(unsigned int aTagId, Entry aEntry)
-	{
-		GetDB().Put(aTagId, aEntry);
-	}
-	void Remove(unsigned int aTagId)
-	{
-		GetDB().Delete(aTagId);
-	}
-	const Entry &Get(unsigned aTagId)
-	{
-		return GetDB().Get(aTagId);
-	}
+	static Database::Typed<Entry> onactivate;
+	return onactivate;
+}
+
+// constructor
+Command::Command(unsigned int aDatabaseId, Entry aEntry)
+	: mTagId(aDatabaseId)
+{
+	Database::Typed<Entry> &db = GetDB();
+	Entry &entry = db.Open(mTagId);
+	mPrev = entry;
+	entry = aEntry;
+	db.Close(mTagId);
+}
+
+// destructor
+Command::~Command()
+{
+	Database::Typed<Entry> &db = GetDB();
+	if (mPrev)
+		db.Put(mTagId, mPrev);
+	else
+		db.Delete(mTagId);
+}
+
+// get the command with the specified identifier
+const Command::Entry &Command::Get(unsigned aTagId)
+{
+	return GetDB().Get(aTagId);
 }
 
 
@@ -180,76 +194,76 @@ int CommandShell(const char * const aParam[], int aCount)
 	setgamestate = STATE_SHELL;
 	return 0;
 }
-Command::Auto commandshell(0x11e1fc01 /* "shell" */, CommandShell);
+Command commandshell(0x11e1fc01 /* "shell" */, CommandShell);
 
 int CommandPlay(const char * const aParam[], int aCount)
 {
 	setgamestate = STATE_PLAY;
 	return 0;
 }
-Command::Auto commandplay(0xc2cbd863 /* "play" */, CommandPlay);
+Command commandplay(0xc2cbd863 /* "play" */, CommandPlay);
 
 int CommandReload(const char * const aParam[], int aCount)
 {
 	setgamestate = STATE_RELOAD;
 	return 0;
 }
-Command::Auto commandreload(0xed7cdd8c /* "reload" */, CommandReload);
+Command commandreload(0xed7cdd8c /* "reload" */, CommandReload);
 
 int CommandQuit(const char * const aParam[], int aCount)
 {
 	setgamestate = STATE_QUIT;
 	return 0;
 }
-Command::Auto commandquit(0x47878736 /* "quit" */, CommandQuit);
+Command commandquit(0x47878736 /* "quit" */, CommandQuit);
 
 int CommandResolution(const char * const aParam[], int aCount)
 {
 	return ProcessCommandInt2(SCREEN_WIDTH, SCREEN_HEIGHT, aParam, aCount, UpdateWindowAction, "resolution: %dx%d\n"); 
 }
-Command::Auto commandresolution(0x1d215c8f /* "resolution" */, CommandResolution);
+Command commandresolution(0x1d215c8f /* "resolution" */, CommandResolution);
 
 int CommandDepth(const char * const aParam[], int aCount)
 {
 	return ProcessCommandInt(SCREEN_DEPTH, aParam, aCount, UpdateWindowAction, "depth: %dbpp");
 }
-Command::Auto commanddepth(0xfe759eea /* "depth" */, CommandDepth);
+Command commanddepth(0xfe759eea /* "depth" */, CommandDepth);
 
 int CommandFullScreen(const char * const aParam[], int aCount)
 {
 	return ProcessCommandBool(SCREEN_FULLSCREEN, aParam, aCount, UpdateWindowAction, "fullscreen: %d\n");
 }
-Command::Auto commandfullscreen(0x5032fb58 /* "fullscreen" */, CommandFullScreen);
+Command commandfullscreen(0x5032fb58 /* "fullscreen" */, CommandFullScreen);
 
 int CommandVsync(const char * const aParam[], int aCount)
 {
 	return ProcessCommandBool(OPENGL_SWAPCONTROL, aParam, aCount, UpdateWindowAction, "vsync: %d\n");
 }
-Command::Auto commandvsync(0x06f8f066 /* "vsync" */, CommandVsync);
+Command commandvsync(0x06f8f066 /* "vsync" */, CommandVsync);
 
 int CommandMultisample(const char * const aParam[], int aCount)
 {
 	return ProcessCommandInt(OPENGL_MULTISAMPLE, aParam, aCount, UpdateWindowAction, "multisample: %d\n");
 }
-Command::Auto commandmultisample(0x47d0f228 /* "multisample" */, CommandMultisample);
+Command commandmultisample(0x47d0f228 /* "multisample" */, CommandMultisample);
 
 int CommandViewSize(const char * const aParam[], int aCount)
 {
 	return ProcessCommandFloat(VIEW_SIZE, aParam, aCount, NULL, "viewsize: %f\n");
 }
-Command::Auto commandviewsize(0x1ae79789 /* "viewsize" */, CommandViewSize);
+Command commandviewsize(0x1ae79789 /* "viewsize" */, CommandViewSize);
 
 int CommandInput(const char * const aParam[], int aCount)
 {
 	return ProcessCommandString(INPUT_CONFIG, aParam, aCount, InitInputAction, "input: %s\n");
 }
-Command::Auto commandinput(0xf9d86f7b /* "input" */, CommandInput);
+Command commandinput(0xf9d86f7b /* "input" */, CommandInput);
 
 int CommandLevel(const char * const aParam[], int aCount)
 {
 	return ProcessCommandString(LEVEL_CONFIG, aParam, aCount, InitLevelAction, "level: %s\n");
 }
-Command::Auto commandlevel(0x9b99e7dd /* "level" */, CommandLevel);
+Command commandlevel(0x9b99e7dd /* "level" */, CommandLevel);
 
 int CommandImport(const char * const aParam[], int aCount)
 {
@@ -267,7 +281,7 @@ int CommandImport(const char * const aParam[], int aCount)
 	}
 	return 0;
 }
-Command::Auto commandimport(0x112a90d4 /* "import" */, CommandImport);
+Command commandimport(0x112a90d4 /* "import" */, CommandImport);
 
 int CommandSplit(const char * const aParam[], int aCount)
 {
@@ -278,7 +292,7 @@ int CommandSplit(const char * const aParam[], int aCount)
 	}
 	return 0;
 }
-Command::Auto commandsplit(0x87b82de3 /* "split" */, CommandSplit);
+Command commandsplit(0x87b82de3 /* "split" */, CommandSplit);
 
 int CommandMerge(const char * const aParam[], int aCount)
 {
@@ -289,115 +303,115 @@ int CommandMerge(const char * const aParam[], int aCount)
 	}
 	return 0;
 }
-Command::Auto commandmerge(0xb9764627 /* "merge" */, CommandMerge);
+Command commandmerge(0xb9764627 /* "merge" */, CommandMerge);
 
 int CommandRecord(const char * const aParam[], int aCount)
 {
 	return ProcessCommandString(RECORD_CONFIG, aParam, aCount, InitRecordAction, "record: %s\n");
 }
-Command::Auto commandrecord(0x593058cc /* "record" */, CommandRecord);
+Command commandrecord(0x593058cc /* "record" */, CommandRecord);
 
 int CommandPlayback(const char * const aParam[], int aCount)
 {
 	return ProcessCommandString(RECORD_CONFIG, aParam, aCount, InitPlaybackAction, "playback: %s\n");
 }
-Command::Auto commandplayback(0xcf8a43ec /* "playback" */, CommandPlayback);
+Command commandplayback(0xcf8a43ec /* "playback" */, CommandPlayback);
 
 int CommandSimRate(const char * const aParam[], int aCount)
 {
 	return ProcessCommandInt(SIMULATION_RATE, aParam, aCount, NULL, "simrate: %d\n");
 }
-Command::Auto commandsimrate(0xd6974b06 /* "simrate" */, CommandSimRate);
+Command commandsimrate(0xd6974b06 /* "simrate" */, CommandSimRate);
 
 int CommandTimeScale(const char * const aParam[], int aCount)
 {
 	return ProcessCommandFloat(TIME_SCALE, aParam, aCount, NULL, "timescale: %f\n");
 }
-Command::Auto commandtimescale(0x9f2f269e /* "timescale" */, CommandTimeScale);
+Command commandtimescale(0x9f2f269e /* "timescale" */, CommandTimeScale);
 
 int CommandFixedStep(const char * const aParam[], int aCount)
 {
 	return ProcessCommandBool(FIXED_STEP, aParam, aCount, NULL, "fixedstep: %d\n");
 }
-Command::Auto commandfixedstep(0xe065cb63 /* "fixedstep" */, CommandFixedStep);
+Command commandfixedstep(0xe065cb63 /* "fixedstep" */, CommandFixedStep);
 
 int CommandMotionBlur(const char * const aParam[], int aCount)
 {
 	return ProcessCommandInt(MOTIONBLUR_STEPS, aParam, aCount, ClampMotionBlurAction, "motionblur: %d\n");
 }
-Command::Auto commandmotionblur(0xf744f3b2 /* "motionblur" */, CommandMotionBlur);
+Command commandmotionblur(0xf744f3b2 /* "motionblur" */, CommandMotionBlur);
 
 int CommandMotionBlurTime(const char * const aParam[], int aCount)
 {
 	return ProcessCommandFloat(MOTIONBLUR_TIME, aParam, aCount, NULL, "motionblurtime: %f\n");
 }
-Command::Auto commandmotionblurtime(0xfb585f73 /* "motionblurtime" */, CommandMotionBlurTime);
+Command commandmotionblurtime(0xfb585f73 /* "motionblurtime" */, CommandMotionBlurTime);
 
 int CommandSoundChannels(const char * const aParam[], int aCount)
 {
 	return ProcessCommandInt(SOUND_CHANNELS, aParam, aCount, NULL, "soundchannels: %d\n");
 }
-Command::Auto commandsoundchannels(0x61e734dc /* "soundchannels" */, CommandSoundChannels);
+Command commandsoundchannels(0x61e734dc /* "soundchannels" */, CommandSoundChannels);
 
 int CommandSoundVolumeEffect(const char * const aParam[], int aCount)
 {
 	return ProcessCommandFloat(SOUND_VOLUME_EFFECT, aParam, aCount, UpdateSoundVolume, "soundvolume: %f\n");
 }
-Command::Auto commandsoundvolumeeffect(0xff4838bb /* "soundvolumeeffect" */, CommandSoundVolumeEffect);
+Command commandsoundvolumeeffect(0xff4838bb /* "soundvolumeeffect" */, CommandSoundVolumeEffect);
 
 int CommandSoundVolumeMusic(const char * const aParam[], int aCount)
 {
 	return ProcessCommandFloat(SOUND_VOLUME_MUSIC, aParam, aCount, UpdateSoundVolume, "soundvolume: %f\n");
 }
-Command::Auto commandsoundvolumemusic(0x689fc51d /* "soundvolumemusic" */, CommandSoundVolumeMusic);
+Command commandsoundvolumemusic(0x689fc51d /* "soundvolumemusic" */, CommandSoundVolumeMusic);
 
 int CommandOutputConsole(const char * const aParam[], int aCount)
 {
 	return ProcessCommandBool(DEBUGPRINT_OUTPUTCONSOLE, aParam, aCount, NULL, "outputconsole: %d\n");
 }
-Command::Auto commandoutputconsole(0x94c716fd /* "outputconsole" */, CommandOutputConsole);
+Command commandoutputconsole(0x94c716fd /* "outputconsole" */, CommandOutputConsole);
 
 int CommandOutputDebug(const char * const aParam[], int aCount)
 {
 	return ProcessCommandBool(DEBUGPRINT_OUTPUTDEBUG, aParam, aCount, NULL, "outputdebug: %d\n");
 }
-Command::Auto commandoutputdebug(0x54822903 /* "outputdebug" */, CommandOutputDebug);
+Command commandoutputdebug(0x54822903 /* "outputdebug" */, CommandOutputDebug);
 
 int CommandOutputStdErr(const char * const aParam[], int aCount)
 {
 	return ProcessCommandBool(DEBUGPRINT_OUTPUTSTDERR, aParam, aCount, NULL, "outputstderr: %d\n");
 }
-Command::Auto commandoutputstderr(0x8940763c /* "outputstderr" */, CommandOutputStdErr);
+Command commandoutputstderr(0x8940763c /* "outputstderr" */, CommandOutputStdErr);
 
 int CommandProfileScreen(const char * const aParam[], int aCount)
 {
 	return ProcessCommandBool(PROFILER_OUTPUTSCREEN, aParam, aCount, NULL, "profilescreen: %d\n");
 }
-Command::Auto commandprofilescreen(0xfbcc8f02 /* "profilescreen" */, CommandProfileScreen);
+Command commandprofilescreen(0xfbcc8f02 /* "profilescreen" */, CommandProfileScreen);
 
 int CommandProfilePrint(const char * const aParam[], int aCount)
 {
 	return ProcessCommandBool(PROFILER_OUTPUTPRINT, aParam, aCount, NULL, "profileprint: %d\n");
 }
-Command::Auto commandprofileprint(0x85e872f9 /* "profileprint" */, CommandProfilePrint);
+Command commandprofileprint(0x85e872f9 /* "profileprint" */, CommandProfilePrint);
 
 int CommandFrameRateScreen(const char * const aParam[], int aCount)
 {
 	return ProcessCommandBool(FRAMERATE_OUTPUTSCREEN, aParam, aCount, NULL, "frameratescreen: %d\n");
 }
-Command::Auto commandframeratescreen(0x24ce5450 /* "frameratescreen" */, CommandFrameRateScreen);
+Command commandframeratescreen(0x24ce5450 /* "frameratescreen" */, CommandFrameRateScreen);
 
 int CommandFrameRatePrint(const char * const aParam[], int aCount)
 {
 	return ProcessCommandBool(FRAMERATE_OUTPUTPRINT, aParam, aCount, NULL, "framerateprint: %d\n");
 }
-Command::Auto commandframerateprint(0x55cfbc33 /* "framerateprint" */, CommandFrameRatePrint);
+Command commandframerateprint(0x55cfbc33 /* "framerateprint" */, CommandFrameRatePrint);
 
 int CommandDebugDraw(const char * const aParam[], int aCount)
 {
 	return ProcessCommandBool(DEBUG_DRAW, aParam, aCount, NULL, "debugdraw: %d\n");
 }
-Command::Auto commanddebugdraw(0xe41f87fa /* "debugdraw" */, CommandDebugDraw);
+Command commanddebugdraw(0xe41f87fa /* "debugdraw" */, CommandDebugDraw);
 
 int CommandDatabase(const char * const aParam[], int aCount)
 {
@@ -434,7 +448,7 @@ int CommandDatabase(const char * const aParam[], int aCount)
 		return 0;
 	}
 }
-Command::Auto commanddatabase(0xa165ddb8 /* "database" */, CommandDatabase);
+Command commanddatabase(0xa165ddb8 /* "database" */, CommandDatabase);
 
 int CommandFind(const char * const aParam[], int aCount)
 {
@@ -504,7 +518,7 @@ int CommandFind(const char * const aParam[], int aCount)
 		return 0;
 	}
 }
-Command::Auto commandfind(0xbdf0855a /* "find" */, CommandFind);
+Command commandfind(0xbdf0855a /* "find" */, CommandFind);
 
 int CommandComponents(const char * const aParam[], int aCount)
 {
@@ -531,7 +545,7 @@ int CommandComponents(const char * const aParam[], int aCount)
 		return 0;
 	}
 }
-Command::Auto commandcomponents(0x1bf51169 /* "components" */, CommandComponents);
+Command commandcomponents(0x1bf51169 /* "components" */, CommandComponents);
 
 int CommandSound(const char * const aParam[], int aCount)
 {
@@ -551,7 +565,7 @@ int CommandSound(const char * const aParam[], int aCount)
 	}
 	
 }
-Command::Auto commandsound(0x0e0d9594 /* "sound" */, CommandSound);
+Command commandsound(0x0e0d9594 /* "sound" */, CommandSound);
 
 // commands
 int ProcessCommand( unsigned int aCommand, char *aParam[], int aCount )

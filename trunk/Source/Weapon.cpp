@@ -114,69 +114,51 @@ namespace Database
 
 	namespace Loader
 	{
-		class WeaponLoader
+		static void WeaponConfigure(unsigned int aId, const tinyxml2::XMLElement *element)
 		{
-		public:
-			WeaponLoader()
-			{
-				AddConfigure(0x6f332041 /* "weapon" */, Entry(this, &WeaponLoader::Configure));
-			}
-
-			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
-			{
-				WeaponTemplate &weapon = Database::weapontemplate.Open(aId);
-				weapon.Configure(element, aId);
-				Database::weapontemplate.Close(aId);
-			}
+			WeaponTemplate &weapon = Database::weapontemplate.Open(aId);
+			weapon.Configure(element, aId);
+			Database::weapontemplate.Close(aId);
 		}
-		weaponloader;
+		Configure weaponconfigure(0x6f332041 /* "weapon" */, WeaponConfigure);
 	}
 
 	namespace Initializer
 	{
-		class WeaponInitializer
+		static void WeaponActivate(unsigned int aId)
 		{
-		public:
-			WeaponInitializer()
-			{
-				AddActivate(0xb1050fa7 /* "weapontemplate" */, Entry(this, &WeaponInitializer::Activate));
-				AddPostActivate(0xb1050fa7 /* "weapontemplate" */, Entry(this, &WeaponInitializer::PostActivate));
-				AddDeactivate(0xb1050fa7 /* "weapontemplate" */, Entry(this, &WeaponInitializer::Deactivate));
-			}
+			const WeaponTemplate &weapontemplate = Database::weapontemplate.Get(aId);
+			Weapon *weapon = new Weapon(weapontemplate, aId);
+			Database::weapon.Put(aId, weapon);
+			weapon->SetControl(aId);
+		}
+		Activate weaponactivate(0xb1050fa7 /* "weapontemplate" */, WeaponActivate);
 
-			void Activate(unsigned int aId)
+		static void WeaponPostActivate(unsigned int aId)
+		{
+			Weapon *weapon = Database::weapon.Get(aId);
+			for (unsigned int aControlId = aId; aControlId != 0; aControlId = Database::backlink.Get(aControlId))
 			{
-				const WeaponTemplate &weapontemplate = Database::weapontemplate.Get(aId);
-				Weapon *weapon = new Weapon(weapontemplate, aId);
-				Database::weapon.Put(aId, weapon);
-				weapon->SetControl(aId);
-			}
-
-			void PostActivate(unsigned int aId)
-			{
-				Weapon *weapon = Database::weapon.Get(aId);
-				for (unsigned int aControlId = aId; aControlId != 0; aControlId = Database::backlink.Get(aControlId))
+				if (const Controller *controller = Database::controller.Get(aControlId))
 				{
-					if (const Controller *controller = Database::controller.Get(aControlId))
-					{
-						weapon->SetControl(aControlId);
-						weapon->SetPrevFire(controller->mFire[Database::weapontemplate.Get(aId).mChannel]);
-						break;
-					}
+					weapon->SetControl(aControlId);
+					weapon->SetPrevFire(controller->mFire[Database::weapontemplate.Get(aId).mChannel]);
+					break;
 				}
-				weapon->Activate();
 			}
+			weapon->Activate();
+		}
+		PostActivate weaponpostactivate(0xb1050fa7 /* "weapontemplate" */, WeaponPostActivate);
 
-			void Deactivate(unsigned int aId)
+		static void WeaponDeactivate(unsigned int aId)
+		{
+			if (Weapon *weapon = Database::weapon.Get(aId))
 			{
-				if (Weapon *weapon = Database::weapon.Get(aId))
-				{
-					delete weapon;
-					Database::weapon.Delete(aId);
-				}
+				delete weapon;
+				Database::weapon.Delete(aId);
 			}
 		}
-		weaponinitializer;
+		Deactivate weapondeactivate(0xb1050fa7 /* "weapontemplate" */, WeaponDeactivate);
 	}
 }
 

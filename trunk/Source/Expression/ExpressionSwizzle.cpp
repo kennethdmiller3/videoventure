@@ -4,8 +4,8 @@
 #include "ExpressionConfigure.h"
 
 
-static Expression::Loader<float>::Auto swizzlefloat(0x3deb1461 /* "swizzle" */, ConfigureSwizzle<float>);
-static Expression::Loader<__m128>::Auto swizzlevector(0x3deb1461 /* "swizzle" */, ConfigureSwizzle<__m128>);
+static Expression::Loader<float> swizzlefloat(0x3deb1461 /* "swizzle" */, ConfigureSwizzle<float>);
+static Expression::Loader<__m128> swizzlevector(0x3deb1461 /* "swizzle" */, ConfigureSwizzle<__m128>);
 
 namespace Expression
 {

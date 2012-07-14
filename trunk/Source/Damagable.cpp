@@ -30,55 +30,37 @@ namespace Database
 
 	namespace Loader
 	{
-		class DamagableLoader
+		static void DamagableConfigure(unsigned int aId, const tinyxml2::XMLElement *element)
 		{
-		public:
-			DamagableLoader()
-			{
-				AddConfigure(0x1b715375 /* "damagable" */, Entry(this, &DamagableLoader::Configure));
-			}
-
-			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
-			{
-				DamagableTemplate &damagable = Database::damagabletemplate.Open(aId);
-				damagable.Configure(element);
-				Database::damagabletemplate.Close(aId);
-			}
+			DamagableTemplate &damagable = Database::damagabletemplate.Open(aId);
+			damagable.Configure(element);
+			Database::damagabletemplate.Close(aId);
 		}
-		damagableloader;
+		Configure damagableconfigure(0x1b715375 /* "damagable" */, DamagableConfigure);
 	}
 
 	namespace Initializer
 	{
-		class DamagableInitializer
+		static void DamagableActivate(unsigned int aId)
 		{
-		public:
-			DamagableInitializer()
-			{
-				AddActivate(0x5e73241b /* "damagabletemplate" */, Entry(this, &DamagableInitializer::Activate));
-				AddDeactivate(0x5e73241b /* "damagabletemplate" */, Entry(this, &DamagableInitializer::Deactivate));
-			}
+			const DamagableTemplate &damagabletemplate = Database::damagabletemplate.Get(aId);
+			Damagable *damagable = new Damagable(damagabletemplate, aId);
+			Database::damagable.Put(aId, damagable);
+		}
+		Activate damagableactivate(0x5e73241b /* "damagabletemplate" */, DamagableActivate);
 
-			void Activate(unsigned int aId)
+		static void DamagableDeactivate(unsigned int aId)
+		{
+			if (Damagable *damagable = Database::damagable.Get(aId))
 			{
-				const DamagableTemplate &damagabletemplate = Database::damagabletemplate.Get(aId);
-				Damagable *damagable = new Damagable(damagabletemplate, aId);
-				Database::damagable.Put(aId, damagable);
-			}
-
-			void Deactivate(unsigned int aId)
-			{
-				if (Damagable *damagable = Database::damagable.Get(aId))
-				{
-					delete damagable;
-					Database::damagable.Delete(aId);
-					Database::damagesignal.Delete(aId);
-					Database::deathsignal.Delete(aId);
-					Database::killsignal.Delete(aId);
-				}
+				delete damagable;
+				Database::damagable.Delete(aId);
+				Database::damagesignal.Delete(aId);
+				Database::deathsignal.Delete(aId);
+				Database::killsignal.Delete(aId);
 			}
 		}
-		damagableinitializer;
+		Deactivate damagable(0x5e73241b /* "damagabletemplate" */, DamagableDeactivate);
 	}
 }
 

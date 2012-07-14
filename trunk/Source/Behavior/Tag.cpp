@@ -9,28 +9,19 @@ namespace Database
 
 	namespace Loader
 	{
-		class TagLoader
+		void TagConfigure(unsigned int aId, const tinyxml2::XMLElement *element)
 		{
-		public:
-			TagLoader()
+			Typed<Tag> &tags = Database::tag.Open(aId);
+			for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 			{
-				AddConfigure(0x95f72993 /* "tag" */, Entry(this, &TagLoader::Configure));
+				unsigned int aSubId = Hash(child->Value());
+				Tag &tag = tags.Open(aSubId);
+				child->QueryFloatAttribute("float", &tag.f);
+				child->QueryIntAttribute("int", &tag.i);
+				tags.Close(aSubId);
 			}
-
-			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
-			{
-				Typed<Tag> &tags = Database::tag.Open(aId);
-				for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
-				{
-					unsigned int aSubId = Hash(child->Value());
-					Tag &tag = tags.Open(aSubId);
-					child->QueryFloatAttribute("float", &tag.f);
-					child->QueryIntAttribute("int", &tag.i);
-					tags.Close(aSubId);
-				}
-				Database::tag.Close(aId);
-			}
+			Database::tag.Close(aId);
 		}
-		tagloader;
+		Configure tagconfigure(0x95f72993 /* "tag" */, TagConfigure);
 	}
 }

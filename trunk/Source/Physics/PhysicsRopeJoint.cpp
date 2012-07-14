@@ -33,62 +33,44 @@ namespace Database
 
 	namespace Loader
 	{
-		class RopeJointLoader
+		static void RopeJointConfigure(unsigned int aId, const tinyxml2::XMLElement *element)
 		{
-		public:
-			RopeJointLoader()
+			Typed<b2RopeJointDef> defs = Database::ropejointdef.Open(aId);
+
+			// get the sub-identifier
+			unsigned int aSubId;
+			if (const char *name = element->Attribute("name"))
+				aSubId = Hash(name);
+			else
+				aSubId = defs.GetCount() + 1;
+
+			// configure the joint definition
+			b2RopeJointDef &def = defs.Open(aSubId);
+			for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 			{
-				AddConfigure(0x84e3150f /* "ropejoint" */, Entry(this, &RopeJointLoader::Configure));
+				ConfigureRopeJointItem(child, def);
 			}
+			defs.Close(aSubId);
 
-			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
-			{
-				Typed<b2RopeJointDef> defs = Database::ropejointdef.Open(aId);
-
-				// get the sub-identifier
-				unsigned int aSubId;
-				if (const char *name = element->Attribute("name"))
-					aSubId = Hash(name);
-				else
-					aSubId = defs.GetCount() + 1;
-
-				// configure the joint definition
-				b2RopeJointDef &def = defs.Open(aSubId);
-				for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
-				{
-					ConfigureRopeJointItem(child, def);
-				}
-				defs.Close(aSubId);
-
-				Database::ropejointdef.Close(aId);
-			}
+			Database::ropejointdef.Close(aId);
 		}
-		ropejointloader;
+		Configure ropejointconfigure(0x84e3150f /* "ropejoint" */, RopeJointConfigure);
 	}
 
 	namespace Initializer
 	{
-		class RopeJointInitializer
+		static void RopeJointPostActivate(unsigned int aId)
 		{
-		public:
-			RopeJointInitializer()
+			for (Database::Typed<b2RopeJointDef>::Iterator itor(&Database::ropejointdef.Get(aId)); itor.IsValid(); ++itor)
 			{
-				AddPostActivate(0xadbc04ee /* "ropejointdef" */, Entry(this, &RopeJointInitializer::PostActivate));
-			}
-
-			void PostActivate(unsigned int aId)
-			{
-				for (Database::Typed<b2RopeJointDef>::Iterator itor(&Database::ropejointdef.Get(aId)); itor.IsValid(); ++itor)
+				b2RopeJointDef def(itor.GetValue());
+				UnpackJointDef(def, aId);
+				if (def.bodyA && def.bodyB)
 				{
-					b2RopeJointDef def(itor.GetValue());
-					UnpackJointDef(def, aId);
-					if (def.bodyA && def.bodyB)
-					{
-						Collidable::GetWorld()->CreateJoint(&def);
-					}
+					Collidable::GetWorld()->CreateJoint(&def);
 				}
 			}
 		}
-		ropejointinitializer;
+		PostActivate ropejointpostactivate(0xadbc04ee /* "ropejointdef" */, RopeJointPostActivate);
 	}
 }

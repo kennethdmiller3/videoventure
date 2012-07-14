@@ -78,53 +78,35 @@ namespace Database
 
 	namespace Loader
 	{
-		class WaveSequenceLoader
+		static void WaveSequenceConfigure(unsigned int aId, const tinyxml2::XMLElement *element)
 		{
-		public:
-			WaveSequenceLoader()
-			{
-				AddConfigure(0x943e7789 /* "wavesequence" */, Entry(this, &WaveSequenceLoader::Configure));
-			}
-
-			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
-			{
-				WaveSequenceTemplate &wavesequence = Database::wavesequencetemplate.Open(aId);
-				wavesequence.Configure(element, aId);
-				Database::wavesequencetemplate.Close(aId);
-			}
+			WaveSequenceTemplate &wavesequence = Database::wavesequencetemplate.Open(aId);
+			wavesequence.Configure(element, aId);
+			Database::wavesequencetemplate.Close(aId);
 		}
-		wavesequenceloader;
+		Configure wavesequenceconfigure(0x943e7789 /* "wavesequence" */, WaveSequenceConfigure);
 	}
 
 	namespace Initializer
 	{
-		class WaveSequenceInitializer
+		static void WaveSequenceActivate(unsigned int aId)
 		{
-		public:
-			WaveSequenceInitializer()
-			{
-				AddActivate(0x684715cf /* "wavesequencetemplate" */, Entry(this, &WaveSequenceInitializer::Activate));
-				AddDeactivate(0x684715cf /* "wavesequencetemplate" */, Entry(this, &WaveSequenceInitializer::Deactivate));
-			}
+			const WaveSequenceTemplate &wavesequencetemplate = Database::wavesequencetemplate.Get(aId);
+			WaveSequence *wavesequence = new WaveSequence(wavesequencetemplate, aId);
+			Database::wavesequence.Put(aId, wavesequence);
+			wavesequence->Activate();
+		}
+		Activate wavesequenceactivate(0x684715cf /* "wavesequencetemplate" */, WaveSequenceActivate);
 
-			void Activate(unsigned int aId)
+		static void WaveSequenceDeactivate(unsigned int aId)
+		{
+			if (WaveSequence *wavesequence = Database::wavesequence.Get(aId))
 			{
-				const WaveSequenceTemplate &wavesequencetemplate = Database::wavesequencetemplate.Get(aId);
-				WaveSequence *wavesequence = new WaveSequence(wavesequencetemplate, aId);
-				Database::wavesequence.Put(aId, wavesequence);
-				wavesequence->Activate();
-			}
-
-			void Deactivate(unsigned int aId)
-			{
-				if (WaveSequence *wavesequence = Database::wavesequence.Get(aId))
-				{
-					delete wavesequence;
-					Database::wavesequence.Delete(aId);
-				}
+				delete wavesequence;
+				Database::wavesequence.Delete(aId);
 			}
 		}
-		wavesequenceinitializer;
+		Deactivate wavesequencedeactivate(0x684715cf /* "wavesequencetemplate" */, WaveSequenceDeactivate);
 	}
 }
 

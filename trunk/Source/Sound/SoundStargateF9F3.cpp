@@ -98,4 +98,4 @@ static bool Configure(SoundTemplate &self, const tinyxml2::XMLElement *element, 
 	return true;
 }
 
-SoundConfigure::Auto soundstargateF9F3(0x071661ac /* "stargateF9F3" */, Configure);
+static SoundConfigure::Configure soundstargateF9F3(0x071661ac /* "stargateF9F3" */, Configure);

@@ -41,62 +41,44 @@ namespace Database
 
 	namespace Loader
 	{
-		class DistanceJointLoader
+		static void DistanceJointConfigure(unsigned int aId, const tinyxml2::XMLElement *element)
 		{
-		public:
-			DistanceJointLoader()
+			Typed<b2DistanceJointDef> defs = Database::distancejointdef.Open(aId);
+
+			// get the sub-identifier
+			unsigned int aSubId;
+			if (const char *name = element->Attribute("name"))
+				aSubId = Hash(name);
+			else
+				aSubId = defs.GetCount() + 1;
+
+			// configure the joint definition
+			b2DistanceJointDef &def = defs.Open(aSubId);
+			for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 			{
-				AddConfigure(0x6932d1ee /* "distancejoint" */, Entry(this, &DistanceJointLoader::Configure));
+				ConfigureDistanceJointItem(child, def);
 			}
+			defs.Close(aSubId);
 
-			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
-			{
-				Typed<b2DistanceJointDef> defs = Database::distancejointdef.Open(aId);
-
-				// get the sub-identifier
-				unsigned int aSubId;
-				if (const char *name = element->Attribute("name"))
-					aSubId = Hash(name);
-				else
-					aSubId = defs.GetCount() + 1;
-
-				// configure the joint definition
-				b2DistanceJointDef &def = defs.Open(aSubId);
-				for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
-				{
-					ConfigureDistanceJointItem(child, def);
-				}
-				defs.Close(aSubId);
-
-				Database::distancejointdef.Close(aId);
-			}
+			Database::distancejointdef.Close(aId);
 		}
-		distancejointloader;
+		Configure distancejointconfigure(0x6932d1ee /* "distancejoint" */, DistanceJointConfigure);
 	}
 
 	namespace Initializer
 	{
-		class DistanceJointInitializer
+		static void DistanceJointPostActivate(unsigned int aId)
 		{
-		public:
-			DistanceJointInitializer()
+			for (Database::Typed<b2DistanceJointDef>::Iterator itor(&Database::distancejointdef.Get(aId)); itor.IsValid(); ++itor)
 			{
-				AddPostActivate(0x3caa9665 /* "distancejointdef" */, Entry(this, &DistanceJointInitializer::PostActivate));
-			}
-
-			void PostActivate(unsigned int aId)
-			{
-				for (Database::Typed<b2DistanceJointDef>::Iterator itor(&Database::distancejointdef.Get(aId)); itor.IsValid(); ++itor)
+				b2DistanceJointDef def(itor.GetValue());
+				UnpackJointDef(def, aId);
+				if (def.bodyA && def.bodyB)
 				{
-					b2DistanceJointDef def(itor.GetValue());
-					UnpackJointDef(def, aId);
-					if (def.bodyA && def.bodyB)
-					{
-						Collidable::GetWorld()->CreateJoint(&def);
-					}
+					Collidable::GetWorld()->CreateJoint(&def);
 				}
 			}
 		}
-		distancejointinitializer;
+		PostActivate distancejointpostactivate(0x3caa9665 /* "distancejointdef" */, DistanceJointPostActivate);
 	}
 }

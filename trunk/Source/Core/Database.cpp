@@ -33,23 +33,31 @@ namespace Database
 	//
 	namespace Loader
 	{
-		Typed<Entry> &GetConfigureDB()
+		Typed<Entry> &Configure::GetDB()
 		{
-			static Typed<Entry> configure;
-			return configure;
+			static Typed<Entry> onactivate;
+			return onactivate;
 		}
-		void AddConfigure(unsigned int aTagId, Entry aEntry)
+		Configure::Configure(unsigned int aTagId, Entry aEntry)
+			: mTagId(aTagId)
 		{
-			GetConfigureDB().Put(aTagId, aEntry);
+			Typed<Entry> &db = GetDB();
+			Entry &entry = db.Open(mTagId);
+			mPrev = entry;
+			entry = aEntry;
+			db.Close(mTagId);
 		}
-		void RemoveConfigure(unsigned int aTagId, Entry aEntry)
+		Configure::~Configure()
 		{
-			if (GetConfigureDB().Get(aTagId) == aEntry)
-				GetConfigureDB().Delete(aTagId);
+			Typed<Entry> &db = GetDB();
+			if (mPrev)
+				db.Put(mTagId, mPrev);
+			else
+				db.Delete(mTagId);
 		}
-		const Entry &GetConfigure(unsigned int aTagId)
+		const Entry &Configure::Get(unsigned int aTagId)
 		{
-			return GetConfigureDB().Get(aTagId);
+			return GetDB().Get(aTagId);
 		}
 	}
 
@@ -58,61 +66,96 @@ namespace Database
 	//
 	namespace Initializer
 	{
-		Typed<Entry> &GetActivate()
+		Typed<Entry> &Activate::GetDB()
 		{
 			static Typed<Entry> onactivate;
 			return onactivate;
 		}
-		void AddActivate(unsigned int aDatabaseId, Entry aEntry)
+		Activate::Activate(unsigned int aDatabaseId, Entry aEntry)
+			: mDatabaseId(aDatabaseId)
 		{
-			GetActivate().Put(aDatabaseId, aEntry);
+			Typed<Entry> &db = GetDB();
+			Entry &entry = db.Open(mDatabaseId);
+			mPrev = entry;
+			entry = aEntry;
+			db.Close(mDatabaseId);
 		}
-		void RemoveActivate(unsigned int aDatabaseId, Entry aEntry)
+		Activate::~Activate()
 		{
-			if (GetActivate().Get(aDatabaseId) == aEntry)
-				GetActivate().Delete(aDatabaseId);
+			Typed<Entry> &db = GetDB();
+			if (mPrev)
+				db.Put(mDatabaseId, mPrev);
+			else
+				db.Delete(mDatabaseId);
 		}
-		Typed<Entry> &GetPostActivate()
+
+		Typed<Entry> &PostActivate::GetDB()
 		{
 			static Typed<Entry> onpostactivate;
 			return onpostactivate;
 		}
-		void AddPostActivate(unsigned int aDatabaseId, Entry aEntry)
+		PostActivate::PostActivate(unsigned int aDatabaseId, Entry aEntry)
+			: mDatabaseId(aDatabaseId)
 		{
-			GetPostActivate().Put(aDatabaseId, aEntry);
+			Typed<Entry> &db = GetDB();
+			Entry &entry = db.Open(mDatabaseId);
+			mPrev = entry;
+			entry = aEntry;
+			db.Close(mDatabaseId);
 		}
-		void RemovePostActivate(unsigned int aDatabaseId, Entry aEntry)
+		PostActivate::~PostActivate()
 		{
-			if (GetPostActivate().Get(aDatabaseId) == aEntry)
-				GetPostActivate().Delete(aDatabaseId);
+			Typed<Entry> &db = GetDB();
+			if (mPrev)
+				db.Put(mDatabaseId, mPrev);
+			else
+				db.Delete(mDatabaseId);
 		}
-		Typed<Entry> &GetPreDeactivate()
+
+		Typed<Entry> &PreDeactivate::GetDB()
 		{
 			static Typed<Entry> onpredeactivate;
 			return onpredeactivate;
 		}
-		void AddPreDeactivate(unsigned int aDatabaseId, Entry aEntry)
+		PreDeactivate::PreDeactivate(unsigned int aDatabaseId, Entry aEntry)
+			: mDatabaseId(aDatabaseId)
 		{
-			GetPreDeactivate().Put(aDatabaseId, aEntry);
+			Typed<Entry> &db = GetDB();
+			Entry &entry = db.Open(mDatabaseId);
+			mPrev = entry;
+			entry = aEntry;
+			db.Close(mDatabaseId);
 		}
-		void RemovePreDeactivate(unsigned int aDatabaseId, Entry aEntry)
+		PreDeactivate::~PreDeactivate()
 		{
-			if (GetPreDeactivate().Get(aDatabaseId) == aEntry)
-				GetPreDeactivate().Delete(aDatabaseId);
+			Typed<Entry> &db = GetDB();
+			if (mPrev)
+				db.Put(mDatabaseId, mPrev);
+			else
+				db.Delete(mDatabaseId);
 		}
-		Typed<Entry> &GetDeactivate()
+
+		Typed<Entry> &Deactivate::GetDB()
 		{
 			static Typed<Entry> ondeactivate;
 			return ondeactivate;
 		}
-		void AddDeactivate(unsigned int aDatabaseId, Entry aEntry)
+		Deactivate::Deactivate(unsigned int aDatabaseId, Entry aEntry)
+			: mDatabaseId(aDatabaseId)
 		{
-			GetDeactivate().Put(aDatabaseId, aEntry);
+			Typed<Entry> &db = GetDB();
+			Entry &entry = db.Open(mDatabaseId);
+			mPrev = entry;
+			entry = aEntry;
+			db.Close(mDatabaseId);
 		}
-		void RemoveDeactivate(unsigned int aDatabaseId, Entry aEntry)
+		Deactivate::~Deactivate()
 		{
-			if (GetDeactivate().Get(aDatabaseId) == aEntry)
-				GetDeactivate().Delete(aDatabaseId);
+			Typed<Entry> &db = GetDB();
+			if (mPrev)
+				db.Put(mDatabaseId, mPrev);
+			else
+				db.Delete(mDatabaseId);
 		}
 	}
 
@@ -200,7 +243,7 @@ namespace Database
 	void ActivateImmediate(unsigned int aId)
 	{
 		// for each activation initializer...
-		for (Typed<Initializer::Entry>::Iterator itor(&Initializer::GetActivate()); itor.IsValid(); ++itor)
+		for (Typed<Initializer::Entry>::Iterator itor(&Initializer::Activate::GetDB()); itor.IsValid(); ++itor)
 		{
 			// get the initializer
 			if (Initializer::Entry initializer = itor.GetValue())
@@ -229,7 +272,7 @@ namespace Database
 		}
 
 		// for each post-activation initializer...
-		for (Typed<Initializer::Entry>::Iterator itor(&Initializer::GetPostActivate()); itor.IsValid(); ++itor)
+		for (Typed<Initializer::Entry>::Iterator itor(&Initializer::PostActivate::GetDB()); itor.IsValid(); ++itor)
 		{
 			// get the initializer
 			if (Initializer::Entry initializer = itor.GetValue())
@@ -282,7 +325,7 @@ namespace Database
 	void DeactivateImmediate(unsigned int aId)
 	{
 		// for each pre-deactivation initializer...
-		for (Typed<Initializer::Entry>::Iterator itor(&Initializer::GetPreDeactivate()); itor.IsValid(); ++itor)
+		for (Typed<Initializer::Entry>::Iterator itor(&Initializer::PreDeactivate::GetDB()); itor.IsValid(); ++itor)
 		{
 			// get the initializer
 			if (Initializer::Entry initializer = itor.GetValue())
@@ -300,7 +343,7 @@ namespace Database
 		}
 
 		// for each deactivation initializer...
-		for (Typed<Initializer::Entry>::Iterator itor(&Initializer::GetDeactivate()); itor.IsValid(); ++itor)
+		for (Typed<Initializer::Entry>::Iterator itor(&Initializer::Deactivate::GetDB()); itor.IsValid(); ++itor)
 		{
 			// get the initializer
 			if (Initializer::Entry initializer = itor.GetValue())

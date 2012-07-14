@@ -13,54 +13,36 @@ namespace BehaviorDatabase
 {
 	namespace Loader
 	{
-		class WanderBehaviorLoader
+		static unsigned int WanderBehaviorConfigure(unsigned int aId, const tinyxml2::XMLElement *element)
 		{
-		public:
-			WanderBehaviorLoader()
-			{
-				AddConfigure(0xf23b7114 /* "wander" */, Entry(this, &WanderBehaviorLoader::Configure));
-			}
-
-			unsigned int Configure(unsigned int aId, const tinyxml2::XMLElement *element)
-			{
-				WanderBehaviorTemplate &wander = Database::wanderbehaviortemplate.Open(aId);
-				wander.Configure(element, aId);
-				Database::wanderbehaviortemplate.Close(aId);
-				return 0xd1cc22c8 /* "wanderbehaviortemplate" */;
-			}
+			WanderBehaviorTemplate &wander = Database::wanderbehaviortemplate.Open(aId);
+			wander.Configure(element, aId);
+			Database::wanderbehaviortemplate.Close(aId);
+			return 0xd1cc22c8 /* "wanderbehaviortemplate" */;
 		}
-		wanderbehaviorloader;
+		Configure wanderbehaviorconfigure(0xf23b7114 /* "wander" */, WanderBehaviorConfigure);
 	}
 
 	namespace Initializer
 	{
-		class WanderBehaviorInitializer
+		static Behavior *WanderBehaviorActivate(unsigned int aId, Controller *aController)
 		{
-		public:
-			WanderBehaviorInitializer()
-			{
-				AddActivate(0xd1cc22c8 /* "wanderbehaviortemplate" */, ActivateEntry(this, &WanderBehaviorInitializer::Activate));
-				AddDeactivate(0xd1cc22c8 /* "wanderbehaviortemplate" */, DeactivateEntry(this, &WanderBehaviorInitializer::Deactivate));
-			}
+			const WanderBehaviorTemplate &wanderbehaviortemplate = Database::wanderbehaviortemplate.Get(aId);
+			WanderBehavior *wanderbehavior = new WanderBehavior(aId, wanderbehaviortemplate, aController);
+			Database::wanderbehavior.Put(aId, wanderbehavior);
+			return wanderbehavior;
+		}
+		Activate wanderbehavioractivate(0xd1cc22c8 /* "wanderbehaviortemplate" */, WanderBehaviorActivate);
 
-			Behavior *Activate(unsigned int aId, Controller *aController)
+		static void WanderBehaviorDeactivate(unsigned int aId)
+		{
+			if (WanderBehavior *wanderbehavior = Database::wanderbehavior.Get(aId))
 			{
-				const WanderBehaviorTemplate &wanderbehaviortemplate = Database::wanderbehaviortemplate.Get(aId);
-				WanderBehavior *wanderbehavior = new WanderBehavior(aId, wanderbehaviortemplate, aController);
-				Database::wanderbehavior.Put(aId, wanderbehavior);
-				return wanderbehavior;
-			}
-
-			void Deactivate(unsigned int aId)
-			{
-				if (WanderBehavior *wanderbehavior = Database::wanderbehavior.Get(aId))
-				{
-					delete wanderbehavior;
-					Database::wanderbehavior.Delete(aId);
-				}
+				delete wanderbehavior;
+				Database::wanderbehavior.Delete(aId);
 			}
 		}
-		wanderbehaviorinitializer;
+		Deactivate wanderbehaviordeactivate(0xd1cc22c8 /* "wanderbehaviortemplate" */, WanderBehaviorDeactivate);
 	}
 }
 

@@ -63,53 +63,35 @@ namespace Database
 
 	namespace Loader
 	{
-		class SpawnerLoader
+		static void SpawnerConfigure(unsigned int aId, const tinyxml2::XMLElement *element)
 		{
-		public:
-			SpawnerLoader()
-			{
-				AddConfigure(0x4936726f /* "spawner" */, Entry(this, &SpawnerLoader::Configure));
-			}
-
-			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
-			{
-				SpawnerTemplate &spawner = Database::spawnertemplate.Open(aId);
-				spawner.Configure(element);
-				Database::spawnertemplate.Close(aId);
-			}
+			SpawnerTemplate &spawner = Database::spawnertemplate.Open(aId);
+			spawner.Configure(element);
+			Database::spawnertemplate.Close(aId);
 		}
-		spawnerloader;
+		Configure spawnerconfigure(0x4936726f /* "spawner" */, SpawnerConfigure);
 	}
 
 	namespace Initializer
 	{
-		class SpawnerInitializer
+		static void SpawnerActivate(unsigned int aId)
 		{
-		public:
-			SpawnerInitializer()
-			{
-				AddActivate(0x8b6ef6ad /* "spawnertemplate" */, Entry(this, &SpawnerInitializer::Activate));
-				AddDeactivate(0x8b6ef6ad /* "spawnertemplate" */, Entry(this, &SpawnerInitializer::Deactivate));
-			}
+			const SpawnerTemplate &spawnertemplate = Database::spawnertemplate.Get(aId);
+			Spawner *spawner = new Spawner(spawnertemplate, aId);
+			Database::spawner.Put(aId, spawner);
+			spawner->Activate();
+		}
+		Activate spawneractivate(0x8b6ef6ad /* "spawnertemplate" */, SpawnerActivate);
 
-			void Activate(unsigned int aId)
+		static void SpawnerDeactivate(unsigned int aId)
+		{
+			if (Spawner *spawner = Database::spawner.Get(aId))
 			{
-				const SpawnerTemplate &spawnertemplate = Database::spawnertemplate.Get(aId);
-				Spawner *spawner = new Spawner(spawnertemplate, aId);
-				Database::spawner.Put(aId, spawner);
-				spawner->Activate();
-			}
-
-			void Deactivate(unsigned int aId)
-			{
-				if (Spawner *spawner = Database::spawner.Get(aId))
-				{
-					delete spawner;
-					Database::spawner.Delete(aId);
-				}
+				delete spawner;
+				Database::spawner.Delete(aId);
 			}
 		}
-		spawnerinitializer;
+		Deactivate spawnerdeactivate(0x8b6ef6ad /* "spawnertemplate" */, SpawnerDeactivate);
 	}
 }
 

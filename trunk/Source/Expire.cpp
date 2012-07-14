@@ -27,53 +27,35 @@ namespace Database
 
 	namespace Loader
 	{
-		class ExpireLoader
+		static void ExpireConfigure(unsigned int aId, const tinyxml2::XMLElement *element)
 		{
-		public:
-			ExpireLoader()
-			{
-				AddConfigure(0x80459822 /* "expire" */, Entry(this, &ExpireLoader::Configure));
-			}
-
-			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
-			{
-				ExpireTemplate &expire = Database::expiretemplate.Open(aId);
-				expire.Configure(element);
-				Database::expiretemplate.Close(aId);
-			}
+			ExpireTemplate &expire = Database::expiretemplate.Open(aId);
+			expire.Configure(element);
+			Database::expiretemplate.Close(aId);
 		}
-		expireloader;
+		Configure expireconfigure(0x80459822 /* "expire" */, ExpireConfigure);
 	}
 
 	namespace Initializer
 	{
-		class ExpireInitializer
+		static void ExpireActivate(unsigned int aId)
 		{
-		public:
-			ExpireInitializer()
-			{
-				AddActivate(0x40558d04 /* "expiretemplate" */, Entry(this, &ExpireInitializer::Activate));
-				AddDeactivate(0x40558d04 /* "expiretemplate" */, Entry(this, &ExpireInitializer::Deactivate));
-			}
+			const ExpireTemplate &expiretemplate = Database::expiretemplate.Get(aId);
+			Expire *expire = new Expire(expiretemplate, aId);
+			Database::expire.Put(aId, expire);
+			expire->Activate();
+		}
+		Activate expireactivate(0x40558d04 /* "expiretemplate" */, ExpireActivate);
 
-			void Activate(unsigned int aId)
+		static void ExpireDeactivate(unsigned int aId)
+		{
+			if (Expire *expire = Database::expire.Get(aId))
 			{
-				const ExpireTemplate &expiretemplate = Database::expiretemplate.Get(aId);
-				Expire *expire = new Expire(expiretemplate, aId);
-				Database::expire.Put(aId, expire);
-				expire->Activate();
-			}
-
-			void Deactivate(unsigned int aId)
-			{
-				if (Expire *expire = Database::expire.Get(aId))
-				{
-					delete expire;
-					Database::expire.Delete(aId);
-				}
+				delete expire;
+				Database::expire.Delete(aId);
 			}
 		}
-		expireinitializer;
+		Deactivate expiredeactivate(0x40558d04 /* "expiretemplate" */, ExpireDeactivate);
 	}
 }
 

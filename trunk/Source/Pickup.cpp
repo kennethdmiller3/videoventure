@@ -35,52 +35,34 @@ namespace Database
 
 	namespace Loader
 	{
-		class PickupLoader
+		static void PickupConfigure(unsigned int aId, const tinyxml2::XMLElement *element)
 		{
-		public:
-			PickupLoader()
-			{
-				AddConfigure(0x6958f085 /* "pickup" */, Entry(this, &PickupLoader::Configure));
-			}
-
-			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
-			{
-				PickupTemplate &pickup = Database::pickuptemplate.Open(aId);
-				pickup.Configure(element, aId);
-				Database::pickuptemplate.Close(aId);
-			}
+			PickupTemplate &pickup = Database::pickuptemplate.Open(aId);
+			pickup.Configure(element, aId);
+			Database::pickuptemplate.Close(aId);
 		}
-		pickuploader;
+		Configure pickupconfigure(0x6958f085 /* "pickup" */, PickupConfigure);
 	}
 
 	namespace Initializer
 	{
-		class PickupInitializer
+		static void PickupActivate(unsigned int aId)
 		{
-		public:
-			PickupInitializer()
-			{
-				AddActivate(0x01ebaacb /* "pickuptemplate" */, Entry(this, &PickupInitializer::Activate));
-				AddDeactivate(0x01ebaacb /* "pickuptemplate" */, Entry(this, &PickupInitializer::Deactivate));
-			}
+			const PickupTemplate &pickuptemplate = Database::pickuptemplate.Get(aId);
+			Pickup *pickup = new Pickup(pickuptemplate, aId);
+			Database::pickup.Put(aId, pickup);
+		}
+		Activate pickupactivate(0x01ebaacb /* "pickuptemplate" */, PickupActivate);
 
-			void Activate(unsigned int aId)
+		static void PickupDeactivate(unsigned int aId)
+		{
+			if (Pickup *pickup = Database::pickup.Get(aId))
 			{
-				const PickupTemplate &pickuptemplate = Database::pickuptemplate.Get(aId);
-				Pickup *pickup = new Pickup(pickuptemplate, aId);
-				Database::pickup.Put(aId, pickup);
-			}
-
-			void Deactivate(unsigned int aId)
-			{
-				if (Pickup *pickup = Database::pickup.Get(aId))
-				{
-					delete pickup;
-					Database::pickup.Delete(aId);
-				}
+				delete pickup;
+				Database::pickup.Delete(aId);
 			}
 		}
-		pickupinitializer;
+		Deactivate pickupdeactivate(0x01ebaacb /* "pickuptemplate" */, PickupDeactivate);
 	}
 }
 

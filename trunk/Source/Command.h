@@ -1,26 +1,20 @@
 #pragma once
 
-namespace Command
+class Command
 {
-	typedef fastdelegate::FastDelegate<int (const char * const aParam[], int aCount)> Entry;
-	void Add(unsigned int aTagId, Entry aEntry);
-	void Remove(unsigned int aTagId);
-	const Entry &Get(unsigned aTagId);
-	struct Auto
-	{
-		unsigned int mTagId;
+public:
+	typedef int (* Entry)(const char * const aParam[], int aCount);
 
-		Auto(unsigned int aTagId, Entry aEntry)
-			: mTagId(aTagId)
-		{
-			Add(mTagId, aEntry);
-		}
-		~Auto()
-		{
-			Remove(mTagId);
-		}
-	};
-}
+private:
+	unsigned int mTagId;	// tag hash id for the configure
+	Entry mPrev;			// entry that this replaced
+
+public:
+	static Database::Typed<Entry> &GetDB();
+	Command(unsigned int aTagId, Entry aEntry);
+	~Command();
+	static const Entry &Get(unsigned int aTagId);
+};
 
 // post-command function
 typedef void (*ProcessCommandPostFunc)(void);

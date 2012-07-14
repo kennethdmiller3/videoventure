@@ -179,4 +179,4 @@ static bool Configure(SoundTemplate &self, const tinyxml2::XMLElement *element, 
 	return true;
 }
 
-static SoundConfigure::Auto soundpulseloop(0x36f16844 /* "pulseloop" */, Configure);
+static SoundConfigure::Configure soundpulseloop(0x36f16844 /* "pulseloop" */, Configure);

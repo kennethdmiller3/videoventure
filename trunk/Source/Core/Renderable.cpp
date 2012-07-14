@@ -24,73 +24,55 @@ namespace Database
 
 	namespace Loader
 	{
-		class RenderableLoader
+		static void RenderableConfigure(unsigned int aId, const tinyxml2::XMLElement *element)
 		{
-		public:
-			RenderableLoader()
-			{
-				AddConfigure(0x109dd1ad /* "renderable" */, Entry(this, &RenderableLoader::Configure));
-			}
+			RenderableTemplate &renderable = Database::renderabletemplate.Open(aId);
+			renderable.Configure(element, aId);
+			Database::renderabletemplate.Close(aId);
 
-			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
-			{
-				RenderableTemplate &renderable = Database::renderabletemplate.Open(aId);
-				renderable.Configure(element, aId);
-				Database::renderabletemplate.Close(aId);
+			bool inherit = true;
+			element->QueryBoolAttribute("inherit", &inherit);
 
-				bool inherit = true;
-				element->QueryBoolAttribute("inherit", &inherit);
-
-				// process child elements
-				std::vector<unsigned int> &buffer = Database::dynamicdrawlist.Open(aId);
+			// process child elements
+			std::vector<unsigned int> &buffer = Database::dynamicdrawlist.Open(aId);
 #ifdef DRAW_FRONT_TO_BACK
-				if (!inherit)
-					buffer.clear();
-				ConfigureDrawItems(element, buffer);
+			if (!inherit)
+				buffer.clear();
+			ConfigureDrawItems(element, buffer);
 #else
-				std::vector<unsigned int> original;
-				std::swap(buffer, original);
-				ConfigureDrawItems(element, buffer);
-				if (inherit)
-					buffer.insert(buffer.end(), original.begin(), original.end());
+			std::vector<unsigned int> original;
+			std::swap(buffer, original);
+			ConfigureDrawItems(element, buffer);
+			if (inherit)
+				buffer.insert(buffer.end(), original.begin(), original.end());
 #endif
-				Database::dynamicdrawlist.Close(aId);
-			}
+			Database::dynamicdrawlist.Close(aId);
 		}
-		renderableloader;
+		Configure renderableconfigure(0x109dd1ad /* "renderable" */, RenderableConfigure);
 	}
 
 	namespace Initializer
 	{
-		class RenderableInitializer
+		static void RenderableActivate(unsigned int aId)
 		{
-		public:
-			RenderableInitializer()
-			{
-				AddActivate(0x0cb54133 /* "renderabletemplate" */, Entry(this, &RenderableInitializer::Activate));
-				AddDeactivate(0x0cb54133 /* "renderabletemplate" */, Entry(this, &RenderableInitializer::Deactivate));
-			}
+			const RenderableTemplate &renderabletemplate = Database::renderabletemplate.Get(aId);
+			Renderable *renderable = new Renderable(renderabletemplate, aId);
+			Database::renderable.Put(aId, renderable);
+			renderable->SetAction(RenderDrawlist);
+			renderable->Show();
+		}
+		Activate renderableactivate(0x0cb54133 /* "renderabletemplate" */, RenderableActivate);
 
-			void Activate(unsigned int aId)
+		static void RenderableDeactivate(unsigned int aId)
+		{
+			if (Renderable *renderable = Database::renderable.Get(aId))
 			{
-				const RenderableTemplate &renderabletemplate = Database::renderabletemplate.Get(aId);
-				Renderable *renderable = new Renderable(renderabletemplate, aId);
-				Database::renderable.Put(aId, renderable);
-				renderable->SetAction(RenderDrawlist);
-				renderable->Show();
-			}
-
-			void Deactivate(unsigned int aId)
-			{
-				if (Renderable *renderable = Database::renderable.Get(aId))
-				{
-					renderable->Hide();
-					delete renderable;
-					Database::renderable.Delete(aId);
-				}
+				renderable->Hide();
+				delete renderable;
+				Database::renderable.Delete(aId);
 			}
 		}
-		renderableinitializer;
+		Deactivate renderabledeactivate(0x0cb54133 /* "renderabletemplate" */, RenderableDeactivate);
 	}
 }
 

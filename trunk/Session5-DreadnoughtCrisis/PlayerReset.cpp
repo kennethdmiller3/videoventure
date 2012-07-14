@@ -13,63 +13,34 @@ namespace Database
 
 	namespace Loader
 	{
-		class PlayerResetLoader
+		static void PlayerResetConfigure(unsigned int aId, const tinyxml2::XMLElement *element)
 		{
-		public:
-			PlayerResetLoader()
-			{
-				AddConfigure(0x006f2a3f /* "playerreset" */, Entry(this, &PlayerResetLoader::Configure));
-			}
-
-			~PlayerResetLoader()
-			{
-				RemoveConfigure(0x006f2a3f /* "playerreset" */, Entry(this, &PlayerResetLoader::Configure));
-			}
-
-			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
-			{
-				PlayerResetTemplate &playerreset = Database::playerresettemplate.Open(aId);
-				element->QueryFloatAttribute("offset", &playerreset.mOffset);
-				Database::playerresettemplate.Close(aId);
-			}
+			PlayerResetTemplate &playerreset = Database::playerresettemplate.Open(aId);
+			element->QueryFloatAttribute("offset", &playerreset.mOffset);
+			Database::playerresettemplate.Close(aId);
 		}
-		playerresetloader;
+		Configure playerresetconfigure(0x006f2a3f /* "playerreset" */, PlayerResetConfigure);
 	}
 
 	namespace Initializer
 	{
-		class PlayerResetInitializer
+		static void PlayerResetActivate(unsigned int aId)
 		{
-		public:
-			PlayerResetInitializer()
-			{
-				AddActivate(0xb683cbdd /* "playerresettemplate" */, Entry(this, &PlayerResetInitializer::Activate));
-				AddDeactivate(0xb683cbdd /* "playerresettemplate" */, Entry(this, &PlayerResetInitializer::Deactivate));
-			}
+			const PlayerResetTemplate &playerresettemplate = Database::playerresettemplate.Get(aId);
+			PlayerReset *playerreset = new PlayerReset(playerresettemplate, aId);
+			Database::playerreset.Put(aId, playerreset);
+		}
+		Activate playerresetactivate(0xb683cbdd /* "playerresettemplate" */, PlayerResetActivate);
 
-			~PlayerResetInitializer()
+		static void PlayerResetDeactivate(unsigned int aId)
+		{
+			if (PlayerReset *playerreset = Database::playerreset.Get(aId))
 			{
-				RemoveActivate(0xb683cbdd /* "playerresettemplate" */, Entry(this, &PlayerResetInitializer::Activate));
-				RemoveDeactivate(0xb683cbdd /* "playerresettemplate" */, Entry(this, &PlayerResetInitializer::Deactivate));
-			}
-
-			void Activate(unsigned int aId)
-			{
-				const PlayerResetTemplate &playerresettemplate = Database::playerresettemplate.Get(aId);
-				PlayerReset *playerreset = new PlayerReset(playerresettemplate, aId);
-				Database::playerreset.Put(aId, playerreset);
-			}
-
-			void Deactivate(unsigned int aId)
-			{
-				if (PlayerReset *playerreset = Database::playerreset.Get(aId))
-				{
-					delete playerreset;
-					Database::playerreset.Delete(aId);
-				}
+				delete playerreset;
+				Database::playerreset.Delete(aId);
 			}
 		}
-		playerresetinitializer;
+		Deactivate playerresetdeactivate(0xb683cbdd /* "playerresettemplate" */, PlayerResetDeactivate);
 	}
 }
 

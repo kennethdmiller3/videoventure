@@ -12,49 +12,22 @@ namespace Database
 
 	namespace Loader
 	{
-		class EngineBaseLoader
+
+		static void EngineBaseConfigure(unsigned int aId, const tinyxml2::XMLElement *element)
 		{
-		public:
-			EngineBaseLoader()
-			{
-				AddConfigure(0xeb9ca706 /* "enginebase" */, Entry(this, &EngineBaseLoader::Configure));
-			}
-
-			~EngineBaseLoader()
-			{
-				RemoveConfigure(0xeb9ca706 /* "enginebase" */, Entry(this, &EngineBaseLoader::Configure));
-			}
-
-			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
-			{
-				float &enginebase = Database::enginebasetemplate.Open(aId);
-				element->QueryFloatAttribute("speed", &enginebase);
-				Database::enginebasetemplate.Close(aId);
-			}
+			float &enginebase = Database::enginebasetemplate.Open(aId);
+			element->QueryFloatAttribute("speed", &enginebase);
+			Database::enginebasetemplate.Close(aId);
 		}
-		enginebaseloader;
+		Configure enginebaseconfigure(0xeb9ca706 /* "enginebase" */, EngineBaseConfigure);
 
-		class EngineAddLoader
+		static void EngineAddConfigure(unsigned int aId, const tinyxml2::XMLElement *element)
 		{
-		public:
-			EngineAddLoader()
-			{
-				AddConfigure(0xc31e166e /* "engineadd" */, Entry(this, &EngineAddLoader::Configure));
-			}
-
-			~EngineAddLoader()
-			{
-				RemoveConfigure(0xc31e166e /* "engineadd" */, Entry(this, &EngineAddLoader::Configure));
-			}
-
-			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
-			{
-				float &engineadd = Database::engineaddtemplate.Open(aId);
-				element->QueryFloatAttribute("speed", &engineadd);
-				Database::engineaddtemplate.Close(aId);
-			}
+			float &engineadd = Database::engineaddtemplate.Open(aId);
+			element->QueryFloatAttribute("speed", &engineadd);
+			Database::engineaddtemplate.Close(aId);
 		}
-		engineaddloader;
+		Configure engineaddconfigure(0xc31e166e /* "engineadd" */, EngineAddConfigure);
 	}
 
 	namespace Initializer
@@ -70,84 +43,54 @@ namespace Database
 			}
 		}
 
-		class EngineBaseInitializer
+		static void EngineBaseActivate(unsigned int aId)
 		{
-		public:
-			EngineBaseInitializer()
-			{
-				AddActivate(0x8e6d1598 /* "enginebasetemplate" */, Entry(this, &EngineBaseInitializer::Activate));
-				AddDeactivate(0x8e6d1598 /* "enginebasetemplate" */, Entry(this, &EngineBaseInitializer::Deactivate));
-			}
-
-			~EngineBaseInitializer()
-			{
-				RemoveActivate(0x8e6d1598 /* "enginebasetemplate" */, Entry(this, &EngineBaseInitializer::Activate));
-				RemoveDeactivate(0x8e6d1598 /* "enginebasetemplate" */, Entry(this, &EngineBaseInitializer::Deactivate));
-			}
-
-			void Activate(unsigned int aId)
-			{
-				float &setspeed = Database::setspeed.Open(aId);
-				setspeed = Database::enginebasetemplate.Get(aId);
-				ApplySpeed(aId, setspeed);
-				Database::setspeed.Close(aId);
-			}
-
-			void Deactivate(unsigned int aId)
-			{
-			}
+			float &setspeed = Database::setspeed.Open(aId);
+			setspeed = Database::enginebasetemplate.Get(aId);
+			ApplySpeed(aId, setspeed);
+			Database::setspeed.Close(aId);
 		}
-		enginebaseinitializer;
+		Activate enginebaseactivate(0x8e6d1598 /* "enginebasetemplate" */, EngineBaseActivate);
 
-		class EngineAddInitializer
+		static void EngineBaseDeactivate(unsigned int aId)
 		{
-		public:
-			EngineAddInitializer()
-			{
-				AddActivate(0xbe47c2c0 /* "engineaddtemplate" */, Entry(this, &EngineAddInitializer::Activate));
-				AddDeactivate(0xbe47c2c0 /* "engineaddtemplate" */, Entry(this, &EngineAddInitializer::Deactivate));
-			}
+		}
+		Deactivate enginebasedeactivate(0x8e6d1598 /* "enginebasetemplate" */, EngineBaseDeactivate);
 
-			~EngineAddInitializer()
-			{
-				RemoveActivate(0xbe47c2c0 /* "engineaddtemplate" */, Entry(this, &EngineAddInitializer::Activate));
-				RemoveDeactivate(0xbe47c2c0 /* "engineaddtemplate" */, Entry(this, &EngineAddInitializer::Deactivate));
-			}
+		static void EngineAddApply(unsigned int aId, float aDelta)
+		{
+			float &setspeed = Database::setspeed.Open(aId);
+			setspeed += aDelta;
+			ApplySpeed(aId, setspeed);
+			Database::setspeed.Close(aId);
+		}
 
-			void Apply(unsigned int aId, float aDelta)
+		static void EngineAddActivate(unsigned int aId)
+		{
+			// backtrack to the entity containing the base speed
+			for (unsigned int id = aId; id != 0; id = Database::backlink.Get(id))
 			{
-				float &setspeed = Database::setspeed.Open(aId);
-				setspeed += aDelta;
-				ApplySpeed(aId, setspeed);
-				Database::setspeed.Close(aId);
-			}
-
-			void Activate(unsigned int aId)
-			{
-				// backtrack to the entity containing the base speed
-				for (unsigned int id = aId; id != 0; id = Database::backlink.Get(id))
+				if (Database::setspeed.Find(id))
 				{
-					if (Database::setspeed.Find(id))
-					{
-						Apply(id, Database::engineaddtemplate.Get(aId));
-						break;
-					}
-				}
-			}
-
-			void Deactivate(unsigned int aId)
-			{
-				// backtrack to the entity containing the base speed
-				for (unsigned int id = aId; id != 0; id = Database::backlink.Get(id))
-				{
-					if (Database::setspeed.Find(id))
-					{
-						Apply(id, -Database::engineaddtemplate.Get(aId));
-						break;
-					}
+					EngineAddApply(id, Database::engineaddtemplate.Get(aId));
+					break;
 				}
 			}
 		}
-		engineaddinitializer;
+		Activate engineaddactivate(0xbe47c2c0 /* "engineaddtemplate" */, EngineAddActivate);
+
+		static void EngineAddDeactivate(unsigned int aId)
+		{
+			// backtrack to the entity containing the base speed
+			for (unsigned int id = aId; id != 0; id = Database::backlink.Get(id))
+			{
+				if (Database::setspeed.Find(id))
+				{
+					EngineAddApply(id, -Database::engineaddtemplate.Get(aId));
+					break;
+				}
+			}
+		}
+		Deactivate engineadddeactivate(0xbe47c2c0 /* "engineaddtemplate" */,EngineAddDeactivate);
 	}
 }

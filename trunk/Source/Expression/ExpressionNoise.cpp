@@ -14,8 +14,8 @@ template<typename T> static void ConfigureNoise(const tinyxml2::XMLElement *elem
 	ConfigureNoise(element, buffer, names, defaults);
 }
 
-static Expression::Loader<float>::Auto noisefloat(0x904416d1 /* "noise" */, ConfigureNoise<float>);
-static Expression::Loader<__m128>::Auto noisevector(0x904416d1 /* "noise" */, ConfigureNoise<__m128>);
+static Expression::Loader<float> noisefloat(0x904416d1 /* "noise" */, ConfigureNoise<float>);
+static Expression::Loader<__m128> noisevector(0x904416d1 /* "noise" */, ConfigureNoise<__m128>);
 
 // configue a parameter
 static bool ConfigureParameter(const tinyxml2::XMLElement *element, const char *param, std::vector<unsigned int> &buffer, float (*op)(Expression::Context &), const char * const names[], const float defvalue, const float identity)

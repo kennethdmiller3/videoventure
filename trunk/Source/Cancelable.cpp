@@ -140,52 +140,34 @@ namespace Database
 
 	namespace Loader
 	{
-		class CancelableLoader
+		static void CancelableConfigure(unsigned int aId, const tinyxml2::XMLElement *element)
 		{
-		public:
-			CancelableLoader()
-			{
-				AddConfigure(0xc1804ae7 /* "cancelable" */, Entry(this, &CancelableLoader::Configure));
-			}
-
-			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
-			{
-				CancelableTemplate &cancelable = Database::cancelabletemplate.Open(aId);
-				cancelable.Configure(element);
-				Database::cancelabletemplate.Close(aId);
-			}
+			CancelableTemplate &cancelable = Database::cancelabletemplate.Open(aId);
+			cancelable.Configure(element);
+			Database::cancelabletemplate.Close(aId);
 		}
-		cancelableloader;
+		Configure cancelableconfigure(0xc1804ae7 /* "cancelable" */, CancelableConfigure);
 	}
 
 	namespace Initializer
 	{
-		class CancelableInitializer
+		static void CancelableActivate(unsigned int aId)
 		{
-		public:
-			CancelableInitializer()
-			{
-				AddActivate(0x7ea1f4e5 /* "cancelabletemplate" */, Entry(this, &CancelableInitializer::Activate));
-				AddDeactivate(0x7ea1f4e5 /* "cancelabletemplate" */, Entry(this, &CancelableInitializer::Deactivate));
-			}
+			const CancelableTemplate &cancelabletemplate = Database::cancelabletemplate.Get(aId);
+			Cancelable *cancelable = new Cancelable(cancelabletemplate, aId);
+			Database::cancelable.Put(aId, cancelable);
+		}
+		Activate cancelableactivate(0x7ea1f4e5 /* "cancelabletemplate" */, CancelableActivate);
 
-			void Activate(unsigned int aId)
+		static void CancelableDeactivate(unsigned int aId)
+		{
+			if (Cancelable *cancelable = Database::cancelable.Get(aId))
 			{
-				const CancelableTemplate &cancelabletemplate = Database::cancelabletemplate.Get(aId);
-				Cancelable *cancelable = new Cancelable(cancelabletemplate, aId);
-				Database::cancelable.Put(aId, cancelable);
-			}
-
-			void Deactivate(unsigned int aId)
-			{
-				if (Cancelable *cancelable = Database::cancelable.Get(aId))
-				{
-					delete cancelable;
-					Database::cancelable.Delete(aId);
-				}
+				delete cancelable;
+				Database::cancelable.Delete(aId);
 			}
 		}
-		cancelableinitializer;
+		Deactivate cancelabledeactivate(0x7ea1f4e5 /* "cancelabletemplate" */, CancelableDeactivate);
 	}
 }
 

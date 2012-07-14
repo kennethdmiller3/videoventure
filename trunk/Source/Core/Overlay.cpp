@@ -109,58 +109,40 @@ namespace Database
 
 	namespace Loader
 	{
-		class OverlayLoader
+		static void OverlayConfigure(unsigned int aId, const tinyxml2::XMLElement *element)
 		{
-		public:
-			OverlayLoader()
-			{
-				AddConfigure(0x2065d503 /* "overlay" */, Entry(this, &OverlayLoader::Configure));
-			}
+			OverlayTemplate &overlay = Database::overlaytemplate.Open(aId);
+			overlay.Configure(element, aId);
+			Database::overlaytemplate.Close(aId);
 
-			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
-			{
-				OverlayTemplate &overlay = Database::overlaytemplate.Open(aId);
-				overlay.Configure(element, aId);
-				Database::overlaytemplate.Close(aId);
-
-				// process child elements
-				std::vector<unsigned int> &buffer = Database::dynamicdrawlist.Open(aId);
-				ConfigureDrawItems(element, buffer);
-				Database::dynamicdrawlist.Close(aId);
-			}
+			// process child elements
+			std::vector<unsigned int> &buffer = Database::dynamicdrawlist.Open(aId);
+			ConfigureDrawItems(element, buffer);
+			Database::dynamicdrawlist.Close(aId);
 		}
-		overlayloader;
+		Configure overlayconfigure(0x2065d503 /* "overlay" */, OverlayConfigure);
 	}
 
 	namespace Initializer
 	{
-		class OverlayInitializer
+		static void OverlayActivate(unsigned int aId)
 		{
-		public:
-			OverlayInitializer()
-			{
-				AddActivate(0x2a4c42d1 /* "overlaytemplate" */, Entry(this, &OverlayInitializer::Activate));
-				AddDeactivate(0x2a4c42d1 /* "overlaytemplate" */, Entry(this, &OverlayInitializer::Deactivate));
-			}
+			Overlay *overlay = new Overlay(aId);
+			Database::overlay.Put(aId, overlay);
+			overlay->SetAction(RenderDrawlist);
+			overlay->Show();
+		}
+		Activate overlayactivate(0x2a4c42d1 /* "overlaytemplate" */, OverlayActivate);
 
-			void Activate(unsigned int aId)
+		static void OverlayDeactivate(unsigned int aId)
+		{
+			if (Overlay *overlay = Database::overlay.Get(aId))
 			{
-				Overlay *overlay = new Overlay(aId);
-				Database::overlay.Put(aId, overlay);
-				overlay->SetAction(RenderDrawlist);
-				overlay->Show();
-			}
-
-			void Deactivate(unsigned int aId)
-			{
-				if (Overlay *overlay = Database::overlay.Get(aId))
-				{
-					overlay->Hide();
-					delete overlay;
-					Database::overlay.Delete(aId);
-				}
+				overlay->Hide();
+				delete overlay;
+				Database::overlay.Delete(aId);
 			}
 		}
-		overlayinitializer;
+		Deactivate overlaydeactivate(0x2a4c42d1 /* "overlaytemplate" */, OverlayDeactivate);
 	}
 }

@@ -34,62 +34,44 @@ namespace Database
 
 	namespace Loader
 	{
-		class WeldJointLoader
+		static void WeldJointConfigure(unsigned int aId, const tinyxml2::XMLElement *element)
 		{
-		public:
-			WeldJointLoader()
+			Typed<b2WeldJointDef> defs = Database::weldjointdef.Open(aId);
+
+			// get the sub-identifier
+			unsigned int aSubId;
+			if (const char *name = element->Attribute("name"))
+				aSubId = Hash(name);
+			else
+				aSubId = defs.GetCount() + 1;
+
+			// configure the joint definition
+			b2WeldJointDef &def = defs.Open(aSubId);
+			for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 			{
-				AddConfigure(0x1190c943 /* "weldjoint" */, Entry(this, &WeldJointLoader::Configure));
+				ConfigureWeldJointItem(child, def);
 			}
+			defs.Close(aSubId);
 
-			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
-			{
-				Typed<b2WeldJointDef> defs = Database::weldjointdef.Open(aId);
-
-				// get the sub-identifier
-				unsigned int aSubId;
-				if (const char *name = element->Attribute("name"))
-					aSubId = Hash(name);
-				else
-					aSubId = defs.GetCount() + 1;
-
-				// configure the joint definition
-				b2WeldJointDef &def = defs.Open(aSubId);
-				for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
-				{
-					ConfigureWeldJointItem(child, def);
-				}
-				defs.Close(aSubId);
-
-				Database::weldjointdef.Close(aId);
-			}
+			Database::weldjointdef.Close(aId);
 		}
-		weldjointloader;
+		Configure weldjointconfigure(0x1190c943 /* "weldjoint" */, WeldJointConfigure);
 	}
 
 	namespace Initializer
 	{
-		class WeldJointInitializer
+		static void WeldJointPostActivate(unsigned int aId)
 		{
-		public:
-			WeldJointInitializer()
+			for (Database::Typed<b2WeldJointDef>::Iterator itor(&Database::weldjointdef.Get(aId)); itor.IsValid(); ++itor)
 			{
-				AddPostActivate(0xf4218892 /* "weldjointdef" */, Entry(this, &WeldJointInitializer::PostActivate));
-			}
-
-			void PostActivate(unsigned int aId)
-			{
-				for (Database::Typed<b2WeldJointDef>::Iterator itor(&Database::weldjointdef.Get(aId)); itor.IsValid(); ++itor)
+				b2WeldJointDef def(itor.GetValue());
+				UnpackJointDef(def, aId);
+				if (def.bodyA && def.bodyB)
 				{
-					b2WeldJointDef def(itor.GetValue());
-					UnpackJointDef(def, aId);
-					if (def.bodyA && def.bodyB)
-					{
-						Collidable::GetWorld()->CreateJoint(&def);
-					}
+					Collidable::GetWorld()->CreateJoint(&def);
 				}
 			}
 		}
-		weldjointinitializer;
+		PostActivate weldjointpostactivate(0xf4218892 /* "weldjointdef" */, WeldJointPostActivate);
 	}
 }

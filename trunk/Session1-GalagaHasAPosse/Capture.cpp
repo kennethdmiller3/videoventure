@@ -32,76 +32,47 @@ namespace Database
 	
 	namespace Loader
 	{
-		class CaptureLoader
+		static void CaptureConfigure(unsigned int aId, const tinyxml2::XMLElement *element)
 		{
-		public:
-			CaptureLoader()
-			{
-				AddConfigure(0xfc9819c1 /* "capture" */, Entry(this, &CaptureLoader::Configure));
-			}
-
-			~CaptureLoader()
-			{
-				RemoveConfigure(0xfc9819c1 /* "capture" */, Entry(this, &CaptureLoader::Configure));
-			}
-
-			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
-			{
-				CaptureTemplate &capture = Database::capturetemplate.Open(aId);
-				capture.Configure(element, aId);
-				Database::capturetemplate.Close(aId);
-			}
+			CaptureTemplate &capture = Database::capturetemplate.Open(aId);
+			capture.Configure(element, aId);
+			Database::capturetemplate.Close(aId);
 		}
-		captureloader;
+		Configure captureconfigure(0xfc9819c1 /* "capture" */, CaptureConfigure);
 	}
 
 	namespace Initializer
 	{
-		class CaptureInitializer
+		static void CaptureActivate(unsigned int aId)
 		{
-		public:
-			CaptureInitializer()
-			{
-				AddActivate(0x6d1fb927 /* "capturetemplate" */, Entry(this, &CaptureInitializer::Activate));
-				AddDeactivate(0x6d1fb927 /* "capturetemplate" */, Entry(this, &CaptureInitializer::Deactivate));
-			}
+			const CaptureTemplate &capturetemplate = Database::capturetemplate.Get(aId);
+			Capture *capture = new Capture(capturetemplate, aId);
+			Database::capture.Put(aId, capture);
 
-			~CaptureInitializer()
+			// TO DO: check to make sure this does not have an order dependency
+			capture->SetControl(aId);
+			for (unsigned int aControlId = aId; aControlId != 0; aControlId = Database::backlink.Get(aControlId))
 			{
-				RemoveActivate(0x6d1fb927 /* "capturetemplate" */, Entry(this, &CaptureInitializer::Activate));
-				RemoveDeactivate(0x6d1fb927 /* "capturetemplate" */, Entry(this, &CaptureInitializer::Deactivate));
-			}
-
-			void Activate(unsigned int aId)
-			{
-				const CaptureTemplate &capturetemplate = Database::capturetemplate.Get(aId);
-				Capture *capture = new Capture(capturetemplate, aId);
-				Database::capture.Put(aId, capture);
-
-				// TO DO: check to make sure this does not have an order dependency
-				capture->SetControl(aId);
-				for (unsigned int aControlId = aId; aControlId != 0; aControlId = Database::backlink.Get(aControlId))
+				if (Database::controller.Find(aControlId))
 				{
-					if (Database::controller.Find(aControlId))
-					{
-						capture->SetControl(aControlId);
-						break;
-					}
+					capture->SetControl(aControlId);
+					break;
 				}
-
-				capture->Activate();
 			}
 
-			void Deactivate(unsigned int aId)
+			capture->Activate();
+		}
+		Activate captureactivate(0x6d1fb927 /* "capturetemplate" */, CaptureActivate);
+
+		static void CaptureDeactivate(unsigned int aId)
+		{
+			if (Capture *capture = Database::capture.Get(aId))
 			{
-				if (Capture *capture = Database::capture.Get(aId))
-				{
-					delete capture;
-					Database::capture.Delete(aId);
-				}
+				delete capture;
+				Database::capture.Delete(aId);
 			}
 		}
-		captureinitializer;
+		Deactivate capturedeactivate(0x6d1fb927 /* "capturetemplate" */, CaptureDeactivate);
 	}
 };
 

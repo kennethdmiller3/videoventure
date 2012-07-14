@@ -130,54 +130,36 @@ namespace Database
 
 	namespace Loader
 	{
-		class ShellTitleLoader
+		static void ShellTitleConfigure(unsigned int aId, const tinyxml2::XMLElement *element)
 		{
-		public:
-			ShellTitleLoader()
-			{
-				AddConfigure(0x45e6e74d /* "shelltitle" */, Entry(this, &ShellTitleLoader::Configure));
-			}
-
-			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
-			{
-				ShellTitleTemplate &shelltitle = Database::shelltitletemplate.Open(aId);
-				shelltitle.Configure(element, aId);
-				Database::shelltitletemplate.Close(aId);
-			}
+			ShellTitleTemplate &shelltitle = Database::shelltitletemplate.Open(aId);
+			shelltitle.Configure(element, aId);
+			Database::shelltitletemplate.Close(aId);
 		}
-		shelltitleloader;
+		Configure shelltitleconfigure(0x45e6e74d /* "shelltitle" */, ShellTitleConfigure);
 	}
 
 	namespace Initializer
 	{
-		class ShellTitleInitializer
+		static void ShellTitleActivate(unsigned int aId)
 		{
-		public:
-			ShellTitleInitializer()
-			{
-				AddActivate(0xbc5f3ad3 /* "shelltitletemplate" */, Entry(this, &ShellTitleInitializer::Activate));
-				AddDeactivate(0xbc5f3ad3 /* "shelltitletemplate" */, Entry(this, &ShellTitleInitializer::Deactivate));
-			}
+			const ShellTitleTemplate &shelltitletemplate = Database::shelltitletemplate.Get(aId);
+			ShellTitle *shelltitle = new ShellTitle(shelltitletemplate, aId);
+			Database::shelltitle.Put(aId, shelltitle);
+			shelltitle->Show();
+		}
+		Activate shelltitleactivate(0xbc5f3ad3 /* "shelltitletemplate" */, ShellTitleActivate);
 
-			void Activate(unsigned int aId)
+		static void ShellTitleDeactivate(unsigned int aId)
+		{
+			if (ShellTitle *shelltitle = Database::shelltitle.Get(aId))
 			{
-				const ShellTitleTemplate &shelltitletemplate = Database::shelltitletemplate.Get(aId);
-				ShellTitle *shelltitle = new ShellTitle(shelltitletemplate, aId);
-				Database::shelltitle.Put(aId, shelltitle);
-				shelltitle->Show();
-			}
-
-			void Deactivate(unsigned int aId)
-			{
-				if (ShellTitle *shelltitle = Database::shelltitle.Get(aId))
-				{
-					shelltitle->Hide();
-					delete shelltitle;
-					Database::shelltitle.Delete(aId);
-				}
+				shelltitle->Hide();
+				delete shelltitle;
+				Database::shelltitle.Delete(aId);
 			}
 		}
-		shelltitleinitializer;
+		Deactivate shelltitledeactivate(0xbc5f3ad3 /* "shelltitletemplate" */, ShellTitleDeactivate);
 	}
 }
 

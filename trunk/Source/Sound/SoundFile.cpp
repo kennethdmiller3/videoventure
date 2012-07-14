@@ -147,4 +147,4 @@ static bool Configure(SoundTemplate &self, const tinyxml2::XMLElement *element, 
 	return true;
 }
 
-static SoundConfigure::Auto soundfileloader(0xaaea5743 /* "file" */, Configure);
+static SoundConfigure::Configure soundfileloader(0xaaea5743 /* "file" */, Configure);

@@ -12,8 +12,8 @@ template<typename T> static void ConfigureWorldTime(const tinyxml2::XMLElement *
 	Expression::Append(buffer, EvaluateWorldTime);
 }
 
-static Expression::Loader<float>::Auto worldtimefloat(0xf667bf8a /* "worldtime" */, ConfigureWorldTime<float>);
-static Expression::Loader<__m128>::Auto worldtimevector(0xf667bf8a /* "worldtime" */, ConfigureWorldTime<__m128>);
+static Expression::Loader<float> worldtimefloat(0xf667bf8a /* "worldtime" */, ConfigureWorldTime<float>);
+static Expression::Loader<__m128> worldtimevector(0xf667bf8a /* "worldtime" */, ConfigureWorldTime<__m128>);
 
 template<typename T> static void ConfigureTime(const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
 {
@@ -21,8 +21,8 @@ template<typename T> static void ConfigureTime(const tinyxml2::XMLElement *eleme
 	Expression::Append(buffer, EvaluateTime);
 }
 
-static Expression::Loader<float>::Auto timefloat(0x5d3c9be4 /* "time" */, ConfigureTime<float>);
-static Expression::Loader<__m128>::Auto timevector(0x5d3c9be4 /* "time" */, ConfigureTime<__m128>);
+static Expression::Loader<float> timefloat(0x5d3c9be4 /* "time" */, ConfigureTime<float>);
+static Expression::Loader<__m128> timevector(0x5d3c9be4 /* "time" */, ConfigureTime<__m128>);
 
 //
 // TIME EXPRESSION
