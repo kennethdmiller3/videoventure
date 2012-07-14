@@ -11,14 +11,14 @@ namespace Platform
 {
 	bool OpenWindow(void)
 	{
-#ifdef ENABLE_ACCUMULATION_BUFFER
 		// set window hints
+#ifdef ENABLE_ACCUMULATION_BUFFER
 		glfwOpenWindowHint(GLFW_ACCUM_RED_BITS, 16);
 		glfwOpenWindowHint(GLFW_ACCUM_GREEN_BITS, 16);
 		glfwOpenWindowHint(GLFW_ACCUM_BLUE_BITS, 16);
 		glfwOpenWindowHint(GLFW_ACCUM_ALPHA_BITS, 16);
-		glfwOpenWindowHint(GLFW_FSAA_SAMPLES, OPENGL_MULTISAMPLE);
 #endif
+		glfwOpenWindowHint(GLFW_FSAA_SAMPLES, OPENGL_MULTISAMPLE);
 
 		// create the window
 		if (!glfwOpenWindow(SCREEN_WIDTH, SCREEN_HEIGHT,
