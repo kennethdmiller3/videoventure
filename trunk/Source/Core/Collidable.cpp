@@ -433,6 +433,11 @@ bool CollidableTemplate::ConfigureBodyItem(const tinyxml2::XMLElement *element, 
 	const char *name = element->Value();
 	switch (Hash(name))
 	{
+	case 0xdbaa7975 /* "body" */:
+		// backwards compatibility
+		ConfigureBody(element, body, id);
+		return true;
+
 	case 0x934f4e0a /* "position" */:
 		element->QueryFloatAttribute("x", &body.position.x);
 		element->QueryFloatAttribute("y", &body.position.y);
@@ -588,20 +593,8 @@ bool CollidableTemplate::Configure(const tinyxml2::XMLElement *element, unsigned
 	// save identifier
 	this->id = id;
 
-	// process child elements
-	for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
-	{
-		const char *name = child->Value();
-		switch (Hash(name))
-		{
-		case 0xdbaa7975 /* "body" */:
-			{
-				// set up the collidable body
-				CollidableTemplate::ConfigureBody(child, bodydef, id);
-			}
-			break;
-		}
-	}
+	// allow direct inclusion of body items
+	ConfigureBody(element, bodydef, id);
 
 	return true;
 }
