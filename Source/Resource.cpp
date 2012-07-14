@@ -30,65 +30,47 @@ namespace Database
 
 	namespace Loader
 	{
-		class ResourceLoader
+		static void ResourceConfigure(unsigned int aId, const tinyxml2::XMLElement *element)
 		{
-		public:
-			ResourceLoader()
-			{
-				AddConfigure(0x29df7ff5 /* "resource" */, Entry(this, &ResourceLoader::Configure));
-			}
-
-			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
-			{
-				Database::Typed<ResourceTemplate> &resources = Database::resourcetemplate.Open(aId);
-				unsigned int aSubId = Hash(element->Attribute("name"));
-				Database::name.Put(aSubId, element->Attribute("name"));
-				ResourceTemplate &resource = resources.Open(aSubId);
-				resource.Configure(element, aId, aSubId);
-				resources.Close(aSubId);
-				Database::resourcetemplate.Close(aId);
-			}
+			Database::Typed<ResourceTemplate> &resources = Database::resourcetemplate.Open(aId);
+			unsigned int aSubId = Hash(element->Attribute("name"));
+			Database::name.Put(aSubId, element->Attribute("name"));
+			ResourceTemplate &resource = resources.Open(aSubId);
+			resource.Configure(element, aId, aSubId);
+			resources.Close(aSubId);
+			Database::resourcetemplate.Close(aId);
 		}
-		resourceloader;
+		Configure resourceconfigure(0x29df7ff5 /* "resource" */, ResourceConfigure);
 	}
 
 	namespace Initializer
 	{
-		class ResourceInitializer
+		static void ResourceActivate(unsigned int aId)
 		{
-		public:
-			ResourceInitializer()
+			Typed<Resource *> &resources = Database::resource.Open(aId);
+			for (Typed<ResourceTemplate>::Iterator itor(Database::resourcetemplate.Find(aId)); itor.IsValid(); ++itor)
 			{
-				AddActivate(0x79aa609b /* "resourcetemplate" */, Entry(this, &ResourceInitializer::Activate));
-				AddDeactivate(0x79aa609b /* "resourcetemplate" */, Entry(this, &ResourceInitializer::Deactivate));
+				const ResourceTemplate &resourcetemplate = itor.GetValue();
+				Resource *resource = new Resource(resourcetemplate, aId);
+				resources.Put(itor.GetKey(), resource);
 			}
-
-			void Activate(unsigned int aId)
-			{
-				Typed<Resource *> &resources = Database::resource.Open(aId);
-				for (Typed<ResourceTemplate>::Iterator itor(Database::resourcetemplate.Find(aId)); itor.IsValid(); ++itor)
-				{
-					const ResourceTemplate &resourcetemplate = itor.GetValue();
-					Resource *resource = new Resource(resourcetemplate, aId);
-					resources.Put(itor.GetKey(), resource);
-				}
-				resources.Close(aId);
-			}
-
-			void Deactivate(unsigned int aId)
-			{
-				for (Typed<Resource *>::Iterator itor(Database::resource.Find(aId)); itor.IsValid(); ++itor)
-				{
-					Resource *resource = itor.GetValue();
-					delete resource;
-				}
-				Database::resource.Delete(aId);
-				Database::resourcechange.Delete(aId);
-				Database::resourceempty.Delete(aId);
-				Database::resourcefull.Delete(aId);
-			}
+			resources.Close(aId);
 		}
-		resourceinitializer;
+		Activate resourceactivate(0x79aa609b /* "resourcetemplate" */, ResourceActivate);
+
+		static void ResourceDeactivate(unsigned int aId)
+		{
+			for (Typed<Resource *>::Iterator itor(Database::resource.Find(aId)); itor.IsValid(); ++itor)
+			{
+				Resource *resource = itor.GetValue();
+				delete resource;
+			}
+			Database::resource.Delete(aId);
+			Database::resourcechange.Delete(aId);
+			Database::resourceempty.Delete(aId);
+			Database::resourcefull.Delete(aId);
+		}
+		Deactivate resourcedeactivate(0x79aa609b /* "resourcetemplate" */, ResourceDeactivate);
 	}
 }
 

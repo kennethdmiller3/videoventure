@@ -81,22 +81,13 @@ namespace Database
 
 	namespace Loader
 	{
-		class PlayerCameraLoader
+		static void PlayerCameraConfigure(unsigned int aId, const tinyxml2::XMLElement *element)
 		{
-		public:
-			PlayerCameraLoader()
-			{
-				AddConfigure(0xdc77fdcf /* "playercamera" */, Entry(this, &PlayerCameraLoader::Configure));
-			}
-
-			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
-			{
-				PlayerCameraTemplate &playercamera = Database::playercameratemplate.Open(aId);
-				playercamera.Configure(element, aId);
-				Database::playercameratemplate.Close(aId);
-			}
+			PlayerCameraTemplate &playercamera = Database::playercameratemplate.Open(aId);
+			playercamera.Configure(element, aId);
+			Database::playercameratemplate.Close(aId);
 		}
-		playercameraloader;
+		Configure playercameraconfigure(0xdc77fdcf /* "playercamera" */, PlayerCameraConfigure);
 	}
 }
 

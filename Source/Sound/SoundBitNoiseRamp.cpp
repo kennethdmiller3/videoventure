@@ -100,4 +100,4 @@ static bool Configure(SoundTemplate &self, const tinyxml2::XMLElement *element, 
 	return true;
 }
 
-static SoundConfigure::Auto soundbitnoiseramp(0xcc6424ae /* "bitnoiseramp" */, Configure);
+static SoundConfigure::Configure soundbitnoiseramp(0xcc6424ae /* "bitnoiseramp" */, Configure);

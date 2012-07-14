@@ -100,90 +100,63 @@ namespace Database
 
 	namespace Loader
 	{
-		class DynamicDrawlistLoader
+		static void DynamicDrawlistConfigure(unsigned int aId, const tinyxml2::XMLElement *element)
 		{
-		public:
-			DynamicDrawlistLoader()
-			{
-				AddConfigure(0xdf3cf9c0 /* "dynamicdrawlist" */, Entry(this, &DynamicDrawlistLoader::Configure));
-			}
-
-			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
-			{
-				std::vector<unsigned int> &buffer = Database::dynamicdrawlist.Open(aId);
-				ConfigureDrawItems(element, buffer);
-				Database::dynamicdrawlist.Close(aId);
-			}
+			std::vector<unsigned int> &buffer = Database::dynamicdrawlist.Open(aId);
+			ConfigureDrawItems(element, buffer);
+			Database::dynamicdrawlist.Close(aId);
 		}
-		dynamicdrawlistloader;
+		Configure dynamicdrawlistconfigure(0xdf3cf9c0 /* "dynamicdrawlist" */, DynamicDrawlistConfigure);
 
-		class DrawlistLoader
+		static void DrawlistConfigure(unsigned int aId, const tinyxml2::XMLElement *element)
 		{
-		public:
-			DrawlistLoader()
-			{
-				AddConfigure(0xc98b019b /* "drawlist" */, Entry(this, &DrawlistLoader::Configure));
-			}
+			// create a new draw list
+			GLuint handle = glGenLists(1);
+			glNewList(handle, GL_COMPILE);
 
-			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
-			{
-				// create a new draw list
-				GLuint handle = glGenLists(1);
-				glNewList(handle, GL_COMPILE);
+			// register the draw list
+			Database::drawlist.Put(aId, handle);
 
-				// register the draw list
-				Database::drawlist.Put(aId, handle);
+			// get (optional) parameter value
+			float param = 0.0f;
+			element->QueryFloatAttribute("param", &param);
 
-				// get (optional) parameter value
-				float param = 0.0f;
-				element->QueryFloatAttribute("param", &param);
+			// configure the dynamic draw list
+			std::vector<unsigned int> &drawlist = Database::dynamicdrawlist.Open(handle);
+			ConfigureDrawItems(element, drawlist);
 
-				// configure the dynamic draw list
-				std::vector<unsigned int> &drawlist = Database::dynamicdrawlist.Open(handle);
-				ConfigureDrawItems(element, drawlist);
+			// execute the dynamic draw list
+			EntityContext context(&drawlist[0], drawlist.size(), param, aId);
+			ExecuteDrawItems(context);
 
-				// execute the dynamic draw list
-				EntityContext context(&drawlist[0], drawlist.size(), param, aId);
-				ExecuteDrawItems(context);
+			// close the dynamic draw list
+			Database::dynamicdrawlist.Close(handle);
 
-				// close the dynamic draw list
-				Database::dynamicdrawlist.Close(handle);
-
-				// finish the draw list
-				glEndList();
-			}
+			// finish the draw list
+			glEndList();
 		}
-		drawlistloader;
+		Configure drawlistconfigure(0xc98b019b /* "drawlist" */, DrawlistConfigure);
 
-		class VariableLoader
+		static void VariableConfigure(unsigned int aId, const tinyxml2::XMLElement *element)
 		{
-		public:
-			VariableLoader()
+			Typed<float> &variables = Database::variable.Open(aId);
+
+			unsigned int name = Hash(element->Attribute("name"));
+			unsigned int type = Hash(element->Attribute("type"));
+			int width;
+			const char * const *names;
+			const float *data;
+			GetTypeData(type, width, names, data);
+			for (int i = 0; i < width; i++)
 			{
-				AddConfigure(0x19385305 /* "variable" */, Entry(this, &VariableLoader::Configure));
+				float value = data[i];
+				element->QueryFloatAttribute(names[i], &value);
+				variables.Put(name+i, value);
 			}
 
-			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
-			{
-				Typed<float> &variables = Database::variable.Open(aId);
-
-				unsigned int name = Hash(element->Attribute("name"));
-				unsigned int type = Hash(element->Attribute("type"));
-				int width;
-				const char * const *names;
-				const float *data;
-				GetTypeData(type, width, names, data);
-				for (int i = 0; i < width; i++)
-				{
-					float value = data[i];
-					element->QueryFloatAttribute(names[i], &value);
-					variables.Put(name+i, value);
-				}
-
-				Database::variable.Close(aId);
-			}
+			Database::variable.Close(aId);
 		}
-		variableloader;
+		Configure variableconfigure(0x19385305 /* "variable" */, VariableConfigure);
 	}
 
 }

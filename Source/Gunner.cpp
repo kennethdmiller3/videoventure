@@ -12,53 +12,35 @@ namespace Database
 
 	namespace Loader
 	{
-		class GunnerLoader
+		static void GunnerConfigure(unsigned int aId, const tinyxml2::XMLElement *element)
 		{
-		public:
-			GunnerLoader()
-			{
-				AddConfigure(0xe063cbaa /* "gunner" */, Entry(this, &GunnerLoader::Configure));
-			}
-
-			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
-			{
-				GunnerTemplate &gunner = Database::gunnertemplate.Open(aId);
-				gunner.Configure(element);
-				Database::gunnertemplate.Close(aId);
-			}
+			GunnerTemplate &gunner = Database::gunnertemplate.Open(aId);
+			gunner.Configure(element);
+			Database::gunnertemplate.Close(aId);
 		}
-		gunnerloader;
+		Configure gunnerconfigure(0xe063cbaa /* "gunner" */, GunnerConfigure);
 	}
 
 	namespace Initializer
 	{
-		class GunnerInitializer
+		static void GunnerActivate(unsigned int aId)
 		{
-		public:
-			GunnerInitializer()
-			{
-				AddActivate(0xe4c32aec /* "gunnertemplate" */, Entry(this, &GunnerInitializer::Activate));
-				AddDeactivate(0xe4c32aec /* "gunnertemplate" */, Entry(this, &GunnerInitializer::Deactivate));
-			}
+			const GunnerTemplate &gunnertemplate = Database::gunnertemplate.Get(aId);
+			Gunner *gunner = new Gunner(gunnertemplate, aId);
+			Database::gunner.Put(aId, gunner);
+			gunner->Activate();
+		}
+		Activate gunneractivate(0xe4c32aec /* "gunnertemplate" */, GunnerActivate);
 
-			void Activate(unsigned int aId)
+		static void GunnerDeactivate(unsigned int aId)
+		{
+			if (Gunner *gunner = Database::gunner.Get(aId))
 			{
-				const GunnerTemplate &gunnertemplate = Database::gunnertemplate.Get(aId);
-				Gunner *gunner = new Gunner(gunnertemplate, aId);
-				Database::gunner.Put(aId, gunner);
-				gunner->Activate();
-			}
-
-			void Deactivate(unsigned int aId)
-			{
-				if (Gunner *gunner = Database::gunner.Get(aId))
-				{
-					delete gunner;
-					Database::gunner.Delete(aId);
-				}
+				delete gunner;
+				Database::gunner.Delete(aId);
 			}
 		}
-		gunnerinitializer;
+		Deactivate gunnerdeactivate(0xe4c32aec /* "gunnertemplate" */, GunnerDeactivate);
 	}
 }
 

@@ -55,51 +55,33 @@ namespace Database
 
 	namespace Loader
 	{
-		class ParticleLoader
+		static void ParticleConfigure(unsigned int aId, const tinyxml2::XMLElement *element)
 		{
-		public:
-			ParticleLoader()
-			{
-				AddConfigure(0x8a8743bf /* "particle" */, Entry(this, &ParticleLoader::Configure));
-			}
-
-			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
-			{
-				ParticleTemplate &particle = Database::particletemplate.Open(aId);
-				particle = true;
-				Database::particletemplate.Close(aId);
-			}
+			ParticleTemplate &particle = Database::particletemplate.Open(aId);
+			particle = true;
+			Database::particletemplate.Close(aId);
 		}
-		particleloader;
+		Configure particleconfigure(0x8a8743bf /* "particle" */, ParticleConfigure);
 	}
 
 	namespace Initializer
 	{
-		class ParticleInitializer
+		static void ParticleActivate(unsigned int aId)
 		{
-		public:
-			ParticleInitializer()
-			{
-				AddActivate(0x9e95955d /* "particletemplate" */, Entry(this, &ParticleInitializer::Activate));
-				AddDeactivate(0x9e95955d /* "particletemplate" */, Entry(this, &ParticleInitializer::Deactivate));
-			}
+			const ParticleTemplate &particletemplate = Database::particletemplate.Get(aId);
+			Particle *particle = new Particle(particletemplate, aId);
+			Database::particle.Put(aId, particle);
+		}
+		Activate particleactivate(0x9e95955d /* "particletemplate" */, ParticleActivate);
 
-			void Activate(unsigned int aId)
+		static void ParticleDeactivate(unsigned int aId)
+		{
+			if (Particle *particle = Database::particle.Get(aId))
 			{
-				const ParticleTemplate &particletemplate = Database::particletemplate.Get(aId);
-				Particle *particle = new Particle(particletemplate, aId);
-				Database::particle.Put(aId, particle);
-			}
-
-			void Deactivate(unsigned int aId)
-			{
-				if (Particle *particle = Database::particle.Get(aId))
-				{
-					delete particle;
-					Database::particle.Delete(aId);
-				}
+				delete particle;
+				Database::particle.Delete(aId);
 			}
 		}
-		particleinitializer;
+		Deactivate particledeactivate(0x9e95955d /* "particletemplate" */, ParticleDeactivate);
 	}
 }

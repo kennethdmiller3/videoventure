@@ -33,55 +33,37 @@ namespace Database
 
 	namespace Loader
 	{
-		class AimerLoader
+		static void AimerConfigure(unsigned int aId, const tinyxml2::XMLElement *element)
 		{
-		public:
-			AimerLoader()
-			{
-				AddConfigure(0x2ea90881 /* "aimer" */, Entry(this, &AimerLoader::Configure));
-			}
-
-			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
-			{
-				AimerTemplate &aimer = Database::aimertemplate.Open(aId);
-				aimer.Configure(element, aId);
-				Database::aimertemplate.Close(aId);
-			}
+			AimerTemplate &aimer = Database::aimertemplate.Open(aId);
+			aimer.Configure(element, aId);
+			Database::aimertemplate.Close(aId);
 		}
-		aimerloader;
+		Configure aimerconfigure(0x2ea90881 /* "aimer" */, AimerConfigure);
 	}
 
 	namespace Initializer
 	{
-		class AimerInitializer
+		static void AimerActivate(unsigned int aId)
 		{
-		public:
-			AimerInitializer()
-			{
-				AddActivate(0x9bde0ae7 /* "aimertemplate" */, Entry(this, &AimerInitializer::Activate));
-				AddDeactivate(0x9bde0ae7 /* "aimertemplate" */, Entry(this, &AimerInitializer::Deactivate));
-			}
+			const AimerTemplate &aimertemplate = Database::aimertemplate.Get(aId);
+			Aimer *aimer = new Aimer(aimertemplate, aId);
+			Database::aimer.Put(aId, aimer);
+			Database::controller.Put(aId, aimer);
+			aimer->Activate();
+		}
+		Activate aimeractivate(0x9bde0ae7 /* "aimertemplate" */, AimerActivate);
 
-			void Activate(unsigned int aId)
+		static void AimerDeactivate(unsigned int aId)
+		{
+			if (Aimer *aimer = Database::aimer.Get(aId))
 			{
-				const AimerTemplate &aimertemplate = Database::aimertemplate.Get(aId);
-				Aimer *aimer = new Aimer(aimertemplate, aId);
-				Database::aimer.Put(aId, aimer);
-				Database::controller.Put(aId, aimer);
-				aimer->Activate();
-			}
-
-			void Deactivate(unsigned int aId)
-			{
-				if (Aimer *aimer = Database::aimer.Get(aId))
-				{
-					delete aimer;
-					Database::aimer.Delete(aId);
-					Database::controller.Delete(aId);
-				}
+				delete aimer;
+				Database::aimer.Delete(aId);
+				Database::controller.Delete(aId);
 			}
 		}
-		aimerinitializer;
+		Deactivate aimerdeactivate(0x9bde0ae7 /* "aimertemplate" */, AimerDeactivate);
 	}
 }
 
@@ -117,7 +99,7 @@ bool AimerTemplate::Configure(const tinyxml2::XMLElement *element, unsigned int 
 
 		default:
 			{
-				const BehaviorDatabase::Loader::Entry &configure = BehaviorDatabase::Loader::GetConfigure(hash);
+				const BehaviorDatabase::Loader::Entry &configure = BehaviorDatabase::Loader::Configure::Get(hash);
 				if (configure)
 				{
 					unsigned int initializer = configure(aId, child);
@@ -144,7 +126,7 @@ Aimer::Aimer(const AimerTemplate &aTemplate, unsigned int aId)
 
 	for (std::vector<unsigned int>::const_iterator itor = aTemplate.mBehaviors.begin(); itor != aTemplate.mBehaviors.end(); ++itor)
 	{
-		const BehaviorDatabase::Initializer::ActivateEntry &activate = BehaviorDatabase::Initializer::GetActivate(*itor);
+		const BehaviorDatabase::Initializer::Activate::Entry &activate = BehaviorDatabase::Initializer::Activate::Get(*itor);
 		if (activate)
 		{
 			Behavior *behavior = activate(mId, this);
@@ -161,7 +143,7 @@ Aimer::~Aimer(void)
 	const AimerTemplate &aimer = Database::aimertemplate.Get(mId);
 	for (std::vector<unsigned int>::const_iterator itor = aimer.mBehaviors.begin(); itor != aimer.mBehaviors.end(); ++itor)
 	{
-		const BehaviorDatabase::Initializer::DeactivateEntry &deactivate = BehaviorDatabase::Initializer::GetDeactivate(*itor);
+		const BehaviorDatabase::Initializer::Deactivate::Entry &deactivate = BehaviorDatabase::Initializer::Deactivate::Get(*itor);
 		if (deactivate)
 		{
 			deactivate(mId);

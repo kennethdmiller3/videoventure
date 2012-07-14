@@ -109,22 +109,22 @@ static void ConfigureAnd(const tinyxml2::XMLElement *element, std::vector<unsign
 {
 	ConfigureShortCircuit(Expression::And, element, buffer, names, defaults);
 }
-static Expression::Loader<bool>::Auto andbool(0x0f29c2a6 /* "and" */, ConfigureAnd);
+static Expression::Loader<bool> andbool(0x0f29c2a6 /* "and" */, ConfigureAnd);
 
 static void ConfigureOr(const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
 {
 	ConfigureShortCircuit(Expression::Or, element, buffer, names, defaults);
 }
-static Expression::Loader<bool>::Auto orbool(0x5d342984 /* "or" */, ConfigureOr);
+static Expression::Loader<bool> orbool(0x5d342984 /* "or" */, ConfigureOr);
 
 static void ConfigureNot(const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
 {
 	ConfigureUnary<bool, bool>(Expression::Not, element, buffer, names, defaults);
 }
-static Expression::Loader<bool>::Auto notbool(0x29b19c8a /* "not" */, ConfigureNot);
+static Expression::Loader<bool> notbool(0x29b19c8a /* "not" */, ConfigureNot);
 
 static void ConfigureXor(const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
 {
 	ConfigureVariadic<bool, bool>(Expression::Xor, element, buffer, names, defaults);
 }
-static Expression::Loader<bool>::Auto xorbool(0xcc6bdb7e /* "xor" */, ConfigureXor);
+static Expression::Loader<bool> xorbool(0xcc6bdb7e /* "xor" */, ConfigureXor);

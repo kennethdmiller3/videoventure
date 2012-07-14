@@ -32,53 +32,35 @@ namespace Database
 
 	namespace Loader
 	{
-		class BeamLoader
+		static void BeamConfigure(unsigned int aId, const tinyxml2::XMLElement *element)
 		{
-		public:
-			BeamLoader()
-			{
-				AddConfigure(0xa75279fa /* "beam" */, Entry(this, &BeamLoader::Configure));
-			}
-
-			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
-			{
-				BeamTemplate &beam = Database::beamtemplate.Open(aId);
-				beam.Configure(element, aId);
-				Database::beamtemplate.Close(aId);
-			}
+			BeamTemplate &beam = Database::beamtemplate.Open(aId);
+			beam.Configure(element, aId);
+			Database::beamtemplate.Close(aId);
 		}
-		beamloader;
+		Configure beamconfigure(0xa75279fa /* "beam" */, BeamConfigure);
 	}
 
 	namespace Initializer
 	{
-		class BeamInitializer
+		static void BeamActivate(unsigned int aId)
 		{
-		public:
-			BeamInitializer()
-			{
-				AddActivate(0x9a5ff3dc /* "beamtemplate" */, Entry(this, &BeamInitializer::Activate));
-				AddDeactivate(0x9a5ff3dc /* "beamtemplate" */, Entry(this, &BeamInitializer::Deactivate));
-			}
+			const BeamTemplate &beamtemplate = Database::beamtemplate.Get(aId);
+			Beam *beam = new Beam(beamtemplate, aId);
+			Database::beam.Put(aId, beam);
+			beam->Activate();
+		}
+		Activate beamactivate(0x9a5ff3dc /* "beamtemplate" */, BeamActivate);
 
-			void Activate(unsigned int aId)
+		static void BeamDeactivate(unsigned int aId)
+		{
+			if (Beam *beam = Database::beam.Get(aId))
 			{
-				const BeamTemplate &beamtemplate = Database::beamtemplate.Get(aId);
-				Beam *beam = new Beam(beamtemplate, aId);
-				Database::beam.Put(aId, beam);
-				beam->Activate();
-			}
-
-			void Deactivate(unsigned int aId)
-			{
-				if (Beam *beam = Database::beam.Get(aId))
-				{
-					delete beam;
-					Database::beam.Delete(aId);
-				}
+				delete beam;
+				Database::beam.Delete(aId);
 			}
 		}
-		beaminitializer;
+		Deactivate beamdeactivate(0x9a5ff3dc /* "beamtemplate" */, BeamDeactivate);
 	}
 };
 

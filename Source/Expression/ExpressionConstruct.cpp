@@ -3,8 +3,8 @@
 #include "ExpressionConstruct.h"
 #include "ExpressionConfigure.h"
 
-static Expression::Loader<float>::Auto constructfloat(0x40c09172 /* "construct" */, ConfigureConstruct<float>);
-static Expression::Loader<__m128>::Auto constructvector(0x40c09172 /* "construct" */, ConfigureConstruct<__m128>);
+static Expression::Loader<float> constructfloat(0x40c09172 /* "construct" */, ConfigureConstruct<float>);
+static Expression::Loader<__m128> constructvector(0x40c09172 /* "construct" */, ConfigureConstruct<__m128>);
 
 
 
@@ -89,4 +89,9 @@ namespace Expression
 		float arg4(Evaluate<float>(aContext));
 		return _mm_setr_ps(arg1, arg2, arg3, arg4);
 	}
+}
+
+
+template <> void ConfigureConstruct<bool>(const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
+{
 }

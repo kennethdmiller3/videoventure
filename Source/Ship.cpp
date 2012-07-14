@@ -28,53 +28,35 @@ namespace Database
 
 	namespace Loader
 	{
-		class ShipLoader
+		static void ShipConfigure(unsigned int aId, const tinyxml2::XMLElement *element)
 		{
-		public:
-			ShipLoader()
-			{
-				AddConfigure(0xac56f17f /* "ship" */, Entry(this, &ShipLoader::Configure));
-			}
-
-			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
-			{
-				ShipTemplate &ship = Database::shiptemplate.Open(aId);
-				ship.Configure(element);
-				Database::shiptemplate.Close(aId);
-			}
+			ShipTemplate &ship = Database::shiptemplate.Open(aId);
+			ship.Configure(element);
+			Database::shiptemplate.Close(aId);
 		}
-		shiploader;
+		Configure shipconfigure(0xac56f17f /* "ship" */, ShipConfigure);
 	}
 
 	namespace Initializer
 	{
-		class ShipInitializer
+		static void ShipActivate(unsigned int aId)
 		{
-		public:
-			ShipInitializer()
-			{
-				AddActivate(0xf71a421d /* "shiptemplate" */, Entry(this, &ShipInitializer::Activate));
-				AddDeactivate(0xf71a421d /* "shiptemplate" */, Entry(this, &ShipInitializer::Deactivate));
-			}
+			const ShipTemplate &shiptemplate = Database::shiptemplate.Get(aId);
+			Ship *ship = new Ship(shiptemplate, aId);
+			Database::ship.Put(aId, ship);
+			ship->Activate();
+		}
+		Activate shipactivate(0xf71a421d /* "shiptemplate" */, ShipActivate);
 
-			void Activate(unsigned int aId)
+		static void ShipDeactivate(unsigned int aId)
+		{
+			if (Ship *ship = Database::ship.Get(aId))
 			{
-				const ShipTemplate &shiptemplate = Database::shiptemplate.Get(aId);
-				Ship *ship = new Ship(shiptemplate, aId);
-				Database::ship.Put(aId, ship);
-				ship->Activate();
-			}
-
-			void Deactivate(unsigned int aId)
-			{
-				if (Ship *ship = Database::ship.Get(aId))
-				{
-					delete ship;
-					Database::ship.Delete(aId);
-				}
+				delete ship;
+				Database::ship.Delete(aId);
 			}
 		}
-		shipinitializer;
+		Deactivate shipdeactivate(0xf71a421d /* "shiptemplate" */, ShipDeactivate);
 	}
 }
 
@@ -122,7 +104,7 @@ bool ShipTemplate::Configure(const tinyxml2::XMLElement *element)
 		switch (Hash(child->Value()))
 		{
 		case 0x0e0d9594 /* "sound" */:
-			Database::Loader::GetConfigure(0x0e0d9594 /* "sound" */);
+			Database::Loader::Configure::Get(0x0e0d9594 /* "sound" */);
 
 		case 0xde1ed562 /* "veloc" */:
 			element->QueryFloatAttribute("forward", &mForwardVeloc);

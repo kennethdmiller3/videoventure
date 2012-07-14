@@ -37,62 +37,44 @@ namespace Database
 
 	namespace Loader
 	{
-		class FrictionJointLoader
+		static void FrictionJointConfigure(unsigned int aId, const tinyxml2::XMLElement *element)
 		{
-		public:
-			FrictionJointLoader()
+			Typed<b2FrictionJointDef> defs = Database::frictionjointdef.Open(aId);
+
+			// get the sub-identifier
+			unsigned int aSubId;
+			if (const char *name = element->Attribute("name"))
+				aSubId = Hash(name);
+			else
+				aSubId = defs.GetCount() + 1;
+
+			// configure the joint definition
+			b2FrictionJointDef &def = defs.Open(aSubId);
+			for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 			{
-				AddConfigure(0x6c34561d /* "frictionjoint" */, Entry(this, &FrictionJointLoader::Configure));
+				ConfigureFrictionJointItem(child, def);
 			}
+			defs.Close(aSubId);
 
-			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
-			{
-				Typed<b2FrictionJointDef> defs = Database::frictionjointdef.Open(aId);
-
-				// get the sub-identifier
-				unsigned int aSubId;
-				if (const char *name = element->Attribute("name"))
-					aSubId = Hash(name);
-				else
-					aSubId = defs.GetCount() + 1;
-
-				// configure the joint definition
-				b2FrictionJointDef &def = defs.Open(aSubId);
-				for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
-				{
-					ConfigureFrictionJointItem(child, def);
-				}
-				defs.Close(aSubId);
-
-				Database::frictionjointdef.Close(aId);
-			}
+			Database::frictionjointdef.Close(aId);
 		}
-		frictionjointloader;
+		Configure frictionjointconfigure(0x6c34561d /* "frictionjoint" */, FrictionJointConfigure);
 	}
 
 	namespace Initializer
 	{
-		class FrictionJointInitializer
+		static void FrictionJointPostActivate(unsigned int aId)
 		{
-		public:
-			FrictionJointInitializer()
+			for (Database::Typed<b2FrictionJointDef>::Iterator itor(&Database::frictionjointdef.Get(aId)); itor.IsValid(); ++itor)
 			{
-				AddPostActivate(0x9d9badd4 /* "frictionjointdef" */, Entry(this, &FrictionJointInitializer::PostActivate));
-			}
-
-			void PostActivate(unsigned int aId)
-			{
-				for (Database::Typed<b2FrictionJointDef>::Iterator itor(&Database::frictionjointdef.Get(aId)); itor.IsValid(); ++itor)
+				b2FrictionJointDef def(itor.GetValue());
+				UnpackJointDef(def, aId);
+				if (def.bodyA && def.bodyB)
 				{
-					b2FrictionJointDef def(itor.GetValue());
-					UnpackJointDef(def, aId);
-					if (def.bodyA && def.bodyB)
-					{
-						Collidable::GetWorld()->CreateJoint(&def);
-					}
+					Collidable::GetWorld()->CreateJoint(&def);
 				}
 			}
 		}
-		frictionjointinitializer;
+		PostActivate frictionjointpostactivate(0x9d9badd4 /* "frictionjointdef" */, FrictionJointPostActivate);
 	}
 }

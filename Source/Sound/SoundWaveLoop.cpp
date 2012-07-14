@@ -345,4 +345,4 @@ FC2C:
 	return true;
 }
 
-static SoundConfigure::Auto soundwaveloop(0xde15262a /* "waveloop" */, Configure);
+static SoundConfigure::Configure soundwaveloop(0xde15262a /* "waveloop" */, Configure);

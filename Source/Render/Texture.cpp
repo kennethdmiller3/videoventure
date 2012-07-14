@@ -14,16 +14,8 @@ namespace Database
 
 	namespace Loader
 	{
-		class TextureLoader
+		static void TextureConfigure(unsigned int aId, const tinyxml2::XMLElement *element)
 		{
-		public:
-			TextureLoader()
-			{
-				AddConfigure(0x3c6468f4 /* "texture" */, Entry(this, &TextureLoader::Configure));
-			}
-
-			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
-			{
 				// generate a handle object handle
 				GLuint handle;
 				glGenTextures( 1, &handle );
@@ -216,10 +208,8 @@ namespace Database
 				// restore texture state
 				glPopAttrib();
 			}
+		Configure textureconfigure(0x3c6468f4 /* "texture" */, TextureConfigure);
 		}
-		textureloader;
-
-	}
 }
 
 void BindTexture(GLuint handle, TextureTemplate const &texture)

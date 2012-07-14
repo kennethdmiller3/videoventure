@@ -17,20 +17,16 @@
 
 #define POKEY_TYPE POKEY_TYPE_ATARI800
 
+static bool poly4[(1<<4) - 1];
+static bool poly5[(1<<5) - 1];
+static bool poly9[(1<<9) - 1];
+static bool poly17[(1<<17) - 1];
 
 static class SoundPokey
 {
 public:
-	bool poly4[(1<<4) - 1];
-	bool poly5[(1<<5) - 1];
-	bool poly9[(1<<9) - 1];
-	bool poly17[(1<<17) - 1];
-
-public:
 	SoundPokey()
 	{
-		SoundConfigure::Add(0xe8f2b85f /* "pokey" */, SoundConfigure::Entry(this, &SoundPokey::Configure));
-
 #if POKEY_TYPE == POKEY_TYPE_MAME
 
 		InitPoly(poly4,   4,  3, 1, 0x00004);
@@ -135,7 +131,7 @@ public:
 
 #if POKEY_TYPE == POKEY_TYPE_MAME
 	// from MAME pokey.c
-	size_t InitPoly(bool aOut[], int aSize, int aLeft, int aRight, int aAdd)
+	static size_t InitPoly(bool aOut[], int aSize, int aLeft, int aRight, int aAdd)
 	{
 		DebugPrint("Poly%d:", aSize);
 		int mask = (1 << aSize) - 1;
@@ -162,7 +158,7 @@ public:
 	}
 #elif POKEY_TYPE == POKEY_TYPE_ATARI800
 	// from Atari800 pokey.c
-	size_t InitPoly(bool aOut[], int aSize, int aTap, unsigned int aSeed, bool aInvert = false)
+	static size_t InitPoly(bool aOut[], int aSize, int aTap, unsigned int aSeed, bool aInvert = false)
 	{
 		DebugPrint("Poly%d tap=%d seed=%08x invert=%d", aSize, aTap, aSeed, aInvert);
 		unsigned int x = aSeed;
@@ -185,7 +181,7 @@ public:
 	}
 #elif POKEY_TYPE == POKEY_TYPE_GALOIS
 	// from http://en.wikipedia.org/wiki/Linear_feedback_shift_register
-	size_t InitPoly(bool aOut[], int aSize, unsigned int aMask, unsigned int aSeed = 0, bool aInvert = false)
+	static size_t InitPoly(bool aOut[], int aSize, unsigned int aMask, unsigned int aSeed = 0, bool aInvert = false)
 	{
 		DebugPrint("LFSR%d mask=%08x seed=%08x invert=%d", aSize, aMask, aSeed, aInvert);
 		unsigned int x = aSeed;
@@ -209,8 +205,10 @@ public:
 #else
 #error "Undefined POKEY type"
 #endif
+}
+soundpokeysetup;
 
-bool Configure(SoundTemplate &self, const tinyxml2::XMLElement *element, unsigned int id)
+static bool Configure(SoundTemplate &self, const tinyxml2::XMLElement *element, unsigned int id)
 {
 	// sample length
 	float length = 0;
@@ -544,5 +542,4 @@ bool Configure(SoundTemplate &self, const tinyxml2::XMLElement *element, unsigne
 
 	return true;
 }
-}
-soundpokeyloader;
+SoundConfigure::Configure soundpokeyloader(0xe8f2b85f /* "pokey" */, Configure);

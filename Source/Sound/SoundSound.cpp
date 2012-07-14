@@ -17,4 +17,4 @@ static bool Configure(SoundTemplate &self, const tinyxml2::XMLElement *element, 
 	return true;
 }
 
-static SoundConfigure::Auto soundsound(0x0e0d9594 /* "sound" */, Configure);
+static SoundConfigure::Configure soundsound(0x0e0d9594 /* "sound" */, Configure);

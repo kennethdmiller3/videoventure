@@ -27,102 +27,84 @@ namespace Database
 
 	namespace Loader
 	{
-		class LinkLoader
+		void LinkConfigure(unsigned int aId, const tinyxml2::XMLElement *element)
 		{
-		public:
-			LinkLoader()
-			{
-				AddConfigure(0x0ddb0669 /* "link" */, Entry(this, &LinkLoader::Configure));
-			}
-
-			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
-			{
-				Database::Typed<LinkTemplate> &links = Database::linktemplate.Open(aId);
-				unsigned int aSubId = Hash(element->Attribute("name"));
-				LinkTemplate &link = links.Open(aSubId);
-				link.Configure(element, aId, aSubId);
-				links.Close(aSubId);
-				Database::linktemplate.Close(aId);
-			}
+			Database::Typed<LinkTemplate> &links = Database::linktemplate.Open(aId);
+			unsigned int aSubId = Hash(element->Attribute("name"));
+			LinkTemplate &link = links.Open(aSubId);
+			link.Configure(element, aId, aSubId);
+			links.Close(aSubId);
+			Database::linktemplate.Close(aId);
 		}
-		linkloader;
+		Configure linkconfigure(0x0ddb0669 /* "link" */, LinkConfigure);
 	}
 
 	namespace Initializer
 	{
-		class LinkInitializer
+		static void LinkActivate(unsigned int aId)
 		{
-		public:
-			LinkInitializer()
-			{
-				AddActivate(0x801f01af /* "linktemplate" */, Entry(this, &LinkInitializer::Activate));
-				AddDeactivate(0x801f01af /* "linktemplate" */, Entry(this, &LinkInitializer::Deactivate));
-			}
+			Typed<Link *> &links = Database::link.Open(aId);
 
-			void Activate(unsigned int aId)
+			// for each link template...
+			for (Typed<LinkTemplate>::Iterator itor(Database::linktemplate.Find(aId)); itor.IsValid(); ++itor)
 			{
-				Typed<Link *> &links = Database::link.Open(aId);
+				// create the link
+				const LinkTemplate &linktemplate = itor.GetValue();
 
-				// for each link template...
-				for (Typed<LinkTemplate>::Iterator itor(Database::linktemplate.Find(aId)); itor.IsValid(); ++itor)
+				// create the link
+				Link *link = new Link(linktemplate, aId);
+				links.Put(itor.GetKey(), link);
+
+				// if linking two collidables...
+				unsigned int aSecondary = link->GetSecondary();
+				if (Database::collidabletemplate.Find(aId) &&
+					Database::collidabletemplate.Find(aSecondary))
 				{
-					// create the link
-					const LinkTemplate &linktemplate = itor.GetValue();
-
-					// create the link
-					Link *link = new Link(linktemplate, aId);
-					links.Put(itor.GetKey(), link);
-
-					// if linking two collidables...
-					unsigned int aSecondary = link->GetSecondary();
-					if (Database::collidabletemplate.Find(aId) &&
-						Database::collidabletemplate.Find(aSecondary))
+					// if updating position
+					if (linktemplate.mUpdatePosition)
 					{
-						// if updating position
-						if (linktemplate.mUpdatePosition)
-						{
-							// get revolute joints for the link target
-							Database::Typed<b2RevoluteJointDef> &joints = Database::revolutejointdef.Open(aSecondary);
+						// get revolute joints for the link target
+						Database::Typed<b2RevoluteJointDef> &joints = Database::revolutejointdef.Open(aSecondary);
 							
-							// configure the joint definition
-							b2RevoluteJointDef &def = joints.Open(aId);
-							def.bodyA = reinterpret_cast<b2Body *>(aId);
-							def.bodyB = reinterpret_cast<b2Body *>(aSecondary);
-							def.localAnchorA.Set(linktemplate.mOffset.p.x, linktemplate.mOffset.p.y);
-							def.localAnchorB.Set(0, 0);
-							def.referenceAngle = linktemplate.mOffset.Angle();
-							if (linktemplate.mUpdateAngle)
-							{
-								def.lowerAngle = 0.0f;
-								def.upperAngle = 0.0f;
-								def.enableLimit = true;
-							}
-							joints.Close(aId);
-
-							Database::revolutejointdef.Close(aSecondary);
+						// configure the joint definition
+						b2RevoluteJointDef &def = joints.Open(aId);
+						def.bodyA = reinterpret_cast<b2Body *>(aId);
+						def.bodyB = reinterpret_cast<b2Body *>(aSecondary);
+						def.localAnchorA.Set(linktemplate.mOffset.p.x, linktemplate.mOffset.p.y);
+						def.localAnchorB.Set(0, 0);
+						def.referenceAngle = linktemplate.mOffset.Angle();
+						if (linktemplate.mUpdateAngle)
+						{
+							def.lowerAngle = 0.0f;
+							def.upperAngle = 0.0f;
+							def.enableLimit = true;
 						}
-					}
-					// else if updating angle or position...
-					else if (linktemplate.mUpdateAngle || linktemplate.mUpdatePosition)
-					{
-						// activate link update
-						link->Activate();
+						joints.Close(aId);
+
+						Database::revolutejointdef.Close(aSecondary);
 					}
 				}
-
-				Database::link.Close(aId);
-			}
-
-			void Deactivate(unsigned int aId)
-			{
-				for (Typed<Link *>::Iterator itor(Database::link.Find(aId)); itor.IsValid(); ++itor)
+				// else if updating angle or position...
+				else if (linktemplate.mUpdateAngle || linktemplate.mUpdatePosition)
 				{
-					delete itor.GetValue();
+					// activate link update
+					link->Activate();
 				}
-				Database::link.Delete(aId);
 			}
+
+			Database::link.Close(aId);
 		}
-		linkinitializer;
+		Activate linkactivate(0x801f01af /* "linktemplate" */, LinkActivate);
+
+		static void LinkDeactivate(unsigned int aId)
+		{
+			for (Typed<Link *>::Iterator itor(Database::link.Find(aId)); itor.IsValid(); ++itor)
+			{
+				delete itor.GetValue();
+			}
+			Database::link.Delete(aId);
+		}
+		Deactivate linkdeactivate(0x801f01af /* "linktemplate" */, LinkDeactivate);
 	}
 }
 
@@ -186,7 +168,7 @@ bool LinkTemplate::Configure(const tinyxml2::XMLElement *element, unsigned int a
 		default:
 			{
 				const char *value = child->Value();
-				const Database::Loader::Entry &configure = Database::Loader::GetConfigure(Hash(value));
+				const Database::Loader::Entry &configure = Database::Loader::Configure::Get(Hash(value));
 				if (configure)
 				{
 					if (!custom)

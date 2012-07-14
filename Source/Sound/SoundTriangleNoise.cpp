@@ -185,4 +185,4 @@ F985:
 	return true;
 }
 
-static SoundConfigure::Auto soundtrianglenoise(0x0a2a7b91 /* "trianglenoise" */, Configure);
+static SoundConfigure::Configure soundtrianglenoise(0x0a2a7b91 /* "trianglenoise" */, Configure);

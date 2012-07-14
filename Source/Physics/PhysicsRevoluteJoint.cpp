@@ -49,62 +49,44 @@ namespace Database
 
 	namespace Loader
 	{
-		class RevoluteJointLoader
+		static void RevoluteJointConfigure(unsigned int aId, const tinyxml2::XMLElement *element)
 		{
-		public:
-			RevoluteJointLoader()
+			Typed<b2RevoluteJointDef> defs = Database::revolutejointdef.Open(aId);
+
+			// get the sub-identifier
+			unsigned int aSubId;
+			if (const char *name = element->Attribute("name"))
+				aSubId = Hash(name);
+			else
+				aSubId = defs.GetCount() + 1;
+
+			// configure the joint definition
+			b2RevoluteJointDef &def = defs.Open(aSubId);
+			for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 			{
-				AddConfigure(0xef2f9539 /* "revolutejoint" */, Entry(this, &RevoluteJointLoader::Configure));
+				ConfigureRevoluteJointItem(child, def);
 			}
+			defs.Close(aSubId);
 
-			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
-			{
-				Typed<b2RevoluteJointDef> defs = Database::revolutejointdef.Open(aId);
-
-				// get the sub-identifier
-				unsigned int aSubId;
-				if (const char *name = element->Attribute("name"))
-					aSubId = Hash(name);
-				else
-					aSubId = defs.GetCount() + 1;
-
-				// configure the joint definition
-				b2RevoluteJointDef &def = defs.Open(aSubId);
-				for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
-				{
-					ConfigureRevoluteJointItem(child, def);
-				}
-				defs.Close(aSubId);
-
-				Database::revolutejointdef.Close(aId);
-			}
+			Database::revolutejointdef.Close(aId);
 		}
-		revolutejointloader;
+		Configure revolutejointconfigure(0xef2f9539 /* "revolutejoint" */, RevoluteJointConfigure);
 	}
 
 	namespace Initializer
 	{
-		class RevoluteJointInitializer
+		static void RevoluteJointPostActivate(unsigned int aId)
 		{
-		public:
-			RevoluteJointInitializer()
+			for (Database::Typed<b2RevoluteJointDef>::Iterator itor(&Database::revolutejointdef.Get(aId)); itor.IsValid(); ++itor)
 			{
-				AddPostActivate(0x2af4a6c0 /* "revolutejointdef" */, Entry(this, &RevoluteJointInitializer::PostActivate));
-			}
-
-			void PostActivate(unsigned int aId)
-			{
-				for (Database::Typed<b2RevoluteJointDef>::Iterator itor(&Database::revolutejointdef.Get(aId)); itor.IsValid(); ++itor)
+				b2RevoluteJointDef def(itor.GetValue());
+				UnpackJointDef(def, aId);
+				if (def.bodyA && def.bodyB)
 				{
-					b2RevoluteJointDef def(itor.GetValue());
-					UnpackJointDef(def, aId);
-					if (def.bodyA && def.bodyB)
-					{
-						Collidable::GetWorld()->CreateJoint(&def);
-					}
+					Collidable::GetWorld()->CreateJoint(&def);
 				}
 			}
 		}
-		revolutejointinitializer;
+		PostActivate revolutejointpostactivate(0x2af4a6c0 /* "revolutejointdef" */, RevoluteJointPostActivate);
 	}
 }

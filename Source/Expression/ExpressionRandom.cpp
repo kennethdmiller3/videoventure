@@ -3,8 +3,8 @@
 #include "ExpressionRandom.h"
 #include "ExpressionConfigure.h"
 
-static Expression::Loader<float>::Auto randomfloat(0xa19b8cd6 /* "rand" */, ConfigureRandom<float>);
-static Expression::Loader<__m128>::Auto randomvector(0xa19b8cd6 /* "rand" */, ConfigureRandom<__m128>);
+static Expression::Loader<float> randomfloat(0xa19b8cd6 /* "rand" */, ConfigureRandom<float>);
+static Expression::Loader<__m128> randomvector(0xa19b8cd6 /* "rand" */, ConfigureRandom<__m128>);
 
 // configure typed random
 template <typename T> void ConfigureRandom(const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
@@ -136,4 +136,8 @@ template <typename T> void ConfigureRandom(const tinyxml2::XMLElement *element, 
 #ifdef PRINT_CONFIGURE_EXPRESSION
 	DebugPrint("\n");
 #endif
+}
+
+template <> void ConfigureRandom<bool>(const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
+{
 }

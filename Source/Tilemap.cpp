@@ -123,126 +123,108 @@ namespace Database
 
 	namespace Loader
 	{
-		class TilemapLoader
+		static void TilemapConfigure(unsigned int aId, const tinyxml2::XMLElement *element)
 		{
-		public:
-			TilemapLoader()
+			// tilemap configuration
+			float x = 0.0f, y = 0.0f;
+			element->QueryFloatAttribute("x", &x);
+			element->QueryFloatAttribute("y", &y);
+			float dx = 1.0f, dy = 1.0f;
+			element->QueryFloatAttribute("dx", &dx);
+			element->QueryFloatAttribute("dy", &dy);
+
+			// tiles
+			struct Tile
 			{
-				AddConfigure(0xbaf310c5 /* "tilemap" */, Entry(this, &TilemapLoader::Configure));
-			}
+				unsigned int mSpawn;
+				Transform2 mOffset;
+			};
+			Tile map[CHAR_MAX-CHAR_MIN+1];
+			memset(map, 0, sizeof(map));
 
-			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
+			// position value
+			Vector2 pos(x, y);
+
+			// get the tilemap template
+			TilemapTemplate &tilemap = Database::tilemaptemplate.Open(aId);
+
+			// process child elements
+			for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 			{
-				// tilemap configuration
-				float x = 0.0f, y = 0.0f;
-				element->QueryFloatAttribute("x", &x);
-				element->QueryFloatAttribute("y", &y);
-				float dx = 1.0f, dy = 1.0f;
-				element->QueryFloatAttribute("dx", &dx);
-				element->QueryFloatAttribute("dy", &dy);
-
-				// tiles
-				struct Tile
+				switch(Hash(child->Value()))
 				{
-					unsigned int mSpawn;
-					Transform2 mOffset;
-				};
-				Tile map[CHAR_MAX-CHAR_MIN+1];
-				memset(map, 0, sizeof(map));
-
-				// position value
-				Vector2 pos(x, y);
-
-				// get the tilemap template
-				TilemapTemplate &tilemap = Database::tilemaptemplate.Open(aId);
-
-				// process child elements
-				for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
-				{
-					switch(Hash(child->Value()))
+				case 0x713a7cc9 /* "tile" */:
 					{
-					case 0x713a7cc9 /* "tile" */:
+						const char *name = child->Attribute("name");
+						if (!name || !name[0])
+							continue;
+						Tile &tile = map[name[0]-CHAR_MIN];
+						const char *spawn = child->Attribute("spawn");
+						tile.mSpawn = Hash(spawn);
+						child->QueryFloatAttribute("x", &tile.mOffset.p.x);
+						child->QueryFloatAttribute("y", &tile.mOffset.p.y);
+						if (child->QueryFloatAttribute("angle", &tile.mOffset.a) == tinyxml2::XML_SUCCESS)
+							tile.mOffset.a *= float(M_PI) / 180.0f;
+					}
+					break;
+
+				case 0x440e1d7b /* "row" */:
+					{
+						pos.x = x;
+
+						const char *text = child->Attribute("data");
+						if (!text)
+							text = child->GetText();
+						if (!text)
+							continue;
+
+						for (const char *t = text; *t; ++t)
 						{
-							const char *name = child->Attribute("name");
-							if (!name || !name[0])
-								continue;
-							Tile &tile = map[name[0]-CHAR_MIN];
-							const char *spawn = child->Attribute("spawn");
-							tile.mSpawn = Hash(spawn);
-							child->QueryFloatAttribute("x", &tile.mOffset.p.x);
-							child->QueryFloatAttribute("y", &tile.mOffset.p.y);
-							if (child->QueryFloatAttribute("angle", &tile.mOffset.a) == tinyxml2::XML_SUCCESS)
-								tile.mOffset.a *= float(M_PI) / 180.0f;
-						}
-						break;
-
-					case 0x440e1d7b /* "row" */:
-						{
-							pos.x = x;
-
-							const char *text = child->Attribute("data");
-							if (!text)
-								text = child->GetText();
-							if (!text)
-								continue;
-
-							for (const char *t = text; *t; ++t)
+							Tile &tile = map[*t-CHAR_MIN];
+							if (tile.mSpawn)
 							{
-								Tile &tile = map[*t-CHAR_MIN];
-								if (tile.mSpawn)
-								{
-									Transform2 transform(tile.mOffset * Transform2(0, pos));
-									if (aId)
-										tilemap.Add(tile.mSpawn, transform);
-									else
-										Database::Instantiate(tile.mSpawn, 0, 0, transform.a, transform.p);
-								}
-
-								pos.x += dx;
+								Transform2 transform(tile.mOffset * Transform2(0, pos));
+								if (aId)
+									tilemap.Add(tile.mSpawn, transform);
+								else
+									Database::Instantiate(tile.mSpawn, 0, 0, transform.a, transform.p);
 							}
 
-							pos.y += dy;
+							pos.x += dx;
 						}
-						break;
 
-					default:
-						break;
+						pos.y += dy;
 					}
-				}
+					break;
 
-				Database::tilemaptemplate.Close(aId);
+				default:
+					break;
+				}
 			}
+
+			Database::tilemaptemplate.Close(aId);
 		}
-		tilemaploader;
+		Configure tilemapconfigure(0xbaf310c5 /* "tilemap" */, TilemapConfigure);
 	}
 
 	namespace Initializer
 	{
-		class TilemapInitializer
+		static void TilemapActivate(unsigned int aId)
 		{
-		public:
-			TilemapInitializer()
-			{
-				AddActivate(0x059c7d0b /* "tilemaptemplate" */, Entry(this, &TilemapInitializer::Activate));
-				AddDeactivate(0x059c7d0b /* "tilemaptemplate" */, Entry(this, &TilemapInitializer::Deactivate));
-			}
+			const TilemapTemplate &tilemaptemplate = Database::tilemaptemplate.Get(aId);
+			Tilemap *tilemap = new Tilemap(tilemaptemplate, aId);
+			Database::tilemap.Put(aId, tilemap);
+		}
+		Activate tilemapactivate(0x059c7d0b /* "tilemaptemplate" */, TilemapActivate);
 
-			void Activate(unsigned int aId)
+		static void TilemapDeactivate(unsigned int aId)
+		{
+			if (Tilemap *tilemap = Database::tilemap.Get(aId))
 			{
-				const TilemapTemplate &tilemaptemplate = Database::tilemaptemplate.Get(aId);
-				Tilemap *tilemap = new Tilemap(tilemaptemplate, aId);
-				Database::tilemap.Put(aId, tilemap);
-			}
-
-			void Deactivate(unsigned int aId)
-			{
-				if (Tilemap *tilemap = Database::tilemap.Get(aId))
-				{
-					delete tilemap;
-					Database::tilemap.Delete(aId);
-				}
+				delete tilemap;
+				Database::tilemap.Delete(aId);
 			}
 		}
-		tilemapinitializer;
+		Deactivate tilemapdeactivate(0x059c7d0b /* "tilemaptemplate" */, TilemapDeactivate);
 	}
 }

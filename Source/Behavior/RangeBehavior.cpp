@@ -18,76 +18,48 @@ namespace BehaviorDatabase
 {
 	namespace Loader
 	{
-		class CloseBehaviorLoader
+		static unsigned int CloseBehaviorConfigure(unsigned int aId, const tinyxml2::XMLElement *element)
 		{
-		public:
-			CloseBehaviorLoader()
-			{
-				AddConfigure(0x27cb3b23 /* "close" */, Entry(this, &CloseBehaviorLoader::Configure));
-			}
-
-			unsigned int Configure(unsigned int aId, const tinyxml2::XMLElement *element)
-			{
-				CloseBehaviorTemplate &closebehavior = Database::closebehaviortemplate.Open(aId);
-				closebehavior.Configure(element, aId);
-				Database::closebehaviortemplate.Close(aId);
-				return 0x9b6aa00b /* "closebehaviortemplate" */;
-			}
+			CloseBehaviorTemplate &closebehavior = Database::closebehaviortemplate.Open(aId);
+			closebehavior.Configure(element, aId);
+			Database::closebehaviortemplate.Close(aId);
+			return 0x9b6aa00b /* "closebehaviortemplate" */;
 		}
-		closebehaviorloader;
+		Configure closebehaviorconfigure(0x27cb3b23 /* "close" */, CloseBehaviorConfigure);
 
-		class FarBehaviorLoader
+		static unsigned int FarBehaviorConfigure(unsigned int aId, const tinyxml2::XMLElement *element)
 		{
-		public:
-			FarBehaviorLoader()
-			{
-				AddConfigure(0xbcf819ee /* "far" */, Entry(this, &FarBehaviorLoader::Configure));
-			}
-
-			unsigned int Configure(unsigned int aId, const tinyxml2::XMLElement *element)
-			{
-				FarBehaviorTemplate &farbehavior = Database::farbehaviortemplate.Open(aId);
-				farbehavior.Configure(element, aId);
-				Database::farbehaviortemplate.Close(aId);
-				return 0xfa06c762 /* "farbehaviortemplate" */;
-			}
+			FarBehaviorTemplate &farbehavior = Database::farbehaviortemplate.Open(aId);
+			farbehavior.Configure(element, aId);
+			Database::farbehaviortemplate.Close(aId);
+			return 0xfa06c762 /* "farbehaviortemplate" */;
 		}
-		farbehaviorloader;
+		Configure farbehaviorconfigure(0xbcf819ee /* "far" */, FarBehaviorConfigure);
 	}
 
 	namespace Initializer
 	{
-		class RangeBehaviorInitializer
+		static Behavior *RangeBehaviorActivate(unsigned int aId, Controller *aController)
 		{
-		public:
-			RangeBehaviorInitializer()
-			{
-				
-				AddActivate(0x9b6aa00b /* "closebehaviortemplate" */, ActivateEntry(this, &RangeBehaviorInitializer::Activate));
-				AddActivate(0xfa06c762 /* "farbehaviortemplate" */, ActivateEntry(this, &RangeBehaviorInitializer::Activate));
-				AddDeactivate(0x9b6aa00b /* "closebehaviortemplate" */, DeactivateEntry(this, &RangeBehaviorInitializer::Deactivate));
-				AddDeactivate(0xfa06c762 /* "farbehaviortemplate" */, DeactivateEntry(this, &RangeBehaviorInitializer::Deactivate));
-			}
-
-			Behavior *Activate(unsigned int aId, Controller *aController)
-			{
-				if (RangeBehavior *rangebehavior = Database::rangebehavior.Get(aId))
-					return rangebehavior;
-				RangeBehavior *rangebehavior = new RangeBehavior(aId, aController);
-				Database::rangebehavior.Put(aId, rangebehavior);
+			if (RangeBehavior *rangebehavior = Database::rangebehavior.Get(aId))
 				return rangebehavior;
-			}
+			RangeBehavior *rangebehavior = new RangeBehavior(aId, aController);
+			Database::rangebehavior.Put(aId, rangebehavior);
+			return rangebehavior;
+		}
+		Activate closebehavioractivate(0x9b6aa00b /* "closebehaviortemplate" */, RangeBehaviorActivate);
+		Activate farbehavioractivate(0xfa06c762 /* "farbehaviortemplate" */, RangeBehaviorActivate);
 
-			void Deactivate(unsigned int aId)
+		static void RangeBehaviorDeactivate(unsigned int aId)
+		{
+			if (RangeBehavior *rangebehavior = Database::rangebehavior.Get(aId))
 			{
-				if (RangeBehavior *rangebehavior = Database::rangebehavior.Get(aId))
-				{
-					delete rangebehavior;
-					Database::rangebehavior.Delete(aId);
-				}
+				delete rangebehavior;
+				Database::rangebehavior.Delete(aId);
 			}
 		}
-		rangebehaviorinitializer;
+		Deactivate closebehaviordeactivate(0x9b6aa00b /* "closebehaviortemplate" */, RangeBehaviorDeactivate);
+		Deactivate farbehaviordeactivate(0xfa06c762 /* "farbehaviortemplate" */, RangeBehaviorDeactivate);
 	}
 }
 

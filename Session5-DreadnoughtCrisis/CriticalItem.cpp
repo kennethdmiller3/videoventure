@@ -8,74 +8,45 @@ namespace Database
 
 	namespace Loader
 	{
-		class CriticalItemLoader
+		static void CriticalItemConfigure(unsigned int aId, const tinyxml2::XMLElement *element)
 		{
-		public:
-			CriticalItemLoader()
-			{
-				AddConfigure(0x26de6ef7 /* "criticalitem" */, Entry(this, &CriticalItemLoader::Configure));
-			}
-
-			~CriticalItemLoader()
-			{
-				RemoveConfigure(0x26de6ef7 /* "criticalitem" */, Entry(this, &CriticalItemLoader::Configure));
-			}
-
-			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
-			{
-				bool &criticalitem = Database::criticalitem.Open(aId);
-				element->QueryBoolAttribute("value", &criticalitem);
-				Database::criticalitem.Close(aId);
-			}
+			bool &criticalitem = Database::criticalitem.Open(aId);
+			element->QueryBoolAttribute("value", &criticalitem);
+			Database::criticalitem.Close(aId);
 		}
-		criticalitemloader;
+		Configure criticalitemconfigure(0x26de6ef7 /* "criticalitem" */, CriticalItemConfigure);
 	}
 
 	namespace Initializer
 	{
-		class CriticalItemInitializer
+		static void CriticalItemOnDeath(unsigned int aId, unsigned int aSourceId)
 		{
-		public:
-			CriticalItemInitializer()
+			// for each player...
+			for (Database::Typed<Player *>::Iterator itor(&Database::player); itor.IsValid(); ++itor)
 			{
-				AddActivate(0x26de6ef7 /* "criticalitem" */, Entry(this, &CriticalItemInitializer::Activate));
-				AddDeactivate(0x26de6ef7 /* "criticalitem" */, Entry(this, &CriticalItemInitializer::Deactivate));
-			}
+				Player *player = itor.GetValue();
 
-			~CriticalItemInitializer()
-			{
-				RemoveActivate(0x26de6ef7 /* "criticalitem" */, Entry(this, &CriticalItemInitializer::Activate));
-				RemoveDeactivate(0x26de6ef7 /* "criticalitem" */, Entry(this, &CriticalItemInitializer::Deactivate));
-			}
-
-			void Activate(unsigned int aId)
-			{
-				Damagable::DeathSignal &signal = Database::deathsignal.Open(aId);
-				signal.Connect(this, &CriticalItemInitializer::OnDeath);
-				Database::deathsignal.Close(aId);
-			}
-
-			void Deactivate(unsigned int aId)
-			{
-				Damagable::DeathSignal &signal = Database::deathsignal.Open(aId);
-				signal.Disconnect(this, &CriticalItemInitializer::OnDeath);
-				Database::deathsignal.Close(aId);
-			}
-
-			void OnDeath(unsigned int aId, unsigned int aSourceId)
-			{
-				// for each player...
-				for (Database::Typed<Player *>::Iterator itor(&Database::player); itor.IsValid(); ++itor)
-				{
-					Player *player = itor.GetValue();
-
-					Database::Delete(player->mAttach);
-					player->Detach(player->mAttach);
-					player->mLives = 0;
-					player->Activate();
-				}
+				Database::Delete(player->mAttach);
+				player->Detach(player->mAttach);
+				player->mLives = 0;
+				player->Activate();
 			}
 		}
-		criticaliteminitializer;
+
+		static void CriticalItemActivate(unsigned int aId)
+		{
+			Damagable::DeathSignal &signal = Database::deathsignal.Open(aId);
+			signal.Connect(Damagable::DeathSignal::Slot(CriticalItemOnDeath));
+			Database::deathsignal.Close(aId);
+		}
+		Activate criticalitemactivate(0x26de6ef7 /* "criticalitem" */, CriticalItemActivate);
+
+		static void CriticalItemDeactivate(unsigned int aId)
+		{
+			Damagable::DeathSignal &signal = Database::deathsignal.Open(aId);
+			signal.Disconnect(Damagable::DeathSignal::Slot(CriticalItemOnDeath));
+			Database::deathsignal.Close(aId);
+		}
+		Deactivate criticalitemdeactivate(0x26de6ef7 /* "criticalitem" */, CriticalItemDeactivate);
 	}
 }

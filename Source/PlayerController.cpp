@@ -12,106 +12,88 @@ namespace Database
 
 	namespace Loader
 	{
-		class PlayerControllerLoader
+		static void PlayerControllerConfigure(unsigned int aId, const tinyxml2::XMLElement *element)
 		{
-		public:
-			PlayerControllerLoader()
+			PlayerControllerTemplate &playercontroller = Database::playercontrollertemplate.Open(aId);
+			for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 			{
-				AddConfigure(0x7a57caa8 /* "playercontroller" */, Entry(this, &PlayerControllerLoader::Configure));
-			}
-
-			void Configure(unsigned int aId, const tinyxml2::XMLElement *element)
-			{
-				PlayerControllerTemplate &playercontroller = Database::playercontrollertemplate.Open(aId);
-				for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
+				switch (Hash(child->Value()))
 				{
-					switch (Hash(child->Value()))
+				case 0x383251f6 /* "aim" */:
+					switch(Hash(child->Attribute("type")))
 					{
-					case 0x383251f6 /* "aim" */:
-						switch(Hash(child->Attribute("type")))
-						{
-						case 0xada7afdb /* "none" */: playercontroller.mAim = PlayerControllerTemplate::NONE; break;
-						case 0xa73b0f65 /* "movesteer" */: playercontroller.mAim = PlayerControllerTemplate::MOVESTEER; break;
-						case 0xa4219fff /* "movelocal" */: playercontroller.mAim = PlayerControllerTemplate::MOVELOCAL; break;
-						case 0x55b3fdb0 /* "moveworld" */: playercontroller.mAim = PlayerControllerTemplate::MOVEWORLD; break;
-						case 0x49cd54a6 /* "movecursor" */: playercontroller.mAim = PlayerControllerTemplate::MOVECURSOR; break;
-						case 0x3b8907cb /* "aimsteer" */: playercontroller.mAim = PlayerControllerTemplate::AIMSTEER; break;
-						case 0x631798dd /* "aimlocal" */: playercontroller.mAim = PlayerControllerTemplate::AIMLOCAL; break;
-						case 0xaee0ceba /* "aimworld" */: playercontroller.mAim = PlayerControllerTemplate::AIMWORLD; break;
-						case 0xe9ec1504 /* "aimcursor" */: playercontroller.mAim = PlayerControllerTemplate::AIMCURSOR; break;
-						case 0x124aec70 /* "left" */: playercontroller.mAim = PlayerControllerTemplate::LEFT; break;
-						case 0x78e32de5 /* "right" */: playercontroller.mAim = PlayerControllerTemplate::RIGHT; break;
-						case 0x43430b20 /* "up" */: playercontroller.mAim = PlayerControllerTemplate::UP; break;
-						case 0x3db9b915 /* "down" */: playercontroller.mAim = PlayerControllerTemplate::DOWN; break;
-						}
-						break;
-
-					case 0x184b0014 /* "move" */:
-						switch(Hash(child->Attribute("type")))
-						{
-						case 0xada7afdb /* "none" */: playercontroller.mMove = PlayerControllerTemplate::NONE; break;
-						case 0xa4219fff /* "movelocal" */: playercontroller.mMove = PlayerControllerTemplate::MOVELOCAL; break;
-						case 0x55b3fdb0 /* "moveworld" */: playercontroller.mMove = PlayerControllerTemplate::MOVEWORLD; break;
-						case 0x631798dd /* "aimlocal" */: playercontroller.mMove = PlayerControllerTemplate::AIMLOCAL; break;
-						case 0xaee0ceba /* "aimworld" */: playercontroller.mMove = PlayerControllerTemplate::AIMWORLD; break;
-						case 0x124aec70 /* "left" */: playercontroller.mMove = PlayerControllerTemplate::LEFT; break;
-						case 0x78e32de5 /* "right" */: playercontroller.mMove = PlayerControllerTemplate::RIGHT; break;
-						case 0x43430b20 /* "up" */: playercontroller.mMove = PlayerControllerTemplate::UP; break;
-						case 0x3db9b915 /* "down" */: playercontroller.mMove = PlayerControllerTemplate::DOWN; break;
-						}
-						break;
-
-					case 0x82971c71 /* "scale" */:
-						child->QueryFloatAttribute("strafe", &playercontroller.mScale.p.x);
-						child->QueryFloatAttribute("thrust", &playercontroller.mScale.p.y);
-						child->QueryFloatAttribute("turn", &playercontroller.mScale.a);
-						break;
-
-					case 0x3b391274 /* "add" */:
-						child->QueryFloatAttribute("strafe", &playercontroller.mAdd.p.x);
-						child->QueryFloatAttribute("thrust", &playercontroller.mAdd.p.y);
-						child->QueryFloatAttribute("turn", &playercontroller.mAdd.a);
-						break;
+					case 0xada7afdb /* "none" */: playercontroller.mAim = PlayerControllerTemplate::NONE; break;
+					case 0xa73b0f65 /* "movesteer" */: playercontroller.mAim = PlayerControllerTemplate::MOVESTEER; break;
+					case 0xa4219fff /* "movelocal" */: playercontroller.mAim = PlayerControllerTemplate::MOVELOCAL; break;
+					case 0x55b3fdb0 /* "moveworld" */: playercontroller.mAim = PlayerControllerTemplate::MOVEWORLD; break;
+					case 0x49cd54a6 /* "movecursor" */: playercontroller.mAim = PlayerControllerTemplate::MOVECURSOR; break;
+					case 0x3b8907cb /* "aimsteer" */: playercontroller.mAim = PlayerControllerTemplate::AIMSTEER; break;
+					case 0x631798dd /* "aimlocal" */: playercontroller.mAim = PlayerControllerTemplate::AIMLOCAL; break;
+					case 0xaee0ceba /* "aimworld" */: playercontroller.mAim = PlayerControllerTemplate::AIMWORLD; break;
+					case 0xe9ec1504 /* "aimcursor" */: playercontroller.mAim = PlayerControllerTemplate::AIMCURSOR; break;
+					case 0x124aec70 /* "left" */: playercontroller.mAim = PlayerControllerTemplate::LEFT; break;
+					case 0x78e32de5 /* "right" */: playercontroller.mAim = PlayerControllerTemplate::RIGHT; break;
+					case 0x43430b20 /* "up" */: playercontroller.mAim = PlayerControllerTemplate::UP; break;
+					case 0x3db9b915 /* "down" */: playercontroller.mAim = PlayerControllerTemplate::DOWN; break;
 					}
-				}
+					break;
 
-				Database::playercontrollertemplate.Close(aId);
+				case 0x184b0014 /* "move" */:
+					switch(Hash(child->Attribute("type")))
+					{
+					case 0xada7afdb /* "none" */: playercontroller.mMove = PlayerControllerTemplate::NONE; break;
+					case 0xa4219fff /* "movelocal" */: playercontroller.mMove = PlayerControllerTemplate::MOVELOCAL; break;
+					case 0x55b3fdb0 /* "moveworld" */: playercontroller.mMove = PlayerControllerTemplate::MOVEWORLD; break;
+					case 0x631798dd /* "aimlocal" */: playercontroller.mMove = PlayerControllerTemplate::AIMLOCAL; break;
+					case 0xaee0ceba /* "aimworld" */: playercontroller.mMove = PlayerControllerTemplate::AIMWORLD; break;
+					case 0x124aec70 /* "left" */: playercontroller.mMove = PlayerControllerTemplate::LEFT; break;
+					case 0x78e32de5 /* "right" */: playercontroller.mMove = PlayerControllerTemplate::RIGHT; break;
+					case 0x43430b20 /* "up" */: playercontroller.mMove = PlayerControllerTemplate::UP; break;
+					case 0x3db9b915 /* "down" */: playercontroller.mMove = PlayerControllerTemplate::DOWN; break;
+					}
+					break;
+
+				case 0x82971c71 /* "scale" */:
+					child->QueryFloatAttribute("strafe", &playercontroller.mScale.p.x);
+					child->QueryFloatAttribute("thrust", &playercontroller.mScale.p.y);
+					child->QueryFloatAttribute("turn", &playercontroller.mScale.a);
+					break;
+
+				case 0x3b391274 /* "add" */:
+					child->QueryFloatAttribute("strafe", &playercontroller.mAdd.p.x);
+					child->QueryFloatAttribute("thrust", &playercontroller.mAdd.p.y);
+					child->QueryFloatAttribute("turn", &playercontroller.mAdd.a);
+					break;
+				}
 			}
+
+			Database::playercontrollertemplate.Close(aId);
 		}
-		playercontrollerloader;
+		Configure playercontrollerconfigure(0x7a57caa8 /* "playercontroller" */, PlayerControllerConfigure);
 	}
 
 	namespace Initializer
 	{
-		class PlayerControllerInitializer
+		static void PlayerControllerActivate(unsigned int aId)
 		{
-		public:
-			PlayerControllerInitializer()
-			{
-				AddActivate(0xec81fd12 /* "playercontrollertemplate" */, Entry(this, &PlayerControllerInitializer::Activate));
-				AddDeactivate(0xec81fd12 /* "playercontrollertemplate" */, Entry(this, &PlayerControllerInitializer::Deactivate));
-			}
+			PlayerController *playercontroller = new PlayerController(aId);
+			Database::playercontroller.Put(aId, playercontroller);
+			Database::controller.Put(aId, playercontroller);
 
-			void Activate(unsigned int aId)
-			{
-				PlayerController *playercontroller = new PlayerController(aId);
-				Database::playercontroller.Put(aId, playercontroller);
-				Database::controller.Put(aId, playercontroller);
+			playercontroller->Activate();
+		}
+		Activate playercontrolleractivate(0xec81fd12 /* "playercontrollertemplate" */, PlayerControllerActivate);
 
-				playercontroller->Activate();
-			}
-
-			void Deactivate(unsigned int aId)
+		static void PlayerControllerDeactivate(unsigned int aId)
+		{
+			if (PlayerController *playercontroller = Database::playercontroller.Get(aId))
 			{
-				if (PlayerController *playercontroller = Database::playercontroller.Get(aId))
-				{
-					delete playercontroller;
-					Database::playercontroller.Delete(aId);
-					Database::controller.Delete(aId);
-				}
+				delete playercontroller;
+				Database::playercontroller.Delete(aId);
+				Database::controller.Delete(aId);
 			}
 		}
-		playercontrollerinitializer;
+		Deactivate playercontrollerdeactivate(0xec81fd12 /* "playercontrollertemplate" */, PlayerControllerDeactivate);
 	}
 }
 
