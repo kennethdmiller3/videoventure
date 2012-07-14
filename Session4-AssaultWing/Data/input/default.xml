@@ -13,14 +13,12 @@
 	<bind name="fire2" type="mouse_button" control="right" scale="1"/>
 
 	<!-- dual-analog joystick -->
-	<bind name="move_x" type="joystick_axis" device="0" control="0" deadzone="0.1" scale="-1"/>
-	<bind name="move_y" type="joystick_axis" device="0" control="1" deadzone="0.1" scale="-1"/>
-	<bind name="aim_x" type="joystick_axis" device="0" control="2" deadzone="0.1"  scale="-1"/>
-	<bind name="aim_y" type="joystick_axis" device="0" control="3" deadzone="0.1" scale="-1"/>
-	<bind name="fire1" type="joystick_button" device="0" control="5" scale="1"/>
-	<bind name="fire2" type="joystick_button" device="0" control="7" scale="1"/>
-	<bind name="fire3" type="joystick_button" device="0" control="4" scale="1"/>
-	<bind name="fire4" type="joystick_button" device="0" control="6" scale="1"/>
+	<bind name="move_x" type="joystick_axis" device="0" control="0" deadzone="0.2" scale="-1.25"/>
+	<bind name="move_y" type="joystick_axis" device="0" control="1" deadzone="0.2" scale="-1.25"/>
+	<bind name="aim_x" type="joystick_axis" device="0" control="4" deadzone="0.2"  scale="-1.25"/>
+	<bind name="aim_y" type="joystick_axis" device="0" control="3" deadzone="0.2" scale="-1.25"/>
+	<bind name="fire1" type="joystick_axis" device="0" control="2" deadzone="0.2" scale="-1.25" min="0"/>
+	<bind name="fire2" type="joystick_axis" device="0" control="2" deadzone="0.2" scale="1.25" min="0"/>
 
 	<!-- mouse -->
 	<bind name="menu_x" type="mouse_axis" control="x" scale="-1"/>
