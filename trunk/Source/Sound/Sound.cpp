@@ -628,7 +628,7 @@ void Sound::Play(unsigned int aOffset)
 		return;
 
 	// if not already playing...
-	if (mPlaying == 0)
+	if (mPlaying == 0 || BASS_ChannelIsActive(mPlaying) == BASS_ACTIVE_STOPPED)
 	{
 		// get a channel
 		mPlaying = BASS_SampleGetChannel(mHandle, false);
