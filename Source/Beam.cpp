@@ -178,28 +178,28 @@ void Beam::Update(float aStep)
 		// if the beam hit something...
 		if (hitId != 0)
 		{
-				// if the recipient is damagable...
-				// and not healing or the target is at max health...
+			// if the recipient is damagable...
+			// and not healing or the target is at max health...
 			if (Damagable *damagable = Database::damagable.Get(hitId))
+			{
+				// get base damage
+				float damage = curDamage;
+
+				// if applying damage over time...
+				if (beam.mLifeSpan > 0.0f)
 				{
-					// get base damage
-					float damage = curDamage;
+					// scale by time step
+					damage *= aStep;
+				}
 
-					// if applying damage over time...
-					if (beam.mLifeSpan > 0.0f)
-					{
-						// scale by time step
-						damage *= aStep;
-					}
+				// limit healing
+				if (damage < 0)
+				{
+					damage = std::max(damage, damagable->GetHealth() - Database::damagabletemplate.Get(hitId).mHealth);
+				}
 
-					// limit healing
-					if (damage < 0)
-					{
-						damage = std::max(damage, damagable->GetHealth() - Database::damagabletemplate.Get(hitId).mHealth);
-					}
-
-					// apply damage
-					damagable->Damage(mId, damage);
+				// apply damage
+				damagable->Damage(mId, damage);
 			}
 
 			if (curDamage >= 0)
