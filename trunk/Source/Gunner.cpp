@@ -75,10 +75,12 @@ Gunner::Gunner(const GunnerTemplate &aTemplate, unsigned int aId)
 	mTrackPos.push_back(entity->GetPosition());
 	mTrackPos.push_back(entity->GetPosition());
 #else
-	mTrackCount = xs_CeilToInt(aTemplate.mFollowLength/GUNNER_TRACK_GRANULARITY) + 1;
+	mTrackCount = xs_CeilToInt(aTemplate.mFollowLength/GUNNER_TRACK_GRANULARITY) + 2;
 	mTrackPos = new Vector2[mTrackCount];
-	mTrackFirst = mTrackLast = 0;
-	mTrackPos[0] = entity->GetPosition();
+	mTrackFirst = 0;
+	mTrackLast = 1;
+	mTrackPos[mTrackFirst] = entity->GetPosition();
+	mTrackPos[mTrackLast] = entity->GetPosition();
 #endif
 	mTrackLength = 0.0f;
 }
@@ -141,7 +143,7 @@ void Gunner::Update(float aStep)
 		mTrackLength += posP.Dist(mTrackPos[mTrackPos.size()-2]);
 #else
 		// get the last segment
-		int mTrackPrev = (mTrackLast > 0) ? (mTrackLast - 1) : (mTrackCount - 1);
+		size_t mTrackPrev = (mTrackLast > 0) ? (mTrackLast - 1) : (mTrackCount - 1);
 		const Vector2 &posL1 = mTrackPos[mTrackPrev];
 		float lastsegment = posL0.Dist(posL1);
 
