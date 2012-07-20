@@ -1,4 +1,0 @@
-<?xml version="1.0" ?>
-<template name="enemytarget">
-	<damagable spawnondeath="enemyrocketbombexplosion" />
-</template>
