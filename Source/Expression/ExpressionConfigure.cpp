@@ -8,6 +8,7 @@ template <typename T> Database::Typed<Expression::Entry> &Expression::Loader<T>:
 	return configure;
 }
 template <typename T> Expression::Loader<T>::Loader(unsigned int aTagId, Expression::Entry aEntry)
+	: mTagId(aTagId)
 {
 	Database::Typed<Entry> &db = GetDB();
 	Entry &entry = db.Open(mTagId);
