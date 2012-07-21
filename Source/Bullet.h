@@ -43,7 +43,7 @@ public:
 	~Bullet(void);
 
 	// collide
-	void Collide(unsigned int aId, unsigned int aHitId, float aTime, const b2Contact &aContact);
+	void Collide(unsigned int aId, unsigned int aHitId, float aTime, const Vector2 &aContact, const Vector2 &aNormal);
 
 	// kill
 	void Kill(float aFraction = 0.0f);

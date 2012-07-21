@@ -1,15 +1,6 @@
 <?xml version="1.0" ?>
 <template name="friendwarriorturret">
-	<collidable>
-		<body name="main">
-			<circle radius="3">
-				<density value="1" />
-				<friction value="0.5" />
-				<restitution value="0.5" />
-				<filter name="blueunit" />
-			</circle>
-		</body>
-	</collidable>
+	<particle />
 	<renderable radius="3">
 		<drawlist>
 			<color r="0.7" g="0.7" b="0.7" a="1.0" />

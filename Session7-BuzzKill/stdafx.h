@@ -29,9 +29,6 @@
 // TinyXML includes
 #include "tinyxml2.h"
 
-// Box2D includes
-#include "Box2d/Box2D.h"
-
 // FastDelegate includes
 #include "FastDelegate.h"
 

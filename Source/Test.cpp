@@ -140,6 +140,9 @@ bool InitOpenGL()
 	// diable fog by default
 	glDisable( GL_FOG );
 
+	// allow vertex arrays
+	glEnableClientState(GL_VERTEX_ARRAY);
+
 	// return true if no errors
 	return glGetError() == GL_NO_ERROR;
 }
@@ -269,7 +272,7 @@ int main( int argc, char *argv[] )
 	{
 		// turn on floating-point exceptions
 		unsigned int prev;
-		_controlfp_s(&prev, 0, _EM_ZERODIVIDE|_EM_INVALID);
+		_controlfp_s(&prev, 0, /*_EM_ZERODIVIDE|*/_EM_INVALID);
 
 		// enable debug heap in a debug build
 		_CrtSetDbgFlag( _CRTDBG_ALLOC_MEM_DF|_CRTDBG_CHECK_EVERY_1024_DF|_CRTDBG_CHECK_CRT_DF|_CRTDBG_LEAK_CHECK_DF );

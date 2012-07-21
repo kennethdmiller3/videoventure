@@ -81,7 +81,6 @@
 			</pushmatrix>
 			<rotate angle="90" />
 		</repeat>
-
 	</renderable>
 	<!--aimer range="256" attack="0" drift="0.5" wanderturn="1" wanderturnrate="0.25" pursue="0.25" leading="30" category="1" bit1="0" bit2="0" /-->
 	<aimer>

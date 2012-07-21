@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Behavior.h"
+#include "Collidable.h"
 
 class Aimer;
 
@@ -14,7 +15,7 @@ public:
 	float mAngle;		// cone angle
 	float mFocus;		// weight factor for current target
 	float mAlign;		// weight factor for angle alignment
-	b2Filter mFilter;	// collision filtering
+	CollidableFilter mFilter;	// collision filtering
 
 public:
 	TargetBehaviorTemplate();

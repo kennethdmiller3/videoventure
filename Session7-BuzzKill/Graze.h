@@ -1,12 +1,13 @@
 #pragma once
 
 #include "Updatable.h"
+#include "Collidable.h"
 
 class GrazeTemplate
 {
 public:
 	// collision
-	b2Filter mFilter;
+	CollidableFilter mFilter;
 
 	// ammo type
 	unsigned int mType;

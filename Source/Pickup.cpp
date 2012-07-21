@@ -394,7 +394,7 @@ void PickupGrantUpdate::operator delete(void *aPtr)
 #endif
 
 
-void Pickup::Collide(unsigned int aId, unsigned int aHitId, float aFraction, const b2Contact &aContact)
+void Pickup::Collide(unsigned int aId, unsigned int aHitId, float aFraction, const Vector2 &aContact, const Vector2 &aNormal)
 {
 	// do nothing if destroyed...
 	if (mDestroy)

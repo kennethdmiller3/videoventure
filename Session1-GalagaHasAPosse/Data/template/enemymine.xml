@@ -2,6 +2,12 @@
 <template name="enemymine">
 	<collidable>
 		<body name="main">
+			<circle radius="1.5">
+				<friction value="0" />
+				<restitution value="1" />
+				<density value="0" />
+				<filter name="redbullet" />
+			</circle>
 			<circle radius="8">
 				<friction value="0" />
 				<restitution value="1" />
@@ -99,5 +105,6 @@
 	</renderable>
 	<expire time="5" switchonexpire="enemybulletexplosion" />
 	<bullet damage="1" spawnondeath="enemymineexplosion" />
+	<team name="red" />
 	<capturable resistance="1" spawnoncapture="friendmine" />
 </template>

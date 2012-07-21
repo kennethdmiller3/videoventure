@@ -135,7 +135,7 @@ Capture::~Capture(void)
 {
 }
 
-class CaptureQueryCallback : public b2QueryCallback
+class CaptureQueryCallback
 {
 public:
 	unsigned int mId;
@@ -146,66 +146,50 @@ public:
 	float mCurStrength[2];
 
 public:
-	virtual bool ReportFixture(b2Fixture* fixture)
+	void Report(CollidableShape *shape, float distance, const Vector2 &point)
 	{
 		// skip unhittable fixtures
-		if (fixture->IsSensor())
-			return true;
-
-		// get the parent body
-		b2Body* body = fixture->GetBody();
+		if (Collidable::IsSensor(shape))
+			return;
 
 		// get the collidable identifier
-		unsigned int targetId = reinterpret_cast<unsigned int>(body->GetUserData());
+		unsigned int targetId = Collidable::GetId(shape);
 
 		// skip non-entity
 		if (targetId == 0)
-			return true;
+			return;
 
 		// skip self
 		if (targetId == mId)
-			return true;
+			return;
 
 		// get team affiliation
 		unsigned int targetTeam = Database::team.Get(targetId);
 
 		// skip teammate
 		if (targetTeam == mTeam)
-			return true;
+			return;
 
-		// get local position
-		b2Vec2 localPos;
-		switch (fixture->GetType())
-		{
-		case b2Shape::e_circle:		localPos = static_cast<b2CircleShape *>(fixture->GetShape())->m_p;	break;
-		case b2Shape::e_polygon:	localPos = static_cast<b2PolygonShape *>(fixture->GetShape())->m_centroid; break;
-		default:					localPos = Vector2(0, 0); break;
-		}
-		Vector2 fixturePos(body->GetWorldPoint(localPos));
+		// get center position
+		Vector2 centerPos(Collidable::GetCenter(shape));
 
-		// get range
-		Vector2 dir(mTransform.Transform(fixturePos));
-		float range = dir.Length();
-		float radius = 0.5f * fixture->GetShape()->m_radius;	//fixture->ComputeSweepRadius(localPos);
-
-		// skip if out of range
-		if (range > mCurRadius[1] + radius)
-			return true;
+		// get direction
+		Vector2 dir(mTransform.Transform(centerPos));
 
 		// skip if outside angle
 		// TO DO: handle partial overlap
 		if (fabsf(atan2f(dir.x, dir.y)) > mCapture.mAngle)
-			return true;
+			return;
 
 		// apply strength falloff
 		float strength;
-		if (range <= mCurRadius[0] - radius)
+		if (distance <= mCurRadius[0])
 		{
 			strength = mCurStrength[0];
 		}
 		else
 		{
-			float interp = (range - mCurRadius[0] + radius) / (mCurRadius[1] + radius - mCurRadius[0] + radius);
+			float interp = (distance - mCurRadius[0]) / (mCurRadius[1] - mCurRadius[0]);
 			strength = Lerp(mCurStrength[0], mCurStrength[1], interp);
 		}
 
@@ -222,8 +206,6 @@ public:
 			// apply strength
 			capturable->Persuade(mId, strength);
 		}
-
-		return true;
 	}
 };
 
@@ -264,11 +246,8 @@ void Capture::Update(float aStep)
 
 		// get nearby fixtures
 		// TO DO: optimize for angle
-		b2AABB aabb;
-		const float lookRadius = callback.mCurRadius[1];
-		aabb.lowerBound.Set(entity->GetPosition().x - lookRadius, entity->GetPosition().y - lookRadius);
-		aabb.upperBound.Set(entity->GetPosition().x + lookRadius, entity->GetPosition().y + lookRadius);
-		Collidable::QueryAABB(&callback, aabb);
+		Collidable::QueryRadius(entity->GetPosition(), capture.mRadius,
+			CollidableFilter(~0U, 0, ~0U), Collidable::QueryRadiusDelegate(&callback, &CaptureQueryCallback::Report));
 	}
 	else
 	{

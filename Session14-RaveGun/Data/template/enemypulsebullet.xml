@@ -52,6 +52,6 @@
 		</pushmatrix>
 	</renderable>
 	<expire time="3" />
-	<bullet damage="1" spawnondeath="enemybulletexplosion" />
-	<cancelable switchoncancel="canceldrop" spawnoncancel="enemybulletexplosion" tethered="1" backlash="1"/>
+	<bullet damage="1" switchondeath="enemybulletexplosion" />
+	<cancelable switchoncancel="enemybulletexplosion" spawnoncancel="canceldrop" tethered="1" backlash="1"/>
 </template>

@@ -99,4 +99,5 @@
 	</renderable>
 	<expire time="5" switchonexpire="friendbulletexplosion" />
 	<bullet damage="3" spawnondeath="friendmineexplosion" />
+	<team name="blue" />
 </template>

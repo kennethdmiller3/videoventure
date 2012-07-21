@@ -8,6 +8,7 @@
 				<friction value="0.5" />
 				<restitution value="0.5" />
 				<filter name="blueunit" />
+				<group value="-1" />
 			</box>
 		</body>
 	</collidable>

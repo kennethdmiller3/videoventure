@@ -87,7 +87,7 @@ TargetBehavior::TargetBehavior(unsigned int aId, const TargetBehaviorTemplate &a
 	Database::targetdata.Close(aId);
 }
 
-class TargetQueryCallback : public b2QueryCallback
+class TargetQueryCallback
 {
 public:
 	TargetBehaviorTemplate mTarget;
@@ -113,62 +113,45 @@ public:
 	{
 	}
 
-	virtual bool ReportFixture(b2Fixture* fixture)
+	void Report(CollidableShape *shape, float range, const Vector2 &point)
 	{
 		// skip unhittable fixtures
-		if (fixture->IsSensor())
-			return true;
-		if (!Collidable::CheckFilter(fixture->GetFilterData(), mTarget.mFilter))
-			return true;
-
-		// get the parent body
-		b2Body* body = fixture->GetBody();
-
-		// get local position
-		b2Vec2 localPos;
-		switch (fixture->GetType())
-		{
-		case b2Shape::e_circle:		localPos = static_cast<b2CircleShape *>(fixture->GetShape())->m_p;	break;
-		case b2Shape::e_polygon:	localPos = static_cast<b2PolygonShape *>(fixture->GetShape())->m_centroid; break;
-		default:					localPos = Vector2(0, 0); break;
-		}
-		Vector2 fixturePos(body->GetWorldPoint(localPos));
+		if (Collidable::IsSensor(shape))
+			return;
+		if (!Collidable::CheckFilter(mTarget.mFilter, Collidable::GetFilter(shape)))
+			return;
 
 		// get the collidable identifier
-		unsigned int targetId = reinterpret_cast<unsigned int>(body->GetUserData());
+		unsigned int targetId = Collidable::GetId(shape);
 
 		// skip non-entity
 		if (targetId == 0)
-			return true;
+			return;
 
 		// skip self
 		if (targetId == mId)
-			return true;
+			return;
 
 		// get team affiliation
 		unsigned int targetTeam = Database::team.Get(targetId);
 
 		// skip neutral
 		if (targetTeam == 0)
-			return true;
+			return;
 
 		// skip teammate
 		if (targetTeam == mTeam)
-			return true;
+			return;
 
 		// skip indestructible
 		if (!Database::damagable.Find(targetId) && !Database::cancelable.Find(targetId))
-			return true;
+			return;
+
+		// get center position
+		Vector2 centerPos(Collidable::GetCenter(shape));
 
 		// get local direction
-		Vector2 localDir(mTransform.Untransform(fixturePos));
-
-		// get range to target
-		float range = localDir.Length() - 0.5f * fixture->GetShape()->m_radius;	//fixture->ComputeSweepRadius(localPos);
-
-		// skip if out of range
-		if (range > mTarget.mRange)
-			return true;
+		Vector2 localDir(mTransform.Untransform(centerPos));
 
 		// if using a cone angle or angle scale
 		if (mTarget.mAngle < float(M_PI)*2.0f || mTarget.mAlign != 0.0f)
@@ -185,7 +168,7 @@ public:
 
 			// skip if outside angle
 			if (fabsf(localAngle) > mTarget.mAngle)
-				return true;
+				return;
 
 			// if using angle scale...
 			if (mTarget.mAlign != 0.0f)
@@ -208,9 +191,8 @@ public:
 			// use the new target
 			mBestRange = range;
 			mBestTargetId = targetId;
-			mBestTargetPos = localPos;
+			mBestTargetPos = Database::entity.Get(targetId)->GetTransform().Untransform(centerPos);
 		}
-		return true;
 	}
 };
 
@@ -235,9 +217,6 @@ Status TargetBehavior::Execute(void)
 	// get transform
 	const Transform2 &transform = entity->GetTransform();
 
-	// get the collision world
-	b2World *world = Collidable::GetWorld();
-
 	// get team affiliation
 	unsigned int aTeam = Database::team.Get(mId);
 
@@ -248,11 +227,8 @@ Status TargetBehavior::Execute(void)
 
 	// query nearby fixtures
 	TargetQueryCallback callback(target, mId, aTeam, transform, data.mTarget);
-	b2AABB aabb;
-	const float lookRadius = target.mRange;
-	aabb.lowerBound.Set(entity->GetPosition().x - lookRadius, entity->GetPosition().y - lookRadius);
-	aabb.upperBound.Set(entity->GetPosition().x + lookRadius, entity->GetPosition().y + lookRadius);
-	world->QueryAABB(&callback, aabb);
+	Collidable::QueryRadius(entity->GetPosition(), target.mRange, target.mFilter,
+		Collidable::QueryRadiusDelegate(&callback, &TargetQueryCallback::Report));
 
 	// use the new target
 	mTarget = callback.mBestTargetId;

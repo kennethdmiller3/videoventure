@@ -38,8 +38,10 @@ namespace Database
 			{
 				Vector2 velocity(entity->GetTransform().Rotate(Vector2(0, aSpeed)));
 				entity->SetVelocity(velocity);
-				if (b2Body *body = Database::collidablebody.Get(aId))
-					body->SetLinearVelocity(velocity);
+				if (CollidableBody *body = Database::collidablebody.Get(aId))
+				{
+					Collidable::SetVelocity(body, velocity);
+				}
 			}
 		}
 

@@ -2,7 +2,7 @@ Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual C++ Express 2010
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tinyxml2", "tinyxml2\tinyxml2\tinyxml2.vcxproj", "{16A1D446-5415-444E-A7B4-F35B7DA7EE8C}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Test", "test.vcxproj", "{FC5E6837-9810-43F3-AE5D-A4CDDDF5D1AF}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test", "test.vcxproj", "{FC5E6837-9810-43F3-AE5D-A4CDDDF5D1AF}"
 	ProjectSection(ProjectDependencies) = postProject
 		{98400D17-43A5-1A40-95BE-C53AC78E7694} = {98400D17-43A5-1A40-95BE-C53AC78E7694}
 		{16A1D446-5415-444E-A7B4-F35B7DA7EE8C} = {16A1D446-5415-444E-A7B4-F35B7DA7EE8C}
@@ -32,6 +32,8 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Session15", "Session15\Session15.vcxproj", "{93678241-DF0E-431A-B32B-0E0664DE5CCB}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Session4", "Session4-AssaultWing\Session4.vcxproj", "{22E7D39F-2FFF-40DB-8AF6-9DC9D63131CF}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "chipmunk", "..\Chipmunk-6.1.1\msvc\vc10\chipmunk\chipmunk.vcxproj", "{C1ACE86E-5A14-490A-9678-104BA2546723}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -91,6 +93,10 @@ Global
 		{22E7D39F-2FFF-40DB-8AF6-9DC9D63131CF}.Debug|Win32.Build.0 = Debug|Win32
 		{22E7D39F-2FFF-40DB-8AF6-9DC9D63131CF}.Release|Win32.ActiveCfg = Release|Win32
 		{22E7D39F-2FFF-40DB-8AF6-9DC9D63131CF}.Release|Win32.Build.0 = Release|Win32
+		{C1ACE86E-5A14-490A-9678-104BA2546723}.Debug|Win32.ActiveCfg = Debug|Win32
+		{C1ACE86E-5A14-490A-9678-104BA2546723}.Debug|Win32.Build.0 = Debug|Win32
+		{C1ACE86E-5A14-490A-9678-104BA2546723}.Release|Win32.ActiveCfg = Release|Win32
+		{C1ACE86E-5A14-490A-9678-104BA2546723}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

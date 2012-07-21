@@ -187,7 +187,7 @@ void BulletKillUpdate::operator delete(void *aPtr)
 #endif
 
 
-void Bullet::Collide(unsigned int aId, unsigned int aHitId, float aFraction, const b2Contact &aContact)
+void Bullet::Collide(unsigned int aId, unsigned int aHitId, float aFraction, const Vector2 &aContact, const Vector2 &aNormal)
 {
 	// do nothing if destroyed...
 	if (mDestroy)
@@ -281,14 +281,8 @@ void Bullet::Collide(unsigned int aId, unsigned int aHitId, float aFraction, con
 	// if spawning on impact...
 	if (bullet.mSpawnOnImpact)
 	{
-		b2WorldManifold worldManifold;
-		aContact.GetWorldManifold(&worldManifold);
-
-		// estimate the point of impact
-		b2Vec2 position(worldManifold.points[0]);
-
 		// spawn the template
-		unsigned int spawnId = Database::Instantiate(bullet.mSpawnOnImpact, Database::owner.Get(mId), mId, 0, Vector2(position), Vector2(0, 0), 0);
+		unsigned int spawnId = Database::Instantiate(bullet.mSpawnOnImpact, Database::owner.Get(mId), mId, 0, aContact, Vector2(0, 0), 0);
 
 		// set fractional turn
 		if (Renderable *renderable = Database::renderable.Get(spawnId))
