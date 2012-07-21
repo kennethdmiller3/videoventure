@@ -14,8 +14,8 @@
 	</collidable>
 	<renderable radius="8" depth="2">
 		<pushmatrix>
-			<color r="0.4" g="0.7" b="1.0" a="1.0"/>
-			<scale x="1" y="1"/>
+			<color r="0.0" g="0.0" b="1.0" a="0.5"/>
+			<scale x="2" y="2"/>
 			<calllist name="circle8"/>
 		</pushmatrix>
 		<pushmatrix>
@@ -24,8 +24,8 @@
 			<calllist name="circle8"/>
 		</pushmatrix>
 		<pushmatrix>
-			<color r="0.0" g="0.0" b="1.0" a="0.5"/>
-			<scale x="2" y="2"/>
+			<color r="0.4" g="0.7" b="1.0" a="1.0"/>
+			<scale x="1" y="1"/>
 			<calllist name="circle8"/>
 		</pushmatrix>
 		<lines width="0.5">
