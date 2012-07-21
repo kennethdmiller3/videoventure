@@ -160,7 +160,7 @@ void PrintAttributes(void)
 	// OpenGL extensions
 	DebugPrint( "Extensions : \n" );
 	const GLubyte *extensions = glGetString( GL_EXTENSIONS );
-	size_t size = strlen(reinterpret_cast<const char *>(extensions)+1);
+	size_t size = strlen(reinterpret_cast<const char *>(extensions))+1;
 	char *buf = static_cast<char *>(_alloca(size));
 	memcpy(buf, extensions, size);
 
