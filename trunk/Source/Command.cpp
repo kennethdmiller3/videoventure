@@ -76,9 +76,14 @@ int ProcessCommandString(std::string &aValue, const char * const aParam[], int a
 			aAction();
 		return 1;
 	}
-	else
+	else if (console)
 	{
 		console->Print(aFormat, aValue.c_str());
+		return 0;
+	}
+	else
+	{
+		DebugPrint(aFormat, aValue.c_str());
 		return 0;
 	}
 }
@@ -93,9 +98,14 @@ int ProcessCommandBool(bool &aValue, const char * const aParam[], int aCount, Pr
 			aAction();
 		return 1;
 	}
-	else
+	else if (console)
 	{
 		console->Print(aFormat, aValue);
+		return 0;
+	}
+	else
+	{
+		DebugPrint(aFormat, aValue);
 		return 0;
 	}
 }
@@ -110,9 +120,14 @@ int ProcessCommandInt(int &aValue, const char * const aParam[], int aCount, Proc
 			aAction();
 		return 1;
 	}
-	else
+	else if (console)
 	{
 		console->Print(aFormat, aValue);
+		return 0;
+	}
+	else
+	{
+		DebugPrint(aFormat, aValue);
 		return 0;
 	}
 }
@@ -128,11 +143,17 @@ int ProcessCommandInt2(int &aValue1, int &aValue2, const char * const aParam[], 
 			aAction();
 		return 2;
 	}
-	else
+	else if (console)
 	{
 		console->Print(aFormat, aValue1, aValue2);
 		return 0;
 	}
+	else
+	{
+		DebugPrint(aFormat, aValue1, aValue2);
+		return 0;
+	}
+
 }
 
 // process a float command
@@ -145,9 +166,14 @@ int ProcessCommandFloat(float &aValue, const char * const aParam[], int aCount, 
 			aAction();
 		return 1;
 	}
-	else
+	else if (console)
 	{
 		console->Print(aFormat, aValue);
+		return 0;
+	}
+	else
+	{
+		DebugPrint(aFormat, aValue);
 		return 0;
 	}
 }
@@ -163,7 +189,9 @@ void UpdateWindowAction()
 void InitInputAction()
 {
 	if (runtime)
+	{
 		InitInput(INPUT_CONFIG.c_str());
+	}
 }
 void InitLevelAction()
 {
