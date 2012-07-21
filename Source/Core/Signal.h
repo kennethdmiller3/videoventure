@@ -19,7 +19,7 @@ public:
 
 	void Connect(const Slot &aSlot)
 	{
-		mConnections.Put(Hash(&aSlot, sizeof(aSlot)), aSlot);
+		mConnections.Put(Hash(&aSlot, sizeof(Slot)), aSlot);
 	}
 	template <typename H, typename F> void Connect(H aHolder, F aFunc)
 	{
@@ -28,7 +28,7 @@ public:
 
 	void Disconnect(const Slot &aSlot)
 	{
-		mConnections.Delete(Hash(&aSlot, sizeof(aSlot)));
+		mConnections.Delete(Hash(&aSlot, sizeof(Slot)));
 	}
 	template <typename H, typename F> void Disconnect(H aHolder, F aFunc)
 	{
@@ -57,7 +57,7 @@ public:
 
 	void Connect(const Slot &aSlot)
 	{
-		mConnections.Put(Hash(&aSlot, sizeof(aSlot)), aSlot);
+		mConnections.Put(Hash(&aSlot, sizeof(Slot)), aSlot);
 	}
 	template <typename H, typename F> void Connect(H aHolder, F aFunc)
 	{
@@ -66,7 +66,7 @@ public:
 
 	void Disconnect(const Slot &aSlot)
 	{
-		mConnections.Delete(Hash(&aSlot, sizeof(aSlot)));
+		mConnections.Delete(Hash(&aSlot, sizeof(Slot)));
 	}
 	template <typename H, typename F> void Disconnect(H aHolder, F aFunc)
 	{
@@ -95,7 +95,7 @@ public:
 
 	void Connect(const Slot &aSlot)
 	{
-		mConnections.Put(Hash(&aSlot, sizeof(aSlot)), aSlot);
+		mConnections.Put(Hash(&aSlot, sizeof(Slot)), aSlot);
 	}
 	template <typename H, typename F> void Connect(H aHolder, F aFunc)
 	{
@@ -104,7 +104,7 @@ public:
 
 	void Disconnect(const Slot &aSlot)
 	{
-		mConnections.Delete(Hash(&aSlot, sizeof(aSlot)));
+		mConnections.Delete(Hash(&aSlot, sizeof(Slot)));
 	}
 	template <typename H, typename F> void Disconnect(H aHolder, F aFunc)
 	{
@@ -133,7 +133,7 @@ public:
 
 	void Connect(const Slot &aSlot)
 	{
-		mConnections.Put(Hash(&aSlot, sizeof(aSlot)), aSlot);
+		mConnections.Put(Hash(&aSlot, sizeof(Slot)), aSlot);
 	}
 	template <typename H, typename F> void Connect(H aHolder, F aFunc)
 	{
@@ -142,7 +142,7 @@ public:
 
 	void Disconnect(const Slot &aSlot)
 	{
-		mConnections.Delete(Hash(&aSlot, sizeof(aSlot)));
+		mConnections.Delete(Hash(&aSlot, sizeof(Slot)));
 	}
 	template <typename H, typename F> void Disconnect(H aHolder, F aFunc)
 	{
@@ -171,7 +171,7 @@ public:
 
 	void Connect(const Slot &aSlot)
 	{
-		mConnections.Put(Hash(&aSlot, sizeof(aSlot)), aSlot);
+		mConnections.Put(Hash(&aSlot, sizeof(Slot)), aSlot);
 	}
 	template <typename H, typename F> void Connect(H aHolder, F aFunc)
 	{
@@ -180,7 +180,7 @@ public:
 
 	void Disconnect(const Slot &aSlot)
 	{
-		mConnections.Delete(Hash(&aSlot, sizeof(aSlot)));
+		mConnections.Delete(Hash(&aSlot, sizeof(Slot)));
 	}
 	template <typename H, typename F> void Disconnect(H aHolder, F aFunc)
 	{
