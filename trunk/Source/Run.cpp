@@ -821,10 +821,12 @@ void RunState()
 			{
 				// push projection transform
 				glMatrixMode(GL_PROJECTION);
+				glPushMatrix();
 				glLoadIdentity();
 				glOrtho(0, 1, 0, 1, -1, 1);
 
 				glMatrixMode(GL_MODELVIEW);
+				glPushMatrix();
 				glLoadIdentity();
 
 				// save texture state
@@ -851,6 +853,12 @@ void RunState()
 				glEnd();
 
 				glPopAttrib();
+
+				glMatrixMode(GL_PROJECTION);
+				glPopMatrix();
+
+				glMatrixMode(GL_MODELVIEW);
+				glPopMatrix();
 			}
 
 			if (blur < MOTIONBLUR_STEPS)
