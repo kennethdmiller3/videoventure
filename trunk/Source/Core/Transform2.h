@@ -19,6 +19,11 @@ public:
 	{
 	}
 
+	Transform2(const Transform2 &aTrans)
+		: a(aTrans.a), p(aTrans.p)
+	{
+	}
+
 	Transform2(const Matrix2 &aM)
 		: a(aM.Angle()), p(aM.p)
 	{

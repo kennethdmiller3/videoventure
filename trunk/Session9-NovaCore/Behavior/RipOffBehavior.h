@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Behavior.h"
+#include "Collidable.h"
 
 class Entity;
 
@@ -9,10 +10,10 @@ class RipOffBehaviorTemplate
 public:
 	unsigned int mTargetTag;
 
-	b2Filter mAvoidFilter;
+	CollidableFilter mAvoidFilter;
 	float mAvoidRadius;
 
-	b2Filter mAttackFilter;
+	CollidableFilter mAttackFilter;
 	float mAttackRadius;
 
 	float mCloseRadius;
@@ -56,11 +57,11 @@ public:
 protected:
 	unsigned int RandomTarget(void);
 	unsigned int ClosestTarget(float aRadius, bool aLocked);
-	unsigned int ClosestEntity(float aRadius, b2Filter aFilter);
+	unsigned int ClosestEntity(float aRadius, const CollidableFilter &aFilter);
 
 	void Drive(float aSpeed, Vector2 aDirection);
 
-	void Escape(unsigned int aId1, unsigned int aId2, float aTime, const b2Contact &aContact);
+	void Escape(unsigned int aId1, unsigned int aId2, float aTime, const Vector2 &aContact, const Vector2 &aNormal);
 
 	void Attach(unsigned int aTarget);
 	void Detach(unsigned int aTarget);

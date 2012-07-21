@@ -81,20 +81,20 @@ Status EdgeBehavior::Execute(void)
 	const Transform2 &transform = entity->GetTransform();
 
 	// push away from the edges of the world (HACK)
-	b2AABB edge(Collidable::GetBoundary());
-	edge.lowerBound.x += edgebehavior.mDistance;
-	edge.upperBound.x -= edgebehavior.mDistance;
-	edge.lowerBound.y += edgebehavior.mDistance;
-	edge.upperBound.y -= edgebehavior.mDistance;
+	AlignedBox2 edge(Collidable::GetBoundary());
+	edge.min.x += edgebehavior.mDistance;
+	edge.max.x -= edgebehavior.mDistance;
+	edge.min.y += edgebehavior.mDistance;
+	edge.max.y -= edgebehavior.mDistance;
 	Vector2 push(0, 0);
-	if (transform.p.x < edge.lowerBound.x)
-		push.x += (edge.lowerBound.x - transform.p.x) * edgebehavior.mStrength;
-	if (transform.p.x > edge.upperBound.x)
-		push.x += (edge.upperBound.x - transform.p.x) * edgebehavior.mStrength;
-	if (transform.p.y < edge.lowerBound.y)
-		push.y += (edge.lowerBound.y - transform.p.y) * edgebehavior.mStrength;
-	if (transform.p.y > edge.upperBound.y)
-		push.y += (edge.upperBound.y - transform.p.y) * edgebehavior.mStrength;
+	if (transform.p.x < edge.min.x)
+		push.x += (edge.min.x - transform.p.x) * edgebehavior.mStrength;
+	if (transform.p.x > edge.max.x)
+		push.x += (edge.max.x - transform.p.x) * edgebehavior.mStrength;
+	if (transform.p.y < edge.min.y)
+		push.y += (edge.min.y - transform.p.y) * edgebehavior.mStrength;
+	if (transform.p.y > edge.max.y)
+		push.y += (edge.max.y - transform.p.y) * edgebehavior.mStrength;
 	if (push.x || push.y)
 	{
 		mController->mMove += push;

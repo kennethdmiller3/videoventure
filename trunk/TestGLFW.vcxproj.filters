@@ -90,9 +90,6 @@
     <ClInclude Include="Source\Core\Overlay.h">
       <Filter>Core</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Core\Pathing.h">
-      <Filter>Core</Filter>
-    </ClInclude>
     <ClInclude Include="Source\Core\PerfTimer.h">
       <Filter>Core</Filter>
     </ClInclude>
@@ -414,35 +411,14 @@
     <ClInclude Include="Source\Expression\ExpressionVariable.h">
       <Filter>Expression</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Physics\PhysicsDistanceJoint.h">
-      <Filter>Physics</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Physics\PhysicsFrictionJoint.h">
-      <Filter>Physics</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Physics\PhysicsPrismaticJoint.h">
-      <Filter>Physics</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Physics\PhysicsPulleyJoint.h">
-      <Filter>Physics</Filter>
-    </ClInclude>
+    <ClInclude Include="Source\stdafx.h" />
+    <ClInclude Include="Source\targetver.h" />
     <ClInclude Include="Source\Physics\PhysicsRevoluteJoint.h">
-      <Filter>Physics</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Physics\PhysicsRopeJoint.h">
       <Filter>Physics</Filter>
     </ClInclude>
     <ClInclude Include="Source\Physics\PhysicsUtilities.h">
       <Filter>Physics</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Physics\PhysicsWeldJoint.h">
-      <Filter>Physics</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Physics\PhysicsWheelJoint.h">
-      <Filter>Physics</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\stdafx.h" />
-    <ClInclude Include="Source\targetver.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Core\Collidable.cpp">
@@ -482,9 +458,6 @@
       <Filter>Core</Filter>
     </ClCompile>
     <ClCompile Include="Source\Core\Particle.cpp">
-      <Filter>Core</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Core\Pathing.cpp">
       <Filter>Core</Filter>
     </ClCompile>
     <ClCompile Include="Source\Core\PerfTimer.cpp">
@@ -826,33 +799,15 @@
     <ClCompile Include="Source\Expression\ExpressionVariable.cpp">
       <Filter>Expression</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Physics\PhysicsDistanceJoint.cpp">
-      <Filter>Physics</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Physics\PhysicsFrictionJoint.cpp">
-      <Filter>Physics</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Physics\PhysicsPrismaticJoint.cpp">
-      <Filter>Physics</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Physics\PhysicsPulleyJoint.cpp">
-      <Filter>Physics</Filter>
-    </ClCompile>
+    <ClCompile Include="Source\stdafx.cpp" />
     <ClCompile Include="Source\Physics\PhysicsRevoluteJoint.cpp">
-      <Filter>Physics</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Physics\PhysicsRopeJoint.cpp">
       <Filter>Physics</Filter>
     </ClCompile>
     <ClCompile Include="Source\Physics\PhysicsUtilities.cpp">
       <Filter>Physics</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Physics\PhysicsWeldJoint.cpp">
-      <Filter>Physics</Filter>
+    <ClCompile Include="Source\Trace.cpp">
+      <Filter>Game</Filter>
     </ClCompile>
-    <ClCompile Include="Source\Physics\PhysicsWheelJoint.cpp">
-      <Filter>Physics</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\stdafx.cpp" />
   </ItemGroup>
 </Project>

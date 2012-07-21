@@ -212,9 +212,8 @@ Status RipOffBehavior::AvoidFriendly(void)
 	const RipOffBehaviorTemplate &ripoffbehavior = Database::ripoffbehaviortemplate.Get(mId);
 
 	// close to a friendly?
-	b2Filter filter;
-	filter.categoryBits = 0xFFFF;
-	filter.maskBits = 1 << 3;
+	CollidableFilter filter;
+	filter.mType = (1 << (3 + 16)) | 0xFFFF;
 	unsigned int friendly = ClosestEntity(ripoffbehavior.mAvoidRadius, filter);
 	if (!friendly)
 		return failedTask;
@@ -233,9 +232,8 @@ Status RipOffBehavior::AttackEnemy(void)
 	const RipOffBehaviorTemplate &ripoffbehavior = Database::ripoffbehaviortemplate.Get(mId);
 
 	// close to an enemy?
-	b2Filter filter;
-	filter.categoryBits = 0xFFFF;
-	filter.maskBits = 1 << 1;
+	CollidableFilter filter;
+	filter.mType = (1 << (1 + 16)) | 0xFFFF;
 	unsigned int enemy = ClosestEntity(mTarget ? ripoffbehavior.mAttackRadius : 65536.0f, filter);
 	if (!enemy)
 		return failedTask;
@@ -246,14 +244,13 @@ Status RipOffBehavior::AttackEnemy(void)
 	Drive(1, dir);
 
 	// check line of fire
-	b2Vec2 shotstart = mEntity->GetPosition();
-	b2Vec2 shotend = mEntity->GetTransform().Transform(Vector2(0, 64));
-	b2Filter shotfilter;
-	shotfilter.categoryBits = 0xFFFF;
-	shotfilter.maskBits = 1 << 4;
+	Vector2 shotstart = mEntity->GetPosition();
+	Vector2 shotend = mEntity->GetTransform().Transform(Vector2(0, 64));
+	CollidableFilter shotfilter;
+	shotfilter.mType = 0xFFFF | (1 << 4);
 	float lambda = 1.0f;
-	b2Vec2 normal;
-	b2Fixture *shape;
+	Vector2 normal;
+	CollidableShape *shape;
 	unsigned int hitId = Collidable::TestSegment(shotstart, shotend, shotfilter, mId, lambda, normal, shape);
 
 	// fire if not blocked
@@ -353,9 +350,9 @@ Status RipOffBehavior::AttachToTarget(void)
 Status RipOffBehavior::PickRandomDirection(void)
 {
 	// get world boundary perimeter
-	const b2AABB &boundary = Collidable::GetBoundary();
-	float width = boundary.upperBound.x - boundary.lowerBound.x;
-	float height = boundary.upperBound.y - boundary.lowerBound.x;
+	const AlignedBox2 &boundary = Collidable::GetBoundary();
+	float width = boundary.max.x - boundary.min.x;
+	float height = boundary.max.y - boundary.min.x;
 	float length = 2.0f * (width + height);
 
 	// pick a random spot along the perimeter
@@ -365,30 +362,30 @@ Status RipOffBehavior::PickRandomDirection(void)
 	Vector2 point;
 	if (value <= width)
 	{
-		point.x = boundary.lowerBound.x + value;
-		point.y = boundary.lowerBound.y;
+		point.x = boundary.min.x + value;
+		point.y = boundary.min.y;
 	}
 	else
 	{
 		value -= width;
 		if (value <= height)
 		{
-			point.x = boundary.upperBound.x;
-			point.y = boundary.lowerBound.y + value;
+			point.x = boundary.max.x;
+			point.y = boundary.min.y + value;
 		}
 		else
 		{
 			value -= height;
 			if (value <= width)
 			{
-				point.x = boundary.upperBound.x - value;
-				point.y = boundary.upperBound.y;
+				point.x = boundary.max.x - value;
+				point.y = boundary.max.y;
 			}
 			else
 			{
 				value -= width;
-				point.x = boundary.lowerBound.x;
-				point.y = boundary.upperBound.y - value;
+				point.x = boundary.min.x;
+				point.y = boundary.max.y - value;
 			}
 		}
 	}
@@ -496,78 +493,58 @@ unsigned int RipOffBehavior::ClosestTarget(float aRadius, bool aLocked)
 	return bestTarget;
 }
 
-class ClosestEntityCallback : public b2QueryCallback
+class ClosestEntityCallback
 {
 public:
 	unsigned int mId;
-	b2Filter mFilter;
+	CollidableFilter mFilter;
 	Transform2 mTransform;
 	float mBestDist;
 	unsigned int mBestTarget;
 
 public:
-	ClosestEntityCallback(unsigned int aId, float aRadius, const b2Filter &aFilter, const Transform2 &aTransform)
+	ClosestEntityCallback(unsigned int aId, float aRadius, const CollidableFilter &aFilter, const Transform2 &aTransform)
 		: mId(aId), mFilter(aFilter), mTransform(aTransform), mBestDist(aRadius), mBestTarget(0)
 	{
 	}
 
-	virtual bool ReportFixture(b2Fixture* fixture)
+	void Report(CollidableShape *shape, float distance, const Vector2 &point)
 	{
-		// skip unhittable fixtures
-		if (fixture->IsSensor())
-			return true;
-		if (!Collidable::CheckFilter(mFilter, fixture->GetFilterData()))
-			return true;
-
-		// get the parent body
-		b2Body* body = fixture->GetBody();
+		// skip unhittable shapes
+		if (Collidable::IsSensor(shape))
+			return;
+		if (!Collidable::CheckFilter(mFilter, Collidable::GetFilter(shape)))
+			return;
 
 		// get the collidable identifier
-		unsigned int targetId = reinterpret_cast<unsigned int>(body->GetUserData());
+		unsigned int targetId = Collidable::GetId(shape);
 
 		// skip non-entity
 		if (targetId == 0)
-			return true;
+			return;
 
 		// skip self
 		if (targetId == mId)
-			return true;
-
-		// get local position
-		b2Vec2 localPos;
-		switch (fixture->GetType())
-		{
-		case b2Shape::e_circle:		localPos = static_cast<b2CircleShape *>(fixture->GetShape())->m_p;	break;
-		case b2Shape::e_polygon:	localPos = static_cast<b2PolygonShape *>(fixture->GetShape())->m_centroid; break;
-		default:					localPos = Vector2(0, 0); break;
-		}
-		Vector2 fixturePos(body->GetWorldPoint(localPos));
-
-		// get range
-		Vector2 dir(mTransform.Transform(fixturePos));
-		float dist = dir.Length() - 0.5f * fixture->GetShape()->m_radius;
+			return;
 
 		// if closer than the current best
-		if (mBestDist > dist)
+		if (mBestDist > distance)
 		{
 			// update target
-			mBestDist = dist;
+			mBestDist = distance;
 			mBestTarget = targetId;
 		}
-		return true;
 	}
 };
 
-unsigned int RipOffBehavior::ClosestEntity(float aRadius, b2Filter aFilter)
+unsigned int RipOffBehavior::ClosestEntity(float aRadius, const CollidableFilter &aFilter)
 {
 	// fill in callback values
 	ClosestEntityCallback callback(mId, aRadius, aFilter, mEntity->GetTransform());
 
 	// perform query
-	b2AABB aabb;
-	aabb.lowerBound.Set(mEntity->GetPosition().x - aRadius, mEntity->GetPosition().y - aRadius);
-	aabb.upperBound.Set(mEntity->GetPosition().x + aRadius, mEntity->GetPosition().y + aRadius);
-	Collidable::QueryAABB(&callback, aabb);
+	Collidable::QueryRadius(mEntity->GetPosition(), aRadius, aFilter, 
+		Collidable::QueryRadiusDelegate(&callback, &ClosestEntityCallback::Report));
 
 	// return best target
 	return callback.mBestTarget;
@@ -590,7 +567,7 @@ void RipOffBehavior::Drive(float aSpeed, Vector2 aDirection)
 }
 
 // escape
-void RipOffBehavior::Escape(unsigned int aId1, unsigned int aId2, float aTime, const b2Contact &aContact)
+void RipOffBehavior::Escape(unsigned int aId1, unsigned int aId2, float aTime, const Vector2 &aContact, const Vector2 &aNormal)
 {
 	// skip incorrect recipient
 	if (aId2 != mId)

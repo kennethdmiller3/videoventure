@@ -188,7 +188,7 @@ Graze::~Graze(void)
 {
 }
 
-class GrazeQueryCallback : public b2QueryCallback
+class GrazeQueryCallback
 {
 public:
 	unsigned int mId;
@@ -198,53 +198,37 @@ public:
 	float mStep;
 
 public:
-	virtual bool ReportFixture(b2Fixture* fixture)
+	void Report(CollidableShape *shape, float distance, const Vector2 &point)
 	{
 		// skip unhittable shapes
-		if (fixture->IsSensor())
-			return true;
-		if (!Collidable::CheckFilter(mGraze.mFilter, fixture->GetFilterData()))
-			return true;
-
-		// get the parent body
-		b2Body* body = fixture->GetBody();
+		if (Collidable::IsSensor(shape))
+			return;
+		if (!Collidable::CheckFilter(mGraze.mFilter, Collidable::GetFilter(shape)))
+			return;
 
 		// get the collidable identifier
-		unsigned int targetId = reinterpret_cast<unsigned int>(body->GetUserData());
+		unsigned int targetId = Collidable::GetId(shape);
 
 		// skip non-entity
 		if (targetId == 0)
-			return true;
+			return;
 
 		// skip self
 		if (targetId == mId)
-			return true;
+			return;
 
-		// get local position
-		b2Vec2 localPos;
-		switch (fixture->GetType())
-		{
-		case b2Shape::e_circle:		localPos = static_cast<b2CircleShape *>(fixture->GetShape())->m_p;	break;
-		case b2Shape::e_polygon:	localPos = static_cast<b2PolygonShape *>(fixture->GetShape())->m_centroid; break;
-		default:					localPos = Vector2(0, 0); break;
-		}
-		Vector2 fixturePos(body->GetWorldPoint(localPos));
+		// get center position
+		Vector2 centerPos(Collidable::GetCenter(shape));
 
-		// get range
-		Vector2 dir(mTransform.Transform(fixturePos));
-		float range = dir.Length();
-		float radius = 0.5f * fixture->GetShape()->m_radius;	//fixture->ComputeSweepRadius(localPos);
-
-		// skip if out of range
-		if (range > mGraze.mRadiusOuter + radius)
-			return true;
+		// get direction
+		Vector2 dir(mTransform.Transform(centerPos));
 
 		// apply value falloff
 		float interp;
-		if (range <= mGraze.mRadiusInner - radius)
+		if (distance <= mGraze.mRadiusInner)
 			interp = 0.0f;
 		else
-			interp = (range - mGraze.mRadiusInner + radius) / (mGraze.mRadiusOuter + radius - mGraze.mRadiusInner + radius);
+			interp = (distance - mGraze.mRadiusInner) / (mGraze.mRadiusOuter - mGraze.mRadiusInner);
 		float value = Lerp(mGraze.mValueInner, mGraze.mValueOuter, interp);
 
 		// if spawning on collect...
@@ -278,8 +262,6 @@ public:
 				}
 			}
 		}
-
-		return true;
 	}
 
 	void Spark(unsigned int aId)
@@ -345,10 +327,7 @@ void Graze::Update(float aStep)
 	callback.mAmmo = mAmmo;
 	callback.mStep = aStep;
 
-	// get nearby fixtures
-	b2AABB aabb;
-	const float lookRadius = graze.mRadiusOuter;
-	aabb.lowerBound.Set(entity->GetPosition().x - lookRadius, entity->GetPosition().y - lookRadius);
-	aabb.upperBound.Set(entity->GetPosition().x + lookRadius, entity->GetPosition().y + lookRadius);
-	Collidable::QueryAABB(&callback, aabb);
+	// get nearby shapes
+	Collidable::QueryRadius(entity->GetPosition(), graze.mRadiusOuter, graze.mFilter, 
+		Collidable::QueryRadiusDelegate(&callback, &GrazeQueryCallback::Report));
 }

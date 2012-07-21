@@ -20,18 +20,8 @@ public:
 	{
 	}
 
-	Vector2(const b2Vec2 &v)
-		: x(v.x), y(v.y)
-	{
-	}
-
 	~Vector2(void)
 	{
-	}
-
-	operator b2Vec2(void) const
-	{
-		return b2Vec2(x, y);
 	}
 
 	float &operator [](int index)

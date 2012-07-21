@@ -162,7 +162,7 @@ void Ship::Simulate(float aStep)
 	const ShipTemplate &ship = Database::shiptemplate.Get(mId);
 
 	// get collision body (if any)
-	b2Body *body = Database::collidablebody.Get(mId);
+	CollidableBody *body = Database::collidablebody.Get(mId);
 
 	// get ship controller
 	const Controller *controller = Database::controller.Get(mId);
@@ -184,12 +184,12 @@ void Ship::Simulate(float aStep)
 			: Lerp(ship.mNeutralVeloc, ship.mReverseVeloc, -mMove.y));
 		const Transform2 &transform = entity->GetTransform();
 		Vector2 dv(transform.Rotate(localvel) - entity->GetVelocity());
-		float it = std::min(acc * InvSqrt(dv.LengthSq() + 0.0001f), 1.0f / aStep);
-		Vector2 new_accel(dv * it);
+		float scale = std::min(aStep * acc * InvSqrt(dv.LengthSq() + 0.0001f), 1.0f);
+		dv *= scale;
 		if (body)
-			body->ApplyForce(new_accel * body->GetMass(), body->GetTransform().p, true);
+			Collidable::AddVelocity(body, dv);
 		else
-			entity->SetVelocity(entity->GetVelocity() + aStep * new_accel);
+			entity->SetVelocity(entity->GetVelocity() + dv);
 
 		// save throttle for the renderer
 		Database::Typed<float> &variables = Database::variable.Open(mId);
@@ -213,7 +213,7 @@ void Ship::Simulate(float aStep)
 	{
 		const float mTurn = controller ? controller->mTurn : 0.0f;
 		if (body)
-			body->SetAngularVelocity(mTurn * ship.mMaxOmega);
+			Collidable::SetOmega(body, mTurn * ship.mMaxOmega);
 		else
 			entity->SetOmega(mTurn * ship.mMaxOmega);
 	}

@@ -78,7 +78,6 @@
     <ClInclude Include="Source\Core\MemoryPool.h" />
     <ClInclude Include="Source\Core\Noise.h" />
     <ClInclude Include="Source\Core\Overlay.h" />
-    <ClInclude Include="Source\Core\Pathing.h" />
     <ClInclude Include="Source\Core\PerfTimer.h" />
     <ClInclude Include="Source\Core\Random.h" />
     <ClInclude Include="Source\Core\Renderable.h" />
@@ -186,15 +185,8 @@
     <ClInclude Include="Source\Expression\ExpressionSwizzle.h" />
     <ClInclude Include="Source\Expression\ExpressionTime.h" />
     <ClInclude Include="Source\Expression\ExpressionVariable.h" />
-    <ClInclude Include="Source\Physics\PhysicsDistanceJoint.h" />
-    <ClInclude Include="Source\Physics\PhysicsFrictionJoint.h" />
-    <ClInclude Include="Source\Physics\PhysicsPrismaticJoint.h" />
-    <ClInclude Include="Source\Physics\PhysicsPulleyJoint.h" />
     <ClInclude Include="Source\Physics\PhysicsRevoluteJoint.h" />
-    <ClInclude Include="Source\Physics\PhysicsRopeJoint.h" />
     <ClInclude Include="Source\Physics\PhysicsUtilities.h" />
-    <ClInclude Include="Source\Physics\PhysicsWeldJoint.h" />
-    <ClInclude Include="Source\Physics\PhysicsWheelJoint.h" />
     <ClInclude Include="Source\stdafx.h" />
     <ClInclude Include="Source\targetver.h" />
   </ItemGroup>
@@ -212,7 +204,6 @@
     <ClCompile Include="Source\Core\Noise.cpp" />
     <ClCompile Include="Source\Core\Overlay.cpp" />
     <ClCompile Include="Source\Core\Particle.cpp" />
-    <ClCompile Include="Source\Core\Pathing.cpp" />
     <ClCompile Include="Source\Core\PerfTimer.cpp" />
     <ClCompile Include="Source\Core\Renderable.cpp" />
     <ClCompile Include="Source\Core\Simulatable.cpp" />
@@ -299,6 +290,7 @@
     <ClCompile Include="Source\Team.cpp" />
     <ClCompile Include="Source\Test.cpp" />
     <ClCompile Include="Source\Tilemap.cpp" />
+    <ClCompile Include="Source\Trace.cpp" />
     <ClCompile Include="Source\TurnAction.cpp" />
     <ClCompile Include="Source\WaveSequence.cpp" />
     <ClCompile Include="Source\Weapon.cpp" />
@@ -326,28 +318,16 @@
     <ClCompile Include="Source\Expression\ExpressionSwizzle.cpp" />
     <ClCompile Include="Source\Expression\ExpressionTime.cpp" />
     <ClCompile Include="Source\Expression\ExpressionVariable.cpp" />
-    <ClCompile Include="Source\Physics\PhysicsDistanceJoint.cpp" />
-    <ClCompile Include="Source\Physics\PhysicsFrictionJoint.cpp" />
-    <ClCompile Include="Source\Physics\PhysicsPrismaticJoint.cpp" />
-    <ClCompile Include="Source\Physics\PhysicsPulleyJoint.cpp" />
     <ClCompile Include="Source\Physics\PhysicsRevoluteJoint.cpp" />
-    <ClCompile Include="Source\Physics\PhysicsRopeJoint.cpp" />
     <ClCompile Include="Source\Physics\PhysicsUtilities.cpp" />
-    <ClCompile Include="Source\Physics\PhysicsWeldJoint.cpp" />
-    <ClCompile Include="Source\Physics\PhysicsWheelJoint.cpp" />
     <ClCompile Include="Source\stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Box2D\Box2D\Build\vs2010\Box2D.vcxproj">
-      <Project>{98400d17-43a5-1a40-95be-c53ac78e7694}</Project>
-      <Private>true</Private>
-      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
-      <CopyLocalSatelliteAssemblies>false</CopyLocalSatelliteAssemblies>
-      <LinkLibraryDependencies>true</LinkLibraryDependencies>
-      <UseLibraryDependencyInputs>false</UseLibraryDependencyInputs>
+    <ProjectReference Include="..\Chipmunk-6.1.1\msvc\vc10\chipmunk\chipmunk.vcxproj">
+      <Project>{c1ace86e-5a14-490a-9678-104ba2546723}</Project>
     </ProjectReference>
     <ProjectReference Include="..\glfw\support\msvc100\GLFW.vcxproj">
       <Project>{4da03747-f505-4a98-9124-03b3b73b9b3b}</Project>

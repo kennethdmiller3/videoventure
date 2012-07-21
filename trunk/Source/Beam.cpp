@@ -156,13 +156,13 @@ void Beam::Update(float aStep)
 		Entity *entity = Database::entity.Get(mId);
 
 		// beam segment
-		b2Vec2 start(entity->GetPosition());
-		b2Vec2 end(entity->GetPosition() + Matrix2(entity->GetTransform()).y * curRange);
+		Vector2 start(entity->GetPosition());
+		Vector2 end(entity->GetPosition() + Matrix2(entity->GetTransform()).y * curRange);
 
 		// impact point
 		float lambda = 1.0f;
-		b2Vec2 normal(0.0f, 0.0f);
-		b2Fixture *shape = NULL;
+		Vector2 normal(0.0f, 0.0f);
+		cpShape *shape = NULL;
 
 		// check for segment intersection
 		unsigned int hitId = Collidable::TestSegment(start, end, beam.mFilter, mId, lambda, normal, shape);

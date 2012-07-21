@@ -139,7 +139,7 @@ Explosion::~Explosion(void)
 {
 }
 
-class ExplosionQueryCallback : public b2QueryCallback
+class ExplosionQueryCallback
 {
 public:
 	unsigned int mId;
@@ -149,56 +149,34 @@ public:
 	float mCurDamage[2];
 
 public:
-	virtual bool ReportFixture(b2Fixture* fixture)
+	void Report(CollidableShape* shape, float distance, const Vector2 &point)
 	{
-		// skip unhittable fixtures
-		if (fixture->IsSensor())
-			return true;
-		if (!Collidable::CheckFilter(mExplosion.mFilter, fixture->GetFilterData()))
-			return true;
-
-		// get the parent body
-		b2Body* body = fixture->GetBody();
+		// skip unhittable shapes
+		if (Collidable::IsSensor(shape))
+			return;
+		if (!Collidable::CheckFilter(mExplosion.mFilter, Collidable::GetFilter(shape)))
+			return;
 
 		// get the collidable identifier
-		unsigned int targetId = reinterpret_cast<unsigned int>(body->GetUserData());
+		unsigned int targetId = Collidable::GetId(shape);
 
 		// skip non-entity
 		if (targetId == 0)
-			return true;
+			return;
 
 		// skip self
 		if (targetId == mId)
-			return true;
-
-		// get local position
-		b2Vec2 localPos;
-		switch (fixture->GetType())
-		{
-		case b2Shape::e_circle:		localPos = static_cast<b2CircleShape *>(fixture->GetShape())->m_p;	break;
-		case b2Shape::e_polygon:	localPos = static_cast<b2PolygonShape *>(fixture->GetShape())->m_centroid; break;
-		default:					localPos = Vector2(0, 0); break;
-		}
-		Vector2 fixturePos(body->GetWorldPoint(localPos));
-
-		// get range
-		Vector2 dir(mTransform.Transform(fixturePos));
-		float range = dir.Length();
-		float radius = 0.5f * fixture->GetShape()->m_radius;	//fixture->ComputeSweepRadius(localPos);
-
-		// skip if out of range
-		if (range > mCurRadius[1] + radius)
-			return true;
+			return;
 
 		// apply damage falloff
 		float damage;
-		if (range <= mCurRadius[0] - radius)
+		if (distance <= mCurRadius[0])
 		{
 			damage = mCurDamage[0];
 		}
 		else
 		{
-			float interp = (range - mCurRadius[0] + radius) / (mCurRadius[1] + radius - mCurRadius[0] + radius);
+			float interp = (distance - mCurRadius[0]) / (mCurRadius[1] - mCurRadius[0]);
 			damage = Lerp(mCurDamage[0], mCurDamage[1], interp);
 		}
 
@@ -225,8 +203,6 @@ public:
 				cancelable->Cancel(targetId, mId);
 			}
 		}
-
-		return true;
 	}
 };
 
@@ -281,15 +257,9 @@ void Explosion::Update(float aStep)
 		// world-to-local transform
 		callback.mTransform = entity->GetTransform().Inverse();
 
-		// get the collision world
-		b2World *world = Collidable::GetWorld();
-
-		// get nearby fixtures
-		b2AABB aabb;
-		const float lookRadius = callback.mCurRadius[1];
-		aabb.lowerBound.Set(entity->GetPosition().x - lookRadius, entity->GetPosition().y - lookRadius);
-		aabb.upperBound.Set(entity->GetPosition().x + lookRadius, entity->GetPosition().y + lookRadius);
-		world->QueryAABB(&callback, aabb);
+		// get shapes within the radius
+		Collidable::QueryRadius(entity->GetPosition(), callback.mCurRadius[1], explosion.mFilter,
+			Collidable::QueryRadiusDelegate(&callback, &ExplosionQueryCallback::Report));
 	}
 
 	// advance life timer

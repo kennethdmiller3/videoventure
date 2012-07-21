@@ -2,7 +2,7 @@
 <template name="enemyturret" type="turret">
 	<collidable>
 		<body name="main">
-			<circle radius="6">
+			<circle name="main" radius="6">
 				<density value="1" />
 				<friction value="0.5" />
 				<restitution value="0.5" />

@@ -17,6 +17,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <malloc.h>
+#include <assert.h>
 
 // STL includes
 #pragma message( "vector" )
@@ -59,10 +60,6 @@ const int AUDIO_FREQUENCY = 48000;
 
 // TinyXML includes
 #include "tinyxml2.h"
-
-// Box2D includes
-#pragma message( "box2d" )
-#include "Box2d/Box2D.h"
 
 // FastDelegate includes
 #include "FastDelegate.h"

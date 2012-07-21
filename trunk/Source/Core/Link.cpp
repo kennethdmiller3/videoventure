@@ -64,20 +64,20 @@ namespace Database
 					if (linktemplate.mUpdatePosition)
 					{
 						// get revolute joints for the link target
-						Database::Typed<b2RevoluteJointDef> &joints = Database::revolutejointdef.Open(aSecondary);
+						Database::Typed<RevoluteJointDef> &joints = Database::revolutejointdef.Open(aSecondary);
 							
 						// configure the joint definition
-						b2RevoluteJointDef &def = joints.Open(aId);
-						def.bodyA = reinterpret_cast<b2Body *>(aId);
-						def.bodyB = reinterpret_cast<b2Body *>(aSecondary);
-						def.localAnchorA.Set(linktemplate.mOffset.p.x, linktemplate.mOffset.p.y);
-						def.localAnchorB.Set(0, 0);
-						def.referenceAngle = linktemplate.mOffset.Angle();
+						RevoluteJointDef &def = joints.Open(aId);
+						def.mIdA = aId;
+						def.mIdB = aSecondary;
+						def.mAnchorA = linktemplate.mOffset.p;
+						def.mAnchorB = Vector2(0.0f, 0.0f);
+						def.mRefAngle = linktemplate.mOffset.Angle();
 						if (linktemplate.mUpdateAngle)
 						{
-							def.lowerAngle = 0.0f;
-							def.upperAngle = 0.0f;
-							def.enableLimit = true;
+							def.mMinAngle = 0.0f;
+							def.mMaxAngle = 0.0f;
+							def.mEnableLimit = true;
 						}
 						joints.Close(aId);
 
@@ -275,12 +275,12 @@ void Link::Update(float aStep)
 			secondary->SetPosition(transform.p);
 			secondary->SetVelocity(entity->GetVelocity());
 		}
-		if (b2Body *body = Database::collidablebody.Get(mSecondary))
+		if (CollidableBody *body = Database::collidablebody.Get(mSecondary))
 		{
-			body->SetAwake(true);
-			body->SetTransform(transform.p, transform.a);
-			body->SetLinearVelocity(entity->GetVelocity());
-			body->SetAngularVelocity(entity->GetOmega());
+			Collidable::SetPosition(body, transform.p);
+			Collidable::SetAngle(body, transform.a);
+			Collidable::SetVelocity(body, entity->GetVelocity());
+			Collidable::SetOmega(body, entity->GetOmega());
 		}
 	}
 }

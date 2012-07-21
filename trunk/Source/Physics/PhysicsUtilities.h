@@ -1,5 +1,19 @@
 #pragma once
 
-extern bool ConfigureJointItem(const tinyxml2::XMLElement *element, b2JointDef &joint);
+class ConstraintDef
+{
+public:
+	ConstraintDef()
+		: mIdA(0)
+		, mIdB(0)
+		, mMaxForce(FLT_MAX)
+	{
+	}
 
-extern void UnpackJointDef(b2JointDef &aDef, unsigned int aId);
+public:
+	unsigned int mIdA;
+	unsigned int mIdB;
+	float mMaxForce;
+};
+
+extern bool ConfigureJointItem(const tinyxml2::XMLElement *element, ConstraintDef &joint);

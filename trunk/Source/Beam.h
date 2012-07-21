@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Updatable.h"
+#include "Collidable.h"
 
 class BeamTemplate
 {
@@ -13,7 +14,7 @@ public:
 	float mRange;
 
 	// collision
-	b2Filter mFilter;
+	CollidableFilter mFilter;
 
 	// spawn
 	unsigned int mSpawnOnImpact;

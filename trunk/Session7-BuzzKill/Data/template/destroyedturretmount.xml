@@ -1,5 +1,14 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <template name="destroyedturretmount">
+	<collidable>
+		<body name="main">
+			<circle radius="6">
+				<density value="1" />
+				<filter name="inert" />
+				<layers default="0" />
+			</circle>
+		</body>
+	</collidable>
 	<renderable radius="8">
 		<drawlist>
 			<pushmatrix>
