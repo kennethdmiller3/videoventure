@@ -1,0 +1,50 @@
+<?xml version="1.0" ?>
+<template name="dreadenergyventdestroyed">
+	<renderable radius="192" depth="256">
+		<drawlist>
+			<translate z="256" />
+			<pushmatrix>
+				<scale x="16" y="32" />
+				<triangle_fan>
+					<color r="0.0" g="0.0" b="0.0" a="1.0" />
+					<vertex x="0" y="0" />
+					<color r="0.0" g="0.0" b="0.0" a="0.0" />
+					<vertex x="1.000000" y="0.000000" />
+					<vertex x="0.923880" y="0.382683" />
+					<vertex x="0.707107" y="0.707107" />
+					<vertex x="0.382683" y="0.923880" />
+					<vertex x="0.000000" y="1.000000" />
+					<vertex x="-0.382683" y="0.923880" />
+					<vertex x="-0.707107" y="0.707107" />
+					<vertex x="-0.923880" y="0.382683" />
+					<vertex x="-1.000000" y="0.00000" />
+					<vertex x="-0.923880" y="-0.382683" />
+					<vertex x="-0.707107" y="-0.707107" />
+					<vertex x="-0.382683" y="-0.923880" />
+					<vertex x="0.000000" y="-1.00000" />
+					<vertex x="0.382683" y="-0.923880" />
+					<vertex x="0.707107" y="-0.707107" />
+					<vertex x="0.923880" y="-0.382683" />
+					<vertex x="1.000000" y="0.000000" />
+				</triangle_fan>
+			</pushmatrix>
+			<color r="0.2" g="0.2" b="0.2" a="1.0" />
+			<pushmatrix>
+				<scale x="12" y="24" />
+				<calllist name="circle16" />
+			</pushmatrix>
+			<color r="0.1" g="0.1" b="0.1" a="1.0" />
+			<pushmatrix>
+				<scale x="10" y="20" />
+				<calllist name="circle16" />
+			</pushmatrix>
+		</drawlist>
+	</renderable>
+	<spawner>
+		<offset x="0" y="0" />
+		<scatter x="6" y="12" />
+		<velocity x="0" y="-24" />
+		<variance x="4" y="4" />
+		<spawn name="dreadsmokepuff" start="0" cycle="0.1" track="0" />
+	</spawner>
+</template>

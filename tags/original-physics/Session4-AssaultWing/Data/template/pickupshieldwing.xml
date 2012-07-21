@@ -1,0 +1,81 @@
+<?xml version="1.0" ?>
+<template name="pickupshieldwing">
+	<collidable>
+		<body name="main">
+			<box w="6" h="6">
+				<density value="1" />
+				<friction value="0.5" />
+				<restitution value="0.5" />
+				<category value="0" />
+				<mask bit1="0" bit2="0" bit3="0" bit4="0" />
+			</box>
+			<box w="6" h="6">
+				<density value="0" />
+				<friction value="0.5" />
+				<restitution value="0.5" />
+				<filter name="blueunit" />
+				<mask bit2="0" bit3="0" bit4="0" />
+				<sensor value="1" />
+			</box>
+			<damping linear="1" angular="1" />
+		</body>
+	</collidable>
+	<renderable radius="10" period="0.1">
+		<pushmatrix>
+			<color>
+				<key time="0.00" r="0.5" g="1.0" b="0.0" a="0.25" />
+				<key time="0.05" r="0.0" g="1.0" b="0.0" a="0.25" />
+				<key time="0.10" r="0.5" g="1.0" b="0.0" a="0.25" />
+			</color>
+			<scale>
+				<key time="0.00" x="4.0" y="4.0" />
+				<key time="0.05" x="3.5" y="3.5" />
+				<key time="0.10" x="4.0" y="4.0" />
+			</scale>
+			<calllist name="circle16" />
+		</pushmatrix>
+		<pushmatrix>
+			<color>
+				<key time="0.00" r="0.7" g="1.0" b="0.4" a="0.5" />
+				<key time="0.05" r="0.5" g="1.0" b="0.0" a="0.5" />
+				<key time="0.10" r="0.7" g="1.0" b="0.4" a="0.5" />
+			</color>
+			<scale>
+				<key time="0.00" x="3.0" y="3.0" />
+				<key time="0.05" x="2.5" y="2.5" />
+				<key time="0.10" x="3.0" y="3.0" />
+			</scale>
+			<calllist name="circle16" />
+		</pushmatrix>
+		<pushmatrix>
+			<color>
+				<key time="0.00" r="0.9" g="1.0" b="0.8" a="0.75" />
+				<key time="0.05" r="0.7" g="1.0" b="0.4" a="0.75" />
+				<key time="0.10" r="0.9" g="1.0" b="0.8" a="0.75" />
+			</color>
+			<scale>
+				<key time="0.00" x="2.0" y="2.0" />
+				<key time="0.05" x="1.5" y="1.5" />
+				<key time="0.10" x="2.0" y="2.0" />
+			</scale>
+			<calllist name="circle16" />
+		</pushmatrix>
+		<pushmatrix>
+			<translate x="2" />
+			<calllist name="shieldwing" />
+			<translate x="-4" />
+			<scale x="-1" />
+			<calllist name="shieldwing" />
+		</pushmatrix>
+	</renderable>
+	<pickup spawnoncollect="health3collect">
+		<team name="blue">
+			<link name="lwing" secondary="friendshieldwing_l" />
+			<link name="rwing" secondary="friendshieldwing_r" />
+		</team>
+		<team name="red">
+			<link name="lwing" secondary="enemyshieldwing_l" />
+			<link name="rwing" secondary="enemyshieldwing_r" />
+		</team>
+	</pickup>
+</template>

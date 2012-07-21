@@ -1,0 +1,99 @@
+<?xml version="1.0" ?>
+<template name="enemyshiplarge">
+	<collidable>
+		<body name="main">
+			<circle radius="12">
+				<density value="1" />
+				<friction value="0.5" />
+				<restitution value="0.5" />
+				<filter name="redunit" />
+			</circle>
+		</body>
+	</collidable>
+	<renderable radius="12" period="0.066667">
+		<pushmatrix>
+			<translate y="-12"/>
+			<calldynamiclist name="enemyengineflame"/>
+		</pushmatrix>
+		<drawlist>
+			<triangle_strip>
+				<color r="0.0" g="0.0" b="0.0" a="0.5" />
+				<vertex x="12.5" y="-12.5" />
+				<vertex x="12.5" y="-7.75" />
+				<vertex x="3.75" y="-12.5" />
+				<vertex x="5" y="-4.25" />
+				<vertex x="2.75" y="-10.5" />
+				<vertex x="5" y="1.25" />
+				<vertex x="2.75" y="-10.5" />
+				<vertex x="3" y="3.25" />
+				<vertex x="1.75" y="-12.5" />
+				<vertex x="1.75" y="12.5" />
+				<vertex x="0" y="-12.5" />
+				<vertex x="-1.75" y="12.5" />
+				<vertex x="-1.75" y="-12.5" />
+				<vertex x="-3" y="3.25" />
+				<vertex x="-2.75" y="-10.5" />
+				<vertex x="-5" y="1.25" />
+				<vertex x="-2.75" y="-10.5" />
+				<vertex x="-5" y="-4.25" />
+				<vertex x="-3.75" y="-12.5" />
+				<vertex x="-12.5" y="-7.75" />
+				<vertex x="-12.5" y="-12.5" />
+			</triangle_strip>
+		</drawlist>
+		<color>
+			<param>
+				<min>
+					<sub>
+						<worldtime/>
+						<lasthit/>
+					</sub>
+					<value value="0.05"/>
+				</min>
+			</param>
+			<key time="0.000000" r="1.0" g="1.0" b="1.0" a="1.0" />
+			<key time="0.033333" r="1.0" g="1.0" b="1.0" a="1.0" />
+			<key time="0.050000" r="1.0" g="0.2" b="0.1" a="1.0" />
+		</color>
+		<drawlist>
+			<triangle_strip>
+				<vertex x="12" y="-12" />
+				<vertex x="12" y="-8" />
+				<vertex x="4" y="-12" />
+				<vertex x="4.5" y="-4.5" />
+				<vertex x="3" y="-10" />
+				<vertex x="4.5" y="1" />
+				<vertex x="2.5" y="-10" />
+				<vertex x="2.5" y="3" />
+				<vertex x="1.5" y="-12" />
+				<vertex x="1.5" y="12" />
+				<vertex x="0" y="-12" />
+				<vertex x="-1.5" y="12" />
+				<vertex x="-1.5" y="-12" />
+				<vertex x="-2.5" y="3" />
+				<vertex x="-2.5" y="-10" />
+				<vertex x="-4.5" y="1" />
+				<vertex x="-3" y="-10" />
+				<vertex x="-4.5" y="-4.5" />
+				<vertex x="-4" y="-12" />
+				<vertex x="-12" y="-8" />
+				<vertex x="-12" y="-12" />
+			</triangle_strip>
+		</drawlist>
+	</renderable>
+	<aimer>
+		<drift strength="0.5"/>
+		<wander turn="0.5" turnrate="0.25" />
+		<target range="256" filter="redbullet" />
+		<aim strength="0.5" leading="0" />
+		<pursue strength="1" leading="0" />
+		<fire channel="1" range="128" angle="30" />
+		<evade strength="1" />
+		<close range="64" />
+		<edge strength="0.0625" distance="16"/>
+	</aimer>
+	<ship forwardveloc="30" neutralveloc="0" reverseveloc="-15" strafeveloc="15" maxaccel="30" minaccel="10" maxomega="1" />
+	<damagable health="100" spawnondeath="enemyexplosion" />
+	<team name="red" />
+	<points value="1000" />
+</template>

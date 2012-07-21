@@ -1,0 +1,66 @@
+<?xml version="1.0" ?>
+<!-- player bomb -->
+<dynamicdrawlist name="playerbomb">
+	<drawlist>
+		<color r="1.0" g="1.0" b="1.0" a="1.0" />
+		<triangle_strip>
+			<vertex x="0" y="2" />
+			<vertex x="1.5" y="1.5" />
+			<vertex x="-1.5" y="1.5" />
+			<vertex x="1.5" y="-1" />
+			<vertex x="-1.5" y="-1" />
+			<vertex x="0.5" y="-1.5" />
+			<vertex x="-0.5" y="-1.5" />
+			<vertex x="0.5" y="-2.5" />
+			<vertex x="-0.5" y="-2.5" />
+		</triangle_strip>
+		<quads>
+			<vertex x="0.5" y="-2.0" />
+			<vertex x="1.5" y="-2.5" />
+			<vertex x="1.5" y="-3.5" />
+			<vertex x="0.5" y="-3.0" />
+			<vertex x="-0.5" y="-2.0" />
+			<vertex x="-1.5" y="-2.5" />
+			<vertex x="-1.5" y="-3.5" />
+			<vertex x="-0.5" y="-3.0" />
+		</quads>
+	</drawlist>
+	<triangle_strip>
+		<color>
+			<param>
+				<mod>
+					<time/>
+					<value value="0.9"/>
+				</mod>
+			</param>
+			<key time="0.00" r="1.0" g="0.0" b="0.0" a="1.0"/>
+			<key time="0.10" r="1.0" g="0.0" b="0.0" a="1.0"/>
+			<key time="0.10" r="0.0" g="0.0" b="0.0" a="1.0"/>
+			<key time="0.15" r="0.0" g="0.0" b="0.0" a="1.0"/>
+			<key time="0.15" r="1.0" g="1.0" b="0.0" a="1.0"/>
+			<key time="0.25" r="1.0" g="1.0" b="0.0" a="1.0"/>
+			<key time="0.25" r="0.0" g="0.0" b="0.0" a="1.0"/>
+			<key time="0.30" r="0.0" g="0.0" b="0.0" a="1.0"/>
+			<key time="0.30" r="0.0" g="1.0" b="0.0" a="1.0"/>
+			<key time="0.40" r="0.0" g="1.0" b="0.0" a="1.0"/>
+			<key time="0.40" r="0.0" g="0.0" b="0.0" a="1.0"/>
+			<key time="0.45" r="0.0" g="0.0" b="0.0" a="1.0"/>
+			<key time="0.45" r="0.0" g="1.0" b="1.0" a="1.0"/>
+			<key time="0.55" r="0.0" g="1.0" b="1.0" a="1.0"/>
+			<key time="0.55" r="0.0" g="0.0" b="0.0" a="1.0"/>
+			<key time="0.60" r="0.0" g="0.0" b="0.0" a="1.0"/>
+			<key time="0.60" r="0.0" g="0.0" b="1.0" a="1.0"/>
+			<key time="0.70" r="0.0" g="0.0" b="1.0" a="1.0"/>
+			<key time="0.70" r="0.0" g="0.0" b="0.0" a="1.0"/>
+			<key time="0.75" r="0.0" g="0.0" b="0.0" a="1.0"/>
+			<key time="0.75" r="1.0" g="0.0" b="1.0" a="1.0"/>
+			<key time="0.85" r="1.0" g="0.0" b="1.0" a="1.0"/>
+			<key time="0.85" r="0.0" g="0.0" b="0.0" a="1.0"/>
+			<key time="0.90" r="0.0" g="0.0" b="0.0" a="1.0"/>
+		</color>
+		<vertex x="0.375" y="3"/>
+		<vertex x="-0.375" y="3"/>
+		<vertex x="0.625" y="1"/>
+		<vertex x="-0.625" y="1"/>
+	</triangle_strip>
+</dynamicdrawlist>

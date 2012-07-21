@@ -1,0 +1,31 @@
+<?xml version="1.0" ?>
+<template name="friendrocketwing_r" type="friendrocketwing">
+	<collidable>
+		<body name="main">
+			<box w="2" h="5">
+				<position x="-2" y="0.5" />
+				<density value="0.5" />
+				<friction value="0.5" />
+				<restitution value="0.5" />
+				<filter name="blueunit" />
+			</box>
+		</body>
+	</collidable>
+	<renderable radius="7">
+		<scale x="-1" />
+		<calllist name="rocketwing" />
+		<calllist name="friendrocketwing" />
+	</renderable>
+	<link name="fire1">
+		<offset x="-1.5" />
+		<weapon>
+			<velocity x="-5" />
+		</weapon>
+	</link>
+	<link name="fire2">
+		<offset x="-3.5" />
+		<weapon>
+			<velocity x="-10" />
+		</weapon>
+	</link>
+</template>

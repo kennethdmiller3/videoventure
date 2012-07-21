@@ -1,0 +1,69 @@
+<?xml version="1.0" ?>
+<template name="health1collect">
+	<expire time="0.5" />
+	<sound>
+		<waveloop frequency="3579000" divider="4" delayrepeat="1" waverepeat="5" fadedelta="0" delaydelta="-3" outerrepeat="256" fadestart="0">
+			<wave>
+				<data value="127" />
+				<data value="217" />
+				<data value="255" />
+				<data value="217" />
+				<data value="127" />
+				<data value="36" />
+				<data value="0" />
+				<data value="36" />
+			</wave>
+			<delay>
+				<data value="64" />
+			</delay>
+		</waveloop>
+	</sound>
+	<renderable radius="16">
+		<pushmatrix>
+			<color>
+				<key time="0.00" r="0.7" g="1.0" b="0.4" a="0.5" />
+				<key time="0.25" r="0.0" g="1.0" b="0.0" a="0.0" />
+			</color>
+			<scale>
+				<key time="0.00" x="2.0" y="2.0" />
+				<key time="0.25" x="4.0" y="4.0" />
+			</scale>
+			<calllist name="circle16" />
+		</pushmatrix>
+		<pushmatrix>
+			<color>
+				<key time="0.0" r="0.7" g="1.0" b="0.4" a="0.5" />
+				<key time="1.0" r="0.0" g="1.0" b="0.0" a="0.0" />
+			</color>
+			<repeat count="3">
+				<repeat count="8">
+					<pushmatrix>
+						<translate>
+							<key time="0.0" x="0" y="16" />
+							<key time="0.5" x="0" y="2" />
+						</translate>
+						<scale>
+							<key time="0.0" x="0.5" y="0.5" />
+							<key time="0.5" x="1.0" y="1.0" />
+						</scale>
+						<calllist name="diamond" />
+					</pushmatrix>
+					<rotate angle="45" />
+				</repeat>
+				<rotate angle="-30" />
+				<scale x="0.75" y="0.75" />
+			</repeat>
+		</pushmatrix>
+		<pushmatrix>
+			<color>
+				<key time="0.0" r="0.9" g="1.0" b="0.8" a="1.0" />
+				<key time="0.5" r="0.5" g="1.0" b="0.0" a="0.0" />
+			</color>
+			<scale>
+				<key time="0.0" x="2.0" y="2.0" />
+				<key time="0.5" x="0.0" y="0.0" />
+			</scale>
+			<calllist name="circle16" />
+		</pushmatrix>
+	</renderable>
+</template>

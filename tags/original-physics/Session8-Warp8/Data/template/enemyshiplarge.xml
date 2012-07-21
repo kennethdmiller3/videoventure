@@ -1,0 +1,72 @@
+<?xml version="1.0" ?>
+<template name="enemyshiplarge">
+	<collidable>
+		<body name="main">
+			<circle radius="12">
+				<density value="1" />
+				<friction value="0.5" />
+				<restitution value="0.5" />
+				<filter name="redunit" />
+			</circle>
+			<fixedrotation value="1"/>
+		</body>
+	</collidable>
+	<renderable radius="12" period="0.066667">
+		<scale x="1.5" y="1.5"/>
+		<pushmatrix>
+			<translate y="-8"/>
+			<calldynamiclist name="enemyengineflame"/>
+		</pushmatrix>
+		<color r="1.0" g="0.2" b="0.1" a="1.0" />
+		<calllist name="ship"/>
+	</renderable>
+	<aimer>
+		<wander side="0.5" siderate="0.5" front="0.5" frontrate="0.5"/>
+		<target range="512" filter="redbullet" />
+		<pursue strength="0.5" leading="0" />
+		<evade strength="1" />
+		<close range="32" />
+	</aimer>
+	<ship maxveloc="30" maxaccel="30" minaccel="10" maxomega="0" />
+	<damagable health="15" spawnondeath="enemyexplosion" />
+	<team name="red" />
+	<points value="1000" />
+	<link name="turret" updateangle="0">
+		<offset x="0" y="-2" angle="0"/>
+		<collidable>
+			<body name="main">
+				<circle radius="3">
+					<density value="1"/>
+					<friction value="0.5"/>
+					<restitution value="0.5"/>
+					<filter name="inert"/>
+				</circle>
+			</body>
+		</collidable>
+		<renderable>
+			<pushmatrix>
+				<color r="1.0" g="1.0" b="1.0" a="1.0" />
+				<scale x="4" y="4" />
+				<calllist name="circle12" />
+			</pushmatrix>
+			<pushmatrix>
+				<color r="0.7" g="0.7" b="0.7" a="1.0" />
+				<scale x="3" y="3" />
+				<calllist name="circle12" />
+			</pushmatrix>
+			<color r="0.5" g="0.5" b="0.5" a="1.0" />
+			<quads>
+				<vertex x="0.5" y="6" />
+				<vertex x="-0.5" y="6" />
+				<vertex x="-1.5" y="1.5" />
+				<vertex x="1.5" y="1.5" />
+			</quads>
+		</renderable>
+		<aimer>
+			<target range="256" filter="redbullet" />
+			<aim strength="1" leading="0" />
+			<fire channel="1" range="192" angle="30" />
+		</aimer>
+		<ship maxveloc="0" maxaccel="0" minaccel="0" maxomega="20"/>
+	</link>
+</template>

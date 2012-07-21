@@ -1,0 +1,36 @@
+<?xml version="1.0" ?>
+<template name="dreadcannonturretblast">
+	<expire time="0.5" />
+	<explosion>
+		<radius inner="16" outer="32" />
+		<damage inner="50" outer="0" />
+	</explosion>
+	<renderable radius="64">
+		<pushmatrix>
+			<color>
+				<key time="0.0" r="1.0" g="0.8" b="0.1" a="1.0" />
+				<key time="0.5" r="1.0" g="0.3" b="0.1" a="0.0" />
+			</color>
+			<scale>
+				<key time="0.0" x="16.0" y="16.0" />
+				<key time="0.5" x="64.0" y="64.0" />
+			</scale>
+			<calllist name="circle32" />
+		</pushmatrix>
+	</renderable>
+	<sound>
+		<pokey length="0.5" frequency="1250000" tone="poly17">
+			<divider quantize="28">
+				<key time="0.0" value="896" />
+				<key time="0.5" value="2912" />
+			</divider>
+			<amplitude quantize="0.066667">
+				<key time="0.0" value="0.4" />
+				<key time="0.5" value="0.0" />
+			</amplitude>
+		</pokey>
+	</sound>
+	<soundcue>
+		<cue sound="dreadcannonturretblast" />
+	</soundcue>
+</template>

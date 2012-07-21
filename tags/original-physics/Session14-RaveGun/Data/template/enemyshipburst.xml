@@ -1,0 +1,32 @@
+﻿<?xml version="1.0"?>
+<template name="enemyshipburst" type="enemyshipturreted">
+	<link name="turret">
+		<weapon>
+			<shot delay="1.666667" />
+			<action>
+				<wait>
+					<mul>
+						<frac>
+							<mul>
+								<worldtime/>
+								<value value="-2.4"/>
+							</mul>
+						</frac>
+						<value value="0.416667"/>
+					</mul>
+				</wait>
+				<repeat count="8">
+					<ordnance name="enemypulsebullet">
+						<position x="0" y="4"/>
+						<velocity x="0" y="120"/>
+					</ordnance>
+					<cue name="fire"/>
+					<wait value="0.052083"/>
+				</repeat>
+			</action>
+		</weapon>
+		<soundcue>
+			<cue name="fire" sound="stargate-spaceguppyshot" />
+		</soundcue>
+	</link>
+</template>

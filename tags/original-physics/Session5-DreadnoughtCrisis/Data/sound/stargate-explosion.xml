@@ -1,0 +1,4 @@
+<?xml version="1.0" ?>
+<sound name="stargate-explosion">
+	<bitnoiseramp frequency="3579000" divider="4" outersteps="255" outerdelay="17" innersteps="3" innerdelay="48" innerdelta="6" />
+</sound>

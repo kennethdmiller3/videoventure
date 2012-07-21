@@ -1,0 +1,75 @@
+<?xml version="1.0" ?>
+<template name="enemycommandship">
+	<collidable>
+		<body name="main">
+			<circle radius="6">
+				<density value="1" />
+				<friction value="0.5" />
+				<restitution value="0.5" />
+				<filter name="redunit" />
+			</circle>
+			<fixedrotation value="1" />
+		</body>
+	</collidable>
+	<renderable radius="6" period="0.4">
+		<pushmatrix>
+			<rotate>
+				<key time="0.0" angle="0" />
+				<key time="0.4" angle="180" />
+			</rotate>
+			<drawlist>
+				<pushmatrix>
+					<scale x="6" y="6" />
+					<color r="1.0" g="0.2" b="0.1" a="1.0" />
+					<calllist name="circle8" />
+					<color r="1.0" g="0.8" b="0.1" a="1.0" />
+					<calllist name="diamond" />
+					<rotate angle="45" />
+					<calllist name="diamond" />
+				</pushmatrix>
+				<pushmatrix>
+					<rotate angle="22.5" />
+					<scale x="4.24" y="4.24" />
+					<color r="1.0" g="0.2" b="0.1" a="1.0" />
+					<calllist name="circle8" />
+				</pushmatrix>
+			</drawlist>
+		</pushmatrix>
+		<color>
+			<key time="0.0" r="1.0" g="1.0" b="1.0" a="1.0" />
+			<key time="0.2" r="1.0" g="0.8" b="0.1" a="1.0" />
+			<key time="0.4" r="1.0" g="1.0" b="1.0" a="1.0" />
+		</color>
+		<triangles>
+			<vertex x="0" y="2" />
+			<vertex x="-2" y="-1" />
+			<vertex x="2" y="-1" />
+		</triangles>
+	</renderable>
+	<aimer>
+		<wander side="0.5" siderate="0.25" front="0.5" frontrate="0.25" />
+		<target range="512" filter="redmissile" />
+		<fire channel="1" range="128" angle="20" />
+		<fire channel="2" range="128" angle="180" />
+		<pursue strength="1" leading="0" y="-64" />
+		<evade strength="1" />
+		<close range="64" />
+		<edge strength="0.0625" distance="16"/>
+	</aimer>
+	<ship maxveloc="45" maxaccel="90" minaccel="10" maxomega="0" />
+	<damagable health="10" spawnondeath="enemyexplosion" />
+	<link name="gun" secondary="enemyweapon">
+		<offset x="0" y="4" angle="0" />
+	</link>
+	<weapon>
+		<trigger channel="2" />
+		<shot delay="1.5" track="4" />
+		<action>
+			<ordnance name="enemyvapormine">
+				<velocity x="0" y="-120" />
+			</ordnance>
+		</action>
+	</weapon>
+	<team name="red" />
+	<points value="300" />
+</template>

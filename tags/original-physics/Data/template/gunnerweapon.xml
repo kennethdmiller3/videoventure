@@ -1,0 +1,14 @@
+<?xml version="1.0" ?>
+<template name="gunnerweapon">
+	<weapon>
+		<velocity x="0" y="360" />
+		<ordnance name="gunnerbullet" />
+		<shot delay="0.3" />
+	</weapon>
+	<sound volume="0.25">
+		<file name="robotron-playershot.wav" />
+	</sound>
+	<soundcue>
+		<cue name="fire" sound="gunnerweapon" />
+	</soundcue>
+</template>

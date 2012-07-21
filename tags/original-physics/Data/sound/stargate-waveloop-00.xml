@@ -1,0 +1,47 @@
+<?xml version="1.0" ?>
+<sound name="stargate-waveloop-00">
+	<waveloop frequency="3579000" divider="4" delayrepeat="8" waverepeat="1" fadedelta="2" delaydelta="0" outerrepeat="256" fadestart="0">
+		<wave>
+			<data value="255" />
+			<data value="255" />
+			<data value="255" />
+			<data value="255" />
+			<data value="0" />
+			<data value="0" />
+			<data value="0" />
+			<data value="0" />
+			<data value="255" />
+			<data value="255" />
+			<data value="255" />
+			<data value="255" />
+			<data value="0" />
+			<data value="0" />
+			<data value="0" />
+			<data value="0" />
+		</wave>
+		<delay>
+			<data value="1" />
+			<data value="1" />
+			<data value="2" />
+			<data value="2" />
+			<data value="4" />
+			<data value="4" />
+			<data value="8" />
+			<data value="8" />
+			<data value="16" />
+			<data value="32" />
+			<data value="40" />
+			<data value="48" />
+			<data value="56" />
+			<data value="64" />
+			<data value="72" />
+			<data value="80" />
+			<data value="96" />
+			<data value="112" />
+			<data value="128" />
+			<data value="160" />
+			<data value="176" />
+			<data value="192" />
+		</delay>
+	</waveloop>
+</sound>

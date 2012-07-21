@@ -1,0 +1,52 @@
+<?xml version="1.0" ?>
+<template name="playerautobombexplosion">
+	<expire time="0.5" />
+	<renderable radius="96">
+		<pushmatrix>
+			<scale x="128" y="128"/>
+			<calldynamiclist name="playerbeatlightblue"/>
+		</pushmatrix>
+		<set name="t">
+			<sqrt>
+				<time/>
+			</sqrt>
+		</set>
+		<color param="t">
+			<key time="0.0" r="1.0" g="1.0" b="1.0" a="1.0" />
+			<key time="0.5" r="1.0" g="1.0" b="1.0" a="0.0" />
+		</color>
+		<set name="r0" type="scalar" param="t">
+			<key time="0.0" value="0"/>
+			<key time="0.5" value="94"/>
+		</set>
+		<set name="r1" type="scalar" param="t">
+			<key time="0.0" value="12"/>
+			<key time="0.5" value="96"/>
+		</set>
+		<quad_strip>
+			<loop name="angle" from="0" to="32" by="1">
+				<vertex>
+					<x>
+						<sinewave scale="r0" input="angle" period="32"/>
+					</x>
+					<y>
+						<sinewave scale="r0" input="angle" phase="0.25" period="32"/>
+					</y>
+				</vertex>
+				<vertex>
+					<x>
+						<sinewave scale="r1" input="angle" period="32"/>
+					</x>
+					<y>
+						<sinewave scale="r1" input="angle" phase="0.25" period="32"/>
+					</y>
+				</vertex>
+			</loop>
+		</quad_strip>
+	</renderable>
+	<explosion filter="bluebomb">
+		<radius inner="16" outer="64"/>
+		<damage inner="10" outer="0"/>
+	</explosion>
+	<team name="blue" />
+</template>

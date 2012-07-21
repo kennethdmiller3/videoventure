@@ -1,0 +1,41 @@
+<?xml version="1.0" ?>
+<template name="dreaddronelaunchermissile">
+	<collidable>
+		<body name="main">
+			<box w="4" h="8">
+				<friction value="1" />
+				<restitution value="0" />
+				<density value="1.0" />
+				<filter name="redmissile" />
+			</box>
+			<fixedrotation value="1" />
+		</body>
+	</collidable>
+	<drawlist>
+		<quads>
+			<vertex x="0" y="8" />
+			<vertex x="4" y="0" />
+			<vertex x="0" y="-4" />
+			<vertex x="-4" y="0" />
+			<vertex x="1" y="-2" />
+			<vertex x="3" y="-2" />
+			<vertex x="3" y="-8" />
+			<vertex x="1" y="-8" />
+			<vertex x="-1" y="-2" />
+			<vertex x="-3" y="-2" />
+			<vertex x="-3" y="-8" />
+			<vertex x="-1" y="-8" />
+		</quads>
+	</drawlist>
+	<renderable radius="64">
+		<color r="0.7" g="0.7" b="0.7" a="1.0" />
+		<calllist name="dreaddronelaunchermissile" />
+	</renderable>
+	<aimer>
+		<target period="1" range="256" filter="blueunit" />
+		<pursue strength="1" />
+	</aimer>
+	<ship forwardveloc="60" neutralveloc="60" reverseveloc="60" strafeveloc="60" maxaccel="60" minaccel="60" maxomega="0" />
+	<bullet damage="10" spawnondeath="dreaddronelauncherblast" />
+	<damagable health="1" spawnondeath="dreaddronelauncherblast" />
+</template>

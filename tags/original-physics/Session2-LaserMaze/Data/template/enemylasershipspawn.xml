@@ -1,0 +1,6 @@
+<?xml version="1.0" ?>
+<template name="enemylasershipspawn">
+	<spawner>
+		<spawn name="enemylasership" start="120" cycle="10" track="1" />
+	</spawner>
+</template>

@@ -1,0 +1,76 @@
+<?xml version="1.0" ?>
+<template name="enemycommandship">
+	<collidable>
+		<body name="main">
+			<circle radius="6">
+				<density value="1" />
+				<friction value="0.5" />
+				<restitution value="0.5" />
+				<filter name="redunit" />
+			</circle>
+		</body>
+	</collidable>
+	<renderable radius="6" period="0.4">
+		<pushmatrix>
+			<rotate>
+				<key time="0.0" angle="0" />
+				<key time="0.4" angle="180" />
+			</rotate>
+			<drawlist>
+				<pushmatrix>
+					<scale x="6" y="6" />
+					<color r="1.0" g="0.2" b="0.1" a="1.0" />
+					<calllist name="circle8" />
+					<color r="1.0" g="0.8" b="0.1" a="1.0" />
+					<calllist name="diamond" />
+					<rotate angle="45" />
+					<calllist name="diamond" />
+				</pushmatrix>
+				<pushmatrix>
+					<rotate angle="22.5" />
+					<scale x="4.24" y="4.24" />
+					<color r="1.0" g="0.2" b="0.1" a="1.0" />
+					<calllist name="circle8" />
+				</pushmatrix>
+			</drawlist>
+		</pushmatrix>
+		<color>
+			<key time="0.0" r="1.0" g="1.0" b="1.0" a="1.0" />
+			<key time="0.2" r="1.0" g="0.8" b="0.1" a="1.0" />
+			<key time="0.4" r="1.0" g="1.0" b="1.0" a="1.0" />
+		</color>
+		<triangles>
+			<vertex x="0" y="2" />
+			<vertex x="-2" y="-1" />
+			<vertex x="2" y="-1" />
+		</triangles>
+	</renderable>
+	<!--aimer range="256" attack1="128" attack2="128" angle2="180" drift="0.25" wanderturn="0.5" wanderturnrate="0.25" leading="240" evade="1" close="64" /-->
+	<aimer>
+		<drift strength="0.25" />
+		<wander turn="0.5" turnrate="0.25" />
+		<target range="256" category="3" bit2="0" bit3="0" bit4="0" />
+		<fire channel="1" range="128" angle="20" />
+		<fire channel="2" range="128" angle="180" />
+		<pursue strength="1" leading="0" />
+		<aim strength="1" leading="240" />
+		<evade strength="1" />
+		<close range="64" />
+		<edge strength="0.015625" distance="64" />
+	</aimer>
+	<ship maxveloc="45" maxaccel="90" minaccel="10" maxomega="2.0" />
+	<damagable health="10" spawnondeath="enemyexplosion" />
+	<link name="gun" secondary="enemyweapon">
+		<offset x="0" y="4" angle="0" />
+	</link>
+	<weapon>
+		<velocity x="0" y="0" />
+		<inherit x="0" y="0" />
+		<ordnance name="enemyphotonmine" />
+		<trigger channel="2" />
+		<shot delay="1.5" track="4" />
+	</weapon>
+	<team name="red" />
+	<points value="300" />
+	<capturable resistance="10" spawnoncapture="friendcommandship" />
+</template>

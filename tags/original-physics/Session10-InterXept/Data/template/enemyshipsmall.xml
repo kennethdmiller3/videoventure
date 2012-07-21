@@ -1,0 +1,64 @@
+<?xml version="1.0" ?>
+<template name="enemyshipsmall">
+	<collidable>
+		<body name="main">
+			<circle radius="6">
+				<density value="1" />
+				<friction value="0.5" />
+				<restitution value="0.5" />
+				<filter name="redunit" />
+			</circle>
+			<fixedrotation value="1"/>
+		</body>
+	</collidable>
+	<renderable radius="6" period="0.066667">
+		<pushmatrix>
+			<translate y="-6" />
+			<calldynamiclist name="enemyengineflame" />
+		</pushmatrix>
+		<color r="1.0" g="0.2" b="0.1" a="1.0" />
+		<calllist name="shipsmall" />
+	</renderable>
+	<aimer>
+		<wander side="0.5" siderate="0.5" front="0.25" frontrate="0.5"/>
+		<target range="512" filter="redbullet" />
+		<pursue strength="0.5" leading="0" />
+		<evade strength="1" />
+		<close range="64" />
+		<edge strength="0.015625" distance="64" />
+	</aimer>
+	<ship maxveloc="120" maxaccel="120" minaccel="60" maxomega="0" />
+	<damagable health="3" spawnondeath="enemyexplosionsmall" />
+	<link name="gun" updateangle="0">
+		<collidable>
+			<body name="main">
+				<circle radius="2">
+					<density value="0.5"/>
+					<friction value="0.5"/>
+					<restitution value="0.5"/>
+					<filter name="inert"/>
+				</circle>
+			</body>
+		</collidable>
+		<aimer>
+			<target range="256" filter="redbullet" />
+			<aim strength="1" leading="0" />
+			<fire channel="1" range="128" angle="15" />
+		</aimer>
+		<ship maxveloc="0" maxaccel="0" minaccel="0" maxomega="3"/>
+		<weapon>
+			<shot delay="0.5" />
+			<action>
+				<ordnance name="enemypulsebullet">
+					<velocity x="0" y="180" />
+				</ordnance>
+				<cue name="fire"/>
+			</action>
+		</weapon>
+		<soundcue>
+			<cue name="fire" sound="stargate-landerfire" />
+		</soundcue>
+	</link>
+	<team name="red" />
+	<points value="200" />
+</template>

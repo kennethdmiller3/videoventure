@@ -1,0 +1,9 @@
+<?xml version="1.0" ?>
+<template name="enemyswarmerbreakoutspawn">
+	<spawner>
+		<offset x="0" y="6" />
+		<inherit x="0.5" y="0.5" />
+		<velocity x="0" y="60" />
+		<spawn name="enemyswarmerbreakout" />
+	</spawner>
+</template>
