@@ -1266,9 +1266,12 @@ public:
 unsigned int Collidable::TestSegment(const Vector2 &aStart, const Vector2 &aEnd, const CollidableFilter &aFilter, unsigned int aId,
 									 float &aLambda, Vector2 &aNormal, cpShape *&aShape)
 {
-	// raycast
+	// pad the segment
+	const Vector2 pad(0.125f * InvSqrt(aStart.DistSq(aEnd) + FLT_MIN) * (aEnd - aStart));
+
+	// find the closest hit
 	CollidableRayCast raycast(aFilter, aId);
-	cpSpaceSegmentQuery(world, cpv(aStart.x, aStart.y), cpv(aEnd.x, aEnd.y), 
+	cpSpaceSegmentQuery(world, cpv(aStart.x - pad.x, aStart.y - pad.y), cpv(aEnd.x + pad.x, aEnd.y + pad.y), 
 		aFilter.mLayers, aFilter.mGroup, CollidableRayCast::Query, &raycast);
 
 	// return result
