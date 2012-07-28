@@ -157,6 +157,7 @@ bool Entity::Configure(const tinyxml2::XMLElement *element)
 		element->QueryFloatAttribute("y", &trans[1].p.y);
 		if (element->QueryFloatAttribute("angle", &trans[1].a) == tinyxml2::XML_SUCCESS)
 			trans[1].a *= float(M_PI) / 180.0f;
+		trans[0] = trans[1];
 		return true;
 
 	case 0x32741c32 /* "velocity" */:
