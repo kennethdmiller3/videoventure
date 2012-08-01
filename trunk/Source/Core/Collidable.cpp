@@ -574,6 +574,8 @@ static void EndContact(cpArbiter *arb, cpSpace *space, void *data)
 
 #ifdef COLLIDABLE_DEBUG_DRAW
 
+static bool DebugDrawCollidable = false;
+
 typedef struct Color {
 	float r, g, b, a;
 } Color;
@@ -588,11 +590,11 @@ static inline Color LAColor(float l, float a){
 	return color;
 }
 
-const Color LINE_COLOR = {200.0/255.0, 210.0/255.0, 230.0/255.0, 1.0};
-const Color CONSTRAINT_COLOR = {0.0, 0.75, 0.0, 1.0};
-const float SHAPE_ALPHA = 0.75;
+static const Color LINE_COLOR = {200.0/255.0, 210.0/255.0, 230.0/255.0, 1.0};
+static const Color CONSTRAINT_COLOR = {0.0, 0.75, 0.0, 1.0};
+static const float SHAPE_ALPHA = 0.75;
 
-float DebugDrawPointLineScale = 1.0;
+static float DebugDrawPointLineScale = 1.0;
 
 static Color
 ColorFromHash(cpHashValue hash, float alpha)
@@ -881,12 +883,18 @@ static void DebugDrawShapes(cpSpace *space)
 	cpSpaceEachShape(space, drawShape, NULL);
 }
 
-#if 0
 // console
 extern Console *console;
 
 int CommandDrawCollidable(const char * const aParam[], int aCount)
 {
+#if 1
+	if (aCount >= 1)
+		DebugDrawCollidable = atoi(aParam[0]) != 0;
+	else
+		console->Print("drawcollidable: %s\n", DebugDrawCollidable ? "on" : "off");
+	return std::min(aCount, 1);
+#else
 	struct Option
 	{
 		unsigned int hash;
@@ -923,9 +931,9 @@ int CommandDrawCollidable(const char * const aParam[], int aCount)
 	}
 
 	return std::min(aCount, 2);
+#endif
 }
 Command commanddrawcollidable(0x38c5ac70 /* "drawcollidable" */, CommandDrawCollidable);
-#endif
 
 #endif
 
@@ -1206,7 +1214,8 @@ void Collidable::CollideAll(float aStep)
 
 #ifdef COLLIDABLE_DEBUG_DRAW
 	//world->DrawDebugData();
-	DebugDrawShapes(world);
+	if (DebugDrawCollidable)
+		DebugDrawShapes(world);
 #endif
 }
 
