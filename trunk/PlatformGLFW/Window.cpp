@@ -6,6 +6,7 @@ extern void CharCallback(int aIndex, int aState);
 extern void MousePosCallback(int aPosX, int aPosY);
 extern void MouseButtonCallback(int aIndex, int aState);
 extern void MouseWheelCallback(int aPos);
+extern int WindowCloseCallback();
 
 namespace Platform
 {
@@ -50,6 +51,7 @@ namespace Platform
 		glfwSetMousePosCallback(MousePosCallback);
 		glfwSetMouseButtonCallback(MouseButtonCallback);
 		glfwSetMouseWheelCallback(MouseWheelCallback);
+		glfwSetWindowCloseCallback(WindowCloseCallback);
 
 		return true;
 	}
