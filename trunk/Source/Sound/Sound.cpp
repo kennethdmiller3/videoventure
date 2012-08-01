@@ -272,7 +272,7 @@ namespace Database
 			HMUSIC handle = BASS_MusicLoad(false, music.c_str(), 0, 0, BASS_MUSIC_RAMPS|BASS_MUSIC_LOOP, 0);
 			if (!handle)
 				DebugPrint("error loading music: %s\n", BASS_ErrorGetString());
-			if (!BASS_ChannelPlay(handle, true))
+			if (SOUND_VOLUME_MUSIC > 0 && !BASS_ChannelPlay(handle, true))
 				DebugPrint("error starting music: %s\n", BASS_ErrorGetString());
 			Database::music.Put(aId, handle);
 		}
@@ -296,7 +296,7 @@ namespace Database
 			Mix_Music *musicdata = Mix_LoadMUS(music.c_str());
 			if (!musicdata)
 				DebugPrint("%s\n", Mix_GetError());
-			if (Mix_PlayMusic(musicdata, -1) < 0)
+			if (SOUND_VOLUME_MUSIC > 0 && Mix_PlayMusic(musicdata, -1) < 0)
 				DebugPrint("%s\n", Mix_GetError());
 			Database::music.Put(aId, musicdata);
 		}
@@ -608,8 +608,12 @@ Sound::Sound(const SoundTemplate &aTemplate, unsigned int aId, unsigned int aSub
 	// set updatable action
 	SetAction(Action(this, &Sound::Update));
 
-	// auto-play
-	Play(0);
+	// auto-play if effect sounds are turned on
+	if (SOUND_CHANNELS > 0 && SOUND_VOLUME_EFFECT > 0)
+	{
+		// auto-play
+		Play(0);
+	}
 }
 
 Sound::~Sound(void)
@@ -655,16 +659,6 @@ void Sound::Play(unsigned int aOffset)
 		return;
 	}
 
-	// if not active...
-	if (!IsActive())
-	{
-		// pre-update to set 3D position
-		Update(0.0f);
-
-		// activate update
-		Activate();
-	}
-
 #elif defined(USE_SDL_MIXER)
 
 	// do nothing if the sound has no sample
@@ -685,7 +679,9 @@ void Sound::Play(unsigned int aOffset)
 		DebugPrint("%s\n", Mix_GetError());
 		return;
 	}
+
 #elif defined(USE_SDL)
+
 	// if not playing...
 	if (!mPlaying)
 	{
@@ -905,6 +901,9 @@ void Sound::Init(void)
 	// initialize sound volume
 	UpdateSoundVolume();
 
+	// initialize music volume
+	UpdateMusicVolume();
+
 #if defined(DISTANCE_FALLOFF)
 	// set default 3D factors
 	if (!BASS_Set3DFactors(SOUND_DISTANCE_FACTOR, SOUND_ROLLOFF_FACTOR, SOUND_DOPPLER_FACTOR))
@@ -1004,10 +1003,35 @@ void Sound::Listener(Vector2 aPos, Vector2 aVel)
 void UpdateSoundVolume(void)
 {
 #if defined(USE_BASS)
-	// update effect and music volumes
+	// update effect volume
 	BASS_SetConfig(BASS_CONFIG_GVOL_SAMPLE, xs_CeilToInt(SOUND_VOLUME_EFFECT * 10000));
 	BASS_SetConfig(BASS_CONFIG_GVOL_STREAM, xs_CeilToInt(SOUND_VOLUME_EFFECT * 10000));
+#endif
+}
+
+void UpdateMusicVolume(void)
+{
+#if defined(USE_BASS)
+	// update music volume
 	BASS_SetConfig(BASS_CONFIG_GVOL_MUSIC, xs_CeilToInt(SOUND_VOLUME_MUSIC * 10000));
+
+	// for each music handle...
+	for (Database::Typed<HMUSIC>::Iterator itor(&Database::music); itor.IsValid(); ++itor)
+	{
+		// if music is enabled...
+		if (SOUND_VOLUME_MUSIC > 0)
+		{
+			// resume paused channel
+			if (BASS_ChannelIsActive(itor.GetValue()) == BASS_ACTIVE_PAUSED)
+				BASS_ChannelPlay(itor.GetValue(), FALSE);
+		}
+		else
+		{
+			// pause playing channel
+			if (BASS_ChannelIsActive(itor.GetValue()) == BASS_ACTIVE_PLAYING)
+				BASS_ChannelPause(itor.GetValue());
+		}
+	}
 #elif defined(USE_SDL_MIXER)
 	// compute music volume
 	Mix_VolumeMusic(xs_CeilToInt(SOUND_VOLUME_MUSIC * MIX_MAX_VOLUME));
@@ -1028,14 +1052,19 @@ void PlaySoundCue(unsigned int aId, unsigned int aCueId)
 		Database::Typed<Sound *> &sounds = Database::sound.Open(aId);
 		if (Sound *s = sounds.Get(aCueId))
 		{
-			// retrigger
-			s->Play(0);
+			// if effect sounds are turned on...
+			if (SOUND_CHANNELS > 0 && SOUND_VOLUME_EFFECT > 0)
+			{
+				// retrigger
+				s->Play(0);
+			}
 		}
 		else
 		{
 			// create a new instance
 			sounds.Put(aCueId, new Sound(soundtemplate, aId, aCueId));
 		}
+		Database::sound.Close(aId);
 	}
 }
 
