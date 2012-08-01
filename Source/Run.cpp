@@ -240,6 +240,12 @@ void MouseWheelCallback(int aPos)
 {
 }
 
+int WindowCloseCallback()
+{
+	setgamestate = STATE_QUIT;
+	return TRUE;
+}
+
 #endif
 
 static void ReadInput()
