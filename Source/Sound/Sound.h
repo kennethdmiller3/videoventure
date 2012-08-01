@@ -157,6 +157,9 @@ namespace Database
 // update sound volume
 void UpdateSoundVolume(void);
 
+// update music volume
+void UpdateMusicVolume(void);
+
 // play/stop sound cues
 void GAME_API PlaySoundCue(unsigned int aId, unsigned int aCueId = 0);
 void GAME_API StopSoundCue(unsigned int aId, unsigned int aCueId = 0);

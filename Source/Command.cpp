@@ -383,13 +383,13 @@ Command commandsoundchannels(0x61e734dc /* "soundchannels" */, CommandSoundChann
 
 int CommandSoundVolumeEffect(const char * const aParam[], int aCount)
 {
-	return ProcessCommandFloat(SOUND_VOLUME_EFFECT, aParam, aCount, UpdateSoundVolume, "soundvolume: %f\n");
+	return ProcessCommandFloat(SOUND_VOLUME_EFFECT, aParam, aCount, UpdateSoundVolume, "soundvolumemusic: %f\n");
 }
 Command commandsoundvolumeeffect(0xff4838bb /* "soundvolumeeffect" */, CommandSoundVolumeEffect);
 
 int CommandSoundVolumeMusic(const char * const aParam[], int aCount)
 {
-	return ProcessCommandFloat(SOUND_VOLUME_MUSIC, aParam, aCount, UpdateSoundVolume, "soundvolume: %f\n");
+	return ProcessCommandFloat(SOUND_VOLUME_MUSIC, aParam, aCount, UpdateMusicVolume, "soundvolumemusic: %f\n");
 }
 Command commandsoundvolumemusic(0x689fc51d /* "soundvolumemusic" */, CommandSoundVolumeMusic);
 
