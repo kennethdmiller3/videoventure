@@ -631,7 +631,7 @@ void ConfigureFloatData(const tinyxml2::XMLElement *element, std::vector<unsigne
 	memcpy(buf, text, len);
 
 	char *item = strtok(buf, " \t\n\r,;");
-	while (element)
+	while (item)
 	{
 		float value = float(atof(item));
 		Expression::Append(buffer, value);
