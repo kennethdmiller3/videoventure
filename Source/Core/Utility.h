@@ -22,13 +22,13 @@ inline float InvSqrt(float x)
 }
 
 // linear interpolation
-template<typename T> inline const T Lerp(T v0, T v1, float s)
+template<typename T> inline T Lerp(T v0, T v1, float s)
 {
 	return (1 - s) * v0 + s * v1;
 }
 
 // value clamp
-template<typename T> inline const T Clamp(T v, T min, T max)
+template<typename T> inline T Clamp(T v, T min, T max)
 {
 	if (v < min)
 		return min;

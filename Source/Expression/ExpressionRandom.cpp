@@ -3,6 +3,18 @@
 #include "ExpressionRandom.h"
 #include "ExpressionConfigure.h"
 
+namespace Expression
+{
+	template <> float Random(Context &aContext)
+	{
+		return Random::Float();
+	}
+	template <> __m128 Random(Context &aContext)
+	{
+		return ComponentNullary<__m128>(aContext, Random::Float);
+	}
+}
+
 static Expression::Loader<float> randomfloat(0xa19b8cd6 /* "rand" */, ConfigureRandom<float>);
 static Expression::Loader<__m128> randomvector(0xa19b8cd6 /* "rand" */, ConfigureRandom<__m128>);
 
@@ -129,7 +141,7 @@ template <typename T> void ConfigureRandom(const tinyxml2::XMLElement *element, 
 			}
 
 			// push randoms
-			Expression::Append(buffer, Expression::ComponentNullary<T, Expression::Schema<T>::COUNT>::Evaluate<float, Random::Float>);
+			Expression::Append(buffer, Expression::Random<T>);
 		}
 	}
 

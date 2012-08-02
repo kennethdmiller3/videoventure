@@ -60,21 +60,21 @@ namespace Expression
 	inline float Rcp(float v) { return 1.0f / v; };
 	template <typename T> T Rcp(Context &aContext)
 	{
-		return ComponentUnary<T, Schema<T>::COUNT>::Evaluate<float, float, Rcp>(aContext);
+		return ComponentUnary<T>(aContext, Rcp);
 	}
 
 	// increment
 	inline float Inc(float v) { return v + 1.0f; };
 	template <typename T> T Inc(Context &aContext)
 	{
-		return ComponentUnary<T, Schema<T>::COUNT>::Evaluate<float, float, Inc>(aContext);
+		return ComponentUnary<T>(aContext, Inc);
 	}
 
 	// decrement
 	inline float Dec(float v) { return v - 1.0f; };
 	template <typename T> T Dec(Context &aContext)
 	{
-		return ComponentUnary<T, Schema<T>::COUNT>::Evaluate<float, float, Dec>(aContext);
+		return ComponentUnary<T>(aContext, Dec);
 	}
 
 
@@ -85,43 +85,43 @@ namespace Expression
 	// sine
 	template <typename T> T Sin(Context &aContext)
 	{
-		return ComponentUnary<T, Schema<T>::COUNT>::Evaluate<float, float, sinf>(aContext);
+		return ComponentUnary<T>(aContext, sinf);
 	}
 
 	// cosine
 	template <typename T> T Cos(Context &aContext)
 	{
-		return ComponentUnary<T, Schema<T>::COUNT>::Evaluate<float, float, cosf>(aContext);
+		return ComponentUnary<T>(aContext, cosf);
 	}
 
 	// tangent
 	template <typename T> T Tan(Context &aContext)
 	{
-		return ComponentUnary<T, Schema<T>::COUNT>::Evaluate<float, float, tanf>(aContext);
+		return ComponentUnary<T>(aContext, tanf);
 	}
 
 	// arcsine
 	template <typename T> T Asin(Context &aContext)
 	{
-		return ComponentUnary<T, Schema<T>::COUNT>::Evaluate<float, float, asinf>(aContext);
+		return ComponentUnary<T>(aContext, asinf);
 	}
 
 	// arccosine
 	template <typename T> T Acos(Context &aContext)
 	{
-		return ComponentUnary<T, Schema<T>::COUNT>::Evaluate<float, float, acosf>(aContext);
+		return ComponentUnary<T>(aContext, acosf);
 	}
 
 	// arctangent (1 argument)
 	template <typename T> T Atan(Context &aContext)
 	{
-		return ComponentUnary<T, Schema<T>::COUNT>::Evaluate<float, float, atanf>(aContext);
+		return ComponentUnary<T>(aContext, atanf);
 	}
 
 	// arctangent (2 arguments)
 	template <typename T> T Atan2(Context &aContext)
 	{
-		return ComponentBinary<T, Schema<T>::COUNT>::Evaluate<float, float, float, atan2f>(aContext);
+		return ComponentBinary<T>(aContext, atan2f);
 	}
 
 
@@ -132,19 +132,19 @@ namespace Expression
 	// hyperbolic sine
 	template <typename T> T Sinh(Context &aContext)
 	{
-		return ComponentUnary<T, Schema<T>::COUNT>::Evaluate<float, float, sinhf>(aContext);
+		return ComponentUnary<T>(aContext, sinhf);
 	}
 
 	// hyperbolic cosine
 	template <typename T> T Cosh(Context &aContext)
 	{
-		return ComponentUnary<T, Schema<T>::COUNT>::Evaluate<float, float, coshf>(aContext);
+		return ComponentUnary<T>(aContext, coshf);
 	}
 
 	// hyperbolic tangent
 	template <typename T> T Tanh(Context &aContext)
 	{
-		return ComponentUnary<T, Schema<T>::COUNT>::Evaluate<float, float, tanhf>(aContext);
+		return ComponentUnary<T>(aContext, tanhf);
 	}
 
 
@@ -155,31 +155,31 @@ namespace Expression
 	// power
 	template <typename T> T Pow(Context &aContext)
 	{
-		return ComponentBinary<T, Schema<T>::COUNT>::Evaluate<float, float, float, powf>(aContext);
+		return ComponentBinary<T>(aContext, powf);
 	}
 
 	// natural exponent
 	template <typename T> T Exp(Context &aContext)
 	{
-		return ComponentUnary<T, Schema<T>::COUNT>::Evaluate<float, float, expf>(aContext);
+		return ComponentUnary<T>(aContext, expf);
 	}
 
 	// natural log
 	template <typename T> T Log(Context &aContext)
 	{
-		return ComponentUnary<T, Schema<T>::COUNT>::Evaluate<float, float, logf>(aContext);
+		return ComponentUnary<T>(aContext, logf);
 	}
 
 	// square root
 	template <typename T> T Sqrt(Context &aContext)
 	{
-		return ComponentUnary<T, Schema<T>::COUNT>::Evaluate<float, float, sqrtf>(aContext);
+		return ComponentUnary<T>(aContext, sqrtf);
 	}
 
 	// reciprocal square root
 	template <typename T> T InvSqrt(Context &aContext)
 	{
-		return ComponentUnary<T, Schema<T>::COUNT>::Evaluate<float, float, ::InvSqrt>(aContext);
+		return ComponentUnary<T>(aContext, ::InvSqrt);
 	}
 
 
@@ -190,72 +190,72 @@ namespace Expression
 	// absolute value
 	template <typename T> T Abs(Context &aContext)
 	{
-		return ComponentUnary<T, Schema<T>::COUNT>::Evaluate<float, float, fabsf>(aContext);
+		return ComponentUnary<T>(aContext, fabsf);
 	}
 
 	// sign
 	inline float Sign(float v) { return (v == 0) ? (0.0f) : ((v > 0) ? (1.0f) : (-1.0f)); }
 	template <typename T> T Sign(Context &aContext)
 	{
-		return ComponentUnary<T, Schema<T>::COUNT>::Evaluate<float, float, Sign>(aContext);
+		return ComponentUnary<T>(aContext, Sign);
 	}
 
 	// floor
 	template <typename T> T Floor(Context &aContext)
 	{
-		return ComponentUnary<T, Schema<T>::COUNT>::Evaluate<float, float, floorf>(aContext);
+		return ComponentUnary<T>(aContext, floorf);
 	}
 
 	// ceiling
 	template <typename T> T Ceil(Context &aContext)
 	{
-		return ComponentUnary<T, Schema<T>::COUNT>::Evaluate<float, float, ceilf>(aContext);
+		return ComponentUnary<T>(aContext, ceilf);
 	}
 
 	// fraction
 	inline float Frac(float v) { return v - xs_FloorToInt(v); }
 	template <typename T> T Frac(Context &aContext)
 	{
-		return ComponentUnary<T, Schema<T>::COUNT>::Evaluate<float, float, Frac>(aContext);
+		return ComponentUnary<T>(aContext, Frac);
 	}
 
 	// modulo
 	template <typename T> T Mod(Context &aContext)
 	{
-		return ComponentBinary<T, Schema<T>::COUNT>::Evaluate<float, float, float, fmodf>(aContext);
+		return ComponentBinary<T>(aContext, fmodf);
 	}
 
 	// minimum
 	inline float Min(float a, float b) { return a < b ? a : b; };
 	template <typename T> T Min(Context &aContext)
 	{
-		return ComponentBinary<T, Schema<T>::COUNT>::Evaluate<float, float, float, Min >(aContext);
+		return ComponentBinary<T>(aContext, Min);
 	}
 
 	// maximum
 	inline float Max(float a, float b) { return a > b ? a : b; };
 	template <typename T> T Max(Context &aContext)
 	{
-		return ComponentBinary<T, Schema<T>::COUNT>::Evaluate<float, float, float, Max >(aContext);
+		return ComponentBinary<T>(aContext, Max);
 	}
 
 	// clamp
 	template <typename T> T Clamp(Context &aContext)
 	{
-		return ComponentTernary<T, Schema<T>::COUNT>::Evaluate<const float, const float, const float, const float, ::Clamp<float> >(aContext);
+		return ComponentTernary<T>(aContext, ::Clamp<float>);
 	}
 
 	// linear interpolate
 	template <typename T> T Lerp(Context &aContext)
 	{
-		return Ternary<T, T, T, float>::Evaluate<const T, const T, const T, float, ::Lerp<T> >(aContext);
+		return Ternary<T, T, T, float>(aContext, ::Lerp<T>);
 	}
 
 	// step
 	inline float Step(float e, float v) { return v < e ? 0.0f : 1.0f; }
 	template <typename T> T Step(Context &aContext)
 	{
-		return ComponentBinary<T, Schema<T>::COUNT>::Evaluate<float, float, float, Step >(aContext);
+		return ComponentBinary<T>(aContext, Step);
 	}
 
 	// smooth step
@@ -268,7 +268,7 @@ namespace Expression
 	}
 	template <typename T> T SmoothStep(Context &aContext)
 	{
-		return ComponentTernary<T, Schema<T>::COUNT>::Evaluate<float, float, float, float, SmoothStep >(aContext);
+		return ComponentTernary<T>(aContext, SmoothStep);
 	}
 }
 

@@ -99,7 +99,7 @@ template <> __m128 EvaluateApplyInterpolatorConstant<__m128>(int aCount, const f
 }
 
 // evaluate typed keyframe interpolator
-template <typename T> const T EvaluateInterpolator(EntityContext &aContext)
+template <typename T> T EvaluateInterpolator(EntityContext &aContext)
 {
 	// get parameter value
 	float aTime(Expression::Evaluate<float>(aContext));
@@ -138,7 +138,7 @@ template <typename T> const T EvaluateInterpolator(EntityContext &aContext)
 }
 
 // evaluate typed keyframe constant
-template <typename T> const T EvaluateInterpolatorConstant(EntityContext &aContext)
+template <typename T> T EvaluateInterpolatorConstant(EntityContext &aContext)
 {
 	// get parameter value
 	float aTime(Expression::Evaluate<float>(aContext));

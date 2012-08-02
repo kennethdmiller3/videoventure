@@ -203,10 +203,11 @@ void VariableOperatorMin(float &v, float data) { v = std::min(v, data); }
 void VariableOperatorMax(float &v, float data) { v = std::max(v, data); }
 
 // evaluate variable operator
-bool EvaluateVariableOperator(EntityContext &aContext, VariableOperator op)
+bool EvaluateVariableOperator(EntityContext &aContext)
 {
-	unsigned int name = *aContext.mStream++;
-	int width = *aContext.mStream++;
+	VariableOperator op = Expression::Read<VariableOperator>(aContext);
+	unsigned int name = Expression::Read<unsigned int>(aContext);
+	int width = Expression::Read<int>(aContext);
 	assert(width <= 4);
 	__m128 value;
 	switch(width)
@@ -525,41 +526,6 @@ void DO_Block(EntityContext &aContext)
 	aContext.mStream += size;
 }
 
-void DO_Set(EntityContext &aContext)
-{
-	EvaluateVariableOperator(aContext, VariableOperatorSet);
-}
-
-void DO_Add(EntityContext &aContext)
-{
-	EvaluateVariableOperator(aContext, VariableOperatorAdd);
-}
-
-void DO_Sub(EntityContext &aContext)
-{
-	EvaluateVariableOperator(aContext, VariableOperatorSub);
-}
-
-void DO_Mul(EntityContext &aContext)
-{
-	EvaluateVariableOperator(aContext, VariableOperatorMul);
-}
-
-void DO_Div(EntityContext &aContext)
-{
-	EvaluateVariableOperator(aContext, VariableOperatorDiv);
-}
-
-void DO_Min(EntityContext &aContext)
-{
-	EvaluateVariableOperator(aContext, VariableOperatorMin);
-}
-
-void DO_Max(EntityContext &aContext)
-{
-	EvaluateVariableOperator(aContext, VariableOperatorMax);
-}
-
 void DO_Swizzle(EntityContext &aContext)
 {
 	unsigned int name(Expression::Read<unsigned int>(aContext));
@@ -639,7 +605,7 @@ void ConfigureFloatData(const tinyxml2::XMLElement *element, std::vector<unsigne
 	}
 }
 
-void ConfigureVariableOperator(const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer, void (*op)(EntityContext &), bool drawdata)
+void ConfigureVariableOperator(const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer, VariableOperator op)
 {
 	unsigned int name = Hash(element->Attribute("name"));
 	unsigned int type = Hash(element->Attribute("type"));
@@ -648,18 +614,28 @@ void ConfigureVariableOperator(const tinyxml2::XMLElement *element, std::vector<
 	const float *data;
 	GetTypeData(type, width, names, data);
 
-	Expression::Append(buffer, op, name, width);
-	if (drawdata)
+	Expression::Append(buffer, EvaluateVariableOperator, op, name, width);
+	switch (width)
 	{
-		switch (width)
-		{
-		case 1: Expression::Loader<float>::ConfigureRoot(element, buffer, names, data); break;
-		case 2: //Expression::Loader<Vector2>::ConfigureRoot(element, buffer, names, data); break;
-		case 3: //Expression::Loader<Vector3>::ConfigureRoot(element, buffer, names, data); break;
-		case 4: Expression::Loader<__m128>::ConfigureRoot(element, buffer, names, data); break;
-		}
+	case 1: Expression::Loader<float>::ConfigureRoot(element, buffer, names, data); break;
+	case 2: //Expression::Loader<Vector2>::ConfigureRoot(element, buffer, names, data); break;
+	case 3: //Expression::Loader<Vector3>::ConfigureRoot(element, buffer, names, data); break;
+	case 4: Expression::Loader<__m128>::ConfigureRoot(element, buffer, names, data); break;
 	}
 }
+
+void ConfigureVariableClear(const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer)
+{
+	unsigned int name = Hash(element->Attribute("name"));
+	unsigned int type = Hash(element->Attribute("type"));
+	int width;
+	const char * const *names;
+	const float *data;
+	GetTypeData(type, width, names, data);
+
+	Expression::Append(buffer, DO_Clear, name, width);
+}
+
 
 void ConfigurePrimitive(const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer, GLenum mode)
 {
@@ -1311,43 +1287,43 @@ void ConfigureDrawItem(const tinyxml2::XMLElement *element, std::vector<unsigned
 
 	case 0xc6270703 /* "set" */:
 		{
-			ConfigureVariableOperator(element, buffer, DO_Set, true);
+			ConfigureVariableOperator(element, buffer, VariableOperatorSet);
 		}
 		break;
 
 	case 0x3b391274 /* "add" */:
 		{
-			ConfigureVariableOperator(element, buffer, DO_Add, true);
+			ConfigureVariableOperator(element, buffer, VariableOperatorAdd);
 		}
 		break;
 
 	case 0xdc4e3915 /* "sub" */:
 		{
-			ConfigureVariableOperator(element, buffer, DO_Sub, true);
+			ConfigureVariableOperator(element, buffer, VariableOperatorSub);
 		}
 		break;
 
 	case 0xeb84ed81 /* "mul" */:
 		{
-			ConfigureVariableOperator(element, buffer, DO_Mul, true);
+			ConfigureVariableOperator(element, buffer, VariableOperatorMul);
 		}
 		break;
 
 	case 0xe562ab48 /* "div" */:
 		{
-			ConfigureVariableOperator(element, buffer, DO_Div, true);
+			ConfigureVariableOperator(element, buffer, VariableOperatorDiv);
 		}
 		break;
 
 	case 0xc98f4557 /* "min" */:
 		{
-			ConfigureVariableOperator(element, buffer, DO_Min, true);
+			ConfigureVariableOperator(element, buffer, VariableOperatorMin);
 		}
 		break;
 
 	case 0xd7a2e319 /* "max" */:
 		{
-			ConfigureVariableOperator(element, buffer, DO_Max, true);
+			ConfigureVariableOperator(element, buffer, VariableOperatorMax);
 		}
 		break;
 
@@ -1392,7 +1368,7 @@ void ConfigureDrawItem(const tinyxml2::XMLElement *element, std::vector<unsigned
 
 	case 0x5c6e1222 /* "clear" */:
 		{
-			ConfigureVariableOperator(element, buffer, DO_Clear, false);
+			ConfigureVariableClear(element, buffer);
 		}
 		break;
 
