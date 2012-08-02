@@ -139,6 +139,7 @@ namespace Expression
 	template <typename T> T SmoothStep(Context &aContext);
 }
 
+
 //
 // UNARY EXPRESSION
 // return the result of an expression taking one parameter

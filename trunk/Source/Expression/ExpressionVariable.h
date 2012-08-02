@@ -20,7 +20,7 @@ inline void EvaluateVariable(float value[], int width, EntityContext &aContext)
 }
 
 // evaluate typed variable
-template <typename T> static const T EvaluateVariable(EntityContext &aContext)
+template <typename T> T EvaluateVariable(EntityContext &aContext)
 {
 	T value = T();
 	EvaluateVariable(reinterpret_cast<float * __restrict>(&value), sizeof(T)/sizeof(float), aContext);

@@ -9,6 +9,11 @@
 // returns a random value
 //
 
+namespace Expression
+{
+	template <typename T> T Random(Context &aContext);
+}
+
 // TO DO: float[width] random
 
 // configure typed random

@@ -144,4 +144,23 @@ namespace Expression
 		const float s(Evaluate<float>(aContext));
 		return _mm_add_ps(v0, _mm_mul_ps(_mm_sub_ps(v1, v0), _mm_set_ps1(s)));
 	}
+
+	// step
+	template <> __m128 Step(Context &aContext)
+	{
+		const __m128 e(Evaluate<__m128>(aContext));
+		const __m128 v(Evaluate<__m128>(aContext));
+		return _mm_and_ps(_mm_cmpgt_ps(v, e), _mm_set_ps1(1));
+	}
+
+	// smooth step
+	template <> __m128 SmoothStep(Context &aContext)
+	{
+		const __m128 e0(Evaluate<__m128>(aContext));
+		const __m128 e1(Evaluate<__m128>(aContext));
+		const __m128 v(Evaluate<__m128>(aContext));
+		const __m128 s(_mm_min_ps(_mm_max_ps(v, e0), e1));
+		const __m128 t(_mm_div_ps(_mm_sub_ps(s, e0), _mm_sub_ps(e1, e0)));
+		return _mm_mul_ps(t, _mm_mul_ps(t, _mm_sub_ps(_mm_set_ps1(3), _mm_add_ps(t, t))));
+	}
 }

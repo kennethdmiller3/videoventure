@@ -443,7 +443,7 @@ void WeaponTemplateOld::BuildAction(std::vector<unsigned int> &aAction, unsigned
 				{
 					Expression::Append(aAction, Expression::Mul<__m128>);
 					Expression::Append(aAction, Expression::Constant<__m128>, Cast<__m128, Transform2>(mScatter));
-					Expression::Append(aAction, Expression::ComponentNullary<__m128, 4>::Evaluate<float, Random::Float>);
+					Expression::Append(aAction, Expression::Random<__m128>);
 				}
 				if (!hasOffset && !hasScatter)
 				{
@@ -476,7 +476,7 @@ void WeaponTemplateOld::BuildAction(std::vector<unsigned int> &aAction, unsigned
 				{
 					Expression::Append(aAction, Expression::Mul<__m128>);
 					Expression::Append(aAction, Expression::Constant<__m128>, Cast<__m128, Transform2>(mVariance));
-					Expression::Append(aAction, Expression::ComponentNullary<__m128, 4>::Evaluate<float, Random::Float>);
+					Expression::Append(aAction, Expression::Random<__m128>);
 				}
 				if (!hasInherit && !hasVelocity && !hasVariance)
 				{

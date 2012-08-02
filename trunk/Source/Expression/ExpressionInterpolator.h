@@ -14,10 +14,10 @@
 //#define EVALUATE_INTERPOLATOR_USE_HINT
 
 // evaluate typed keyframe interpolator
-template <typename T> const T EvaluateInterpolator(EntityContext &aContext);
+template <typename T> T EvaluateInterpolator(EntityContext &aContext);
 
 // evaluate typed keyframe constant
-template <typename T> const T EvaluateInterpolatorConstant(EntityContext &aContext);
+template <typename T> T EvaluateInterpolatorConstant(EntityContext &aContext);
 
 // configure typed interpolator
 template <typename T> void ConfigureInterpolator(const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[]);

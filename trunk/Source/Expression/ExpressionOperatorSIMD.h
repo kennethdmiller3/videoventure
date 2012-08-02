@@ -69,4 +69,10 @@ namespace Expression
 
 	// linear interpolate
 	template <> GAME_API __m128 Lerp(Context &aContext);
+
+	// step
+	template <> GAME_API __m128 Step(Context &aContext);
+
+	// smooth step
+	template <> GAME_API __m128 SmoothStep(Context &aContext);
 }

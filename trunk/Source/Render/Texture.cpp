@@ -117,10 +117,10 @@ namespace Database
 										value += a * Noise(x * f + seed[c], y * f - seed[c], xs_FloorToInt(texture.mWidth * f), xs_FloorToInt(texture.mHeight * f));
 #else
 										value += a * (
-											Noise((x) * f, (y) * f) * (texture.mWidth - x) * (texture.mHeight - y) +
-											Noise((x - texture.mWidth) * f, (y) * f) * (x) * (texture.mHeight - y) +
-											Noise((x - texture.mWidth) * f, (y - texture.mHeight) * f) * (x) * (y) +
-											Noise((x) * f, (y - texture.mHeight) * f) * (texture.mWidth - x) * (y)
+											Noise2D((x) * f, (y) * f) * (texture.mWidth - x) * (texture.mHeight - y) +
+											Noise2D((x - texture.mWidth) * f, (y) * f) * (x) * (texture.mHeight - y) +
+											Noise2D((x - texture.mWidth) * f, (y - texture.mHeight) * f) * (x) * (y) +
+											Noise2D((x) * f, (y - texture.mHeight) * f) * (texture.mWidth - x) * (y)
 											) / (texture.mWidth * texture.mHeight);
 #endif
 										f *= 2;
