@@ -46,7 +46,7 @@ template <typename T> void ConfigureConstruct(const tinyxml2::XMLElement *elemen
 #ifdef PRINT_CONFIGURE_EXPRESSION
 			DebugPrint("%s default %s: %f\n", Expression::Schema<float>::NAME, names[i], defaults[i]);
 #endif
-			Expression::Append(buffer, Expression::Constant<float>, defaults[i]);
+			Expression::Append(buffer, Expression::Read<float>, defaults[i]);
 		}
 	}
 }
@@ -60,10 +60,9 @@ namespace Expression
 	}
 	template <> __m128 Construct<__m128, float>(Context &aContext)
 	{
-		float arg1(Evaluate<float>(aContext));
-		float arg2(Evaluate<float>(aContext));
-		float arg3(Evaluate<float>(aContext));
-		float arg4(Evaluate<float>(aContext));
-		return _mm_setr_ps(arg1, arg2, arg3, arg4);
+		__m128 ret = _mm_setzero_ps();
+		for (register int i = 0; i < 4; ++i)
+			ret.m128_f32[i] = Evaluate<float>(aContext);
+		return ret;
 	}
 }

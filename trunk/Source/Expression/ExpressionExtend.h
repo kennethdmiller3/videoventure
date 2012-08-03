@@ -9,6 +9,5 @@
 
 namespace Expression
 {
-	template <typename T, typename A> T Extend(Context &aContext);
-	template <> GAME_API __m128 Extend<__m128, float>(Context &aContext);
+	GAME_API __m128 Extend(Context &aContext);
 }

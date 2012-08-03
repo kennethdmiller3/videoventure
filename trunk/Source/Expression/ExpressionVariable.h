@@ -10,22 +10,8 @@
 // returns the value of a named variable
 //
 
-// evaluate float[width] variable
-inline void EvaluateVariable(float value[], int width, EntityContext &aContext)
-{
-	unsigned int name = Expression::Read<unsigned int>(aContext);
-//	const Database::Typed<float> &variables = Database::variable.Get(aContext.mId);
-	for (int i = 0; i < width; ++i)
-		value[i] = aContext.mVars->Get(name+i);
-}
-
 // evaluate typed variable
-template <typename T> T EvaluateVariable(EntityContext &aContext)
-{
-	T value = T();
-	EvaluateVariable(reinterpret_cast<float * __restrict>(&value), sizeof(T)/sizeof(float), aContext);
-	return value;
-}
+template <typename T> T EvaluateVariable(EntityContext &aContext);
 
 // typed variable: attribute-inlined version
 template <typename T> void ConfigureInlineVariable(const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])

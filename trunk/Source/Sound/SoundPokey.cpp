@@ -240,7 +240,7 @@ static bool Configure(SoundTemplate &self, const tinyxml2::XMLElement *element, 
 	}
 	else
 	{
-		Expression::Append(stream, Expression::Constant<float>, dividerdefault);
+		Expression::Append(stream, Expression::Read<float>, dividerdefault);
 	}
 
 	// amplitude
@@ -254,7 +254,7 @@ static bool Configure(SoundTemplate &self, const tinyxml2::XMLElement *element, 
 	}
 	else
 	{
-		Expression::Append(stream, Expression::Constant<float>, amplitudedefault);
+		Expression::Append(stream, Expression::Read<float>, amplitudedefault);
 	}
 
 	// offset
@@ -268,7 +268,7 @@ static bool Configure(SoundTemplate &self, const tinyxml2::XMLElement *element, 
 	}
 	else
 	{
-		Expression::Append(stream, Expression::Constant<float>, offsetdefault);
+		Expression::Append(stream, Expression::Read<float>, offsetdefault);
 	}
 #else
 	// frequency divider

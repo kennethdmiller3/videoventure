@@ -10,50 +10,50 @@ namespace Expression
 	//
 	
 	// greater than
-	template <typename T> bool Greater(Context &aContext)
+	template <> bool Greater<float>(Context &aContext)
 	{
-		T arg1(Evaluate<T>(aContext));
-		T arg2(Evaluate<T>(aContext));
+		float arg1(Evaluate<float>(aContext));
+		float arg2(Evaluate<float>(aContext));
 		return arg1 > arg2;
 	}
 
 	// greater than or equal to
-	template <typename T> bool GreaterEqual(Context &aContext)
+	template <> bool GreaterEqual<float>(Context &aContext)
 	{
-		T arg1(Evaluate<T>(aContext));
-		T arg2(Evaluate<T>(aContext));
+		float arg1(Evaluate<float>(aContext));
+		float arg2(Evaluate<float>(aContext));
 		return arg1 >= arg2;
 	}
 
 	// less than
-	template <typename T> bool Less(Context &aContext)
+	template <> bool Less<float>(Context &aContext)
 	{
-		T arg1(Evaluate<T>(aContext));
-		T arg2(Evaluate<T>(aContext));
+		float arg1(Evaluate<float>(aContext));
+		float arg2(Evaluate<float>(aContext));
 		return arg1 < arg2;
 	}
 
 	// less than or equal to
-	template <typename T> bool LessEqual(Context &aContext)
+	template <> bool LessEqual<float>(Context &aContext)
 	{
-		T arg1(Evaluate<T>(aContext));
-		T arg2(Evaluate<T>(aContext));
+		float arg1(Evaluate<float>(aContext));
+		float arg2(Evaluate<float>(aContext));
 		return arg1 <= arg2;
 	}
 
 	// equal
-	template <typename T> bool Equal(Context &aContext)
+	template <> bool Equal<float>(Context &aContext)
 	{
-		T arg1(Evaluate<T>(aContext));
-		T arg2(Evaluate<T>(aContext));
+		float arg1(Evaluate<float>(aContext));
+		float arg2(Evaluate<float>(aContext));
 		return arg1 == arg2;
 	}
 
 	// not equal
-	template <typename T> bool NotEqual(Context &aContext)
+	template <> bool NotEqual<float>(Context &aContext)
 	{
-		T arg1(Evaluate<T>(aContext));
-		T arg2(Evaluate<T>(aContext));
+		float arg1(Evaluate<float>(aContext));
+		float arg2(Evaluate<float>(aContext));
 		return arg1 != arg2;
 	}
 }

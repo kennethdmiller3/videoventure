@@ -7,20 +7,10 @@ static Expression::Loader<float> interpolatorfloat(0x83588fd4 /* "interpolator" 
 static Expression::Loader<__m128> interpolatorvector(0x83588fd4 /* "interpolator" */, ConfigureInterpolator<__m128>);
 
 // apply keyframe interpolator (typed)
-template <typename T> inline T EvaluateApplyInterpolator(int aCount, const float aKeys[], float aTime, int &aHint)
-{
-	T value = T();
-	ApplyInterpolator(reinterpret_cast<float * __restrict>(&value), sizeof(T)/sizeof(float), aCount, aKeys, aTime, aHint);
-	return value;
-}
+template <typename T> inline T EvaluateApplyInterpolator(int aCount, const float aKeys[], float aTime, int &aHint);
 
 // apply keyframe constant (typed)
-template <typename T> inline T EvaluateApplyInterpolatorConstant(int aCount, const float aKeys[], float aTime, int &aHint)
-{
-	T value = T();
-	ApplyInterpolatorConstant(reinterpret_cast<float * __restrict>(&value), sizeof(T)/sizeof(float), aCount, aKeys, aTime, aHint);
-	return value;
-}
+template <typename T> inline T EvaluateApplyInterpolatorConstant(int aCount, const float aKeys[], float aTime, int &aHint);
 
 // apply interpolator (specialization for scalar)
 template<> float EvaluateApplyInterpolator<float>(int aCount, const float aKeys[], float aTime, int &aHint)

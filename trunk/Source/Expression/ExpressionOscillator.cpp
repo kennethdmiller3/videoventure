@@ -93,7 +93,7 @@ static bool ConfigureParameter(const tinyxml2::XMLElement *element, const char *
 			Expression::Append(buffer, op);
 
 		// append a constant expression
-		Expression::Append(buffer, Expression::Constant<float>, value);
+		Expression::Append(buffer, Expression::Read<float>, value);
 		return true;
 	}
 

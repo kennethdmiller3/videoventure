@@ -91,7 +91,7 @@ namespace Expression
 	// read a value from an expression stream
 	template <typename T> T Read(Context &aContext)
 	{
-		const T &value = *reinterpret_cast<const T *>(aContext.mStream);
+		register const T value = *reinterpret_cast<const T *>(aContext.mStream);
 		aContext.mStream += (sizeof(T) + sizeof(unsigned int) - 1) / sizeof(unsigned int);
 		return value;
 	}
@@ -100,14 +100,8 @@ namespace Expression
 	template <typename T> T Evaluate(Context &aContext)
 	{
 		typedef T (*F)(Context &);
-		F expr(Read<F>(aContext));
+		register const F expr(Read<F>(aContext));
 		return (*expr)(aContext);
-	}
-
-	// constant expression
-	template <typename T> T Constant(Context &aContext)
-	{
-		return Read<T>(aContext);
 	}
 
 	// nullary operator adapter
@@ -119,24 +113,24 @@ namespace Expression
 	// unary operator adapter
 	template <typename T, typename A1> T Unary(Context &aContext, T (*aOp)(A1))
 	{
-		const A1 arg1(Expression::Evaluate<A1>(aContext));
+		register const A1 arg1(Expression::Evaluate<A1>(aContext));
 		return aOp(arg1);
 	}
 
 	// binary operator adapter
 	template <typename T, typename A1, typename A2> T Binary(Context &aContext, T (*aOp)(A1, A2))
 	{
-		const A1 arg1(Expression::Evaluate<A1>(aContext));
-		const A2 arg2(Expression::Evaluate<A2>(aContext));
+		register const A1 arg1(Expression::Evaluate<A1>(aContext));
+		register const A2 arg2(Expression::Evaluate<A2>(aContext));
 		return aOp(arg1, arg2);
 	};
 
 	// ternary operator adapter
 	template <typename T, typename A1, typename A2, typename A3> T Ternary(Context &aContext, T (*aOp)(A1, A2, A3))
 	{
-		const A1 arg1(Expression::Evaluate<A1>(aContext));
-		const A2 arg2(Expression::Evaluate<A2>(aContext));
-		const A3 arg3(Expression::Evaluate<A3>(aContext));
+		register const A1 arg1(Expression::Evaluate<A1>(aContext));
+		register const A2 arg2(Expression::Evaluate<A2>(aContext));
+		register const A3 arg3(Expression::Evaluate<A3>(aContext));
 		return aOp(arg1, arg2, arg3);
 	};
 
@@ -179,28 +173,28 @@ namespace Expression
 	// construction expression
 	template <typename T, typename A1> T Construct(Context &aContext)
 	{
-		const A1 arg1(Evaluate<A1>(aContext));
+		register const A1 arg1(Evaluate<A1>(aContext));
 		return T(arg1);
 	}
 	template <typename T, typename A1, typename A2> T Construct(Context &aContext)
 	{
-		const A1 arg1(Evaluate<A1>(aContext));
-		const A2 arg2(Evaluate<A2>(aContext));
+		register const A1 arg1(Evaluate<A1>(aContext));
+		register const A2 arg2(Evaluate<A2>(aContext));
 		return T(arg1, arg2);
 	}
 	template <typename T, typename A1, typename A2, typename A3> T Construct(Context &aContext)
 	{
-		const A1 arg1(Evaluate<A1>(aContext));
-		const A2 arg2(Evaluate<A2>(aContext));
-		const A3 arg3(Evaluate<A3>(aContext));
+		register const A1 arg1(Evaluate<A1>(aContext));
+		register const A2 arg2(Evaluate<A2>(aContext));
+		register const A3 arg3(Evaluate<A3>(aContext));
 		return T(arg1, arg2, arg3);
 	}
 	template <typename T, typename A1, typename A2, typename A3, typename A4> T Construct(Context &aContext)
 	{
-		const A1 arg1(Evaluate<A1>(aContext));
-		const A2 arg2(Evaluate<A2>(aContext));
-		const A3 arg3(Evaluate<A3>(aContext));
-		const A4 arg4(Evaluate<A4>(aContext));
+		register const A1 arg1(Evaluate<A1>(aContext));
+		register const A2 arg2(Evaluate<A2>(aContext));
+		register const A3 arg3(Evaluate<A3>(aContext));
+		register const A4 arg4(Evaluate<A4>(aContext));
 		return T(arg1, arg2, arg3, arg4);
 	}
 }

@@ -187,8 +187,7 @@ static const float sTransformDefault[] = { 0.0f, 0.0f, 0.0f, 0.0f };
 
 template<> inline Transform2 Cast<Transform2, __m128>(__m128 i)
 {
-	return Transform2(reinterpret_cast<const float * __restrict>(&i)[2],
-		Vector2(reinterpret_cast<const float * __restrict>(&i)[0], reinterpret_cast<const float * __restrict>(&i)[1]));
+	return Transform2(i.m128_f32[2], Vector2(i.m128_f32[0], i.m128_f32[1]));
 }
 
 template<> inline __m128 Cast<__m128, Transform2>(Transform2 i)
@@ -398,7 +397,7 @@ void WeaponTemplateOld::BuildAction(std::vector<unsigned int> &aAction, unsigned
 			if (mBurstStart > 0.0f)
 			{
 				// add burst start delay
-				Expression::Append(aAction, WeaponWait, Expression::Constant<float>, mBurstStart);
+				Expression::Append(aAction, WeaponWait, Expression::Read<float>, mBurstStart);
 			}
 		}
 		else
@@ -406,7 +405,7 @@ void WeaponTemplateOld::BuildAction(std::vector<unsigned int> &aAction, unsigned
 			if (mBurstDelay > 0.0f)
 			{
 				// add burst delay
-				Expression::Append(aAction, WeaponWait, Expression::Constant<float>, mBurstDelay);
+				Expression::Append(aAction, WeaponWait, Expression::Read<float>, mBurstDelay);
 			}
 		}
 
@@ -420,7 +419,7 @@ void WeaponTemplateOld::BuildAction(std::vector<unsigned int> &aAction, unsigned
 			{
 				// emit a flash
 				Expression::Append(aAction, WeaponFlash, mFlash);
-				Expression::Append(aAction, Expression::Constant<__m128>, Cast<__m128, Transform2>(mOffset));
+				Expression::Append(aAction, Expression::Read<__m128>, Cast<__m128, Transform2>(mOffset));
 			}
 
 			if (mOrdnance)
@@ -437,17 +436,17 @@ void WeaponTemplateOld::BuildAction(std::vector<unsigned int> &aAction, unsigned
 				}
 				if (hasOffset)
 				{
-					Expression::Append(aAction, Expression::Constant<__m128>, Cast<__m128, Transform2>(mOffset));
+					Expression::Append(aAction, Expression::Read<__m128>, Cast<__m128, Transform2>(mOffset));
 				}
 				if (hasScatter)
 				{
 					Expression::Append(aAction, Expression::Mul<__m128>);
-					Expression::Append(aAction, Expression::Constant<__m128>, Cast<__m128, Transform2>(mScatter));
+					Expression::Append(aAction, Expression::Read<__m128>, Cast<__m128, Transform2>(mScatter));
 					Expression::Append(aAction, Expression::Random<__m128>);
 				}
 				if (!hasOffset && !hasScatter)
 				{
-					Expression::Append(aAction, Expression::Constant<__m128>, _mm_setzero_ps());
+					Expression::Append(aAction, Expression::Read<__m128>, _mm_setzero_ps());
 				}
 
 				// velocity
@@ -461,7 +460,7 @@ void WeaponTemplateOld::BuildAction(std::vector<unsigned int> &aAction, unsigned
 				if (hasInherit)
 				{
 					Expression::Append(aAction, Expression::Mul<__m128>);
-					Expression::Append(aAction, Expression::Constant<__m128>, Cast<__m128, Transform2>(mInherit));
+					Expression::Append(aAction, Expression::Read<__m128>, Cast<__m128, Transform2>(mInherit));
 					Expression::Append(aAction, EvaluateVelocityLocal);
 				}
 				if (hasVelocity && hasVariance)
@@ -470,17 +469,17 @@ void WeaponTemplateOld::BuildAction(std::vector<unsigned int> &aAction, unsigned
 				}
 				if (hasVelocity)
 				{
-					Expression::Append(aAction, Expression::Constant<__m128>, Cast<__m128, Transform2>(mVelocity));
+					Expression::Append(aAction, Expression::Read<__m128>, Cast<__m128, Transform2>(mVelocity));
 				}
 				if (hasVariance)
 				{
 					Expression::Append(aAction, Expression::Mul<__m128>);
-					Expression::Append(aAction, Expression::Constant<__m128>, Cast<__m128, Transform2>(mVariance));
+					Expression::Append(aAction, Expression::Read<__m128>, Cast<__m128, Transform2>(mVariance));
 					Expression::Append(aAction, Expression::Random<__m128>);
 				}
 				if (!hasInherit && !hasVelocity && !hasVariance)
 				{
-					Expression::Append(aAction, Expression::Constant<__m128>, _mm_setzero_ps());
+					Expression::Append(aAction, Expression::Read<__m128>, _mm_setzero_ps());
 				}
 			}
 		}
@@ -503,7 +502,7 @@ static void ConfigureParameter(const tinyxml2::XMLElement *element, const char *
 	else
 	{
 		// append a constant expression
-		Expression::Append(buffer, Expression::Constant<float>, value);
+		Expression::Append(buffer, Expression::Read<float>, value);
 	}
 }
 
@@ -565,7 +564,7 @@ bool WeaponTemplate::ConfigureAction(const tinyxml2::XMLElement *element, unsign
 			if (const tinyxml2::XMLElement *param = child->FirstChildElement("position"))
 				Expression::Loader<__m128>::ConfigureRoot(param, mAction, sTransformNames, sTransformDefault);
 			else
-				Expression::Append(mAction, Expression::Constant<__m128>, _mm_setzero_ps());
+				Expression::Append(mAction, Expression::Read<__m128>, _mm_setzero_ps());
 			break;
 
 		case 0x399bf05d /* "ordnance" */:
@@ -573,11 +572,11 @@ bool WeaponTemplate::ConfigureAction(const tinyxml2::XMLElement *element, unsign
 			if (const tinyxml2::XMLElement *param = child->FirstChildElement("position"))
 				Expression::Loader<__m128>::ConfigureRoot(param, mAction, sTransformNames, sTransformDefault);
 			else
-				Expression::Append(mAction, Expression::Constant<__m128>, _mm_setzero_ps());
+				Expression::Append(mAction, Expression::Read<__m128>, _mm_setzero_ps());
 			if (const tinyxml2::XMLElement *param = child->FirstChildElement("velocity"))
 				Expression::Loader<__m128>::ConfigureRoot(param, mAction, sTransformNames, sTransformDefault);
 			else
-				Expression::Append(mAction, Expression::Constant<__m128>, _mm_setzero_ps());
+				Expression::Append(mAction, Expression::Read<__m128>, _mm_setzero_ps());
 			break;
 
 		case 0xe5561300 /* "cue" */:

@@ -77,7 +77,7 @@ static void ConfigureShortCircuit(bool (*expr)(Expression::Context &), const tin
 	{
 		// no first argument: return false (HACK)
 		DebugPrint("no first argument for variadic operator %s", element->Value());
-		Expression::Append(buffer, Expression::Constant<bool>, false);
+		Expression::Append(buffer, Expression::Read<bool>, false);
 		return;
 	}
 
