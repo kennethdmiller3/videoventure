@@ -205,9 +205,9 @@ void VariableOperatorMax(float &v, float data) { v = std::max(v, data); }
 // evaluate variable operator
 bool EvaluateVariableOperator(EntityContext &aContext)
 {
-	VariableOperator op = Expression::Read<VariableOperator>(aContext);
-	unsigned int name = Expression::Read<unsigned int>(aContext);
-	int width = Expression::Read<int>(aContext);
+	const VariableOperator op = Expression::Read<VariableOperator>(aContext);
+	const unsigned int name = Expression::Read<unsigned int>(aContext);
+	const int width = Expression::Read<int>(aContext);
 	assert(width <= 4);
 	__m128 value;
 	switch(width)
@@ -221,7 +221,7 @@ bool EvaluateVariableOperator(EntityContext &aContext)
 	for (int i = 0; i < width; i++)
 	{
 		float &v = aContext.mVars->Open(name+i);
-		op(v, reinterpret_cast<float *>(&value)[i]);
+		op(v, value.m128_f32[i]);
 		aContext.mVars->Close(name+i);
 	}
 //	Database::variable.Close(aContext.mId);
@@ -246,15 +246,15 @@ void DO_glBegin(EntityContext &aContext)
 
 void DO_glBindTexture(EntityContext &aContext)
 {
-	GLenum target(Expression::Read<GLenum>(aContext));
-	GLuint texture(Expression::Read<GLuint>(aContext));
+	const GLenum target(Expression::Read<GLenum>(aContext));
+	const GLuint texture(Expression::Read<GLuint>(aContext));
 	glBindTexture(target, texture);
 }
 
 void DO_glBlendFunc(EntityContext &aContext)
 {
-	GLenum sfactor(Expression::Read<GLenum>(aContext));
-	GLenum dfactor(Expression::Read<GLenum>(aContext));
+	const GLenum sfactor(Expression::Read<GLenum>(aContext));
+	const GLenum dfactor(Expression::Read<GLenum>(aContext));
 	glBlendFunc(sfactor, dfactor);
 }
 
@@ -265,15 +265,15 @@ void DO_glCallList(EntityContext &aContext)
 
 void DO_glColor4fv(EntityContext &aContext)
 {
-	DLColor value(Expression::Evaluate<DLColor>(aContext));
-	glColor4fv(reinterpret_cast<float *>(&value));
+	const DLColor value(Expression::Evaluate<DLColor>(aContext));
+	glColor4fv(value.m128_f32);
 }
 
 void DO_glColorPointer(EntityContext &aContext)
 {
-	GLint size(Expression::Read<GLint>(aContext));
-	GLsizei stride(Expression::Read<GLsizei>(aContext));
-	size_t count(Expression::Read<size_t>(aContext));
+	const GLint size(Expression::Read<GLint>(aContext));
+	const GLsizei stride(Expression::Read<GLsizei>(aContext));
+	const size_t count(Expression::Read<size_t>(aContext));
 	glColorPointer(size, GL_FLOAT, stride, aContext.mStream);
 	aContext.mStream += (count*sizeof(GLfloat)+sizeof(unsigned int)-1)/sizeof(unsigned int);
 }
@@ -290,16 +290,16 @@ void DO_glDisableClientState(EntityContext &aContext)
 
 void DO_glDrawArrays(EntityContext &aContext)
 {
-	GLenum mode(Expression::Read<GLenum>(aContext));
-	GLint first(Expression::Read<GLint>(aContext));
-	size_t count(Expression::Read<size_t>(aContext));
+	const GLenum mode(Expression::Read<GLenum>(aContext));
+	const GLint first(Expression::Read<GLint>(aContext));
+	const size_t count(Expression::Read<size_t>(aContext));
 	glDrawArrays(mode, first, count);
 }
 
 void DO_glDrawElements(EntityContext &aContext)
 {
-	GLenum mode(Expression::Read<GLenum>(aContext));
-	size_t count(Expression::Read<size_t>(aContext));
+	const GLenum mode(Expression::Read<GLenum>(aContext));
+	const size_t count(Expression::Read<size_t>(aContext));
 	glDrawElements(mode, count, GL_UNSIGNED_SHORT, aContext.mStream);
 	aContext.mStream += (count*sizeof(unsigned short)+sizeof(unsigned int)-1)/sizeof(unsigned int);
 }
@@ -311,8 +311,8 @@ void DO_glEdgeFlag(EntityContext &aContext)
 
 void DO_glEdgeFlagPointer(EntityContext &aContext)
 {
-	GLsizei stride(Expression::Read<GLsizei>(aContext));
-	size_t count(Expression::Read<size_t>(aContext));
+	const GLsizei stride(Expression::Read<GLsizei>(aContext));
+	const size_t count(Expression::Read<size_t>(aContext));
 	glEdgeFlagPointer(stride, aContext.mStream);
 	aContext.mStream += (count*sizeof(bool)+sizeof(unsigned int)-1)/sizeof(unsigned int);
 }
@@ -334,27 +334,27 @@ void DO_glEnd(EntityContext &aContext)
 
 void DO_glIndexf(EntityContext &aContext)
 {
-	float value(Expression::Evaluate<DLIndex>(aContext));
+	const float value(Expression::Evaluate<DLIndex>(aContext));
 	glIndexf(value);
 }
 
 void DO_glIndexPointer(EntityContext &aContext)
 {
-	GLsizei stride(Expression::Read<GLsizei>(aContext));
-	size_t count(Expression::Read<size_t>(aContext));
+	const GLsizei stride(Expression::Read<GLsizei>(aContext));
+	const size_t count(Expression::Read<size_t>(aContext));
 	glIndexPointer(GL_FLOAT, stride, aContext.mStream);
 	aContext.mStream += (count*sizeof(GLfloat)+sizeof(unsigned int)-1)/sizeof(unsigned int);
 }
 
 void DO_glLineWidth(EntityContext &aContext)
 {
-	GLfloat width(Expression::Read<GLfloat>(aContext));
+	const GLfloat width(Expression::Read<GLfloat>(aContext));
 	glLineWidth(width);
 }
 
 void DO_glLineWidthWorld(EntityContext &aContext)
 {
-	GLfloat width(Expression::Read<GLfloat>(aContext) * float(SCREEN_HEIGHT) / VIEW_SIZE);
+	const GLfloat width(Expression::Read<GLfloat>(aContext) * float(SCREEN_HEIGHT) / VIEW_SIZE);
 	glLineWidth(width);
 }
 
@@ -377,27 +377,27 @@ void DO_glMultMatrixf(EntityContext &aContext)
 
 void DO_glNormal3fv(EntityContext &aContext)
 {
-	DLNormal value(Expression::Evaluate<DLNormal>(aContext));
-	glNormal3fv(reinterpret_cast<float *>(&value));
+	const DLNormal value(Expression::Evaluate<DLNormal>(aContext));
+	glNormal3fv(value.m128_f32);
 }
 
 void DO_glNormalPointer(EntityContext &aContext)
 {
-	GLsizei stride(Expression::Read<GLsizei>(aContext));
-	size_t count(Expression::Read<size_t>(aContext));
+	const GLsizei stride(Expression::Read<GLsizei>(aContext));
+	const size_t count(Expression::Read<size_t>(aContext));
 	glNormalPointer(GL_FLOAT, stride, aContext.mStream);
 	aContext.mStream += (count*sizeof(GLfloat)+sizeof(unsigned int)-1)/sizeof(unsigned int);
 }
 
 void DO_glPointSize(EntityContext &aContext)
 {
-	GLfloat size(Expression::Read<GLfloat>(aContext));
+	const GLfloat size(Expression::Read<GLfloat>(aContext));
 	glPointSize(size);
 }
 
 void DO_glPointSizeWorld(EntityContext &aContext)
 {
-	GLfloat size(Expression::Read<GLfloat>(aContext) * float(SCREEN_HEIGHT) / VIEW_SIZE);
+	const GLfloat size(Expression::Read<GLfloat>(aContext) * float(SCREEN_HEIGHT) / VIEW_SIZE);
 	glPointSize(size);
 }
 
@@ -433,63 +433,63 @@ void DO_glPushMatrix(EntityContext &aContext)
 
 void DO_glRotatef(EntityContext &aContext)
 {
-	float value(Expression::Evaluate<DLRotation>(aContext));
+	const float value(Expression::Evaluate<DLRotation>(aContext));
 	glRotatef(value, 0, 0, 1);
 }
 
 void DO_glScalef(EntityContext &aContext)
 {
-	DLScale value(Expression::Evaluate<DLScale>(aContext));
-	glScalef(reinterpret_cast<float *>(&value)[0], reinterpret_cast<float *>(&value)[1], reinterpret_cast<float *>(&value)[2]);
+	const DLScale value(Expression::Evaluate<DLScale>(aContext));
+	glScalef(value.m128_f32[0], value.m128_f32[1], value.m128_f32[2]);
 }
 
 void DO_glTexCoord2fv(EntityContext &aContext)
 {
-	DLTexCoord value(Expression::Evaluate<DLTexCoord>(aContext));
-	glTexCoord2fv(reinterpret_cast<float *>(&value));
+	const DLTexCoord value(Expression::Evaluate<DLTexCoord>(aContext));
+	glTexCoord2fv(value.m128_f32);
 }
 
 void DO_glTexCoordPointer(EntityContext &aContext)
 {
-	GLint size(Expression::Read<GLint>(aContext));
-	GLsizei stride(Expression::Read<GLsizei>(aContext));
-	size_t count(Expression::Read<size_t>(aContext));
+	const GLint size(Expression::Read<GLint>(aContext));
+	const GLsizei stride(Expression::Read<GLsizei>(aContext));
+	const size_t count(Expression::Read<size_t>(aContext));
 	glTexCoordPointer(size, GL_FLOAT, stride, aContext.mStream);
 	aContext.mStream += (count*sizeof(GLfloat)+sizeof(unsigned int)-1)/sizeof(unsigned int);
 }
 
 void DO_glTexEnvi(EntityContext &aContext)
 {
-	GLenum pname(Expression::Read<GLint>(aContext));
-	GLint param(Expression::Read<GLint>(aContext));
+	const GLenum pname(Expression::Read<GLint>(aContext));
+	const GLint param(Expression::Read<GLint>(aContext));
 	glTexEnvi( GL_TEXTURE_ENV, pname, param );
 }
 
 void DO_glTranslatef(EntityContext &aContext)
 {
-	DLTranslation value(Expression::Evaluate<DLTranslation>(aContext));
-	glTranslatef(reinterpret_cast<float *>(&value)[0], reinterpret_cast<float *>(&value)[1], reinterpret_cast<float *>(&value)[2]);
+	const DLTranslation value(Expression::Evaluate<DLTranslation>(aContext));
+	glTranslatef(value.m128_f32[0], value.m128_f32[1], value.m128_f32[2]);
 }
 
 void DO_glVertex3fv(EntityContext &aContext)
 {
-	DLPosition value(Expression::Evaluate<DLPosition>(aContext));
-	glVertex3fv(reinterpret_cast<float *>(&value));
+	const DLPosition value(Expression::Evaluate<DLPosition>(aContext));
+	glVertex3fv(value.m128_f32);
 }
 
 void DO_glVertexPointer(EntityContext &aContext)
 {
-	GLint size(Expression::Read<GLint>(aContext));
-	GLsizei stride(Expression::Read<GLsizei>(aContext));
-	size_t count(Expression::Read<size_t>(aContext));
+	const GLint size(Expression::Read<GLint>(aContext));
+	const GLsizei stride(Expression::Read<GLsizei>(aContext));
+	const size_t count(Expression::Read<size_t>(aContext));
 	glVertexPointer(size, GL_FLOAT, stride, aContext.mStream);
 	aContext.mStream += (count*sizeof(GLfloat)+sizeof(unsigned int)-1)/sizeof(unsigned int);
 }
 
 void DO_Repeat(EntityContext &aContext)
 {
-	int repeat(Expression::Read<int>(aContext));
-	size_t size(Expression::Read<size_t>(aContext));
+	const int repeat(Expression::Read<int>(aContext));
+	const size_t size(Expression::Read<size_t>(aContext));
 	EntityContext context(aContext);
 	context.mBegin = context.mStream;
 	context.mEnd = context.mStream + size;
@@ -503,11 +503,11 @@ void DO_Repeat(EntityContext &aContext)
 
 void DO_Block(EntityContext &aContext)
 {
-	float start(Expression::Read<float>(aContext));
-	float length(Expression::Read<float>(aContext));
-	float scale(Expression::Read<float>(aContext));
-	int repeat(Expression::Read<int>(aContext));
-	size_t size(Expression::Read<size_t>(aContext));
+	const float start(Expression::Read<float>(aContext));
+	const float length(Expression::Read<float>(aContext));
+	const float scale(Expression::Read<float>(aContext));
+	const int repeat(Expression::Read<int>(aContext));
+	const size_t size(Expression::Read<size_t>(aContext));
 	float t = aContext.mParam - start;
 	if (t >= 0.0f && length > 0.0f)
 	{
@@ -528,8 +528,8 @@ void DO_Block(EntityContext &aContext)
 
 void DO_Swizzle(EntityContext &aContext)
 {
-	unsigned int name(Expression::Read<unsigned int>(aContext));
-	int width(Expression::Read<int>(aContext));
+	const unsigned int name(Expression::Read<unsigned int>(aContext));
+	const int width(Expression::Read<int>(aContext));
 //	Database::Typed<float> &variables = Database::variable.Open(aContext.mId);
 	float *temp = static_cast<float *>(_alloca(width * sizeof(float)));
 	for (int i = 0; i < width; i++)
@@ -541,8 +541,8 @@ void DO_Swizzle(EntityContext &aContext)
 
 void DO_Clear(EntityContext &aContext)
 {
-	unsigned int name(Expression::Read<unsigned int>(aContext));
-	int width(Expression::Read<int>(aContext));
+	const unsigned int name(Expression::Read<unsigned int>(aContext));
+	const int width(Expression::Read<int>(aContext));
 //	Database::Typed<float> &variables = Database::variable.Open(aContext.mId);
 	for (int i = 0; i < width; i++)
 		aContext.mVars->Delete(name+i);
@@ -552,11 +552,11 @@ void DO_Clear(EntityContext &aContext)
 #ifdef DRAWLIST_LOOP
 void DO_Loop(EntityContext &aContext)
 {
-	unsigned int name = Expression::Read<unsigned int>(aContext);
-	float from = Expression::Read<float>(aContext);
-	float to   = Expression::Read<float>(aContext);
-	float by   = Expression::Read<float>(aContext);
-	size_t size = Expression::Read<size_t>(aContext);
+	const unsigned int name = Expression::Read<unsigned int>(aContext);
+	const float from = Expression::Read<float>(aContext);
+	const float to   = Expression::Read<float>(aContext);
+	const float by   = Expression::Read<float>(aContext);
+	const size_t size = Expression::Read<size_t>(aContext);
 
 //		Database::Typed<float> &variables = Database::variable.Open(aContext.mId);
 	EntityContext context(aContext);
@@ -591,8 +591,8 @@ void DO_Loop(EntityContext &aContext)
 
 void ConfigureFloatData(const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer)
 {
-	const char *text = element->GetText();
-	size_t len = strlen(text)+1;
+	const char * const text = element->GetText();
+	const size_t len = strlen(text)+1;
 	char *buf = static_cast<char *>(_alloca(len));
 	memcpy(buf, text, len);
 
@@ -607,8 +607,8 @@ void ConfigureFloatData(const tinyxml2::XMLElement *element, std::vector<unsigne
 
 void ConfigureVariableOperator(const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer, VariableOperator op)
 {
-	unsigned int name = Hash(element->Attribute("name"));
-	unsigned int type = Hash(element->Attribute("type"));
+	const unsigned int name = Hash(element->Attribute("name"));
+	const unsigned int type = Hash(element->Attribute("type"));
 	int width;
 	const char * const *names;
 	const float *data;
@@ -626,8 +626,8 @@ void ConfigureVariableOperator(const tinyxml2::XMLElement *element, std::vector<
 
 void ConfigureVariableClear(const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer)
 {
-	unsigned int name = Hash(element->Attribute("name"));
-	unsigned int type = Hash(element->Attribute("type"));
+	const unsigned int name = Hash(element->Attribute("name"));
+	const unsigned int type = Hash(element->Attribute("type"));
 	int width;
 	const char * const *names;
 	const float *data;
@@ -649,7 +649,7 @@ void ConfigureArray(const tinyxml2::XMLElement *element, std::vector<unsigned in
 	Expression::Append(buffer, op, size, stride);
 
 	buffer.push_back(0);
-	int start = buffer.size();
+	const int start = buffer.size();
 	ConfigureFloatData(element, buffer);
 	buffer[start-1] = buffer.size() - start;
 }
@@ -1188,8 +1188,8 @@ void ConfigureDrawItem(const tinyxml2::XMLElement *element, std::vector<unsigned
 			int stride = 0;
 			element->QueryIntAttribute("stride", &stride);
 
-			const char *text = element->GetText();
-			size_t len = strlen(text)+1;
+			const char * const text = element->GetText();
+			const size_t len = strlen(text)+1;
 			char *buf = static_cast<char *>(_alloca(len));
 			memcpy(buf, text, len);
 			bool *data = static_cast<bool *>(_alloca(len*sizeof(bool)/2));
@@ -1232,8 +1232,8 @@ void ConfigureDrawItem(const tinyxml2::XMLElement *element, std::vector<unsigned
 		{
 			GLenum mode(GetPrimitiveMode(element->Attribute("mode")));
 
-			const char *text = element->GetText();
-			size_t len = strlen(text)+1;
+			const char * const text = element->GetText();
+			const size_t len = strlen(text)+1;
 			char *buf = static_cast<char *>(_alloca(len));
 			memcpy(buf, text, len);
 			unsigned short *indices = static_cast<unsigned short *>(_alloca(len*sizeof(unsigned short)/2));
@@ -1259,7 +1259,7 @@ void ConfigureDrawItem(const tinyxml2::XMLElement *element, std::vector<unsigned
 			Expression::Append(buffer, DO_Repeat, count);
 
 			buffer.push_back(0);
-			int start = buffer.size();
+			const int start = buffer.size();
 			ConfigureDrawItems(element, buffer);
 			buffer[start-1] = buffer.size() - start;
 		}
@@ -1329,8 +1329,8 @@ void ConfigureDrawItem(const tinyxml2::XMLElement *element, std::vector<unsigned
 
 	case 0x3deb1461 /* "swizzle" */:
 		{
-			unsigned int name = Hash(element->Attribute("name"));
-			unsigned int type = Hash(element->Attribute("type"));
+			const unsigned int name = Hash(element->Attribute("name"));
+			const unsigned int type = Hash(element->Attribute("type"));
 			int width;
 			const char * const *names;
 			const float *data;
@@ -1375,7 +1375,7 @@ void ConfigureDrawItem(const tinyxml2::XMLElement *element, std::vector<unsigned
 #ifdef DRAWLIST_LOOP
 	case 0xddef486b /* "loop" */:
 		{
-			unsigned int name = Hash(element->Attribute("name"));
+			const unsigned int name = Hash(element->Attribute("name"));
 			float from = 0.0f;
 			element->QueryFloatAttribute("from", &from);
 			float to = 0.0f;
@@ -1392,7 +1392,7 @@ void ConfigureDrawItem(const tinyxml2::XMLElement *element, std::vector<unsigned
 			Expression::Append(buffer, DO_Loop, name, from, to, by);
 
 			buffer.push_back(0);
-			int start = buffer.size();
+			const int start = buffer.size();
 			ConfigureDrawItems(element, buffer);
 			buffer[start-1] = buffer.size() - start;
 		}
@@ -1414,7 +1414,7 @@ void ConfigureDrawItem(const tinyxml2::XMLElement *element, std::vector<unsigned
 			Expression::Append(buffer, DO_Emitter, count, period, x, y, a);
 
 			buffer.push_back(0);
-			int start = buffer.size();
+			const int start = buffer.size();
 			ConfigureDrawItems(element, buffer);
 			buffer[start-1] = buffer.size() - start;
 		}

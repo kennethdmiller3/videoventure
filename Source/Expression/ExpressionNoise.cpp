@@ -10,17 +10,17 @@
 
 namespace Expression
 {
-	template <typename T> float Noise1D(Context &aContext)
+	float Noise1D(Context &aContext)
 	{
-		return ComponentUnary<float>(aContext, ::Noise1D);
+		return Unary<float>(aContext, ::Noise1D);
 	}
-	template <typename T> float Noise2D(Context &aContext)
+	float Noise2D(Context &aContext)
 	{
-		return ComponentBinary<float>(aContext, ::Noise2D);
+		return Binary<float>(aContext, ::Noise2D);
 	}
-	template <typename T> float Noise3D(Context &aContext)
+	float Noise3D(Context &aContext)
 	{
-		return ComponentTernary<float>(aContext, ::Noise3D);
+		return Ternary<float>(aContext, ::Noise3D);
 	}
 }
 
@@ -60,7 +60,7 @@ static bool ConfigureParameter(const tinyxml2::XMLElement *element, const char *
 			Expression::Append(buffer, op);
 
 		// append a constant expression
-		Expression::Append(buffer, Expression::Constant<float>, value);
+		Expression::Append(buffer, Expression::Read<float>, value);
 		return true;
 	}
 
@@ -95,7 +95,7 @@ void ConfigureNoise(const tinyxml2::XMLElement *element, std::vector<unsigned in
 #ifdef PRINT_CONFIGURE_EXPRESSION
 		DebugPrint("%s noise1\n", Expression::Schema<float>::NAME);
 #endif
-		Expression::Append(buffer, Expression::Noise1D<float>);
+		Expression::Append(buffer, Expression::Noise1D);
 		Expression::Loader<float>::Configure(arg1, buffer, names, defaults);
 		return;
 	}
@@ -106,7 +106,7 @@ void ConfigureNoise(const tinyxml2::XMLElement *element, std::vector<unsigned in
 #ifdef PRINT_CONFIGURE_EXPRESSION
 		DebugPrint("%s noise2\n", Expression::Schema<float>::NAME);
 #endif
-		Expression::Append(buffer, Expression::Noise2D<float>);
+		Expression::Append(buffer, Expression::Noise2D);
 		Expression::Loader<float>::Configure(arg1, buffer, names, defaults);
 		Expression::Loader<float>::Configure(arg2, buffer, names, defaults);
 		return;
@@ -118,7 +118,7 @@ void ConfigureNoise(const tinyxml2::XMLElement *element, std::vector<unsigned in
 #ifdef PRINT_CONFIGURE_EXPRESSION
 		DebugPrint("%s noise3\n", Expression::Schema<float>::NAME);
 #endif
-		Expression::Append(buffer, Expression::Noise3D<float>);
+		Expression::Append(buffer, Expression::Noise3D);
 		Expression::Loader<float>::Configure(arg1, buffer, names, defaults);
 		Expression::Loader<float>::Configure(arg2, buffer, names, defaults);
 		Expression::Loader<float>::Configure(arg3, buffer, names, defaults);

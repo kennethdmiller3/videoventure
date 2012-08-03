@@ -88,8 +88,7 @@ static const float sTransformDefault[] = { 0.0f, 0.0f, 0.0f, 0.0f };
 
 template<> inline Transform2 Cast<Transform2, __m128>(__m128 i)
 {
-	return Transform2(reinterpret_cast<const float * __restrict>(&i)[2],
-		Vector2(reinterpret_cast<const float * __restrict>(&i)[0], reinterpret_cast<const float * __restrict>(&i)[1]));
+	return Transform2(i.m128_f32[2], Vector2(i.m128_f32[0], i.m128_f32[1]));
 }
 
 template<> inline __m128 Cast<__m128, Transform2>(Transform2 i)
@@ -296,7 +295,7 @@ static void ConfigureParameter(const tinyxml2::XMLElement *element, const char *
 	else
 	{
 		// append a constant expression
-		Expression::Append(buffer, Expression::Constant<float>, value);
+		Expression::Append(buffer, Expression::Read<float>, value);
 	}
 }
 
@@ -372,7 +371,7 @@ bool ChargeStateTemplate::ConfigureAction(const tinyxml2::XMLElement *element, u
 			if (const tinyxml2::XMLElement *param = child->FirstChildElement("position"))
 				Expression::Loader<__m128>::ConfigureRoot(param, mAction, sTransformNames, sTransformDefault);
 			else
-				Expression::Append(mAction, Expression::Constant<__m128>, _mm_setzero_ps());
+				Expression::Append(mAction, Expression::Read<__m128>, _mm_setzero_ps());
 			break;
 
 		case 0x399bf05d /* "ordnance" */:
@@ -380,11 +379,11 @@ bool ChargeStateTemplate::ConfigureAction(const tinyxml2::XMLElement *element, u
 			if (const tinyxml2::XMLElement *param = child->FirstChildElement("position"))
 				Expression::Loader<__m128>::ConfigureRoot(param, mAction, sTransformNames, sTransformDefault);
 			else
-				Expression::Append(mAction, Expression::Constant<__m128>, _mm_setzero_ps());
+				Expression::Append(mAction, Expression::Read<__m128>, _mm_setzero_ps());
 			if (const tinyxml2::XMLElement *param = child->FirstChildElement("velocity"))
 				Expression::Loader<__m128>::ConfigureRoot(param, mAction, sTransformNames, sTransformDefault);
 			else
-				Expression::Append(mAction, Expression::Constant<__m128>, _mm_setzero_ps());
+				Expression::Append(mAction, Expression::Read<__m128>, _mm_setzero_ps());
 			break;
 
 		case 0xe5561300 /* "cue" */:

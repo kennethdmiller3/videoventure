@@ -114,7 +114,7 @@ template <typename T> void ConfigureRandom(const tinyxml2::XMLElement *element, 
 		}
 
 		// push offset
-		Expression::Append(buffer, Expression::Constant<T>);
+		Expression::Append(buffer, Expression::Read<T>);
 		for (int i = 0; i < width; ++i)
 			Expression::New<float>(buffer, offset[i]);
 	}
@@ -127,7 +127,7 @@ template <typename T> void ConfigureRandom(const tinyxml2::XMLElement *element, 
 			Expression::Append(buffer, Expression::Mul<T>);
 
 			// push scale
-			Expression::Append(buffer, Expression::Constant<T>);
+			Expression::Append(buffer, Expression::Read<T>);
 			for (int i = 0; i < width; ++i)
 				Expression::New<float>(buffer, scale[i]);
 		}

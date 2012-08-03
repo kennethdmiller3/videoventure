@@ -13,8 +13,7 @@ static const float sTransformDefault[] = { 0.0f, 0.0f, 0.0f, 0.0f };
 
 template<> inline Transform2 Cast<Transform2, __m128>(__m128 i)
 {
-	return Transform2(reinterpret_cast<const float * __restrict>(&i)[2],
-		Vector2(reinterpret_cast<const float * __restrict>(&i)[0], reinterpret_cast<const float * __restrict>(&i)[1]));
+	return Transform2(i.m128_f32[2], Vector2(i.m128_f32[0], i.m128_f32[1]));
 }
 
 
@@ -100,11 +99,11 @@ static void ConfigureActionItem(const tinyxml2::XMLElement *element, std::vector
 			if (const tinyxml2::XMLElement *param = element->FirstChildElement("offset"))
 				Expression::Loader<__m128>::ConfigureRoot(param, buffer, sTransformNames, sTransformDefault);
 			else
-				Expression::Append(buffer, Expression::Constant<__m128>, _mm_setzero_ps());
+				Expression::Append(buffer, Expression::Read<__m128>, _mm_setzero_ps());
 			if (const tinyxml2::XMLElement *param = element->FirstChildElement("velocity"))
 				Expression::Loader<__m128>::ConfigureRoot(param, buffer, sTransformNames, sTransformDefault);
 			else
-				Expression::Append(buffer, Expression::Constant<__m128>, _mm_setzero_ps());
+				Expression::Append(buffer, Expression::Read<__m128>, _mm_setzero_ps());
 		}
 		break;
 

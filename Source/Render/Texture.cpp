@@ -132,11 +132,18 @@ namespace Database
 									context.Restart();
 									context.mParam = value;
 									__m128 color = Expression::Evaluate<__m128>(context);
-
+#if 1
+									color = _mm_mul_ps(_mm_min_ps(_mm_max_ps(color, _mm_setzero_ps()), _mm_set1_ps(1)), _mm_set1_ps(255));
+									*pixel++ = (unsigned char)xs_RoundToInt(color.m128_f32[0]);
+									*pixel++ = (unsigned char)xs_RoundToInt(color.m128_f32[1]);
+									*pixel++ = (unsigned char)xs_RoundToInt(color.m128_f32[2]);
+									*pixel++ = (unsigned char)xs_RoundToInt(color.m128_f32[3]);
+#else
 									*pixel++ = (unsigned char)xs_RoundToInt(Clamp(reinterpret_cast<float * __restrict>(&color)[0], 0.0f, 1.0f) * 255);
 									*pixel++ = (unsigned char)xs_RoundToInt(Clamp(reinterpret_cast<float * __restrict>(&color)[1], 0.0f, 1.0f) * 255);
 									*pixel++ = (unsigned char)xs_RoundToInt(Clamp(reinterpret_cast<float * __restrict>(&color)[2], 0.0f, 1.0f) * 255);
 									*pixel++ = (unsigned char)xs_RoundToInt(Clamp(reinterpret_cast<float * __restrict>(&color)[3], 0.0f, 1.0f) * 255);
+#endif
 								}
 							}
 						}
@@ -173,11 +180,18 @@ namespace Database
 									// get interpolator value
 									context.Restart();
 									__m128 color = Expression::Evaluate<__m128>(context);
-
+#if 1
+									color = _mm_mul_ps(_mm_min_ps(_mm_max_ps(color, _mm_setzero_ps()), _mm_set1_ps(1)), _mm_set1_ps(255));
+									*pixel++ = (unsigned char)xs_RoundToInt(color.m128_f32[0]);
+									*pixel++ = (unsigned char)xs_RoundToInt(color.m128_f32[1]);
+									*pixel++ = (unsigned char)xs_RoundToInt(color.m128_f32[2]);
+									*pixel++ = (unsigned char)xs_RoundToInt(color.m128_f32[3]);
+#else
 									*pixel++ = (unsigned char)xs_RoundToInt(Clamp(reinterpret_cast<float * __restrict>(&color)[0], 0.0f, 1.0f) * 255);
 									*pixel++ = (unsigned char)xs_RoundToInt(Clamp(reinterpret_cast<float * __restrict>(&color)[1], 0.0f, 1.0f) * 255);
 									*pixel++ = (unsigned char)xs_RoundToInt(Clamp(reinterpret_cast<float * __restrict>(&color)[2], 0.0f, 1.0f) * 255);
 									*pixel++ = (unsigned char)xs_RoundToInt(Clamp(reinterpret_cast<float * __restrict>(&color)[3], 0.0f, 1.0f) * 255);
+#endif
 								}
 							}
 

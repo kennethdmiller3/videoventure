@@ -34,7 +34,7 @@ namespace Expression
 	{
 		static void Append(std::vector<unsigned int> &buffer)
 		{
-			Expression::Append(buffer, Expression::Extend<__m128, float>);
+			Expression::Append(buffer, Expression::Extend);
 		}
 	};
 }

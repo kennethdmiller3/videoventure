@@ -13,7 +13,7 @@ template <typename T> void ConfigureLiteral(const tinyxml2::XMLElement *element,
 #ifdef PRINT_CONFIGURE_EXPRESSION
 	DebugPrint("%s literal:", Expression::Schema<T>::NAME);
 #endif
-	Expression::Append(buffer, Expression::Constant<T>);
+	Expression::Append(buffer, Expression::Read<T>);
 	ConfigureLiteral(element, buffer, sizeof(T)/sizeof(float), names, defaults);
 #ifdef PRINT_CONFIGURE_EXPRESSION
 	DebugPrint("\n");
