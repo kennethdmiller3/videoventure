@@ -28,9 +28,6 @@
     <Filter Include="Expression">
       <UniqueIdentifier>{8476c726-937d-42d5-9310-fcf5022323c1}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Console">
-      <UniqueIdentifier>{10c2f603-04ce-4927-8196-ef890fe78cf4}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Physics">
       <UniqueIdentifier>{55d46e46-fd2a-4e8a-a1bf-af753c8f56c2}</UniqueIdentifier>
     </Filter>
@@ -106,9 +103,6 @@
       <Filter>Core</Filter>
     </ClInclude>
     <ClInclude Include="Source\Core\Sphere2.h">
-      <Filter>Core</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Core\targetver.h">
       <Filter>Core</Filter>
     </ClInclude>
     <ClInclude Include="Source\Core\Transform2.h">

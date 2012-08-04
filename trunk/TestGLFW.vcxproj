@@ -84,7 +84,6 @@
     <ClInclude Include="Source\Core\Signal.h" />
     <ClInclude Include="Source\Core\Simulatable.h" />
     <ClInclude Include="Source\Core\Sphere2.h" />
-    <ClInclude Include="Source\Core\targetver.h" />
     <ClInclude Include="Source\Core\Transform2.h" />
     <ClInclude Include="Source\Core\TreeNode.h" />
     <ClInclude Include="Source\Core\Updatable.h" />
