@@ -590,11 +590,11 @@ static inline Color LAColor(float l, float a){
 	return color;
 }
 
-static const Color LINE_COLOR = {200.0/255.0, 210.0/255.0, 230.0/255.0, 1.0};
-static const Color CONSTRAINT_COLOR = {0.0, 0.75, 0.0, 1.0};
-static const float SHAPE_ALPHA = 0.75;
+static const Color LINE_COLOR = {200.0f/255.0f, 210.0f/255.0f, 230.0f/255.0f, 1.0f};
+static const Color CONSTRAINT_COLOR = {0.0f, 0.75f, 0.0f, 1.0f};
+static const float SHAPE_ALPHA = 0.75f;
 
-static float DebugDrawPointLineScale = 1.0;
+static float DebugDrawPointLineScale = 1.0f;
 
 static Color
 ColorFromHash(cpHashValue hash, float alpha)
@@ -615,11 +615,11 @@ ColorFromHash(cpHashValue hash, float alpha)
 	
 	GLfloat max = std::max(std::max(r, g), b);
 	GLfloat min = std::min(std::min(r, g), b);
-	GLfloat intensity = 0.75;
+	GLfloat intensity = 0.75f;
 	
 	// Saturate and scale the color
 	if(min == max){
-		return RGBAColor(intensity, 0.0, 0.0, alpha);
+		return RGBAColor(intensity, 0.0f, 0.0f, alpha);
 	} else {
 		GLfloat coef = alpha*intensity/(max - min);
 		return RGBAColor(
@@ -646,13 +646,13 @@ ColorForShape(cpShape *shape)
 		cpBody *body = shape->body;
 		
 		if(cpBodyIsSleeping(body)){
-			color.r *= 0.2;
-			color.g *= 0.2;
-			color.b *= 0.2;
+			color.r *= 0.2f;
+			color.g *= 0.2f;
+			color.b *= 0.2f;
 		} else if(body->CP_PRIVATE(node).idleTime > shape->CP_PRIVATE(space)->sleepTimeThreshold) {
-			color.r *= 0.66;
-			color.g *= 0.66;
-			color.b *= 0.66;
+			color.r *= 0.66f;
+			color.g *= 0.66f;
+			color.b *= 0.66f;
 		}
 		return color;
 	}
@@ -1137,9 +1137,9 @@ void Collidable::WorldInit(float aMinX, float aMinY, float aMaxX, float aMaxY, b
 
 	// create physics world
 	world = cpSpaceNew();
-	cpSpaceSetSleepTimeThreshold(world, 1.0);
-	cpSpaceSetCollisionSlop(world, 0.0);	//0.01);
-	cpSpaceSetCollisionBias(world, pow(0.5, 60.0));
+	cpSpaceSetSleepTimeThreshold(world, 1.0f);
+	cpSpaceSetCollisionSlop(world, 0.0f);	//0.01);
+	cpSpaceSetCollisionBias(world, powf(0.5f, 60.0f));
 
 	// set default collision handler
 	cpSpaceSetDefaultCollisionHandler(world, BeginContact, NULL, NULL, EndContact, NULL);
