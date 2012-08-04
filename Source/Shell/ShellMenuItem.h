@@ -37,7 +37,8 @@ struct ShellMenuItem
 	unsigned int mState;
 
 	// action
-	fastdelegate::FastDelegate<void ()> mAction;
+	//fastdelegate::FastDelegate<void ()> mAction;
+	void (*mAction)();
 
 	// associated variable
 	unsigned int mVariable;

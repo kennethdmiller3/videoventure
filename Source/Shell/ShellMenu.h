@@ -8,8 +8,10 @@ struct ShellMenuPage
 	ShellMenuItem *mOption;
 	unsigned int mCount;
 
-	fastdelegate::FastDelegate<void ()> mEnter;
-	fastdelegate::FastDelegate<void ()> mExit;
+	//fastdelegate::FastDelegate<void ()> mEnter;
+	void (*mEnter)();
+	//fastdelegate::FastDelegate<void ()> mExit;
+	void (*mExit)();
 
 	ShellMenuPage *mParent;
 };
