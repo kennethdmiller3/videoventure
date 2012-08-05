@@ -5,11 +5,14 @@
 #include <ctime>
 
 #if defined( _MSC_VER )
+	#include <direct.h>		// _mkdir
 	#include <crtdbg.h>
 	#define WIN32_LEAN_AND_MEAN
 	#include <windows.h>
 	_CrtMemState startMemState;
 	_CrtMemState endMemState;
+#else
+	#include <sys/stat.h>	// mkdir
 #endif
 
 using namespace tinyxml2;
@@ -49,7 +52,7 @@ template< class T > bool XMLTest( const char* testString, T expected, T found, b
 	if ( !echo )
 		printf (" %s\n", testString);
 	else
-		printf (" %s [%d][%d]\n", testString, expected, found);
+		printf (" %s [%d][%d]\n", testString, static_cast<int>(expected), static_cast<int>(found) );
 
 	if ( pass )
 		++gPass;
@@ -155,6 +158,12 @@ int main( int /*argc*/, const char ** /*argv*/ )
 	#pragma warning ( disable : 4996 )		// Fail to see a compelling reason why this should be deprecated.
 	#endif
 
+	#if defined(_MSC_VER)
+		_mkdir( "resources/out/" );
+	#else
+		mkdir( "resources/out/", S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+	#endif
+
 	FILE* fp = fopen( "resources/dream.xml", "r" );
 	if ( !fp ) {
 		printf( "Error opening test file 'dream.xml'.\n"
@@ -182,14 +191,14 @@ int main( int /*argc*/, const char ** /*argv*/ )
 
 	{
 		static const char* test[] = {	"<element />",
-									    "<element></element>",
+										"<element></element>",
 										"<element><subelement/></element>",
-									    "<element><subelement></subelement></element>",
-									    "<element><subelement><subsub/></subelement></element>",
-									    "<!--comment beside elements--><element><subelement></subelement></element>",
-									    "<!--comment beside elements, this time with spaces-->  \n <element>  <subelement> \n </subelement> </element>",
-									    "<element attrib1='foo' attrib2=\"bar\" ></element>",
-									    "<element attrib1='foo' attrib2=\"bar\" ><subelement attrib3='yeehaa' /></element>",
+										"<element><subelement></subelement></element>",
+										"<element><subelement><subsub/></subelement></element>",
+										"<!--comment beside elements--><element><subelement></subelement></element>",
+										"<!--comment beside elements, this time with spaces-->  \n <element>  <subelement> \n </subelement> </element>",
+										"<element attrib1='foo' attrib2=\"bar\" ></element>",
+										"<element attrib1='foo' attrib2=\"bar\" ><subelement attrib3='yeehaa' /></element>",
 										"<element>Text inside element.</element>",
 										"<element><b></b></element>",
 										"<element>Text inside and <b>bolded</b> in the element.</element>",
@@ -208,10 +217,10 @@ int main( int /*argc*/, const char ** /*argv*/ )
 #if 1
 	{
 		static const char* test = "<!--hello world\n"
-			                      "          line 2\r"
-			                      "          line 3\r\n"
-			                      "          line 4\n\r"
-			                      "          line 5\r-->";
+								  "          line 2\r"
+								  "          line 3\r\n"
+								  "          line 4\n\r"
+								  "          line 5\r-->";
 
 		XMLDocument doc;
 		doc.Parse( test );
@@ -297,28 +306,28 @@ int main( int /*argc*/, const char ** /*argv*/ )
 		XMLDocument doc;
 		doc.LoadFile( "resources/dream.xml" );
 
-		doc.SaveFile( "resources/dreamout.xml" );
+		doc.SaveFile( "resources/out/dreamout.xml" );
 		doc.PrintError();
 
 		XMLTest( "Dream", "xml version=\"1.0\"",
-			              doc.FirstChild()->ToDeclaration()->Value() );
+						  doc.FirstChild()->ToDeclaration()->Value() );
 		XMLTest( "Dream", true, doc.FirstChild()->NextSibling()->ToUnknown() ? true : false );
 		XMLTest( "Dream", "DOCTYPE PLAY SYSTEM \"play.dtd\"",
 						  doc.FirstChild()->NextSibling()->ToUnknown()->Value() );
 		XMLTest( "Dream", "And Robin shall restore amends.",
-			              doc.LastChild()->LastChild()->LastChild()->LastChild()->LastChildElement()->GetText() );
+						  doc.LastChild()->LastChild()->LastChild()->LastChild()->LastChildElement()->GetText() );
 		XMLTest( "Dream", "And Robin shall restore amends.",
-			              doc.LastChild()->LastChild()->LastChild()->LastChild()->LastChildElement()->GetText() );
+						  doc.LastChild()->LastChild()->LastChild()->LastChild()->LastChildElement()->GetText() );
 
 		XMLDocument doc2;
-		doc2.LoadFile( "resources/dreamout.xml" );
+		doc2.LoadFile( "resources/out/dreamout.xml" );
 		XMLTest( "Dream-out", "xml version=\"1.0\"",
-			              doc2.FirstChild()->ToDeclaration()->Value() );
+						  doc2.FirstChild()->ToDeclaration()->Value() );
 		XMLTest( "Dream-out", true, doc2.FirstChild()->NextSibling()->ToUnknown() ? true : false );
 		XMLTest( "Dream-out", "DOCTYPE PLAY SYSTEM \"play.dtd\"",
 						  doc2.FirstChild()->NextSibling()->ToUnknown()->Value() );
 		XMLTest( "Dream-out", "And Robin shall restore amends.",
-			              doc2.LastChild()->LastChild()->LastChild()->LastChild()->LastChildElement()->GetText() );
+						  doc2.LastChild()->LastChild()->LastChild()->LastChild()->LastChildElement()->GetText() );
 
 		//gNewTotal = gNew - newStart;
 	}
@@ -408,11 +417,9 @@ int main( int /*argc*/, const char ** /*argv*/ )
 				 text->Value() );
 
 		// Now try for a round trip.
-		doc.SaveFile( "resources/utf8testout.xml" );
+		doc.SaveFile( "resources/out/utf8testout.xml" );
 
 		// Check the round trip.
-		char savedBuf[256];
-		char verifyBuf[256];
 		int okay = 0;
 
 
@@ -420,7 +427,7 @@ int main( int /*argc*/, const char ** /*argv*/ )
 #pragma warning ( push )
 #pragma warning ( disable : 4996 )		// Fail to see a compelling reason why this should be deprecated.
 #endif
-		FILE* saved  = fopen( "resources/utf8testout.xml", "r" );
+		FILE* saved  = fopen( "resources/out/utf8testout.xml", "r" );
 		FILE* verify = fopen( "resources/utf8testverify.xml", "r" );
 #if defined(_MSC_VER)
 #pragma warning ( pop )
@@ -429,8 +436,10 @@ int main( int /*argc*/, const char ** /*argv*/ )
 		if ( saved && verify )
 		{
 			okay = 1;
+			char verifyBuf[256];
 			while ( fgets( verifyBuf, 256, verify ) )
 			{
+				char savedBuf[256];
 				fgets( savedBuf, 256, saved );
 				NullLineEndings( verifyBuf );
 				NullLineEndings( savedBuf );
@@ -541,7 +550,7 @@ int main( int /*argc*/, const char ** /*argv*/ )
 #pragma warning ( push )
 #pragma warning ( disable : 4996 )		// Fail to see a compelling reason why this should be deprecated.
 #endif
-		FILE* textfile = fopen( "resources/textfile.txt", "w" );
+		FILE* textfile = fopen( "resources/out/textfile.txt", "w" );
 #if defined(_MSC_VER)
 #pragma warning ( pop )
 #endif
@@ -555,7 +564,7 @@ int main( int /*argc*/, const char ** /*argv*/ )
 #pragma warning ( push )
 #pragma warning ( disable : 4996 )		// Fail to see a compelling reason why this should be deprecated.
 #endif
-		textfile = fopen( "resources/textfile.txt", "r" );
+		textfile = fopen( "resources/out/textfile.txt", "r" );
 #if defined(_MSC_VER)
 #pragma warning ( pop )
 #endif
@@ -568,8 +577,8 @@ int main( int /*argc*/, const char ** /*argv*/ )
 					 "<psg context=\"Line 5 has &quot;quotation marks&quot; and &apos;apostrophe marks&apos;."
 					 " It also has &lt;, &gt;, and &amp;, as well as a fake copyright \xC2\xA9.\"/>\n",
 					 buf, false );
+			fclose( textfile );
 		}
-		fclose( textfile );
 	}
 
 	{
@@ -591,26 +600,26 @@ int main( int /*argc*/, const char ** /*argv*/ )
 	}
 
 	{
-        const char* test = "<?xml version='1.0'?><a.elem xmi.version='2.0'/>";
+		const char* test = "<?xml version='1.0'?><a.elem xmi.version='2.0'/>";
 
 		XMLDocument doc;
-        doc.Parse( test );
-        XMLTest( "dot in names", doc.Error(), false );
-        XMLTest( "dot in names", doc.FirstChildElement()->Name(), "a.elem" );
-        XMLTest( "dot in names", doc.FirstChildElement()->Attribute( "xmi.version" ), "2.0" );
+		doc.Parse( test );
+		XMLTest( "dot in names", doc.Error(), false );
+		XMLTest( "dot in names", doc.FirstChildElement()->Name(), "a.elem" );
+		XMLTest( "dot in names", doc.FirstChildElement()->Attribute( "xmi.version" ), "2.0" );
 	}
 
 	{
-        const char* test = "<element><Name>1.1 Start easy ignore fin thickness&#xA;</Name></element>";
+		const char* test = "<element><Name>1.1 Start easy ignore fin thickness&#xA;</Name></element>";
 
-        XMLDocument doc;
+		XMLDocument doc;
 		doc.Parse( test );
 
 		XMLText* text = doc.FirstChildElement()->FirstChildElement()->FirstChild()->ToText();
 		XMLTest( "Entity with one digit.",
 				 text->Value(), "1.1 Start easy ignore fin thickness\n",
 				 false );
-    }
+	}
 
 	{
 		// DOCTYPE not preserved (950171)
@@ -624,9 +633,9 @@ int main( int /*argc*/, const char ** /*argv*/ )
 
 		XMLDocument doc;
 		doc.Parse( doctype );
-		doc.SaveFile( "resources/test7.xml" );
+		doc.SaveFile( "resources/out/test7.xml" );
 		doc.DeleteChild( doc.RootElement() );
-		doc.LoadFile( "resources/test7.xml" );
+		doc.LoadFile( "resources/out/test7.xml" );
 		doc.Print();
 		
 		const XMLUnknown* decl = doc.FirstChild()->NextSibling()->ToUnknown();
