@@ -13,6 +13,9 @@ private:
 	// number of blocks to add when out of blocks
 	size_t mGrow;
 
+	// data alignment
+	size_t mAlign;
+
 	// pointer to list of allocated chunks
 	void *mChunk;
 
@@ -28,13 +31,13 @@ public:
 	GAME_API MemoryPool(void);
 
 	// consructor
-	GAME_API MemoryPool(size_t aSize, size_t aStart = 256, size_t aGrow = 16);
+	GAME_API MemoryPool(size_t aSize, size_t aStart = 256, size_t aGrow = 16, size_t aAlign = 4);
 
 	// destructor
 	GAME_API ~MemoryPool();
 
 	// setup
-	GAME_API void Setup(size_t aSize, size_t aStart, size_t aGrow);
+	GAME_API void Setup(size_t aSize, size_t aStart, size_t aGrow, size_t aAlign);
 
 	// initialize
 	GAME_API void Init(void);

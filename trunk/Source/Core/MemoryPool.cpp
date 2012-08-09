@@ -2,9 +2,6 @@
 
 #include "MemoryPool.h"
 
-// alignment of memory pool data
-#define MEMORY_POOL_ALIGN 16
-
 //#define MEMORY_POOL_VIRTUAL_ALLOC
 
 
@@ -14,14 +11,14 @@
 MemoryPool::MemoryPool(void)
 : mChunk(NULL), mFree(NULL)
 {
-	Setup(0, 0, 0);
+	Setup(0, 0, 0, 0);
 }
 
 // constructor
-MemoryPool::MemoryPool(size_t aSize, size_t aStart, size_t aGrow)
+MemoryPool::MemoryPool(size_t aSize, size_t aStart, size_t aGrow, size_t aAlign)
 : mChunk(NULL), mFree(NULL)
 {
-	Setup(aSize, aStart, aGrow);
+	Setup(aSize, aStart, aGrow, aAlign);
 	Init();
 }
 
@@ -32,16 +29,17 @@ MemoryPool::~MemoryPool()
 }
 
 // setup
-void MemoryPool::Setup(size_t aSize, size_t aStart, size_t aGrow)
+void MemoryPool::Setup(size_t aSize, size_t aStart, size_t aGrow, size_t aAlign)
 {
 	// invalidate the pool
 	Clean();
 
 	// update properties
 	// (and ensure a block is large enough to hold a freelist node)
-	mSize = std::max(sizeof(void *), aSize);
+	mSize = std::max(sizeof(void *), (aSize + aAlign - 1) & ~(aAlign - 1));
 	mStart = aStart;
 	mGrow = aGrow;
+	mAlign = aAlign;
 }
 
 // initialize
@@ -79,22 +77,28 @@ void MemoryPool::Clean(void)
 // grow the memory pool
 void MemoryPool::Grow(size_t aCount)
 {
+	// allocation size
+	size_t size = std::max(sizeof(void *), mAlign) + mSize * aCount;
+
 	// create a new chunk
 #ifdef MEMORY_POOL_VIRTUAL_ALLOC
-	void *chunk = VirtualAlloc(NULL, MEMORY_POOL_ALIGN + mSize * aCount, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+	void *chunk = VirtualAlloc(NULL, size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
 #else
-	void *chunk = malloc(MEMORY_POOL_ALIGN + mSize * aCount);
+	void *chunk = malloc(size);
 #endif
+
+	// fill with an unallocated pattern
+	memset(chunk, ~0UL, size);
 
 	// add to the head of the chunk list
 	*reinterpret_cast<void **>(chunk) = mChunk;
 	mChunk = chunk;
 
-	// fill with an unallocated pattern
-	memset(reinterpret_cast<unsigned char *>(chunk) + sizeof(void *), 0xFF, mSize * aCount + MEMORY_POOL_ALIGN - sizeof(void *));
+	// first element
+	// (reserve space for chunk pointer and then align to the requested alignment)
+	void *first = reinterpret_cast<void *>((uintptr_t(chunk) + sizeof(void *) + (mAlign - 1)) & ~(mAlign - 1));
 
 	// build free list
-	void *first = reinterpret_cast<unsigned char *>(chunk) + MEMORY_POOL_ALIGN;
 	void *free = first;
 	for (size_t i = 0; i < aCount - 1; ++i)
 	{
@@ -169,9 +173,22 @@ bool MemoryPool::IsValid(const void *aPtr)
 #else
 		size_t size = _msize(chunk);
 #endif
-		if (reinterpret_cast<const unsigned char *>(aPtr) >= reinterpret_cast<const unsigned char *>(chunk) + MEMORY_POOL_ALIGN &&
-			reinterpret_cast<const unsigned char *>(aPtr) < reinterpret_cast<const unsigned char *>(chunk) + size)
+		// if the pointer is in this chunk...
+		const void *end = reinterpret_cast<const unsigned char *>(chunk) + size;
+		if (aPtr >= chunk && aPtr < end)
 		{
+			// first element
+			void *first = reinterpret_cast<void *>((uintptr_t(chunk) + sizeof(void *) + (mAlign - 1)) & ~(mAlign - 1));
+
+			// check that the pointer matches a slot in this chunk
+			int slot = (uintptr_t(aPtr) - uintptr_t(first)) / mSize;
+			if (slot < 0)
+				return false;
+			int count = (uintptr_t(end) - uintptr_t(first)) / mSize;
+			if (slot >= count)
+				return false;
+			if (uintptr_t(aPtr) != uintptr_t(first) + slot * mSize)
+				return false;
 			return true;
 		}
 	}
