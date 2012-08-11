@@ -137,9 +137,10 @@ unsigned int Entity::sNextId = 1;
 
 Entity::Entity(unsigned int id)
 : id(id)
+, prevtrans(0, Vector2(0, 0))
+, curtrans(0, Vector2(0, 0))
+, veloc(0, Vector2(0, 0))
 {
-	memset(&trans, 0, sizeof(trans));
-	memset(&veloc, 0, sizeof(veloc));
 }
 
 Entity::~Entity(void)
@@ -153,11 +154,11 @@ bool Entity::Configure(const tinyxml2::XMLElement *element)
 	switch (Hash(label))
 	{
 	case 0x934f4e0a /* "position" */:
-		element->QueryFloatAttribute("x", &trans[1].p.x);
-		element->QueryFloatAttribute("y", &trans[1].p.y);
-		if (element->QueryFloatAttribute("angle", &trans[1].a) == tinyxml2::XML_SUCCESS)
-			trans[1].a *= float(M_PI) / 180.0f;
-		trans[0] = trans[1];
+		element->QueryFloatAttribute("x", &curtrans.p.x);
+		element->QueryFloatAttribute("y", &curtrans.p.y);
+		if (element->QueryFloatAttribute("angle", &curtrans.a) == tinyxml2::XML_SUCCESS)
+			curtrans.a *= float(M_PI) / 180.0f;
+		prevtrans = curtrans;
 		return true;
 
 	case 0x32741c32 /* "velocity" */:
