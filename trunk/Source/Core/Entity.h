@@ -11,7 +11,7 @@ protected:
 	unsigned int id;
 
 	// previous and current transform
-	Transform2 trans[2];
+	Transform2 prevtrans, curtrans;
 
 	// current velocity
 	Transform2 veloc;
@@ -44,24 +44,24 @@ public:
 	// step
 	void Step(void)
 	{
-		trans[0] = trans[1];
+		prevtrans = curtrans;
 	}
 
 	// set transform
 	void SetTransform(const float aAngle, const Vector2 &aPosit)
 	{
-		trans[1].a = aAngle;
-		trans[1].p = aPosit;
+		curtrans.a = aAngle;
+		curtrans.p = aPosit;
 	}
 	void SetTransform(const Transform2 &aTransform)
 	{
-		trans[1] = aTransform;
+		curtrans = aTransform;
 	}
 
 	// get transform
 	const Transform2 &GetTransform() const
 	{
-		return trans[1];
+		return curtrans;
 	}
 
 	// get interpolated transform
@@ -73,36 +73,36 @@ public:
 	// set previous angle
 	void SetPrevAngle(float aAngle)
 	{
-		trans[0].a = aAngle;
+		prevtrans.a = aAngle;
 	}
 
 	// set angle
 	void SetAngle(float aAngle)
 	{
-		trans[1].a = aAngle;
+		curtrans.a = aAngle;
 	}
 
 	// get previous angle
 	float GetPrevAngle() const
 	{
-		return trans[0].a;
+		return prevtrans.a;
 	}
 
 	// get current angle
 	float GetAngle() const
 	{
-		return trans[1].a;
+		return curtrans.a;
 	}
 
 	// get interpolated angle
 	float GetInterpolatedAngle(float aRatio) const
 	{
-		float angle_d = trans[1].a - trans[0].a;
+		float angle_d = curtrans.a - prevtrans.a;
 		if (angle_d > float(M_PI))
 			angle_d -= 2.0f*float(M_PI);
 		else if (angle_d < -float(M_PI))
 			angle_d += 2.0f*float(M_PI);
-		return trans[0].a + angle_d * aRatio;
+		return prevtrans.a + angle_d * aRatio;
 	}
 
 	// set veloc.a
@@ -120,31 +120,31 @@ public:
 	// set previous position
 	void SetPrevPosition(const Vector2 &aPos)
 	{
-		trans[0].p = aPos;
+		prevtrans.p = aPos;
 	}
 
 	// set position
 	void SetPosition(const Vector2 &aPos)
 	{
-		trans[1].p = aPos;
+		curtrans.p = aPos;
 	}
 
 	// get previous position
 	const Vector2 &GetPrevPosition() const
 	{
-		return trans[0].p;
+		return prevtrans.p;
 	}
 
 	// get current position
 	const Vector2 &GetPosition() const
 	{
-		return trans[1].p;
+		return curtrans.p;
 	}
 
 	// get interpolated position
 	const Vector2 GetInterpolatedPosition(float aRatio) const
 	{
-		return trans[0].p + (trans[1].p - trans[0].p) * aRatio;
+		return prevtrans.p + (curtrans.p - prevtrans.p) * aRatio;
 	}
 
 
