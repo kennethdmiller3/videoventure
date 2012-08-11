@@ -54,7 +54,6 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
       <AdditionalIncludeDirectories>Source;Source\Behavior;Source\Core;Source\Expression;Source\Interface;Source\Physics;Source\Render;Source\Shell;Source\Sound;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <StringPooling>true</StringPooling>
     </ClCompile>
     <Link>
       <TargetMachine>MachineX86</TargetMachine>
