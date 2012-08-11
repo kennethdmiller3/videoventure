@@ -1,16 +1,26 @@
 #include "StdAfx.h"
 #include "Noise.h"
 
-// Implementation based on Ken Perlin's Java implementation and Stefan Gustavson C++ "Noise1234" implementation
+// Implementation based on Ken Perlin's Java implementation
+// and Stefan Gustavson C++ "Noise1234" implementation
 
-// Ken Perlin's improved interpolant
+// Computing vertex gradients in a loop produces much smaller code
+// compared to the original implementation though it may be slightly
+// slower.  It adds loop overhead but lets the compiler fully inline
+// the Gradient function, eliminating function call overhead.
+
+// implement 4D noise?
+// (nothing uses it yet so disable it to save ~600 bytes)
+//#define NOISE_4D
+
+// Ken Perlin's improved C(2) continuous interpolant
 static inline float Fade(float t)
 {
-	return t * t * t * (t * (t * 6 - 15) + 10);
+	return ((6 * t - 15) * t + 10) * t * t * t;
 }
 
 // Ken Perlin's permutation table
-static unsigned char p[256] =
+static const unsigned char p[256] =
 {
 	151, 160, 137,  91,  90,  15, 131,  13, 201,  95,  96,  53, 194, 233,   7, 225,
 	140,  36, 103,  30,  69, 142,   8,  99,  37, 240,  21,  10,  23, 190,   6, 148,
@@ -29,261 +39,282 @@ static unsigned char p[256] =
 	184,  84, 204, 176, 115, 121,  50,  45, 127,   4, 150, 254, 138, 236, 205,  93,
 	222, 114,  67,  29,  24,  72, 243, 141, 128, 195,  78,  66, 215,  61, 156, 180
 };
-static inline unsigned char Permute(register unsigned char i)
+static inline unsigned char Permute(unsigned char i)
 {
 	return p[i];
 }
 
 // 1D gradient
-// (16 slopes between -1.5 and +1.5)
-static const float g[16] =
+// (16 slopes, -8..-1, 1..8)
+static inline float Gradient(unsigned char hash, float x)
 {
-	  1.f*0.1875f,  2.f*0.1875f,  3.f*0.1875f,  4.f*0.1875f,  5.f*0.1875f,  6.f*0.1875f,  7.f*0.1875f,  8.f*0.1875f,
-	 -1.f*0.1875f, -2.f*0.1875f, -3.f*0.1875f, -4.f*0.1875f, -5.f*0.1875f, -6.f*0.1875f, -7.f*0.1875f, -8.f*0.1875f,
-};
-static float Gradient(int hash, float x)
-{
-	return g[hash & 15] * x;
+	// convert hash to a signed 4-bit value (-8..7)
+	// this is equivalent to assigning hash to a signed bitfield
+	// though it assumes the >> 4 produces an arithmetic shift right
+	register signed char g = signed char(signed char(hash) << 4) >> 4;
+
+	// add one if it's 0 or more
+	g += (g >= 0);
+
+	// apply the gradient
+	return g * x;
 }
 
 // 2D gradient
 // (8 directions similar to moves of the knight chess piece)
-static float Gradient(int hash, float x, float y)
+static float Gradient(unsigned char hash, float x, float y)
 {
-	float u = (hash & 4) ? y : x;
-	float v = (hash & 4) ? x : y;
-	return ((hash & 1)? -u : u) + ((hash & 2)? -v-v : v+v);
+	register float u, v;
+	if (hash & 4)
+		u = y, v = x;
+	else
+		u = x, v = y;
+	if (hash & 2)
+		v = -v;
+	if (hash & 1)
+		u = -u;
+	return u + v + v;
 }
 
 // 3D gradient
 // (12 vectors to the edges of a cube and 4 repeats)
-static float Gradient(int hash, float x, float y , float z)
+static float Gradient(unsigned char hash, float x, float y , float z)
 {
-	int h = hash & 15;
-	float u = h < 8 ? x : y;
-	float v = h < 4 ? y : (h==12 || h==14 ? x : z);
-	return ((h & 1) ? -u : u) + ((h & 2) ? -v : v);
+	const unsigned char h = hash & 15;
+	register float u = h < 8 ? x : y;
+	register float v = h < 4 ? y : (h==12 || h==14 ? x : z);
+	if (h & 2)
+		v = -v;
+	if (h & 1)
+		u = -u;
+	return u + v;
 }
 
+#ifdef NOISE_4D
 // 4D gradient
 // (32 vectors to the edges of a 4D hypercube)
-static float Gradient(int hash, float x, float y, float z, float t)
+static float Gradient(unsigned char hash, float x, float y, float z, float t)
 {
-	int h = hash & 31;
-	float u = h < 24 ? x : y;
-	float v = h < 16 ? y : z;
-	float w = h < 8 ? z : t;
-	return ((h & 1)? -u : u) + ((h & 2)? -v : v) + ((h & 4)? -w : w);
+	const unsigned char h = hash & 31;
+	register float u = h < 24 ? x : y;
+	register float v = h < 16 ? y : z;
+	register float w = h < 8 ? z : t;
+	if (h & 4)
+		w = -w;
+	if (h & 2)
+		v = -v;
+	if (h & 1)
+		u = -u;
+	return u + v + w;
 }
-
+#endif
 
 // 1D Perlin Noise
 float Noise1D(float x)
 {
-	// split x value into integer, fraction, and interpolator parts
-	int ix = xs_FloorToInt(x);
-	float fx0 = x - ix;
-	float fx1 = fx0 - 1.0f;
-	unsigned char ix0 = unsigned char(ix);
-	unsigned char ix1 = unsigned char(ix + 1);
-	float tx = Fade(fx0);
+	// split value into integer, fraction, and interpolator parts
+	const int ix = xs_FloorToInt(x);
+	const float fx = x - ix;
+	const float tx = Fade(fx);
 
-	// interpolate along x axis
-	float nx0 = Gradient(Permute(ix0), fx0);
-	float nx1 = Gradient(Permute(ix1), fx1);
-	return Lerp(nx0, nx1, tx);
+	// compute gradient at each vertex and interpolate
+	return 0.1875f * Lerp(
+		Gradient(Permute(unsigned char(ix)), fx),
+		Gradient(Permute(unsigned char(ix + 1)), fx - 1.0f),
+		tx);
 }
 
 
 // 2D Perlin Noise
 float Noise2D(float x, float y)
 {
-	// split x value into integer, fraction, and interpolator parts
-	int ix = xs_FloorToInt(x);
-	float fx0 = x - ix;
-	float fx1 = fx0 - 1.0f;
-	unsigned char ix0 = unsigned char(ix);
-	unsigned char ix1 = unsigned char(ix + 1);
-	float tx = Fade(fx0);
+	// split values into integer, fraction, and interpolator parts
+	const int ix = xs_FloorToInt(x), iy = xs_FloorToInt(y);
+	const float fx = x - ix, fy = y - iy;
+	const float tx = Fade(fx), ty = Fade(fy);
 
-	// split y value into integer, fraction, and interpolator parts
-	int iy = xs_FloorToInt(y);
-	float fy0 = y - iy;
-	float fy1 = fy0 - 1.0f;
-	unsigned char iy0 = unsigned char(iy);
-	unsigned char iy1 = unsigned char(iy + 1);
-	float ty = Fade(fy0);
+#if 1
+	// this variant has fewer branches but the unrolled interpolate code is slightly larger
+	float n[4];
+	for (register int i = 0; i < 4; ++i)
+	{
+		// compute vertex offset from the vertex index
+		register const int dx = (i) & 1, dy = (i >> 1) & 1;
 
-	// interpolate along y axis at fx=0
-	float nx0y0 = Gradient(Permute(ix0 + Permute(iy0)), fx0, fy0);
-	float nx0y1 = Gradient(Permute(ix0 + Permute(iy1)), fx0, fy1);
-	float nx0 = Lerp(nx0y0, nx0y1, ty);
+		// compute gradient at the vertex
+		n[i] = Gradient(Permute(unsigned char(ix + dx) + Permute(unsigned char(iy + dy))), fx - dx, fy - dy);
+	}
 
-	// interpolate along y axis at fx=1
-	float nx1y0 = Gradient(Permute(ix1 + Permute(iy0)), fx1, fy0);
-	float nx1y1 = Gradient(Permute(ix1 + Permute(iy1)), fx1, fy1);
-	float nx1 = Lerp(nx1y0, nx1y1, ty);
+	// interpolate
+	return 0.507f * 
+		Lerp(
+		Lerp(n[0], n[1], tx),
+		Lerp(n[2], n[3], tx),
+		ty
+		);
+#else
+	float nx, ny;
+	for (register int i = 0; i < 4; ++i)
+	{
+		// compute vertex offset from the vertex index
+		register const int dx = (i) & 1, dy = (i >> 1) & 1;
 
-	// interpolate along x axis
-	return 0.5f * Lerp(nx0, nx1, tx);
+		// compute gradient for the vertex
+		register const float n = Gradient(Permute(unsigned char(ix + dx) + Permute(unsigned char(iy + dy))), fx - dx, fy - dy);
+
+		// incremental interpolation
+		if (!dx)
+		{
+			nx = n * (1 - tx);
+			continue;
+		}
+		nx += n * tx;
+		if (!dy)
+		{
+			ny = nx * (1 - ty);
+			continue;
+		}
+		ny += nx * ty;
+	}
+	return 0.507f * ny;
+#endif
 }
 
 
 // 3D Perlin Noise
 float Noise3D(float x, float y, float z)
 {
-	// split x value into integer, fraction, and interpolator parts
-	int ix = xs_FloorToInt(x);
-	float fx0 = x - ix;
-	float fx1 = fx0 - 1.0f;
-	unsigned char ix0 = unsigned char(ix);
-	unsigned char ix1 = unsigned char(ix + 1);
-	float tx = Fade(fx0);
+	// split values into integer, fraction, and interpolator parts
+	const int ix = xs_FloorToInt(x), iy = xs_FloorToInt(y), iz = xs_FloorToInt(z);
+	const float fx = x - ix, fy = y - iy, fz = z - iz;
+	const float tx = Fade(fx), ty = Fade(fy), tz = Fade(fz);
 
-	// split y value into integer, fraction, and interpolator parts
-	int iy = xs_FloorToInt(y);
-	float fy0 = y - iy;
-	float fy1 = fy0 - 1.0f;
-	unsigned char iy0 = unsigned char(iy);
-	unsigned char iy1 = unsigned char(iy + 1);
-	float ty = Fade(fy0);
+#if 1
+	// this variant has fewer branches but the unrolled interpolate code is slightly larger
+	float n[8];
+	for (register int i = 0; i < 8; ++i)
+	{
+		// compute vertex offset from the vertex index
+		register const int dx = (i) & 1, dy = (i >> 1) & 1, dz = (i >> 2) & 1;
 
-	// split z value into integer, fraction, and interpolator parts
-	int iz = xs_FloorToInt(z);
-	float fz0 = z - iz;
-	float fz1 = fz0 - 1.0f;
-	unsigned char iz0 = unsigned char(iz);
-	unsigned char iz1 = unsigned char(iz + 1);
-	float tz = Fade(fz0);
+		// compute gradient for the vertex
+		n[i] = Gradient(Permute(unsigned char(ix + dx) + Permute(unsigned char(iy + dy) + Permute(unsigned char(iz + dz)))), fx - dx, fy - dy, fz - dz);
+	}
 
-	// interpolate along z axis at fx=0 fy=0
-	float nx0y0z0 = Gradient(Permute(ix0 + Permute(iy0 + Permute(iz0))), fx0, fy0, fz0);
-	float nx0y0z1 = Gradient(Permute(ix0 + Permute(iy0 + Permute(iz1))), fx0, fy0, fz1);
-	float nx0y0 = Lerp(nx0y0z0, nx0y0z1, tz);
+	// interpolate
+	return 0.9375f * 
+		Lerp(
+		Lerp(
+		Lerp(n[0], n[1], tx),
+		Lerp(n[2], n[3], tx),
+		ty
+		),
+		Lerp(
+		Lerp(n[4], n[5], tx),
+		Lerp(n[6], n[7], tx),
+		ty
+		),
+		tz
+		);
+#else
+	// this variant produces slightly smaller code but has a lot of branches
+	float nx, ny, nz;
+	for (register int i = 0; i < 8; ++i)
+	{
+		// compute vertex offset from the vertex index
+		register const int dx = (i) & 1, dy = (i >> 1) & 1, dz = (i >> 2) & 1;
 
-	// interpolate along z axis at fx=0 fy=1
-	float nx0y1z0 = Gradient(Permute(ix0 + Permute(iy1 + Permute(iz0))), fx0, fy1, fz0);
-	float nx0y1z1 = Gradient(Permute(ix0 + Permute(iy1 + Permute(iz1))), fx0, fy1, fz1);
-	float nx0y1 = Lerp(nx0y1z0, nx0y1z1, tz);
+		// compute gradient for the vertex
+		register const float n = Gradient(Permute(unsigned char(ix + dx) + Permute(unsigned char(iy + dy) + Permute(unsigned char(iz + dz)))), fx - dx, fy - dy, fz - dz);
 
-	// interpolate along y axis at fx=0
-	float nx0 = Lerp(nx0y0, nx0y1, ty);
-
-	// interpolate along z axis at fx=1 fy=0
-	float nx1y0z0 = Gradient(Permute(ix1 + Permute(iy0 + Permute(iz0))), fx1, fy0, fz0);
-	float nx1y0z1 = Gradient(Permute(ix1 + Permute(iy0 + Permute(iz1))), fx1, fy0, fz1);
-	float nx1y0 = Lerp(nx1y0z0, nx1y0z1, tz);
-
-	// interpolate along z axis at fx=1 fy=1
-	float nx1y1z0 = Gradient(Permute(ix1 + Permute(iy1 + Permute(iz0))), fx1, fy1, fz0);
-	float nx1y1z1 = Gradient(Permute(ix1 + Permute(iy1 + Permute(iz1))), fx1, fy1, fz1);
-	float nx1y1 = Lerp(nx1y1z0, nx1y1z1, tz);
-
-	// interpolate along y axis at fx=1
-	float nx1 = Lerp(nx1y0, nx1y1, ty);
-	
-	// interpolate along x axis
-	return 0.9375f * Lerp(nx0, nx1, tx);
+		// incremental interpolation
+		if (!dx)
+		{
+			nx = n * (1 - tx);
+			continue;
+		}
+		nx += n * tx;
+		if (!dy)
+		{
+			ny = nx * (1 - ty);
+			continue;
+		}
+		ny += nx * ty;
+		if (!dz)
+		{
+			nz = ny * (1 - tz);
+			continue;
+		}
+		nz += ny * tz;
+	}
+	return 0.9375f * nz;
+#endif
 }
 
+#ifdef NOISE_4D
+
+// 4D Perlin Noise
+float Noise4D(float x, float y, float z, float w)
+
+{
+	// split values into integer, fraction, and interpolator parts
+	const int ix = xs_FloorToInt(x), iy = xs_FloorToInt(y), iz = xs_FloorToInt(z), iw = xs_FloorToInt(w);
+	const float fx = x - ix, fy = y - iy, fz = z - iz, fw = w - iw;
+	const float tx = Fade(fx), ty = Fade(fy), tz = Fade(fz), tw = Fade(fw);
+
+	// this variant has fewer branches but the unrolled interpolate code is slightly larger
+	float n[16];
+	for (register int i = 0; i < 16; ++i)
+	{
+		// compute vertex offset from the vertex index
+		register const int dx = (i) & 1, dy = (i >> 1) & 1, dz = (i >> 2) & 1, dw = (i >> 3) & 1;
+
+		// compute gradient for the vertex
+		n[i] = Gradient(Permute(unsigned char(ix + dx) + Permute(unsigned char(iy + dy) + Permute(unsigned char(iz + dz) + Permute(unsigned char(iw + dw))))), fx - dx, fy - dy, fz - dz, fw - dw);
+	}
+
+	// interpolate
+	return 0.875f * 
+		Lerp(
+		Lerp(
+		Lerp(
+		Lerp(n[0], n[1], tx),
+		Lerp(n[2], n[3], tx),
+		ty
+		),
+		Lerp(
+		Lerp(n[4], n[5], tx),
+		Lerp(n[6], n[7], tx),
+		ty
+		),
+		tz
+		),
+		Lerp(
+		Lerp(
+		Lerp(n[8], n[9], tx),
+		Lerp(n[10], n[11], tx),
+		ty
+		),
+		Lerp(
+		Lerp(n[12], n[13], tx),
+		Lerp(n[14], n[15], tx),
+		ty
+		),
+		tz
+		),
+		tw
+		);
+}
+
+#else
 
 // 4D Perlin Noise
 float Noise4D(float x, float y, float z, float w)
 {
-	// split x value into integer, fraction, and interpolator parts
-	int ix = xs_FloorToInt(x);
-	float fx0 = x - ix;
-	float fx1 = fx0 - 1.0f;
-	unsigned char ix0 = unsigned char(ix);
-	unsigned char ix1 = unsigned char(ix + 1);
-	float tx = Fade(fx0);
-
-	// split y value into integer, fraction, and interpolator parts
-	int iy = xs_FloorToInt(y);
-	float fy0 = y - iy;
-	float fy1 = fy0 - 1.0f;
-	unsigned char iy0 = unsigned char(iy);
-	unsigned char iy1 = unsigned char(iy + 1);
-	float ty = Fade(fy0);
-
-	// split z value into integer, fraction, and interpolator parts
-	int iz = xs_FloorToInt(z);
-	float fz0 = z - iz;
-	float fz1 = fz0 - 1.0f;
-	unsigned char iz0 = unsigned char(iz);
-	unsigned char iz1 = unsigned char(iz + 1);
-	float tz = Fade(fz0);
-
-	// split w value into integer, fraction, and interpolator parts
-	int iw = xs_FloorToInt(w);
-	float fw0 = w - iw;
-	float fw1 = fw0 - 1.0f;
-	unsigned char iw0 = unsigned char(iw);
-	unsigned char iw1 = unsigned char(iw + 1);
-	float tw = Fade(fw0);
-
-	// interpolate along w axis at fx=0 fy=0 fz=0
-	float nx0y0z0w0 = Gradient(Permute(ix0 + Permute(iy0 + Permute(iz0 + Permute(iw0)))), fx0, fy0, fz0, fw0);
-	float nx0y0z0w1 = Gradient(Permute(ix0 + Permute(iy0 + Permute(iz0 + Permute(iw1)))), fx0, fy0, fz0, fw1);
-	float nx0y0z0 = Lerp(nx0y0z0w0, nx0y0z0w1, tw);
-	
-	// interpolate along w axis at fx=0 fy=0 fz=1
-	float nx0y0z1w0 = Gradient(Permute(ix0 + Permute(iy0 + Permute(iz1 + Permute(iw0)))), fx0, fy0, fz1, fw0);
-	float nx0y0z1w1 = Gradient(Permute(ix0 + Permute(iy0 + Permute(iz1 + Permute(iw1)))), fx0, fy0, fz1, fw1);
-	float nx0y0z1 = Lerp(nx0y0z1w0, nx0y0z1w1, tw);
-	
-	// interpolate along z axis at fx=0 fy=0
-	float nx0y0 = Lerp(nx0y0z0, nx0y0z1, tz);
-
-	// interpolate along w axis at fx=0 fy=1 fz=0
-	float nx0y1z0w0 = Gradient(Permute(ix0 + Permute(iy1 + Permute(iz0 + Permute(iw0)))), fx0, fy1, fz0, fw0);
-	float nx0y1z0w1 = Gradient(Permute(ix0 + Permute(iy1 + Permute(iz0 + Permute(iw1)))), fx0, fy1, fz0, fw1);
-	float nx0y1z0 = Lerp(nx0y1z0w0, nx0y1z0w1, tw);
-	
-	// interpolate along w axis at fx=0 fy=1 fz=1
-	float nx0y1z1w0 = Gradient(Permute(ix0 + Permute(iy1 + Permute(iz1 + Permute(iw0)))), fx0, fy1, fz1, fw0);
-	float nx0y1z1w1 = Gradient(Permute(ix0 + Permute(iy1 + Permute(iz1 + Permute(iw1)))), fx0, fy1, fz1, fw1);
-	float nx0y1z1 = Lerp(nx0y1z1w0, nx0y1z1w1, tw);
-
-	// interpolate along z axis at fx=0 fy=1
-	float nx0y1 = Lerp(nx0y1z0, nx0y1z1, tz);
-
-	// interpolate along y axis at fx=0
-	float nx0 = Lerp(nx0y0, nx0y1, ty);
-
-	// interpolate along w axis at fx=1 fy=0 fz=0
-	float nx1y0z0w0 = Gradient(Permute(ix1 + Permute(iy0 + Permute(iz0 + Permute(iw0)))), fx1, fy0, fz0, fw0);
-	float nx1y0z0w1 = Gradient(Permute(ix1 + Permute(iy0 + Permute(iz0 + Permute(iw1)))), fx1, fy0, fz0, fw1);
-	float nx1y0z0 = Lerp(nx1y0z0w0, nx1y0z0w1, tw);
-		
-	// interpolate along w axis at fx=1 fy=0 fz=1
-	float nx1y0z1w0 = Gradient(Permute(ix1 + Permute(iy0 + Permute(iz1 + Permute(iw0)))), fx1, fy0, fz1, fw0);
-	float nx1y0z1w1 = Gradient(Permute(ix1 + Permute(iy0 + Permute(iz1 + Permute(iw1)))), fx1, fy0, fz1, fw1);
-	float nx1y0z1 = Lerp(nx1y0z1w0, nx1y0z1w1, tw);
-
-	// interpolate along z axis at fx=1 fy=0
-	float nx1y0 = Lerp(nx1y0z0, nx1y0z1, tz);
-
-	// interpolate along w axis at fx=1 fy=1 fz=0
-	float nx1y1z0w0 = Gradient(Permute(ix1 + Permute(iy1 + Permute(iz0 + Permute(iw0)))), fx1, fy1, fz0, fw0);
-	float nx1y1z0w1 = Gradient(Permute(ix1 + Permute(iy1 + Permute(iz0 + Permute(iw1)))), fx1, fy1, fz0, fw1);
-	float nx1y1z0 = Lerp(nx1y1z0w0, nx1y1z0w1, tw);
-		
-	// interpolate along w axis at fx=1 fy=1 fz=1
-	float nx1y1z1w0 = Gradient(Permute(ix1 + Permute(iy1 + Permute(iz1 + Permute(iw0)))), fx1, fy1, fz1, fw0);
-	float nx1y1z1w1 = Gradient(Permute(ix1 + Permute(iy1 + Permute(iz1 + Permute(iw1)))), fx1, fy1, fz1, fw1);
-	float nx1y1z1 = Lerp(nx1y1z1w0, nx1y1z1w1, tw);
-
-	// interpolate along z axis at fx=1 fy=1
-	float nx1y1 = Lerp(nx1y1z0, nx1y1z1, tz);
-
-	// interpolate along y axis at fx=1
-	float nx1 = Lerp(nx1y0, nx1y1, ty);
-
-	// interpolate along x axis
-	return 0.875f * Lerp(nx0, nx1, tx);
+	assert(false);
+	return 0.0f;
 }
-
+#endif
 
 /*
 	// Ken Perlin's 3D Simplex Noise
