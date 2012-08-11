@@ -24,7 +24,7 @@ inline float InvSqrt(float x)
 // linear interpolation
 template<typename T> inline T Lerp(T v0, T v1, float s)
 {
-	return (1 - s) * v0 + s * v1;
+	return v0 + (v1 - v0) * s;
 }
 
 // value clamp
