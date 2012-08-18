@@ -263,49 +263,14 @@ void DO_glColor4fv(EntityContext &aContext)
 	glColor4fv(value.m128_f32);
 }
 
-void DO_glColorPointer(EntityContext &aContext)
-{
-	const GLint size(Expression::Read<GLint>(aContext));
-	const GLsizei stride(Expression::Read<GLsizei>(aContext));
-	const size_t count(Expression::Read<size_t>(aContext));
-	glColorPointer(size, GL_FLOAT, stride, aContext.mStream);
-	aContext.mStream += (count*sizeof(GLfloat)+sizeof(unsigned int)-1)/sizeof(unsigned int);
-}
-
 void DO_glDisable(EntityContext &aContext)
 {
 	glDisable(Expression::Read<GLenum>(aContext));
 }
 
-void DO_glDisableClientState(EntityContext &aContext)
-{
-	glDisableClientState(Expression::Read<GLenum>(aContext));
-}
-
-void DO_glDrawArrays(EntityContext &aContext)
-{
-	const GLenum mode(Expression::Read<GLenum>(aContext));
-	const GLint first(Expression::Read<GLint>(aContext));
-	const size_t count(Expression::Read<size_t>(aContext));
-	glDrawArrays(mode, first, count);
-}
-
-void DO_glDrawElements(EntityContext &aContext)
-{
-	const GLenum mode(Expression::Read<GLenum>(aContext));
-	const size_t count(Expression::Read<size_t>(aContext));
-	glDrawElements(mode, count, GL_UNSIGNED_SHORT, aContext.mStream);
-	aContext.mStream += (count*sizeof(unsigned short)+sizeof(unsigned int)-1)/sizeof(unsigned int);
-}
-
 void DO_glEnable(EntityContext &aContext)
 {
 	glEnable(Expression::Read<GLenum>(aContext));
-}
-
-void DO_glEnableClientState(EntityContext &aContext)
-{
-	glEnableClientState(Expression::Read<GLenum>(aContext));
 }
 
 void DO_glEnd(EntityContext &aContext)
@@ -348,14 +313,6 @@ void DO_glNormal3fv(EntityContext &aContext)
 	glNormal3fv(value.m128_f32);
 }
 
-void DO_glNormalPointer(EntityContext &aContext)
-{
-	const GLsizei stride(Expression::Read<GLsizei>(aContext));
-	const size_t count(Expression::Read<size_t>(aContext));
-	glNormalPointer(GL_FLOAT, stride, aContext.mStream);
-	aContext.mStream += (count*sizeof(GLfloat)+sizeof(unsigned int)-1)/sizeof(unsigned int);
-}
-
 void DO_glPointSize(EntityContext &aContext)
 {
 	const GLfloat size(Expression::Read<GLfloat>(aContext));
@@ -373,11 +330,6 @@ void DO_glPopAttrib(EntityContext &aContext)
 	glPopAttrib();
 }
 
-void DO_glPopClientAttrib(EntityContext &aContext)
-{
-	glPopClientAttrib();
-}
-
 void DO_glPopMatrix(EntityContext &aContext)
 {
 	glPopMatrix();
@@ -386,11 +338,6 @@ void DO_glPopMatrix(EntityContext &aContext)
 void DO_glPushAttrib(EntityContext &aContext)
 {
 	glPushAttrib(Expression::Read<GLbitfield>(aContext));
-}
-
-void DO_glPushClientAttrib(EntityContext &aContext)
-{
-	glPushClientAttrib(Expression::Read<GLbitfield>(aContext));
 }
 
 void DO_glPushMatrix(EntityContext &aContext)
@@ -416,15 +363,6 @@ void DO_glTexCoord2fv(EntityContext &aContext)
 	glTexCoord2fv(value.m128_f32);
 }
 
-void DO_glTexCoordPointer(EntityContext &aContext)
-{
-	const GLint size(Expression::Read<GLint>(aContext));
-	const GLsizei stride(Expression::Read<GLsizei>(aContext));
-	const size_t count(Expression::Read<size_t>(aContext));
-	glTexCoordPointer(size, GL_FLOAT, stride, aContext.mStream);
-	aContext.mStream += (count*sizeof(GLfloat)+sizeof(unsigned int)-1)/sizeof(unsigned int);
-}
-
 void DO_glTexEnvi(EntityContext &aContext)
 {
 	const GLenum pname(Expression::Read<GLint>(aContext));
@@ -442,15 +380,6 @@ void DO_glVertex3fv(EntityContext &aContext)
 {
 	const DLPosition value(Expression::Evaluate<DLPosition>(aContext));
 	glVertex3fv(value.m128_f32);
-}
-
-void DO_glVertexPointer(EntityContext &aContext)
-{
-	const GLint size(Expression::Read<GLint>(aContext));
-	const GLsizei stride(Expression::Read<GLsizei>(aContext));
-	const size_t count(Expression::Read<size_t>(aContext));
-	glVertexPointer(size, GL_FLOAT, stride, aContext.mStream);
-	aContext.mStream += (count*sizeof(GLfloat)+sizeof(unsigned int)-1)/sizeof(unsigned int);
 }
 
 void DO_Repeat(EntityContext &aContext)
@@ -663,29 +592,6 @@ void ConfigureDrawItem(const tinyxml2::XMLElement *element, std::vector<unsigned
 			Expression::Append(buffer, DO_glPushAttrib, mask);
 			ConfigureDrawItems(element, buffer);
 			Expression::Append(buffer, DO_glPopAttrib);
-		}
-		break;
-
-	case 0x052eb8b2 /* "pushclientattrib" */:
-		{
-			GLuint mask = 0U;
-			for (const tinyxml2::XMLAttribute *attrib = element->FirstAttribute(); attrib != NULL; attrib = attrib->Next())
-			{
-				GLuint bit = 0U;
-				switch (Hash(attrib->Name()))
-				{
-				case 0x959fee19 /* "pixel_store" */:	bit = GL_CLIENT_PIXEL_STORE_BIT; break;
-				case 0x20a16825 /* "vertex_array" */:	bit = GL_CLIENT_VERTEX_ARRAY_BIT; break;
-				case 0x13254bc4 /* "all" */:			bit = GL_CLIENT_ALL_ATTRIB_BITS; break;
-				}
-				if (attrib->BoolValue())
-					mask |= bit;
-				else
-					mask &= ~bit;
-			}
-			Expression::Append(buffer, DO_glPushClientAttrib, mask);
-			ConfigureDrawItems(element, buffer);
-			Expression::Append(buffer, DO_glPopClientAttrib);
 		}
 		break;
 
@@ -1027,42 +933,6 @@ void ConfigureDrawItem(const tinyxml2::XMLElement *element, std::vector<unsigned
 			Expression::Append(buffer, DO_glCallList, handle);
 		}
 		break;
-
-#if 0
-	case 0xf4de4a21 /* "drawarrays" */:
-		{
-			GLenum mode(GetPrimitiveMode(element->Attribute("mode")));
-
-			int first = 0, count = 0;
-			element->QueryIntAttribute("first", &first);
-			element->QueryIntAttribute("count", &count);
-			Expression::Append(buffer, DO_glDrawArrays, mode, first, count);
-		}
-		break;
-
-	case 0x757eeee2 /* "drawelements" */:
-		{
-			GLenum mode(GetPrimitiveMode(element->Attribute("mode")));
-
-			const char * const text = element->GetText();
-			const size_t len = strlen(text)+1;
-			char *buf = static_cast<char *>(_alloca(len));
-			memcpy(buf, text, len);
-			unsigned short *indices = static_cast<unsigned short *>(_alloca(len*sizeof(unsigned short)/2));
-			int count = 0;
-			char *element = strtok(buf, " \t\n\r,;");
-			while (element)
-			{
-				indices[count++] = unsigned short(atoi(element));
-				element = strtok(NULL, " \t\n\r,;");
-			}
-
-			Expression::Append(buffer, DO_glDrawElements, mode, count);
-			for (size_t i = 0; i < count+sizeof(unsigned int)/sizeof(unsigned short)-1; i += sizeof(unsigned int)/sizeof(unsigned short))
-				buffer.push_back(*reinterpret_cast<unsigned int *>(&indices[i]));
-		}
-		break;
-#endif
 
 	case 0xd99ba82a /* "repeat" */:
 		{
