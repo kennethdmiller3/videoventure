@@ -66,11 +66,6 @@ static const char * const sTexCoordNames[] = { "s", "t", "r", "q" };
 static const float sTexCoordDefault[] = { 0.0f, 0.0f, 0.0f, 1.0f };
 static const int sTexCoordWidth = 2;
 
-typedef float DLIndex;
-static const char * const sIndexNames[] = { "c" };
-static const float sIndexDefault[] = { 0.0f };
-static const int sIndexWidth = 1;
-
 static const char * const sMatrixNames[] = { "m0", "m1", "m2", "m3", "m4", "m5", "m6", "m7", "m8", "m9", "m10", "m11", "m12", "m13", "m14", "m15" };
 static const float sMatrixDefault[] = { 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f };
 static const int sMatrixWidth = 16;
@@ -88,7 +83,6 @@ void GetTypeData(unsigned int type, int &width, const char * const *&names, cons
 	case 0x82971c71 /* "scale" */:		names = sScaleNames; data = sScaleDefault; width = sScaleWidth; break;
 	case 0x3d7e6258 /* "color" */:		names = sColorNames; data = sColorDefault; width = sColorWidth; break;
 	case 0xdd612dd3 /* "texcoord" */:	names = sTexCoordNames; data = sTexCoordDefault; width = sTexCoordWidth; break;
-	case 0x090aa9ab /* "index" */:		names = sIndexNames; data = sIndexDefault; width = sIndexWidth; break;
 	case 0x15c2f8ec /* "matrix" */:		names = sMatrixNames; data = sMatrixDefault; width = sMatrixWidth; break;
 	}
 }
@@ -304,19 +298,6 @@ void DO_glDrawElements(EntityContext &aContext)
 	aContext.mStream += (count*sizeof(unsigned short)+sizeof(unsigned int)-1)/sizeof(unsigned int);
 }
 
-void DO_glEdgeFlag(EntityContext &aContext)
-{
-	glEdgeFlag(Expression::Read<GLboolean>(aContext));
-}
-
-void DO_glEdgeFlagPointer(EntityContext &aContext)
-{
-	const GLsizei stride(Expression::Read<GLsizei>(aContext));
-	const size_t count(Expression::Read<size_t>(aContext));
-	glEdgeFlagPointer(stride, aContext.mStream);
-	aContext.mStream += (count*sizeof(bool)+sizeof(unsigned int)-1)/sizeof(unsigned int);
-}
-
 void DO_glEnable(EntityContext &aContext)
 {
 	glEnable(Expression::Read<GLenum>(aContext));
@@ -330,20 +311,6 @@ void DO_glEnableClientState(EntityContext &aContext)
 void DO_glEnd(EntityContext &aContext)
 {
 	glEnd();
-}
-
-void DO_glIndexf(EntityContext &aContext)
-{
-	const float value(Expression::Evaluate<DLIndex>(aContext));
-	glIndexf(value);
-}
-
-void DO_glIndexPointer(EntityContext &aContext)
-{
-	const GLsizei stride(Expression::Read<GLsizei>(aContext));
-	const size_t count(Expression::Read<size_t>(aContext));
-	glIndexPointer(GL_FLOAT, stride, aContext.mStream);
-	aContext.mStream += (count*sizeof(GLfloat)+sizeof(unsigned int)-1)/sizeof(unsigned int);
 }
 
 void DO_glLineWidth(EntityContext &aContext)
@@ -587,24 +554,6 @@ void DO_Loop(EntityContext &aContext)
 }
 #endif
 
-
-
-void ConfigureFloatData(const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer)
-{
-	const char * const text = element->GetText();
-	const size_t len = strlen(text)+1;
-	char *buf = static_cast<char *>(_alloca(len));
-	memcpy(buf, text, len);
-
-	char *item = strtok(buf, " \t\n\r,;");
-	while (item)
-	{
-		float value = float(atof(item));
-		Expression::Append(buffer, value);
-		item = strtok(NULL, " \t\n\r,;");
-	}
-}
-
 void ConfigureVariableOperator(const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer, VariableOperator op)
 {
 	const unsigned int name = Hash(element->Attribute("name"));
@@ -642,16 +591,6 @@ void ConfigurePrimitive(const tinyxml2::XMLElement *element, std::vector<unsigne
 	Expression::Append(buffer, DO_glBegin, mode);
 	ConfigureDrawItems(element, buffer);
 	Expression::Append(buffer, DO_glEnd);
-}
-
-void ConfigureArray(const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer, void (*op)(EntityContext &), size_t size, size_t stride)
-{
-	Expression::Append(buffer, op, size, stride);
-
-	buffer.push_back(0);
-	const int start = buffer.size();
-	ConfigureFloatData(element, buffer);
-	buffer[start-1] = buffer.size() - start;
 }
 
 GLenum GetPrimitiveMode(const char *mode)
@@ -826,27 +765,10 @@ void ConfigureDrawItem(const tinyxml2::XMLElement *element, std::vector<unsigned
 		}
 		break;
 
-	case 0x090aa9ab /* "index" */:
-		{
-			Expression::Append(buffer, DO_glIndexf);
-			Expression::Loader<DLIndex>::ConfigureRoot(element, buffer, sIndexNames, sIndexDefault);
-		}
-		break;
-
 	case 0xdd612dd3 /* "texcoord" */:
 		{
 			Expression::Append(buffer, DO_glTexCoord2fv);
 			Expression::Loader<DLTexCoord>::ConfigureRoot(element, buffer, sTexCoordNames, sTexCoordDefault);
-		}
-		break;
-
-	case 0x0135ab46 /* "edgeflag" */:
-		{
-			bool flag;
-			if (element->QueryBoolAttribute("flag", &flag) == tinyxml2::XML_SUCCESS)
-			{
-				Expression::Append(buffer, DO_glEdgeFlag, flag ? GL_TRUE : GL_FALSE);
-			}
 		}
 		break;
 
@@ -1106,117 +1028,7 @@ void ConfigureDrawItem(const tinyxml2::XMLElement *element, std::vector<unsigned
 		}
 		break;
 
-	case 0x2610a4a3 /* "clientstate" */:
-		{
-			for (const tinyxml2::XMLAttribute *attrib = element->FirstAttribute(); attrib != NULL; attrib = attrib->Next())
-			{
-				GLenum clientstate;
-				switch (Hash(attrib->Name()))
-				{
-				case 0x945367a7 /* "vertex" */:		clientstate = GL_VERTEX_ARRAY; break;
-				case 0xe68b9c52 /* "normal" */:		clientstate = GL_NORMAL_ARRAY; break;
-				case 0x3d7e6258 /* "color" */:		clientstate = GL_COLOR_ARRAY; break;
-				case 0x090aa9ab /* "index" */:		clientstate = GL_INDEX_ARRAY; break;
-				case 0xdd612dd3 /* "texcoord" */:	clientstate = GL_TEXTURE_COORD_ARRAY; break;
-				case 0x0135ab46 /* "edgeflag" */:	clientstate = GL_EDGE_FLAG_ARRAY; break;
-				default:							clientstate = 0; break;
-				}
-				if (clientstate)
-				{
-					Expression::Append(buffer, attrib->BoolValue() ? DO_glEnableClientState : DO_glDisableClientState, clientstate);
-				}
-			}
-		}
-		break;
-
-	case 0x6298bce4 /* "vertexarray" */:
-		{
-			int size = 0;
-			element->QueryIntAttribute("size", &size);
-
-			int stride = 0;
-			element->QueryIntAttribute("stride", &stride);
-
-			ConfigureArray(element, buffer, DO_glVertexPointer, size, stride);
-		}
-		break;
-
-	case 0x81491d33 /* "normalarray" */:
-		{
-			int stride = 0;
-			element->QueryIntAttribute("stride", &stride);
-
-			ConfigureArray(element, buffer, DO_glNormalPointer, 0, stride);
-		}
-		break;
-
-	case 0xcce5b995 /* "colorarray" */:
-		{
-			int size = 0;
-			element->QueryIntAttribute("size", &size);
-
-			int stride = 0;
-			element->QueryIntAttribute("stride", &stride);
-
-			ConfigureArray(element, buffer, DO_glColorPointer, size, stride);
-		}
-		break;
-
-	case 0x664ead80 /* "indexarray" */:
-		{
-			int stride = 0;
-			element->QueryIntAttribute("stride", &stride);
-
-			ConfigureArray(element, buffer, DO_glIndexPointer, 0, stride);
-		}
-		break;
-
-	case 0x91aa3148 /* "texcoordarray" */:
-		{
-			int size = 0;
-			element->QueryIntAttribute("size", &size);
-
-			int stride = 0;
-			element->QueryIntAttribute("stride", &stride);
-
-			ConfigureArray(element, buffer, DO_glTexCoordPointer, size, stride);
-		}
-		break;
-
-	case 0x60360ccf /* "edgeflagarray" */:
-		{
-			int stride = 0;
-			element->QueryIntAttribute("stride", &stride);
-
-			const char * const text = element->GetText();
-			const size_t len = strlen(text)+1;
-			char *buf = static_cast<char *>(_alloca(len));
-			memcpy(buf, text, len);
-			bool *data = static_cast<bool *>(_alloca(len*sizeof(bool)/2));
-			int count = 0;
-			char *element = strtok(buf, " \t\n\r,;");
-			while (element)
-			{
-				data[count++] = atoi(element) != 0;
-				element = strtok(NULL, " \t\n\r,;");
-			}
-
-			Expression::Append(buffer, DO_glEdgeFlagPointer, stride, count);
-			for (size_t i = 0; i < count+sizeof(unsigned int)/sizeof(bool)-1; i += sizeof(unsigned int)/sizeof(bool))
-				buffer.push_back(*reinterpret_cast<unsigned int *>(&data[i]));
-		}
-		break;
-
-	case 0x0a85bb5e /* "arrayelement" */:
-		{
-			int index;
-			if (element->QueryIntAttribute("index", &index) == tinyxml2::XML_SUCCESS)
-			{
-				Expression::Append(buffer, DO_glArrayElement, index);
-			}
-		}
-		break;
-
+#if 0
 	case 0xf4de4a21 /* "drawarrays" */:
 		{
 			GLenum mode(GetPrimitiveMode(element->Attribute("mode")));
@@ -1250,6 +1062,7 @@ void ConfigureDrawItem(const tinyxml2::XMLElement *element, std::vector<unsigned
 				buffer.push_back(*reinterpret_cast<unsigned int *>(&indices[i]));
 		}
 		break;
+#endif
 
 	case 0xd99ba82a /* "repeat" */:
 		{
@@ -1422,6 +1235,7 @@ void ConfigureDrawItem(const tinyxml2::XMLElement *element, std::vector<unsigned
 #endif
 
 	default:
+		DebugPrint("Unknown draw item \"%s\"\n", element->Value());
 		break;
 	}
 }
