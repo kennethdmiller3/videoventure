@@ -987,14 +987,18 @@ void Sound::Listener(Vector2 aPos, Vector2 aVel)
 	listenervel = aVel;
 
 #if defined(USE_BASS)
-	// apply position
-	BASS_3DVECTOR pos(listenerpos.x, listenerpos.y, -CAMERA_DISTANCE);
-	BASS_3DVECTOR vel(listenervel.x, listenervel.y, 0.0f);
-	BASS_3DVECTOR front(0.0f, 1.0f, 0.0f);
-	BASS_3DVECTOR top(0.0f, 0.0f, 1.0f);
-	if (!BASS_Set3DPosition(&pos, &vel, &front, &top))
-		DebugPrint("error setting listener 3d position: %s\n", BASS_ErrorGetString());
-	BASS_Apply3D();
+	// if effect sounds are turned on...
+	if (SOUND_CHANNELS > 0 && SOUND_VOLUME_EFFECT > 0)
+	{
+		// apply position
+		BASS_3DVECTOR pos(listenerpos.x, listenerpos.y, -CAMERA_DISTANCE);
+		BASS_3DVECTOR vel(listenervel.x, listenervel.y, 0.0f);
+		BASS_3DVECTOR front(0.0f, 1.0f, 0.0f);
+		BASS_3DVECTOR top(0.0f, 0.0f, 1.0f);
+		if (!BASS_Set3DPosition(&pos, &vel, &front, &top))
+			DebugPrint("error setting listener 3d position: %s\n", BASS_ErrorGetString());
+		BASS_Apply3D();
+	}
 #endif
 #endif
 }
