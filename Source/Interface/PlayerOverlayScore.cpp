@@ -35,7 +35,8 @@ PlayerOverlayScore::PlayerOverlayScore(unsigned int aPlayerId = 0)
 PlayerOverlayScore::~PlayerOverlayScore()
 {
 	// free score draw list
-	glDeleteLists(score_handle, 1);
+	if (glIsList(score_handle))
+		glDeleteLists(score_handle, 1);
 }
 
 // render

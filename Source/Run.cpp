@@ -1136,6 +1136,18 @@ void RunState()
 	}
 	while( setgamestate == curgamestate );
 
+#ifndef USE_ACCUMULATION_BUFFER
+	// free accumulation texture
+	if (glIsTexture(accumHandle))
+		glDeleteTextures(1, &accumHandle);
+#endif
+
+#ifdef COLLECT_DEBUG_DRAW
+	// delete debug draw list
+	if (glIsList(debugdraw))
+		glDeleteLists(debugdraw, 1);
+#endif
+
 	if (curgamestate == STATE_PLAY)
 	{
 		if (record)

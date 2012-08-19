@@ -29,7 +29,8 @@ PlayerOverlaySpecial::PlayerOverlaySpecial(unsigned int aPlayerId = 0)
 PlayerOverlaySpecial::~PlayerOverlaySpecial()
 {
 	// free special draw list
-	glDeleteLists(special_handle, 1);
+	if (glIsList(special_handle))
+		glDeleteLists(special_handle, 1);
 }
 
 // render
