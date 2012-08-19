@@ -48,7 +48,8 @@ PlayerOverlayLevel::PlayerOverlayLevel(unsigned int aPlayerId = 0)
 PlayerOverlayLevel::~PlayerOverlayLevel()
 {
 	// free level draw list
-	glDeleteLists(level_handle, 1);
+	if (glIsList(level_handle))
+		glDeleteLists(level_handle, 1);
 }
 
 // render

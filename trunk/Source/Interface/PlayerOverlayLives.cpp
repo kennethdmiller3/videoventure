@@ -28,7 +28,8 @@ PlayerOverlayLives::PlayerOverlayLives(unsigned int aPlayerId = 0)
 PlayerOverlayLives::~PlayerOverlayLives()
 {
 	// free lives draw list
-	glDeleteLists(lives_handle, 1);
+	if (glIsList(lives_handle))
+		glDeleteLists(lives_handle, 1);
 }
 
 // render

@@ -1202,6 +1202,25 @@ void ExecuteDrawItems(EntityContext &aContext)
 }
 #pragma optimize( "", on )
 
+void InitDrawlists(void)
+{
+}
+
+void CleanupDrawlists(void)
+{
+	// for each entry in the drawlist database...
+	for (Database::Typed<GLuint>::Iterator itor(&Database::drawlist); itor.IsValid(); ++itor)
+	{
+		// if the handle is still valid...
+		GLuint handle = itor.GetValue();
+		if (glIsList(handle))
+		{
+			// delete the draw list
+			glDeleteLists(handle, 1);
+		}
+	}
+}
+
 void RebuildDrawlists(void)
 {
 	// for each entry in the drawlist database...

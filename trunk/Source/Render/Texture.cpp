@@ -251,6 +251,18 @@ void BindTexture(GLuint handle, TextureTemplate const &texture)
 	glPopAttrib();
 }
 
+void CleanupTextures(void)
+{
+	// for each entry in the texture database
+	for (Database::Typed<GLuint>::Iterator itor(&Database::texture); itor.IsValid(); ++itor)
+	{
+		// delete the texture
+		GLuint handle = itor.GetValue();
+		if (glIsTexture(handle))
+			glDeleteTextures(1, &handle);
+	}
+}
+
 void RebuildTextures(void)
 {
 	// for each entry in the texture database

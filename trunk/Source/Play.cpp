@@ -8,6 +8,7 @@
 #include "Collidable.h"
 #include "World.h"
 #include "Drawlist.h"
+#include "Texture.h"
 #include "Escape.h"
 #include "Library.h"
 #include "Font.h"
@@ -225,6 +226,9 @@ void PlayerQuitListener(unsigned int aId)
 // enter play state
 void EnterPlayState()
 {
+	// set up drawlists
+	InitDrawlists();
+
 	// create default font
 	CreateDefaultFont();
 
@@ -293,6 +297,12 @@ void ExitPlayState()
 	// delete escape overlay
 	delete Database::overlay.Get(0x9e212406 /* "escape" */);
 	Database::overlay.Delete(0x9e212406 /* "escape" */);
+
+	// cleanup drawlists
+	CleanupDrawlists();
+
+	// cleanup textures
+	CleanupTextures();
 
 	// clear all databases
 	Database::Cleanup();

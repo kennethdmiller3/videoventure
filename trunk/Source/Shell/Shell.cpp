@@ -9,6 +9,8 @@
 #include "Collidable.h"
 #include "Library.h"
 #include "Font.h"
+#include "Drawlist.h"
+#include "Texture.h"
 
 
 extern bool InitInput(const char *config);
@@ -50,6 +52,9 @@ void RenderShellOptions(unsigned int aId, float aTime, const Transform2 &aTransf
 // enter shell state
 void EnterShellState()
 {
+	// set up drawlists
+	InitDrawlists();
+
 	// create default font
 	CreateDefaultFont();
 
@@ -105,6 +110,12 @@ void ExitShellState()
 	// clear overlays
 	delete Database::overlay.Get(0xef286ca5 /* "options" */);
 	Database::overlay.Delete(0xef286ca5 /* "options" */);
+
+	// cleanup drawlists
+	CleanupDrawlists();
+
+	// cleanup textures
+	CleanupTextures();
 
 	// clear all databases
 	Database::Cleanup();

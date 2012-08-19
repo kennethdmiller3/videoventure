@@ -59,6 +59,7 @@ struct TextureTemplate
 };
 
 extern void BindTexture(GLuint handle, TextureTemplate const &texture);
+extern void CleanupTextures(void);
 extern void RebuildTextures(void);
 
 namespace Database

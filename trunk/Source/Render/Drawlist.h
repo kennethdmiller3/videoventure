@@ -1,5 +1,8 @@
 #pragma once
 
+extern void InitDrawlists(void);
+extern void CleanupDrawlists(void);
+
 extern void ConfigureDrawItem(const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer);
 extern void ConfigureDrawItems(const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer);
 extern void RebuildDrawlists(void);

@@ -174,10 +174,13 @@ ShellTitleTemplate::ShellTitleTemplate(void)
 
 ShellTitleTemplate::~ShellTitleTemplate()
 {
-	glDeleteLists(1, titlebar);
+	if (glIsList(titlebar))
+		glDeleteLists(1, titlebar);
 #if defined(USE_TITLE_DYNAMIC_TEXTURE)
-	glDeleteLists(1, titledrawlist);
-	glDeleteTextures(1, &titletexture);
+	if (glIsList(titledrawlist))
+		glDeleteLists(1, titledrawlist);
+	if (glIsTexture(titletexture))
+		glDeleteTextures(1, &titletexture);
 #endif
 	delete[] titlefill;
 }

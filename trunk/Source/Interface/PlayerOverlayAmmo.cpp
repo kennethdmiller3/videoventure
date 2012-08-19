@@ -41,7 +41,8 @@ PlayerOverlayAmmo::PlayerOverlayAmmo(unsigned int aPlayerId = 0)
 PlayerOverlayAmmo::~PlayerOverlayAmmo()
 {
 	// free ammo draw list
-	glDeleteLists(ammo_handle, 1);
+	if (glIsList(ammo_handle))
+		glDeleteLists(ammo_handle, 1);
 }
 
 // render
