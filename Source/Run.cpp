@@ -1117,12 +1117,6 @@ void RunState()
 		}
 #endif
 
-		// reset camera transform
-		glMatrixMode(GL_PROJECTION);
-		glPopMatrix();
-		glMatrixMode(GL_MODELVIEW);
-		glPopMatrix();
-
 		// restore blend mode
 		glPopAttrib();
 
