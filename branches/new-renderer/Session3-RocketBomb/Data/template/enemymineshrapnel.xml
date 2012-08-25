@@ -1,0 +1,28 @@
+<?xml version="1.0" ?>
+<template name="enemymineshrapnel">
+	<trace filter="redbullet">
+		<damping linear="1.0" />
+	</trace>
+	<renderable radius="2.5">
+		<drawlist>
+			<pushmatrix>
+				<color r="1.0" g="0.0" b="0.0" a="0.25" />
+				<scale x="2.5" y="2.5" />
+				<calllist name="diamond" />
+			</pushmatrix>
+			<pushmatrix>
+				<color r="1.0" g="1.0" b="0.0" a="0.5" />
+				<scale x="2.0" y="2.0" />
+				<calllist name="diamond" />
+			</pushmatrix>
+			<pushmatrix>
+				<color r="1.0" g="1.0" b="1.0" a="1.0" />
+				<scale x="1.5" y="1.5" />
+				<calllist name="diamond" />
+			</pushmatrix>
+		</drawlist>
+	</renderable>
+	<expire time="1" />
+	<bullet damage="1" spawnondeath="enemybulletexplosion" />
+	<capturable resistance="1" spawnoncapture="friendmineshrapnel" />
+</template>

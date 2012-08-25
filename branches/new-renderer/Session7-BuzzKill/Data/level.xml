@@ -1,0 +1,830 @@
+<?xml version="1.0" standalone="no"?>
+<!-- Test Level -->
+<world xmin="-512" ymin="-512" xmax="512" ymax="512">
+	<library name="session7.dll"/>
+	<soundsystem>
+		<distance factor="0.0625"/>
+		<rolloff factor="4"/>
+		<doppler factor="0"/>
+	</soundsystem>
+	<!-- sounds -->
+	<import name="sound/robotron-start.xml" />
+	<import name="sound/stargate-warpin.xml" />
+	<import name="sound/stargate-playershot.xml" />
+	<import name="sound/stargate-playershipidle.xml" />
+	<import name="sound/stargate-playershipthrust.xml" />
+	<import name="sound/stargate-explosion.xml" />
+	<import name="sound/stargate-bigexplosion.xml" />
+	<import name="sound/stargate-playershipdeath.xml" />
+	<import name="sound/stargate-smartbomb.xml" />
+	<import name="sound/stargate-firebomberfire.xml" />
+	<import name="sound/stargate-podkill.xml" />
+	<import name="sound/stargate-swarmerfire.xml" />
+	<import name="sound/stargate-landerkill.xml" />
+	<import name="sound/stargate-enemykill.xml" />
+	<import name="sound/stargate-anotherenemykill.xml" />
+	<import name="sound/stargate-landerfire.xml" />
+	<import name="sound/stargate-spaceguppyshot.xml" />
+	<import name="sound/stargate-extralife.xml" />
+	<import name="sound/stargate-dynamofire.xml" />
+	<import name="sound/stargate-createmutant.xml" />
+	<import name="sound/stargate-humanoidcatch.xml" />
+	<!-- players -->
+	<entity name="1P">
+		<position x="0" y="0" />
+		<player name="playershipwarp" start="1.5" cycle="4" lives="3" firstextra="20000" extra="50000" />
+		<team name="blue" />
+	</entity>
+	<!-- draw lists -->
+	<import name="drawlist/square.xml" />
+	<import name="drawlist/diamond.xml" />
+	<import name="drawlist/circle8.xml" />
+	<import name="drawlist/circle12.xml" />
+	<import name="drawlist/circle16.xml" />
+	<import name="drawlist/circle32.xml" />
+	<import name="drawlist/ship.xml" />
+	<import name="drawlist/shipsmall.xml" />
+	<import name="drawlist/shiptiny.xml" />
+	<!-- reticule -->
+	<import name="drawlist/reticule.xml" />
+	<!-- nebula -->
+	<entity name="nebula">
+		<texture mode="modulate" minfilter="nearest" magfilter="nearest" wraps="repeat" wrapt="repeat">
+			<perlin width="64" height="64" octaves="6" frequency="0.015625" persistence="0.625">
+				<key time="-1.000000" r="1" g="1" b="1" a="0.00"/>
+				<key time="-0.333333" r="1" g="1" b="1" a="0.00"/>
+				<key time="1.000000" r="1" g="1" b="1" a="1.00"/>
+			</perlin>
+		</texture>
+		<renderable radius="512">
+			<drawlist>
+				<color r="1.0" g="1.0" b="1.0" a="1.0" />
+				<line_loop>
+					<vertex x="-512" y="-512" />
+					<vertex x="512" y="-512" />
+					<vertex x="512" y="512" />
+					<vertex x="-512" y="512" />
+				</line_loop>
+				<pushattrib texture="1">
+					<bindtexture name="nebula" />
+					<quads>
+						<color r="1.0" g="0.0" b="0.0" a="0.5" />
+						<texcoord s="1" t="3" />
+						<vertex x="2048" y="2048" z="512" />
+						<texcoord s="3" t="3" />
+						<vertex x="-2048" y="2048" z="512" />
+						<texcoord s="3" t="1" />
+						<vertex x="-2048" y="-2048" z="512" />
+						<texcoord s="1" t="1" />
+						<vertex x="2048" y="-2048" z="512" />
+						<color r="0.0" g="1.0" b="0.0" a="0.5" />
+						<texcoord s="2.5" t="0.5" />
+						<vertex x="1536" y="1536" z="384" />
+						<texcoord s="0.5" t="0.5" />
+						<vertex x="-1536" y="1536" z="384" />
+						<texcoord s="0.5" t="2.5" />
+						<vertex x="-1536" y="-1536" z="384" />
+						<texcoord s="2.5" t="2.5" />
+						<vertex x="1536" y="-1536" z="384" />
+						<color r="0.0" g="0.0" b="1.0" a="0.5" />
+						<texcoord s="0" t="0" />
+						<vertex x="1024" y="1024" z="256" />
+						<texcoord s="2" t="0" />
+						<vertex x="-1024" y="1024" z="256" />
+						<texcoord s="2" t="2" />
+						<vertex x="-1024" y="-1024" z="256" />
+						<texcoord s="0" t="2" />
+						<vertex x="1024" y="-1024" z="256" />
+					</quads>
+				</pushattrib>
+			</drawlist>
+		</renderable>
+	</entity>
+	<!-- starfield -->
+	<import name="template/starfield.xml" />
+	<tilemap x="768" y="768" dx="-512" dy="-512">
+		<tile name="*" spawn="starfield" />
+		<row data="****" />
+		<row data="****" />
+		<row data="****" />
+		<row data="****" />
+	</tilemap>
+	<!-- reference grid -->
+	<entity name="playfield">
+		<renderable radius="512">
+			<drawlist>
+				<scale x="16" y="16" />
+				<color r="1.0" g="1.0" b="1.0" a="1.0" />
+				<line_loop>
+					<!-- perimeter -->
+					<vertex x="-32" y="-32" />
+					<vertex x="32" y="-32" />
+					<vertex x="32" y="32" />
+					<vertex x="-32" y="32" />
+				</line_loop>
+				<lines>
+					<!-- vertical lines -->
+					<set name="p0" type="position" x="-31" y="-32" />
+					<set name="p1" type="position" x="-31" y="32" />
+					<repeat count="15">
+						<color r="1.0" g="1.0" b="1.0" a="0.0625" />
+						<repeat count="3">
+							<vertex variable="p0" />
+							<vertex variable="p1" />
+							<add name="p0" type="translate" x="1" y="0" />
+							<add name="p1" type="translate" x="1" y="0" />
+						</repeat>
+						<color r="1.0" g="1.0" b="1.0" a="0.25" />
+						<vertex variable="p0" />
+						<vertex variable="p1" />
+						<add name="p0" type="translate" x="1" y="0" />
+						<add name="p1" type="translate" x="1" y="0" />
+					</repeat>
+					<color r="1.0" g="1.0" b="1.0" a="0.0625" />
+					<repeat count="3">
+						<vertex variable="p0" />
+						<vertex variable="p1" />
+						<add name="p0" type="translate" x="1" y="0" />
+						<add name="p1" type="translate" x="1" y="0" />
+					</repeat>
+					<!-- horizontal lines -->
+					<set name="p0" type="translate" x="-32" y="-31" />
+					<set name="p1" type="translate" x="32" y="-31" />
+					<repeat count="15">
+						<color r="1.0" g="1.0" b="1.0" a="0.0625" />
+						<repeat count="3">
+							<vertex variable="p0" />
+							<vertex variable="p1" />
+							<add name="p0" type="translate" x="0" y="1" />
+							<add name="p1" type="translate" x="0" y="1" />
+						</repeat>
+						<color r="1.0" g="1.0" b="1.0" a="0.25" />
+						<vertex variable="p0" />
+						<vertex variable="p1" />
+						<add name="p0" type="translate" x="0" y="1" />
+						<add name="p1" type="translate" x="0" y="1" />
+					</repeat>
+					<color r="1.0" g="1.0" b="1.0" a="0.0625" />
+					<repeat count="3">
+						<vertex variable="p0" />
+						<vertex variable="p1" />
+						<add name="p0" type="translate" x="0" y="1" />
+						<add name="p1" type="translate" x="0" y="1" />
+					</repeat>
+					<clear name="p0" />
+					<clear name="p1" />
+				</lines>
+			</drawlist>
+		</renderable>
+	</entity>
+	<!-- collidable filters -->
+	<collidablefilter name="inert">
+		<category value="-1" />
+	</collidablefilter>
+	<collidablefilter name="environment">
+		<category value="0" />
+	</collidablefilter>
+	<collidablefilter name="blueunit">
+		<category value="1" />
+	</collidablefilter>
+	<collidablefilter name="bluemissile">
+		<category value="1" />
+		<mask bit1="0" bit2="0" />
+	</collidablefilter>
+	<collidablefilter name="bluebullet">
+		<category value="2" />
+		<mask bit1="0" bit2="0" bit4="0" />
+	</collidablefilter>
+	<collidablefilter name="redunit">
+		<category value="3" />
+	</collidablefilter>
+	<collidablefilter name="redmissile">
+		<category value="3" />
+		<mask bit3="0" bit4="0" />
+	</collidablefilter>
+	<collidablefilter name="redbullet">
+		<category value="4" />
+		<mask bit2="0" bit3="0" bit4="0" />
+	</collidablefilter>
+	<!-- player bullet explosion -->
+	<import name="template/playerbulletexplosion.xml" />
+	<!-- player bullet -->
+	<template name="playerbullet">
+		<collidable>
+			<body name="main">
+				<fast value="1" />
+				<circle radius="1">
+					<friction value="1" />
+					<restitution value="0" />
+					<density value="1.0" />
+					<filter name="bluebullet" />
+				</circle>
+				<fixedrotation value="1" />
+			</body>
+		</collidable>
+		<renderable radius="6">
+			<drawlist>
+				<color r="0.0" g="0.5" b="1.0" a="0.25" />
+				<pushmatrix>
+					<scale x="1.5" y="6" />
+					<calllist name="circle8" />
+				</pushmatrix>
+				<color r="0.4" g="0.7" b="1.0" a="0.5" />
+				<pushmatrix>
+					<scale x="1.0" y="5" />
+					<calllist name="circle8" />
+				</pushmatrix>
+				<color r="1.0" g="1.0" b="1.0" a="1.0" />
+				<pushmatrix>
+					<scale x="0.5" y="4" />
+					<calllist name="circle8" />
+				</pushmatrix>
+			</drawlist>
+		</renderable>
+		<expire time="1" />
+		<bullet damage="1" spawnondeath="playerbulletexplosion" />
+	</template>
+	<!-- player ship weapon -->
+	<template name="playershipweapon">
+		<weapon>
+			<velocity x="0" y="480" />
+			<ordnance name="playerbullet" />
+			<shot delay="0.15" />
+		</weapon>
+		<sound volume="0.5">
+			<file name="robotron-playershot.wav" />
+		</sound>
+		<soundcue>
+			<cue name="fire" sound="playershipweapon" />
+		</soundcue>
+	</template>
+	<!-- player smart bomb explosion -->
+	<import name="template/playersmartbombexplosion.xml" />
+	<import name="template/playersmartbombexplosion2.xml" />
+	<!-- player smart bomb weapon -->
+	<import name="template/playersmartbombweapon.xml" />
+	<!-- player ship -->
+	<import name="template/playership.xml" />
+	<!-- graze spark effect -->
+	<template name="grazespark">
+		<expire time="0.5" />
+		<renderable radius="4">
+			<scale>
+				<key time="0.0" x="1" y="1" />
+				<key time="0.5" x="0.5" y="0.5" />
+			</scale>
+			<color>
+				<key time="0.0" r="1.0" g="0.0" b="1.0" a="0.5" />
+				<key time="0.5" r="0.0" g="0.0" b="1.0" a="0.0" />
+			</color>
+			<calllist name="square" />
+		</renderable>
+		<particle/>
+	</template>
+	<!-- level 1 player ship: 2 guns -->
+	<template name="playership">
+		<renderable radius="12" inherit="0">
+			<pushmatrix>
+				<color r="0.0" g="0.0" b="1.0" a="0.125" />
+				<scale x="16" y="16"/>
+				<calllist name="circle16"/>
+			</pushmatrix>
+			<pushmatrix>
+				<color r="0.5" g="0.0" b="1.0" a="0.125" />
+				<scale x="12" y="12"/>
+				<calllist name="circle16"/>
+			</pushmatrix>
+			<pushmatrix>
+				<color r="0.7" g="0.4" b="1.0" a="0.125" />
+				<scale x="8" y="8"/>
+				<calllist name="circle16"/>
+			</pushmatrix>
+			<color r="0.4" g="0.5" b="1.0" a="1.0" />
+			<calllist name="playership" />
+			<pushmatrix>
+				<translate y="-2"/>
+				<color r="1.0" g="1.0" b="1.0" a="1.0" />
+				<calllist name="square" />
+			</pushmatrix>
+		</renderable>
+		<ship maxveloc="120" maxaccel="3600" minaccel="3600" maxomega="20" />
+		<resource name="level" initial="1" maximum="2"/>
+		<graze>
+			<category value="0"/>
+			<mask default="0" bit4="1"/>
+			<ammo type="level"/>
+			<radius inner="4" outer="16"/>
+			<value inner="1" outer="0"/>
+			<inherit x="0.1" y="0.1"/>
+			<scatter angle="360"/>
+			<variance angle="360" x="10" y="10"/>
+			<spawn name="grazespark"/>
+		</graze>
+		<link name="lgun" secondary="playershipweapon">
+			<offset x="2" y="0" angle="0"/>
+		</link>
+		<link name="rgun" secondary="playershipweapon">
+			<offset x="-2" y="0" angle="0"/>
+		</link>
+	</template>
+	<!-- player ship downgrade effect -->
+	<template name="playershipdowngrade">
+		<renderable radius="100">
+			<block start="0.4" length="0.5">
+				<pushmatrix>
+					<color>
+						<key time="0.0" r="0.4" g="0.7" b="1.0" a="0.125" />
+						<key time="0.5" r="0.0" g="0.0" b="1.0" a="0.0" />
+					</color>
+					<scale>
+						<key time="0.0" x="4.0" y="4.0" />
+						<key time="0.5" x="24.0" y="24.0" />
+					</scale>
+					<calllist name="circle32" />
+				</pushmatrix>
+			</block>
+			<block start="0.2" length="0.5">
+				<pushmatrix>
+					<color>
+						<key time="0.0" r="0.4" g="0.7" b="1.0" a="0.25" />
+						<key time="0.5" r="0.0" g="0.0" b="1.0" a="0.0" />
+					</color>
+					<scale>
+						<key time="0.0" x="4.0" y="4.0" />
+						<key time="0.5" x="24.0" y="24.0" />
+					</scale>
+					<calllist name="circle32" />
+				</pushmatrix>
+			</block>
+			<block start="0.0" length="0.5">
+				<pushmatrix>
+					<color>
+						<key time="0.0" r="0.4" g="0.7" b="1.0" a="0.375" />
+						<key time="0.5" r="0.0" g="0.0" b="1.0" a="0.0" />
+					</color>
+					<scale>
+						<key time="0.0" x="4.0" y="4.0" />
+						<key time="0.5" x="24.0" y="24.0" />
+					</scale>
+					<calllist name="circle32" />
+				</pushmatrix>
+			</block>
+			<block length="0.5">
+				<pushmatrix>
+					<color>
+						<key time="0.0" r="0.4" g="0.7" b="1.0" a="0.5" />
+						<key time="0.5" r="0.0" g="0.0" b="1.0" a="0.0" />
+					</color>
+					<repeat count="4">
+						<repeat count="12">
+							<pushmatrix>
+								<translate>
+									<key time="0.0" x="0" y="0" />
+									<key time="0.5" x="100" y="0" />
+								</translate>
+								<scale>
+									<key time="0.0" x="5.0" y="0.5" />
+									<key time="0.5" x="0.5" y="0.5" />
+								</scale>
+								<calllist name="circle16" />
+							</pushmatrix>
+							<rotate angle="30" />
+						</repeat>
+						<scale x="0.8" y="0.8" />
+						<rotate angle="18" />
+					</repeat>
+				</pushmatrix>
+			</block>
+		</renderable>
+		<expire time="2.0" />
+		<soundcue>
+			<cue sound="stargate-explosion" />
+		</soundcue>
+	</template>
+	<!-- level 2 player ship: 4 guns -->
+	<template name="playership2" type="playership">
+		<link name="lgun2" secondary="playershipweapon">
+			<offset x="5" y="-3" angle="-5"/>
+		</link>
+		<link name="rgun2" secondary="playershipweapon">
+			<offset x="-5" y="-3" angle="5"/>
+		</link>
+		<resource name="level" initial="2" maximum="3"/>
+		<graze switchonfull="playership3">
+			<value inner="0.5" outer="0"/>
+		</graze>
+		<damagable health="1" switchondeath="playership" spawnondeath="playershipdowngrade" />
+	</template>
+	<!-- level 3 player ship: 6 guns -->
+	<template name="playership3" type="playership">
+		<link name="lgun3" secondary="playershipweapon">
+			<offset x="8" y="-6" angle="-10"/>
+		</link>
+		<link name="lgun2" secondary="playershipweapon">
+			<offset x="5" y="-3" angle="-5"/>
+		</link>
+		<link name="rgun2" secondary="playershipweapon">
+			<offset x="-5" y="-3" angle="5"/>
+		</link>
+		<link name="rgun3" secondary="playershipweapon">
+			<offset x="-8" y="-6" angle="10"/>
+		</link>
+		<resource name="level" initial="3" maximum="4"/>
+		<graze switchonfull="playership4">
+			<value inner="0.333333" outer="0"/>
+		</graze>
+		<damagable health="1" switchondeath="playership2" spawnondeath="playershipdowngrade" />
+	</template>
+	<!-- player missile -->
+	<import name="template/friendbulletexplosion.xml" />
+	<import name="template/friendfireballexplosion.xml" />
+	<template name="playermissile">
+		<collidable>
+			<body name="main">
+				<fast value="1" />
+				<poly>
+					<vertex x="0" y="6" />
+					<vertex x="-1" y="5" />
+					<vertex x="-1" y="0" />
+					<vertex x="1" y="0" />
+					<vertex x="1" y="5" />
+					<friction value="1" />
+					<restitution value="0" />
+					<density value="1.0" />
+					<filter name="bluemissile" />
+				</poly>
+			</body>
+		</collidable>
+		<renderable radius="11" period="0.066667">
+			<drawlist>
+				<triangle_strip>
+					<color r="0.7" g="0.7" b="0.7" a="1.0" />
+					<vertex x="0.25" y="6" />
+					<vertex x="-0.25" y="6" />
+					<vertex x="0.5" y="5" />
+					<vertex x="-0.75" y="5" />
+					<vertex x="0.5" y="4.5" />
+					<vertex x="-0.5" y="4.5" />
+					<color r="0.1" g="0.2" b="1.0" a="1.0" />
+					<vertex x="0.5" y="4.5" />
+					<vertex x="-0.5" y="4.5" />
+					<vertex x="0.5" y="3.5" />
+					<vertex x="-0.5" y="3.5" />
+					<color r="0.7" g="0.7" b="0.7" a="1.0" />
+					<vertex x="0.5" y="3.5" />
+					<vertex x="-0.5" y="3.5" />
+					<vertex x="0.5" y="0" />
+					<vertex x="-0.5" y="0" />
+				</triangle_strip>
+				<quads>
+					<color r="0.6" g="0.6" b="0.6" a="1.0" />
+					<vertex x="0.5" y="1.5" />
+					<vertex x="1.5" y="1.0" />
+					<vertex x="1.5" y="0" />
+					<vertex x="0.5" y="0" />
+					<vertex x="-0.5" y="1.5" />
+					<vertex x="-1.5" y="1.0" />
+					<vertex x="-1.5" y="0" />
+					<vertex x="-0.5" y="0" />
+				</quads>
+			</drawlist>
+			<pushmatrix>
+				<translate y="-0.5" />
+				<scale>
+					<key time="0.000000" x="1" y="1" />
+					<key time="0.033333" x="0.5" y="0.5" />
+					<key time="0.066667" x="1" y="1" />
+				</scale>
+				<pushmatrix>
+					<scale x="3" y="3" />
+					<color r="0.0" g="0.0" b="1.0" a="0.25" />
+					<calllist name="circle12" />
+				</pushmatrix>
+				<pushmatrix>
+					<scale x="2" y="2" />
+					<color r="0.0" g="0.5" b="1.0" a="0.5" />
+					<calllist name="circle12" />
+				</pushmatrix>
+				<pushmatrix>
+					<color r="0.4" g="0.7" b="1.0" a="1.0" />
+					<calllist name="circle12" />
+				</pushmatrix>
+			</pushmatrix>
+			<pushmatrix>
+				<scale>
+					<key time="0.000000" x="0.5" y="0.5" />
+					<key time="0.033333" x="1.0" y="1.0" />
+					<key time="0.066667" x="0.5" y="0.5" />
+				</scale>
+				<drawlist>
+					<triangles>
+						<color r="0.0" g="0.0" b="1.0" a="0.25" />
+						<vertex x="1.125" y="0" />
+						<vertex x="0.0" y="-15" />
+						<vertex x="-1.125" y="0" />
+						<color r="0.0" g="0.5" b="1.0" a="0.5" />
+						<vertex x="0.75" y="0" />
+						<vertex x="0.75" y="-10" />
+						<vertex x="-1.0" y="0" />
+						<color r="0.4" g="0.7" b="1.0" a="1.0" />
+						<vertex x="0.375" y="0" />
+						<vertex x="0.0" y="-5" />
+						<vertex x="-0.375" y="0" />
+					</triangles>
+				</drawlist>
+			</pushmatrix>
+		</renderable>
+		<expire time="1.5" switchonexpire="friendbulletexplosion" />
+		<bullet damage="1" spawnondeath="friendfireballexplosion" />
+		<damagable health="1" spawnondeath="friendfireballexplosion" />
+		<aimer>
+			<target period="0.2" range="256" focus="2" category="1" bit1="0" bit2="0" bit4="0" />
+			<aim strength="1" leading="0" />
+		</aimer>
+		<ship forwardveloc="240" neutralveloc="240" reverseveloc="240" strafeveloc="0" maxaccel="480" minaccel="480" maxomega="6" />
+	</template>
+	<template name="playerweaponmissile">
+		<weapon>
+			<offset x="0" y="5" />
+			<velocity x="0" y="60" />
+			<ordnance name="playermissile" />
+			<shot delay="0.6" />
+		</weapon>
+	</template>
+	<!-- level 4 player ship: 6 guns + 2 missiles -->
+	<template name="playership4" type="playership">
+		<link name="lmsl" secondary="playerweaponmissile">
+			<offset x="4" y="-2" angle="-45"/>
+		</link>
+		<link name="lgun3" secondary="playershipweapon">
+			<offset x="8" y="-6" angle="-10"/>
+		</link>
+		<link name="lgun2" secondary="playershipweapon">
+			<offset x="5" y="-3" angle="-5"/>
+		</link>
+		<link name="rgun2" secondary="playershipweapon">
+			<offset x="-5" y="-3" angle="5"/>
+		</link>
+		<link name="rgun3" secondary="playershipweapon">
+			<offset x="-8" y="-6" angle="10"/>
+		</link>
+		<link name="rmsl" secondary="playerweaponmissile">
+			<offset x="-4" y="-2" angle="45"/>
+		</link>
+		<resource name="level" initial="4" maximum="5"/>
+		<graze switchonfull="playership5">
+			<value inner="0.25" outer="0"/>
+		</graze>
+		<damagable health="1" switchondeath="playership3" spawnondeath="playershipdowngrade" />
+	</template>
+	<!-- level 4 player ship: 6 guns + 4 missiles -->
+	<template name="playership5" type="playership">
+		<link name="lmsl2" secondary="playerweaponmissile">
+			<offset x="6" y="-4" angle="-90"/>
+		</link>
+		<link name="lmsl" secondary="playerweaponmissile">
+			<offset x="4" y="-2" angle="-45"/>
+		</link>
+		<link name="lgun3" secondary="playershipweapon">
+			<offset x="8" y="-6" angle="-10"/>
+		</link>
+		<link name="lgun2" secondary="playershipweapon">
+			<offset x="5" y="-3" angle="-5"/>
+		</link>
+		<link name="rgun2" secondary="playershipweapon">
+			<offset x="-5" y="-3" angle="5"/>
+		</link>
+		<link name="rgun3" secondary="playershipweapon">
+			<offset x="-8" y="-6" angle="10"/>
+		</link>
+		<link name="rmsl" secondary="playerweaponmissile">
+			<offset x="-4" y="-2" angle="45"/>
+		</link>
+		<link name="rmsl2" secondary="playerweaponmissile">
+			<offset x="-6" y="-4" angle="90"/>
+		</link>
+		<resource name="level" initial="5" maximum="5"/>
+		<damagable health="1" switchondeath="playership4" spawnondeath="playershipdowngrade" />
+	</template>
+	<!-- finalize player ship -->
+	<template name="playership">
+		<resource name="level" initial="1"/>
+		<graze switchonfull="playership2"/>
+		<damagable health="3" />
+	</template>
+
+	<!-- player ship invulnerable -->
+	<import name="template/playershipinvulnerable.xml" />
+	<!-- player ship warp -->
+	<import name="template/playershipwarp.xml" />
+	<!-- player ship death -->
+	<import name="template/playershipdeath.xml" />
+	<!-- player ship explosion -->
+	<import name="template/playershipexplosion.xml" />
+
+	<!-- 1-health powerup -->
+	<import name="template/health1expire.xml" />
+	<import name="template/health1collect.xml" />
+	<import name="template/health1.xml" />
+	<!-- enemy warp-in -->
+	<import name="template/enemywarpin.xml" />
+	<!-- enemy long warp-in -->
+	<import name="template/enemylongwarpin.xml" />
+	<!-- enemy bullet explosion -->
+	<import name="template/enemybulletexplosion.xml" />
+	<!-- enemy bullet -->
+	<import name="template/enemybullet.xml" />
+	<template name="enemybullet">
+		<expire time="2" />
+	</template>
+	<!-- enemy weapon -->
+	<template name="enemyweapon">
+		<weapon>
+			<velocity x="0" y="120" />
+			<inherit x="0" y="0" />
+			<ordnance name="enemybullet" />
+			<shot delay="1" />
+		</weapon>
+		<soundcue>
+			<cue name="fire" sound="stargate-landerfire" />
+		</soundcue>
+	</template>
+	<!-- enemy pulse bullet -->
+	<import name="template/enemypulsebullet.xml" />
+	<!-- enemy pulse weapon -->
+	<import name="template/enemypulseweapon.xml" />
+	<!-- enemy missile -->
+	<import name="template/missiletrail.xml" />
+	<import name="template/enemymissile.xml" />
+	<import name="template/enemyweaponmissile.xml" />
+	<!-- enemy explosion -->
+	<import name="template/enemyexplosion.xml" />
+	<!-- enemy turret -->
+	<import name="template/enemycannon.xml" />
+	<import name="template/enemycannon0.xml" />
+	<import name="template/enemycannon1.xml" />
+	<import name="template/enemycannonmissile.xml" />
+	<import name="template/turret.xml" />
+	<import name="template/enemyturret.xml" />
+	<import name="template/enemyturret1.xml" />
+	<import name="template/enemyturret2.xml" />
+	<import name="template/enemyturret3.xml" />
+	<import name="template/enemyturretmissile.xml" />
+	<import name="template/enemyturretmount1.xml" />
+	<import name="template/enemyturretmount2.xml" />
+	<import name="template/enemyturretmount3.xml" />
+	<import name="template/enemyturretmountmissile.xml" />
+	<import name="template/enemyturretpod1.xml" />
+	<import name="template/enemyturretpod2.xml" />
+	<import name="template/enemyturretpod3.xml" />
+	<import name="template/enemyturretpodmissile.xml" />
+	<import name="template/enemyturretpod1warp.xml" />
+	<import name="template/enemyturretpod2warp.xml" />
+	<import name="template/enemyturretpod3warp.xml" />
+	<import name="template/enemyturretpodmissilewarp.xml" />
+	<import name="template/enemyturretcluster.xml" />
+	<entity name="enemyturretcluster1" type="enemyturretcluster">
+		<position x="384.0" y="384.0" angle="135" />
+	</entity>
+	<entity name="enemyturretcluster2" type="enemyturretcluster">
+		<position x="-384.0" y="384.0" angle="-135" />
+	</entity>
+	<entity name="enemyturretcluster3" type="enemyturretcluster">
+		<position x="-384.0" y="-384.0" angle="-45" />
+	</entity>
+	<entity name="enemyturretcluster4" type="enemyturretcluster">
+		<position x="384.0" y="-384.0" angle="45" />
+	</entity>
+	<!-- enemy fireball explosion -->
+	<import name="template/enemyfireballexplosion.xml" />
+	<!-- enemy fireball -->
+	<import name="template/enemyfireballtrail.xml" />
+	<import name="template/enemyfireball.xml" />
+	<!-- enemy firebomber -->
+	<import name="drawlist/bowtie.xml" />
+	<import name="template/enemyfirebomber.xml" />
+	<!-- enemy mine explosion -->
+	<import name="template/enemymineexplosion.xml" />
+	<!-- enemy mine -->
+	<import name="template/enemymine.xml" />
+	<!-- enemy bomber -->
+	<import name="template/enemybomber.xml" />
+	<!-- enemy space hum -->
+	<import name="template/enemyspacehumtrail.xml" />
+	<import name="template/enemyspacehum.xml" />
+	<!-- enemy dynamo -->
+	<import name="template/enemydynamo.xml" />
+	<!-- enemy swarmer -->
+	<import name="template/enemyswarmerbreakout.xml" />
+	<import name="template/enemyswarmer.xml" />
+	<!-- small enemy explosion -->
+	<import name="template/enemyexplosionsmall.xml" />
+	<!-- enemy pod -->
+	<import name="template/enemyswarmerbreakoutspawn.xml" />
+	<import name="template/enemypodexplosion.xml" />
+	<import name="template/enemypod.xml" />
+	<!-- enemy vapor mine -->
+	<import name="template/enemymineshrapnel.xml" />
+	<import name="template/enemymineshrapnelspawn.xml" />
+	<import name="template/enemyvapormineexplosion.xml" />
+	<import name="template/enemyvapormine.xml" />
+	<!-- enemy photon mine -->
+	<import name="template/enemyphotonmine.xml" />
+	<!-- enemy command ship -->
+	<import name="template/enemycommandship.xml" />
+	<!-- enemy warrior -->
+	<import name="template/enemywarriorturret.xml" />
+	<import name="template/enemywarrior.xml" />
+	<!-- enemy tiny ship -->
+	<import name="template/enemyshiptiny.xml" />
+	<!-- enemy small ship -->
+	<import name="template/enemyshipsmall.xml" />
+	<!-- enemy ship weapon -->
+	<import name="template/enemyshipweapon.xml" />
+	<!-- enemy ship -->
+	<import name="template/enemyship.xml" />
+	<template name="enemyship">
+		<link name="lgun2" secondary="enemyshipweapon">
+			<offset x="5" y="-2" angle="-10" />
+			<weapon>
+				<shot phase="1" cycle="2" />
+			</weapon>
+		</link>
+		<link name="lgun" secondary="enemyshipweapon">
+			<offset x="2" y="0" angle="0" />
+			<weapon>
+				<shot phase="0" cycle="2" />
+			</weapon>
+		</link>
+		<link name="rgun" secondary="enemyshipweapon">
+			<offset x="-2" y="0" angle="0" />
+			<weapon>
+				<shot phase="0" cycle="2" />
+			</weapon>
+		</link>
+		<link name="rgun2" secondary="enemyshipweapon">
+			<offset x="-5" y="-2" angle="10" />
+			<weapon>
+				<shot phase="1" cycle="2" />
+			</weapon>
+		</link>
+	</template>
+	<!-- enemy laser ship beam -->
+	<import name="template/enemylasershipbeam.xml" />
+	<!-- enemy laser ship tracer -->
+	<import name="template/enemylasershiptracer.xml" />
+	<!-- enemy laser ship weapon -->
+	<import name="template/enemylasershipweapon.xml" />
+	<!-- enemy laser ship -->
+	<import name="template/enemylasership.xml" />
+	<!-- enemy carrier -->
+	<import name="template/enemycarrierexplosion.xml" />
+	<import name="template/enemylaunchbay.xml" />
+	<import name="template/enemycarrier.xml" />
+	<!-- enemy spawners -->
+	<import name="template/enemyshipsmallwarp.xml" />
+	<import name="template/enemyshipsmallspawn.xml" />
+	<import name="template/enemybomberwarp.xml" />
+	<import name="template/enemybomberspawn.xml" />
+	<import name="template/enemyfirebomberwarp.xml" />
+	<import name="template/enemyfirebomberspawn.xml" />
+	<import name="template/enemydynamowarp.xml" />
+	<import name="template/enemydynamospawn.xml" />
+	<import name="template/enemypodwarp.xml" />
+	<import name="template/enemypodspawn.xml" />
+	<import name="template/enemycommandshipwarp.xml" />
+	<import name="template/enemycommandshipspawn.xml" />
+	<import name="template/enemywarriorwarp.xml" />
+	<import name="template/enemywarriorspawn.xml" />
+	<import name="template/enemyshipwarp.xml" />
+	<import name="template/enemyshipspawn.xml" />
+	<import name="template/enemylasershipwarp.xml" />
+	<import name="template/enemylasershipspawn.xml" />
+	<import name="template/enemycarrierspawn.xml" />
+	<import name="template/enemyspawncluster.xml" />
+	<entity name="enemyspawncluster1">
+		<position x="0" y="512" angle="180" />
+		<spawner>
+			<spawn name="enemyspawncluster" start="0" />
+		</spawner>
+	</entity>
+	<entity name="enemyspawncluster2">
+		<position x="512" y="0" angle="90" />
+		<spawner>
+			<spawn name="enemyspawncluster" start="8" />
+		</spawner>
+	</entity>
+	<entity name="enemyspawncluster3">
+		<position x="0" y="-512" angle="0" />
+		<spawner>
+			<spawn name="enemyspawncluster" start="16" />
+		</spawner>
+	</entity>
+	<entity name="enemyspawncluster4">
+		<position x="-512" y="0" angle="270" />
+		<spawner>
+			<spawn name="enemyspawncluster" start="24" />
+		</spawner>
+	</entity>
+	
+</world>

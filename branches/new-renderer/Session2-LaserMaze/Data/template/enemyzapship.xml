@@ -1,0 +1,22 @@
+<?xml version="1.0" ?>
+<template name="enemyzapship" type="enemyswarmer">
+	<!--aimer range="512" focus="1" attack="64" leading="0" angle="30" evade="1" close="32" closedistscale="0.0625" closespeedscale="0.015625" category="4" bit2="0" bit3="0" bit4="0"/-->
+	<aimer>
+		<target range="512" category="4" bit2="0" bit3="0" bit4="0" />
+		<aim strength="1" leading="0" />
+		<pursue strength="1" leading="0" />
+		<fire channel="1" range="64" angle="30" />
+		<close range="32" scaledist="0.0625" scalespeed="0.015625" />
+	</aimer>
+	<ship maxveloc="64" maxaccel="128" minaccel="32" maxomega="2" />
+	<damagable spawnondeath="enemyexplosionsmall" />
+	<weapon>
+		<offset x="0" y="2" angle="0" />
+		<flash name="enemyzapshipbeam" />
+		<shot delay="0.2" />
+	</weapon>
+	<soundcue>
+		<cue name="fire" sound="stargate-spaceguppyshot" />
+	</soundcue>
+	<points value="100" />
+</template>

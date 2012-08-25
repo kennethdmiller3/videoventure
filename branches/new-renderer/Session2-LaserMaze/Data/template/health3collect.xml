@@ -1,0 +1,61 @@
+<?xml version="1.0" ?>
+<template name="health3collect">
+	<expire time="1.0" />
+	<soundcue>
+		<cue sound="stargate-humanoidcatch" />
+	</soundcue>
+	<renderable radius="45">
+		<pushmatrix>
+			<color>
+				<key time="0.00" r="0.7" g="1.0" b="0.4" a="0.5" />
+				<key time="0.25" r="0.0" g="1.0" b="0.0" a="0.0" />
+			</color>
+			<scale>
+				<key time="0.00" x="8.0" y="8.0" />
+				<key time="0.25" x="16.0" y="16.0" />
+			</scale>
+			<calllist name="circle16" />
+		</pushmatrix>
+		<pushmatrix>
+			<color>
+				<key time="0.0" r="0.7" g="1.0" b="0.4" a="0.5" />
+				<key time="1.0" r="0.0" g="1.0" b="0.0" a="0.0" />
+			</color>
+			<rotate>
+				<key time="0.0" angle="0" />
+				<key time="1.0" angle="120" />
+			</rotate>
+			<repeat count="3">
+				<repeat count="6">
+					<pushmatrix>
+						<translate>
+							<key time="0.0" x="40" y="10" />
+							<key time="0.5" x="15" y="10" />
+							<key time="1.0" x="0" y="10" />
+						</translate>
+						<scale>
+							<key time="0.0" x="2.0" y="2.0" />
+							<key time="0.5" x="15.0" y="1.0" />
+							<key time="1.0" x="1.0" y="1.0" />
+						</scale>
+						<calllist name="circle16" />
+					</pushmatrix>
+					<rotate angle="60" />
+				</repeat>
+				<rotate angle="-30" />
+				<scale x="0.75" y="0.75" />
+			</repeat>
+		</pushmatrix>
+		<pushmatrix>
+			<color>
+				<key time="0.0" r="0.9" g="1.0" b="0.8" a="1.0" />
+				<key time="0.5" r="0.5" g="1.0" b="0.0" a="0.0" />
+			</color>
+			<scale>
+				<key time="0.0" x="6.0" y="6.0" />
+				<key time="0.5" x="3.0" y="3.0" />
+			</scale>
+			<calllist name="circle16" />
+		</pushmatrix>
+	</renderable>
+</template>

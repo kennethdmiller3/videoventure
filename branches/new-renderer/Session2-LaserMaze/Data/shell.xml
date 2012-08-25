@@ -1,0 +1,99 @@
+<?xml version="1.0" standalone="no"?>
+<!-- Test Level -->
+<world>
+
+	<fog enable="1" mode="linear" r="0" g="0" b="0" a="0" start="512" end="1280" />
+
+
+	<!-- sounds -->
+
+	<sound name="startup">
+	</sound>
+	
+	
+	<!-- reticule -->
+
+	<import name="drawlist/reticule.xml" />
+
+
+	<!-- title -->
+
+	<entity name="title">
+		<shelltitle>
+			<row data="000     0000000 000000000000000 0000000" bar="0.0"/>
+			<row data="0 0     0     0 0             0 0     0" bar="0.0"/>
+			<row data="0 0     00000 0 0 0000000 000 0 0 00000" bar="0.0"/>
+			<row data="0 0         0 0 0 0     0 0 0 0 0 0    " bar="0.0"/>
+			<row data="0 0     00000 0 0 00000 0 000 0 0 0    " bar="0.0"/>
+			<row data="0 0     0     0 0     0 0     0 0 0    " bar="0.0"/>
+			<row data="0 0     0 000 0 00000 0 0 00000 0 0    " bar="0.0"/>
+			<row data="0 0     0 0 0 0     0 0 0 0     0 0    " bar="0.0"/>
+			<row data="0 0000000 000 0000000 0 0 0000000 0    " bar="0.0"/>
+			<row data="0                     0 0         0    " bar="0.0"/>
+			<row data="00000000000000000000000 00000000000    " bar="0.0"/>
+			<row data="                                       " bar="0.0"/>
+			<row data="    00000000000 0000000 0000000 0000000" bar="0.0"/>
+			<row data="    0         0 0     0 0     0 0     0" bar="0.0"/>
+			<row data="    0 000 000 0 00000 0 00000 0 0 000 0" bar="0.0"/>
+			<row data="    0 0 0 0 0 0     0 0     0 0 0 0 0 0" bar="0.0"/>
+			<row data="    0 0 0 0 0 0 00000 0 00000 0 0 000 0" bar="0.0"/>
+			<row data="    0 0 0 0 0 0 0     0 0     0 0     0" bar="0.0"/>
+			<row data="    0 0 0 0 0 0 0 000 0 0 00000 0 00000" bar="0.0"/>
+			<row data="    0 0 0 0 0 0 0 0 0 0 0 0     0 0    " bar="0.0"/>
+			<row data="    0 0 000 0 000 000 000 0000000 00000" bar="0.0"/>
+			<row data="    0 0     0                         0" bar="0.0"/>
+			<row data="    000     000000000000000000000000000" bar="0.0"/>
+		</shelltitle>
+	</entity>
+	
+	
+	<!-- starfield -->
+
+	<entity name="starfield">
+		<renderable radius="1536" period="60">
+			<rotate>
+				<key time="0" angle="0"/>
+				<key time="60" angle="360"/>
+			</rotate>
+			<translate>
+				<key time="0" z="0"/>
+				<key time="10" z="-1024"/>
+				<key time="10" z="0"/>
+				<key time="20" z="-1024"/>
+				<key time="20" z="0"/>
+				<key time="30" z="-1024"/>
+				<key time="30" z="0"/>
+				<key time="40" z="-1024"/>
+				<key time="40" z="0"/>
+				<key time="50" z="-1024"/>
+				<key time="50" z="0"/>
+				<key time="60" z="-1024"/>
+			</translate>
+			<drawlist>
+				<quads>
+					<repeat count="1024">
+						<color rand="1" r_avg="0.75" r_var="0.25" g_avg="0.75" g_var="0.25" b_avg="0.75" b_var="0.25" a_avg="1" a_var="0"/>
+						<set name="p0" type="position" rand="1" x_avg="0" x_var="1024" y_avg="0" y_var="1024" z_avg="512" z_var="512"/>
+						<add name="p0" type="translate" x="-1" y="-1"/>
+						<vertex variable="p0"/>
+						<add name="p0" type="translate" x="2" y="0"/>
+						<vertex variable="p0"/>
+						<add name="p0" type="translate" x="0" y="2"/>
+						<vertex variable="p0"/>
+						<add name="p0" type="translate" x="-2" y="0"/>
+						<vertex variable="p0"/>
+						<add name="p0" type="translate" x="0" y="-2" z="1024"/>
+						<vertex variable="p0"/>
+						<add name="p0" type="translate" x="2" y="0"/>
+						<vertex variable="p0"/>
+						<add name="p0" type="translate" x="0" y="2"/>
+						<vertex variable="p0"/>
+						<add name="p0" type="translate" x="-2" y="0"/>
+						<vertex variable="p0"/>
+					</repeat>
+				</quads>
+				<clear name="p0"/>
+			</drawlist>
+		</renderable>
+	</entity>
+</world>

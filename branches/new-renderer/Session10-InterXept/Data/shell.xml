@@ -1,0 +1,138 @@
+<?xml version="1.0" standalone="no"?>
+<world>
+
+	<fog enable="1" mode="linear" r="0" g="0" b="0" a="1" start="512" end="1280" />
+
+	<!-- sounds -->
+	<sound name="click">
+		<expression length="0.016667">
+			<pulsewave frequency="1760">
+				<scale>
+					<key time="0.000000" value="0.125"/>
+					<key time="0.016667" value="0.0000"/>
+				</scale>
+			</pulsewave>
+		</expression>
+	</sound>
+	<sound name="rollover">
+		<expression length="0.016667">
+			<pulsewave frequency="880">
+				<scale>
+					<key time="0.000000" value="0.0625"/>
+					<key time="0.016667" value="0.0000"/>
+				</scale>
+			</pulsewave>
+		</expression>
+	</sound>
+	<soundcue>
+		<cue name="click" sound="click"/>
+		<cue name="rollover" sound="rollover"/>
+	</soundcue>
+	
+	<!-- music -->
+	<entity name="music">
+		<!--music file="karsten_koch-jupiters_orbit.s3m" /-->
+		<music file="bzl-funky_escalator.xm" />
+	</entity>
+
+	<!-- reticule -->
+	<import name="drawlist/reticule.xml" />
+
+	<!-- title -->
+	<entity name="title">
+		<shelltitle>
+			<row data="                                                     1111        1111                                   " bar="0.0"/>
+			<row data="                                                      1111      1111                                    " bar="0.1"/>
+			<row data="0000   00000000   000000000    000000000   00000000    1111    1111    000000000  000000000   000000000 " bar="0.2"/>
+			<row data="0000  0000000000  0000000000  0000000000  0000000000    1111  1111    0000000000  0000000000  0000000000" bar="0.4"/>
+			<row data="0000  0000  0000        0000  0000        0000           11111111     0000              0000        0000" bar="0.6"/>
+			<row data="0000  0000  0000        0000  00000000    0000            111111      00000000     000000000        0000" bar="0.8"/>
+			<row data="0000  0000  0000        0000  00000000    0000            111111      00000000    000000000         0000" bar="0.8"/>
+			<row data="0000  0000  0000        0000  0000        0000           11111111     0000        0000              0000" bar="0.6"/>
+			<row data="0000  0000  0000        0000  0000000000  0000          1111  1111    0000000000  0000              0000" bar="0.4"/>
+			<row data="0000  0000  0000        0000   000000000  0000         1111    1111    000000000  0000              0000" bar="0.2"/>
+			<row data="                                                      1111      1111                                    " bar="0.1"/>
+			<row data="                                                     1111        1111                                   " bar="0.0"/>
+		</shelltitle>
+	</entity>
+	
+	<!-- starfield -->
+	<entity name="starfield">
+		<renderable radius="1536">
+			<rotate>
+				<mul>
+					<noise>
+						<mul>
+							<value angle="0.021"/>
+							<time/>
+						</mul>
+					</noise>
+					<value angle="360"/>
+				</mul>
+			</rotate>
+			<translate>
+				<x>
+					<mul>
+						<value value="512"/>
+						<noise>
+							<mul>
+								<value value="0.065"/>
+								<time/>
+							</mul>
+						</noise>
+					</mul>
+				</x>
+				<y>
+					<mul>
+						<value value="512"/>
+						<noise>
+							<mul>
+								<value value="0.054"/>
+								<time/>
+							</mul>
+						</noise>
+					</mul>
+				</y>
+				<z>
+					<mul>
+						<value value="-1024"/>
+						<mod>
+							<mul>
+								<value value="0.1"/>
+								<time/>
+							</mul>
+							<value value="1"/>
+						</mod>
+					</mul>
+				</z>
+			</translate>
+			<drawlist>
+				<quads>
+					<loop name="depth" from="0" to="1024">
+						<color rand="1" r_min="0.5" r_max="1.0" g_min="0.5" g_max="1.0" b_min="0.5" b_max="1.0" a="1"/>
+						<set name="p" type="position">
+							<x rand="1" value_var="1024"/>
+							<y rand="1" value_var="1024"/>
+							<z>
+								<depth/>
+							</z>
+						</set>
+						<add name="p" type="translate" x="-1" y="-1" />
+						<repeat count="2">
+							<vertex variable="p" />
+							<add name="p" type="translate" x="2" y="0" />
+							<vertex variable="p" />
+							<add name="p" type="translate" x="0" y="2" />
+							<vertex variable="p" />
+							<add name="p" type="translate" x="-2" y="0" />
+							<vertex variable="p" />
+							<add name="p" type="translate" x="0" y="-2" z="1024"/>
+						</repeat>
+					</loop>
+				</quads>
+				<clear name="p"/>
+			</drawlist>
+		</renderable>
+	</entity>
+
+</world>

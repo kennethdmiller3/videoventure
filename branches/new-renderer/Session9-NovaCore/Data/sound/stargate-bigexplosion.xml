@@ -1,0 +1,4 @@
+<?xml version="1.0" ?>
+<sound name="stargate-bigexplosion">
+	<trianglenoise frequency="3579000" divider="4" outerdelay="61" innerdelay="30" slope="255" duration="1000" decay="1" sputter="1" />
+</sound>

@@ -1,0 +1,11 @@
+<?xml version="1.0" ?>
+<template name="friendshipweapon">
+	<weapon>
+		<velocity x="0" y="180" />
+		<ordnance name="friendbullet" />
+		<shot delay="0.3" />
+	</weapon>
+	<soundcue>
+		<cue name="fire" sound="stargate-spaceguppyshot" />
+	</soundcue>
+</template>

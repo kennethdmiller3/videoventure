@@ -1,0 +1,63 @@
+<?xml version="1.0" ?>
+<template name="enemyshieldwing_l" type="enemyshieldwing">
+	<collidable>
+		<body name="main">
+			<poly>
+				<vertex x="1.25" y="-4.75" />
+				<!-- vertex x="2.5" y="-4.5"/ -->
+				<vertex x="3.5" y="-4.0" />
+				<!-- vertex x="4.5" y="-3.125"/ -->
+				<vertex x="5.25" y="-2.25" />
+				<!-- vertex x="6.125" y="-0.25"/ -->
+				<vertex x="6.5" y="2.25" />
+				<!-- vertex x="6.125" y="4.75"/ -->
+				<vertex x="5.0" y="7.0" />
+				<!-- vertex x="3.75" y="8.75"/ -->
+				<vertex x="1.25" y="11.0" />
+				<density value="0.2" />
+				<friction value="0.5" />
+				<restitution value="0.5" />
+				<filter name="redunit" />
+			</poly>
+		</body>
+	</collidable>
+	<renderable radius="7" period="0.033333">
+		<calllist name="shieldwing" />
+		<calllist name="enemyshieldwing" />
+		<pushmatrix>
+			<translate x="1.25" />
+			<set name="s" type="scale" variable="shield" />
+			<swizzle name="s" type="scale" x="x" y="x" z="x" />
+			<mul name="s" type="scale" x="0.25" y="0.25" z="0.0" />
+			<add name="s" type="scale" x="1.0" y="1.0" z="1.0" />
+			<scale variable="s" />
+			<triangle_fan>
+				<set name="c1" type="color" variable="shield" />
+				<swizzle name="c1" type="color" r="r" g="r" b="r" a="r" />
+				<set name="cm" type="color">
+					<key time="0.000000" r="0.0" g="1.0" b="0.5" a="5.0" />
+					<key time="0.033333" r="0.0" g="0.5" b="0.0" a="0.0" />
+				</set>
+				<mul name="c1" type="color" variable="cm" />
+				<add name="c1" type="color" r="1.0" g="0.0" b="0.0" a="0.0" />
+				<min name="c1" type="color" r="1.0" g="1.0" b="1.0" a="0.75" />
+				<set name="c0" type="color" variable="c1" />
+				<mul name="c0" type="color" r="1.0" g="0.75" b="0.5" a="0.0" />
+				<color variable="c0" />
+				<vertex x="0.0" y="0" />
+				<color variable="c1" />
+				<vertex x="0.0" y="11.0" />
+				<vertex x="2.5" y="8.75" />
+				<vertex x="3.75" y="7.0" />
+				<vertex x="4.875" y="4.75" />
+				<vertex x="5.25" y="2.25" />
+				<vertex x="4.875" y="-0.25" />
+				<vertex x="4.0" y="-2.25" />
+				<vertex x="3.25" y="-3.125" />
+				<vertex x="2.25" y="-4.0" />
+				<vertex x="1.25" y="-4.5" />
+				<vertex x="0.0" y="-4.75" />
+			</triangle_fan>
+		</pushmatrix>
+	</renderable>
+</template>

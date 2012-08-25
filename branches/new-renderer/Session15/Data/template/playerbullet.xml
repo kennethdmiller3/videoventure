@@ -1,0 +1,29 @@
+<?xml version="1.0" ?>
+<template name="playerbullet">
+	<trace filter="bluebullet" />
+	<renderable radius="8" depth="2">
+		<pushmatrix>
+			<color r="0.0" g="0.0" b="1.0" a="0.5"/>
+			<scale x="2" y="2"/>
+			<calllist name="circle8"/>
+		</pushmatrix>
+		<pushmatrix>
+			<color r="0.0" g="0.5" b="1.0" a="0.75"/>
+			<scale x="1.5" y="1.5"/>
+			<calllist name="circle8"/>
+		</pushmatrix>
+		<pushmatrix>
+			<color r="0.4" g="0.7" b="1.0" a="1.0"/>
+			<scale x="1" y="1"/>
+			<calllist name="circle8"/>
+		</pushmatrix>
+		<lines width="0.5">
+			<color r="0.0" g="0.5" b="1.0" a="0.75"/>
+			<vertex x="0" y="-1.5"/>
+			<color r="0.0" g="0.0" b="1.0" a="0.25"/>
+			<vertex x="0" y="-8"/>
+		</lines>
+	</renderable>
+	<expire time="1" />
+	<bullet damage="1" spawnondeath="playerbulletexplosion" />
+</template>

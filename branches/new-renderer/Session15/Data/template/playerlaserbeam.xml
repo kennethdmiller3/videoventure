@@ -1,0 +1,63 @@
+<?xml version="1.0" ?>
+<template name="playerlaserbeam">
+	<expire time="0.05"/>
+	<beam damage="1" range="384" filter="bluebullet" spawnonimpact="playerlaserbeamimpact"/>
+	<renderable radius="384">
+		<quad_strip>
+			<set name="p" type="position">
+				<key time="0.00" x="0.50"/>
+				<key time="0.05" x="0.25"/>
+			</set>
+			<color>
+				<key time="0.00" r="1.0" g="1.0" b="1.0" a="1.0"/>
+				<key time="0.05" r="0.7" g="0.4" b="1.0" a="0.0"/>
+			</color>
+			<vertex variable="p"/>
+			<mul name="p" type="scale" x="-1"/>
+			<vertex variable="p"/>
+			<mul name="p" type="scale" x="-1"/>
+			<color>
+				<key time="0.00" r="0.9" g="0.8" b="1.0" a="1.0"/>
+				<key time="0.05" r="0.5" g="0.0" b="1.0" a="0.0"/>
+			</color>
+			<add name="p" type="translate" y="8"/>
+			<vertex variable="p"/>
+			<mul name="p" type="scale" x="-1"/>
+			<vertex variable="p"/>
+			<mul name="p" type="scale" x="-1"/>
+			<sub name="p" type="translate" y="8"/>
+			<add name="p" type="translate" variable="beamend"/>
+			<vertex variable="p"/>
+			<mul name="p" type="scale" x="-1"/>
+			<vertex variable="p"/>
+		</quad_strip>
+		<quad_strip>
+			<set name="p" type="position">
+				<key time="0.00" x="1.00"/>
+				<key time="0.05" x="2.00"/>
+			</set>
+			<color>
+				<key time="0.00" r="0.7" g="0.4" b="1.0" a="0.5"/>
+				<key time="0.05" r="0.5" g="0.0" b="1.0" a="0.0"/>
+			</color>
+			<vertex variable="p"/>
+			<mul name="p" type="scale" x="-1"/>
+			<vertex variable="p"/>
+			<mul name="p" type="scale" x="-1"/>
+			<color>
+				<key time="0.00" r="0.5" g="0.0" b="1.0" a="0.5"/>
+				<key time="0.05" r="0.0" g="0.0" b="1.0" a="0.0"/>
+			</color>
+			<add name="p" type="translate" y="8"/>
+			<vertex variable="p"/>
+			<mul name="p" type="scale" x="-1"/>
+			<vertex variable="p"/>
+			<mul name="p" type="scale" x="-1"/>
+			<sub name="p" type="translate" y="8"/>
+			<add name="p" type="translate" variable="beamend"/>
+			<vertex variable="p"/>
+			<mul name="p" type="scale" x="-1"/>
+			<vertex variable="p"/>
+		</quad_strip>
+	</renderable>
+</template>

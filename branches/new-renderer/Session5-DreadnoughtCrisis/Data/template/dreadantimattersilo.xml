@@ -1,0 +1,49 @@
+<?xml version="1.0" ?>
+<template name="dreadantimattersilo">
+	<collidable>
+		<body name="main">
+			<circle radius="14">
+				<density value="1" />
+				<friction value="0" />
+				<restitution value="0" />
+				<filter name="ground" />
+			</circle>
+		</body>
+	</collidable>
+	<renderable radius="192" depth="256" period="0.066667">
+		<translate z="256" />
+		<drawlist>
+			<color r="0.1" g="0.1" b="0.1" a="1.0" />
+			<pushmatrix>
+				<scale x="16" y="14" />
+				<calllist name="circle16" />
+			</pushmatrix>
+			<color r="0.8" g="0.8" b="0.8" a="1.0" />
+			<pushmatrix>
+				<translate y="-3" />
+				<scale x="8" y="8" />
+				<calllist name="circle12" />
+			</pushmatrix>
+		</drawlist>
+		<color>
+			<key time="0.000000" r="1.0" g="0.2" b="0.1" a="1.0" />
+			<key time="0.033333" r="0.1" g="0.1" b="0.1" a="1.0" />
+			<key time="0.066667" r="1.0" g="0.2" b="0.1" a="1.0" />
+		</color>
+		<pushmatrix>
+			<translate y="-3" />
+			<scale x="6" y="6" />
+			<calllist name="circle12" />
+		</pushmatrix>
+	</renderable>
+	<weapon>
+		<offset x="0" y="-3" />
+		<velocity x="0" y="120" />
+		<ordnance name="dreadantimattersilobullet" />
+		<shot delay="5" />
+		<trigger channel="2" />
+	</weapon>
+	<damagable health="10" spawnondeath="dreadpartexplosion" switchondeath="dreadantimattersilodestroyed" />
+	<points value="50" />
+	<team name="red" />
+</template>

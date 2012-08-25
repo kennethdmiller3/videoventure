@@ -1,0 +1,25 @@
+<?xml version="1.0" ?>
+<template name="friendbullet">
+	<trace filter="bluebullet" />
+	<renderable radius="6">
+		<drawlist>
+			<color r="0.0" g="0.5" b="1.0" a="0.25" />
+			<pushmatrix>
+				<scale x="1.5" y="6" />
+				<calllist name="circle8" />
+			</pushmatrix>
+			<color r="0.4" g="0.7" b="1.0" a="0.5" />
+			<pushmatrix>
+				<scale x="1.0" y="5" />
+				<calllist name="circle8" />
+			</pushmatrix>
+			<color r="1.0" g="1.0" b="1.0" a="1.0" />
+			<pushmatrix>
+				<scale x="0.5" y="4" />
+				<calllist name="circle8" />
+			</pushmatrix>
+		</drawlist>
+	</renderable>
+	<expire time="1" />
+	<bullet damage="1" spawnondeath="friendbulletexplosion" />
+</template>

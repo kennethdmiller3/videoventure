@@ -1,0 +1,810 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Core">
+      <UniqueIdentifier>{74e746d1-2504-40b9-aba9-c736a0db2efd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Interface">
+      <UniqueIdentifier>{4cf2cc86-445a-4de7-bab6-d97fe8703f1f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Behavior">
+      <UniqueIdentifier>{65bd09fe-05f8-4d96-81b6-3f5edefe9eff}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Render">
+      <UniqueIdentifier>{8456d84d-bb8f-49f7-ad79-d8cad20eccf7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shell">
+      <UniqueIdentifier>{14091623-ff47-4148-b457-1e2696b2bb13}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Sound">
+      <UniqueIdentifier>{66ae94b5-3427-4f3b-a77b-e019588b924c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Game">
+      <UniqueIdentifier>{d0eb788d-f761-4345-ac35-d44285d6c647}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Platform">
+      <UniqueIdentifier>{97586695-c784-4e9d-a921-c8bd28e71f00}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Expression">
+      <UniqueIdentifier>{8476c726-937d-42d5-9310-fcf5022323c1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Physics">
+      <UniqueIdentifier>{55d46e46-fd2a-4e8a-a1bf-af753c8f56c2}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Source\Core\AlignedBox2.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Core\Collidable.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Core\Color4.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Core\Controller.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Core\Database.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Core\DatabaseTyped.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Core\DatabaseUntyped.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Core\Entity.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Core\Hash.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Core\Input.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Core\Interpolator.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Core\Library.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Core\Link.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Core\Magic.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Core\Matrix2.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Core\MemoryPool.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Core\Noise.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Core\Overlay.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Core\PerfTimer.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Core\Random.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Core\Renderable.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Core\Signal.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Core\Simulatable.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Core\Sphere2.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Core\Transform2.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Core\TreeNode.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Core\Updatable.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Core\Utility.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Core\Variable.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Core\VarItem.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Core\Vector2.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Core\Vector3.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Core\Vector4.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Core\World.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Core\xs_Config.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Core\xs_Float.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Interface\Console.h">
+      <Filter>Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Interface\Font.h">
+      <Filter>Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Interface\PlayerHUD.h">
+      <Filter>Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Interface\PlayerOverlayAmmo.h">
+      <Filter>Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Interface\PlayerOverlayGameOver.h">
+      <Filter>Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Interface\PlayerOverlayHealth.h">
+      <Filter>Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Interface\PlayerOverlayLevel.h">
+      <Filter>Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Interface\PlayerOverlayLives.h">
+      <Filter>Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Interface\PlayerOverlayReticule.h">
+      <Filter>Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Interface\PlayerOverlayScore.h">
+      <Filter>Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Interface\PlayerOverlaySpecial.h">
+      <Filter>Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Interface\PointsOverlay.h">
+      <Filter>Interface</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Behavior\AimBehavior.h">
+      <Filter>Behavior</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Behavior\Behavior.h">
+      <Filter>Behavior</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Behavior\BotUtilities.h">
+      <Filter>Behavior</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Behavior\Brain.h">
+      <Filter>Behavior</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Behavior\EdgeBehavior.h">
+      <Filter>Behavior</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Behavior\EvadeBehavior.h">
+      <Filter>Behavior</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Behavior\Parallel.h">
+      <Filter>Behavior</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Behavior\PursueBehavior.h">
+      <Filter>Behavior</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Behavior\RangeBehavior.h">
+      <Filter>Behavior</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Behavior\Scheduler.h">
+      <Filter>Behavior</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Behavior\Selector.h">
+      <Filter>Behavior</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Behavior\Sequence.h">
+      <Filter>Behavior</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Behavior\Tag.h">
+      <Filter>Behavior</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Behavior\TargetBehavior.h">
+      <Filter>Behavior</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Behavior\Task.h">
+      <Filter>Behavior</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Behavior\WanderBehavior.h">
+      <Filter>Behavior</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Render\Drawlist.h">
+      <Filter>Render</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Render\Texture.h">
+      <Filter>Render</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Shell\Escape.h">
+      <Filter>Shell</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Shell\ShellMenu.h">
+      <Filter>Shell</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Shell\ShellMenuItem.h">
+      <Filter>Shell</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Shell\Title.h">
+      <Filter>Shell</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Sound\Sound.h">
+      <Filter>Sound</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Sound\SoundConfigure.h">
+      <Filter>Sound</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Sound\SoundMixer.h">
+      <Filter>Sound</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Sound\SoundStargate.h">
+      <Filter>Sound</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Sound\SoundUtilities.h">
+      <Filter>Sound</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Aimer.h">
+      <Filter>Game</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Beam.h">
+      <Filter>Game</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Bullet.h">
+      <Filter>Game</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Cancelable.h">
+      <Filter>Game</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Command.h">
+      <Filter>Game</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Damagable.h">
+      <Filter>Game</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Expire.h">
+      <Filter>Game</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Explosion.h">
+      <Filter>Game</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\GameState.h">
+      <Filter>Game</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Gunner.h">
+      <Filter>Game</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Pickup.h">
+      <Filter>Game</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Player.h">
+      <Filter>Game</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\PlayerCamera.h">
+      <Filter>Game</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\PlayerController.h">
+      <Filter>Game</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Points.h">
+      <Filter>Game</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Preferences.h">
+      <Filter>Game</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Resource.h">
+      <Filter>Game</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Ship.h">
+      <Filter>Game</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Spawn.h">
+      <Filter>Game</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Spawner.h">
+      <Filter>Game</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\State.h">
+      <Filter>Game</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Team.h">
+      <Filter>Game</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\TurnAction.h">
+      <Filter>Game</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\WaveSequence.h">
+      <Filter>Game</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Weapon.h">
+      <Filter>Game</Filter>
+    </ClInclude>
+    <ClInclude Include="PlatformGLFW\Platform.h">
+      <Filter>Platform</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Expression\Expression.h">
+      <Filter>Expression</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Expression\ExpressionAction.h">
+      <Filter>Expression</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Expression\ExpressionConfigure.h">
+      <Filter>Expression</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Expression\ExpressionConstruct.h">
+      <Filter>Expression</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Expression\ExpressionConvert.h">
+      <Filter>Expression</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Expression\ExpressionEntity.h">
+      <Filter>Expression</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Expression\ExpressionExtend.h">
+      <Filter>Expression</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Expression\ExpressionIntegral.h">
+      <Filter>Expression</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Expression\ExpressionInterpolator.h">
+      <Filter>Expression</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Expression\ExpressionLiteral.h">
+      <Filter>Expression</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Expression\ExpressionLogical.h">
+      <Filter>Expression</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Expression\ExpressionNoise.h">
+      <Filter>Expression</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Expression\ExpressionOperator.h">
+      <Filter>Expression</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Expression\ExpressionOperatorSIMD.h">
+      <Filter>Expression</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Expression\ExpressionOscillator.h">
+      <Filter>Expression</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Expression\ExpressionRandom.h">
+      <Filter>Expression</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Expression\ExpressionRelational.h">
+      <Filter>Expression</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Expression\ExpressionResource.h">
+      <Filter>Expression</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Expression\ExpressionSchema.h">
+      <Filter>Expression</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Expression\ExpressionSIMD.h">
+      <Filter>Expression</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Expression\ExpressionSwizzle.h">
+      <Filter>Expression</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Expression\ExpressionTime.h">
+      <Filter>Expression</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Expression\ExpressionVariable.h">
+      <Filter>Expression</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\stdafx.h" />
+    <ClInclude Include="Source\targetver.h" />
+    <ClInclude Include="Source\Physics\PhysicsRevoluteJoint.h">
+      <Filter>Physics</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Physics\PhysicsUtilities.h">
+      <Filter>Physics</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Source\Core\Collidable.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Core\Controller.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Core\Database.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Core\DatabaseUntyped.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Core\Entity.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Core\Input.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Core\Interpolator.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Core\Library.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Core\Link.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Core\MemoryPool.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Core\Noise.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Core\Overlay.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Core\Particle.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Core\PerfTimer.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Core\Renderable.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Core\Simulatable.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Core\Updatable.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Core\Variable.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Core\VarItem.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Core\World.cpp">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Interface\Console.cpp">
+      <Filter>Interface</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Interface\Font.cpp">
+      <Filter>Interface</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Interface\PlayerHUD.cpp">
+      <Filter>Interface</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Interface\PlayerOverlayAmmo.cpp">
+      <Filter>Interface</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Interface\PlayerOverlayGameOver.cpp">
+      <Filter>Interface</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Interface\PlayerOverlayHealth.cpp">
+      <Filter>Interface</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Interface\PlayerOverlayLevel.cpp">
+      <Filter>Interface</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Interface\PlayerOverlayLives.cpp">
+      <Filter>Interface</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Interface\PlayerOverlayReticule.cpp">
+      <Filter>Interface</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Interface\PlayerOverlayScore.cpp">
+      <Filter>Interface</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Interface\PlayerOverlaySpecial.cpp">
+      <Filter>Interface</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Interface\PointsOverlay.cpp">
+      <Filter>Interface</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Behavior\AimBehavior.cpp">
+      <Filter>Behavior</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Behavior\Behavior.cpp">
+      <Filter>Behavior</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Behavior\BotUtilities.cpp">
+      <Filter>Behavior</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Behavior\EdgeBehavior.cpp">
+      <Filter>Behavior</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Behavior\EvadeBehavior.cpp">
+      <Filter>Behavior</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Behavior\PursueBehavior.cpp">
+      <Filter>Behavior</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Behavior\RangeBehavior.cpp">
+      <Filter>Behavior</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Behavior\Scheduler.cpp">
+      <Filter>Behavior</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Behavior\Tag.cpp">
+      <Filter>Behavior</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Behavior\TargetBehavior.cpp">
+      <Filter>Behavior</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Behavior\Task.cpp">
+      <Filter>Behavior</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Behavior\WanderBehavior.cpp">
+      <Filter>Behavior</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Render\Drawlist.cpp">
+      <Filter>Render</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Render\Texture.cpp">
+      <Filter>Render</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Shell\Escape.cpp">
+      <Filter>Shell</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Shell\EscapeMenuMain.cpp">
+      <Filter>Shell</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Shell\Shell.cpp">
+      <Filter>Shell</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Shell\ShellMenu.cpp">
+      <Filter>Shell</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Shell\ShellMenuAudio.cpp">
+      <Filter>Shell</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Shell\ShellMenuItem.cpp">
+      <Filter>Shell</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Shell\ShellMenuMain.cpp">
+      <Filter>Shell</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Shell\ShellMenuOptions.cpp">
+      <Filter>Shell</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Shell\ShellMenuVideo.cpp">
+      <Filter>Shell</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Shell\Title.cpp">
+      <Filter>Shell</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Sound\Sound.cpp">
+      <Filter>Sound</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Sound\SoundBitNoiseRamp.cpp">
+      <Filter>Sound</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Sound\SoundConfigure.cpp">
+      <Filter>Sound</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Sound\SoundExpression.cpp">
+      <Filter>Sound</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Sound\SoundFile.cpp">
+      <Filter>Sound</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Sound\SoundMixer.cpp">
+      <Filter>Sound</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Sound\SoundPokey.cpp">
+      <Filter>Sound</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Sound\SoundPulseLoop.cpp">
+      <Filter>Sound</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Sound\SoundSample.cpp">
+      <Filter>Sound</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Sound\SoundSound.cpp">
+      <Filter>Sound</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Sound\SoundStargate.cpp">
+      <Filter>Sound</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Sound\SoundStargateF9A6.cpp">
+      <Filter>Sound</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Sound\SoundStargateF9F3.cpp">
+      <Filter>Sound</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Sound\SoundTriangleNoise.cpp">
+      <Filter>Sound</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Sound\SoundUtilities.cpp">
+      <Filter>Sound</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Sound\SoundWaveLoop.cpp">
+      <Filter>Sound</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Aimer.cpp">
+      <Filter>Game</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Beam.cpp">
+      <Filter>Game</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Bullet.cpp">
+      <Filter>Game</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Cancelable.cpp">
+      <Filter>Game</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Command.cpp">
+      <Filter>Game</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Condition.cpp">
+      <Filter>Game</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Damagable.cpp">
+      <Filter>Game</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Expire.cpp">
+      <Filter>Game</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Explosion.cpp">
+      <Filter>Game</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\GameState.cpp">
+      <Filter>Game</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Gunner.cpp">
+      <Filter>Game</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Pickup.cpp">
+      <Filter>Game</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Play.cpp">
+      <Filter>Game</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Player.cpp">
+      <Filter>Game</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\PlayerCamera.cpp">
+      <Filter>Game</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\PlayerController.cpp">
+      <Filter>Game</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Points.cpp">
+      <Filter>Game</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Preferences.cpp">
+      <Filter>Game</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Resource.cpp">
+      <Filter>Game</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Run.cpp">
+      <Filter>Game</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Ship.cpp">
+      <Filter>Game</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Spawn.cpp">
+      <Filter>Game</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Spawner.cpp">
+      <Filter>Game</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\State.cpp">
+      <Filter>Game</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Team.cpp">
+      <Filter>Game</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Test.cpp">
+      <Filter>Game</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Tilemap.cpp">
+      <Filter>Game</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\TurnAction.cpp">
+      <Filter>Game</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\WaveSequence.cpp">
+      <Filter>Game</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Weapon.cpp">
+      <Filter>Game</Filter>
+    </ClCompile>
+    <ClCompile Include="PlatformGLFW\LoadTexture.cpp">
+      <Filter>Platform</Filter>
+    </ClCompile>
+    <ClCompile Include="PlatformGLFW\OneTime.cpp">
+      <Filter>Platform</Filter>
+    </ClCompile>
+    <ClCompile Include="PlatformGLFW\Window.cpp">
+      <Filter>Platform</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Expression\ExpressionAction.cpp">
+      <Filter>Expression</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Expression\ExpressionConfigure.cpp">
+      <Filter>Expression</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Expression\ExpressionConstruct.cpp">
+      <Filter>Expression</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Expression\ExpressionConvert.cpp">
+      <Filter>Expression</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Expression\ExpressionEntity.cpp">
+      <Filter>Expression</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Expression\ExpressionExtend.cpp">
+      <Filter>Expression</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Expression\ExpressionIntegral.cpp">
+      <Filter>Expression</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Expression\ExpressionInterpolator.cpp">
+      <Filter>Expression</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Expression\ExpressionLiteral.cpp">
+      <Filter>Expression</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Expression\ExpressionLogical.cpp">
+      <Filter>Expression</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Expression\ExpressionNoise.cpp">
+      <Filter>Expression</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Expression\ExpressionOperator.cpp">
+      <Filter>Expression</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Expression\ExpressionOperatorSIMD.cpp">
+      <Filter>Expression</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Expression\ExpressionOscillator.cpp">
+      <Filter>Expression</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Expression\ExpressionRandom.cpp">
+      <Filter>Expression</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Expression\ExpressionRelational.cpp">
+      <Filter>Expression</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Expression\ExpressionResource.cpp">
+      <Filter>Expression</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Expression\ExpressionSchema.cpp">
+      <Filter>Expression</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Expression\ExpressionSwizzle.cpp">
+      <Filter>Expression</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Expression\ExpressionTime.cpp">
+      <Filter>Expression</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Expression\ExpressionVariable.cpp">
+      <Filter>Expression</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\stdafx.cpp" />
+    <ClCompile Include="Source\Physics\PhysicsRevoluteJoint.cpp">
+      <Filter>Physics</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Physics\PhysicsUtilities.cpp">
+      <Filter>Physics</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Trace.cpp">
+      <Filter>Game</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Render\MatrixStack.cpp">
+      <Filter>Render</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

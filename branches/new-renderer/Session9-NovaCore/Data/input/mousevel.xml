@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" standalone="no"?>
+<!-- input binding -->
+<input>
+	
+	<!-- mouse/keyboard -->
+	<bind name="move_x" type="keyboard" device="0" control="97" scale="1"/>
+	<bind name="move_x" type="keyboard" device="0" control="100" scale="-1"/>
+	<bind name="move_y" type="keyboard" device="0" control="119" scale="1"/>
+	<bind name="move_y" type="keyboard" device="0" control="115" scale="-1"/>
+	<bind name="aim_x" type="mouse_axis" device="0" control="2" scale="-1"/>
+	<bind name="aim_y" type="mouse_axis" device="0" control="3" scale="-1"/>
+	<bind name="fire1" type="mouse_button" device="0" control="1" scale="1"/>
+	<bind name="fire2" type="mouse_button" device="0" control="3" scale="1"/>
+
+</input>

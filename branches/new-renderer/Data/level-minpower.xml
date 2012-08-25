@@ -1,0 +1,614 @@
+<?xml version="1.0" standalone="no" ?>
+<!-- Test Level -->
+<world xmin="-1024" ymin="-1024" xmax="1024" ymax="1024">
+	<!-- sounds -->
+	<import name="sound/stargate-start.xml" />
+	<import name="sound/missilecommand-alert.xml" />
+	<import name="sound/missilecommand-fire.xml" />
+	<import name="sound/missilecommand-explosion.xml" />
+	<import name="sound/missilecommand-explosion2.xml" />
+	<import name="sound/missilecommand-lowammo.xml" />
+	<import name="sound/missilecommand-empty.xml" />
+	<import name="sound/missilecommand-ammobonus.xml" />
+	<import name="sound/missilecommand-citybonus.xml" />
+	<import name="sound/missilecommand-bomber.xml" />
+	<import name="sound/missilecommand-smartbomb.xml" />
+	<import name="sound/stargate-warpin.xml" />
+	<import name="sound/stargate-playershot.xml" />
+	<import name="sound/stargate-playershipidle.xml" />
+	<import name="sound/stargate-playershipthrust.xml" />
+	<import name="sound/stargate-explosion.xml" />
+	<import name="sound/stargate-bigexplosion.xml" />
+	<import name="sound/stargate-playershipdeath.xml" />
+	<import name="sound/stargate-smartbomb.xml" />
+	<import name="sound/stargate-firebomberfire.xml" />
+	<import name="sound/stargate-podkill.xml" />
+	<import name="sound/stargate-swarmerfire.xml" />
+	<import name="sound/stargate-landerkill.xml" />
+	<import name="sound/stargate-enemykill.xml" />
+	<import name="sound/stargate-anotherenemykill.xml" />
+	<import name="sound/stargate-landerfire.xml" />
+	<import name="sound/stargate-spaceguppyshot.xml" />
+	<import name="sound/stargate-extralife.xml" />
+	<import name="sound/stargate-dynamofire.xml" />
+	<import name="sound/stargate-createmutant.xml" />
+	<import name="sound/stargate-humanoidcatch.xml" />
+	<!-- players -->
+	<entity name="1P">
+		<position x="0" y="0" />
+		<player name="playershipwarp" start="1.5" cycle="4" lives="3" firstextra="20000" extra="50000" />
+		<resource name="special" initial="3" />
+		<team name="blue" />
+	</entity>
+	<!-- draw lists -->
+	<import name="drawlist/square.xml" />
+	<import name="drawlist/diamond.xml" />
+	<import name="drawlist/circle8.xml" />
+	<import name="drawlist/circle12.xml" />
+	<import name="drawlist/circle16.xml" />
+	<import name="drawlist/circle32.xml" />
+	<import name="drawlist/ship.xml" />
+	<import name="drawlist/shipsmall.xml" />
+	<import name="drawlist/shiptiny.xml" />
+	<!-- reticule -->
+	<import name="drawlist/reticule.xml" />
+	<!-- background shapes -->
+	<!-- clouds -->
+	<!--
+	<entity name="clouds">
+		<renderable radius="512">
+			<drawlist>
+				<set name="d" type="translate" x="0" y="0" z="256" />
+				<quads>
+					<repeat count="64">
+						<color rand="1" r_avg="0.125" r_var="0.0625" g_avg="0.125" g_var="0.0625" b_avg="0.125" b_var="0.0625" a_avg="0.75" a_var="0" />
+						<set name="p0" type="position" rand="4" x_avg="0" x_var="1024" y_avg="0" y_var="1024" z_avg="0" z_var="0" />
+						<set name="w" type="translate" rand="1" x_avg="64" x_var="48" y_avg="0" y_var="0" z_avg="0" z_var="0" />
+						<set name="h" type="translate" rand="1" x_avg="0" x_var="0" y_avg="64" y_var="48" z_avg="0" z_var="0" />
+						<add name="p0" type="translate" variable="d" />
+						<sub name="p0" type="translate" variable="w" />
+						<sub name="p0" type="translate" variable="h" />
+						<add name="w" type="translate" variable="w" />
+						<add name="h" type="translate" variable="h" />
+						<vertex variable="p0" />
+						<add name="p0" type="translate" variable="w" />
+						<vertex variable="p0" />
+						<add name="p0" type="translate" variable="h" />
+						<vertex variable="p0" />
+						<sub name="p0" type="translate" variable="w" />
+						<vertex variable="p0" />
+						<add name="d" type="translate" x="0" y="0" z="6" />
+					</repeat>
+				</quads>
+				<clear name="p0" />
+				<clear name="w" />
+				<clear name="h" />
+				<clear name="d" />
+			</drawlist>
+		</renderable>
+	</entity>
+	-->
+	<!-- starfield -->
+	<import name="template/starfield.xml" />
+	<tilemap x="768" y="768" dx="-512" dy="-512">
+		<tile name="*" spawn="starfield" />
+		<row data="****" />
+		<row data="****" />
+		<row data="****" />
+		<row data="****" />
+	</tilemap>
+	<!-- reference grid -->
+	<entity name="playfield">
+		<renderable radius="1024">
+			<drawlist>
+				<scale x="32" y="32" />
+				<color r="1.0" g="1.0" b="1.0" a="1.0" />
+				<line_loop>
+					<!-- perimeter -->
+					<vertex x="-32" y="-32" />
+					<vertex x="32" y="-32" />
+					<vertex x="32" y="32" />
+					<vertex x="-32" y="32" />
+				</line_loop>
+				<lines>
+					<!-- vertical lines -->
+					<set name="p0" type="position" x="-31" y="-32" />
+					<set name="p1" type="position" x="-31" y="32" />
+					<repeat count="15">
+						<color r="1.0" g="1.0" b="1.0" a="0.0625" />
+						<repeat count="3">
+							<vertex variable="p0" />
+							<vertex variable="p1" />
+							<add name="p0" type="translate" x="1" y="0" />
+							<add name="p1" type="translate" x="1" y="0" />
+						</repeat>
+						<color r="1.0" g="1.0" b="1.0" a="0.25" />
+						<vertex variable="p0" />
+						<vertex variable="p1" />
+						<add name="p0" type="translate" x="1" y="0" />
+						<add name="p1" type="translate" x="1" y="0" />
+					</repeat>
+					<color r="1.0" g="1.0" b="1.0" a="0.0625" />
+					<repeat count="3">
+						<vertex variable="p0" />
+						<vertex variable="p1" />
+						<add name="p0" type="translate" x="1" y="0" />
+						<add name="p1" type="translate" x="1" y="0" />
+					</repeat>
+					<!-- horizontal lines -->
+					<set name="p0" type="translate" x="-32" y="-31" />
+					<set name="p1" type="translate" x="32" y="-31" />
+					<repeat count="15">
+						<color r="1.0" g="1.0" b="1.0" a="0.0625" />
+						<repeat count="3">
+							<vertex variable="p0" />
+							<vertex variable="p1" />
+							<add name="p0" type="translate" x="0" y="1" />
+							<add name="p1" type="translate" x="0" y="1" />
+						</repeat>
+						<color r="1.0" g="1.0" b="1.0" a="0.25" />
+						<vertex variable="p0" />
+						<vertex variable="p1" />
+						<add name="p0" type="translate" x="0" y="1" />
+						<add name="p1" type="translate" x="0" y="1" />
+					</repeat>
+					<color r="1.0" g="1.0" b="1.0" a="0.0625" />
+					<repeat count="3">
+						<vertex variable="p0" />
+						<vertex variable="p1" />
+						<add name="p0" type="translate" x="0" y="1" />
+						<add name="p1" type="translate" x="0" y="1" />
+					</repeat>
+					<clear name="p0" />
+					<clear name="p1" />
+				</lines>
+			</drawlist>
+		</renderable>
+	</entity>
+	<!-- collidable filters -->
+	<collidablefilter name="inert">
+		<category value="-1" />
+	</collidablefilter>
+	<collidablefilter name="environment">
+		<category value="0" />
+	</collidablefilter>
+	<collidablefilter name="blueunit">
+		<category value="1" />
+	</collidablefilter>
+	<collidablefilter name="bluemissile">
+		<category value="1" />
+		<mask bit1="0" bit2="0" />
+	</collidablefilter>
+	<collidablefilter name="bluebullet">
+		<category value="2" />
+		<mask bit1="0" bit2="0" bit4="0" />
+	</collidablefilter>
+	<collidablefilter name="redunit">
+		<category value="3" />
+	</collidablefilter>
+	<collidablefilter name="redmissile">
+		<category value="3" />
+		<mask bit3="0" bit4="0" />
+	</collidablefilter>
+	<collidablefilter name="redbullet">
+		<category value="4" />
+		<mask bit2="0" bit3="0" bit4="0" />
+	</collidablefilter>
+	<!-- enemy bullseye targets -->
+	<import name="template/enemytarget.xml" />
+	<import name="template/enemytargetappear.xml" />
+	<!-- 1-health powerup -->
+	<import name="template/health1expire.xml" />
+	<import name="template/health1collect.xml" />
+	<import name="template/health1.xml" />
+	<!-- enemy warp-in -->
+	<import name="template/enemywarpin.xml" />
+	<!-- enemy long warp-in -->
+	<import name="template/enemylongwarpin.xml" />
+	<!-- enemy bullet explosion -->
+	<import name="template/enemybulletexplosion.xml" />
+	<!-- enemy bullet -->
+	<import name="template/enemybullet.xml" />
+	<!-- enemy weapon -->
+	<import name="template/enemyweapon.xml" />
+	<!-- enemy pulse bullet -->
+	<import name="template/enemypulsebullet.xml" />
+	<!-- enemy pulse weapon -->
+	<import name="template/enemypulseweapon.xml" />
+	<!-- enemy missile -->
+	<import name="template/missiletrail.xml" />
+	<import name="template/enemymissile.xml" />
+	<import name="template/enemyweaponmissile.xml" />
+	<!-- enemy explosion -->
+	<import name="template/enemyexplosion.xml" />
+	<!-- enemy turret -->
+	<import name="template/enemycannon.xml" />
+	<import name="template/enemycannon0.xml" />
+	<import name="template/enemycannon1.xml" />
+	<import name="template/enemycannonmissile.xml" />
+	<import name="template/turret.xml" />
+	<import name="template/enemyturret.xml" />
+	<import name="template/enemyturret1.xml" />
+	<import name="template/enemyturret2.xml" />
+	<import name="template/enemyturret3.xml" />
+	<import name="template/enemyturretmissile.xml" />
+	<import name="template/enemyturretmount1.xml" />
+	<import name="template/enemyturretmount2.xml" />
+	<import name="template/enemyturretmount3.xml" />
+	<import name="template/enemyturretmountmissile.xml" />
+	<import name="template/enemyturretpod1.xml" />
+	<import name="template/enemyturretpod2.xml" />
+	<import name="template/enemyturretpod3.xml" />
+	<import name="template/enemyturretpodmissile.xml" />
+	<import name="template/enemyturretpod1warp.xml" />
+	<import name="template/enemyturretpod2warp.xml" />
+	<import name="template/enemyturretpod3warp.xml" />
+	<import name="template/enemyturretpodmissilewarp.xml" />
+	<import name="template/enemyturretcluster.xml" />
+	<entity name="enemyturretcluster1" type="enemyturretcluster">
+		<position x="768.0" y="768.0" angle="135" />
+	</entity>
+	<entity name="enemyturretcluster2" type="enemyturretcluster">
+		<position x="-768.0" y="768.0" angle="-135" />
+	</entity>
+	<entity name="enemyturretcluster3" type="enemyturretcluster">
+		<position x="-768.0" y="-768.0" angle="-45" />
+	</entity>
+	<entity name="enemyturretcluster4" type="enemyturretcluster">
+		<position x="768.0" y="-768.0" angle="45" />
+	</entity>
+	<!-- enemy fireball explosion -->
+	<import name="template/enemyfireballexplosion.xml" />
+	<!-- enemy fireball -->
+	<import name="template/enemyfireballtrail.xml" />
+	<import name="template/enemyfireball.xml" />
+	<!-- enemy firebomber -->
+	<import name="drawlist/bowtie.xml" />
+	<import name="template/enemyfirebomber.xml" />
+	<!-- enemy mine explosion -->
+	<import name="template/enemymineexplosion.xml" />
+	<!-- enemy mine -->
+	<import name="template/enemymine.xml" />
+	<!-- enemy bomber -->
+	<import name="template/enemybomber.xml" />
+	<!-- enemy space hum -->
+	<import name="template/enemyspacehumtrail.xml" />
+	<import name="template/enemyspacehum.xml" />
+	<!-- enemy dynamo -->
+	<import name="template/enemydynamo.xml" />
+	<!-- enemy swarmer -->
+	<import name="template/enemyswarmerbreakout.xml" />
+	<import name="template/enemyswarmer.xml" />
+	<!-- small enemy explosion -->
+	<import name="template/enemyexplosionsmall.xml" />
+	<!-- enemy pod -->
+	<import name="template/enemyswarmerbreakoutspawn.xml" />
+	<import name="template/enemypodexplosion.xml" />
+	<import name="template/enemypod.xml" />
+	<!-- enemy vapor mine -->
+	<import name="template/enemymineshrapnel.xml" />
+	<import name="template/enemymineshrapnelspawn.xml" />
+	<import name="template/enemyvapormineexplosion.xml" />
+	<import name="template/enemyvapormine.xml" />
+	<!-- enemy photon mine -->
+	<import name="template/enemyphotonmine.xml" />
+	<!-- enemy command ship -->
+	<import name="template/enemycommandship.xml" />
+	<!-- enemy warrior -->
+	<import name="template/enemywarriorturret.xml" />
+	<import name="template/enemywarrior.xml" />
+	<!-- enemy tiny ship -->
+	<import name="template/enemyshiptiny.xml" />
+	<!-- enemy small ship -->
+	<import name="template/enemyshipsmall.xml" />
+	<!-- enemy ship weapon -->
+	<import name="template/enemyshipweapon.xml" />
+	<!-- enemy ship -->
+	<import name="template/enemyship.xml" />
+	<!-- enemy laser ship beam -->
+	<import name="template/enemylasershipbeam.xml" />
+	<!-- enemy laser ship tracer -->
+	<import name="template/enemylasershiptracer.xml" />
+	<!-- enemy laser ship weapon -->
+	<import name="template/enemylasershipweapon.xml" />
+	<!-- enemy laser ship -->
+	<import name="template/enemylasership.xml" />
+	<!-- enemy carrier -->
+	<import name="template/enemycarrierexplosion.xml" />
+	<import name="template/enemylaunchbay.xml" />
+	<import name="template/enemycarrier.xml" />
+	<!-- enemy spawners -->
+	<import name="template/enemyshipsmallwarp.xml" />
+	<import name="template/enemyshipsmallspawn.xml" />
+	<import name="template/enemybomberwarp.xml" />
+	<import name="template/enemybomberspawn.xml" />
+	<import name="template/enemyfirebomberwarp.xml" />
+	<import name="template/enemyfirebomberspawn.xml" />
+	<import name="template/enemydynamowarp.xml" />
+	<import name="template/enemydynamospawn.xml" />
+	<import name="template/enemypodwarp.xml" />
+	<import name="template/enemypodspawn.xml" />
+	<import name="template/enemycommandshipwarp.xml" />
+	<import name="template/enemycommandshipspawn.xml" />
+	<import name="template/enemywarriorwarp.xml" />
+	<import name="template/enemywarriorspawn.xml" />
+	<import name="template/enemyshipwarp.xml" />
+	<import name="template/enemyshipspawn.xml" />
+	<import name="template/enemylasershipwarp.xml" />
+	<import name="template/enemylasershipspawn.xml" />
+	<import name="template/enemycarrierspawn.xml" />
+	<import name="template/enemyspawncluster.xml" />
+	<entity name="enemyspawncluster1">
+		<position x="0" y="1024" angle="180" />
+		<spawner>
+			<spawn name="enemyspawncluster" start="0" />
+		</spawner>
+	</entity>
+	<entity name="enemyspawncluster2">
+		<position x="1024" y="0" angle="90" />
+		<spawner>
+			<spawn name="enemyspawncluster" start="8" />
+		</spawner>
+	</entity>
+	<entity name="enemyspawncluster3">
+		<position x="0" y="-1024" angle="0" />
+		<spawner>
+			<spawn name="enemyspawncluster" start="16" />
+		</spawner>
+	</entity>
+	<entity name="enemyspawncluster4">
+		<position x="-1024" y="0" angle="270" />
+		<spawner>
+			<spawn name="enemyspawncluster" start="24" />
+		</spawner>
+	</entity>
+	<!-- missile command explosion -->
+	<import name="template/missilecommandexplosion.xml" />
+	<!-- missile command rocket -->
+	<import name="template/missilecommandbullet.xml" />
+	<!-- missile command launcher -->
+	<import name="template/missilecommandweapon.xml" />
+	<!-- gunner bullet explosion -->
+	<import name="template/gunnerbulletexplosion.xml" />
+	<!-- gunner bullet -->
+	<import name="template/gunnerbullet.xml" />
+	<!-- gunner weapon -->
+	<import name="template/gunnerweapon.xml" />
+	<import name="template/gunnerweapon0.xml" />
+	<import name="template/gunnerweapon1.xml" />
+	<!-- gunner option -->
+	<import name="template/gunner.xml" />
+	<import name="template/gunner0.xml" />
+	<import name="template/gunner1.xml" />
+	<!-- bit bullet explosion -->
+	<import name="template/bitbulletexplosion.xml" />
+	<!-- bit bullet -->
+	<import name="template/bitbullet.xml" />
+	<!-- bit option -->
+	<import name="drawlist/semicircle16.xml" />
+	<import name="drawlist/bitcore.xml" />
+	<import name="drawlist/bitshell.xml" />
+	<import name="template/bit.xml" />
+	<import name="template/bit1.xml" />
+	<import name="template/bit2.xml" />
+	<!-- force bullet explosion -->
+	<import name="template/forcebulletexplosion.xml" />
+	<!-- force bullet -->
+	<import name="template/forcebullet.xml" />
+	<!-- force weapon -->
+	<import name="template/forceweapon.xml" />
+	<!-- force option (level 1) -->
+	<import name="template/forcecannon.xml" />
+	<import name="template/force.xml" />
+	<!-- force option (level 2) -->
+	<import name="template/force2.xml" />
+	<!-- force option (level 3) -->
+	<import name="template/force3.xml" />
+	<!-- force option (level 4) -->
+	<import name="template/force4.xml" />
+	<!-- player bullet explosion -->
+	<import name="template/playerbulletexplosion.xml" />
+	<!-- player bullet -->
+	<import name="template/playerbullet.xml" />
+	<!-- player ship weapon -->
+	<import name="template/playershipweapon.xml" />
+	<!-- player smart bomb explosion -->
+	<import name="template/playersmartbombexplosion.xml" />
+	<import name="template/playersmartbombexplosion2.xml" />
+	<!-- player smart bomb weapon -->
+	<import name="template/playersmartbombweapon.xml" />
+	<!-- player multiple -->
+	<import name="template/multiple.xml" />
+	<import name="template/multiple2.xml" />
+	<import name="template/multiple3.xml" />
+	<import name="template/multiple4.xml" />
+	<!-- player ship -->
+	<import name="template/playership.xml" />
+	<import name="template/playership-minpower.xml" />
+	<import name="template/playershipinvulnerable.xml" />
+	<import name="template/playershipwarp.xml" />
+	<!-- player ship death -->
+	<import name="template/playershipdeath.xml" />
+	<!-- player ship explosion -->
+	<import name="template/playershipexplosion.xml" />
+	<!-- friend bullseye targets -->
+	<import name="template/friendtarget.xml" />
+	<import name="template/friendtargetappear.xml" />
+	<import name="template/friendtargetspawn.xml" />
+	<entity name="friendtargetspawn1" type="friendtargetspawn">
+		<position x="256.0" y="0.0" />
+	</entity>
+	<entity name="friendtargetspawn2" type="friendtargetspawn">
+		<position x="236.5" y="98.0" />
+	</entity>
+	<entity name="friendtargetspawn3" type="friendtargetspawn">
+		<position x="181.0" y="181.0" />
+	</entity>
+	<entity name="friendtargetspawn4" type="friendtargetspawn">
+		<position x="98.0" y="236.5" />
+	</entity>
+	<entity name="friendtargetspawn5" type="friendtargetspawn">
+		<position x="0.0" y="256.0" />
+	</entity>
+	<entity name="friendtargetspawn6" type="friendtargetspawn">
+		<position x="-98.0" y="236.5" />
+	</entity>
+	<entity name="friendtargetspawn7" type="friendtargetspawn">
+		<position x="-181.0" y="181.0" />
+	</entity>
+	<entity name="friendtargetspawn8" type="friendtargetspawn">
+		<position x="-236.5" y="98.0" />
+	</entity>
+	<entity name="friendtargetspawn9" type="friendtargetspawn">
+		<position x="-256.0" y="0.0" />
+	</entity>
+	<entity name="friendtargetspawn10" type="friendtargetspawn">
+		<position x="-236.5" y="-98.0" />
+	</entity>
+	<entity name="friendtargetspawn11" type="friendtargetspawn">
+		<position x="-181.0" y="-181.0" />
+	</entity>
+	<entity name="friendtargetspawn12" type="friendtargetspawn">
+		<position x="-98.0" y="-236.5" />
+	</entity>
+	<entity name="friendtargetspawn13" type="friendtargetspawn">
+		<position x="0.0" y="-256.0" />
+	</entity>
+	<entity name="friendtargetspawn14" type="friendtargetspawn">
+		<position x="98.0" y="-236.5" />
+	</entity>
+	<entity name="friendtargetspawn15" type="friendtargetspawn">
+		<position x="181.0" y="-181.0" />
+	</entity>
+	<entity name="friendtargetspawn16" type="friendtargetspawn">
+		<position x="236.5" y="-98.0" />
+	</entity>
+	<!-- 3-health powerup -->
+	<import name="template/health3collect.xml" />
+	<import name="template/health3.xml" />
+	<import name="template/health3appear.xml" />
+	<import name="template/health3spawner.xml" />
+	<!-- player base -->
+	<import name="template/friendwall.xml" />
+	<import name="template/gate.xml" />
+	<import name="template/friendforcewall.xml" />
+	<import name="template/friendbase.xml" />
+	<entity name="playerbase" type="friendbase" />
+	<!-- friend warp-in -->
+	<import name="template/friendwarpin.xml" />
+	<!-- friend long warp-in -->
+	<import name="template/friendlongwarpin.xml" />
+	<!-- friend bullet explosion -->
+	<import name="template/friendbulletexplosion.xml" />
+	<!-- friend bullet -->
+	<import name="template/friendbullet.xml" />
+	<!-- friend weapon -->
+	<import name="template/friendweapon.xml" />
+	<!-- friend pulse bullet -->
+	<import name="template/friendpulsebullet.xml" />
+	<!-- friend pulse weapon -->
+	<import name="template/friendpulseweapon.xml" />
+	<!-- friend missile -->
+	<import name="template/friendmissile.xml" />
+	<import name="template/friendweaponmissile.xml" />
+	<!-- friend explosion -->
+	<import name="template/friendexplosion.xml" />
+	<!-- friend turret -->
+	<import name="template/friendcannon.xml" />
+	<import name="template/friendcannon0.xml" />
+	<import name="template/friendcannon1.xml" />
+	<import name="template/friendcannonmissile.xml" />
+	<import name="template/friendturret.xml" />
+	<import name="template/friendturret1.xml" />
+	<import name="template/friendturret2.xml" />
+	<import name="template/friendturret3.xml" />
+	<import name="template/friendturretmissile.xml" />
+	<import name="template/friendturretmount1.xml" />
+	<import name="template/friendturretmount2.xml" />
+	<import name="template/friendturretmount3.xml" />
+	<import name="template/friendturretmountmissile.xml" />
+	<import name="template/friendturretpod1.xml" />
+	<import name="template/friendturretpod2.xml" />
+	<import name="template/friendturretpod3.xml" />
+	<import name="template/friendturretpodmissile.xml" />
+	<import name="template/friendturretpod1warp.xml" />
+	<import name="template/friendturret1spawn.xml" />
+	<import name="template/friendturretpod2warp.xml" />
+	<import name="template/friendturret2spawn.xml" />
+	<import name="template/friendturretpod3warp.xml" />
+	<import name="template/friendturret3spawn.xml" />
+	<import name="template/friendturretpodmissilewarp.xml" />
+	<import name="template/friendturretlauncherspawn.xml" />
+	<import name="template/friendturretcluster.xml" />
+	<entity name="friendspawn1" type="friendturretcluster">
+		<position x="384.0" y="0.0" angle="270" />
+	</entity>
+	<entity name="friendspawn2" type="friendturretcluster">
+		<position x="0.0" y="384.0" angle="0" />
+	</entity>
+	<entity name="friendspawn3" type="friendturretcluster">
+		<position x="-384.0" y="0.0" angle="90" />
+	</entity>
+	<entity name="friendspawn4" type="friendturretcluster">
+		<position x="0.0" y="-384.0" angle="180" />
+	</entity>
+	<!-- friend fireball explosion -->
+	<import name="template/friendfireballexplosion.xml" />
+	<!-- friend fireball -->
+	<import name="template/friendfireballtrail.xml" />
+	<import name="template/friendfireball.xml" />
+	<!-- friend firebomber -->
+	<import name="template/friendfirebomber.xml" />
+	<!-- friend mine explosion -->
+	<import name="template/friendmineexplosion.xml" />
+	<!-- friend mine -->
+	<import name="template/friendmine.xml" />
+	<!-- friend bomber -->
+	<import name="template/friendbomber.xml" />
+	<!-- friend space hum -->
+	<import name="template/friendspacehumtrail.xml" />
+	<import name="template/friendspacehum.xml" />
+	<!-- friend dynamo -->
+	<import name="template/frienddynamo.xml" />
+	<!-- friend swarmer -->
+	<import name="template/friendswarmerbreakout.xml" />
+	<import name="template/friendswarmer.xml" />
+	<!-- small friend explosion -->
+	<import name="template/friendexplosionsmall.xml" />
+	<!-- friend pod -->
+	<import name="template/friendswarmerbreakoutspawn.xml" />
+	<import name="template/friendpodexplosion.xml" />
+	<import name="template/friendpod.xml" />
+	<!-- friend vapor mine -->
+	<import name="template/friendmineshrapnel.xml" />
+	<import name="template/friendmineshrapnelspawn.xml" />
+	<import name="template/friendvapormineexplosion.xml" />
+	<import name="template/friendvapormine.xml" />
+	<!-- friend photon mine -->
+	<import name="template/friendphotonmine.xml" />
+	<!-- friend command ship -->
+	<import name="template/friendcommandship.xml" />
+	<!-- friend warrior -->
+	<import name="template/friendwarriorturret.xml" />
+	<import name="template/friendwarrior.xml" />
+	<!-- friend tiny ship -->
+	<import name="template/friendshiptiny.xml" />
+	<!-- friend small ship -->
+	<import name="template/friendshipsmall.xml" />
+	<!-- friend ship weapon -->
+	<import name="template/friendshipweapon.xml" />
+	<!-- friend ship -->
+	<import name="template/friendship.xml" />
+	<!-- friend laser ship beam -->
+	<import name="template/friendlasershipbeam.xml" />
+	<!-- friend laser ship tracer -->
+	<import name="template/friendlasershiptracer.xml" />
+	<!-- friend laser ship weapon -->
+	<import name="template/friendlasershipweapon.xml" />
+	<!-- friend laser ship -->
+	<import name="template/friendlasership.xml" />
+	<!-- friend carrier -->
+	<import name="template/friendcarrierexplosion.xml" />
+	<import name="template/friendlaunchbay.xml" />
+	<import name="template/friendcarrier.xml" />
+</world>

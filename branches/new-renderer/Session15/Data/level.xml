@@ -1,0 +1,496 @@
+<?xml version="1.0" standalone="no"?>
+<!-- Test Level -->
+<world xmin="-200" ymin="-110" xmax="200" ymax="110" wall="0">
+	<library name="session15.dll"/>
+	
+	<!-- disable fog-->
+	<fog enable="0" />
+
+	<!-- edge perimeter -->
+	<entity name="perimeter">
+		<collidable>
+			<body>
+				<edge>
+					<vertex1 x="-200" y="110"/>
+					<vertex2 x="200" y="110"/>
+					<restitution value="0"/>
+					<friction value="0"/>
+					<category value="0"/>
+					<mask default="0" bit1="1"/>
+				</edge>
+				<edge>
+					<vertex1 x="200" y="110"/>
+					<vertex2 x="200" y="-110"/>
+					<restitution value="0"/>
+					<friction value="0"/>
+					<category value="0"/>
+					<mask default="0" bit1="1"/>
+				</edge>
+				<edge>
+					<vertex1 x="200" y="-110"/>
+					<vertex2 x="-200" y="-110"/>
+					<restitution value="0"/>
+					<friction value="0"/>
+					<category value="0"/>
+					<mask default="0" bit1="1"/>
+				</edge>
+				<edge>
+					<vertex1 x="-200" y="-110"/>
+					<vertex2 x="-200" y="110"/>
+					<restitution value="0"/>
+					<friction value="0"/>
+					<category value="0"/>
+					<mask default="0" bit1="1"/>
+				</edge>
+			</body>
+		</collidable>
+	</entity>
+	<!-- sounds -->
+	<import name="sound/stargate-explosion.xml" />
+	<import name="sound/stargate-enemykill.xml" />
+	<import name="sound/stargate-bigexplosion.xml" />
+	<import name="sound/stargate-playershipdeath.xml" />
+	<import name="sound/stargate-playershot.xml" />
+	<import name="sound/stargate-smartbomb.xml" />
+	<import name="sound/stargate-extralife.xml" />
+	<import name="sound/stargate-landerfire.xml" />
+	<import name="sound/stargate-spaceguppyshot.xml" />
+	<import name="sound/stargate-createmutant.xml" />
+	<import name="sound/stargate-dynamofire.xml" />
+	<!-- players -->
+	<entity name="1P">
+		<position x="0" y="-100" />
+		<velocity x="0" y="240" />
+		<player name="playershipinvulnerable" start="1" cycle="4" lives="3" firstextra="20000" extra="50000" />
+		<team name="blue" />
+		<playercamera>
+			<aim scale="0" filter="0"/>
+			<scale x="0.25" y="0"/>
+		</playercamera>
+	</entity>
+	<!-- draw lists -->
+	<import name="drawlist/square.xml" />
+	<import name="drawlist/diamond.xml" />
+	<import name="drawlist/circle8.xml" />
+	<import name="drawlist/circle12.xml" />
+	<import name="drawlist/circle16.xml" />
+	<import name="drawlist/circle32.xml" />
+	<import name="drawlist/shiptiny.xml" />
+	<import name="drawlist/shipsmall.xml" />
+	<import name="drawlist/ship.xml" />
+	<!-- reticule -->
+	<import name="drawlist/reticule.xml" />
+	<!-- starfield -->
+	<entity name="starfield">
+		<renderable radius="1536" period="4">
+			<translate>
+				<key time="0" y="0"/>
+				<key time="4" y="-1024"/>
+			</translate>
+			<drawlist>
+				<quads>
+					<loop name="depth" from="0" to="1024">
+						<color>
+							<r rand="1" value_min="0.5" value_max="1.0"/>
+							<g rand="1" value_min="0.5" value_max="1.0"/>
+							<b rand="1" value_min="0.5" value_max="1.0"/>
+							<a>
+								<sub>
+									<value value="1"/>
+									<div>
+										<depth/>
+										<value value="1024"/>
+									</div>
+								</sub>
+							</a>
+						</color>
+						<set name="p" type="position">
+							<x rand="1" value_var="512"/>
+							<y rand="1" value_var="512"/>
+							<z>
+								<add>
+									<depth/>
+									<value value="256"/>
+								</add>
+							</z>
+						</set>
+						<add name="p" type="translate" x="-1" y="-1" />
+						<repeat count="2">
+							<vertex variable="p" />
+							<add name="p" type="translate" x="2" y="0" />
+							<vertex variable="p" />
+							<add name="p" type="translate" x="0" y="2" />
+							<vertex variable="p" />
+							<add name="p" type="translate" x="-2" y="0" />
+							<vertex variable="p" />
+							<add name="p" type="translate" x="0" y="1022"/>
+						</repeat>
+					</loop>
+				</quads>
+				<clear name="p0" />
+				<clear name="a" />
+				<clear name="c" />
+			</drawlist>
+		</renderable>
+	</entity>
+	<!-- collidable filters -->
+	<collidablefilter name="inert">
+		<category value="-1" />
+		<mask default="0" />
+	</collidablefilter>
+	<collidablefilter name="environment">
+		<category value="0" />
+		<mask default="1" />
+	</collidablefilter>
+	<collidablefilter name="blueunit">
+		<category value="1" />
+		<mask default="0" bit0="1" bit5="1" bit6="1"/>
+	</collidablefilter>
+	<collidablefilter name="bluemissile">
+		<category value="2" />
+		<mask default="0" bit0="1" bit4="1" bit5="1" bit6="1"/>
+	</collidablefilter>
+	<collidablefilter name="bluebullet">
+		<category value="3" />
+		<mask default="0" bit0="1" bit4="1" bit5="1"/>
+	</collidablefilter>
+	<collidablefilter name="bluebomb">
+		<category value="0" />
+		<mask default="0" bit4="1" bit5="1" bit6="1"/>
+	</collidablefilter>
+	<collidablefilter name="redunit">
+		<category value="4" />
+		<mask default="0" bit0="1" bit2="1" bit3="1"/>
+	</collidablefilter>
+	<collidablefilter name="redmissile">
+		<category value="5" />
+		<mask default="0" bit0="1" bit1="1" bit2="1" bit3="1"/>
+	</collidablefilter>
+	<collidablefilter name="redbullet">
+		<category value="6" />
+		<mask default="0" bit0="1" bit1="1" bit2="1"/>
+	</collidablefilter>
+	<!-- music -->
+	<entity name="soundtrack">
+    <music file="reed-imploder.xm"/>
+  </entity>
+
+	<!-- player bullet explosion -->
+
+	<!-- player bullet -->
+	<import name="template/playerbulletexplosion.xml" />
+	<import name="template/playerbullet.xml" />
+
+	<!-- player bullet 1 -->
+	<import name="drawlist/playerbulletbeams.xml" />
+	<import name="template/playerbullet1.xml" />
+	<import name="template/playerbulletexplosion1.xml" />
+	<import name="template/playerbullettrail1.xml" />
+
+	<!-- player bullet 2 -->
+	<import name="template/playerbullet2.xml" />
+	<import name="template/playerbulletexplosion2.xml" />
+	<import name="template/playerbullettrail2.xml" />
+
+	<!-- player bullet 3 -->
+	<import name="template/playerbullet3.xml" />
+	<import name="template/playerbulletexplosion3.xml" />
+	<import name="template/playerbullettrail3.xml" />
+
+	<!-- player bullet 4 -->
+	<import name="template/playerbullet4.xml" />
+	<import name="template/playerbulletexplosion4.xml" />
+	<import name="template/playerbullettrail4.xml" />
+
+	<!-- player bullet 4 -->
+	<import name="template/playerbullet5.xml" />
+	<import name="template/playerbulletexplosion5.xml" />
+	<import name="template/playerbullettrail5.xml" />
+
+	<!-- player weapon flash -->
+	<import name="template/playerweaponflash.xml" />
+
+	<!-- player ship weapon -->
+	<import name="template/playershipweapon.xml" />
+	
+	<!-- player auto-bomb explosion -->
+	<import name="template/playerautobombexplosion.xml" />
+	
+	<!-- player smart bomb explosion -->
+	<import name="template/playersmartbombexplosion.xml" />
+	<import name="template/playersmartbombexplosion2.xml" />
+
+	<!-- player smart bomb ordnance -->
+	<import name="template/playersmartbombordnance.xml" />
+
+	<!-- player smart bomb weapon -->
+	<import name="template/playersmartbombweapon.xml" />
+
+	<import name="template/playerlaserbeamimpact.xml" />
+	<import name="template/playerlaserbeam.xml" />
+	<import name="template/playerlaserweapon.xml" />
+
+	<!-- player bomb -->
+	<import name="drawlist/playerbomb.xml" />
+	<import name="template/playerbombbullet.xml" />
+	<import name="template/playerbomb.xml" />
+	
+	<!-- player multiple -->
+	<import name="template/multiple.xml" />
+	<import name="template/multiple2.xml" />
+	<import name="template/multiple3.xml" />
+	<import name="template/multiple4.xml" />
+	<import name="template/multiple5.xml" />
+
+	<!-- player ship -->
+	<import name="drawlist/playerengineflame.xml" />
+	<import name="template/playership.xml" />
+	<import name="template/playershipinvulnerable.xml" />
+	
+	<template name="bombpickup">
+		<collidable>
+			<body name="main">
+				<circle radius="3">
+					<density value="1" />
+					<friction value="0.5" />
+					<restitution value="0.5" />
+					<filter name="environment" />
+					<mask default="0" bit1="1" />
+					<sensor value="1" />
+				</circle>
+				<damping linear="1" angular="1" />
+			</body>
+		</collidable>
+		<renderable radius="3" period="0.9">
+			<calldynamiclist name="playerbomb"/>
+		</renderable>
+		<pickup>
+			<team name="blue">
+				<resource name="level" add="1"/>
+			</team>
+		</pickup>
+	</template>
+
+	<!-- player ship death -->
+	<import name="template/playershipdeath.xml" />
+	<!-- player ship explosion -->
+	<import name="template/playershipexplosion.xml" />
+
+	<!-- tiny enemy explosion -->
+	<import name="template/enemyfireballexplosion.xml" />
+	<!-- small enemy explosion -->
+	<import name="template/enemyexplosionsmall.xml" />
+	<!-- enemy explosion -->
+	<import name="template/enemyexplosion.xml" />
+	<!-- enemy mine explosion -->
+	<import name="template/enemymineexplosion.xml" />
+	<!-- enemy bullet explosion -->
+	<import name="template/enemybulletexplosion.xml" />
+	<!-- enemy bullet -->
+	<import name="template/enemybullet.xml" />
+	<!-- enemy pulse bullet -->
+	<import name="template/enemypulsebullet.xml" />
+	<!-- enemy weapon -->
+	<import name="template/enemyweapon.xml" />
+
+	<!-- enemy engine flame -->
+	<import name="drawlist/enemyengineflame.xml" />
+
+	<!-- tiny enemy ship -->
+	<import name="template/enemyshiptiny.xml" />
+
+	<!-- small enemy ship -->
+	<import name="template/enemyshipsmall.xml" />
+
+	<!-- normal enemy ship -->
+	<import name="template/enemyshipweapon.xml" />
+	<import name="template/enemyship.xml" />
+
+	<!-- enemy mine -->
+	<import name="template/enemymine.xml" />
+
+	<!-- enemy bomber -->
+	<import name="template/enemybomber.xml" />
+
+	<!-- enemy space hum -->
+	<import name="template/enemyspacehum.xml" />
+	<import name="template/enemyspacehumtrail.xml" />
+
+	<!-- enemy dynamo -->
+	<import name="template/enemydynamo.xml" />
+
+	<!-- enemy vapor mine -->
+	<import name="template/enemymineshrapnel.xml" />
+	<import name="template/enemymineshrapnelspawn.xml" />
+	<import name="template/enemyvapormineexplosion.xml" />
+	<import name="template/enemyvapormine.xml" />
+
+	<!-- enemy command ship -->
+	<import name="template/enemycommandship.xml" />
+
+	<!-- enemy large ship -->
+	<import name="template/enemyshiplarge.xml" />
+
+	<!-- enemy missile weapon -->
+	<import name="template/missiletrail.xml" />
+	<import name="template/enemymissile.xml" />
+	<import name="template/enemyweaponmissile.xml" />
+	<import name="template/enemycannonmissile.xml" />
+	
+	<!-- enemy large ship: launcher -->
+	<import name="template/enemyshiplauncher.xml" />
+
+	<!-- enemy turreted ship -->
+	<import name="template/enemyshipturreted.xml" />
+	
+	<!-- enemy large ship: burst shot -->
+	<import name="template/enemyshipburst.xml" />
+
+	<!-- enemy large ship: spread shot -->
+	<import name="template/enemyshipspread.xml" />
+
+	<!-- enemy carrier -->
+	<import name="template/turret.xml"/>
+	<import name="template/enemycannon.xml"/>
+	<import name="template/enemycannon0.xml"/>
+	<import name="template/enemycannon1.xml"/>
+	<import name="template/enemyturret.xml"/>
+	<import name="template/enemyturret1.xml"/>
+	<import name="template/enemyturret2.xml"/>
+	<import name="template/enemyturret3.xml"/>
+	<import name="template/enemyturretmount1.xml"/>
+	<import name="template/enemyturretmount2.xml"/>
+	<import name="template/enemyturretmount3.xml"/>
+	<import name="template/enemycarrierexplosion.xml"/>
+	<import name="template/enemycarrier.xml"/>
+	
+
+	<!-- spawn patterns -->
+
+	<entity name="enemyshiptinyspawn1">
+		<position x="0" y="128"/>
+		<spawner>
+			<velocity x="0" y="-90" />
+			<scatter x="160"/>
+			<spawn name="enemyshiptiny" start="5" cycle="5" track="2"/>
+		</spawner>
+	</entity>
+
+	<entity name="enemyshiptinyspawn2">
+		<position x="0" y="-128"/>
+		<spawner>
+			<velocity x="0" y="90" />
+			<scatter x="160"/>
+			<spawn name="enemyshiptiny" start="25" cycle="5" track="2"/>
+		</spawner>
+	</entity>
+
+	<entity name="enemyshiptinyspawn3">
+		<position x="0" y="128"/>
+		<spawner>
+			<velocity x="0" y="-90" />
+			<scatter x="160"/>
+			<spawn name="enemyshiptiny" start="40" cycle="5" track="2"/>
+		</spawner>
+	</entity>
+
+	<entity name="enemyshiptinyspawn4">
+		<position x="0" y="-128"/>
+		<spawner>
+			<velocity x="0" y="90" />
+			<scatter x="160"/>
+			<spawn name="enemyshiptiny" start="55" cycle="5" track="2"/>
+		</spawner>
+	</entity>
+
+	<entity name="enemybomberspawn">
+		<position x="0" y="-128"/>
+		<spawner>
+			<velocity x="0" y="60" />
+			<scatter x="160"/>
+			<spawn name="enemybomber" start="10" cycle="15" track="4"/>
+		</spawner>
+	</entity>
+
+	<entity name="enemyshipsmallspawn1">
+		<position x="0" y="-128"/>
+		<spawner>
+			<velocity x="0" y="90" />
+			<scatter x="160"/>
+			<spawn name="enemyshipsmall" start="20" cycle="10" track="2"/>
+		</spawner>
+	</entity>
+
+	<entity name="enemyshipsmallspawn2">
+		<position x="0" y="128"/>
+		<spawner>
+			<velocity x="0" y="-90" />
+			<scatter x="160"/>
+			<spawn name="enemyshipsmall" start="65" cycle="10" track="2"/>
+		</spawner>
+	</entity>
+
+	<entity name="enemydynamospawn">
+		<position x="0" y="-128"/>
+		<spawner>
+			<velocity x="0" y="90" />
+			<scatter x="160"/>
+			<spawn name="enemydynamo" start="30" cycle="20" track="3"/>
+		</spawner>
+	</entity>
+
+	<entity name="enemyshipspawn">
+		<position x="0" y="128"/>
+		<spawner>
+			<velocity x="0" y="-90" />
+			<scatter x="160"/>
+			<spawn name="enemyship" start="45" cycle="15" track="1"/>
+		</spawner>
+	</entity>
+
+	<entity name="enemycommandshipspawn">
+		<position x="0" y="-128"/>
+		<spawner>
+			<velocity x="0" y="90" />
+			<scatter x="160"/>
+			<spawn name="enemycommandship" start="60" cycle="10" track="1"/>
+		</spawner>
+	</entity>
+	
+	<entity name="enemyshiplauncherspawn">
+		<position x="0" y="128"/>
+		<spawner>
+			<velocity x="0" y="-90" />
+			<scatter x="160"/>
+			<spawn name="enemyshiplauncher" start="75" cycle="15" track="1"/>
+		</spawner>
+	</entity>
+	
+	<entity name="enemyshipburstspawn">
+		<position x="0" y="128"/>
+		<spawner>
+			<velocity x="0" y="-90" />
+			<scatter x="160"/>
+			<spawn name="enemyshipburst" start="90" cycle="15" track="1"/>
+		</spawner>
+	</entity>
+
+	<entity name="enemyshipspreadspawn">
+		<position x="0" y="-128"/>
+		<spawner>
+			<velocity x="0" y="90" />
+			<scatter x="160"/>
+			<spawn name="enemyshipspread" start="120" cycle="15" track="1"/>
+		</spawner>
+	</entity>
+
+	<entity name="enemycarrierspawn">
+		<position x="0" y="128"/>
+		<spawner>
+			<velocity x="0" y="-30" />
+			<scatter x="160"/>
+			<spawn name="enemycarrier" start="150" cycle="30" track="1"/>
+		</spawner>
+	</entity>
+
+</world>

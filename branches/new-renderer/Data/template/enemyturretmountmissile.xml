@@ -1,0 +1,13 @@
+<?xml version="1.0" ?>
+<template name="enemyturretmountmissile" type="enemyturretmissile">
+	<collidable>
+		<body name="main">
+			<circle name="main">
+				<mask bit1="0" bit3="0" />
+			</circle>
+		</body>
+	</collidable>
+	<damagable health="10" spawnondeath="enemyexplosion" switchondeath="destroyedturretmount" />
+	<points value="250" />
+	<capturable resistance="10" spawnoncapture="friendturretmountmissile" />
+</template>

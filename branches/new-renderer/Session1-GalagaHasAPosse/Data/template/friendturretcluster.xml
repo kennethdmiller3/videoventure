@@ -1,0 +1,21 @@
+<?xml version="1.0" ?>
+<template name="friendturretcluster">
+	<link name="friendturretmissile" secondary="friendturretlauncherspawn">
+		<offset x="0" y="0" />
+	</link>
+	<link name="friendturret3" secondary="friendturret3spawn">
+		<offset x="0" y="48" />
+	</link>
+	<link name="friendturret2a" secondary="friendturret2spawn">
+		<offset x="64" y="16" />
+	</link>
+	<link name="friendturret2b" secondary="friendturret2spawn">
+		<offset x="-64" y="16" />
+	</link>
+	<link name="friendturret1a" secondary="friendturret1spawn">
+		<offset x="128" y="-16" />
+	</link>
+	<link name="friendturret1b" secondary="friendturret1spawn">
+		<offset x="-128" y="-16" />
+	</link>
+</template>

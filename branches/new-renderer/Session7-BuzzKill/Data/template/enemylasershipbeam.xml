@@ -1,0 +1,78 @@
+<?xml version="1.0" ?>
+<template name="enemylasershipbeam">
+	<expire time="0.5" />
+	<beam damage="10" range="256" filter="redbullet" spawnonimpact="enemyfireballexplosion" />
+	<renderable radius="256">
+		<quads>
+			<block length="0.1">
+				<color>
+					<key time="0.0" r="1.0" g="1.0" b="1.0" a="1.0" />
+					<key time="0.1" r="1.0" g="1.0" b="1.0" a="0.0" />
+				</color>
+				<set name="p" type="position">
+					<key time="0.0" x="2.0" />
+					<key time="0.1" x="0.0" />
+				</set>
+				<vertex variable="p" />
+				<mul name="p" type="scale" x="-1" />
+				<vertex variable="p" />
+				<add name="p" type="translate" variable="beamend" />
+				<vertex variable="p" />
+				<mul name="p" type="scale" x="-1" />
+				<vertex variable="p" />
+				<color>
+					<key time="0.0" r="1.0" g="1.0" b="1.0" a="0.2" />
+					<key time="0.1" r="1.0" g="1.0" b="1.0" a="0.0" />
+				</color>
+				<set name="p" type="position">
+					<key time="0.0" x="2.0" />
+					<key time="0.1" x="8.0" />
+				</set>
+				<vertex variable="p" />
+				<mul name="p" type="scale" x="-1" />
+				<vertex variable="p" />
+				<add name="p" type="translate" variable="beamend" />
+				<vertex variable="p" />
+				<mul name="p" type="scale" x="-1" />
+				<vertex variable="p" />
+			</block>
+			<block length="0.3">
+				<color>
+					<key time="0.0" r="1.0" g="0.8" b="0.1" a="1.0" />
+					<key time="0.3" r="1.0" g="0.5" b="0.0" a="0.0" />
+				</color>
+				<set name="p" type="position">
+					<key time="0.0" x="1.00" />
+					<key time="0.3" x="0.25" />
+				</set>
+				<vertex variable="p" />
+				<mul name="p" type="scale" x="-1" />
+				<vertex variable="p" />
+				<add name="p" type="translate" variable="beamend" />
+				<vertex variable="p" />
+				<mul name="p" type="scale" x="-1" />
+				<vertex variable="p" />
+			</block>
+			<block length="0.2">
+				<color>
+					<key time="0.0" r="1.0" g="0.5" b="0.0" a="0.5" />
+					<key time="0.2" r="1.0" g="0.0" b="0.0" a="0.0" />
+				</color>
+				<set name="p" type="position">
+					<key time="0.0" x="2.0" />
+					<key time="0.2" x="4.0" />
+				</set>
+				<vertex variable="p" />
+				<mul name="p" type="scale" x="-1" />
+				<vertex variable="p" />
+				<add name="p" type="translate" variable="beamend" />
+				<vertex variable="p" />
+				<mul name="p" type="scale" x="-1" />
+				<vertex variable="p" />
+			</block>
+		</quads>
+	</renderable>
+	<soundcue>
+		<cue sound="stargate-anotherenemykill" />
+	</soundcue>
+</template>

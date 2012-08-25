@@ -1,0 +1,45 @@
+<?xml version="1.0" ?>
+<sound name="stargate-podkill" volume="2">
+	<waveloop frequency="3579000" divider="4" delayrepeat="2" waverepeat="4" fadedelta="0" delaydelta="0" outerrepeat="256" fadestart="0">
+		<wave>
+			<data value="127" />
+			<data value="176" />
+			<data value="217" />
+			<data value="245" />
+			<data value="255" />
+			<data value="245" />
+			<data value="217" />
+			<data value="176" />
+			<data value="127" />
+			<data value="78" />
+			<data value="36" />
+			<data value="9" />
+			<data value="0" />
+			<data value="9" />
+			<data value="36" />
+			<data value="78" />
+		</wave>
+		<delay>
+			<data value="8" />
+			<data value="64" />
+			<data value="8" />
+			<data value="64" />
+			<data value="8" />
+			<data value="64" />
+			<data value="8" />
+			<data value="64" />
+			<data value="8" />
+			<data value="64" />
+			<data value="8" />
+			<data value="64" />
+			<data value="8" />
+			<data value="64" />
+			<data value="8" />
+			<data value="64" />
+			<data value="8" />
+			<data value="64" />
+			<data value="8" />
+			<data value="64" />
+		</delay>
+	</waveloop>
+</sound>
