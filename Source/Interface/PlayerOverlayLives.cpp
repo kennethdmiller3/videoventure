@@ -62,7 +62,7 @@ void PlayerOverlayLives::Render(unsigned int aId, float aTime, const Transform2 
 	glPushMatrix();
 	glTranslatef(livespos.x, livespos.y, 0.0f);
 	glScalef(-0.5f, -0.5f, 1);
-	glCallList(Database::drawlist.Get(0xeec1dafa /* "playership" */));
+	RenderStaticDrawlist(0xeec1dafa /* "playership" */, 0.0f, Transform2::Identity());
 	glPopMatrix();
 
 	// draw remaining lives

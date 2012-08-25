@@ -235,6 +235,7 @@
     <ClCompile Include="Source\Behavior\Task.cpp" />
     <ClCompile Include="Source\Behavior\WanderBehavior.cpp" />
     <ClCompile Include="Source\Render\Drawlist.cpp" />
+    <ClCompile Include="Source\Render\MatrixStack.cpp" />
     <ClCompile Include="Source\Render\Texture.cpp" />
     <ClCompile Include="Source\Shell\Escape.cpp" />
     <ClCompile Include="Source\Shell\EscapeMenuMain.cpp" />

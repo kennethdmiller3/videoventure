@@ -53,7 +53,7 @@
 	<!-- reticule -->
 	<import name="drawlist/reticule.xml" />
 	<!-- clouds -->
-	<entity name="clouds">
+  <!--entity name="clouds">
 		<renderable radius="512">
 			<drawlist>
 				<set name="d" type="translate" x="0" y="0" z="256" />
@@ -84,9 +84,9 @@
 				<clear name="d" />
 			</drawlist>
 		</renderable>
-	</entity>
+	</entity-->
 	<!-- starfield -->
-	<import name="template/starfield.xml" />
+  <import name="template/starfield.xml" />
 	<tilemap x="768" y="768" dx="-512" dy="-512">
 		<tile name="*" spawn="starfield" />
 		<row data="****" />

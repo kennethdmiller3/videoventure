@@ -68,9 +68,6 @@ unsigned int Random::gSeed = 0x92D68CA2;
 Vector2 camerapos[2];
 float CAMERA_DISTANCE = 256.0f;
 
-// reticule handle (HACK)
-GLuint reticule_handle;
-
 // pause state
 bool paused = false;
 bool singlestep = false;
@@ -97,7 +94,8 @@ static void Pause(void)
 
 static void Resume(void)
 {
-	Platform::ShowCursor(!reticule_handle);
+	// HACK
+	Platform::ShowCursor(Database::dynamicdrawlist.Find(0x170e4c58 /* "reticule" */) == NULL);
 	Platform::GrabInput(true);
 	Sound::Resume();
 }
@@ -522,6 +520,8 @@ void RunState()
 	BindTexture(accumHandle, accumTexture);
 #endif
 
+
+
 	// wait for user exit
 	do
 	{
@@ -812,6 +812,9 @@ void RunState()
 			// (send interpolation ratio and offset from simulation time)
 			Renderable::RenderAll(view);
 
+			// commit pending draw
+			RenderFlush();
+
 			// reset camera transform
 			glPopMatrix();
 
@@ -935,6 +938,9 @@ void RunState()
 
 		// render all overlays
 		Overlay::RenderAll();
+
+		// commit pending draw
+		RenderFlush();
 
 #ifdef GET_PERFORMANCE_DETAILS
 		overlay_timer.Stop();

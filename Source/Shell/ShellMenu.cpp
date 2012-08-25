@@ -2,7 +2,8 @@
 #include "ShellMenu.h"
 #include "ShellMenuItem.h"
 #include "Sound.h"
-
+#include "ExpressionEntity.h"
+#include "Drawlist.h"
 
 // draw options
 void ShellMenu::RenderOptions(unsigned int aId, float aTime, const Transform2 &aTransform)
@@ -70,8 +71,5 @@ void ShellMenu::RenderOptions(unsigned int aId, float aTime, const Transform2 &a
 	}
 
 	// draw reticule (HACK)
-	glPushMatrix();
-	glTranslatef(cursor_x, cursor_y, 0.0f);
-	glCallList(reticule_handle);
-	glPopMatrix();
+	RenderStaticDrawlist(0x170e4c58 /* "reticule" */, 0.0f, Transform2(0, Vector2(cursor_x, cursor_y)));
 }

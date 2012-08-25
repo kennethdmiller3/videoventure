@@ -176,8 +176,8 @@ extern GAME_API float sim_fraction;
 // camera position
 extern GAME_API Vector2 camerapos[2];
 
-// reticule handle (HACK)
-extern GLuint reticule_handle;
+// reticule drawlist
+extern std::vector<unsigned int> reticule_drawlist;
 
 
 // queue a turn action

@@ -8,12 +8,62 @@
 #include "Expression.h"
 #include "ExpressionConfigure.h"
 
+#include "MatrixStack.h"
 
+
+//
+// DEFINES
+//
+
+// enable "loop" drawlist element
 #define DRAWLIST_LOOP
 
+// how to manage static data
+// defined: create hardware static buffers (fast)
+// undefined: only create a static data pool (slow)
+#define DRAWLIST_STATIC_BUFFER
+
+// floating-point color format
+// defined: store color as GLfloat[4] (16 bytes)
+// undefined: store color as GLubyte[4] (4 bytes)
+//#define DRAWLIST_FLOAT_COLOR
+
+// how to copy work buffer to the dynamic buffer
+// defined: use glMapBufferRange and copy work data
+// undefined: use glBufferData to copy work data
+//#define DRAWLIST_DYNAMIC_BUFFER_RANGE
+
+// vertex count threshold for drawing from static buffer
+// undefined: always draw from static buffer
+// defined: copy and draw from dynamic buffer for batches smaller than this
+// setting this too low or too high can reduce rendering speed
+// static draw elements has significant fixed overhead cost but no memory copy cost
+// 32 +/- 16 seems to work best, with rapid decline below 16 and slow decline above 48
+// the best value is probably CPU-, GPU-, and workload-dependent...
+#define DRAWLIST_STATIC_THRESHOLD 32
+
+
+//
+// FORWARD DECLARATIONS
+//
 
 // execute a dynamic draw list
-void ExecuteDrawItems(EntityContext &aContext);
+static void ExecuteDrawItems(EntityContext &aContext);
+
+#if defined(DRAWLIST_STATIC_THRESHOLD) || !defined(DRAWLIST_STATIC_BUFFER)
+// copy elements
+void DO_CopyElements(EntityContext &aContext);
+#endif
+
+// draw elements
+void DO_DrawElements(EntityContext &aContext);
+
+// set static mode
+static bool SetStaticActive(bool aStatic);
+
+// configure static drawlist
+static void BeginStatic();
+static void EndStatic(unsigned int aId, std::vector<unsigned int> &buffer, const std::vector<unsigned int> &generate);
 
 
 //
@@ -57,7 +107,7 @@ static const int sScaleWidth = 3;
 //typedef Color4 DLColor;
 typedef __m128 DLColor;
 static const char * const sColorNames[] = { "r", "g", "b", "a" };
-static const float sColorDefault[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+static const float sColorDefault[] = { 1.0f, 1.0f, 1.0f, 1.0f };
 static const int sColorWidth = 4;
 
 //typedef Vector2 DLTexCoord;
@@ -87,47 +137,507 @@ void GetTypeData(unsigned int type, int &width, const char * const *&names, cons
 	}
 }
 
+
+//
+// BUFFER OBJECTS
+//
+
+// OpenGL 1.2 functions
+typedef void (APIENTRY * PFN_glDrawRangeElements)(GLenum , GLuint , GLuint , GLsizei , GLenum , const GLvoid *);
+static PFN_glDrawRangeElements glDrawRangeElements;
+
+// OpenGL 1.5 definitions
+#define GL_BUFFER_SIZE 0x8764
+#define GL_BUFFER_USAGE 0x8765
+#define GL_QUERY_COUNTER_BITS 0x8864
+#define GL_CURRENT_QUERY 0x8865
+#define GL_QUERY_RESULT 0x8866
+#define GL_QUERY_RESULT_AVAILABLE 0x8867
+#define GL_ARRAY_BUFFER 0x8892
+#define GL_ELEMENT_ARRAY_BUFFER 0x8893
+#define GL_ARRAY_BUFFER_BINDING 0x8894
+#define GL_ELEMENT_ARRAY_BUFFER_BINDING 0x8895
+#define GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING 0x889F
+#define GL_READ_ONLY 0x88B8
+#define GL_WRITE_ONLY 0x88B9
+#define GL_READ_WRITE 0x88BA
+#define GL_BUFFER_ACCESS 0x88BB
+#define GL_BUFFER_MAPPED 0x88BC
+#define GL_BUFFER_MAP_POINTER 0x88BD
+#define GL_STREAM_DRAW 0x88E0
+#define GL_STREAM_READ 0x88E1
+#define GL_STREAM_COPY 0x88E2
+#define GL_STATIC_DRAW 0x88E4
+#define GL_STATIC_READ 0x88E5
+#define GL_STATIC_COPY 0x88E6
+#define GL_DYNAMIC_DRAW 0x88E8
+#define GL_DYNAMIC_READ 0x88E9
+#define GL_DYNAMIC_COPY 0x88EA
+#define GL_SAMPLES_PASSED 0x8914
+
+// OpenGL 1.5 functions
+typedef ptrdiff_t GLintptr;
+typedef ptrdiff_t GLsizeiptr;
+typedef void (APIENTRY * PFN_glGenBuffers)(GLsizei n, GLuint *buffers);
+static PFN_glGenBuffers		glGenBuffers;
+typedef void (APIENTRY * PFN_glDeleteBuffers)(GLsizei n, const GLuint *buffers);
+static PFN_glDeleteBuffers	glDeleteBuffers;
+typedef void (APIENTRY * PFN_glBindBuffer)(GLenum target, GLuint buffer);
+static PFN_glBindBuffer		glBindBuffer;
+typedef void (APIENTRY * PFN_glBufferData)(GLenum target, GLsizeiptr size, const GLvoid *data, GLenum usage);
+static PFN_glBufferData		glBufferData;
+typedef void (APIENTRY * PFN_glBufferSubData)(GLenum target, GLintptr offset, GLsizeiptr size, const GLvoid *data);
+static PFN_glBufferSubData	glBufferSubData;
+typedef GLvoid* (APIENTRY * PFN_glMapBuffer)(GLenum , GLenum );
+static PFN_glMapBuffer glMapBuffer;
+typedef GLboolean (APIENTRY * PFN_glUnmapBuffer)(GLenum );
+static PFN_glUnmapBuffer glUnmapBuffer;
+
+// OpenGL map buffer range defines
+#define GL_MAP_READ_BIT 0x0001
+#define GL_MAP_WRITE_BIT 0x0002
+#define GL_MAP_INVALIDATE_RANGE_BIT 0x0004
+#define GL_MAP_INVALIDATE_BUFFER_BIT 0x0008
+#define GL_MAP_FLUSH_EXPLICIT_BIT 0x0010
+#define GL_MAP_UNSYNCHRONIZED_BIT 0x0020
+
+// OpenGL map buffer range extension functions
+typedef GLvoid* (APIENTRY * PFN_glMapBufferRange)(GLenum , GLintptr , GLsizeiptr , GLbitfield);
+static PFN_glMapBufferRange glMapBufferRange;
+
+enum BufferType
+{
+	BUFFER_DYNAMIC_VERTEX,
+	BUFFER_DYNAMIC_INDEX,
+	BUFFER_STATIC_VERTEX,
+	BUFFER_STATIC_INDEX,
+	BUFFER_COUNT
+};
+
+// buffer state
+struct BufferState
+{
+	GLuint mSize;
+	GLuint mHandle;
+	void *mData;
+	GLuint mStart;
+	GLuint mEnd;
+};
+static BufferState sBuffer[BUFFER_COUNT];
+
+// vertex work buffer
+static float sVertexWork[64 * 1024];
+static size_t sVertexUsed;
+static size_t sVertexCount;
+static size_t sVertexBase;
+
+// index work buffer
+static unsigned short sIndexWork[32 * 1024];
+static size_t sIndexCount;
+
+// static buffers active?
+static bool sStaticActive;
+static BufferState *sVertexBuffer;
+static BufferState *sIndexBuffer;
+
+// current vertex component values
+static DLNormal sNormal;
+#ifdef DRAWLIST_FLOAT_COLOR
+static DLColor sColor;
+#else
+static GLubyte sColor[4];
+#endif
+static DLTexCoord sTexCoord;
+
+// current drawing mode
+static GLenum sDrawMode;
+
+// active vertex components
+static bool sNormalActive;
+static bool sColorActive;
+static bool sTexCoordActive;
+
+struct PackedRenderState
+{
+	unsigned char mMode;
+	bool mNormal;
+	bool mColor;
+	bool mTexCoord;
+};
+
+// tag appended to generator drawlist name to prevent it from matching a template name:
+// this fixes a bug where a generator would be duplicated when a template inherited from
+// a template containing a drawlist (e.g. "playershipinvunlerable" from "playership"),
+// throwing off the static buffer generation sequence in RebuildDrawlists
+static const char * const sGenTag = "!generate";
+
+// draw elements from the currently active buffer array
+static void DrawElements(GLenum aDrawMode, bool aNormalActive, bool aColorActive, bool aTexCoordActive, GLuint aVertexOffset, GLuint aVertexCount, GLuint aIndexOffset, GLuint aIndexCount)
+{
+	// component sizes
+	const size_t sizeposition = sPositionWidth * sizeof(float);
+	const size_t sizenormal = aNormalActive * sNormalWidth * sizeof(float);
+#ifdef DRAWLIST_FLOAT_COLOR
+	const size_t sizecolor = aColorActive * sColorWidth * sizeof(float);
+#else
+	const size_t sizecolor = aColorActive * sColorWidth * sizeof(GLubyte);
+#endif
+	const size_t sizetexcoord = aTexCoordActive * sTexCoordWidth * sizeof(float);
+
+	// combined size
+	size_t sizevertex = sizeposition + sizenormal + sizecolor + sizetexcoord;
+
+	// set up pointers
+	size_t offset = aVertexOffset;
+	glVertexPointer(sPositionWidth, GL_FLOAT, sizevertex, reinterpret_cast<GLvoid *>(offset));
+	offset += sizeposition;
+	sNormalActive = aNormalActive;
+	if (aNormalActive)
+	{
+		glEnableClientState(GL_NORMAL_ARRAY);
+		glNormalPointer(GL_FLOAT, sizevertex, reinterpret_cast<GLvoid *>(offset));
+		offset += sizenormal;
+	}
+	else
+	{
+		glDisableClientState(GL_NORMAL_ARRAY);
+		glNormal3fv(sNormal.m128_f32);
+	}
+	sColorActive = aColorActive;
+	if (aColorActive)
+	{
+		glEnableClientState(GL_COLOR_ARRAY);
+#ifdef DRAWLIST_FLOAT_COLOR
+		glColorPointer(sColorWidth, GL_FLOAT, sizevertex, reinterpret_cast<GLvoid *>(offset));
+#else
+		glColorPointer(sColorWidth, GL_UNSIGNED_BYTE, sizevertex, reinterpret_cast<GLvoid *>(offset));
+#endif
+		offset += sizecolor;
+	}
+	else
+	{
+		glDisableClientState(GL_COLOR_ARRAY);
+#ifdef DRAWLIST_FLOAT_COLOR
+		glColor4fv(sColor.m128_f32);
+#else
+		glColor4ubv(sColor);
+#endif
+	}
+	sTexCoordActive = aTexCoordActive;
+	if (aTexCoordActive)
+	{
+		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+		glTexCoordPointer(sTexCoordWidth, GL_FLOAT, sizevertex, reinterpret_cast<GLvoid *>(offset));
+		offset += sizetexcoord;
+	}
+	else
+	{
+		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+		glTexCoord2fv(sTexCoord.m128_f32);
+	}
+
+	// draw elements
+	//glDrawElements(aDrawMode, aIndexCount, GL_UNSIGNED_SHORT, (GLvoid *)aIndexOffset);
+	if (aDrawMode == GL_POINTS)
+		glDrawArrays(aDrawMode, 0, aVertexCount);
+	else
+		glDrawRangeElements(aDrawMode, 0, aVertexCount, aIndexCount, GL_UNSIGNED_SHORT, (GLvoid *)aIndexOffset);
+}
+
+// flush static geometry
+static void FlushStatic(std::vector<unsigned int> &buffer)
+{
+	if (sVertexCount == 0 && sIndexCount == 0)
+		return;
+	assert(sDrawMode == GL_POINTS || sIndexCount > 0);
+
+	assert(sStaticActive);
+
+	// if the vertex buffer is full...
+	if (sVertexBuffer->mEnd + sVertexUsed * sizeof(float) > sVertexBuffer->mSize)
+	{
+		DebugPrint("Static vertex buffer is full");
+		return;
+	}
+
+	// if the element array buffer is full...
+	if (sIndexBuffer->mEnd + sIndexCount * sizeof(unsigned short) > sIndexBuffer->mSize)
+	{
+		DebugPrint("Static index buffer is full");
+		return;
+	}
+
+	DebugPrint("VB start=%d size=%d count=%d\n", sVertexBuffer->mEnd, sVertexUsed * sizeof(float), sVertexCount);
+	const float *vertex = sVertexWork;
+	for (size_t i = 0; i < sVertexCount; ++i)
+	{
+		DebugPrint("\t%d: p(%.2f %.2f %.2f)", i, vertex[0], vertex[1], vertex[2]);
+		vertex += 3;
+		if (sNormalActive)
+		{
+			DebugPrint(" n(%.2f %.2f %.2f)", vertex[0], vertex[1], vertex[2]);
+			vertex += 3;
+		}
+		if (sColorActive)
+		{
+#ifdef DRAWLIST_FLOAT_COLOR
+			DebugPrint(" c(%.2f %.2f %.2f %.2f)", vertex[0], vertex[1], vertex[2], vertex[3]);
+			vertex += 4;
+#else
+			const GLubyte *c = reinterpret_cast<const GLubyte *>(&vertex[0]);
+			DebugPrint(" c(%d %d %d %d)", c[0], c[1], c[2], c[3]);
+			vertex += 1;
+#endif
+		}
+		if (sTexCoordActive)
+		{
+			DebugPrint(" t(%.2f %.2f)", vertex[0], vertex[1]);
+			vertex += 2;
+		}
+		DebugPrint("\n");
+	}
+	DebugPrint("IB start=%d size=%d count=%d\n", sIndexBuffer->mEnd, sIndexCount * sizeof(unsigned short), sIndexCount);
+	const unsigned short *index = sIndexWork;
+	switch (sDrawMode)
+	{
+	case GL_POINTS:
+		for (size_t i = 0; i < sIndexCount; ++i)
+			DebugPrint("\t%d\n", index[i]);
+		break;
+	case GL_LINES:
+		for (size_t i = 0; i < sIndexCount; i += 2)
+			DebugPrint("\t%d %d\n", index[i], index[i + 1]);
+		break;
+	case GL_TRIANGLES:
+		for (size_t i = 0; i < sIndexCount; i += 3)
+			DebugPrint("\t%d %d %d\n", index[i], index[i + 1], index[i + 2]);
+		break;
+	default:
+		assert(0);
+		break;
+	}
+
+#ifdef DRAWLIST_STATIC_BUFFER
+	// copy vertex work buffer to the array buffer
+	glBufferSubData(GL_ARRAY_BUFFER, sVertexBuffer->mEnd, sVertexUsed * sizeof(float), sVertexWork);
+
+	// copy index work buffer to the element array buffer
+	glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, sIndexBuffer->mEnd, sIndexCount * sizeof(unsigned short), sIndexWork);
+#endif
+
+	// save a persistent copy
+	memcpy(reinterpret_cast<unsigned char *>(sVertexBuffer->mData) + sVertexBuffer->mEnd, sVertexWork, sVertexUsed * sizeof(float));
+	memcpy(reinterpret_cast<unsigned char *>(sIndexBuffer->mData) + sIndexBuffer->mEnd, sIndexWork, sIndexCount * sizeof(float));
+
+	// advance end offsets
+	sVertexBuffer->mEnd += sVertexUsed * sizeof(float);
+	sIndexBuffer->mEnd += sIndexCount * sizeof(unsigned short);
+
+	// add a draw elements command
+	PackedRenderState state;
+	state.mMode = unsigned char(sDrawMode);
+	state.mNormal = sNormalActive;
+	state.mColor = sColorActive;
+	state.mTexCoord = sTexCoordActive;
+#if defined(DRAWLIST_STATIC_BUFFER) && defined(DRAWLIST_STATIC_THRESHOLD)
+	if (sVertexCount < DRAWLIST_STATIC_THRESHOLD)
+#endif
+#if !defined(DRAWLIST_STATIC_BUFFER) || defined(DRAWLIST_STATIC_THRESHOLD)
+		Expression::Append(buffer, DO_CopyElements, state, sVertexBuffer->mStart, sVertexCount, sIndexBuffer->mStart, sIndexCount);
+#endif
+#ifdef DRAWLIST_STATIC_BUFFER
+#if defined(DRAWLIST_STATIC_THRESHOLD)
+	else
+#endif
+		Expression::Append(buffer, DO_DrawElements, state, sVertexBuffer->mStart, sVertexCount, sIndexBuffer->mStart, sIndexCount);
+#endif
+
+	// reset work buffer
+	sVertexUsed = 0;
+	sVertexCount = 0;
+	sVertexBase = 0;
+	sIndexCount = 0;
+
+	// get ready for the next batch
+	sVertexBuffer->mStart = sVertexBuffer->mEnd;
+	sIndexBuffer->mStart = sIndexBuffer->mEnd;
+}
+
+// flush dynamic geometry
+static void FlushDynamic(void)
+{
+	if (sVertexCount == 0 && sIndexCount == 0)
+		return;
+	assert(sDrawMode == GL_POINTS || sIndexCount > 0);
+
+	assert(!sStaticActive);
+
+#ifdef DEBUG_FLUSH_DYNAMIC
+	DebugPrint("Flush draw=%d n=%d c=%d t=%d\n", sDrawMode, sNormalActive, sColorActive, sTexCoordActive);
+	DebugPrint("DVB start=%d size=%d count=%d\n", sVertexBuffer->mStart, sVertexBuffer->mEnd - sVertexBuffer->mStart, sVertexCount);
+	const float *vertex = sVertexWork;
+	for (size_t i = 0; i < sVertexCount; ++i)
+	{
+		DebugPrint("\t%d: p(%.2f %.2f %.2f)", i, vertex[0], vertex[1], vertex[2]);
+		vertex += 3;
+		if (sNormalActive)
+		{
+			DebugPrint(" n(%.2f %.2f %.2f)", vertex[0], vertex[1], vertex[2]);
+			vertex += 3;
+		}
+		if (sColorActive)
+		{
+#ifdef DRAWLIST_FLOAT_COLOR
+			DebugPrint(" c(%.2f %.2f %.2f %.2f)", vertex[0], vertex[1], vertex[2], vertex[3]);
+			vertex += 4;
+#else
+			const GLubyte *c = reinterpret_cast<const GLubyte *>(&vertex[0]);
+			DebugPrint(" c(%d %d %d %d)", c[0], c[1], c[2], c[3]);
+			vertex += 1;
+#endif
+		}
+		if (sTexCoordActive)
+		{
+			DebugPrint(" t(%.2f %.2f)", vertex[0], vertex[1]);
+			vertex += 2;
+		}
+		DebugPrint("\n");
+	}
+	glUnmapBuffer(GL_ARRAY_BUFFER);
+
+	DebugPrint("DIB start=%d size=%d count=%d\n", sIndexBuffer->mStart, sIndexBuffer->mEnd - sIndexBuffer->mStart, sIndexCount);
+	const unsigned short *index = sIndexWork;
+	switch (sDrawMode)
+	{
+	case GL_POINTS:
+		for (size_t i = 0; i < sIndexCount; ++i)
+			DebugPrint("\t%d\n", index[i]);
+		break;
+	case GL_LINES:
+		for (size_t i = 0; i < sIndexCount; i += 2)
+			DebugPrint("\t%d %d\n", index[i], index[i + 1]);
+		break;
+	case GL_TRIANGLES:
+		for (size_t i = 0; i < sIndexCount; i += 3)
+			DebugPrint("\t%d %d %d\n", index[i], index[i + 1], index[i + 2]);
+		break;
+	default:
+		assert(0);
+		break;
+	}
+	glUnmapBuffer(GL_ELEMENT_ARRAY_BUFFER);
+#endif
+
+#ifndef DRAWLIST_DYNAMIC_BUFFER_RANGE
+
+	// copy vertex work buffer to the dynamic vertex buffer
+	// (this seems faster than using map buffer range)
+	sVertexBuffer->mStart = 0;
+	sVertexBuffer->mEnd = sVertexUsed * sizeof(float);
+	glBufferData(GL_ARRAY_BUFFER, sVertexBuffer->mEnd, sVertexWork, GL_STREAM_DRAW);
+
+	// copy index work buffer to the dynamic index buffer
+	// (this seems faster than using map buffer range)
+	sIndexBuffer->mStart = 0;
+	sIndexBuffer->mEnd = sIndexCount * sizeof(unsigned short);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sIndexBuffer->mEnd, sIndexWork, GL_STREAM_DRAW);
+
+#else
+
+	// if the vertex buffer is full...
+	if (sVertexBuffer->mEnd + sVertexUsed * sizeof(float) > sVertexBuffer->mSize)
+	{
+		// reset buffer data
+		glBufferData(GL_ARRAY_BUFFER, sVertexBuffer->mSize, NULL, GL_STREAM_DRAW);
+		sVertexBuffer->mStart = 0;
+		sVertexBuffer->mEnd = 0;
+	}
+
+	// if the element array buffer is full...
+	if (sIndexBuffer->mEnd + sIndexCount * sizeof(unsigned short) > sIndexBuffer->mSize)
+	{
+		// reset buffer data
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sIndexBuffer->mSize, NULL, GL_STREAM_DRAW);
+		sIndexBuffer->mStart = 0;
+		sIndexBuffer->mEnd = 0;
+	}
+
+	if (glMapBufferRange)
+	{
+		// copy vertex work buffer to the array buffer
+		if (void *data = glMapBufferRange(GL_ARRAY_BUFFER, sVertexBuffer->mEnd, sVertexUsed * sizeof(float), GL_MAP_WRITE_BIT|GL_MAP_INVALIDATE_RANGE_BIT|GL_MAP_UNSYNCHRONIZED_BIT))
+		{
+			memcpy(data, sVertexWork, sVertexUsed * sizeof(float));
+			glUnmapBuffer(GL_ARRAY_BUFFER);
+		}
+
+		// copy index work buffer to the element array buffer
+		if (void *data = glMapBufferRange(GL_ELEMENT_ARRAY_BUFFER, sIndexBuffer->mEnd, sIndexCount * sizeof(unsigned short), GL_MAP_WRITE_BIT|GL_MAP_INVALIDATE_RANGE_BIT|GL_MAP_UNSYNCHRONIZED_BIT))
+		{
+			memcpy(data, sIndexWork, sIndexCount * sizeof(unsigned short));
+			glUnmapBuffer(GL_ELEMENT_ARRAY_BUFFER);
+		}
+	}
+	else
+	{
+		// copy vertex work buffer to the array buffer
+		glBufferSubData(GL_ARRAY_BUFFER, sVertexBuffer->mEnd, sVertexUsed * sizeof(float), sVertexWork);
+
+		// copy index work buffer to the element array buffer
+		glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, sIndexBuffer->mEnd, sIndexCount * sizeof(unsigned short), sIndexWork);
+	}
+
+	// advance end offsets
+	sVertexBuffer->mEnd += sVertexUsed * sizeof(float);
+	sIndexBuffer->mEnd += sIndexCount * sizeof(unsigned short);
+#endif
+
+	// draw elements
+	DrawElements(sDrawMode, sNormalActive, sColorActive, sTexCoordActive, sVertexBuffer->mStart, sVertexCount, sIndexBuffer->mStart, sIndexCount);
+
+	// reset work buffer
+	sVertexUsed = 0;
+	sVertexCount = 0;
+	sVertexBase = 0;
+	sIndexCount = 0;
+
+	// get ready for the next batch
+	sVertexBuffer->mStart = sVertexBuffer->mEnd;
+	sIndexBuffer->mStart = sIndexBuffer->mEnd;
+}
+
+
 namespace Database
 {
 	Typed<std::vector<unsigned int> > dynamicdrawlist(0xdf3cf9c0 /* "dynamicdrawlist" */);
-	Typed<GLuint> drawlist(0xc98b019b /* "drawlist" */);
+	Typed<std::vector<unsigned int> > generatedrawlist(0x7deba542 /* "generatedrawlist" */);
+	Typed<std::vector<unsigned int> > drawlist(0xc98b019b /* "drawlist" */);
+	//Typed<DrawRecord> drawrecord(0x7e069162 /* "drawrecord" */);
 
 	namespace Loader
 	{
 		static void DynamicDrawlistConfigure(unsigned int aId, const tinyxml2::XMLElement *element)
 		{
 			std::vector<unsigned int> &buffer = Database::dynamicdrawlist.Open(aId);
-			ConfigureDrawItems(element, buffer);
+			assert(buffer.size() == 0);
+			ConfigureDrawItems(aId, element, buffer, false);
 			Database::dynamicdrawlist.Close(aId);
 		}
 		Configure dynamicdrawlistconfigure(0xdf3cf9c0 /* "dynamicdrawlist" */, DynamicDrawlistConfigure);
 
 		static void DrawlistConfigure(unsigned int aId, const tinyxml2::XMLElement *element)
 		{
-			// create a new draw list
-			GLuint handle = glGenLists(1);
-			glNewList(handle, GL_COMPILE);
-
-			// register the draw list
-			Database::drawlist.Put(aId, handle);
-
-			// get (optional) parameter value
-			float param = 0.0f;
-			element->QueryFloatAttribute("param", &param);
-
-			// configure the dynamic draw list
-			std::vector<unsigned int> &drawlist = Database::dynamicdrawlist.Open(handle);
-			ConfigureDrawItems(element, drawlist);
-
-			// execute the dynamic draw list
-			EntityContext context(&drawlist[0], drawlist.size(), param, aId);
-			ExecuteDrawItems(context);
-
-			// close the dynamic draw list
-			Database::dynamicdrawlist.Close(handle);
-
-			// finish the draw list
-			glEndList();
+			// configure static drawlist and generator drawlist
+			Database::Key genId(Hash(sGenTag, aId));
+			std::vector<unsigned int> &generate = Database::generatedrawlist.Open(genId);
+			assert(generate.size() == 0);
+			std::vector<unsigned int> &buffer = Database::drawlist.Open(aId);
+			assert(buffer.size() == 0);
+			BeginStatic();
+			ConfigureDrawItems(aId, element, generate, true);
+			EndStatic(aId, buffer, generate);
+			Database::drawlist.Close(aId);
+			Database::generatedrawlist.Close(genId);
 		}
 		Configure drawlistconfigure(0xc98b019b /* "drawlist" */, DrawlistConfigure);
 
@@ -154,32 +664,6 @@ namespace Database
 	}
 
 }
-
-#if 0
-static const unsigned int sHashToAttribMask[][2] =
-{
-	{ 0xd965bbda /* "current" */,			GL_CURRENT_BIT },
-	{ 0x18ae6c91 /* "point" */,				GL_POINT_BIT },
-	{ 0x17db1627 /* "line" */,				GL_LINE_BIT },
-	{ 0x051cb889 /* "polygon" */,			GL_POLYGON_BIT },
-	{ 0x67b14997 /* "polygon_stipple" */,	GL_POLYGON_STIPPLE_BIT },
-	{ 0xccde91eb /* "pixel_mode" */,		GL_LIGHTING_BIT },
-	{ 0x827eb1c9 /* "lighting" */,			GL_POINT_BIT },
-	{ 0xa1f3723f /* "fog" */,				GL_FOG_BIT },
-	{ 0x65e5b825 /* "depth_buffer" */,		GL_DEPTH_BUFFER_BIT },
-	{ 0x907f6213 /* "accum_buffer" */,		GL_ACCUM_BUFFER_BIT },
-	{ 0x632020be /* "stencil_buffer" */,	GL_STENCIL_BUFFER_BIT },
-	{ 0xe4abbac3 /* "viewport" */,			GL_VIEWPORT_BIT },
-	{ 0xe1ad931b /* "transform" */,			GL_TRANSFORM_BIT },
-	{ 0xaf8bb8ce /* "enable" */,			GL_ENABLE_BIT },
-	{ 0x0d759bbb /* "color_buffer" */,		GL_COLOR_BUFFER_BIT },
-	{ 0x4bc809b8 /* "hint" */,				GL_HINT_BIT },
-	{ 0x08d22e0f /* "eval" */,				GL_EVAL_BIT },
-	{ 0x0cfb5881 /* "list" */,				GL_LIST_BIT },
-	{ 0x3c6468f4 /* "texture" */,			GL_TEXTURE_BIT },
-	{ 0x0adbc081 /* "scissor" */,			GL_SCISSOR_BIT },
-};
-#endif
 
 
 //
@@ -228,171 +712,669 @@ bool EvaluateVariableOperator(EntityContext &aContext)
 // DRAWLIST OPERATIONS
 //
 
-void DO_glArrayElement(EntityContext &aContext)
-{
-	glArrayElement(Expression::Read<GLint>(aContext));
-}
-
-void DO_glBegin(EntityContext &aContext)
+#if 0
+void DO_Begin(EntityContext &aContext)
 {
 	glBegin(Expression::Read<GLenum>(aContext));
 }
+#endif
 
-void DO_glBindTexture(EntityContext &aContext)
+struct BakeContext : public EntityContext
 {
+	std::vector<unsigned int> *mTarget;
+
+	BakeContext(std::vector<unsigned int> *aTarget, const unsigned int *aBuffer, const size_t aSize, float aParam, unsigned int aId, Database::Typed<float> *aVars = NULL)
+		: EntityContext(aBuffer, aSize, aParam, aId, aVars)
+		, mTarget(aTarget)
+	{
+	}
+};
+
+void DO_CallListBake(BakeContext &aContext)
+{
+	const unsigned int name(Expression::Read<unsigned int>(aContext));
+
+	const std::vector<unsigned int> &generate = Database::generatedrawlist.Get(name);
+	BakeContext context(aContext.mTarget, &generate[0], generate.size(), 0.0f, aContext.mId, aContext.mVars);
+	ExecuteDrawItems(context);
+}
+
+void DO_DrawMode(EntityContext &aContext)
+{
+	// get the render state
+	PackedRenderState state(Expression::Read<PackedRenderState>(aContext));
+
+	// switch to dynamic mode
+	SetStaticActive(false);
+
+	// different draw mode or vertex format is different
+	if (sDrawMode != state.mMode ||
+		sNormalActive != state.mNormal ||
+		sColorActive != state.mColor ||
+		sTexCoordActive != state.mTexCoord)
+	{
+		// flush geometry
+		FlushDynamic();
+
+		// switch to the requested render state
+#ifdef DEBUG_DYNAMIC_DRAW_MODE_CHANGE
+		DebugPrint("DrawMode: mode=%d->%d normal=%d->%d color=%d->%d texcoord=%d->%d\n",
+			sDrawMode, state.mMode, 
+			sNormalActive, state.mNormal,
+			sColorActive, state.mColor,
+			sTexCoordActive, state.mTexCoord);
+#endif
+		sDrawMode = state.mMode;
+		sNormalActive = state.mNormal;
+		sColorActive = state.mColor;
+		sTexCoordActive = state.mTexCoord;
+	}
+
+	// set the vertex base
+	sVertexBase = sVertexCount;
+}
+
+void DO_DrawModeBake(BakeContext &aContext)
+{
+	// get the render state
+	PackedRenderState state(Expression::Read<PackedRenderState>(aContext));
+
+	// different draw mode or vertex format is different
+	if (sDrawMode != state.mMode ||
+		sNormalActive < state.mNormal ||
+		sColorActive < state.mColor ||
+		sTexCoordActive < state.mTexCoord)
+	{
+		// flush geometry
+		FlushStatic(*aContext.mTarget);
+
+		// switch to the requested render state
+		sDrawMode = state.mMode;
+		sNormalActive |= state.mNormal;
+		sColorActive |= state.mColor;
+		sTexCoordActive |= state.mTexCoord;
+	}
+
+	// set the vertex base
+	sVertexBase = sVertexCount;
+}
+
+void DO_BindTexture(EntityContext &aContext)
+{
+	FlushDynamic();
+
 	const GLenum target(Expression::Read<GLenum>(aContext));
 	const GLuint texture(Expression::Read<GLuint>(aContext));
 	glBindTexture(target, texture);
 }
 
-void DO_glBlendFunc(EntityContext &aContext)
+void DO_BindTextureBake(BakeContext &aContext)
 {
+	FlushStatic(*aContext.mTarget);
+
+	const GLenum target(Expression::Read<GLenum>(aContext));
+	const GLuint texture(Expression::Read<GLuint>(aContext));
+	Expression::Append(*aContext.mTarget, DO_BindTexture, target, texture);
+}
+
+void DO_BlendFunc(EntityContext &aContext)
+{
+	FlushDynamic();
+
 	const GLenum sfactor(Expression::Read<GLenum>(aContext));
 	const GLenum dfactor(Expression::Read<GLenum>(aContext));
 	glBlendFunc(sfactor, dfactor);
 }
 
-void DO_glCallList(EntityContext &aContext)
+void DO_BlendFuncBake(BakeContext &aContext)
 {
-	glCallList(Expression::Read<GLuint>(aContext));
+	FlushStatic(*aContext.mTarget);
+
+	const GLenum sfactor(Expression::Read<GLenum>(aContext));
+	const GLenum dfactor(Expression::Read<GLenum>(aContext));
+	Expression::Append(*aContext.mTarget, DO_BlendFunc, sfactor, dfactor);
 }
 
-void DO_glColor4fv(EntityContext &aContext)
+void DO_Color(EntityContext &aContext)
 {
-	const DLColor value(Expression::Evaluate<DLColor>(aContext));
-	glColor4fv(value.m128_f32);
+	sColorActive = true;
+#ifdef DRAWLIST_FLOAT_COLOR
+	sColor = Expression::Evaluate<DLColor>(aContext);
+#else
+	DLColor c(Expression::Evaluate<DLColor>(aContext));
+	sColor[0] = GLubyte(Clamp(xs_RoundToInt(c.m128_f32[0]*255), 0, 255));
+	sColor[1] = GLubyte(Clamp(xs_RoundToInt(c.m128_f32[1]*255), 0, 255));
+	sColor[2] = GLubyte(Clamp(xs_RoundToInt(c.m128_f32[2]*255), 0, 255));
+	sColor[3] = GLubyte(Clamp(xs_RoundToInt(c.m128_f32[3]*255), 0, 255));
+#endif
 }
 
-void DO_glDisable(EntityContext &aContext)
+void DO_Disable(EntityContext &aContext)
 {
-	glDisable(Expression::Read<GLenum>(aContext));
+	FlushDynamic();
+	GLenum cap(Expression::Read<GLenum>(aContext));
+	glDisable(cap);
 }
 
-void DO_glEnable(EntityContext &aContext)
+void DO_DisableBake(BakeContext &aContext)
 {
-	glEnable(Expression::Read<GLenum>(aContext));
+	FlushStatic(*aContext.mTarget);
+	GLenum cap(Expression::Read<GLenum>(aContext));
+	Expression::Append(*aContext.mTarget, DO_Disable, cap);
 }
 
-void DO_glEnd(EntityContext &aContext)
+void DO_CopyElements(EntityContext &aContext)
 {
-	glEnd();
+	// get rendering state
+	PackedRenderState state(Expression::Read<PackedRenderState>(aContext));
+	GLuint vertexOffset(Expression::Read<GLuint>(aContext));
+	GLuint vertexCount(Expression::Read<GLuint>(aContext));
+	GLuint indexOffset(Expression::Read<GLuint>(aContext));
+	GLuint indexCount(Expression::Read<GLuint>(aContext));
+
+	// switch to dynamic mode
+	SetStaticActive(false);
+
+	// different draw mode or vertex format is different
+	if (sDrawMode != state.mMode ||
+		sNormalActive < state.mNormal ||
+		sColorActive < state.mColor ||
+		sTexCoordActive < state.mTexCoord)
+	{
+		// flush geometry
+		FlushDynamic();
+
+		// switch to the requested render state
+		sDrawMode = state.mMode;
+		sNormalActive |= state.mNormal;
+		sColorActive |= state.mColor;
+		sTexCoordActive |= state.mTexCoord;
+	}
+
+	// component sizes
+	const size_t sizeposition = sPositionWidth * sizeof(float);
+	const size_t sizedstnormal = sNormalActive * sNormalWidth * sizeof(float);
+	const size_t sizesrcnormal = state.mNormal * sNormalWidth * sizeof(float);
+#ifdef DRAWLIST_FLOAT_COLOR
+	const size_t sizedstcolor = sColorActive * sColorWidth * sizeof(float);
+	const size_t sizesrccolor = state.mColor * sColorWidth * sizeof(float);
+#else
+	const size_t sizedstcolor = sColorActive * sColorWidth * sizeof(GLubyte);
+	const size_t sizesrccolor = state.mColor * sColorWidth * sizeof(GLubyte);
+#endif
+	const size_t sizedsttexcoord = sTexCoordActive * sTexCoordWidth * sizeof(float);
+	const size_t sizesrctexcoord = state.mTexCoord * sTexCoordWidth * sizeof(float);
+
+	// combined size
+	const size_t sizevertex = sizeposition + sizedstnormal + sizedstcolor + sizedsttexcoord;
+
+	// if a work buffer is full...
+	if (sVertexUsed * sizeof(float) + vertexCount * sizevertex > sizeof(sVertexWork) ||
+		(sIndexCount + indexCount) * sizeof(unsigned short) > sizeof(sIndexWork))
+	{
+		// flush geometry
+		FlushDynamic();
+	}
+
+	// set the vertex base
+	sVertexBase = sVertexCount;
+
+	// get static data source
+	const float *srcVertex = reinterpret_cast<const float *>(intptr_t(sBuffer[BUFFER_STATIC_VERTEX].mData) + vertexOffset);
+	const unsigned short *srcIndex = reinterpret_cast<unsigned short *>(intptr_t(sBuffer[BUFFER_STATIC_INDEX].mData) + indexOffset);
+
+	// get work data destination
+	float *dstVertex = sVertexWork + sVertexUsed;
+	unsigned short *dstIndex = sIndexWork + sIndexCount;
+
+	// copy and transform vertex data
+	DLPosition pos = _mm_set_ps1(1);
+	DLNormal nrm = _mm_set_ps1(0);
+	for (size_t i = 0; i < vertexCount; ++i)
+	{
+		memcpy(&pos, srcVertex, sizeposition);
+		pos = StackTransformPosition(pos);
+		memcpy(dstVertex, &pos, sizeposition);
+		//_mm_storeu_ps(dstVertex, StackTransformPosition(_mm_loadu_ps(srcVertex)));
+		srcVertex += sizeposition / sizeof(float);
+		dstVertex += sizeposition / sizeof(float);
+
+		if (sizedstnormal)
+		{
+			if (sizesrcnormal)
+				memcpy(&nrm, srcVertex, sizesrcnormal);
+			else
+				nrm = sNormal;
+			nrm = StackTransformNormal(nrm);
+			memcpy(dstVertex, &nrm, sizedstnormal);
+			//_mm_storeu_ps(dstVertex, StackTransformNormal(_mm_loadu_ps(srcVertex)));
+		}
+		srcVertex += sizesrcnormal / sizeof(float);
+		dstVertex += sizedstnormal / sizeof(float);
+
+		if (sizedstcolor)
+		{
+			if (sizesrccolor)
+				memcpy(dstVertex, srcVertex, sizesrccolor);
+			else
+				memcpy(dstVertex, &sColor, sizedstcolor);
+		}
+		srcVertex += sizesrccolor / sizeof(float);
+		dstVertex += sizedstcolor / sizeof(float);
+
+		if (sizedsttexcoord)
+		{
+			if (sizesrctexcoord)
+				memcpy(dstVertex, srcVertex, sizesrctexcoord);
+			else
+				memcpy(dstVertex, &sTexCoord, sizedsttexcoord);
+		}
+		srcVertex += sizesrctexcoord / sizeof(float);
+		dstVertex += sizedsttexcoord / sizeof(float);
+	}
+
+	// copy and adjust indices
+	for (size_t i = 0; i < indexCount; ++i)
+	{
+		*dstIndex++ = unsigned short(*srcIndex++ + sVertexBase);
+	}
+
+	// update vertex work buffer
+	sVertexUsed = dstVertex - sVertexWork;
+	sVertexCount += vertexCount;
+
+	// update index work buffer
+	sIndexCount += indexCount;
 }
 
-void DO_glLineWidth(EntityContext &aContext)
+#ifdef DRAWLIST_STATIC_BUFFER
+void DO_DrawElements(EntityContext &aContext)
 {
+	// if not currently in static mode...
+	if (!sStaticActive)
+	{
+		// flush dynamic geometry
+		FlushDynamic();
+
+		// switch to static mode
+		SetStaticActive(true);
+	}
+
+	// sync opengl matrix
+	glPushMatrix();
+	glMultMatrixf(StackGetMatrix());
+
+	// get rendering state
+	PackedRenderState state(Expression::Read<PackedRenderState>(aContext));
+	GLuint vertexOffset(Expression::Read<GLuint>(aContext));
+	GLuint vertexCount(Expression::Read<GLuint>(aContext));
+	GLuint indexOffset(Expression::Read<GLuint>(aContext));
+	GLuint indexCount(Expression::Read<GLuint>(aContext));
+
+	// draw elements using the specified rendering state
+	DrawElements(state.mMode, state.mNormal, state.mColor, state.mTexCoord, vertexOffset, vertexCount, indexOffset, indexCount);
+
+	// 
+	glPopMatrix();
+}
+#endif
+
+void DO_Enable(EntityContext &aContext)
+{
+	FlushDynamic();
+	GLenum cap(Expression::Read<GLenum>(aContext));
+	glEnable(cap);
+}
+
+void DO_EnableBake(BakeContext &aContext)
+{
+	FlushStatic(*aContext.mTarget);
+	GLenum cap(Expression::Read<GLenum>(aContext));
+	Expression::Append(*aContext.mTarget, DO_Enable, cap);
+}
+
+void DO_IndexPoints(EntityContext &aContext)
+{
+	// points don't use indices :)
+}
+
+void DO_IndexLines(EntityContext &aContext)
+{
+	const GLuint start(sVertexBase);
+	const GLuint count(sVertexCount - sVertexBase);
+	for (register GLuint i = 0; i < count; ++i)
+	{
+		sIndexWork[sIndexCount++] = unsigned short(start + i);
+	}
+}
+
+void DO_IndexLineLoop(EntityContext &aContext)
+{
+	const GLuint start(sVertexBase);
+	const GLuint count(sVertexCount - sVertexBase);
+	for (register GLuint i = 0; i < count - 1; ++i)
+	{
+		sIndexWork[sIndexCount++] = unsigned short(start + i);
+		sIndexWork[sIndexCount++] = unsigned short(start + i + 1);
+	}
+	sIndexWork[sIndexCount++] = unsigned short(start + count - 1);
+	sIndexWork[sIndexCount++] = unsigned short(start);
+}
+
+void DO_IndexLineStrip(EntityContext &aContext)
+{
+	const GLuint start(sVertexBase);
+	const GLuint count(sVertexCount - sVertexBase);
+	for (register GLuint i = 0; i < count - 1; ++i)
+	{
+		sIndexWork[sIndexCount++] = unsigned short(start + i);
+		sIndexWork[sIndexCount++] = unsigned short(start + i + 1);
+	}
+}
+
+void DO_IndexTriangles(EntityContext &aContext)
+{
+	const GLuint start(sVertexBase);
+	const GLuint count(sVertexCount - sVertexBase);
+	for (register GLuint i = 0; i < count; ++i)
+	{
+		sIndexWork[sIndexCount++] = unsigned short(start + i);
+	}
+}
+
+void DO_IndexTriangleStrip(EntityContext &aContext)
+{
+	const GLuint start(sVertexBase);
+	const GLuint count(sVertexCount - sVertexBase);
+	for (register GLuint i = 0; i < count - 2; ++i)
+	{
+		const int odd = i & 1;
+		sIndexWork[sIndexCount++] = unsigned short(start + i + odd);
+		sIndexWork[sIndexCount++] = unsigned short(start + i + 1 - odd);
+		sIndexWork[sIndexCount++] = unsigned short(start + i + 2);
+	}
+}
+
+void DO_IndexTriangleFan(EntityContext &aContext)
+{
+	const GLuint start(sVertexBase);
+	const GLuint count(sVertexCount - sVertexBase);
+	for (register GLuint i = 1; i < count - 1; ++i)
+	{
+		sIndexWork[sIndexCount++] = unsigned short(start);
+		sIndexWork[sIndexCount++] = unsigned short(start + i);
+		sIndexWork[sIndexCount++] = unsigned short(start + i + 1);
+	}
+}
+
+void DO_IndexQuads(EntityContext &aContext)
+{
+	const GLuint start(sVertexBase);
+	const GLuint count(sVertexCount - sVertexBase);
+	for (register GLuint i = 0; i < count; i += 4)
+	{
+		sIndexWork[sIndexCount++] = unsigned short(start + i);
+		sIndexWork[sIndexCount++] = unsigned short(start + i + 1);
+		sIndexWork[sIndexCount++] = unsigned short(start + i + 2);
+		sIndexWork[sIndexCount++] = unsigned short(start + i);
+		sIndexWork[sIndexCount++] = unsigned short(start + i + 2);
+		sIndexWork[sIndexCount++] = unsigned short(start + i + 3);
+	}
+}
+
+void DO_IndexQuadStrip(EntityContext &aContext)
+{
+	const GLuint start(sVertexBase);
+	const GLuint count(sVertexCount - sVertexBase);
+	for (register GLuint i = 0; i < count - 2; i += 2)
+	{
+		sIndexWork[sIndexCount++] = unsigned short(start + i);
+		sIndexWork[sIndexCount++] = unsigned short(start + i + 1);
+		sIndexWork[sIndexCount++] = unsigned short(start + i + 3);
+		sIndexWork[sIndexCount++] = unsigned short(start + i);
+		sIndexWork[sIndexCount++] = unsigned short(start + i + 3);
+		sIndexWork[sIndexCount++] = unsigned short(start + i + 2);
+	}
+}
+
+void DO_IndexPolygon(EntityContext &aContext)
+{
+	const GLuint start(sVertexBase);
+	const GLuint count(sVertexCount - sVertexBase);
+	for (register GLuint i = 1; i < count - 1; ++i)
+	{
+		sIndexWork[sIndexCount++] = unsigned short(start);
+		sIndexWork[sIndexCount++] = unsigned short(start + i);
+		sIndexWork[sIndexCount++] = unsigned short(start + i + 1);
+	}
+}
+
+void DO_LineWidth(EntityContext &aContext)
+{
+	FlushDynamic();
+
 	const GLfloat width(Expression::Read<GLfloat>(aContext));
 	glLineWidth(width);
 }
 
-void DO_glLineWidthWorld(EntityContext &aContext)
+void DO_LineWidthBake(BakeContext &aContext)
 {
-	const GLfloat width(Expression::Read<GLfloat>(aContext) * float(SCREEN_HEIGHT) / VIEW_SIZE);
-	glLineWidth(width);
+	FlushStatic(*aContext.mTarget);
+
+	const GLfloat width(Expression::Read<GLfloat>(aContext));
+	Expression::Append(*aContext.mTarget, DO_LineWidth, width);
 }
 
-void DO_glLoadIdentity(EntityContext &aContext)
+void DO_LineWidthWorld(EntityContext &aContext)
 {
-	glLoadIdentity();
+	FlushDynamic();
+
+	const GLfloat width(Expression::Read<GLfloat>(aContext));
+	glLineWidth(width * float(SCREEN_HEIGHT) / VIEW_SIZE);
 }
 
-void DO_glLoadMatrixf(EntityContext &aContext)
+void DO_LineWidthWorldBake(BakeContext &aContext)
 {
-	glLoadMatrixf(reinterpret_cast<const GLfloat *>(aContext.mStream));
+	FlushStatic(*aContext.mTarget);
+
+	const GLfloat width(Expression::Read<GLfloat>(aContext));
+	Expression::Append(*aContext.mTarget, DO_LineWidthWorld, width);
+}
+
+void DO_LoadIdentity(EntityContext &aContext)
+{
+	// glLoadIdentity();
+	StackIdentity();
+}
+
+void DO_LoadMatrix(EntityContext &aContext)
+{
+	//glLoadMatrixf(reinterpret_cast<const GLfloat *>(aContext.mStream));
+	StackLoad(reinterpret_cast<const float *>(aContext.mStream));
 	aContext.mStream += (16*sizeof(GLfloat)+sizeof(unsigned int)-1)/sizeof(unsigned int);
 }
 
-void DO_glMultMatrixf(EntityContext &aContext)
+void DO_MultMatrix(EntityContext &aContext)
 {
-	glMultMatrixf(reinterpret_cast<const GLfloat *>(aContext.mStream));
+	//glMultMatrixf(reinterpret_cast<const GLfloat *>(aContext.mStream));
+	StackMult(reinterpret_cast<const float *>(aContext.mStream));
 	aContext.mStream += (16*sizeof(GLfloat)+sizeof(unsigned int)-1)/sizeof(unsigned int);
 }
 
-void DO_glNormal3fv(EntityContext &aContext)
+void DO_Normal(EntityContext &aContext)
 {
-	const DLNormal value(Expression::Evaluate<DLNormal>(aContext));
-	glNormal3fv(value.m128_f32);
+	sNormalActive = true;
+	sNormal = StackTransformNormal(Expression::Evaluate<DLNormal>(aContext));
 }
 
-void DO_glPointSize(EntityContext &aContext)
+void DO_PointSize(EntityContext &aContext)
 {
+	FlushDynamic();
+
 	const GLfloat size(Expression::Read<GLfloat>(aContext));
 	glPointSize(size);
 }
 
-void DO_glPointSizeWorld(EntityContext &aContext)
+void DO_PointSizeBake(BakeContext &aContext)
 {
-	const GLfloat size(Expression::Read<GLfloat>(aContext) * float(SCREEN_HEIGHT) / VIEW_SIZE);
-	glPointSize(size);
+	FlushStatic(*aContext.mTarget);
+
+	const GLfloat size(Expression::Read<GLfloat>(aContext));
+	Expression::Append(*aContext.mTarget, DO_PointSize, size);
 }
 
-void DO_glPopAttrib(EntityContext &aContext)
+void DO_PointSizeWorld(EntityContext &aContext)
 {
+	FlushDynamic();
+
+	const GLfloat size(Expression::Read<GLfloat>(aContext));
+	glPointSize(size * float(SCREEN_HEIGHT) / VIEW_SIZE);
+}
+
+void DO_PointSizeWorldBake(BakeContext &aContext)
+{
+	FlushStatic(*aContext.mTarget);
+
+	const GLfloat size(Expression::Read<GLfloat>(aContext));
+	Expression::Append(*aContext.mTarget, DO_PointSizeWorld, size);
+}
+
+void DO_PopAttrib(EntityContext &aContext)
+{
+	FlushDynamic();
+
 	glPopAttrib();
 }
 
-void DO_glPopMatrix(EntityContext &aContext)
+void DO_PopAttribBake(BakeContext &aContext)
 {
-	glPopMatrix();
+	FlushStatic(*aContext.mTarget);
+
+	Expression::Append(*aContext.mTarget, DO_PopAttrib);
 }
 
-void DO_glPushAttrib(EntityContext &aContext)
+void DO_PopMatrix(EntityContext &aContext)
 {
-	glPushAttrib(Expression::Read<GLbitfield>(aContext));
+	//glPopMatrix();
+	StackPop();
 }
 
-void DO_glPushMatrix(EntityContext &aContext)
+void DO_PushAttrib(EntityContext &aContext)
 {
-	glPushMatrix();
+	FlushDynamic();
+
+	GLbitfield mask(Expression::Read<GLbitfield>(aContext));
+	glPushAttrib(mask);
 }
 
-void DO_glRotatef(EntityContext &aContext)
+void DO_PushAttribBake(BakeContext &aContext)
+{
+	FlushStatic(*aContext.mTarget);
+
+	GLbitfield mask(Expression::Read<GLbitfield>(aContext));
+	Expression::Append(*aContext.mTarget, DO_PushAttrib, mask);
+}
+
+void DO_PushMatrix(EntityContext &aContext)
+{
+	//glPushMatrix();
+	StackPush();
+}
+
+void DO_Rotate(EntityContext &aContext)
 {
 	const float value(Expression::Evaluate<DLRotation>(aContext));
-	glRotatef(value, 0, 0, 1);
+	//glRotatef(value, 0, 0, 1);
+	StackRotate(value*float(M_PI/180.0f));
 }
 
-void DO_glScalef(EntityContext &aContext)
+void DO_Scale(EntityContext &aContext)
 {
 	const DLScale value(Expression::Evaluate<DLScale>(aContext));
-	glScalef(value.m128_f32[0], value.m128_f32[1], value.m128_f32[2]);
+	StackScale(value);
 }
 
-void DO_glTexCoord2fv(EntityContext &aContext)
+void DO_TexCoord(EntityContext &aContext)
 {
-	const DLTexCoord value(Expression::Evaluate<DLTexCoord>(aContext));
-	glTexCoord2fv(value.m128_f32);
+	sTexCoordActive = true;
+	sTexCoord = Expression::Evaluate<DLTexCoord>(aContext);
 }
 
-void DO_glTexEnvi(EntityContext &aContext)
+void DO_TexEnvi(EntityContext &aContext)
 {
+	FlushDynamic();
+
 	const GLenum pname(Expression::Read<GLint>(aContext));
 	const GLint param(Expression::Read<GLint>(aContext));
 	glTexEnvi( GL_TEXTURE_ENV, pname, param );
 }
 
-void DO_glTranslatef(EntityContext &aContext)
+void DO_TexEnviBake(BakeContext &aContext)
 {
-	const DLTranslation value(Expression::Evaluate<DLTranslation>(aContext));
-	glTranslatef(value.m128_f32[0], value.m128_f32[1], value.m128_f32[2]);
+	FlushStatic(*aContext.mTarget);
+
+	const GLenum pname(Expression::Read<GLint>(aContext));
+	const GLint param(Expression::Read<GLint>(aContext));
+	Expression::Append(*aContext.mTarget, DO_TexEnvi, pname, param);
 }
 
-void DO_glVertex3fv(EntityContext &aContext)
+void DO_Translate(EntityContext &aContext)
 {
-	const DLPosition value(Expression::Evaluate<DLPosition>(aContext));
-	glVertex3fv(value.m128_f32);
+	const DLTranslation value(Expression::Evaluate<DLTranslation>(aContext));
+	StackTranslate(value);
+}
+
+void DO_Vertex(EntityContext &aContext)
+{
+	const DLPosition value(StackTransformPosition(Expression::Evaluate<DLPosition>(aContext)));
+
+	// component sizes
+	const size_t sizeposition = sPositionWidth * sizeof(float);
+	const size_t sizenormal = sNormalActive * sNormalWidth * sizeof(float);
+#ifdef DRAWLIST_FLOAT_COLOR
+	const size_t sizecolor = sColorActive * sColorWidth * sizeof(float);
+#else
+	const size_t sizecolor = sColorActive * sColorWidth * sizeof(GLubyte);
+#endif
+	const size_t sizetexcoord = sTexCoordActive * sTexCoordWidth * sizeof(float);
+
+	// combined size
+	size_t sizevertex = sizeposition + sizenormal + sizecolor + sizetexcoord;
+
+	// make sure there's enough room for the data
+	assert(sVertexUsed * sizeof(float) + sizevertex < sizeof(sVertexWork));
+
+	// add data to the work buffer
+	// NOTE: this generates interleaved vertex data
+	memcpy(sVertexWork + sVertexUsed, &value, sizeposition);
+	sVertexUsed += sizeposition / sizeof(float);
+	if (sNormalActive)
+	{
+		memcpy(sVertexWork + sVertexUsed, &sNormal, sizenormal);
+		sVertexUsed += sizenormal / sizeof(float);
+	}
+	if (sColorActive)
+	{
+		memcpy(sVertexWork + sVertexUsed, &sColor, sizecolor);
+		sVertexUsed += sizecolor / sizeof(float);
+	}
+	if (sTexCoordActive)
+	{
+		memcpy(sVertexWork + sVertexUsed, &sTexCoord, sizetexcoord);
+		sVertexUsed += sizetexcoord / sizeof(float);
+	}
+	++sVertexCount;
 }
 
 void DO_Repeat(EntityContext &aContext)
 {
 	const int repeat(Expression::Read<int>(aContext));
 	const size_t size(Expression::Read<size_t>(aContext));
-	EntityContext context(aContext);
-	context.mBegin = context.mStream;
-	context.mEnd = context.mStream + size;
+	EntityContext context(aContext.mStream, size, aContext.mParam, aContext.mId, aContext.mVars);
 	for (int i = 0; i < repeat; i++)
 	{
-		context.mStream = context.mBegin;
 		ExecuteDrawItems(context);
+		context.Restart();
 	}
 	aContext.mStream += size;
 }
@@ -412,10 +1394,7 @@ void DO_Block(EntityContext &aContext)
 		{
 			t -= loop * length;
 			t *= scale;
-			EntityContext context(aContext);
-			context.mBegin = context.mStream;
-			context.mEnd = context.mStream + size;
-			context.mParam = t;
+			EntityContext context(aContext.mStream, size, t, aContext.mId, aContext.mVars);
 			ExecuteDrawItems(context);
 		}
 	}
@@ -455,16 +1434,14 @@ void DO_Loop(EntityContext &aContext)
 	const size_t size = Expression::Read<size_t>(aContext);
 
 //		Database::Typed<float> &variables = Database::variable.Open(aContext.mId);
-	EntityContext context(aContext);
-	context.mBegin = context.mStream;
-	context.mEnd = context.mStream + size;
+	EntityContext context(aContext.mStream, size, aContext.mParam, aContext.mId, aContext.mVars);
 	if (by > 0)
 	{
 		for (float value = from; value <= to; value += by)
 		{
 			context.mVars->Put(name, value);
-			context.mStream = aContext.mStream;
 			ExecuteDrawItems(context);
+			context.Restart();
 		}
 	}
 	else
@@ -472,8 +1449,8 @@ void DO_Loop(EntityContext &aContext)
 		for (float value = from; value >= to; value += by)
 		{
 			context.mVars->Put(name, value);
-			context.mStream = aContext.mStream;
 			ExecuteDrawItems(context);
+			context.Restart();
 		}
 	}
 	context.mVars->Delete(name);
@@ -515,11 +1492,93 @@ void ConfigureVariableClear(const tinyxml2::XMLElement *element, std::vector<uns
 }
 
 
-void ConfigurePrimitive(const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer, GLenum mode)
+void ConfigurePrimitive(GLenum mode, unsigned int aId, const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer, bool bake)
 {
-	Expression::Append(buffer, DO_glBegin, mode);
-	ConfigureDrawItems(element, buffer);
-	Expression::Append(buffer, DO_glEnd);
+	typedef void (*Op)(EntityContext &);
+	Op indexop;
+	GLenum drawmode;
+	switch (mode)
+	{
+	default:
+		assert(false);
+	case GL_POINTS:
+		drawmode = GL_POINTS;
+		indexop = DO_IndexPoints;
+		break;
+
+	case GL_LINES:
+		drawmode = GL_LINES;
+		indexop = DO_IndexLines;
+		break;
+
+	case GL_LINE_LOOP:
+		drawmode = GL_LINES;
+		indexop = DO_IndexLineLoop;
+		break;
+
+	case GL_LINE_STRIP:
+		drawmode = GL_LINES;
+		indexop = DO_IndexLineStrip;
+		break;
+
+	case GL_TRIANGLES:
+		drawmode = GL_TRIANGLES;
+		indexop = DO_IndexTriangles;
+		break;
+
+	case GL_TRIANGLE_STRIP:
+		drawmode = GL_TRIANGLES;
+		indexop = DO_IndexTriangleStrip;
+		break;
+
+	case GL_TRIANGLE_FAN:
+		drawmode = GL_TRIANGLES;
+		indexop = DO_IndexTriangleFan;
+		break;
+
+	case GL_QUADS:
+		drawmode = GL_TRIANGLES;
+		indexop = DO_IndexQuads;
+		break;
+
+	case GL_QUAD_STRIP:
+		drawmode = GL_TRIANGLES;
+		indexop = DO_IndexQuadStrip;
+		break;
+
+	case GL_POLYGON:
+		drawmode = GL_TRIANGLES;
+		indexop = DO_IndexPolygon;
+		break;
+	}
+
+	// set draw mode
+	// this operator does two things:
+	// 1. flush geometry if the mode or active components change
+	// 2. set the vertex base for index generation
+	if (bake)
+		Expression::Append(buffer, DO_DrawModeBake);
+	else
+		Expression::Append(buffer, DO_DrawMode);
+
+	// reserve space for draw mode render state
+	// NOTE: don't save the pointer because resizing the buffer will invalidate it
+	size_t start = buffer.size();
+	Expression::Alloc(buffer, sizeof(PackedRenderState));
+
+	// add vertex-generation operations
+	// this will set active components
+	ConfigureDrawItems(aId, element, buffer, bake);
+
+	// fill in the draw mode render state
+	PackedRenderState &state = *new (&buffer[start]) PackedRenderState;
+	state.mMode = unsigned char(drawmode);
+	state.mNormal = sNormalActive;
+	state.mColor = sColorActive;
+	state.mTexCoord = sTexCoordActive;
+
+	// add index operation
+	Expression::Append(buffer, indexop);
 }
 
 GLenum GetPrimitiveMode(const char *mode)
@@ -540,19 +1599,321 @@ GLenum GetPrimitiveMode(const char *mode)
 	}
 }
 
+static void ConfigureMatrix(const tinyxml2::XMLElement *element, float m[])
+{
+	for (int i = 0; i < 16; i++)
+	{
+		char name[16];
+		sprintf(name, "m%d", i);
+		m[i] = sMatrixDefault[i];
+		element->QueryFloatAttribute(name, &m[i]);
+	}
+}
 
-void ConfigureDrawItem(const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer)
+#if 0
+// transform: pushmatrix, popmatrix, loadidentity, loadmatrix, multmatrix, rotate, translate, scale
+// primitive: points, lines, line_loop, line_strip, triangles, triangle_strip, triangle_fan, quads, quad_strip, polygon
+// geometry: vertex, normal, color, texcoord
+// grouping: drawlist, dynamicdrawlist, repeat, block, loop
+// variable: set, add, sub, mul, div, min, max, swizzle, clear
+// renderstate: pushattrib, popattrib, bindtexture, texenv, blendfunc
+
+// leave point primitives alone (no need to index)
+// convert line primitives to indexed lines
+// convert poly primitives to indexed triangles
+// combine primitive with previous primitive when possible
+// same draw type (points, lines, triangles)
+// no intervening renderstate commands; those act as barriers
+// static: next vertex format is a subset of the current format
+// dynamic: next vertex format matches current format
+// base decision on the size of the next block?
+
+// item: ConfigureDynamicDrawItem(const tinyxml2::XMLElement *element, std::vector<unsigned int> &drawlist)
+// block: ConfigureDynamicDrawItems(const tinyxml2::XMLElement *element, std::vector<unsigned int> &drawlist)
+// transform/primitive/geometry/grouping/variable commands in dynamicdrawlist
+// emit geometry to dynamic VB/IB at runtime
+// include drawelements and other commands in dynamicdrawlist
+// drawlist command: handle = drawlist.count + 1; dummy = drawlist[handle]; generate = generatedrawlist[handle]; ConfigureStaticDrawItems(element, generate, drawlist)
+// dynamicdrawlist command: dynamic = dynamicdrawlist[name], ConfigureDynamicDrawItems(element, dynamic)
+
+// item: ConfigureStaticDrawItem(const tinyxml2::XMLElement *element, std::vector<unsigned int> &drawlist, std::vector<unsigned int> &generate)
+// block: ConfigureStaticDrawItems(const tinyxml2::XMLElement *element, std::vector<unsigned int> &drawlist, std::vector<unsigned int> &generate)
+// transform/primitive/geometry/grouping/variable commands in generatedrawlist
+// emit geometry to static VB/IB during configure
+// exclude drawelements and other commands from generatedrawlist
+// include drawelements and other commands in staticdrawlist
+// drawlist command: inline contents ConfigureStaticDrawItems(element, generate, drawlist)
+// dynamicdrawlist command: ?
+
+// forbid renderstate command inside primitive
+// forbid vertex command outside of primitive
+// normal, color, or texcoord command outside of primitive saves value and activates component
+#endif
+
+void ConfigureDrawItem(unsigned int aId, const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer, bool bake)
 {
 	const char *label = element->Value();
 	switch (Hash(label))
 	{
+		//
+		// TRANSFORM COMMANDS
+
 	case 0x974c9474 /* "pushmatrix" */:
 		{
-			Expression::Append(buffer, DO_glPushMatrix);
-			ConfigureDrawItems(element, buffer);
-			Expression::Append(buffer, DO_glPopMatrix);
+			Expression::Append(buffer, DO_PushMatrix);
+			ConfigureDrawItems(aId, element, buffer, bake);
+			Expression::Append(buffer, DO_PopMatrix);
 		}
 		break;
+
+	case 0xad0ecfd5 /* "translate" */:
+		{
+			Expression::Append(buffer, DO_Translate);
+			Expression::Loader<DLTranslation>::ConfigureRoot(element, buffer, sPositionNames, sPositionDefault);
+		}
+		break;
+
+	case 0xa5f4fd0a /* "rotate" */:
+		{
+			Expression::Append(buffer, DO_Rotate);
+			Expression::Loader<DLRotation>::ConfigureRoot(element, buffer, sRotationNames, sRotationDefault);
+		}
+		break;
+
+	case 0x82971c71 /* "scale" */:
+		{
+			Expression::Append(buffer, DO_Scale);
+			Expression::Loader<DLScale>::ConfigureRoot(element, buffer, sScaleNames, sScaleDefault);
+		}
+		break;
+
+	case 0x938fc4f7 /* "loadidentity" */:
+		{
+			Expression::Append(buffer, DO_LoadIdentity);
+		}
+		break;
+
+	case 0x7d22a710 /* "loadmatrix" */:
+		{
+			float m[16];
+			ConfigureMatrix(element, m);
+			Expression::Append(buffer, DO_LoadMatrix);
+			Expression::Append(buffer, m);
+		}
+		break;
+
+	case 0x3807cb92 /* "multmatrix" */:
+		{
+			float m[16];
+			ConfigureMatrix(element, m);
+			Expression::Append(buffer, DO_MultMatrix);
+			Expression::Append(buffer, m);
+		}
+		break;
+
+		//
+		// GEOMETRY COMMANDS
+
+	case 0x945367a7 /* "vertex" */:
+		{
+			Expression::Append(buffer, DO_Vertex);
+			Expression::Loader<DLPosition>::ConfigureRoot(element, buffer, sPositionNames, sPositionDefault);
+		}
+		break;
+
+	case 0xe68b9c52 /* "normal" */:
+		{
+			sNormalActive = true;
+			Expression::Append(buffer, DO_Normal);
+			Expression::Loader<DLNormal>::ConfigureRoot(element, buffer, sNormalNames, sNormalDefault);
+		}
+		break;
+
+	case 0x3d7e6258 /* "color" */:
+		{
+			sColorActive = true;
+			Expression::Append(buffer, DO_Color);
+			Expression::Loader<DLColor>::ConfigureRoot(element, buffer, sColorNames, sColorDefault);
+		}
+		break;
+
+	case 0xdd612dd3 /* "texcoord" */:
+		{
+			sTexCoordActive = true;
+			Expression::Append(buffer, DO_TexCoord);
+			Expression::Loader<DLTexCoord>::ConfigureRoot(element, buffer, sTexCoordNames, sTexCoordDefault);
+		}
+		break;
+
+		//
+		// PRIMITIVE COMMANDS
+
+	case 0xbc9567c6 /* "points" */:
+		{
+			float size = 0.0f;
+			element->QueryFloatAttribute("size", &size);
+			if (size != 0.0f)
+			{
+				if (bake)
+				{
+					Expression::Append(buffer, DO_PushAttribBake, GL_POINT_BIT);
+					Expression::Append(buffer, DO_PointSizeWorldBake, size);
+				}
+				else
+				{
+					Expression::Append(buffer, DO_PushAttrib, GL_POINT_BIT);
+					Expression::Append(buffer, DO_PointSizeWorld, size);
+				}
+			}
+			ConfigurePrimitive(GL_POINTS, aId, element, buffer, bake);
+			if (size != 0.0f)
+			{
+				if (bake)
+				{
+					Expression::Append(buffer, DO_PopAttribBake);
+				}
+				else
+				{
+					Expression::Append(buffer, DO_PopAttrib);
+				}
+			}
+		}
+		break;
+
+	case 0xe1e4263c /* "lines" */:
+		{
+			float width = 0.0f;
+			element->QueryFloatAttribute("width", &width);
+			if (width != 0.0f)
+			{
+				if (bake)
+				{
+					Expression::Append(buffer, DO_PushAttribBake, GL_LINE_BIT);
+					Expression::Append(buffer, DO_LineWidthWorldBake, width);
+				}
+				else
+				{
+					Expression::Append(buffer, DO_PushAttrib, GL_LINE_BIT);
+					Expression::Append(buffer, DO_LineWidthWorld, width);
+				}
+			}
+			ConfigurePrimitive(GL_LINES, aId, element, buffer, bake);
+			if (width != 0.0f)
+			{
+				if (bake)
+				{
+					Expression::Append(buffer, DO_PopAttribBake);
+				}
+				else
+				{
+					Expression::Append(buffer, DO_PopAttrib);
+				}
+			}
+		}
+		break;
+
+	case 0xc2106ab6 /* "line_loop" */:
+		{
+			float width = 0.0f;
+			element->QueryFloatAttribute("width", &width);
+			if (width != 0.0f)
+			{
+				if (bake)
+				{
+					Expression::Append(buffer, DO_PushAttribBake, GL_LINE_BIT);
+					Expression::Append(buffer, DO_LineWidthWorldBake, width);
+				}
+				else
+				{
+					Expression::Append(buffer, DO_PushAttrib, GL_LINE_BIT);
+					Expression::Append(buffer, DO_LineWidthWorld, width);
+				}
+			}
+			ConfigurePrimitive(GL_LINE_LOOP, aId, element, buffer, bake);
+			if (width != 0.0f)
+			{
+				if (bake)
+				{
+					Expression::Append(buffer, DO_PopAttribBake);
+				}
+				else
+				{
+					Expression::Append(buffer, DO_PopAttrib);
+				}
+			}
+		}
+		break;
+
+	case 0xc6f2fa0e /* "line_strip" */:
+		{
+			float width = 0.0f;
+			element->QueryFloatAttribute("width", &width);
+			if (width != 0.0f)
+			{
+				if (bake)
+				{
+					Expression::Append(buffer, DO_PushAttribBake, GL_LINE_BIT);
+					Expression::Append(buffer, DO_LineWidthWorldBake, width);
+				}
+				else
+				{
+					Expression::Append(buffer, DO_PushAttrib, GL_LINE_BIT);
+					Expression::Append(buffer, DO_LineWidthWorld, width);
+				}
+			}
+			ConfigurePrimitive(GL_LINE_STRIP, aId, element, buffer, bake);
+			if (width != 0.0f)
+			{
+				if (bake)
+				{
+					Expression::Append(buffer, DO_PopAttribBake);
+				}
+				else
+				{
+					Expression::Append(buffer, DO_PopAttrib);
+				}
+			}
+		}
+		break;
+
+	case 0xd8a57342 /* "triangles" */:
+		{
+			ConfigurePrimitive(GL_TRIANGLES, aId, element, buffer, bake);
+		}
+		break;
+
+	case 0x668b2dd8 /* "triangle_strip" */:
+		{
+			ConfigurePrimitive(GL_TRIANGLE_STRIP, aId, element, buffer, bake);
+		}
+		break;
+
+	case 0xcfa6904f /* "triangle_fan" */:
+		{
+			ConfigurePrimitive(GL_TRIANGLE_FAN, aId, element, buffer, bake);
+		}
+		break;
+
+	case 0x5667b307 /* "quads" */:
+		{
+			ConfigurePrimitive(GL_QUADS, aId, element, buffer, bake);
+		}
+		break;
+
+	case 0xb47cad9b /* "quad_strip" */:
+		{
+			ConfigurePrimitive(GL_QUAD_STRIP, aId, element, buffer, bake);
+		}
+		break;
+
+	case 0x051cb889 /* "polygon" */:
+		{
+			ConfigurePrimitive(GL_POLYGON, aId, element, buffer, bake);
+		}
+		break;
+
+		//
+		// RENDERSTATE COMMANDS
 
 	case 0x937cff81 /* "pushattrib" */:
 		{
@@ -589,106 +1950,45 @@ void ConfigureDrawItem(const tinyxml2::XMLElement *element, std::vector<unsigned
 				else
 					mask &= ~bit;
 			}
-			Expression::Append(buffer, DO_glPushAttrib, mask);
-			ConfigureDrawItems(element, buffer);
-			Expression::Append(buffer, DO_glPopAttrib);
-		}
-		break;
 
-	case 0xad0ecfd5 /* "translate" */:
-		{
-			Expression::Append(buffer, DO_glTranslatef);
-			Expression::Loader<DLTranslation>::ConfigureRoot(element, buffer, sPositionNames, sPositionDefault);
-		}
-		break;
-
-	case 0xa5f4fd0a /* "rotate" */:
-		{
-			Expression::Append(buffer, DO_glRotatef);
-			Expression::Loader<DLRotation>::ConfigureRoot(element, buffer, sRotationNames, sRotationDefault);
-		}
-		break;
-
-	case 0x82971c71 /* "scale" */:
-		{
-			Expression::Append(buffer, DO_glScalef);
-			Expression::Loader<DLScale>::ConfigureRoot(element, buffer, sScaleNames, sScaleDefault);
-		}
-		break;
-
-	case 0x938fc4f7 /* "loadidentity" */:
-		{
-			Expression::Append(buffer, DO_glLoadIdentity);
-		}
-		break;
-
-	case 0x7d22a710 /* "loadmatrix" */:
-		{
-			Expression::Append(buffer, DO_glLoadMatrixf);
-			for (int i = 0; i < 16; i++)
+			if (bake)
 			{
-				char name[16];
-				sprintf(name, "m%d", i);
-				float m = sMatrixDefault[i];
-				element->QueryFloatAttribute(name, &m);
-				Expression::Append(buffer, m);
+				Expression::Append(buffer, DO_PushAttribBake, mask);
+				ConfigureDrawItems(aId, element, buffer, bake);
+				Expression::Append(buffer, DO_PopAttribBake);
 			}
-		}
-		break;
-
-	case 0x3807cb92 /* "multmatrix" */:
-		{
-			Expression::Append(buffer, DO_glMultMatrixf);
-			for (int i = 0; i < 16; i++)
+			else
 			{
-				char name[16];
-				sprintf(name, "m%d", i);
-				float m = sMatrixDefault[i];
-				element->QueryFloatAttribute(name, &m);
-				Expression::Append(buffer, m);
+				Expression::Append(buffer, DO_PushAttrib, mask);
+				ConfigureDrawItems(aId, element, buffer, bake);
+				Expression::Append(buffer, DO_PopAttrib);
 			}
-		}
-		break;
 
-	case 0x945367a7 /* "vertex" */:
-		{
-			Expression::Append(buffer, DO_glVertex3fv);
-			Expression::Loader<DLPosition>::ConfigureRoot(element, buffer, sPositionNames, sPositionDefault);
-		}
-		break;
-
-	case 0xe68b9c52 /* "normal" */:
-		{
-			Expression::Append(buffer, DO_glNormal3fv);
-			Expression::Loader<DLNormal>::ConfigureRoot(element, buffer, sPositionNames, sPositionDefault);
-		}
-		break;
-
-	case 0x3d7e6258 /* "color" */:
-		{
-			Expression::Append(buffer, DO_glColor4fv);
-			Expression::Loader<DLColor>::ConfigureRoot(element, buffer, sColorNames, sColorDefault);
-		}
-		break;
-
-	case 0xdd612dd3 /* "texcoord" */:
-		{
-			Expression::Append(buffer, DO_glTexCoord2fv);
-			Expression::Loader<DLTexCoord>::ConfigureRoot(element, buffer, sTexCoordNames, sTexCoordDefault);
 		}
 		break;
 
 	case 0x4dead571 /* "bindtexture" */:
 		{
-			const char *name = element->Attribute("name");
-			if (name)
+			if (const char *name = element->Attribute("name"))
 			{
 				GLuint texture = Database::texture.Get(Hash(name));
 				if (texture)
 				{
 					// bind the texture object
-					Expression::Append(buffer, DO_glEnable, GL_TEXTURE_2D);
-					Expression::Append(buffer, DO_glBindTexture, GL_TEXTURE_2D, texture);
+					if (bake)
+					{
+						Expression::Append(buffer, DO_EnableBake, GL_TEXTURE_2D);
+						Expression::Append(buffer, DO_BindTextureBake, GL_TEXTURE_2D, texture);
+					}
+					else
+					{
+						Expression::Append(buffer, DO_Enable, GL_TEXTURE_2D);
+						Expression::Append(buffer, DO_BindTexture, GL_TEXTURE_2D, texture);
+					}
+				}
+				else
+				{
+					DebugPrint("Missing texture %s", name);
 				}
 			}
 		}
@@ -705,111 +2005,10 @@ void ConfigureDrawItem(const tinyxml2::XMLElement *element, std::vector<unsigned
 			case 0x0bbc40d8 /* "blend" */:		blendmode = GL_BLEND; break;
 			case 0xa13884c3 /* "replace" */:	blendmode = GL_REPLACE; break;
 			}
-			Expression::Append(buffer, DO_glTexEnvi, GL_TEXTURE_ENV_MODE, blendmode);
-		}
-		break;
-
-	case 0xbc9567c6 /* "points" */:
-		{
-			float size = 0.0f;
-			element->QueryFloatAttribute("size", &size);
-			if (size != 0.0f)
-			{
-				Expression::Append(buffer, DO_glPushAttrib, GL_POINT_BIT);
-				Expression::Append(buffer, DO_glPointSizeWorld, size);
-			}
-			ConfigurePrimitive(element, buffer, GL_POINTS);
-			if (size != 0.0f)
-			{
-				Expression::Append(buffer, DO_glPopAttrib);
-			}
-		}
-		break;
-
-	case 0xe1e4263c /* "lines" */:
-		{
-			float width = 0.0f;
-			element->QueryFloatAttribute("width", &width);
-			if (width != 0.0f)
-			{
-				Expression::Append(buffer, DO_glPushAttrib, GL_LINE_BIT);
-				Expression::Append(buffer, DO_glLineWidthWorld, width);
-			}
-			ConfigurePrimitive(element, buffer, GL_LINES);
-			if (width != 0.0f)
-			{
-				Expression::Append(buffer, DO_glPopAttrib);
-			}
-		}
-		break;
-
-	case 0xc2106ab6 /* "line_loop" */:
-		{
-			float width = 0.0f;
-			element->QueryFloatAttribute("width", &width);
-			if (width != 0.0f)
-			{
-				Expression::Append(buffer, DO_glPushAttrib, GL_LINE_BIT);
-				Expression::Append(buffer, DO_glLineWidthWorld, width);
-			}
-			ConfigurePrimitive(element, buffer, GL_LINE_LOOP);
-			if (width != 0.0f)
-			{
-				Expression::Append(buffer, DO_glPopAttrib);
-			}
-		}
-		break;
-
-	case 0xc6f2fa0e /* "line_strip" */:
-		{
-			float width = 0.0f;
-			element->QueryFloatAttribute("width", &width);
-			if (width != 0.0f)
-			{
-				Expression::Append(buffer, DO_glPushAttrib, GL_LINE_BIT);
-				Expression::Append(buffer, DO_glLineWidthWorld, width);
-			}
-			ConfigurePrimitive(element, buffer, GL_LINE_STRIP);
-			if (width != 0.0f)
-			{
-				Expression::Append(buffer, DO_glPopAttrib);
-			}
-		}
-		break;
-
-	case 0xd8a57342 /* "triangles" */:
-		{
-			ConfigurePrimitive(element, buffer, GL_TRIANGLES);
-		}
-		break;
-
-	case 0x668b2dd8 /* "triangle_strip" */:
-		{
-			ConfigurePrimitive(element, buffer, GL_TRIANGLE_STRIP);
-		}
-		break;
-
-	case 0xcfa6904f /* "triangle_fan" */:
-		{
-			ConfigurePrimitive(element, buffer, GL_TRIANGLE_FAN);
-		}
-		break;
-
-	case 0x5667b307 /* "quads" */:
-		{
-			ConfigurePrimitive(element, buffer, GL_QUADS);
-		}
-		break;
-
-	case 0xb47cad9b /* "quad_strip" */:
-		{
-			ConfigurePrimitive(element, buffer, GL_QUAD_STRIP);
-		}
-		break;
-
-	case 0x051cb889 /* "polygon" */:
-		{
-			ConfigurePrimitive(element, buffer, GL_POLYGON);
+			if (bake)
+				Expression::Append(buffer, DO_TexEnvi, GL_TEXTURE_ENV_MODE, blendmode);
+			else
+				Expression::Append(buffer, DO_TexEnviBake, GL_TEXTURE_ENV_MODE, blendmode);
 		}
 		break;
 
@@ -846,24 +2045,89 @@ void ConfigureDrawItem(const tinyxml2::XMLElement *element, std::vector<unsigned
 			case 0x1ad7d24f /* "one_minus_dst_alpha" */:	dstfactor = GL_ONE_MINUS_DST_ALPHA; break;
 			}
 
-			Expression::Append(buffer, DO_glBlendFunc, srcfactor, dstfactor);
+			if (bake)
+				Expression::Append(buffer, DO_BlendFuncBake, srcfactor, dstfactor);
+			else
+				Expression::Append(buffer, DO_BlendFunc, srcfactor, dstfactor);
+		}
+		break;
+
+		//
+		// GROUPING COMMANDS
+
+	case 0xc98b019b /* "drawlist" */:
+		if (bake)
+		{
+			// inline the drawlist contents
+			ConfigureDrawItems(aId, element, buffer, bake);
+		}
+		else
+		{
+			// create a generator drawlist
+			Database::Key handle = Database::generatedrawlist.GetCount() + 1;
+			std::vector<unsigned int> &generate = Database::generatedrawlist.Open(handle);
+			assert(generate.size() == 0);
+
+			// configure static data
+			BeginStatic();
+			ConfigureDrawItems(aId, element, generate, true);
+			EndStatic(aId, buffer, generate);
+
+			// close generator drawlist
+			Database::generatedrawlist.Close(handle);
+
+			// set name to surrounding world item
+			Database::name.Put(handle, Database::name.Get(aId));
 		}
 		break;
 
 	case 0xd2cf6b75 /* "calllist" */:
 		{
-			const char *name = element->Attribute("name");
-			if (name)
+			if (const char *name = element->Attribute("name"))
 			{
-				GLuint drawlist = Database::drawlist.Get(Hash(name));
-				if (drawlist)
+				if (bake)
 				{
-					Expression::Append(buffer, DO_glCallList, drawlist);
+					// find the generator drawlist
+					Database::Key id = Hash(sGenTag, Hash(name));
+					const std::vector<unsigned int> &generate = Database::generatedrawlist.Get(id);
+					if (generate.size())
+					{
+						// add bake command
+						Expression::Append(buffer, DO_CallListBake, id);
+					}
+					else
+					{
+						DebugPrint("Missing generator generate %s\n", name);
+					}
 				}
 				else
 				{
-					DebugPrint("Missing drawlist %s\n", name);
+					// find the drawlist
+					Database::Key id = Hash(name);
+					const std::vector<unsigned int> &drawlist = Database::drawlist.Get(id);
+					if (drawlist.size())
+					{
+						// append its contents
+						buffer.insert(buffer.end(), drawlist.begin(), drawlist.end());
+					}
+					else
+					{
+						DebugPrint("Missing drawlist %s\n", name);
+					}
 				}
+			}
+		}
+		break;
+
+	case 0xdf3cf9c0 /* "dynamicdrawlist" */:
+		{
+			if (const char *name = element->Attribute("name"))
+			{
+				// process draw items
+				unsigned int id = Hash(name);
+				std::vector<unsigned int> &dynamic = Database::dynamicdrawlist.Open(id);
+				ConfigureDrawItems(id, element, dynamic, false);
+				Database::dynamicdrawlist.Close(id);
 			}
 		}
 		break;
@@ -871,8 +2135,7 @@ void ConfigureDrawItem(const tinyxml2::XMLElement *element, std::vector<unsigned
 	case 0x23e2c68e /* "calldynamiclist" */:
 		{
 			// hacktastic!
-			const char *name = element->Attribute("name");
-			if (name)
+			if (const char *name = element->Attribute("name"))
 			{
 				// TO DO: call drawlist at runtime instead of "inlining" it
 				const std::vector<unsigned int> &drawlist = Database::dynamicdrawlist.Get(Hash(name));
@@ -888,62 +2151,16 @@ void ConfigureDrawItem(const tinyxml2::XMLElement *element, std::vector<unsigned
 		}
 		break;
 
-	case 0xdf3cf9c0 /* "dynamicdrawlist" */:
-		{
-			const char *name = element->Attribute("name");
-			if (name)
-			{
-				// process draw items
-				unsigned int id = Hash(name);
-				std::vector<unsigned int> &drawlist = Database::dynamicdrawlist.Open(id);
-				ConfigureDrawItems(element, drawlist);
-				Database::dynamicdrawlist.Close(id);
-			}
-		}
-		break;
-
-	case 0xc98b019b /* "drawlist" */:
-		{
-			// create a new draw list
-			GLuint handle = glGenLists(1);
-			glNewList(handle, GL_COMPILE);
-
-			// register the draw list
-			Database::drawlist.Put(handle, handle);
-
-			// get (optional) parameter value
-			float param = 0.0f;
-			element->QueryFloatAttribute("param", &param);
-
-			// configure the dynamic draw list
-			std::vector<unsigned int> &drawlist = Database::dynamicdrawlist.Open(handle);
-			ConfigureDrawItems(element, drawlist);
-
-			// execute the dynamic draw list
-			EntityContext context(&drawlist[0], drawlist.size(), param, 0);
-			ExecuteDrawItems(context);
-
-			// close the dynamic draw list
-			Database::dynamicdrawlist.Close(handle);
-
-			// finish the draw list
-			glEndList();
-
-			// use the anonymous drawlist
-			Expression::Append(buffer, DO_glCallList, handle);
-		}
-		break;
-
 	case 0xd99ba82a /* "repeat" */:
 		{
 			int count = 1;
 			element->QueryIntAttribute("count", &count);
 
 			Expression::Append(buffer, DO_Repeat, count);
-
+	
 			buffer.push_back(0);
 			const int start = buffer.size();
-			ConfigureDrawItems(element, buffer);
+			ConfigureDrawItems(aId, element, buffer, bake);
 			buffer[start-1] = buffer.size() - start;
 		}
 		break;
@@ -963,7 +2180,7 @@ void ConfigureDrawItem(const tinyxml2::XMLElement *element, std::vector<unsigned
 
 			buffer.push_back(0);
 			int size = buffer.size();
-			ConfigureDrawItems(element, buffer);
+			ConfigureDrawItems(aId, element, buffer, bake);
 			buffer[size-1] = buffer.size() - size;
 		}
 		break;
@@ -1019,8 +2236,7 @@ void ConfigureDrawItem(const tinyxml2::XMLElement *element, std::vector<unsigned
 			const float *data;
 			GetTypeData(type, width, names, data);
 
-			Expression::Append(buffer, DO_Swizzle, name, width);
-
+			unsigned int *map = static_cast<unsigned int *>(_alloca(width * sizeof(unsigned int)));
 			for (int i = 0; i < width; ++i)
 			{
 				unsigned int map;
@@ -1044,8 +2260,11 @@ void ConfigureDrawItem(const tinyxml2::XMLElement *element, std::vector<unsigned
 						}
 					}
 				}
-				buffer.push_back(map);
 			}
+
+			Expression::Append(buffer, DO_Swizzle, name, width);
+			for (int i = 0; i < width; ++i)
+				buffer.push_back(map[i]);
 		}
 		break;
 
@@ -1076,7 +2295,7 @@ void ConfigureDrawItem(const tinyxml2::XMLElement *element, std::vector<unsigned
 
 			buffer.push_back(0);
 			const int start = buffer.size();
-			ConfigureDrawItems(element, buffer);
+			ConfigureDrawItems(aId, element, buffer, bake);
 			buffer[start-1] = buffer.size() - start;
 		}
 		break;
@@ -1098,7 +2317,7 @@ void ConfigureDrawItem(const tinyxml2::XMLElement *element, std::vector<unsigned
 
 			buffer.push_back(0);
 			const int start = buffer.size();
-			ConfigureDrawItems(element, buffer);
+			ConfigureDrawItems(aId, element, buffer);
 			buffer[start-1] = buffer.size() - start;
 		}
 		break;
@@ -1110,13 +2329,51 @@ void ConfigureDrawItem(const tinyxml2::XMLElement *element, std::vector<unsigned
 	}
 }
 
-void ConfigureDrawItems(const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer)
+void ConfigureDrawItems(unsigned int aId, const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer, bool bake)
 {
 	// process child elements
 	for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
-		ConfigureDrawItem(child, buffer);
+		ConfigureDrawItem(aId, child, buffer, bake);
 	}
+}
+
+static void BeginStatic()
+{
+	// switch to static mode
+	SetStaticActive(true);
+
+	// push matrix stack
+	StackPush();
+
+	// load identity
+	StackIdentity();
+
+	// initialize work buffer
+	assert(sVertexCount == 0);
+	sVertexUsed = 0;
+	sVertexCount = 0;
+	sVertexBase = 0;
+	assert(sIndexCount == 0);
+	sIndexCount = 0;
+
+	// clear active elements
+	sNormalActive = false;
+	sColorActive = false;
+	sTexCoordActive = false;
+}
+
+static void EndStatic(unsigned int aId, std::vector<unsigned int> &buffer, const std::vector<unsigned int> &generate)
+{
+	// execute the drawlist
+	BakeContext context(&buffer, &generate[0], generate.size(), 0.0f, aId);
+	ExecuteDrawItems(context);
+
+	// flush static
+	FlushStatic(buffer);
+
+	// pop stack matrix
+	StackPop();
 }
 
 #ifdef DRAWLIST_EMITTER
@@ -1204,50 +2461,267 @@ void ExecuteDrawItems(EntityContext &aContext)
 
 void InitDrawlists(void)
 {
+	// bind function pointers
+	glDrawRangeElements = static_cast<PFN_glDrawRangeElements>(glfwGetProcAddress("glDrawRangeElements"));
+	glGenBuffers = static_cast<PFN_glGenBuffers>(glfwGetProcAddress("glGenBuffers"));
+	glDeleteBuffers = static_cast<PFN_glDeleteBuffers>(glfwGetProcAddress("glDeleteBuffers"));
+	glBindBuffer = static_cast<PFN_glBindBuffer>(glfwGetProcAddress("glBindBuffer"));
+	glBufferData = static_cast<PFN_glBufferData>(glfwGetProcAddress("glBufferData"));
+	glBufferSubData = static_cast<PFN_glBufferSubData>(glfwGetProcAddress("glBufferSubData"));
+	glMapBuffer = static_cast<PFN_glMapBuffer>(glfwGetProcAddress("glMapBuffer"));
+	glMapBufferRange = static_cast<PFN_glMapBufferRange>(glfwGetProcAddress("glMapBufferRange"));
+	glUnmapBuffer = static_cast<PFN_glUnmapBuffer>(glfwGetProcAddress("glUnmapBuffer"));
+
+	// set up dynamic vertex buffer
+	{
+		BufferState &state = sBuffer[BUFFER_DYNAMIC_VERTEX];
+		state.mSize = 256 * 1024;
+		glGenBuffers(1, &state.mHandle);
+#ifdef DRAWLIST_DYNAMIC_BUFFER_RANGE
+		glBindBuffer(GL_ARRAY_BUFFER, state.mHandle);
+		glBufferData(GL_ARRAY_BUFFER, state.mSize, NULL, GL_STREAM_DRAW);
+#endif
+		state.mData = NULL;
+		state.mStart = 0;
+		state.mEnd = 0;
+	}
+
+	// set up dynamic index buffer
+	{
+		BufferState &state = sBuffer[BUFFER_DYNAMIC_INDEX];
+		state.mSize = 64 * 1024;
+		glGenBuffers(1, &state.mHandle);
+#ifdef DRAWLIST_DYNAMIC_BUFFER_RANGE
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, state.mHandle);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, state.mSize, NULL, GL_STREAM_DRAW);
+#endif
+		state.mData = NULL;
+		state.mStart = 0;
+		state.mEnd = 0;
+	}
+
+	// set up static vertex buffer
+	{
+		BufferState &state = sBuffer[BUFFER_STATIC_VERTEX];
+		state.mSize = 256 * 1024;
+#ifdef DRAWLIST_STATIC_BUFFER
+		glGenBuffers(1, &state.mHandle);
+		glBindBuffer(GL_ARRAY_BUFFER, state.mHandle);
+		glBufferData(GL_ARRAY_BUFFER, state.mSize, NULL, GL_STATIC_DRAW);
+#endif
+		state.mData = malloc(state.mSize);
+		state.mStart = 0;
+		state.mEnd = 0;
+	}
+
+	// set up static index buffer
+	{
+		BufferState &state = sBuffer[BUFFER_STATIC_INDEX];
+		state.mSize = 64 * 1024;
+#ifdef DRAWLIST_STATIC_BUFFER
+		glGenBuffers(1, &state.mHandle);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, state.mHandle);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, state.mSize, NULL, GL_STATIC_DRAW);
+#endif
+		state.mData = malloc(state.mSize);
+		state.mStart = 0;
+		state.mEnd = 0;
+	}
+
+	// vertex work buffer
+	// this get copied to the array buffer on flush
+	sVertexUsed = 0;
+	sVertexCount = 0;
+	sVertexBase = 0;
+
+	// index work buffer
+	// this gets copied to the element array buffer on flush
+	sIndexCount = 0;
+
+	// set to static mode for configure phase
+	sStaticActive = true;
+	sVertexBuffer = &sBuffer[BUFFER_STATIC_VERTEX];
+	sIndexBuffer = &sBuffer[BUFFER_STATIC_INDEX];
+
+#ifdef DRAWLIST_STATIC_BUFFER
+	// bind static buffer
+	glBindBuffer(GL_ARRAY_BUFFER, sVertexBuffer->mHandle);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, sIndexBuffer->mHandle);
+#else
+	// bind dynamic buffer since that's the only choice
+	glBindBuffer(GL_ARRAY_BUFFER, sBuffer[BUFFER_DYNAMIC_VERTEX].mHandle);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, sBuffer[BUFFER_DYNAMIC_INDEX].mHandle);
+#endif
+
+	// current vertex component values
+	memcpy(&sNormal, sNormalDefault, sNormalWidth * sizeof(float));
+#ifdef DRAWLIST_FLOAT_COLOR
+	memcpy(&sColor, sColorDefault, sColorWidth * sizeof(float));
+#else
+	sColor[0] = sColor[1] = sColor[2] = sColor[3] = 255;
+#endif
+	memcpy(&sTexCoord, sTexCoordDefault, sTexCoordWidth * sizeof(float));
+
+	// current drawing mode
+	sDrawMode = GL_TRIANGLES;
+
+	// active vertex components
+	sNormalActive = false;
+	sColorActive = false;
+	sTexCoordActive = false;
+
+	// initialize matrix stack
+	StackInit();
 }
+
+// set static mode
+static bool SetStaticActive(bool aStatic)
+{
+	if (sStaticActive == aStatic)
+		return false;
+
+	if (aStatic)
+	{
+		sVertexBuffer = &sBuffer[BUFFER_STATIC_VERTEX];
+		sIndexBuffer = &sBuffer[BUFFER_STATIC_INDEX];
+	}
+	else
+	{
+		sVertexBuffer = &sBuffer[BUFFER_DYNAMIC_VERTEX];
+		sIndexBuffer = &sBuffer[BUFFER_DYNAMIC_INDEX];
+	}
+#ifdef DRAWLIST_STATIC_BUFFER
+	glBindBuffer(GL_ARRAY_BUFFER, sVertexBuffer->mHandle);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, sIndexBuffer->mHandle);
+#endif
+	sStaticActive = aStatic;
+	return true;
+}
+
 
 void CleanupDrawlists(void)
 {
-	// for each entry in the drawlist database...
-	for (Database::Typed<GLuint>::Iterator itor(&Database::drawlist); itor.IsValid(); ++itor)
+	// delete buffer objects
+	for (int i = 0; i < BUFFER_COUNT; ++i)
 	{
-		// if the handle is still valid...
-		GLuint handle = itor.GetValue();
-		if (glIsList(handle))
-		{
-			// delete the draw list
-			glDeleteLists(handle, 1);
-		}
+		glDeleteBuffers(1, &sBuffer[i].mHandle);
 	}
 }
 
 void RebuildDrawlists(void)
 {
-	// for each entry in the drawlist database...
-	for (Database::Typed<GLuint>::Iterator itor(&Database::drawlist); itor.IsValid(); ++itor)
+#if 1
+
+	// rebuild dynamic vertex buffer
 	{
-		// recreate the draw list
-		GLuint handle = itor.GetValue();
-		glNewList(handle, GL_COMPILE);
-
-		// TO DO: recover parameter value
-		float param = 0.0f;
-
-		// process draw items
-		// TO DO: recover id value
-		const std::vector<unsigned int> &drawlist = Database::dynamicdrawlist.Get(handle);
-		if (drawlist.size() > 0)
-		{
-			EntityContext context(&drawlist[0], drawlist.size(), param, 0);
-			ExecuteDrawItems(context);
-		}
-
-		// finish the draw list
-		glEndList();
+		BufferState &state = sBuffer[BUFFER_DYNAMIC_VERTEX];
+		glGenBuffers(1, &state.mHandle);
+#ifdef DRAWLIST_DYNAMIC_BUFFER_RANGE
+		glBindBuffer(GL_ARRAY_BUFFER, state.mHandle);
+		glBufferData(GL_ARRAY_BUFFER, state.mSize, NULL, GL_STREAM_DRAW);
+#endif
+		state.mStart = 0;
+		state.mEnd = 0;
 	}
+
+	// rebuild dynamic index buffer
+	{
+		BufferState &state = sBuffer[BUFFER_DYNAMIC_INDEX];
+		glGenBuffers(1, &state.mHandle);
+#ifdef DRAWLIST_DYNAMIC_BUFFER_RANGE
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, state.mHandle);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, state.mSize, NULL, GL_STREAM_DRAW);
+#endif
+		state.mStart = 0;
+		state.mEnd = 0;
+	}
+
+#ifdef DRAWLIST_STATIC_BUFFER
+	// rebuild static vertex buffer
+	{
+		BufferState &state = sBuffer[BUFFER_STATIC_VERTEX];
+		glGenBuffers(1, &state.mHandle);
+		glBindBuffer(GL_ARRAY_BUFFER, state.mHandle);
+		glBufferData(GL_ARRAY_BUFFER, state.mSize, sVertexBuffer->mData, GL_STATIC_DRAW);
+	}
+
+	// rebuild static index buffer
+	{
+		BufferState &state = sBuffer[BUFFER_STATIC_INDEX];
+		glGenBuffers(1, &state.mHandle);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, state.mHandle);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, state.mSize, sIndexBuffer->mData, GL_STATIC_DRAW);
+	}
+#endif
+
+#ifdef DRAWLIST_STATIC_BUFFER
+	// set to static mode for configure phase
+	sStaticActive = true;
+	sVertexBuffer = &sBuffer[BUFFER_STATIC_VERTEX];
+	sIndexBuffer = &sBuffer[BUFFER_STATIC_INDEX];
+	glBindBuffer(GL_ARRAY_BUFFER, sVertexBuffer->mHandle);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, sIndexBuffer->mHandle);
+#endif
+
+	// current vertex component values
+	memcpy(&sNormal, sNormalDefault, sNormalWidth * sizeof(float));
+#ifdef DRAWLIST_FLOAT_COLOR
+	memcpy(&sColor, sColorDefault, sColorWidth * sizeof(float));
+#else
+	sColor[0] = sColor[1] = sColor[2] = 0;
+	sColor[3] = 255;
+#endif
+	memcpy(&sTexCoord, sTexCoordDefault, sTexCoordWidth * sizeof(float));
+
+#else
+
+	CleanupDrawlists();
+	InitDrawlists();
+
+	// for each entry in the generator drawlist database...
+	for (Database::Typed<std::vector<unsigned int> >::Iterator itor(&Database::generatedrawlist); itor.IsValid(); ++itor)
+	{
+		// get the generator
+		Database::Key id = itor.GetKey();
+		const std::vector<unsigned int> &generate = itor.GetValue();
+		if (!generate.empty())
+		{
+			DebugPrint("rebuilding drawlist \"%s\"\n", Database::name.Get(id).c_str());
+
+			// create a dummy drawlist
+			std::vector<unsigned int> dummy;
+
+			// rebuild the static buffers
+			BeginStatic();
+			EndStatic(id, dummy, generate);
+
+			// TO DO: compare dummy against the original drawlist
+			const std::vector<unsigned int> &drawlist = Database::drawlist.Get(id);
+			if (!drawlist.empty())
+			{
+				if (drawlist.size() != dummy.size())
+				{
+					DebugPrint("size mismatch: before=%d after=%d\n", drawlist.size(), dummy.size());
+				}
+				else
+				{
+					for (size_t i = 0; i < drawlist.size(); ++i)
+					{
+						if (drawlist[i] != dummy[i])
+						{
+							DebugPrint("data mismatch at %d: before=%08x after=%08x\n", i, drawlist[i], dummy[i]);
+							break;
+						}
+					}
+				}
+			}
+		}
+	}
+
+#endif
 }
 
-void RenderDrawlist(unsigned int aId, float aTime, const Transform2 &aTransform)
+void RenderDynamicDrawlist(unsigned int aId, float aTime, const Transform2 &aTransform)
 {
 	// skip if not visible
 	if (aTime < 0)
@@ -1260,21 +2734,52 @@ void RenderDrawlist(unsigned int aId, float aTime, const Transform2 &aTransform)
 	if (buffer.empty())
 		return;
 
-#if 0
-	// push a transform
-	glPushMatrix();
+	// render the drawlist
+	EntityContext context(&buffer[0], buffer.size(), aTime, aId);
+	RenderDrawlist(context, aTransform);
+}
+
+void RenderStaticDrawlist(unsigned int aId, float aTime, const Transform2 &aTransform)
+{
+	// skip if not visible
+	if (aTime < 0)
+		return;
+
+	// get the static draw list
+	const std::vector<unsigned int> &buffer = Database::drawlist.Get(aId);
+
+	// skip if empty
+	if (buffer.empty())
+		return;
+
+	// render the drawlist
+	EntityContext context(&buffer[0], buffer.size(), aTime, aId);
+	RenderDrawlist(context, aTransform);
+}
+
+void RenderDrawlist(EntityContext &context, const Transform2 &aTransform)
+{
+	// push matrix stack
+	StackPush();
 
 	// load matrix
-	glTranslatef(aTransform.p.x, aTransform.p.y, 0);
-	glRotatef(aTransform.a*180/float(M_PI), 0.0f, 0.0f, 1.0f);
-#endif
+	if (aTransform.p.x != 0.0f || aTransform.p.y != 0.0f)
+		//glTranslatef(aTransform.p.x, aTransform.p.y, 0);
+		StackTranslate(_mm_setr_ps(aTransform.p.x, aTransform.p.y, 0, 1));
+	if (aTransform.a != 0.0f)
+		//glRotatef(aTransform.a*180/float(M_PI), 0.0f, 0.0f, 1.0f);
+		StackRotate(aTransform.a);
 
 	// execute the deferred draw list
-	EntityContext context(&buffer[0], buffer.size(), aTime, aId);
 	ExecuteDrawItems(context);
 
-#if 0
-	// reset the transform
-	glPopMatrix();
-#endif
+	// pop matrix stack
+	StackPop();
 };
+
+void RenderFlush(void)
+{
+	// flush dynamic geometry
+	// TO DO: only call this at the end of the frame
+	FlushDynamic();
+}

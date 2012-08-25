@@ -225,6 +225,9 @@ namespace Database
 			// if the database has a record for the template...
 			if (const void *data = database->Find(aTemplateId))
 			{
+				// make sure there isn't already a record for the instance
+				assert(!database->Find(aInstanceId));
+
 				// duplicate into the instance
 				database->Put(aInstanceId, data);
 			}

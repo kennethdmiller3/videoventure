@@ -107,7 +107,7 @@ void PlayerOverlayLevel::Render(unsigned int aId, float aTime, const Transform2 
 	glPushMatrix();
 	glTranslatef(levelpos.x, levelpos.y, 0.0f);
 	glScalef(4, 4, 1);
-	glCallList(Database::drawlist.Get(0x8cdedbba /* "circle16" */));
+	RenderStaticDrawlist(0x8cdedbba /* "circle16" */, 0.0f, Transform2::Identity());
 	glPopMatrix();
 
 	// draw level number

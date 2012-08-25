@@ -77,15 +77,9 @@ void Overlay::RenderAll(Overlay &aRoot)
 			// TO DO: replace this with expressions
 			float t = fmodf((int(sim_turn - itor->mStart) + sim_fraction - itor->mFraction) * sim_step, overlay.mPeriod);
 
-			// push a transform
-			glPushMatrix();
-
 			// perform action
 			// TO DO: support transform parameter
 			(itor->mAction)(itor->mId, t, Transform2::Identity());
-
-			// reset the transform
-			glPopMatrix();
 		}
 
 		// recurse on children
@@ -117,7 +111,7 @@ namespace Database
 
 			// process child elements
 			std::vector<unsigned int> &buffer = Database::dynamicdrawlist.Open(aId);
-			ConfigureDrawItems(element, buffer);
+			ConfigureDrawItems(aId, element, buffer, false);
 			Database::dynamicdrawlist.Close(aId);
 		}
 		Configure overlayconfigure(0x2065d503 /* "overlay" */, OverlayConfigure);
@@ -129,7 +123,7 @@ namespace Database
 		{
 			Overlay *overlay = new Overlay(aId);
 			Database::overlay.Put(aId, overlay);
-			overlay->SetAction(RenderDrawlist);
+			overlay->SetAction(RenderDynamicDrawlist);
 			overlay->Show();
 		}
 		Activate overlayactivate(0x2a4c42d1 /* "overlaytemplate" */, OverlayActivate);

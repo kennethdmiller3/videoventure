@@ -170,15 +170,8 @@ bool InitLevel(const char *config)
 	{
 		// process the world
 		ConfigureWorldItem(root);
-
-		// get the reticule draw list (HACK)
-		reticule_handle = Database::drawlist.Get(0x170e4c58 /* "reticule" */);
-
 		return true;
 	}
-
-	// clear the reticule draw list (HACK)
-	reticule_handle = 0;
 
 	// show the mouse cursor
 	Platform::ShowCursor(true);

@@ -803,5 +803,8 @@
     <ClCompile Include="Source\Trace.cpp">
       <Filter>Game</Filter>
     </ClCompile>
+    <ClCompile Include="Source\Render\MatrixStack.cpp">
+      <Filter>Render</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

@@ -85,7 +85,9 @@ public:
 
 	void Render(unsigned int aId, float aParam, const Transform2 &aTransform)
 	{
-		glPopMatrix();
+		RenderFlush();
+
+		//glPopMatrix();
 
 		const Vector2 aPos0 = aTransform.p;
 		const Vector2 aPos1 = Lerp(mSourcePos, aPos0, float(sim_turn - mStart + sim_fraction - mFraction) / float(mEnd - mStart - mFraction));
@@ -114,7 +116,7 @@ public:
 
 		glLineWidth(1);
 
-		glPushMatrix();
+		//glPushMatrix();
 	}
 };
 

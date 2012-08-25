@@ -2,7 +2,7 @@
 <preferences>
     <resolution width="1280" height="960"/>
     <fullscreen enable="0"/>
-    <verticalsync enable="1"/>
+    <verticalsync enable="0"/>
     <multisample samples="4"/>
     <motionblur steps="4" strength="100"/>
     <sound channels="8" effectvolume="50" musicvolume="50"/>

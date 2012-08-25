@@ -2,10 +2,8 @@
 #include "PlayerOverlayReticule.h"
 #include "PlayerController.h"
 #include "Player.h"
-
-
-// reticule handle (HACK)
-extern GLuint reticule_handle;
+#include "ExpressionEntity.h"
+#include "Drawlist.h"
 
 
 //
@@ -60,10 +58,7 @@ void PlayerOverlayReticule::Render(unsigned int aId, float aTime, const Transfor
 			float x = 320 - 240 * Lerp(aimpos[0].x, aimpos[1].x, sim_fraction);
 			float y = 240 - 240 * Lerp(aimpos[0].y, aimpos[1].y, sim_fraction);
 
-			glPushMatrix();
-			glTranslatef(x, y, 0.0f);
-			glCallList(reticule_handle);
-			glPopMatrix();
+			RenderStaticDrawlist(0x170e4c58 /* "reticule" */, 0.0f, Transform2(0, Vector2(x, y)));
 		}
 	}
 }

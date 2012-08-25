@@ -26,13 +26,11 @@
 			<clear name="t" />
 		</pushmatrix>
 		<triangle_strip>
-			<drawlist>
-				<color r="1.0" g="1.0" b="1.0" a="1.0" />
-				<vertex x="0" y="4" />
-				<vertex x="1.5" y="-0.5" />
-				<vertex x="-1.5" y="-0.5" />
-				<vertex x="0.0" y="-2" />
-			</drawlist>
+			<color r="1.0" g="1.0" b="1.0" a="1.0" />
+			<vertex x="0" y="4" />
+			<vertex x="1.5" y="-0.5" />
+			<vertex x="-1.5" y="-0.5" />
+			<vertex x="0.0" y="-2" />
 			<block length="0.1" repeat="5">
 				<color>
 					<key time="0.00" r="0.0" g="1.0" b="0.5" a="1.0" />
