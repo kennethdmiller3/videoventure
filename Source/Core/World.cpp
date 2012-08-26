@@ -108,20 +108,25 @@ void ConfigureWorldItem(const tinyxml2::XMLElement *element)
 {
 	const char *value = element->Value();
 	const char *name = element->Attribute("name");
-	if (name)
-		Database::name.Put(Hash(name), name);
+
+	// get item identifier
+	Database::Key id = Hash(name);
 
 	// process world item
 	const Database::Loader::Entry &configure = Database::Loader::Configure::Get(Hash(value));
 	if (configure)
 	{
 		DebugPrint("processing %s \"%s\"\n", value, name);
-		configure(Hash(name), element);
+		configure(id, element);
 	}
 	else
 	{
 		DebugPrint("skipping %s \"%s\"\n", value, name);
 	}
+
+	// assign the name
+	if (name)
+		Database::name.Put(id, name);
 }
 
 void ConfigureWorldItems(const tinyxml2::XMLElement *element)
