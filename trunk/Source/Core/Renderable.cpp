@@ -35,17 +35,19 @@ namespace Database
 
 			// process child elements
 			std::vector<unsigned int> &buffer = Database::dynamicdrawlist.Open(aId);
+
 #ifdef DRAW_FRONT_TO_BACK
 			if (!inherit)
 				buffer.clear();
-			ConfigureDrawItems(element, buffer);
+			ConfigureDrawItems(aId, element, buffer);
 #else
 			std::vector<unsigned int> original;
 			std::swap(buffer, original);
-			ConfigureDrawItems(element, buffer);
+			ConfigureDrawItems(aId, element, buffer);
 			if (inherit)
 				buffer.insert(buffer.end(), original.begin(), original.end());
 #endif
+
 			Database::dynamicdrawlist.Close(aId);
 		}
 		Configure renderableconfigure(0x109dd1ad /* "renderable" */, RenderableConfigure);
@@ -265,22 +267,8 @@ void Renderable::RenderAll(const AlignedBox2 &aView)
 			// elapsed time
 			float t = fmodf((int(sim_turn - itor->mStart) + sim_fraction - itor->mFraction) * sim_step, renderable.mPeriod);
 
-			// push a transform
-			glPushMatrix();
-
-			// if applying the entity transformm...
-			if (renderable.mTransform)
-			{
-				// apply transform
-				glTranslatef(position.x, position.y, 0);
-				glRotatef(angle*180/float(M_PI), 0.0f, 0.0f, 1.0f);
-			}
-
 			// render
-			(itor->mAction)(itor->mId, t, Transform2(angle, position));
-
-			// reset the transform
-			glPopMatrix();
+			(itor->mAction)(itor->mId, t, renderable.mTransform ? Transform2(angle, position) : Transform2::Identity());
 
 #ifdef RENDER_STATS
 			++drawn;

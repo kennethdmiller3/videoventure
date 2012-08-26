@@ -9,11 +9,20 @@
 #include "ExpressionConfigure.h"
 
 
+//
+// DEFINES
+//
+
+// enable "loop" drawlist element
 #define DRAWLIST_LOOP
 
 
+//
+// FORWARD DECLARATIONS
+//
+
 // execute a dynamic draw list
-void ExecuteDrawItems(EntityContext &aContext);
+static void ExecuteDrawItems(EntityContext &aContext);
 
 
 //
@@ -97,7 +106,8 @@ namespace Database
 		static void DynamicDrawlistConfigure(unsigned int aId, const tinyxml2::XMLElement *element)
 		{
 			std::vector<unsigned int> &buffer = Database::dynamicdrawlist.Open(aId);
-			ConfigureDrawItems(element, buffer);
+			assert(buffer.size() == 0);
+			ConfigureDrawItems(aId, element, buffer);
 			Database::dynamicdrawlist.Close(aId);
 		}
 		Configure dynamicdrawlistconfigure(0xdf3cf9c0 /* "dynamicdrawlist" */, DynamicDrawlistConfigure);
@@ -117,7 +127,7 @@ namespace Database
 
 			// configure the dynamic draw list
 			std::vector<unsigned int> &drawlist = Database::dynamicdrawlist.Open(handle);
-			ConfigureDrawItems(element, drawlist);
+			ConfigureDrawItems(aId, element, drawlist);
 
 			// execute the dynamic draw list
 			EntityContext context(&drawlist[0], drawlist.size(), param, aId);
@@ -154,32 +164,6 @@ namespace Database
 	}
 
 }
-
-#if 0
-static const unsigned int sHashToAttribMask[][2] =
-{
-	{ 0xd965bbda /* "current" */,			GL_CURRENT_BIT },
-	{ 0x18ae6c91 /* "point" */,				GL_POINT_BIT },
-	{ 0x17db1627 /* "line" */,				GL_LINE_BIT },
-	{ 0x051cb889 /* "polygon" */,			GL_POLYGON_BIT },
-	{ 0x67b14997 /* "polygon_stipple" */,	GL_POLYGON_STIPPLE_BIT },
-	{ 0xccde91eb /* "pixel_mode" */,		GL_LIGHTING_BIT },
-	{ 0x827eb1c9 /* "lighting" */,			GL_POINT_BIT },
-	{ 0xa1f3723f /* "fog" */,				GL_FOG_BIT },
-	{ 0x65e5b825 /* "depth_buffer" */,		GL_DEPTH_BUFFER_BIT },
-	{ 0x907f6213 /* "accum_buffer" */,		GL_ACCUM_BUFFER_BIT },
-	{ 0x632020be /* "stencil_buffer" */,	GL_STENCIL_BUFFER_BIT },
-	{ 0xe4abbac3 /* "viewport" */,			GL_VIEWPORT_BIT },
-	{ 0xe1ad931b /* "transform" */,			GL_TRANSFORM_BIT },
-	{ 0xaf8bb8ce /* "enable" */,			GL_ENABLE_BIT },
-	{ 0x0d759bbb /* "color_buffer" */,		GL_COLOR_BUFFER_BIT },
-	{ 0x4bc809b8 /* "hint" */,				GL_HINT_BIT },
-	{ 0x08d22e0f /* "eval" */,				GL_EVAL_BIT },
-	{ 0x0cfb5881 /* "list" */,				GL_LIST_BIT },
-	{ 0x3c6468f4 /* "texture" */,			GL_TEXTURE_BIT },
-	{ 0x0adbc081 /* "scissor" */,			GL_SCISSOR_BIT },
-};
-#endif
 
 
 //
@@ -228,155 +212,150 @@ bool EvaluateVariableOperator(EntityContext &aContext)
 // DRAWLIST OPERATIONS
 //
 
-void DO_glArrayElement(EntityContext &aContext)
-{
-	glArrayElement(Expression::Read<GLint>(aContext));
-}
-
-void DO_glBegin(EntityContext &aContext)
+void DO_Begin(EntityContext &aContext)
 {
 	glBegin(Expression::Read<GLenum>(aContext));
 }
 
-void DO_glBindTexture(EntityContext &aContext)
+void DO_BindTexture(EntityContext &aContext)
 {
 	const GLenum target(Expression::Read<GLenum>(aContext));
 	const GLuint texture(Expression::Read<GLuint>(aContext));
 	glBindTexture(target, texture);
 }
 
-void DO_glBlendFunc(EntityContext &aContext)
+void DO_BlendFunc(EntityContext &aContext)
 {
 	const GLenum sfactor(Expression::Read<GLenum>(aContext));
 	const GLenum dfactor(Expression::Read<GLenum>(aContext));
 	glBlendFunc(sfactor, dfactor);
 }
 
-void DO_glCallList(EntityContext &aContext)
+void DO_CallList(EntityContext &aContext)
 {
 	glCallList(Expression::Read<GLuint>(aContext));
 }
 
-void DO_glColor4fv(EntityContext &aContext)
+void DO_Color(EntityContext &aContext)
 {
 	const DLColor value(Expression::Evaluate<DLColor>(aContext));
 	glColor4fv(value.m128_f32);
 }
 
-void DO_glDisable(EntityContext &aContext)
+void DO_Disable(EntityContext &aContext)
 {
 	glDisable(Expression::Read<GLenum>(aContext));
 }
 
-void DO_glEnable(EntityContext &aContext)
+void DO_Enable(EntityContext &aContext)
 {
 	glEnable(Expression::Read<GLenum>(aContext));
 }
 
-void DO_glEnd(EntityContext &aContext)
+void DO_End(EntityContext &aContext)
 {
 	glEnd();
 }
 
-void DO_glLineWidth(EntityContext &aContext)
+void DO_LineWidth(EntityContext &aContext)
 {
 	const GLfloat width(Expression::Read<GLfloat>(aContext));
 	glLineWidth(width);
 }
 
-void DO_glLineWidthWorld(EntityContext &aContext)
+void DO_LineWidthWorld(EntityContext &aContext)
 {
 	const GLfloat width(Expression::Read<GLfloat>(aContext) * float(SCREEN_HEIGHT) / VIEW_SIZE);
 	glLineWidth(width);
 }
 
-void DO_glLoadIdentity(EntityContext &aContext)
+void DO_LoadIdentity(EntityContext &aContext)
 {
 	glLoadIdentity();
 }
 
-void DO_glLoadMatrixf(EntityContext &aContext)
+void DO_LoadMatrix(EntityContext &aContext)
 {
 	glLoadMatrixf(reinterpret_cast<const GLfloat *>(aContext.mStream));
 	aContext.mStream += (16*sizeof(GLfloat)+sizeof(unsigned int)-1)/sizeof(unsigned int);
 }
 
-void DO_glMultMatrixf(EntityContext &aContext)
+void DO_MultMatrix(EntityContext &aContext)
 {
 	glMultMatrixf(reinterpret_cast<const GLfloat *>(aContext.mStream));
 	aContext.mStream += (16*sizeof(GLfloat)+sizeof(unsigned int)-1)/sizeof(unsigned int);
 }
 
-void DO_glNormal3fv(EntityContext &aContext)
+void DO_Normal(EntityContext &aContext)
 {
 	const DLNormal value(Expression::Evaluate<DLNormal>(aContext));
 	glNormal3fv(value.m128_f32);
 }
 
-void DO_glPointSize(EntityContext &aContext)
+void DO_PointSize(EntityContext &aContext)
 {
 	const GLfloat size(Expression::Read<GLfloat>(aContext));
 	glPointSize(size);
 }
 
-void DO_glPointSizeWorld(EntityContext &aContext)
+void DO_PointSizeWorld(EntityContext &aContext)
 {
 	const GLfloat size(Expression::Read<GLfloat>(aContext) * float(SCREEN_HEIGHT) / VIEW_SIZE);
 	glPointSize(size);
 }
 
-void DO_glPopAttrib(EntityContext &aContext)
+void DO_PopAttrib(EntityContext &aContext)
 {
 	glPopAttrib();
 }
 
-void DO_glPopMatrix(EntityContext &aContext)
+void DO_PopMatrix(EntityContext &aContext)
 {
 	glPopMatrix();
 }
 
-void DO_glPushAttrib(EntityContext &aContext)
+void DO_PushAttrib(EntityContext &aContext)
 {
 	glPushAttrib(Expression::Read<GLbitfield>(aContext));
 }
 
-void DO_glPushMatrix(EntityContext &aContext)
+void DO_PushMatrix(EntityContext &aContext)
 {
 	glPushMatrix();
 }
 
-void DO_glRotatef(EntityContext &aContext)
+void DO_Rotate(EntityContext &aContext)
 {
 	const float value(Expression::Evaluate<DLRotation>(aContext));
 	glRotatef(value, 0, 0, 1);
 }
 
-void DO_glScalef(EntityContext &aContext)
+void DO_Scale(EntityContext &aContext)
 {
 	const DLScale value(Expression::Evaluate<DLScale>(aContext));
 	glScalef(value.m128_f32[0], value.m128_f32[1], value.m128_f32[2]);
 }
 
-void DO_glTexCoord2fv(EntityContext &aContext)
+void DO_TexCoord(EntityContext &aContext)
 {
 	const DLTexCoord value(Expression::Evaluate<DLTexCoord>(aContext));
 	glTexCoord2fv(value.m128_f32);
 }
 
-void DO_glTexEnvi(EntityContext &aContext)
+void DO_TexEnvi(EntityContext &aContext)
 {
 	const GLenum pname(Expression::Read<GLint>(aContext));
 	const GLint param(Expression::Read<GLint>(aContext));
 	glTexEnvi( GL_TEXTURE_ENV, pname, param );
 }
 
-void DO_glTranslatef(EntityContext &aContext)
+void DO_Translate(EntityContext &aContext)
 {
 	const DLTranslation value(Expression::Evaluate<DLTranslation>(aContext));
 	glTranslatef(value.m128_f32[0], value.m128_f32[1], value.m128_f32[2]);
 }
 
-void DO_glVertex3fv(EntityContext &aContext)
+void DO_Vertex(EntityContext &aContext)
 {
 	const DLPosition value(Expression::Evaluate<DLPosition>(aContext));
 	glVertex3fv(value.m128_f32);
@@ -386,13 +365,11 @@ void DO_Repeat(EntityContext &aContext)
 {
 	const int repeat(Expression::Read<int>(aContext));
 	const size_t size(Expression::Read<size_t>(aContext));
-	EntityContext context(aContext);
-	context.mBegin = context.mStream;
-	context.mEnd = context.mStream + size;
+	EntityContext context(aContext.mStream, size, aContext.mParam, aContext.mId, aContext.mVars);
 	for (int i = 0; i < repeat; i++)
 	{
-		context.mStream = context.mBegin;
 		ExecuteDrawItems(context);
+		context.Restart();
 	}
 	aContext.mStream += size;
 }
@@ -412,10 +389,7 @@ void DO_Block(EntityContext &aContext)
 		{
 			t -= loop * length;
 			t *= scale;
-			EntityContext context(aContext);
-			context.mBegin = context.mStream;
-			context.mEnd = context.mStream + size;
-			context.mParam = t;
+			EntityContext context(aContext.mStream, size, t, aContext.mId, aContext.mVars);
 			ExecuteDrawItems(context);
 		}
 	}
@@ -455,16 +429,14 @@ void DO_Loop(EntityContext &aContext)
 	const size_t size = Expression::Read<size_t>(aContext);
 
 //		Database::Typed<float> &variables = Database::variable.Open(aContext.mId);
-	EntityContext context(aContext);
-	context.mBegin = context.mStream;
-	context.mEnd = context.mStream + size;
+	EntityContext context(aContext.mStream, size, aContext.mParam, aContext.mId, aContext.mVars);
 	if (by > 0)
 	{
 		for (float value = from; value <= to; value += by)
 		{
 			context.mVars->Put(name, value);
-			context.mStream = aContext.mStream;
 			ExecuteDrawItems(context);
+			context.Restart();
 		}
 	}
 	else
@@ -472,8 +444,8 @@ void DO_Loop(EntityContext &aContext)
 		for (float value = from; value >= to; value += by)
 		{
 			context.mVars->Put(name, value);
-			context.mStream = aContext.mStream;
 			ExecuteDrawItems(context);
+			context.Restart();
 		}
 	}
 	context.mVars->Delete(name);
@@ -515,11 +487,11 @@ void ConfigureVariableClear(const tinyxml2::XMLElement *element, std::vector<uns
 }
 
 
-void ConfigurePrimitive(const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer, GLenum mode)
+void ConfigurePrimitive(GLenum mode, unsigned int aId, const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer)
 {
-	Expression::Append(buffer, DO_glBegin, mode);
-	ConfigureDrawItems(element, buffer);
-	Expression::Append(buffer, DO_glEnd);
+	Expression::Append(buffer, DO_Begin, mode);
+	ConfigureDrawItems(aId, element, buffer);
+	Expression::Append(buffer, DO_End);
 }
 
 GLenum GetPrimitiveMode(const char *mode)
@@ -540,19 +512,219 @@ GLenum GetPrimitiveMode(const char *mode)
 	}
 }
 
+static void ConfigureMatrix(const tinyxml2::XMLElement *element, float m[])
+{
+	for (int i = 0; i < 16; i++)
+	{
+		char name[16];
+		sprintf(name, "m%d", i);
+		m[i] = sMatrixDefault[i];
+		element->QueryFloatAttribute(name, &m[i]);
+	}
+}
 
-void ConfigureDrawItem(const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer)
+
+void ConfigureDrawItem(unsigned int aId, const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer)
 {
 	const char *label = element->Value();
 	switch (Hash(label))
 	{
+		//
+		// TRANSFORM COMMANDS
+
 	case 0x974c9474 /* "pushmatrix" */:
 		{
-			Expression::Append(buffer, DO_glPushMatrix);
-			ConfigureDrawItems(element, buffer);
-			Expression::Append(buffer, DO_glPopMatrix);
+			Expression::Append(buffer, DO_PushMatrix);
+			ConfigureDrawItems(aId, element, buffer);
+			Expression::Append(buffer, DO_PopMatrix);
 		}
 		break;
+
+	case 0xad0ecfd5 /* "translate" */:
+		{
+			Expression::Append(buffer, DO_Translate);
+			Expression::Loader<DLTranslation>::ConfigureRoot(element, buffer, sPositionNames, sPositionDefault);
+		}
+		break;
+
+	case 0xa5f4fd0a /* "rotate" */:
+		{
+			Expression::Append(buffer, DO_Rotate);
+			Expression::Loader<DLRotation>::ConfigureRoot(element, buffer, sRotationNames, sRotationDefault);
+		}
+		break;
+
+	case 0x82971c71 /* "scale" */:
+		{
+			Expression::Append(buffer, DO_Scale);
+			Expression::Loader<DLScale>::ConfigureRoot(element, buffer, sScaleNames, sScaleDefault);
+		}
+		break;
+
+	case 0x938fc4f7 /* "loadidentity" */:
+		{
+			Expression::Append(buffer, DO_LoadIdentity);
+		}
+		break;
+
+	case 0x7d22a710 /* "loadmatrix" */:
+		{
+			float m[16];
+			ConfigureMatrix(element, m);
+			Expression::Append(buffer, DO_LoadMatrix);
+			Expression::Append(buffer, m);
+		}
+		break;
+
+	case 0x3807cb92 /* "multmatrix" */:
+		{
+			float m[16];
+			ConfigureMatrix(element, m);
+			Expression::Append(buffer, DO_MultMatrix);
+			Expression::Append(buffer, m);
+		}
+		break;
+
+		//
+		// GEOMETRY COMMANDS
+
+	case 0x945367a7 /* "vertex" */:
+		{
+			Expression::Append(buffer, DO_Vertex);
+			Expression::Loader<DLPosition>::ConfigureRoot(element, buffer, sPositionNames, sPositionDefault);
+		}
+		break;
+
+	case 0xe68b9c52 /* "normal" */:
+		{
+			Expression::Append(buffer, DO_Normal);
+			Expression::Loader<DLNormal>::ConfigureRoot(element, buffer, sNormalNames, sNormalDefault);
+		}
+		break;
+
+	case 0x3d7e6258 /* "color" */:
+		{
+			Expression::Append(buffer, DO_Color);
+			Expression::Loader<DLColor>::ConfigureRoot(element, buffer, sColorNames, sColorDefault);
+		}
+		break;
+
+	case 0xdd612dd3 /* "texcoord" */:
+		{
+			Expression::Append(buffer, DO_TexCoord);
+			Expression::Loader<DLTexCoord>::ConfigureRoot(element, buffer, sTexCoordNames, sTexCoordDefault);
+		}
+		break;
+
+		//
+		// PRIMITIVE COMMANDS
+
+	case 0xbc9567c6 /* "points" */:
+		{
+			float size = 0.0f;
+			element->QueryFloatAttribute("size", &size);
+			if (size != 0.0f)
+			{
+				Expression::Append(buffer, DO_PushAttrib, GL_POINT_BIT);
+				Expression::Append(buffer, DO_PointSizeWorld, size);
+			}
+			ConfigurePrimitive(GL_POINTS, aId, element, buffer);
+			if (size != 0.0f)
+			{
+				Expression::Append(buffer, DO_PopAttrib);
+			}
+		}
+		break;
+
+	case 0xe1e4263c /* "lines" */:
+		{
+			float width = 0.0f;
+			element->QueryFloatAttribute("width", &width);
+			if (width != 0.0f)
+			{
+				Expression::Append(buffer, DO_PushAttrib, GL_LINE_BIT);
+				Expression::Append(buffer, DO_LineWidthWorld, width);
+			}
+			ConfigurePrimitive(GL_LINES, aId, element, buffer);
+			if (width != 0.0f)
+			{
+				Expression::Append(buffer, DO_PopAttrib);
+			}
+		}
+		break;
+
+	case 0xc2106ab6 /* "line_loop" */:
+		{
+			float width = 0.0f;
+			element->QueryFloatAttribute("width", &width);
+			if (width != 0.0f)
+			{
+				Expression::Append(buffer, DO_PushAttrib, GL_LINE_BIT);
+				Expression::Append(buffer, DO_LineWidthWorld, width);
+			}
+			ConfigurePrimitive(GL_LINE_LOOP, aId, element, buffer);
+			if (width != 0.0f)
+			{
+				Expression::Append(buffer, DO_PopAttrib);
+			}
+		}
+		break;
+
+	case 0xc6f2fa0e /* "line_strip" */:
+		{
+			float width = 0.0f;
+			element->QueryFloatAttribute("width", &width);
+			if (width != 0.0f)
+			{
+				Expression::Append(buffer, DO_PushAttrib, GL_LINE_BIT);
+				Expression::Append(buffer, DO_LineWidthWorld, width);
+			}
+			ConfigurePrimitive(GL_LINE_STRIP, aId, element, buffer);
+			if (width != 0.0f)
+			{
+				Expression::Append(buffer, DO_PopAttrib);
+			}
+		}
+		break;
+
+	case 0xd8a57342 /* "triangles" */:
+		{
+			ConfigurePrimitive(GL_TRIANGLES, aId, element, buffer);
+		}
+		break;
+
+	case 0x668b2dd8 /* "triangle_strip" */:
+		{
+			ConfigurePrimitive(GL_TRIANGLE_STRIP, aId, element, buffer);
+		}
+		break;
+
+	case 0xcfa6904f /* "triangle_fan" */:
+		{
+			ConfigurePrimitive(GL_TRIANGLE_FAN, aId, element, buffer);
+		}
+		break;
+
+	case 0x5667b307 /* "quads" */:
+		{
+			ConfigurePrimitive(GL_QUADS, aId, element, buffer);
+		}
+		break;
+
+	case 0xb47cad9b /* "quad_strip" */:
+		{
+			ConfigurePrimitive(GL_QUAD_STRIP, aId, element, buffer);
+		}
+		break;
+
+	case 0x051cb889 /* "polygon" */:
+		{
+			ConfigurePrimitive(GL_POLYGON, aId, element, buffer);
+		}
+		break;
+
+		//
+		// RENDERSTATE COMMANDS
 
 	case 0x937cff81 /* "pushattrib" */:
 		{
@@ -589,92 +761,9 @@ void ConfigureDrawItem(const tinyxml2::XMLElement *element, std::vector<unsigned
 				else
 					mask &= ~bit;
 			}
-			Expression::Append(buffer, DO_glPushAttrib, mask);
-			ConfigureDrawItems(element, buffer);
-			Expression::Append(buffer, DO_glPopAttrib);
-		}
-		break;
-
-	case 0xad0ecfd5 /* "translate" */:
-		{
-			Expression::Append(buffer, DO_glTranslatef);
-			Expression::Loader<DLTranslation>::ConfigureRoot(element, buffer, sPositionNames, sPositionDefault);
-		}
-		break;
-
-	case 0xa5f4fd0a /* "rotate" */:
-		{
-			Expression::Append(buffer, DO_glRotatef);
-			Expression::Loader<DLRotation>::ConfigureRoot(element, buffer, sRotationNames, sRotationDefault);
-		}
-		break;
-
-	case 0x82971c71 /* "scale" */:
-		{
-			Expression::Append(buffer, DO_glScalef);
-			Expression::Loader<DLScale>::ConfigureRoot(element, buffer, sScaleNames, sScaleDefault);
-		}
-		break;
-
-	case 0x938fc4f7 /* "loadidentity" */:
-		{
-			Expression::Append(buffer, DO_glLoadIdentity);
-		}
-		break;
-
-	case 0x7d22a710 /* "loadmatrix" */:
-		{
-			Expression::Append(buffer, DO_glLoadMatrixf);
-			for (int i = 0; i < 16; i++)
-			{
-				char name[16];
-				sprintf(name, "m%d", i);
-				float m = sMatrixDefault[i];
-				element->QueryFloatAttribute(name, &m);
-				Expression::Append(buffer, m);
-			}
-		}
-		break;
-
-	case 0x3807cb92 /* "multmatrix" */:
-		{
-			Expression::Append(buffer, DO_glMultMatrixf);
-			for (int i = 0; i < 16; i++)
-			{
-				char name[16];
-				sprintf(name, "m%d", i);
-				float m = sMatrixDefault[i];
-				element->QueryFloatAttribute(name, &m);
-				Expression::Append(buffer, m);
-			}
-		}
-		break;
-
-	case 0x945367a7 /* "vertex" */:
-		{
-			Expression::Append(buffer, DO_glVertex3fv);
-			Expression::Loader<DLPosition>::ConfigureRoot(element, buffer, sPositionNames, sPositionDefault);
-		}
-		break;
-
-	case 0xe68b9c52 /* "normal" */:
-		{
-			Expression::Append(buffer, DO_glNormal3fv);
-			Expression::Loader<DLNormal>::ConfigureRoot(element, buffer, sPositionNames, sPositionDefault);
-		}
-		break;
-
-	case 0x3d7e6258 /* "color" */:
-		{
-			Expression::Append(buffer, DO_glColor4fv);
-			Expression::Loader<DLColor>::ConfigureRoot(element, buffer, sColorNames, sColorDefault);
-		}
-		break;
-
-	case 0xdd612dd3 /* "texcoord" */:
-		{
-			Expression::Append(buffer, DO_glTexCoord2fv);
-			Expression::Loader<DLTexCoord>::ConfigureRoot(element, buffer, sTexCoordNames, sTexCoordDefault);
+			Expression::Append(buffer, DO_PushAttrib, mask);
+			ConfigureDrawItems(aId, element, buffer);
+			Expression::Append(buffer, DO_PopAttrib);
 		}
 		break;
 
@@ -687,8 +776,12 @@ void ConfigureDrawItem(const tinyxml2::XMLElement *element, std::vector<unsigned
 				if (texture)
 				{
 					// bind the texture object
-					Expression::Append(buffer, DO_glEnable, GL_TEXTURE_2D);
-					Expression::Append(buffer, DO_glBindTexture, GL_TEXTURE_2D, texture);
+					Expression::Append(buffer, DO_Enable, GL_TEXTURE_2D);
+					Expression::Append(buffer, DO_BindTexture, GL_TEXTURE_2D, texture);
+				}
+				else
+				{
+					DebugPrint("Missing texture %s", name);
 				}
 			}
 		}
@@ -705,111 +798,7 @@ void ConfigureDrawItem(const tinyxml2::XMLElement *element, std::vector<unsigned
 			case 0x0bbc40d8 /* "blend" */:		blendmode = GL_BLEND; break;
 			case 0xa13884c3 /* "replace" */:	blendmode = GL_REPLACE; break;
 			}
-			Expression::Append(buffer, DO_glTexEnvi, GL_TEXTURE_ENV_MODE, blendmode);
-		}
-		break;
-
-	case 0xbc9567c6 /* "points" */:
-		{
-			float size = 0.0f;
-			element->QueryFloatAttribute("size", &size);
-			if (size != 0.0f)
-			{
-				Expression::Append(buffer, DO_glPushAttrib, GL_POINT_BIT);
-				Expression::Append(buffer, DO_glPointSizeWorld, size);
-			}
-			ConfigurePrimitive(element, buffer, GL_POINTS);
-			if (size != 0.0f)
-			{
-				Expression::Append(buffer, DO_glPopAttrib);
-			}
-		}
-		break;
-
-	case 0xe1e4263c /* "lines" */:
-		{
-			float width = 0.0f;
-			element->QueryFloatAttribute("width", &width);
-			if (width != 0.0f)
-			{
-				Expression::Append(buffer, DO_glPushAttrib, GL_LINE_BIT);
-				Expression::Append(buffer, DO_glLineWidthWorld, width);
-			}
-			ConfigurePrimitive(element, buffer, GL_LINES);
-			if (width != 0.0f)
-			{
-				Expression::Append(buffer, DO_glPopAttrib);
-			}
-		}
-		break;
-
-	case 0xc2106ab6 /* "line_loop" */:
-		{
-			float width = 0.0f;
-			element->QueryFloatAttribute("width", &width);
-			if (width != 0.0f)
-			{
-				Expression::Append(buffer, DO_glPushAttrib, GL_LINE_BIT);
-				Expression::Append(buffer, DO_glLineWidthWorld, width);
-			}
-			ConfigurePrimitive(element, buffer, GL_LINE_LOOP);
-			if (width != 0.0f)
-			{
-				Expression::Append(buffer, DO_glPopAttrib);
-			}
-		}
-		break;
-
-	case 0xc6f2fa0e /* "line_strip" */:
-		{
-			float width = 0.0f;
-			element->QueryFloatAttribute("width", &width);
-			if (width != 0.0f)
-			{
-				Expression::Append(buffer, DO_glPushAttrib, GL_LINE_BIT);
-				Expression::Append(buffer, DO_glLineWidthWorld, width);
-			}
-			ConfigurePrimitive(element, buffer, GL_LINE_STRIP);
-			if (width != 0.0f)
-			{
-				Expression::Append(buffer, DO_glPopAttrib);
-			}
-		}
-		break;
-
-	case 0xd8a57342 /* "triangles" */:
-		{
-			ConfigurePrimitive(element, buffer, GL_TRIANGLES);
-		}
-		break;
-
-	case 0x668b2dd8 /* "triangle_strip" */:
-		{
-			ConfigurePrimitive(element, buffer, GL_TRIANGLE_STRIP);
-		}
-		break;
-
-	case 0xcfa6904f /* "triangle_fan" */:
-		{
-			ConfigurePrimitive(element, buffer, GL_TRIANGLE_FAN);
-		}
-		break;
-
-	case 0x5667b307 /* "quads" */:
-		{
-			ConfigurePrimitive(element, buffer, GL_QUADS);
-		}
-		break;
-
-	case 0xb47cad9b /* "quad_strip" */:
-		{
-			ConfigurePrimitive(element, buffer, GL_QUAD_STRIP);
-		}
-		break;
-
-	case 0x051cb889 /* "polygon" */:
-		{
-			ConfigurePrimitive(element, buffer, GL_POLYGON);
+			Expression::Append(buffer, DO_TexEnvi, GL_TEXTURE_ENV_MODE, blendmode);
 		}
 		break;
 
@@ -846,7 +835,38 @@ void ConfigureDrawItem(const tinyxml2::XMLElement *element, std::vector<unsigned
 			case 0x1ad7d24f /* "one_minus_dst_alpha" */:	dstfactor = GL_ONE_MINUS_DST_ALPHA; break;
 			}
 
-			Expression::Append(buffer, DO_glBlendFunc, srcfactor, dstfactor);
+			Expression::Append(buffer, DO_BlendFunc, srcfactor, dstfactor);
+		}
+		break;
+
+		//
+		// DRAWLIST COMMANDS
+
+	case 0xc98b019b /* "drawlist" */:
+		{
+			// create a new draw list
+			GLuint handle = glGenLists(1);
+			glNewList(handle, GL_COMPILE);
+
+			// register the draw list
+			Database::drawlist.Put(handle, handle);
+
+			// configure the dynamic draw list
+			std::vector<unsigned int> &drawlist = Database::dynamicdrawlist.Open(handle);
+			ConfigureDrawItems(aId, element, drawlist);
+
+			// execute the dynamic draw list
+			EntityContext context(&drawlist[0], drawlist.size(), 0.0f, aId);
+			ExecuteDrawItems(context);
+
+			// close the dynamic draw list
+			Database::dynamicdrawlist.Close(handle);
+
+			// finish the draw list
+			glEndList();
+
+			// use the anonymous drawlist
+			Expression::Append(buffer, DO_CallList, handle);
 		}
 		break;
 
@@ -858,12 +878,26 @@ void ConfigureDrawItem(const tinyxml2::XMLElement *element, std::vector<unsigned
 				GLuint drawlist = Database::drawlist.Get(Hash(name));
 				if (drawlist)
 				{
-					Expression::Append(buffer, DO_glCallList, drawlist);
+					Expression::Append(buffer, DO_CallList, drawlist);
 				}
 				else
 				{
 					DebugPrint("Missing drawlist %s\n", name);
 				}
+			}
+		}
+		break;
+
+	case 0xdf3cf9c0 /* "dynamicdrawlist" */:
+		{
+			const char *name = element->Attribute("name");
+			if (name)
+			{
+				// process draw items
+				unsigned int id = Hash(name);
+				std::vector<unsigned int> &drawlist = Database::dynamicdrawlist.Open(id);
+				ConfigureDrawItems(id, element, drawlist);
+				Database::dynamicdrawlist.Close(id);
 			}
 		}
 		break;
@@ -888,51 +922,8 @@ void ConfigureDrawItem(const tinyxml2::XMLElement *element, std::vector<unsigned
 		}
 		break;
 
-	case 0xdf3cf9c0 /* "dynamicdrawlist" */:
-		{
-			const char *name = element->Attribute("name");
-			if (name)
-			{
-				// process draw items
-				unsigned int id = Hash(name);
-				std::vector<unsigned int> &drawlist = Database::dynamicdrawlist.Open(id);
-				ConfigureDrawItems(element, drawlist);
-				Database::dynamicdrawlist.Close(id);
-			}
-		}
-		break;
-
-	case 0xc98b019b /* "drawlist" */:
-		{
-			// create a new draw list
-			GLuint handle = glGenLists(1);
-			glNewList(handle, GL_COMPILE);
-
-			// register the draw list
-			Database::drawlist.Put(handle, handle);
-
-			// get (optional) parameter value
-			float param = 0.0f;
-			element->QueryFloatAttribute("param", &param);
-
-			// configure the dynamic draw list
-			std::vector<unsigned int> &drawlist = Database::dynamicdrawlist.Open(handle);
-			ConfigureDrawItems(element, drawlist);
-
-			// execute the dynamic draw list
-			EntityContext context(&drawlist[0], drawlist.size(), param, 0);
-			ExecuteDrawItems(context);
-
-			// close the dynamic draw list
-			Database::dynamicdrawlist.Close(handle);
-
-			// finish the draw list
-			glEndList();
-
-			// use the anonymous drawlist
-			Expression::Append(buffer, DO_glCallList, handle);
-		}
-		break;
+		//
+		// GROUPING COMMANDS
 
 	case 0xd99ba82a /* "repeat" */:
 		{
@@ -943,7 +934,7 @@ void ConfigureDrawItem(const tinyxml2::XMLElement *element, std::vector<unsigned
 
 			buffer.push_back(0);
 			const int start = buffer.size();
-			ConfigureDrawItems(element, buffer);
+			ConfigureDrawItems(aId, element, buffer);
 			buffer[start-1] = buffer.size() - start;
 		}
 		break;
@@ -963,10 +954,62 @@ void ConfigureDrawItem(const tinyxml2::XMLElement *element, std::vector<unsigned
 
 			buffer.push_back(0);
 			int size = buffer.size();
-			ConfigureDrawItems(element, buffer);
+			ConfigureDrawItems(aId, element, buffer);
 			buffer[size-1] = buffer.size() - size;
 		}
 		break;
+
+#ifdef DRAWLIST_LOOP
+	case 0xddef486b /* "loop" */:
+		{
+			const unsigned int name = Hash(element->Attribute("name"));
+			float from = 0.0f;
+			element->QueryFloatAttribute("from", &from);
+			float to = 0.0f;
+			element->QueryFloatAttribute("to", &to);
+			float by = from < to ? 1.0f : -1.0f;
+			element->QueryFloatAttribute("by", &by);
+
+			if ((to - from) * by <= 0)
+			{
+				DebugPrint("loop name=\"%s\" from=\"%f\" to=\"%f\" by=\"%f\" would never terminate\n");
+				break;
+			}
+
+			Expression::Append(buffer, DO_Loop, name, from, to, by);
+
+			buffer.push_back(0);
+			const int start = buffer.size();
+			ConfigureDrawItems(aId, element, buffer);
+			buffer[start-1] = buffer.size() - start;
+		}
+		break;
+#endif
+
+#ifdef DRAWLIST_EMITTER
+	case 0x576b09cd /* "emitter" */:
+		{
+			int count = 1;
+			element->QueryIntAttribute("count", &count);
+			float period = 1.0f;
+			element->QueryFloatAttribute("period", &period);
+			float x = 0.0f, y = 0.0f, a = 0.0f;
+			element->QueryFloatAttribute("x", &x);
+			element->QueryFloatAttribute("y", &y);
+			element->QueryFloatAttribute("angle", &a);
+
+			Expression::Append(buffer, DO_Emitter, count, period, x, y, a);
+
+			buffer.push_back(0);
+			const int start = buffer.size();
+			ConfigureDrawItems(aId, element, buffer);
+			buffer[start-1] = buffer.size() - start;
+		}
+		break;
+#endif
+
+		//
+		// VARIABLE COMMANDS
 
 	case 0xc6270703 /* "set" */:
 		{
@@ -1055,67 +1098,18 @@ void ConfigureDrawItem(const tinyxml2::XMLElement *element, std::vector<unsigned
 		}
 		break;
 
-#ifdef DRAWLIST_LOOP
-	case 0xddef486b /* "loop" */:
-		{
-			const unsigned int name = Hash(element->Attribute("name"));
-			float from = 0.0f;
-			element->QueryFloatAttribute("from", &from);
-			float to = 0.0f;
-			element->QueryFloatAttribute("to", &to);
-			float by = from < to ? 1.0f : -1.0f;
-			element->QueryFloatAttribute("by", &by);
-
-			if ((to - from) * by <= 0)
-			{
-				DebugPrint("loop name=\"%s\" from=\"%f\" to=\"%f\" by=\"%f\" would never terminate\n");
-				break;
-			}
-
-			Expression::Append(buffer, DO_Loop, name, from, to, by);
-
-			buffer.push_back(0);
-			const int start = buffer.size();
-			ConfigureDrawItems(element, buffer);
-			buffer[start-1] = buffer.size() - start;
-		}
-		break;
-#endif
-
-#ifdef DRAWLIST_EMITTER
-	case 0x576b09cd /* "emitter" */:
-		{
-			int count = 1;
-			element->QueryIntAttribute("count", &count);
-			float period = 1.0f;
-			element->QueryFloatAttribute("period", &period);
-			float x = 0.0f, y = 0.0f, a = 0.0f;
-			element->QueryFloatAttribute("x", &x);
-			element->QueryFloatAttribute("y", &y);
-			element->QueryFloatAttribute("angle", &a);
-
-			Expression::Append(buffer, DO_Emitter, count, period, x, y, a);
-
-			buffer.push_back(0);
-			const int start = buffer.size();
-			ConfigureDrawItems(element, buffer);
-			buffer[start-1] = buffer.size() - start;
-		}
-		break;
-#endif
-
 	default:
 		DebugPrint("Unknown draw item \"%s\"\n", element->Value());
 		break;
 	}
 }
 
-void ConfigureDrawItems(const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer)
+void ConfigureDrawItems(unsigned int aId, const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer)
 {
 	// process child elements
 	for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
-		ConfigureDrawItem(child, buffer);
+		ConfigureDrawItem(aId, child, buffer);
 	}
 }
 
@@ -1230,15 +1224,12 @@ void RebuildDrawlists(void)
 		GLuint handle = itor.GetValue();
 		glNewList(handle, GL_COMPILE);
 
-		// TO DO: recover parameter value
-		float param = 0.0f;
-
 		// process draw items
 		// TO DO: recover id value
 		const std::vector<unsigned int> &drawlist = Database::dynamicdrawlist.Get(handle);
 		if (drawlist.size() > 0)
 		{
-			EntityContext context(&drawlist[0], drawlist.size(), param, 0);
+			EntityContext context(&drawlist[0], drawlist.size(), 0.0f, 0);
 			ExecuteDrawItems(context);
 		}
 
@@ -1260,21 +1251,19 @@ void RenderDrawlist(unsigned int aId, float aTime, const Transform2 &aTransform)
 	if (buffer.empty())
 		return;
 
-#if 0
 	// push a transform
 	glPushMatrix();
 
 	// load matrix
-	glTranslatef(aTransform.p.x, aTransform.p.y, 0);
-	glRotatef(aTransform.a*180/float(M_PI), 0.0f, 0.0f, 1.0f);
-#endif
+	if (aTransform.p.x != 0.0f || aTransform.p.y != 0.0f)
+		glTranslatef(aTransform.p.x, aTransform.p.y, 0);
+	if (aTransform.a != 0.0f)
+		glRotatef(aTransform.a*180/float(M_PI), 0.0f, 0.0f, 1.0f);
 
 	// execute the deferred draw list
 	EntityContext context(&buffer[0], buffer.size(), aTime, aId);
 	ExecuteDrawItems(context);
 
-#if 0
 	// reset the transform
 	glPopMatrix();
-#endif
 };

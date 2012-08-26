@@ -218,9 +218,6 @@ namespace Database
 
 				// done with texture template
 				Database::texturetemplate.Close(handle);
-
-				// restore texture state
-				glPopAttrib();
 			}
 		Configure textureconfigure(0x3c6468f4 /* "texture" */, TextureConfigure);
 		}
