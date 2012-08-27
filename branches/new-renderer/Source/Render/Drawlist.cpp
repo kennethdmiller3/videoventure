@@ -2053,7 +2053,7 @@ void ConfigureDrawItem(unsigned int aId, const tinyxml2::XMLElement *element, st
 		break;
 
 		//
-		// GROUPING COMMANDS
+		// DRAWLIST COMMANDS
 
 	case 0xc98b019b /* "drawlist" */:
 		if (bake)
@@ -2151,6 +2151,9 @@ void ConfigureDrawItem(unsigned int aId, const tinyxml2::XMLElement *element, st
 		}
 		break;
 
+		//
+		// GROUPING COMMANDS
+
 	case 0xd99ba82a /* "repeat" */:
 		{
 			int count = 1;
@@ -2184,6 +2187,58 @@ void ConfigureDrawItem(unsigned int aId, const tinyxml2::XMLElement *element, st
 			buffer[size-1] = buffer.size() - size;
 		}
 		break;
+
+#ifdef DRAWLIST_LOOP
+	case 0xddef486b /* "loop" */:
+		{
+			const unsigned int name = Hash(element->Attribute("name"));
+			float from = 0.0f;
+			element->QueryFloatAttribute("from", &from);
+			float to = 0.0f;
+			element->QueryFloatAttribute("to", &to);
+			float by = from < to ? 1.0f : -1.0f;
+			element->QueryFloatAttribute("by", &by);
+
+			if ((to - from) * by <= 0)
+			{
+				DebugPrint("loop name=\"%s\" from=\"%f\" to=\"%f\" by=\"%f\" would never terminate\n");
+				break;
+			}
+
+			Expression::Append(buffer, DO_Loop, name, from, to, by);
+
+			buffer.push_back(0);
+			const int start = buffer.size();
+			ConfigureDrawItems(aId, element, buffer, bake);
+			buffer[start-1] = buffer.size() - start;
+		}
+		break;
+#endif
+
+#ifdef DRAWLIST_EMITTER
+	case 0x576b09cd /* "emitter" */:
+		{
+			int count = 1;
+			element->QueryIntAttribute("count", &count);
+			float period = 1.0f;
+			element->QueryFloatAttribute("period", &period);
+			float x = 0.0f, y = 0.0f, a = 0.0f;
+			element->QueryFloatAttribute("x", &x);
+			element->QueryFloatAttribute("y", &y);
+			element->QueryFloatAttribute("angle", &a);
+
+			Expression::Append(buffer, DO_Emitter, count, period, x, y, a);
+
+			buffer.push_back(0);
+			const int start = buffer.size();
+			ConfigureDrawItems(aId, element, buffer);
+			buffer[start-1] = buffer.size() - start;
+		}
+		break;
+#endif
+
+		//
+		// VARIABLE COMMANDS
 
 	case 0xc6270703 /* "set" */:
 		{
@@ -2273,55 +2328,6 @@ void ConfigureDrawItem(unsigned int aId, const tinyxml2::XMLElement *element, st
 			ConfigureVariableClear(element, buffer);
 		}
 		break;
-
-#ifdef DRAWLIST_LOOP
-	case 0xddef486b /* "loop" */:
-		{
-			const unsigned int name = Hash(element->Attribute("name"));
-			float from = 0.0f;
-			element->QueryFloatAttribute("from", &from);
-			float to = 0.0f;
-			element->QueryFloatAttribute("to", &to);
-			float by = from < to ? 1.0f : -1.0f;
-			element->QueryFloatAttribute("by", &by);
-
-			if ((to - from) * by <= 0)
-			{
-				DebugPrint("loop name=\"%s\" from=\"%f\" to=\"%f\" by=\"%f\" would never terminate\n");
-				break;
-			}
-
-			Expression::Append(buffer, DO_Loop, name, from, to, by);
-
-			buffer.push_back(0);
-			const int start = buffer.size();
-			ConfigureDrawItems(aId, element, buffer, bake);
-			buffer[start-1] = buffer.size() - start;
-		}
-		break;
-#endif
-
-#ifdef DRAWLIST_EMITTER
-	case 0x576b09cd /* "emitter" */:
-		{
-			int count = 1;
-			element->QueryIntAttribute("count", &count);
-			float period = 1.0f;
-			element->QueryFloatAttribute("period", &period);
-			float x = 0.0f, y = 0.0f, a = 0.0f;
-			element->QueryFloatAttribute("x", &x);
-			element->QueryFloatAttribute("y", &y);
-			element->QueryFloatAttribute("angle", &a);
-
-			Expression::Append(buffer, DO_Emitter, count, period, x, y, a);
-
-			buffer.push_back(0);
-			const int start = buffer.size();
-			ConfigureDrawItems(aId, element, buffer);
-			buffer[start-1] = buffer.size() - start;
-		}
-		break;
-#endif
 
 	default:
 		DebugPrint("Unknown draw item \"%s\"\n", element->Value());
