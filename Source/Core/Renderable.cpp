@@ -39,7 +39,7 @@ namespace Database
 #ifdef DRAW_FRONT_TO_BACK
 			if (!inherit)
 				buffer.clear();
-			ConfigureDrawItems(aId, element, buffer);
+			ConfigureDrawItems(aId, element, buffer, false);
 #else
 			std::vector<unsigned int> original;
 			std::swap(buffer, original);
