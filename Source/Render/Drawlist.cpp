@@ -10,6 +10,8 @@
 
 #include "MatrixStack.h"
 
+#include "GL/glcorearb.h"
+
 
 //
 // DEFINES
@@ -41,6 +43,11 @@
 // 32 +/- 16 seems to work best, with rapid decline below 16 and slow decline above 48
 // the best value is probably CPU-, GPU-, and workload-dependent...
 #define DRAWLIST_STATIC_THRESHOLD 32
+
+// vertex normals
+// defined: enable support for normals
+// undefined: disable support for normals
+//#define DRAWLIST_NORMALS
 
 
 //
@@ -139,71 +146,71 @@ void GetTypeData(unsigned int type, int &width, const char * const *&names, cons
 
 
 //
-// BUFFER OBJECTS
+// OPENGL FUNCTIONS
 //
 
-// OpenGL 1.2 functions
-typedef void (APIENTRY * PFN_glDrawRangeElements)(GLenum , GLuint , GLuint , GLsizei , GLenum , const GLvoid *);
-static PFN_glDrawRangeElements glDrawRangeElements;
+// OpenGL 1.2
+PFNGLDRAWRANGEELEMENTSPROC glDrawRangeElements;
 
-// OpenGL 1.5 definitions
-#define GL_BUFFER_SIZE 0x8764
-#define GL_BUFFER_USAGE 0x8765
-#define GL_QUERY_COUNTER_BITS 0x8864
-#define GL_CURRENT_QUERY 0x8865
-#define GL_QUERY_RESULT 0x8866
-#define GL_QUERY_RESULT_AVAILABLE 0x8867
-#define GL_ARRAY_BUFFER 0x8892
-#define GL_ELEMENT_ARRAY_BUFFER 0x8893
-#define GL_ARRAY_BUFFER_BINDING 0x8894
-#define GL_ELEMENT_ARRAY_BUFFER_BINDING 0x8895
-#define GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING 0x889F
-#define GL_READ_ONLY 0x88B8
-#define GL_WRITE_ONLY 0x88B9
-#define GL_READ_WRITE 0x88BA
-#define GL_BUFFER_ACCESS 0x88BB
-#define GL_BUFFER_MAPPED 0x88BC
-#define GL_BUFFER_MAP_POINTER 0x88BD
-#define GL_STREAM_DRAW 0x88E0
-#define GL_STREAM_READ 0x88E1
-#define GL_STREAM_COPY 0x88E2
-#define GL_STATIC_DRAW 0x88E4
-#define GL_STATIC_READ 0x88E5
-#define GL_STATIC_COPY 0x88E6
-#define GL_DYNAMIC_DRAW 0x88E8
-#define GL_DYNAMIC_READ 0x88E9
-#define GL_DYNAMIC_COPY 0x88EA
-#define GL_SAMPLES_PASSED 0x8914
+// OpenGL 1.5
+PFNGLGENBUFFERSPROC glGenBuffers;
+PFNGLDELETEBUFFERSPROC glDeleteBuffers;
+PFNGLBINDBUFFERPROC glBindBuffer;
+PFNGLBUFFERDATAPROC glBufferData;
+PFNGLBUFFERSUBDATAPROC glBufferSubData;
+PFNGLMAPBUFFERPROC glMapBuffer;
+PFNGLMAPBUFFERRANGEPROC glMapBufferRange;
+PFNGLUNMAPBUFFERPROC glUnmapBuffer;
 
-// OpenGL 1.5 functions
-typedef ptrdiff_t GLintptr;
-typedef ptrdiff_t GLsizeiptr;
-typedef void (APIENTRY * PFN_glGenBuffers)(GLsizei n, GLuint *buffers);
-static PFN_glGenBuffers		glGenBuffers;
-typedef void (APIENTRY * PFN_glDeleteBuffers)(GLsizei n, const GLuint *buffers);
-static PFN_glDeleteBuffers	glDeleteBuffers;
-typedef void (APIENTRY * PFN_glBindBuffer)(GLenum target, GLuint buffer);
-static PFN_glBindBuffer		glBindBuffer;
-typedef void (APIENTRY * PFN_glBufferData)(GLenum target, GLsizeiptr size, const GLvoid *data, GLenum usage);
-static PFN_glBufferData		glBufferData;
-typedef void (APIENTRY * PFN_glBufferSubData)(GLenum target, GLintptr offset, GLsizeiptr size, const GLvoid *data);
-static PFN_glBufferSubData	glBufferSubData;
-typedef GLvoid* (APIENTRY * PFN_glMapBuffer)(GLenum , GLenum );
-static PFN_glMapBuffer glMapBuffer;
-typedef GLboolean (APIENTRY * PFN_glUnmapBuffer)(GLenum );
-static PFN_glUnmapBuffer glUnmapBuffer;
+// OpenGL 2.0
+PFNGLATTACHSHADERPROC glAttachShader;
+PFNGLDRAWBUFFERSPROC glDrawBuffers;
+PFNGLBINDATTRIBLOCATIONPROC glBindAttribLocation;
+PFNGLCOMPILESHADERPROC glCompileShader;
+PFNGLCREATEPROGRAMPROC glCreateProgram;
+PFNGLCREATESHADERPROC glCreateShader;
+PFNGLDELETEPROGRAMPROC glDeleteProgram;
+PFNGLDETACHSHADERPROC glDetachShader;
+PFNGLDISABLEVERTEXATTRIBARRAYPROC glDisableVertexAttribArray;
+PFNGLENABLEVERTEXATTRIBARRAYPROC glEnableVertexAttribArray;
+PFNGLGETATTRIBLOCATIONPROC glGetAttribLocation;
+PFNGLGETUNIFORMLOCATIONPROC glGetUniformLocation;
+PFNGLISPROGRAMPROC glIsProgram;
+PFNGLISSHADERPROC glIsShader;
+PFNGLLINKPROGRAMPROC glLinkProgram;
+PFNGLSHADERSOURCEPROC glShaderSource;
+PFNGLUSEPROGRAMPROC glUseProgram;
+PFNGLUNIFORM1FPROC glUniform1f;
+PFNGLUNIFORM2FPROC glUniform2f;
+PFNGLUNIFORM3FPROC glUniform3f;
+PFNGLUNIFORM4FPROC glUniform4f;
+PFNGLUNIFORM1FVPROC glUniform1fv;
+PFNGLUNIFORM2FVPROC glUniform2fv;
+PFNGLUNIFORM3FVPROC glUniform3fv;
+PFNGLUNIFORM4FVPROC glUniform4fv;
+PFNGLUNIFORMMATRIX4FVPROC glUniformMatrix4fv;
+PFNGLVALIDATEPROGRAMPROC glValidateProgram;
+PFNGLVERTEXATTRIB1FPROC glVertexAttrib1f;
+PFNGLVERTEXATTRIB1FVPROC glVertexAttrib1fv;
+PFNGLVERTEXATTRIB2FPROC glVertexAttrib2f;
+PFNGLVERTEXATTRIB2FVPROC glVertexAttrib2fv;
+PFNGLVERTEXATTRIB3FPROC glVertexAttrib3f;
+PFNGLVERTEXATTRIB3FVPROC glVertexAttrib3fv;
+PFNGLVERTEXATTRIB4FPROC glVertexAttrib4f;
+PFNGLVERTEXATTRIB4FVPROC glVertexAttrib4fv;
+PFNGLVERTEXATTRIB4NUBVPROC glVertexAttrib4Nubv;
+PFNGLVERTEXATTRIBPOINTERPROC glVertexAttribPointer;
 
-// OpenGL map buffer range defines
-#define GL_MAP_READ_BIT 0x0001
-#define GL_MAP_WRITE_BIT 0x0002
-#define GL_MAP_INVALIDATE_RANGE_BIT 0x0004
-#define GL_MAP_INVALIDATE_BUFFER_BIT 0x0008
-#define GL_MAP_FLUSH_EXPLICIT_BIT 0x0010
-#define GL_MAP_UNSYNCHRONIZED_BIT 0x0020
+// ARB vertex array object
+PFNGLBINDVERTEXARRAYPROC glBindVertexArray;
+PFNGLDELETEVERTEXARRAYSPROC glDeleteVertexArray;
+PFNGLGENVERTEXARRAYSPROC glGenVertexArrays;
+PFNGLISVERTEXARRAYPROC glIsVertexArray;
 
-// OpenGL map buffer range extension functions
-typedef GLvoid* (APIENTRY * PFN_glMapBufferRange)(GLenum , GLintptr , GLsizeiptr , GLbitfield);
-static PFN_glMapBufferRange glMapBufferRange;
+
+//
+// BUFFER OBJECTS
+//
 
 enum BufferType
 {
@@ -265,6 +272,63 @@ struct PackedRenderState
 	bool mTexCoord;
 };
 
+
+//
+// SHADER
+//
+
+// basic vertex shader program
+// TO DO: support normal
+// TO DO: support texcoord
+const GLchar * const sVertexShader =
+	"#version 130\n"
+	"\n"
+	"uniform mat4 projection;\n"
+	"uniform mat4 modelview;\n"
+	"\n"
+	"in vec3 position;\n"
+	"in vec4 color;\n"
+//	"in vec2 texcoord;\n"
+	"\n"
+	"out vec4 vscolor;\n"
+//	"out vec2 vstexcoord;\n"
+	"\n"
+	"void main()\n"
+	"{\n"
+	"    gl_Position = projection * modelview * vec4(position, 1.0);\n"
+	"    vscolor = color;\n"
+//	"    vstexcoord = texcoord;\n"
+	"}\n";
+
+// basic fragment shader program
+const GLchar * const sFragmentShader =
+	"#version 130\n"
+	"\n"
+	"in vec4 vscolor;\n"
+//	"in vec2 vstexcoord;\n"
+	"\n"
+	"out vec4 fragmentcolor;\n"
+//	"out vec2 fragmenttexcoord;\n"
+	"\n"
+	"void main(void)\n"
+	"{\n"
+	"    fragmentcolor = vscolor;\n"
+//	"    fragmenttexcoord = vstexcoord;\n"
+	"}\n";
+
+// shader program
+GLuint sProgram;
+
+// uniform locations
+GLint sUniformProjection;
+GLint sUniformModelView;
+
+// attribute locations
+GLint sAttribPosition;
+GLint sAttribNormal;
+GLint sAttribColor;
+GLint sAttribTexCoord;
+
 // tag appended to generator drawlist name to prevent it from matching a template name:
 // this fixes a bug where a generator would be duplicated when a template inherited from
 // a template containing a drawlist (e.g. "playershipinvunlerable" from "playership"),
@@ -289,51 +353,61 @@ static void DrawElements(GLenum aDrawMode, bool aNormalActive, bool aColorActive
 
 	// set up pointers
 	size_t offset = aVertexOffset;
-	glVertexPointer(sPositionWidth, GL_FLOAT, sizevertex, reinterpret_cast<GLvoid *>(offset));
+	glVertexAttribPointer(sAttribPosition, sPositionWidth, GL_FLOAT, GL_FALSE,sizevertex, reinterpret_cast<GLvoid *>(offset));
+	glEnableVertexAttribArray(sAttribPosition);
 	offset += sizeposition;
 	sNormalActive = aNormalActive;
-	if (aNormalActive)
+	if (sAttribNormal >= 0)
 	{
-		glEnableClientState(GL_NORMAL_ARRAY);
-		glNormalPointer(GL_FLOAT, sizevertex, reinterpret_cast<GLvoid *>(offset));
-		offset += sizenormal;
-	}
-	else
-	{
-		glDisableClientState(GL_NORMAL_ARRAY);
-		glNormal3fv(sNormal.m128_f32);
+		if (aNormalActive)
+		{
+			glVertexAttribPointer(sAttribNormal, sNormalWidth, GL_FLOAT, GL_FALSE,sizevertex, reinterpret_cast<GLvoid *>(offset));
+			glEnableVertexAttribArray(sAttribNormal);
+			offset += sizenormal;
+		}
+		else
+		{
+			glDisableVertexAttribArray(sAttribNormal);
+			glVertexAttrib3fv(sAttribNormal, sNormal.m128_f32);
+		}
 	}
 	sColorActive = aColorActive;
-	if (aColorActive)
+	if (sAttribColor >= 0)
 	{
-		glEnableClientState(GL_COLOR_ARRAY);
+		if (aColorActive)
+		{
 #ifdef DRAWLIST_FLOAT_COLOR
-		glColorPointer(sColorWidth, GL_FLOAT, sizevertex, reinterpret_cast<GLvoid *>(offset));
+			glVertexAttribPointer(sAttribColor, sColorWidth, GL_FLOAT, GL_FALSE,sizevertex, reinterpret_cast<GLvoid *>(offset));
 #else
-		glColorPointer(sColorWidth, GL_UNSIGNED_BYTE, sizevertex, reinterpret_cast<GLvoid *>(offset));
+			glVertexAttribPointer(sAttribColor, sColorWidth, GL_UNSIGNED_BYTE, GL_TRUE,sizevertex, reinterpret_cast<GLvoid *>(offset));
 #endif
-		offset += sizecolor;
-	}
-	else
-	{
-		glDisableClientState(GL_COLOR_ARRAY);
+			glEnableVertexAttribArray(sAttribColor);
+			offset += sizecolor;
+		}
+		else
+		{
+			glDisableVertexAttribArray(sAttribColor);
 #ifdef DRAWLIST_FLOAT_COLOR
-		glColor4fv(sColor.m128_f32);
+			glVertexAttrib4fv(sAttribColor, sColor.m128_f32);
 #else
-		glColor4ubv(sColor);
+			glVertexAttrib4Nubv(sAttribColor, sColor);
 #endif
+		}
 	}
 	sTexCoordActive = aTexCoordActive;
-	if (aTexCoordActive)
+	if (sAttribTexCoord >= 0)
 	{
-		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-		glTexCoordPointer(sTexCoordWidth, GL_FLOAT, sizevertex, reinterpret_cast<GLvoid *>(offset));
-		offset += sizetexcoord;
-	}
-	else
-	{
-		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-		glTexCoord2fv(sTexCoord.m128_f32);
+		if (aTexCoordActive)
+		{
+			glVertexAttribPointer(sAttribTexCoord, sTexCoordWidth, GL_FLOAT, GL_FALSE,sizevertex, reinterpret_cast<GLvoid *>(offset));
+			glEnableVertexAttribArray(sAttribTexCoord);
+			offset += sizenormal;
+		}
+		else
+		{
+			glDisableVertexAttribArray(sAttribTexCoord);
+			glVertexAttrib2fv(sAttribTexCoord, sTexCoord.m128_f32);
+		}
 	}
 
 	// draw elements
@@ -932,22 +1006,31 @@ void DO_CopyElements(EntityContext &aContext)
 	DLNormal nrm = _mm_set_ps1(0);
 	for (size_t i = 0; i < vertexCount; ++i)
 	{
+#if 1
 		memcpy(&pos, srcVertex, sizeposition);
 		pos = StackTransformPosition(pos);
 		memcpy(dstVertex, &pos, sizeposition);
-		//_mm_storeu_ps(dstVertex, StackTransformPosition(_mm_loadu_ps(srcVertex)));
+#else
+		_mm_storeu_ps(dstVertex, StackTransformPosition(_mm_loadu_ps(srcVertex)));
+#endif
 		srcVertex += sizeposition / sizeof(float);
 		dstVertex += sizeposition / sizeof(float);
 
 		if (sizedstnormal)
 		{
+#if 1
 			if (sizesrcnormal)
 				memcpy(&nrm, srcVertex, sizesrcnormal);
 			else
 				nrm = sNormal;
 			nrm = StackTransformNormal(nrm);
 			memcpy(dstVertex, &nrm, sizedstnormal);
-			//_mm_storeu_ps(dstVertex, StackTransformNormal(_mm_loadu_ps(srcVertex)));
+#else
+			if (sizesrcnormal)
+				_mm_storeu_ps(dstVertex, StackTransformNormal(_mm_loadu_ps(srcVertex)));
+			else
+				_mm_storeu_ps(dstVertex, StackTransformNormal(sNormal));
+#endif
 		}
 		srcVertex += sizesrcnormal / sizeof(float);
 		dstVertex += sizedstnormal / sizeof(float);
@@ -1001,8 +1084,7 @@ void DO_DrawElements(EntityContext &aContext)
 	}
 
 	// sync opengl matrix
-	glPushMatrix();
-	glMultMatrixf(StackGetMatrix());
+	glUniformMatrix4fv(sUniformModelView, 1, GL_FALSE, StackGet());
 
 	// get rendering state
 	PackedRenderState state(Expression::Read<PackedRenderState>(aContext));
@@ -1013,9 +1095,6 @@ void DO_DrawElements(EntityContext &aContext)
 
 	// draw elements using the specified rendering state
 	DrawElements(state.mMode, state.mNormal, state.mColor, state.mTexCoord, vertexOffset, vertexCount, indexOffset, indexCount);
-
-	// 
-	glPopMatrix();
 }
 #endif
 
@@ -2467,16 +2546,92 @@ void ExecuteDrawItems(EntityContext &aContext)
 
 void InitDrawlists(void)
 {
-	// bind function pointers
-	glDrawRangeElements = static_cast<PFN_glDrawRangeElements>(glfwGetProcAddress("glDrawRangeElements"));
-	glGenBuffers = static_cast<PFN_glGenBuffers>(glfwGetProcAddress("glGenBuffers"));
-	glDeleteBuffers = static_cast<PFN_glDeleteBuffers>(glfwGetProcAddress("glDeleteBuffers"));
-	glBindBuffer = static_cast<PFN_glBindBuffer>(glfwGetProcAddress("glBindBuffer"));
-	glBufferData = static_cast<PFN_glBufferData>(glfwGetProcAddress("glBufferData"));
-	glBufferSubData = static_cast<PFN_glBufferSubData>(glfwGetProcAddress("glBufferSubData"));
-	glMapBuffer = static_cast<PFN_glMapBuffer>(glfwGetProcAddress("glMapBuffer"));
-	glMapBufferRange = static_cast<PFN_glMapBufferRange>(glfwGetProcAddress("glMapBufferRange"));
-	glUnmapBuffer = static_cast<PFN_glUnmapBuffer>(glfwGetProcAddress("glUnmapBuffer"));
+	// bind 1.2 function pointers
+	glDrawRangeElements = static_cast<PFNGLDRAWRANGEELEMENTSPROC>(glfwGetProcAddress("glDrawRangeElements"));
+
+	// bind 1.5 function pointers
+	glGenBuffers = static_cast<PFNGLGENBUFFERSPROC>(glfwGetProcAddress("glGenBuffers"));
+	glDeleteBuffers = static_cast<PFNGLDELETEBUFFERSPROC>(glfwGetProcAddress("glDeleteBuffers"));
+	glBindBuffer = static_cast<PFNGLBINDBUFFERPROC>(glfwGetProcAddress("glBindBuffer"));
+	glBufferData = static_cast<PFNGLBUFFERDATAPROC>(glfwGetProcAddress("glBufferData"));
+	glBufferSubData = static_cast<PFNGLBUFFERSUBDATAPROC>(glfwGetProcAddress("glBufferSubData"));
+	glMapBuffer = static_cast<PFNGLMAPBUFFERPROC>(glfwGetProcAddress("glMapBuffer"));
+	glMapBufferRange = static_cast<PFNGLMAPBUFFERRANGEPROC>(glfwGetProcAddress("glMapBufferRange"));
+	glUnmapBuffer = static_cast<PFNGLUNMAPBUFFERPROC>(glfwGetProcAddress("glUnmapBuffer"));
+
+	// bind 2.0 function pointers
+	glAttachShader = static_cast<PFNGLATTACHSHADERPROC>(glfwGetProcAddress("glAttachShader"));
+	glDrawBuffers = static_cast<PFNGLDRAWBUFFERSPROC>(glfwGetProcAddress("glDrawBuffers"));
+	glBindAttribLocation = static_cast<PFNGLBINDATTRIBLOCATIONPROC>(glfwGetProcAddress("glBindAttribLocation"));
+	glCompileShader = static_cast<PFNGLCOMPILESHADERPROC>(glfwGetProcAddress("glCompileShader"));
+	glCreateProgram = static_cast<PFNGLCREATEPROGRAMPROC>(glfwGetProcAddress("glCreateProgram"));
+	glCreateShader = static_cast<PFNGLCREATESHADERPROC>(glfwGetProcAddress("glCreateShader"));
+	glDeleteProgram = static_cast<PFNGLDELETEPROGRAMPROC>(glfwGetProcAddress("glDeleteProgram"));
+	glDetachShader = static_cast<PFNGLDETACHSHADERPROC>(glfwGetProcAddress("glDetachShader"));
+	glDisableVertexAttribArray = static_cast<PFNGLDISABLEVERTEXATTRIBARRAYPROC>(glfwGetProcAddress("glDisableVertexAttribArray"));
+	glEnableVertexAttribArray = static_cast<PFNGLENABLEVERTEXATTRIBARRAYPROC>(glfwGetProcAddress("glEnableVertexAttribArray"));
+	glGetAttribLocation = static_cast<PFNGLGETATTRIBLOCATIONPROC>(glfwGetProcAddress("glGetAttribLocation"));
+	glGetUniformLocation = static_cast<PFNGLGETUNIFORMLOCATIONPROC>(glfwGetProcAddress("glGetUniformLocation"));
+	glIsProgram = static_cast<PFNGLISPROGRAMPROC>(glfwGetProcAddress("glIsProgram"));
+	glIsShader = static_cast<PFNGLISSHADERPROC>(glfwGetProcAddress("glIsShader"));
+	glLinkProgram = static_cast<PFNGLLINKPROGRAMPROC>(glfwGetProcAddress("glLinkProgram"));
+	glShaderSource = static_cast<PFNGLSHADERSOURCEPROC>(glfwGetProcAddress("glShaderSource"));
+	glUseProgram = static_cast<PFNGLUSEPROGRAMPROC>(glfwGetProcAddress("glUseProgram"));
+	glUniform1f = static_cast<PFNGLUNIFORM1FPROC>(glfwGetProcAddress("glUniform1f"));
+	glUniform2f = static_cast<PFNGLUNIFORM2FPROC>(glfwGetProcAddress("glUniform2f"));
+	glUniform3f = static_cast<PFNGLUNIFORM3FPROC>(glfwGetProcAddress("glUniform3f"));
+	glUniform4f = static_cast<PFNGLUNIFORM4FPROC>(glfwGetProcAddress("glUniform4f"));
+	glUniform1fv = static_cast<PFNGLUNIFORM1FVPROC>(glfwGetProcAddress("glUniform1fv"));
+	glUniform2fv = static_cast<PFNGLUNIFORM2FVPROC>(glfwGetProcAddress("glUniform2fv"));
+	glUniform3fv = static_cast<PFNGLUNIFORM3FVPROC>(glfwGetProcAddress("glUniform3fv"));
+	glUniform4fv = static_cast<PFNGLUNIFORM4FVPROC>(glfwGetProcAddress("glUniform4fv"));
+	glUniformMatrix4fv = static_cast<PFNGLUNIFORMMATRIX4FVPROC>(glfwGetProcAddress("glUniformMatrix4fv"));
+	glValidateProgram = static_cast<PFNGLVALIDATEPROGRAMPROC>(glfwGetProcAddress("glValidateProgram"));
+	glVertexAttrib1f = static_cast<PFNGLVERTEXATTRIB1FPROC>(glfwGetProcAddress("glVertexAttrib1f"));
+	glVertexAttrib1fv = static_cast<PFNGLVERTEXATTRIB1FVPROC>(glfwGetProcAddress("glVertexAttrib1fv"));
+	glVertexAttrib2f = static_cast<PFNGLVERTEXATTRIB2FPROC>(glfwGetProcAddress("glVertexAttrib2f"));
+	glVertexAttrib2fv = static_cast<PFNGLVERTEXATTRIB2FVPROC>(glfwGetProcAddress("glVertexAttrib2fv"));
+	glVertexAttrib3f = static_cast<PFNGLVERTEXATTRIB3FPROC>(glfwGetProcAddress("glVertexAttrib3f"));
+	glVertexAttrib3fv = static_cast<PFNGLVERTEXATTRIB3FVPROC>(glfwGetProcAddress("glVertexAttrib3fv"));
+	glVertexAttrib4f = static_cast<PFNGLVERTEXATTRIB4FPROC>(glfwGetProcAddress("glVertexAttrib4f"));
+	glVertexAttrib4fv = static_cast<PFNGLVERTEXATTRIB4FVPROC>(glfwGetProcAddress("glVertexAttrib4fv"));
+	glVertexAttrib4Nubv = static_cast<PFNGLVERTEXATTRIB4NUBVPROC>(glfwGetProcAddress("glVertexAttrib4Nubv"));
+	glVertexAttribPointer = static_cast<PFNGLVERTEXATTRIBPOINTERPROC>(glfwGetProcAddress("glVertexAttribPointer"));
+
+	// ARB vertex array object
+	glBindVertexArray = static_cast<PFNGLBINDVERTEXARRAYPROC>(glfwGetProcAddress("glBindVertexArray"));
+	glDeleteVertexArray = static_cast<PFNGLDELETEVERTEXARRAYSPROC>(glfwGetProcAddress("glDeleteVertexArray"));
+	glGenVertexArrays = static_cast<PFNGLGENVERTEXARRAYSPROC>(glfwGetProcAddress("glGenVertexArrays"));
+	glIsVertexArray = static_cast<PFNGLISVERTEXARRAYPROC>(glfwGetProcAddress("glIsVertexArray"));
+
+	// compile vertex shader
+	GLuint vertexShaderId = glCreateShader(GL_VERTEX_SHADER);
+	glShaderSource(vertexShaderId, 1, &sVertexShader, NULL);
+	glCompileShader(vertexShaderId);
+
+	// compile fragment shader
+	GLuint fragmentShaderId = glCreateShader(GL_FRAGMENT_SHADER);
+	glShaderSource(fragmentShaderId, 1, &sFragmentShader, NULL);
+	glCompileShader(fragmentShaderId);
+
+	// create shader program
+	sProgram = glCreateProgram();
+	glAttachShader(sProgram, vertexShaderId);
+	glAttachShader(sProgram, fragmentShaderId);
+	glLinkProgram(sProgram);
+
+	// use the program
+	glUseProgram(sProgram);
+
+	// get uniform location
+	sUniformProjection = glGetUniformLocation(sProgram, "projection");
+	sUniformModelView = glGetUniformLocation(sProgram, "modelview");
+
+	// get attribute locations
+	sAttribPosition = glGetAttribLocation(sProgram, "position");
+	sAttribNormal = glGetAttribLocation(sProgram, "normal");
+	sAttribColor = glGetAttribLocation(sProgram, "color");
+	sAttribTexCoord = glGetAttribLocation(sProgram, "texcoord");
 
 	// set up dynamic vertex buffer
 	{
@@ -2487,6 +2642,7 @@ void InitDrawlists(void)
 		glBindBuffer(GL_ARRAY_BUFFER, state.mHandle);
 		glBufferData(GL_ARRAY_BUFFER, state.mSize, NULL, GL_STREAM_DRAW);
 #endif
+
 		state.mData = NULL;
 		state.mStart = 0;
 		state.mEnd = 0;
@@ -2534,6 +2690,8 @@ void InitDrawlists(void)
 		state.mEnd = 0;
 	}
 
+	// TO DO set up vertex array objects
+
 	// vertex work buffer
 	// this get copied to the array buffer on flush
 	sVertexUsed = 0;
@@ -2579,31 +2737,6 @@ void InitDrawlists(void)
 	// initialize matrix stack
 	StackInit();
 }
-
-// set static mode
-static bool SetStaticActive(bool aStatic)
-{
-	if (sStaticActive == aStatic)
-		return false;
-
-	if (aStatic)
-	{
-		sVertexBuffer = &sBuffer[BUFFER_STATIC_VERTEX];
-		sIndexBuffer = &sBuffer[BUFFER_STATIC_INDEX];
-	}
-	else
-	{
-		sVertexBuffer = &sBuffer[BUFFER_DYNAMIC_VERTEX];
-		sIndexBuffer = &sBuffer[BUFFER_DYNAMIC_INDEX];
-	}
-#ifdef DRAWLIST_STATIC_BUFFER
-	glBindBuffer(GL_ARRAY_BUFFER, sVertexBuffer->mHandle);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, sIndexBuffer->mHandle);
-#endif
-	sStaticActive = aStatic;
-	return true;
-}
-
 
 void CleanupDrawlists(void)
 {
@@ -2727,6 +2860,33 @@ void RebuildDrawlists(void)
 #endif
 }
 
+// set static mode
+static bool SetStaticActive(bool aStatic)
+{
+	if (sStaticActive == aStatic)
+		return false;
+
+	if (aStatic)
+	{
+		sVertexBuffer = &sBuffer[BUFFER_STATIC_VERTEX];
+		sIndexBuffer = &sBuffer[BUFFER_STATIC_INDEX];
+	}
+	else
+	{
+		sVertexBuffer = &sBuffer[BUFFER_DYNAMIC_VERTEX];
+		sIndexBuffer = &sBuffer[BUFFER_DYNAMIC_INDEX];
+
+		// sync opengl matrix
+		glUniformMatrix4fv(sUniformModelView, 1, GL_FALSE, IdentityGet());
+	}
+#ifdef DRAWLIST_STATIC_BUFFER
+	glBindBuffer(GL_ARRAY_BUFFER, sVertexBuffer->mHandle);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, sIndexBuffer->mHandle);
+#endif
+	sStaticActive = aStatic;
+	return true;
+}
+
 void RenderDynamicDrawlist(unsigned int aId, float aTime, const Transform2 &aTransform)
 {
 	// skip if not visible
@@ -2783,9 +2943,24 @@ void RenderDrawlist(EntityContext &context, const Transform2 &aTransform)
 	StackPop();
 };
 
+void RenderBegin(void)
+{
+	// use the program
+	glUseProgram(sProgram);
+
+	// load projection
+	glUniformMatrix4fv(sUniformProjection, 1, GL_FALSE, ProjectionGet());
+
+	// load model view
+	glUniformMatrix4fv(sUniformModelView, 1, GL_FALSE, IdentityGet());
+}
+
 void RenderFlush(void)
 {
 	// flush dynamic geometry
 	// TO DO: only call this at the end of the frame
 	FlushDynamic();
+
+	// disable the program
+	glUseProgram(0);
 }
