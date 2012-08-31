@@ -13,6 +13,7 @@
 #include "Sound.h"
 #include "Font.h"
 #include "Texture.h"
+#include "MatrixStack.h"
 
 #include "Console.h"
 
@@ -607,6 +608,7 @@ void RunState()
 #endif
 				);
 
+			/*
 			// set projection
 			glMatrixMode( GL_PROJECTION );
 			glLoadIdentity();
@@ -617,6 +619,7 @@ void RunState()
 			glLoadIdentity();
 			glTranslatef( 0.0f, 0.0f, -CAMERA_DISTANCE );
 			glScalef( -1.0f, -1.0f, -1.0f );
+			*/
 
 			// advance the sim timer
 			sim_fraction += step_turns;
@@ -792,14 +795,32 @@ void RunState()
 
 			// RENDERING PHASE
 
-			// push camera transform
-			glPushMatrix();
+			//glFrustum( -0.5*VIEW_SIZE*SCREEN_WIDTH/SCREEN_HEIGHT, 0.5*VIEW_SIZE*SCREEN_WIDTH/SCREEN_HEIGHT, 0.5f*VIEW_SIZE, -0.5f*VIEW_SIZE, 256.0f*1.0f, 256.0f*5.0f );
+			const float 
+				l = -0.5f*VIEW_SIZE*SCREEN_WIDTH/SCREEN_HEIGHT, 
+				r = 0.5f*VIEW_SIZE*SCREEN_WIDTH/SCREEN_HEIGHT,
+				b = 0.5f*VIEW_SIZE,
+				t = -0.5f*VIEW_SIZE,
+				n = 256.0f, 
+				f = 256.0f * 5.0f;
+			const float proj[16] = 
+			{
+				2*n/(r-l), 0, 0, 0,
+				0, 2*n/(t-b), 0, 0,
+				(r+l)/(r-l), (t+b)/(t-b), -(f+n)/(f-n), -1,
+				0, 0, -2*f*n/(f-n), 0
+			};
+			ProjectionLoad(proj);
+
+			// push view transform
+			StackPush();
 
 			// get interpolated track position
 			Vector2 viewpos(Lerp(camerapos[0], camerapos[1], sim_fraction));
 
-			// set view position
-			glTranslatef( -viewpos.x, -viewpos.y, 0 );
+			// set view matrix
+			StackScale(_mm_setr_ps(-1, -1, -1, 0));
+			StackTranslate(_mm_setr_ps(-viewpos.x, -viewpos.y, CAMERA_DISTANCE, 0));
 
 			// calculate view area
 			AlignedBox2 view;
@@ -808,6 +829,9 @@ void RunState()
 			view.min.y = viewpos.y - VIEW_SIZE * 0.5f;
 			view.max.y = viewpos.y + VIEW_SIZE * 0.5f;
 
+			// begin rendering
+			RenderBegin();
+
 			// render all entities
 			// (send interpolation ratio and offset from simulation time)
 			Renderable::RenderAll(view);
@@ -815,8 +839,8 @@ void RunState()
 			// commit pending draw
 			RenderFlush();
 
-			// reset camera transform
-			glPopMatrix();
+			// reset view transform
+			StackPop();
 
 #ifdef USE_ACCUMULATION_BUFFER
 			// if performing motion blur...

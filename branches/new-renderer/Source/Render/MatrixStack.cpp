@@ -60,10 +60,38 @@ Matrix4 operator *(const Matrix4 &a, const Matrix4 &b)
 // identity matrix;
 const Matrix4 Matrix4::Identity = { 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 };
 
+// projection matrix
+static Matrix4 sProjMatrix;
+
 // matrix stack
 static const int sStackEntries = 64;
 static Matrix4 sStackMatrix[sStackEntries];
 static int sStackTop;
+
+
+//
+// IDENTITY MATRIX OPERATIONS
+//
+
+const float *IdentityGet(void)
+{
+	return Matrix4::Identity.m->m128_f32;
+}
+
+
+//
+// PROJECTION MATRIX OPERATIONS
+//
+
+void ProjectionLoad(const float *values)
+{
+	memcpy(&sProjMatrix, values, sizeof(Matrix4));
+}
+
+const float *ProjectionGet(void)
+{
+	return sProjMatrix.m->m128_f32;
+}
 
 
 //
@@ -81,7 +109,7 @@ void StackInit(void)
 }
 
 // get the current matrix
-const float *StackGetMatrix(void)
+const float *StackGet(void)
 {
 	return sStackMatrix[sStackTop].m->m128_f32;
 }

@@ -14,6 +14,7 @@ extern void RenderStaticDrawlist(unsigned int aId, float aTime, const Transform2
 struct EntityContext;
 extern void RenderDrawlist(EntityContext &aContext, const Transform2 &aTransform);
 
+extern void RenderBegin();
 extern void RenderFlush();
 
 namespace Database
