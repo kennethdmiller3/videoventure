@@ -20,6 +20,10 @@ namespace Platform
 		glfwOpenWindowHint(GLFW_ACCUM_ALPHA_BITS, 16);
 #endif
 		glfwOpenWindowHint(GLFW_FSAA_SAMPLES, OPENGL_MULTISAMPLE);
+		glfwOpenWindowHint(GLFW_OPENGL_VERSION_MAJOR, 2);
+#ifdef DEBUG
+		glfwOpenWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, 1);
+#endif
 
 		// create the window
 		if (!glfwOpenWindow(SCREEN_WIDTH, SCREEN_HEIGHT,
