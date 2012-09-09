@@ -46,6 +46,11 @@
 // use fixed function?
 #define DRAWLIST_FIXED_FUNCTION
 
+// debug static geometry flush
+// defined: full details of VB and IB contents
+// undefined: basic statistics
+//#define DRAWLIST_DEBUG_FLUSH_STATIC
+
 
 //
 // FORWARD DECLARATIONS
@@ -306,8 +311,8 @@ static void FlushStatic(BakeContext &aContext)
 
 	// TO DO: use shader program
 	// TO DO: set up attributes
-
 	DebugPrint("VB start=%d size=%d count=%d\n", sStaticVertexBuffer.mEnd, sVertexUsed * sizeof(float), sVertexCount);
+#ifdef DRAWLIST_DEBUG_FLUSH_STATIC
 	const float *vertex = sVertexWork;
 	for (size_t i = 0; i < sVertexCount; ++i)
 	{
@@ -338,8 +343,10 @@ static void FlushStatic(BakeContext &aContext)
 		}
 		DebugPrint("\n");
 	}
+#endif
 
 	DebugPrint("IB start=%d size=%d count=%d\n", sStaticIndexBuffer.mEnd, sIndexCount * sizeof(unsigned short), sIndexCount);
+#ifdef DRAWLIST_DEBUG_FLUSH_STATIC
 	const unsigned short *index = sIndexWork;
 	switch (aContext.mDrawMode)
 	{
@@ -359,6 +366,7 @@ static void FlushStatic(BakeContext &aContext)
 		assert(0);
 		break;
 	}
+#endif
 
 #ifdef DRAWLIST_STATIC_BUFFER
 	// copy vertex work buffer to the array buffer
