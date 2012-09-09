@@ -174,7 +174,7 @@ void Console::Render()
 	FontDrawBegin(sDefaultFontHandle);
 
 	// display text: green
-	glColor3f(0.0f, 1.0f, 0.0f);
+	FontDrawColor(Color4(0.0f, 1.0f, 0.0f, 1.0f));
 
 	// start at the first visible index
 	int tLine = lineScrollIndex;
@@ -200,7 +200,7 @@ void Console::Render()
 	if (historyScrollIndex >= 0)
 	{
 		// draw the specified line in red
-		glColor3f(1.0f, 0.0f, 0.0f);
+		FontDrawColor(Color4(1.0f, 0.0f, 0.0f, 1.0f));
 		FontDrawString(
 			history[historyScrollIndex],
 			0, 0,
@@ -211,7 +211,7 @@ void Console::Render()
 	else
 	{
 		// draw input line in light blue 
-		glColor3f(0.0f, 0.5f, 1.0f);
+		FontDrawColor(Color4(0.0f, 0.5f, 1.0f, 1.0f));
 		FontDrawString(
 			inputLine,
 			0, 0,
@@ -220,7 +220,7 @@ void Console::Render()
 			0);
 
 		// draw a cursor in white
-		glColor3f(1,1,1);
+		FontDrawColor(Color4(1.0f, 1.0f, 1.0f, 1.0f));
 		FontDrawCharacter(
 			'_',
 			inputCursorPos * characterWidth,

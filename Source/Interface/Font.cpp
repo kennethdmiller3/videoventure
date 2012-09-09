@@ -176,6 +176,11 @@ void FontDrawEnd()
     glPopAttrib();
 }
 
+void FontDrawColor(const Color4 &color)
+{
+	glColor4fv(color);
+}
+
 void FontDrawCharacter(int c, float x, float y, float w, float h, float z)
 {
 	// texture coordinates

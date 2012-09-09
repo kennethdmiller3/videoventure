@@ -74,7 +74,7 @@ void PlayerOverlayScore::Render(unsigned int aId, float aTime, const Transform2 
 			char c = *s;
 			if (c != '0')
 				leading = false;
-			glColor4fv(scorecolor[leading]);
+			FontDrawColor(scorecolor[leading]);
 			FontDrawCharacter(c,
 				scorerect.x + scorerect.w * (s - score), scorerect.y + scorerect.h,
 				scorerect.w, -scorerect.h, 0);

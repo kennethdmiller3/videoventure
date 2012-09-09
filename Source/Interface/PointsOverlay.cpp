@@ -82,7 +82,7 @@ void PointsOverlay::Render(unsigned int aId, float aTime, const Transform2 &aTra
 			sprintf(buf, "%d", item.mValue);
 
 		// draw point value
-		glColor4f(1.0f, 1.0f, 1.0f, std::min(item.mTime, 1.0f));
+		FontDrawColor(Color4(1.0f, 1.0f, 1.0f, std::min(item.mTime, 1.0f)));
 		float w = 4 * VIEW_SIZE / 240;
 		FontDrawString(buf, item.mPosition.x + w * 0.5f * strlen(buf), item.mPosition.y - w * 0.5f, -w, w, 0);
 
