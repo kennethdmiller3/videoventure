@@ -76,7 +76,7 @@ void PlayerOverlaySpecial::Render(unsigned int aId, float aTime, const Transform
 
 	FontDrawBegin(sDefaultFontHandle);
 
-	glColor4f(0.4f, 0.5f, 1.0f, 1.0f);
+	FontDrawColor(Color4(0.4f, 0.5f, 1.0f, 1.0f));
 
 	float w = 8;
 	float h = -8;

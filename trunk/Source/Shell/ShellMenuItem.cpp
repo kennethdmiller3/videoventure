@@ -67,7 +67,7 @@ void ShellMenuItem::Render(unsigned int aId, float aTime, const Transform2 &aTra
 		if (mBorderColor)
 		{
 			// render border
-			glColor4fv(mBorderColor[state]);
+			FontDrawColor(mBorderColor[state]);
 			FontDrawString(mLabel, labelcorner.x - 2, labelcorner.y - 2, mCharSize.x, -mCharSize.y, 0);
 			FontDrawString(mLabel, labelcorner.x    , labelcorner.y - 2, mCharSize.x, -mCharSize.y, 0);
 			FontDrawString(mLabel, labelcorner.x + 2, labelcorner.y - 2, mCharSize.x, -mCharSize.y, 0);
@@ -83,7 +83,7 @@ void ShellMenuItem::Render(unsigned int aId, float aTime, const Transform2 &aTra
 		float interp = ((sim_turn & 16) ? 16 - (sim_turn & 15) : (sim_turn & 15)) / 16.0f;
 		for (int c = 0; c < 4; c++)
 			color[c] = Lerp(mLabelColor[state][0][c], mLabelColor[state][1][c], interp);
-		glColor4fv(color);
+		FontDrawColor(color);
 		FontDrawString(mLabel, labelcorner.x, labelcorner.y, mCharSize.x, -mCharSize.y, 0);
 
 		FontDrawEnd();

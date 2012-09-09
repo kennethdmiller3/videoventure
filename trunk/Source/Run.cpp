@@ -1056,13 +1056,13 @@ void RunState()
 
 				char fps[16];
 				sprintf(fps, "%.2f max", rate_max);
-				glColor4f(0.5f, 0.5f, 0.5f, 1.0f);
+				FontDrawColor(Color4(0.5f, 0.5f, 0.5f, 1.0f));
 				FontDrawString(fps, float(640 - 16 - 8 * strlen(fps)), 16, 8, -8, 0);
 				sprintf(fps, "%.2f avg", rate_avg);
-				glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+				FontDrawColor(Color4(1.0f, 1.0f, 1.0f, 1.0f));
 				FontDrawString(fps, float(640 - 16 - 8 * strlen(fps)), 24, 8, -8, 0);
 				sprintf(fps, "%.2f min", rate_min);
-				glColor4f(0.5f, 0.5f, 0.5f, 1.0f);
+				FontDrawColor(Color4(0.5f, 0.5f, 0.5f, 1.0f));
 				FontDrawString(fps, float(640 - 16 - 8 * strlen(fps)), 32, 8, -8, 0);
 
 				FontDrawEnd();
@@ -1093,11 +1093,11 @@ void RunState()
 					if (sound->IsActive())
 					{
 						++active;
-						glColor4f(0.0f, 0.5f, 1.0f, 1.0f);
+						FontDrawColor(Color4(0.0f, 0.5f, 1.0f, 1.0f));
 					}
 					else
 					{
-						glColor4f(0.5f, 0.5f, 0.5f, 1.0f);
+						FontDrawColor(Color4(0.5f, 0.5f, 0.5f, 1.0f));
 					}
 					const char *name = Database::name.Get(outer.GetKey()).c_str();
 					const char *cue = Database::name.Get(inner.GetKey()).c_str();
@@ -1111,7 +1111,7 @@ void RunState()
 			char buf[64];
 			sprintf(buf, "sound: %d/%d", active, total);
 
-			glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+			FontDrawColor(Color4(1.0f, 1.0f, 1.0f, 1.0f));
 			FontDrawString(buf, 200, 16, 8, -8, 0);
 			FontDrawEnd();
 		}
