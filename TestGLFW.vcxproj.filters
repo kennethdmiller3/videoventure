@@ -413,6 +413,12 @@
     <ClInclude Include="Source\Physics\PhysicsUtilities.h">
       <Filter>Physics</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Render\Render.h">
+      <Filter>Render</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Render\MatrixStack.h">
+      <Filter>Render</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Core\Collidable.cpp">
@@ -804,6 +810,9 @@
       <Filter>Game</Filter>
     </ClCompile>
     <ClCompile Include="Source\Render\MatrixStack.cpp">
+      <Filter>Render</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Render\Render.cpp">
       <Filter>Render</Filter>
     </ClCompile>
   </ItemGroup>

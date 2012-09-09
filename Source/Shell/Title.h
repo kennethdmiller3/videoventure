@@ -8,7 +8,7 @@ class ShellTitleTemplate : public OverlayTemplate
 	int cols;
 	int rows;
 	unsigned short *titlefill;
-	GLuint titlebar;
+	float *rowalpha;
 
 public:
 	ShellTitleTemplate(void);
@@ -23,7 +23,7 @@ class ShellTitle : public Overlay
 	int cols;
 	int rows;
 	unsigned short *titlefill;
-	GLuint titlebar;
+	float *rowalpha;
 
 public:
 	// constructor

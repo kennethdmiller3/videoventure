@@ -2,6 +2,7 @@
 #include "PlayerOverlayHealth.h"
 #include "Player.h"
 #include "Damagable.h"
+#include "Render.h"
 
 
 // health gauge
@@ -25,6 +26,25 @@ static const float DRAIN_RATE = 0.5f;
 // flash values
 static const float FLASH_RATE = 2.0f;
 
+struct Vertex
+{
+	Vector3 pos;
+#ifdef PLAYER_HEALTH_FLOAT_COLOR
+	Color4 color;
+#else
+	unsigned int color;
+#endif
+};
+
+
+unsigned int ToPacked(const Color4 &color)
+{
+	return
+		(Clamp(xs_RoundToInt(color.r * 255), 0, 255)) |
+		(Clamp(xs_RoundToInt(color.g * 255), 0, 255) << 8) |
+		(Clamp(xs_RoundToInt(color.b * 255), 0, 255) << 16) |
+		(Clamp(xs_RoundToInt(color.a * 255), 0, 255) << 24);
+}
 
 //
 // PLAYER OVERLAY: HEALTH
@@ -119,44 +139,104 @@ void PlayerOverlayHealth::Render(unsigned int aId, float aTime, const Transform2
 		fillcolor[i] = Lerp(Lerp(healthcolor[band][0][i], healthcolor[band+1][0][i], ratio), Lerp(healthcolor[band][1][i], healthcolor[band+1][1][i], ratio), pulse);
 
 	// begin drawing
-	glBegin(GL_QUADS);
+	SetWorkFormat((1<<0)|(1<<2));
+	SetDrawMode(GL_TRIANGLES);
 
-	// background
-	glColor4fv(healthbackground);
-	glVertex2f(healthrect.x, healthrect.y);
-	glVertex2f(healthrect.x + healthrect.w, healthrect.y);
-	glVertex2f(healthrect.x + healthrect.w, healthrect.y + healthrect.h);
-	glVertex2f(healthrect.x, healthrect.y + healthrect.h);
+	int base = GetVertexCount();
+	register Vertex * __restrict v;
+
+	if (fill > 0.0f)
+	{
+		// fill gauge
+#ifdef PLAYER_HEALTH_FLOAT_COLOR
+		const Color4 &color = fillcolor;
+#else
+		unsigned int color = ToPacked(fillcolor);
+#endif
+		v = static_cast<Vertex *>(AllocVertices(4));
+		v->pos = Vector3(healthrect.x, healthrect.y, 0);
+		v->color = color;
+		++v;
+		v->pos = Vector3(healthrect.x + healthrect.w * fill, healthrect.y, 0);
+		v->color = color;
+		++v;
+		v->pos = Vector3(healthrect.x + healthrect.w * fill, healthrect.y + healthrect.h, 0);
+		v->color = color;
+		++v;
+		v->pos = Vector3(healthrect.x, healthrect.y + healthrect.h, 0);
+		v->color = color;
+		++v;
+	}
+
+	if (fill < 1.0f)
+	{
+		// background
+#ifdef PLAYER_HEALTH_FLOAT_COLOR
+		const Color4 &color = healthbackground;
+#else
+		unsigned int color = ToPacked(healthbackground);
+#endif
+		v = static_cast<Vertex *>(AllocVertices(4));
+		v->pos = Vector3(healthrect.x + healthrect.w * fill, healthrect.y, 0);
+		v->color = color;
+		++v;
+		v->pos = Vector3(healthrect.x + healthrect.w, healthrect.y, 0);
+		v->color = color;
+		++v;
+		v->pos = Vector3(healthrect.x + healthrect.w, healthrect.y + healthrect.h, 0);
+		v->color = color;
+		++v;
+		v->pos = Vector3(healthrect.x + healthrect.w * fill, healthrect.y + healthrect.h, 0);
+		v->color = color;
+		++v;
+	}
 
 	// drain
 	if (fill < drain)
 	{
-		glColor4fv(healthdrain);
-		glVertex2f(healthrect.x + healthrect.w * fill, healthrect.y);
-		glVertex2f(healthrect.x + healthrect.w * drain, healthrect.y);
-		glVertex2f(healthrect.x + healthrect.w * drain, healthrect.y + healthrect.h);
-		glVertex2f(healthrect.x + healthrect.w * fill, healthrect.y + healthrect.h);
+#ifdef PLAYER_HEALTH_FLOAT_COLOR
+		const Color4 &color = healthdrain;
+#else
+		unsigned int color = ToPacked(healthdrain);
+#endif
+		v = static_cast<Vertex *>(AllocVertices(4));
+		v->pos = Vector3(healthrect.x + healthrect.w * fill, healthrect.y, 0);
+		v->color = color;
+		++v;
+		v->pos = Vector3(healthrect.x + healthrect.w * drain, healthrect.y, 0);
+		v->color = color;
+		++v;
+		v->pos = Vector3(healthrect.x + healthrect.w * drain, healthrect.y + healthrect.h, 0);
+		v->color = color;
+		++v;
+		v->pos = Vector3(healthrect.x + healthrect.w * fill, healthrect.y + healthrect.h, 0);
+		v->color = color;
+		++v;
 	}
 
 	// flash
 	for (int i = 0; i < flashcount; ++i)
 	{
 		Flash &flashinfo = flash[i];
-		glColor4f(1.0f, 1.0f, 1.0f, flashinfo.fade);
-		glVertex2f(healthrect.x + healthrect.w * flashinfo.left, healthrect.y - 2 * flashinfo.fade);
-		glVertex2f(healthrect.x + healthrect.w * flashinfo.right, healthrect.y - 2 * flashinfo.fade);
-		glVertex2f(healthrect.x + healthrect.w * flashinfo.right, healthrect.y + healthrect.h + 2 * flashinfo.fade);
-		glVertex2f(healthrect.x + healthrect.w * flashinfo.left, healthrect.y + healthrect.h + 2 * flashinfo.fade);
+#ifdef PLAYER_HEALTH_FLOAT_COLOR
+		const Color4 color(1.0f, 1.0f, 1.0f, flashinfo.fade);
+#else
+		unsigned int color = Clamp(xs_RoundToInt(flashinfo.fade * 255), 0, 255) << 24 | 0x00FFFFFF;
+#endif
+		v = static_cast<Vertex *>(AllocVertices(4));
+		v->pos = Vector3(healthrect.x + healthrect.w * flashinfo.left, healthrect.y - 2 * flashinfo.fade, 0);
+		v->color = color;
+		++v;
+		v->pos = Vector3(healthrect.x + healthrect.w * flashinfo.right, healthrect.y - 2 * flashinfo.fade, 0);
+		v->color = color;
+		++v;
+		v->pos = Vector3(healthrect.x + healthrect.w * flashinfo.right, healthrect.y + healthrect.h + 2 * flashinfo.fade, 0);
+		v->color = color;
+		++v;
+		v->pos = Vector3(healthrect.x + healthrect.w * flashinfo.left, healthrect.y + healthrect.h + 2 * flashinfo.fade, 0);
+		v->color = color;
+		++v;
 	}
-
-	// fill gauge
-	glColor4fv(fillcolor);
-	glVertex2f(healthrect.x, healthrect.y);
-	glVertex2f(healthrect.x + healthrect.w * fill, healthrect.y);
-	glVertex2f(healthrect.x + healthrect.w * fill, healthrect.y + healthrect.h);
-	glVertex2f(healthrect.x, healthrect.y + healthrect.h);
-
-	glEnd();
 
 	// if the drain delay elapsed...
 	draindelay -= frame_time;
@@ -182,17 +262,34 @@ void PlayerOverlayHealth::Render(unsigned int aId, float aTime, const Transform2
 
 	if (maxhealth > 1)
 	{
-		glBegin(GL_LINES);
-		glColor4f(0.0f, 0.0f, 0.0f, 0.125f);
-
 		// tick marks
-		for (int i = 1; i < xs_FloorToInt(maxhealth); ++i)
+		base = GetVertexCount();
+		int ticks = xs_FloorToInt(maxhealth);
+#ifdef PLAYER_HEALTH_FLOAT_COLOR
+		const Color4 color(0.0f, 0.0f, 0.0f, 0.125f);
+#else
+		unsigned int color = 0x1F000000;
+#endif
+		v = static_cast<Vertex *>(AllocVertices(ticks * 2));
+
+		for (int i = 1; i < ticks; ++i)
 		{
 			float x = healthrect.x + i * healthrect.w / maxhealth;
-			glVertex2f(x, healthrect.y);
-			glVertex2f(x, healthrect.y + healthrect.h);
+			v->pos = Vector3(x, healthrect.y, 0);
+			v->color = color;
+			++v;
+			v->pos = Vector3(x + 1, healthrect.y, 0);
+			v->color = color;
+			++v;
+			v->pos = Vector3(x + 1, healthrect.y + healthrect.h, 0);
+			v->color = color;
+			++v;
+			v->pos = Vector3(x, healthrect.y + healthrect.h, 0);
+			v->color = color;
+			++v;
 		}
-
-		glEnd();
 	}
+
+	// indices
+	IndexQuads(base, GetVertexCount() - base);
 }

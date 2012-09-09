@@ -4,7 +4,6 @@
 
 class PlayerOverlayLevel : public Overlay
 {
-	GLuint level_handle;
 	int cur_level;
 	float cur_part;
 

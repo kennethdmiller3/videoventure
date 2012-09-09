@@ -2,6 +2,10 @@
 
 #include "Console.h"
 #include "Font.h"
+#include "Render.h"
+#include "MatrixStack.h"
+#include "Drawlist.h"
+
 
 // number of frames to transition between hidden and visible states
 static const int SLIDE_STEPS = 30;
@@ -65,24 +69,27 @@ void Console::Resize()
 
 	// generate projection matrix
 	// (flip vertically so zero is at the top)
-	glMatrixMode(GL_PROJECTION);
-	glPushMatrix();
-	glOrtho(viewport[0], viewport[2], viewport[1], viewport[3], -1, 1);
-	glGetFloatv(GL_PROJECTION_MATRIX, projectionMatrix);
-	glPopMatrix();
+	ProjectionPush();
+	ProjectionOrtho(
+		GLfloat(viewport[0]), GLfloat(viewport[2]),
+		GLfloat(viewport[1]), GLfloat(viewport[3]),
+		-1.0f, 1.0f
+		);
+	memcpy(projectionMatrix, ProjectionGet(), 16 * sizeof(GLfloat));
+	ProjectionPop();
 
 	// generate model/view matrix
 	// (shift to center the console within the viewport)
-	glMatrixMode(GL_MODELVIEW);
-	glPushMatrix();
-	glLoadIdentity();
-	glTranslatef(
+	StackPush();
+	StackIdentity();
+	StackTranslate(_mm_setr_ps(
 		0.5f*((float)viewport[2] - textWidth * characterWidth),
 		0.5f*((float)viewport[3] - textHeight * characterHeight),
-		0
-		);
-	glGetFloatv(GL_MODELVIEW_MATRIX, modelviewMatrix);
-	glPopMatrix();
+		0,
+		1
+		));
+	memcpy(modelviewMatrix, StackGet(), 16 * sizeof(GLfloat));
+	StackPop();
 
 	// set total number of screen lines
 	maxLines = DEFAULT_MAX_LINES;
@@ -116,23 +123,16 @@ void Console::Render()
 	if (visibility == 0)
 		return;
 
-	glPushAttrib(GL_ALL_ATTRIB_BITS);
-
 	// load the projection matrix
-	glMatrixMode(GL_PROJECTION);
-	glPushMatrix();
-	glLoadMatrixf(projectionMatrix);
+	GLfloat original[16];
+	memcpy(original, ProjectionGet(), 16 * sizeof(GLfloat));
+	ProjectionLoad(projectionMatrix);
 
 	// load the model/view matrix
-	glMatrixMode(GL_MODELVIEW);
-	glPushMatrix();
-	glLoadMatrixf(modelviewMatrix);
+	StackPush();
+	StackLoad(modelviewMatrix);
 
-	// turn off depth test
-	glDisable(GL_DEPTH_TEST);
-
-	// disable polygon smoothing
-	glDisable(GL_POLYGON_SMOOTH);
+	RenderBegin();
 
     /* Render hiding / showing console in a special manner. Zero means hidden. 1
      * means visible. All other values are traveling toward zero or one. TODO:
@@ -159,22 +159,35 @@ void Console::Render()
 
 	// draw the background:
 	// untextured translucent black rectangle
-	glDisable(GL_TEXTURE_2D);
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	glColor4f(0.0f, 0.0f, 0.0f, 0.5f);
-	glBegin(GL_QUADS);
-	glVertex2f(0, 0);
-	glVertex2f(textWidth * characterWidth, 0);
-	glVertex2f(textWidth * characterWidth, textHeight * characterHeight);
-	glVertex2f(0, textHeight * characterHeight);
-	glEnd();
+	struct Vertex
+	{
+		Vector3 pos;
+		unsigned int color;
+	};
+	SetWorkFormat((1<<0)|(1<<2));
+	SetDrawMode(GL_TRIANGLES);
+	size_t base = GetVertexCount();
+	register Vertex * __restrict v = static_cast<Vertex *>(AllocVertices(4));
+	const unsigned int color = 0x7F000000;	//Color4 color(0, 0, 0, 0.5f);
+	v->pos = Vector3(0, 0, 0);
+	v->color = color;
+	++v;
+	v->pos = Vector3(textWidth * characterWidth, 0, 0);
+	v->color = color;
+	++v;
+	v->pos = Vector3(textWidth * characterWidth, textHeight * characterHeight, 0);
+	v->color = color;
+	++v;
+	v->pos = Vector3(0, textHeight * characterHeight, 0);
+	v->color = color;
+	++v;
+	IndexQuads(base, GetVertexCount() - base);
 
 	// start rendering text
 	FontDrawBegin(sDefaultFontHandle);
 
 	// display text: green
-	glColor3f(0.0f, 1.0f, 0.0f);
+	FontDrawColor(Color4(0.0f, 1.0f, 0.0f, 1.0f));
 
 	// start at the first visible index
 	int tLine = lineScrollIndex;
@@ -200,7 +213,7 @@ void Console::Render()
 	if (historyScrollIndex >= 0)
 	{
 		// draw the specified line in red
-		glColor3f(1.0f, 0.0f, 0.0f);
+		FontDrawColor(Color4(1.0f, 0.0f, 0.0f, 1.0f));
 		FontDrawString(
 			history[historyScrollIndex],
 			0, 0,
@@ -211,7 +224,7 @@ void Console::Render()
 	else
 	{
 		// draw input line in light blue 
-		glColor3f(0.0f, 0.5f, 1.0f);
+		FontDrawColor(Color4(0.0f, 0.5f, 1.0f, 1.0f));
 		FontDrawString(
 			inputLine,
 			0, 0,
@@ -220,7 +233,7 @@ void Console::Render()
 			0);
 
 		// draw a cursor in white
-		glColor3f(1,1,1);
+		FontDrawColor(Color4(1.0f, 1.0f, 1.0f));
 		FontDrawCharacter(
 			'_',
 			inputCursorPos * characterWidth,
@@ -234,15 +247,13 @@ void Console::Render()
 	FontDrawEnd();
 
 	// restore projection matrix
-	glMatrixMode(GL_PROJECTION);
-	glPopMatrix();
+	ProjectionLoad(original);
 
 	// restore model/view matrix
-	glMatrixMode(GL_MODELVIEW);
-	glPopMatrix();
+	StackPop();
 
-	// restore attributes
-	glPopAttrib();
+	// 
+	RenderFlush();
 }
 
 // formatted print

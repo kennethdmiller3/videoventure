@@ -4,7 +4,6 @@
 
 class PlayerOverlayAmmo : public Overlay
 {
-	GLuint ammo_handle;
 	float cur_ammo;
 	int cur_level;
 

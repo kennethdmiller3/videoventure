@@ -2,6 +2,7 @@
 #include "PlayerOverlayAmmo.h"
 #include "Player.h"
 #include "Resource.h"
+#include "Render.h"
 
 
 // ammo gauge
@@ -9,6 +10,7 @@ static const Rect<float> ammorect =
 {
 	8, 34, 128, 8
 };
+#ifdef PLAYER_AMMO_FLOAT_COLOR
 static const Color4 ammocolor[] =
 {
 	Color4( 0.3f, 0.3f, 0.3f, 0.5f),	// level 0
@@ -19,7 +21,28 @@ static const Color4 ammocolor[] =
 	Color4( 1.0f, 1.0f, 1.0f, 1.0f),	// level 5
 	Color4( 1.0f, 1.0f, 1.0f, 1.0f),	// level max
 };
+#else
+static const unsigned int ammocolor[] =
+{
+	0x7F4C4C4C,	// level 0
+	0xFFFF0000,	// level 1
+	0xFFFF00B2,	// level 2
+	0xFFFF00FF,	// level 3
+	0xFFFFB2FF,	// level 4
+	0xFFFFFFFF,	// level 5
+	0xFFFFFFFF,	// level max
+};
+#endif
 
+struct Vertex
+{
+	Vector3 pos;
+#ifdef PLAYER_AMMO_FLOAT_COLOR
+	Color4 color;
+#else
+	unsigned int color;
+#endif
+};
 
 //
 // PLAYER OVERLAY: AMMO
@@ -31,18 +54,12 @@ PlayerOverlayAmmo::PlayerOverlayAmmo(unsigned int aPlayerId = 0)
 	, cur_ammo(-FLT_MAX)
 	, cur_level(-1)
 {
-	// allocate ammo draw list
-	ammo_handle = glGenLists(1);
-
 	Overlay::SetAction(Overlay::Action(this, &PlayerOverlayAmmo::Render));
 }
 
 // destructor
 PlayerOverlayAmmo::~PlayerOverlayAmmo()
 {
-	// free ammo draw list
-	if (glIsList(ammo_handle))
-		glDeleteLists(ammo_handle, 1);
 }
 
 // render
@@ -75,38 +92,44 @@ void PlayerOverlayAmmo::Render(unsigned int aId, float aTime, const Transform2 &
 		new_level = xs_FloorToInt(levelresource->GetValue());
 	}
 
-	// if the lives count has not changed...
-	if (new_ammo == cur_ammo && new_level == cur_level && glIsList(ammo_handle))
-	{
-		// call the existing draw list
-		glCallList(ammo_handle);
-		return;
-	}
-
-	// update ammo
-	cur_ammo = new_ammo;
+	// update level
 	cur_level = new_level;
 
-	// start a new draw list list
-	glNewList(ammo_handle, GL_COMPILE_AND_EXECUTE);
+	// begin drawing
+	SetWorkFormat((1<<0)|(1<<2));
+	SetDrawMode(GL_TRIANGLES);
 
-	glBegin(GL_QUADS);
+	int base = GetVertexCount();
+	register Vertex * __restrict v = static_cast<Vertex *>(AllocVertices(8));
 
 	// background
-	glColor4fv(ammocolor[cur_level]);
-	glVertex2f(ammorect.x, ammorect.y);
-	glVertex2f(ammorect.x + ammorect.w, ammorect.y);
-	glVertex2f(ammorect.x + ammorect.w, ammorect.y + ammorect.h);
-	glVertex2f(ammorect.x, ammorect.y + ammorect.h);
+	v->pos = Vector3(ammorect.x, ammorect.y, 0);
+	v->color = ammocolor[cur_level];
+	++v;
+	v->pos = Vector3(ammorect.x + ammorect.w, ammorect.y, 0);
+	v->color = ammocolor[cur_level];
+	++v;
+	v->pos = Vector3(ammorect.x + ammorect.w, ammorect.y + ammorect.h, 0);
+	v->color = ammocolor[cur_level];
+	++v;
+	v->pos = Vector3(ammorect.x, ammorect.y + ammorect.h, 0);
+	v->color = ammocolor[cur_level];
+	++v;
 
 	// fill gauge
-	glColor4fv(ammocolor[cur_level+1]);
-	glVertex2f(ammorect.x, ammorect.y);
-	glVertex2f(ammorect.x + ammorect.w * cur_ammo, ammorect.y);
-	glVertex2f(ammorect.x + ammorect.w * cur_ammo, ammorect.y + ammorect.h);
-	glVertex2f(ammorect.x, ammorect.y + ammorect.h);
+	v->pos = Vector3(ammorect.x, ammorect.y, 0);
+	v->color = ammocolor[cur_level+1];
+	++v;
+	v->pos = Vector3(ammorect.x + ammorect.w * cur_ammo, ammorect.y, 0);
+	v->color = ammocolor[cur_level+1];
+	++v;
+	v->pos = Vector3(ammorect.x + ammorect.w * cur_ammo, ammorect.y + ammorect.h, 0);
+	v->color = ammocolor[cur_level+1];
+	++v;
+	v->pos = Vector3(ammorect.x, ammorect.y + ammorect.h, 0);
+	v->color = ammocolor[cur_level+1];
+	++v;
 
-	glEnd();
-
-	glEndList();
+	// indices
+	IndexQuads(base, GetVertexCount() - base);
 }

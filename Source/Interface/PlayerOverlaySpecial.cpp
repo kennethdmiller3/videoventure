@@ -4,6 +4,8 @@
 #include "Resource.h"
 #include "Drawlist.h"
 #include "Font.h"
+#include "Render.h"
+#include "MatrixStack.h"
 
 
 // special ammo position
@@ -63,12 +65,12 @@ void PlayerOverlaySpecial::Render(unsigned int aId, float aTime, const Transform
 	glNewList(special_handle, GL_COMPILE_AND_EXECUTE);
 
 	// draw the special ammo icon
-	glColor4f(0.4f, 0.5f, 1.0f, 1.0f);
-	glPushMatrix();
-	glTranslatef(specialpos.x, specialpos.y, 0.0f);
-	glScalef(4, 4, 1);
+	SetAttribConstant(2, _mm_setr_ps(0.4f, 0.5f, 1.0f, 1.0f));
+	StackPush();
+	StackTranslate(_mm_setr_ps(specialpos.x, specialpos.y, 0.0f, 1.0f));
+	StackScale(_mm_setr_ps(4.0f, 4.0f, 1.0f, 1.0f));
 	RenderStaticDrawlist(0x8cdedbba /* "circle16" */, 0.0f, Transform2::Identity());
-	glPopMatrix();
+	StackPop();
 
 	// draw remaining special ammo
 	char special[16];
@@ -76,7 +78,7 @@ void PlayerOverlaySpecial::Render(unsigned int aId, float aTime, const Transform
 
 	FontDrawBegin(sDefaultFontHandle);
 
-	glColor4f(0.4f, 0.5f, 1.0f, 1.0f);
+	FontDrawColor(Color4(0.4f, 0.5f, 1.0f, 1.0f));
 
 	float w = 8;
 	float h = -8;

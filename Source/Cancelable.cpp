@@ -8,6 +8,8 @@
 #include "Link.h"
 
 #include "Renderable.h"
+#include "Render.h"
+#include "MatrixStack.h"
 
 
 #ifdef USE_POOL_ALLOCATOR
@@ -23,6 +25,11 @@ void Cancelable::operator delete(void *aPtr)
 }
 #endif
 
+struct Vertex
+{
+	Vector3 pos;
+	unsigned int color;
+};
 
 
 
@@ -83,40 +90,87 @@ public:
 		}
 	}
 
+#ifdef DYNAMIC_GEOMETRY_IN_VIEW_SPACE
+	inline static Vector3 Transform(const Vector2 &aPos)
+	{
+		// transform from world space to view space
+		register const __m128 p(StackTransformPosition(_mm_setr_ps(aPos.x, aPos.y, 0, 1)));
+		return Vector3(p.m128_f32[0], p.m128_f32[1], p.m128_f32[2]);
+	}
+#else
+	inline static Vector3 Transform(const Vector2 &aPos)
+	{
+		return Vector3(aPos.x, aPos.y, 0);
+	}
+#endif
+
 	void Render(unsigned int aId, float aParam, const Transform2 &aTransform)
 	{
-		RenderFlush();
-
-		//glPopMatrix();
-
 		const Vector2 aPos0 = aTransform.p;
 		const Vector2 aPos1 = Lerp(mSourcePos, aPos0, float(sim_turn - mStart + sim_fraction - mFraction) / float(mEnd - mStart - mFraction));
 
-		glLineWidth(SCREEN_HEIGHT / 240.0f);
+		SetWorkFormat((1<<0)|(1<<2));
+		SetDrawMode(GL_TRIANGLES);
 
-		glBegin(GL_LINES);
+		size_t base = GetVertexCount();
+		register Vertex * __restrict v = static_cast<Vertex *>(AllocVertices(4*10));
 
-		glColor4f(0.7f, 0.7f, 0.7f, 0.5f);
-		glVertex2f(aPos0.x, aPos0.y);
-		glVertex2f(aPos1.x, aPos1.y);
+		Vector2 perp(mSourcePos.y - aPos0.y, aPos0.x - mSourcePos.x);
+		perp *= 0.5f * InvSqrt(perp.x * perp.x + perp.y * perp.y);
 
-		glColor4f(0.2f, 0.2f, 0.2f, 0.5f);
-		glVertex2f(aPos1.x, aPos1.y);
-		glVertex2f(mSourcePos.x, mSourcePos.y);
+		// fuse
+		v->pos = Transform(aPos0 + perp);
+		v->color = 0x7FB2B2B2;	//Color4(0.7f, 0.7f, 0.7f, 0.5f);
+		++v;
+		v->pos = Transform(aPos0 - perp);
+		v->color = 0x7FB2B2B2;	//Color4(0.7f, 0.7f, 0.7f, 0.5f);
+		++v;
+		v->pos = Transform(aPos1 - perp);
+		v->color = 0x7FB2B2B2;	//Color4(0.7f, 0.7f, 0.7f, 0.5f);
+		++v;
+		v->pos = Transform(aPos1 + perp);
+		v->color = 0x7FB2B2B2;	//Color4(0.7f, 0.7f, 0.7f, 0.5f);
+		++v;
 
+		// burnt fuse
+		v->pos = Transform(aPos1 + perp);
+		v->color = 0x7F4A4A4A;	//Color4(0.2f, 0.2f, 0.2f, 0.5f);
+		++v;
+		v->pos = Transform(aPos1 - perp);
+		v->color = 0x7F4A4A4A;	//Color4(0.2f, 0.2f, 0.2f, 0.5f);
+		++v;
+		v->pos = Transform(mSourcePos - perp);
+		v->color = 0x7F4A4A4A;	//Color4(0.2f, 0.2f, 0.2f, 0.5f);
+		++v;
+		v->pos = Transform(mSourcePos + perp);
+		v->color = 0x7F4A4A4A;	//Color4(0.2f, 0.2f, 0.2f, 0.5f);
+		++v;
+
+		// spark
 		for (int i = 0; i < 8; ++i)
 		{
-			glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-			glVertex2f(aPos1.x, aPos1.y);
-			glColor4f(1.0f, 0.0f, 1.0f, 0.25f);
-			glVertex2f(aPos1.x + 16.0f * (Random::Float() - Random::Float()), aPos1.y + 16.0f * (Random::Float() - Random::Float()));
+			const Vector2 offset(
+				16.0f * (Random::Float() - Random::Float()),
+				16.0f * (Random::Float() - Random::Float())
+				);
+			Vector2 perp(-offset.y, offset.x);
+			perp *= 0.5f * InvSqrt(perp.x * perp.x + perp.y * perp.y);
+
+			v->pos = Transform(aPos1 + perp);
+			v->color = 0xFFFFFFFF;	//Color4(1.0f, 1.0f, 1.0f, 1.0f);
+			++v;
+			v->pos = Transform(aPos1 - perp);
+			v->color = 0xFFFFFFFF;	//Color4(1.0f, 1.0f, 1.0f, 1.0f);
+			++v;
+			v->pos = Transform(aPos1 + offset - perp);
+			v->color = 0x3FFFFFFF;	//Color4(1.0f, 0.0f, 1.0f, 0.25f);
+			++v;
+			v->pos = Transform(aPos1 + offset + perp);
+			v->color = 0x3FFFFFFF;	//Color4(1.0f, 0.0f, 1.0f, 0.25f);
+			++v;
 		}
 
-		glEnd();
-
-		glLineWidth(1);
-
-		//glPushMatrix();
+		IndexQuads(base, GetVertexCount() - base);
 	}
 };
 

@@ -1,7 +1,22 @@
 #include "StdAfx.h"
 
 #include "Title.h"
+#include "Render.h"
 
+#define USE_TITLE_PACKED_VERTEX
+#if defined(USE_TITLE_PACKED_VERTEX)
+struct Vertex
+{
+	Vector2 pos;
+	unsigned int color;
+};
+#else
+struct Vertex
+{
+	Vector3 pos;
+	Color4 color;
+};
+#endif
 
 // convert HSV [0..1] to RGB [0..1]
 #pragma optimize( "t", on )
@@ -100,7 +115,7 @@ static GLuint titledrawlist;
 
 #endif
 
-#ifdef USE_TITLE_MIRROR_WATER_EFFECT
+#if defined(USE_TITLE_MIRROR_WATER_EFFECT)
 // mirror offset
 static const float mirrorscale = -0.75f;
 
@@ -168,14 +183,12 @@ ShellTitleTemplate::ShellTitleTemplate(void)
 , cols(0)
 , rows(0)
 , titlefill(NULL)
-, titlebar(0)
+, rowalpha(NULL)
 {
 }
 
 ShellTitleTemplate::~ShellTitleTemplate()
 {
-	if (glIsList(titlebar))
-		glDeleteLists(1, titlebar);
 #if defined(USE_TITLE_DYNAMIC_TEXTURE)
 	if (glIsList(titledrawlist))
 		glDeleteLists(1, titledrawlist);
@@ -183,6 +196,7 @@ ShellTitleTemplate::~ShellTitleTemplate()
 		glDeleteTextures(1, &titletexture);
 #endif
 	delete[] titlefill;
+	delete[] rowalpha;
 }
 
 // configure
@@ -213,12 +227,8 @@ bool ShellTitleTemplate::Configure(const tinyxml2::XMLElement *element, unsigned
 	char *titlemap = (char *)_alloca(cols * rows);
 	memset(titlemap, ' ', cols * rows);
 
-	// title bar drawlist
-	titlebar = glGenLists(1);
-
-	// begin drawlist
-	glNewList(titlebar, GL_COMPILE);
-	glBegin(GL_QUADS);
+	// allocate row alphas
+	rowalpha = new float[rows];
 
 	// fill in
 	int row = 0;
@@ -235,27 +245,13 @@ bool ShellTitleTemplate::Configure(const tinyxml2::XMLElement *element, unsigned
 					continue;
 				memcpy(&titlemap[row*cols], text, strlen(text));
 
-				float alpha = 0.0f;
-				child->QueryFloatAttribute("bar", &alpha);
-				if (alpha > 0.0f)
-				{
-					const float y0 = titley + row * titleh, y1 = y0 + titleh;
-
-					glColor4f(0.3f, 0.3f, 0.3f, alpha);
-					glVertex2f(0, y0);
-					glVertex2f(640, y0);
-					glVertex2f(640, y1);
-					glVertex2f(0, y1);
-				}
+				rowalpha[row] = 0.0f;
+				child->QueryFloatAttribute("bar", &rowalpha[row]);
 
 				++row;
 			}
 		}
 	}
-
-	// finish drawlist
-	glEnd();
-	glEndList();
 
 	// allocate fill data
 	titlefill = new unsigned short[(rows + 2) * (cols + 2)];
@@ -409,7 +405,7 @@ ShellTitle::ShellTitle(const ShellTitleTemplate &aTemplate, unsigned int aId)
 	, cols(aTemplate.cols)
 	, rows(aTemplate.rows)
 	, titlefill(aTemplate.titlefill)
-	, titlebar(aTemplate.titlebar)
+	, rowalpha(aTemplate.rowalpha)
 {
 	SetAction(Action(this, &ShellTitle::Render));
 }
@@ -429,18 +425,60 @@ void ShellTitle::Render(unsigned int aId, float aTime, const Transform2 &aTransf
 	unsigned int *colorptr = colorarray;
 #endif
 
+	// begin drawing
+#if defined(USE_TITLE_PACKED_VERTEX)
+	SetAttribFormat(0, 2, GL_FLOAT);
+	SetAttribFormat(2, 4, GL_UNSIGNED_BYTE);
+#endif
+	SetWorkFormat((1<<0)|(1<<2));
+	SetDrawMode(GL_QUADS);
+	Vertex *v0 = static_cast<Vertex *>(AllocVertices(0));
+	register Vertex * __restrict v = v0;
+
 	// draw title bar
-	glCallList(titlebar);
+	for (int row = 0; row < rows; ++row)
+	{
+		const float alpha = rowalpha[row];
+		if (alpha > 0.0f)
+		{
+			const float y0 = titley + row * titleh, y1 = y0 + titleh;
+#if defined(USE_TITLE_PACKED_VERTEX)
+			const unsigned int color = 0x004C4C4C | (xs_RoundToInt(alpha * 255) << 24);
+			v->pos = Vector2(0.0f, y0);
+			v->color = color;
+			++v;
+			v->pos = Vector2(640.0f, y0);
+			v->color = color;
+			++v;
+			v->pos = Vector2(640.0f, y1);
+			v->color = color;
+			++v;
+			v->pos = Vector2(0.0f, y1);
+			v->color = color;
+			++v;
+#else
+			v->pos = Vector3(0.0f, y0, 0.0f);
+			v->color = Color4(0.3f, 0.3f, 0.3f, alpha);
+			++v;
+			v->pos = Vector3(640.0f, y0, 0.0f);
+			v->color = Color4(0.3f, 0.3f, 0.3f, alpha);
+			++v;
+			v->pos = Vector3(640.0f, y1, 0.0f);
+			v->color = Color4(0.3f, 0.3f, 0.3f, alpha);
+			++v;
+			v->pos = Vector3(0.0f, y1, 0.0f);
+			v->color = Color4(0.3f, 0.3f, 0.3f, alpha);
+			++v;
+#endif
+		}
+	}
 
 	// draw title body
 	unsigned short *titlefillptr = titlefill;
 
 #if !defined(USE_TITLE_DYNAMIC_TEXTURE)
-#if !defined(USE_TITLE_VERTEX_ARRAY)
-	glBegin(GL_QUADS);
-#endif
 
-#ifdef USE_TITLE_MIRROR_WATER_EFFECT
+#if defined(USE_TITLE_MIRROR_WATER_EFFECT)
 	// mirror offset
 	const float titleheight = titleh * (rows + 1);
 	const float mirrortop = titley + titleheight + titleh * 2 + 4;
@@ -458,7 +496,7 @@ void ShellTitle::Render(unsigned int aId, float aTime, const Transform2 &aTransf
 	{
 		float y = titley + row * titleh;
 
-#ifdef USE_TITLE_MIRROR_WATER_EFFECT
+#if defined(USE_TITLE_MIRROR_WATER_EFFECT)
 		// row mirror properties
 		float mirror_y1 = mirrorbottom + MirrorWaveY(y + titleh);
 		float mirror_yd = (mirror_y1 - mirror_y0) / titleh;
@@ -496,7 +534,7 @@ void ShellTitle::Render(unsigned int aId, float aTime, const Transform2 &aTransf
 						float y1 = y + block[i][1][1];
 
 						// upright
-#ifdef USE_TITLE_VERTEX_ARRAY
+#if defined(USE_TITLE_VERTEX_ARRAY)
 						unsigned int color = 0xFF000000 | (xs_RoundToInt(B * 255) << 16) | (xs_RoundToInt(G * 255) << 8) | (xs_RoundToInt(R * 255) );
 						*colorptr++ = color;
 						*colorptr++ = color;
@@ -506,15 +544,36 @@ void ShellTitle::Render(unsigned int aId, float aTime, const Transform2 &aTransf
 						*vertexptr++ = Vector2(x1, y0);
 						*vertexptr++ = Vector2(x1, y1);
 						*vertexptr++ = Vector2(x0, y1);
+#elif defined(USE_TITLE_PACKED_VERTEX)
+						unsigned int color = 0xFF000000 | (xs_RoundToInt(B * 255) << 16) | (xs_RoundToInt(G * 255) << 8) | (xs_RoundToInt(R * 255) );
+						v->pos = Vector2(x0, y0);
+						v->color = color;
+						++v;
+						v->pos = Vector2(x1, y0);
+						v->color = color;
+						++v;
+						v->pos = Vector2(x1, y1);
+						v->color = color;
+						++v;
+						v->pos = Vector2(x0, y1);
+						v->color = color;
+						++v;
 #else
-						glColor4f(R, G, B, 1.0f);
-						glVertex2f(x0, y0);
-						glVertex2f(x1, y0);
-						glVertex2f(x1, y1);
-						glVertex2f(x0, y1);
+						v->pos = Vector3(x0, y0, 0);
+						v->color = Color4(R, G, B, 1);
+						++v;
+						v->pos = Vector3(x1, y0, 0);
+						v->color = Color4(R, G, B, 1);
+						++v;
+						v->pos = Vector3(x1, y1, 0);
+						v->color = Color4(R, G, B, 1);
+						++v;
+						v->pos = Vector3(x0, y1, 0);
+						v->color = Color4(R, G, B, 1);
+						++v;
 #endif
 
-#ifdef USE_TITLE_MIRROR_WATER_EFFECT
+#if defined(USE_TITLE_MIRROR_WATER_EFFECT)
 						if (mirror_a0 > 0.0f || mirror_a1 > 0.0f)
 						{
 							// mirrored
@@ -526,7 +585,7 @@ void ShellTitle::Render(unsigned int aId, float aTime, const Transform2 &aTransf
 							float dx1 = mirror_d0 + mirror_dd * m1;
 							float yy0 = mirror_y0 + mirror_yd * m0;
 							float yy1 = mirror_y0 + mirror_yd * m1;
-#ifdef USE_TITLE_VERTEX_ARRAY
+#if defined(USE_TITLE_VERTEX_ARRAY)
 							color &= 0x00FFFFFF;
 							color |= xs_RoundToInt(a1 * a1 * 255) << 24;
 							*colorptr++ = color;
@@ -539,13 +598,36 @@ void ShellTitle::Render(unsigned int aId, float aTime, const Transform2 &aTransf
 							*colorptr++ = color;
 							*vertexptr++ = Vector2(x1 + dx0, yy0);
 							*vertexptr++ = Vector2(x0 + dx0, yy0);
+#elif defined(USE_TITLE_PACKED_VERTEX)
+							color &= 0x00FFFFFF;
+							color |= xs_RoundToInt(a1 * a1 * 255) << 24;
+							v->pos = Vector2(x0 + dx1, yy1);
+							v->color = color;
+							++v;
+							v->pos = Vector2(x1 + dx1, yy1);
+							v->color = color;
+							++v;
+							color &= 0x00FFFFFF;
+							color |= xs_RoundToInt(a0 * a0 * 255) << 24;
+							v->pos = Vector2(x1 + dx0, yy0);
+							v->color = color;
+							++v;
+							v->pos = Vector2(x0 + dx0, yy0);
+							v->color = color;
+							++v;
 #else
-							glColor4f(R, G, B, a1 * a1);
-							glVertex2f(x0 + dx1, yy1);
-							glVertex2f(x1 + dx1, yy1);
-							glColor4f(R, G, B, a0 * a0);
-							glVertex2f(x1 + dx0, yy0);
-							glVertex2f(x0 + dx0, yy0);
+							v->pos = Vector3(x0 + dx1, yy1, 0);
+							v->color = Color4(R, G, B, a1 * a1);
+							++v;
+							v->pos = Vector3(x1 + dx1, yy1, 0);
+							v->color = Color4(R, G, B, a1 * a1);
+							++v;
+							v->pos = Vector3(x1 + dx0, yy0, 0);
+							v->color = Color4(R, G, B, a0 * a0);
+							++v;
+							v->pos = Vector3(x0 + dx0, yy0, 0);
+							v->color = Color4(R, G, B, a0 * a0);
+							++v;
 #endif
 						}
 #endif
@@ -556,7 +638,7 @@ void ShellTitle::Render(unsigned int aId, float aTime, const Transform2 &aTransf
 			++titlefillptr;
 		}
 
-#ifdef USE_TITLE_MIRROR_WATER_EFFECT
+#if defined(USE_TITLE_MIRROR_WATER_EFFECT)
 		// mirror shift row
 		mirror_y0 = mirror_y1;
 		mirror_d0 = mirror_d1;
@@ -564,16 +646,27 @@ void ShellTitle::Render(unsigned int aId, float aTime, const Transform2 &aTransf
 #endif
 	}
 
-#ifdef USE_TITLE_VERTEX_ARRAY
-	glEnableClientState(GL_VERTEX_ARRAY);
-	glEnableClientState(GL_COLOR_ARRAY);
+#if defined(USE_TITLE_VERTEX_ARRAY)
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+//	glEnableClientState(GL_VERTEX_ARRAY);
+//	glEnableClientState(GL_COLOR_ARRAY);
 	glVertexPointer(2, GL_FLOAT, 0, vertexarray);
 	glColorPointer(4, GL_UNSIGNED_BYTE, 0, colorarray);
 	glDrawArrays(GL_QUADS, 0, vertexptr - vertexarray);
-	glDisableClientState(GL_VERTEX_ARRAY);
-	glDisableClientState(GL_COLOR_ARRAY);
+//	glDisableClientState(GL_VERTEX_ARRAY);
+//	glDisableClientState(GL_COLOR_ARRAY);
+	glBindBuffer(GL_ARRAY_BUFFER, GetBoundVertexBuffer().mHandle);
+#elif 1
+	AllocVertices(v - v0);
+	FlushDynamic();
+#ifdef USE_TITLE_PACKED_VERTEX
+	SetAttribFormat(0, 3, GL_FLOAT);
+//	SetAttribFormat(2, 4, GL_FLOAT);
+	SetWorkFormat((1<<0)|(1<<2));
+#endif
 #else
-	glEnd();
+	// finish drawing
+	IndexQuads(base, GetVertexCount() - base);
 #endif
 
 #else
@@ -586,8 +679,11 @@ void ShellTitle::Render(unsigned int aId, float aTime, const Transform2 &aTransf
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
+	// execute the drawlist
+	glCallList(titledrawlist);
+
 	// generate texture data
-	unsigned char texturedata[titletexheight][titletexwidth][3];
+	unsigned char texturedata[titletexheight][titletexwidth][4];
 	for (int row = -1; row < rows + 1; ++row)
 	{
 		for (int col = -1; col < cols + 1; ++col)
@@ -606,12 +702,14 @@ void ShellTitle::Render(unsigned int aId, float aTime, const Transform2 &aTransf
 				texturedata[row+1][col+1][0] = (unsigned char)(int)(R * 255);
 				texturedata[row+1][col+1][1] = (unsigned char)(int)(G * 255);
 				texturedata[row+1][col+1][2] = (unsigned char)(int)(B * 255);
+				texturedata[row+1][col+1][3] = 255;
 			}
 			else
 			{
 				texturedata[row+1][col+1][0] = 0;
 				texturedata[row+1][col+1][1] = 0;
 				texturedata[row+1][col+1][2] = 0;
+				texturedata[row+1][col+1][3] = 0;
 			}
 
 			++titlefillptr;
@@ -619,10 +717,9 @@ void ShellTitle::Render(unsigned int aId, float aTime, const Transform2 &aTransf
 	}
 
 	// upload texture
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, titletexwidth, titletexheight, 0, GL_RGB, GL_UNSIGNED_BYTE, texturedata);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, titletexwidth, titletexheight, 0, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8_REV, texturedata);
 	{int err=glGetError();if(err)DebugPrint("glTexImage2D() error: %i\n",err);}
 
-	// execute the drawlist
-	glCallList(titledrawlist);
+	glBindTexture(GL_TEXTURE_2D, 0);
 #endif
 }
