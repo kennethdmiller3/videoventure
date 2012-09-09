@@ -4,6 +4,8 @@
 #include "Resource.h"
 #include "Drawlist.h"
 #include "Font.h"
+#include "Render.h"
+#include "MatrixStack.h"
 
 
 // level indicator position
@@ -14,6 +16,7 @@ static const Rect<float> levelrect =
 {
 	8, 34, 128, 8
 };
+#ifdef PLAYER_LEVEL_FLOAT_COLOR
 static const Color4 levelcolor[] =
 {
 	Color4( 0.2f, 0.2f, 0.2f, 0.5f),	// level 0
@@ -27,6 +30,31 @@ static const Color4 levelcolor[] =
 	Color4( 1.0f, 1.0f, 1.0f, 1.0f),	// level 8
 	Color4( 1.0f, 1.0f, 1.0f, 1.0f),	// level max
 };
+#else
+static const unsigned int levelcolor[] =
+{
+	0x7F333333,	// level 0
+	0xFF0000FF,	// level 1
+	0xFF00FFFF,	// level 2
+	0xFF00FF00,	// level 3
+	0xFFFF0000,	// level 4
+	0xFFFF00B2,	// level 5
+	0xFFFF00FF,	// level 6
+	0xFFFFB2FF,	// level 7
+	0xFFFFFFFF,	// level 8
+	0xFFFFFFFF,	// level max
+};
+#endif
+
+struct Vertex
+{
+	Vector3 pos;
+#ifdef PLAYER_LEVEL_FLOAT_COLOR
+	Color4 color;
+#else
+	unsigned int color;
+#endif
+};
 
 
 //
@@ -38,18 +66,12 @@ PlayerOverlayLevel::PlayerOverlayLevel(unsigned int aPlayerId = 0)
 	: Overlay(aPlayerId)
 	, cur_level(-1)
 {
-	// allocate level draw list
-	level_handle = glGenLists(1);
-
 	Overlay::SetAction(Overlay::Action(this, &PlayerOverlayLevel::Render));
 }
 
 // destructor
 PlayerOverlayLevel::~PlayerOverlayLevel()
 {
-	// free level draw list
-	if (glIsList(level_handle))
-		glDeleteLists(level_handle, 1);
 }
 
 // render
@@ -68,47 +90,57 @@ void PlayerOverlayLevel::Render(unsigned int aId, float aTime, const Transform2 
 	int new_level = xs_FloorToInt(levelresource->GetValue());
 	float new_part = levelresource->GetValue() - new_level;
 
-	// if the level has not changed...
-	if (new_part == cur_part && new_level == cur_level && glIsList(level_handle))
-	{
-		// call the existing draw list
-		glCallList(level_handle);
-		return;
-	}
-
 	// update level
 	cur_level = new_level;
 	cur_part = new_part;
 
-	// start a new draw list list
-	glNewList(level_handle, GL_COMPILE_AND_EXECUTE);
-
 	// draw level gauge
-	glBegin(GL_QUADS);
+
+	// begin drawing
+	SetWorkFormat((1<<0)|(1<<2));
+	SetDrawMode(GL_TRIANGLES);
+
+	int base = GetVertexCount();
+	register Vertex * __restrict v = static_cast<Vertex *>(AllocVertices(8));
 
 	// background
-	glColor4fv(levelcolor[cur_level]);
-	glVertex2f(levelrect.x, levelrect.y);
-	glVertex2f(levelrect.x + levelrect.w, levelrect.y);
-	glVertex2f(levelrect.x + levelrect.w, levelrect.y + levelrect.h);
-	glVertex2f(levelrect.x, levelrect.y + levelrect.h);
+	v->pos = Vector3(levelrect.x, levelrect.y, 0);
+	v->color = levelcolor[cur_level];
+	++v;
+	v->pos = Vector3(levelrect.x + levelrect.w, levelrect.y, 0);
+	v->color = levelcolor[cur_level];
+	++v;
+	v->pos = Vector3(levelrect.x + levelrect.w, levelrect.y + levelrect.h, 0);
+	v->color = levelcolor[cur_level];
+	++v;
+	v->pos = Vector3(levelrect.x, levelrect.y + levelrect.h, 0);
+	v->color = levelcolor[cur_level];
+	++v;
 
 	// fill gauge
-	glColor4fv(levelcolor[cur_level+1]);
-	glVertex2f(levelrect.x, levelrect.y);
-	glVertex2f(levelrect.x + levelrect.w * cur_part, levelrect.y);
-	glVertex2f(levelrect.x + levelrect.w * cur_part, levelrect.y + levelrect.h);
-	glVertex2f(levelrect.x, levelrect.y + levelrect.h);
+	v->pos = Vector3(levelrect.x, levelrect.y, 0);
+	v->color = levelcolor[cur_level+1];
+	++v;
+	v->pos = Vector3(levelrect.x + levelrect.w * cur_part, levelrect.y, 0);
+	v->color = levelcolor[cur_level+1];
+	++v;
+	v->pos = Vector3(levelrect.x + levelrect.w * cur_part, levelrect.y + levelrect.h, 0);
+	v->color = levelcolor[cur_level+1];
+	++v;
+	v->pos = Vector3(levelrect.x, levelrect.y + levelrect.h, 0);
+	v->color = levelcolor[cur_level+1];
+	++v;
 
-	glEnd();
+	// indices
+	IndexQuads(base, GetVertexCount() - base);
 
 	// draw the level icon
-	glColor4f(0.4f, 0.5f, 1.0f, 1.0f);
-	glPushMatrix();
-	glTranslatef(levelpos.x, levelpos.y, 0.0f);
-	glScalef(4, 4, 1);
+	SetAttribConstant(2, _mm_setr_ps(0.4f, 0.5f, 1.0f, 1.0f));
+	StackPush();
+	StackTranslate(_mm_setr_ps(levelpos.x, levelpos.y, 0.0f, 1.0f));
+	StackScale(_mm_setr_ps(4.0f, 4.0f, 1.0f, 1.0f));
 	RenderStaticDrawlist(0x8cdedbba /* "circle16" */, 0.0f, Transform2::Identity());
-	glPopMatrix();
+	StackPop();
 
 	// draw level number
 	char level[16];
@@ -116,7 +148,7 @@ void PlayerOverlayLevel::Render(unsigned int aId, float aTime, const Transform2 
 
 	FontDrawBegin(sDefaultFontHandle);
 
-	glColor4f(0.4f, 0.5f, 1.0f, 1.0f);
+	FontDrawColor(Color4(0.4f, 0.5f, 1.0f, 1.0f));
 
 	float w = 8;
 	float h = -8;
@@ -126,6 +158,4 @@ void PlayerOverlayLevel::Render(unsigned int aId, float aTime, const Transform2 
 	FontDrawString(level, x, y, w, h, z);
 
 	FontDrawEnd();
-
-	glEndList();
 }

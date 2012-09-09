@@ -8,10 +8,8 @@
 #include "Expression.h"
 #include "ExpressionConfigure.h"
 
+#include "Render.h"
 #include "MatrixStack.h"
-
-#include "GL/glcorearb.h"
-
 
 //
 // DEFINES
@@ -30,11 +28,6 @@
 // undefined: store color as GLubyte[4] (4 bytes)
 //#define DRAWLIST_FLOAT_COLOR
 
-// how to copy work buffer to the dynamic buffer
-// defined: use glMapBufferRange and copy work data
-// undefined: use glBufferData to copy work data
-//#define DRAWLIST_DYNAMIC_BUFFER_RANGE
-
 // vertex count threshold for drawing from static buffer
 // undefined: always draw from static buffer
 // defined: copy and draw from dynamic buffer for batches smaller than this
@@ -42,12 +35,16 @@
 // static draw elements has significant fixed overhead cost but no memory copy cost
 // 32 +/- 16 seems to work best, with rapid decline below 16 and slow decline above 48
 // the best value is probably CPU-, GPU-, and workload-dependent...
-#define DRAWLIST_STATIC_THRESHOLD 32
+// TO DO: get this working properly with GLubyte drawlist colors
+#define DRAWLIST_STATIC_THRESHOLD 8
 
 // vertex normals
 // defined: enable support for normals
 // undefined: disable support for normals
 //#define DRAWLIST_NORMALS
+
+// use fixed function?
+#define DRAWLIST_FIXED_FUNCTION
 
 
 //
@@ -65,12 +62,8 @@ void DO_CopyElements(EntityContext &aContext);
 // draw elements
 void DO_DrawElements(EntityContext &aContext);
 
-// set static mode
-static bool SetStaticActive(bool aStatic);
-
 // configure static drawlist
-static void BeginStatic();
-static void EndStatic(unsigned int aId, std::vector<unsigned int> &buffer, const std::vector<unsigned int> &generate);
+static void ConfigureStatic(unsigned int aId, const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer, std::vector<unsigned int> &generate);
 
 
 //
@@ -88,11 +81,13 @@ static const char * const sPositionNames[] = { "x", "y", "z", "w" };
 static const float sPositionDefault[] = { 0.0f, 0.0f, 0.0f, 1.0f };
 static const int sPositionWidth = 3;
 
+#ifdef DRAWLIST_NORMALS
 //typedef Vector3 DLNormal;
 typedef __m128 DLNormal;
 static const char * const sNormalNames[] = { "x", "y", "z", "w" };
 static const float sNormalDefault[] = { 0.0f, 0.0f, 0.0f, 0.0f };
 static const int sNormalWidth = 3;
+#endif
 
 //typedef Vector3 DLTranslation;
 typedef __m128 DLTranslation;
@@ -114,7 +109,7 @@ static const int sScaleWidth = 3;
 //typedef Color4 DLColor;
 typedef __m128 DLColor;
 static const char * const sColorNames[] = { "r", "g", "b", "a" };
-static const float sColorDefault[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+static const float sColorDefault[] = { 0.0f, 0.0f, 0.0f, 1.0f };
 static const int sColorWidth = 4;
 
 //typedef Vector2 DLTexCoord;
@@ -134,7 +129,9 @@ void GetTypeData(unsigned int type, int &width, const char * const *&names, cons
 	default:
 	case 0xaeebcbdd /* "scalar" */:		names = sScalarNames; data = sScalarDefault; width = sScalarWidth; break;
 	case 0x934f4e0a /* "position" */:	names = sPositionNames; data = sPositionDefault; width = sPositionWidth; break;
+#ifdef DRAWLIST_NORMALS
 	case 0xe68b9c52 /* "normal" */:		names = sNormalNames; data = sNormalDefault; width = sNormalWidth; break;
+#endif
 	case 0xad0ecfd5 /* "translate" */:	names = sTranslationNames, data = sTranslationDefault; width = sTranslationWidth; break;
 	case 0x21ac415f /* "rotation" */:	names = sRotationNames; data = sRotationDefault; width = sRotationWidth; break;
 	case 0x82971c71 /* "scale" */:		names = sScaleNames; data = sScaleDefault; width = sScaleWidth; break;
@@ -145,131 +142,54 @@ void GetTypeData(unsigned int type, int &width, const char * const *&names, cons
 }
 
 
-//
-// OPENGL FUNCTIONS
-//
-
-// OpenGL 1.2
-PFNGLDRAWRANGEELEMENTSPROC glDrawRangeElements;
-
-// OpenGL 1.5
-PFNGLGENBUFFERSPROC glGenBuffers;
-PFNGLDELETEBUFFERSPROC glDeleteBuffers;
-PFNGLBINDBUFFERPROC glBindBuffer;
-PFNGLBUFFERDATAPROC glBufferData;
-PFNGLBUFFERSUBDATAPROC glBufferSubData;
-PFNGLMAPBUFFERPROC glMapBuffer;
-PFNGLMAPBUFFERRANGEPROC glMapBufferRange;
-PFNGLUNMAPBUFFERPROC glUnmapBuffer;
-
-// OpenGL 2.0
-PFNGLATTACHSHADERPROC glAttachShader;
-PFNGLDRAWBUFFERSPROC glDrawBuffers;
-PFNGLBINDATTRIBLOCATIONPROC glBindAttribLocation;
-PFNGLCOMPILESHADERPROC glCompileShader;
-PFNGLCREATEPROGRAMPROC glCreateProgram;
-PFNGLCREATESHADERPROC glCreateShader;
-PFNGLDELETEPROGRAMPROC glDeleteProgram;
-PFNGLDETACHSHADERPROC glDetachShader;
-PFNGLDISABLEVERTEXATTRIBARRAYPROC glDisableVertexAttribArray;
-PFNGLENABLEVERTEXATTRIBARRAYPROC glEnableVertexAttribArray;
-PFNGLGETATTRIBLOCATIONPROC glGetAttribLocation;
-PFNGLGETUNIFORMLOCATIONPROC glGetUniformLocation;
-PFNGLISPROGRAMPROC glIsProgram;
-PFNGLISSHADERPROC glIsShader;
-PFNGLLINKPROGRAMPROC glLinkProgram;
-PFNGLSHADERSOURCEPROC glShaderSource;
-PFNGLUSEPROGRAMPROC glUseProgram;
-PFNGLUNIFORM1FPROC glUniform1f;
-PFNGLUNIFORM2FPROC glUniform2f;
-PFNGLUNIFORM3FPROC glUniform3f;
-PFNGLUNIFORM4FPROC glUniform4f;
-PFNGLUNIFORM1FVPROC glUniform1fv;
-PFNGLUNIFORM2FVPROC glUniform2fv;
-PFNGLUNIFORM3FVPROC glUniform3fv;
-PFNGLUNIFORM4FVPROC glUniform4fv;
-PFNGLUNIFORMMATRIX4FVPROC glUniformMatrix4fv;
-PFNGLVALIDATEPROGRAMPROC glValidateProgram;
-PFNGLVERTEXATTRIB1FPROC glVertexAttrib1f;
-PFNGLVERTEXATTRIB1FVPROC glVertexAttrib1fv;
-PFNGLVERTEXATTRIB2FPROC glVertexAttrib2f;
-PFNGLVERTEXATTRIB2FVPROC glVertexAttrib2fv;
-PFNGLVERTEXATTRIB3FPROC glVertexAttrib3f;
-PFNGLVERTEXATTRIB3FVPROC glVertexAttrib3fv;
-PFNGLVERTEXATTRIB4FPROC glVertexAttrib4f;
-PFNGLVERTEXATTRIB4FVPROC glVertexAttrib4fv;
-PFNGLVERTEXATTRIB4NUBVPROC glVertexAttrib4Nubv;
-PFNGLVERTEXATTRIBPOINTERPROC glVertexAttribPointer;
-
-// ARB vertex array object
-PFNGLBINDVERTEXARRAYPROC glBindVertexArray;
-PFNGLDELETEVERTEXARRAYSPROC glDeleteVertexArray;
-PFNGLGENVERTEXARRAYSPROC glGenVertexArrays;
-PFNGLISVERTEXARRAYPROC glIsVertexArray;
 
 
 //
 // BUFFER OBJECTS
 //
 
-enum BufferType
-{
-	BUFFER_DYNAMIC_VERTEX,
-	BUFFER_DYNAMIC_INDEX,
-	BUFFER_STATIC_VERTEX,
-	BUFFER_STATIC_INDEX,
-	BUFFER_COUNT
-};
-
 // buffer state
-struct BufferState
-{
-	GLuint mSize;
-	GLuint mHandle;
-	void *mData;
-	GLuint mStart;
-	GLuint mEnd;
-};
-static BufferState sBuffer[BUFFER_COUNT];
+static BufferObject sStaticVertexBuffer;
+static BufferObject sStaticIndexBuffer;
+
+// vertex attributes
+// TO DO: get rid of this
+const int RENDER_MAX_ATTRIB = 16;
+extern int sAttribCount;
+extern __m128 sAttribValue[RENDER_MAX_ATTRIB];
+extern GLuint sAttribBuffer[RENDER_MAX_ATTRIB];
+extern GLuint sAttribWidth[RENDER_MAX_ATTRIB];
+extern GLenum sAttribType[RENDER_MAX_ATTRIB];
+extern GLuint sAttribSize[RENDER_MAX_ATTRIB];
+extern GLuint sAttribStride[RENDER_MAX_ATTRIB];
+extern GLuint sAttribOffset[RENDER_MAX_ATTRIB];
+extern GLuint sAttribDisplace[RENDER_MAX_ATTRIB];
+
+// packed vertex data
+extern GLubyte sVertexPacked[RENDER_MAX_ATTRIB*16];
+
+// vertex work buffer format
+extern GLuint sVertexWorkFormat;
+extern GLuint sVertexWorkSize;
 
 // vertex work buffer
-static float sVertexWork[64 * 1024];
-static size_t sVertexUsed;
-static size_t sVertexCount;
-static size_t sVertexBase;
+// TO DO: get rid of this
+extern float *sVertexWork;
+extern size_t sVertexLimit;
+extern size_t sVertexUsed;
+extern size_t sVertexCount;
+extern size_t sVertexBase;
 
 // index work buffer
-static unsigned short sIndexWork[32 * 1024];
-static size_t sIndexCount;
-
-// static buffers active?
-static bool sStaticActive;
-static BufferState *sVertexBuffer;
-static BufferState *sIndexBuffer;
-
-// current vertex component values
-static DLNormal sNormal;
-#ifdef DRAWLIST_FLOAT_COLOR
-static DLColor sColor;
-#else
-static GLubyte sColor[4];
-#endif
-static DLTexCoord sTexCoord;
-
-// current drawing mode
-static GLenum sDrawMode;
-
-// active vertex components
-static bool sNormalActive;
-static bool sColorActive;
-static bool sTexCoordActive;
+// TO DO: get rid of this
+extern unsigned short *sIndexWork;
+extern size_t sIndexLimit;
+extern size_t sIndexCount;
 
 struct PackedRenderState
 {
 	unsigned char mMode;
-	bool mNormal;
-	bool mColor;
-	bool mTexCoord;
+	unsigned short mFormat;
 };
 
 
@@ -278,9 +198,9 @@ struct PackedRenderState
 //
 
 // basic vertex shader program
-// TO DO: support normal
-// TO DO: support texcoord
-const GLchar * const sVertexShader =
+// vertex position: transform by modelview and projection
+// vertex color: pass through unmodified
+static const GLchar * const sBasicVertexShader =
 	"#version 130\n"
 	"\n"
 	"uniform mat4 projection;\n"
@@ -288,46 +208,44 @@ const GLchar * const sVertexShader =
 	"\n"
 	"in vec3 position;\n"
 	"in vec4 color;\n"
-//	"in vec2 texcoord;\n"
 	"\n"
 	"out vec4 vscolor;\n"
-//	"out vec2 vstexcoord;\n"
 	"\n"
 	"void main()\n"
 	"{\n"
 	"    gl_Position = projection * modelview * vec4(position, 1.0);\n"
 	"    vscolor = color;\n"
-//	"    vstexcoord = texcoord;\n"
 	"}\n";
 
 // basic fragment shader program
-const GLchar * const sFragmentShader =
+static const GLchar * const sBasicFragmentShader =
 	"#version 130\n"
 	"\n"
 	"in vec4 vscolor;\n"
-//	"in vec2 vstexcoord;\n"
 	"\n"
 	"out vec4 fragmentcolor;\n"
-//	"out vec2 fragmenttexcoord;\n"
 	"\n"
 	"void main(void)\n"
 	"{\n"
 	"    fragmentcolor = vscolor;\n"
-//	"    fragmenttexcoord = vstexcoord;\n"
 	"}\n";
 
 // shader program
-GLuint sProgram;
+static GLuint sBasicProgramId;
+static GLuint sBasicVertexId;
+static GLuint sBasicFragmentId;
 
 // uniform locations
-GLint sUniformProjection;
-GLint sUniformModelView;
+static GLint sUniformProjection;
+static GLint sUniformModelView;
 
 // attribute locations
-GLint sAttribPosition;
-GLint sAttribNormal;
-GLint sAttribColor;
-GLint sAttribTexCoord;
+static GLint sAttribPosition;
+#ifdef DRAWLIST_NORMALS
+static GLint sAttribNormal;
+#endif
+static GLint sAttribColor;
+static GLint sAttribTexCoord;
 
 // tag appended to generator drawlist name to prevent it from matching a template name:
 // this fixes a bug where a generator would be duplicated when a template inherited from
@@ -335,124 +253,74 @@ GLint sAttribTexCoord;
 // throwing off the static buffer generation sequence in RebuildDrawlists
 static const char * const sGenTag = "!generate";
 
-// draw elements from the currently active buffer array
-static void DrawElements(GLenum aDrawMode, bool aNormalActive, bool aColorActive, bool aTexCoordActive, GLuint aVertexOffset, GLuint aVertexCount, GLuint aIndexOffset, GLuint aIndexCount)
+// expression context for baking static geometry
+struct BakeContext : public EntityContext
 {
-	// component sizes
-	const size_t sizeposition = sPositionWidth * sizeof(float);
-	const size_t sizenormal = aNormalActive * sNormalWidth * sizeof(float);
-#ifdef DRAWLIST_FLOAT_COLOR
-	const size_t sizecolor = aColorActive * sColorWidth * sizeof(float);
-#else
-	const size_t sizecolor = aColorActive * sColorWidth * sizeof(GLubyte);
-#endif
-	const size_t sizetexcoord = aTexCoordActive * sTexCoordWidth * sizeof(float);
+	// output drawlist
+	std::vector<unsigned int> *mTarget;
 
-	// combined size
-	size_t sizevertex = sizeposition + sizenormal + sizecolor + sizetexcoord;
+	// active vertex format
+	// TO DO: replace with bitfield/bool[] indexed by attrib location
+	GLuint mFormat;
 
-	// set up pointers
-	size_t offset = aVertexOffset;
-	glVertexAttribPointer(sAttribPosition, sPositionWidth, GL_FLOAT, GL_FALSE,sizevertex, reinterpret_cast<GLvoid *>(offset));
-	glEnableVertexAttribArray(sAttribPosition);
-	offset += sizeposition;
-	sNormalActive = aNormalActive;
-	if (sAttribNormal >= 0)
-	{
-		if (aNormalActive)
-		{
-			glVertexAttribPointer(sAttribNormal, sNormalWidth, GL_FLOAT, GL_FALSE,sizevertex, reinterpret_cast<GLvoid *>(offset));
-			glEnableVertexAttribArray(sAttribNormal);
-			offset += sizenormal;
-		}
-		else
-		{
-			glDisableVertexAttribArray(sAttribNormal);
-			glVertexAttrib3fv(sAttribNormal, sNormal.m128_f32);
-		}
-	}
-	sColorActive = aColorActive;
-	if (sAttribColor >= 0)
-	{
-		if (aColorActive)
-		{
-#ifdef DRAWLIST_FLOAT_COLOR
-			glVertexAttribPointer(sAttribColor, sColorWidth, GL_FLOAT, GL_FALSE,sizevertex, reinterpret_cast<GLvoid *>(offset));
-#else
-			glVertexAttribPointer(sAttribColor, sColorWidth, GL_UNSIGNED_BYTE, GL_TRUE,sizevertex, reinterpret_cast<GLvoid *>(offset));
+	// current vertex component values
+#ifdef DRAWLIST_NORMALS
+	GLfloat mNormal[4];
 #endif
-			glEnableVertexAttribArray(sAttribColor);
-			offset += sizecolor;
-		}
-		else
-		{
-			glDisableVertexAttribArray(sAttribColor);
 #ifdef DRAWLIST_FLOAT_COLOR
-			glVertexAttrib4fv(sAttribColor, sColor.m128_f32);
+	GLfloat mColor[4];
 #else
-			glVertexAttrib4Nubv(sAttribColor, sColor);
+	GLubyte mColor[4];
 #endif
-		}
-	}
-	sTexCoordActive = aTexCoordActive;
-	if (sAttribTexCoord >= 0)
-	{
-		if (aTexCoordActive)
-		{
-			glVertexAttribPointer(sAttribTexCoord, sTexCoordWidth, GL_FLOAT, GL_FALSE,sizevertex, reinterpret_cast<GLvoid *>(offset));
-			glEnableVertexAttribArray(sAttribTexCoord);
-			offset += sizenormal;
-		}
-		else
-		{
-			glDisableVertexAttribArray(sAttribTexCoord);
-			glVertexAttrib2fv(sAttribTexCoord, sTexCoord.m128_f32);
-		}
-	}
+	GLfloat mTexCoord[4];
 
-	// draw elements
-	//glDrawElements(aDrawMode, aIndexCount, GL_UNSIGNED_SHORT, (GLvoid *)aIndexOffset);
-	if (aDrawMode == GL_POINTS)
-		glDrawArrays(aDrawMode, 0, aVertexCount);
-	else
-		glDrawRangeElements(aDrawMode, 0, aVertexCount, aIndexCount, GL_UNSIGNED_SHORT, (GLvoid *)aIndexOffset);
-}
+	// current drawing mode
+	GLenum mDrawMode;
+
+	BakeContext(std::vector<unsigned int> *aTarget, const unsigned int *aBuffer, const size_t aSize, float aParam, unsigned int aId, Database::Typed<float> *aVars = NULL)
+		: EntityContext(aBuffer, aSize, aParam, aId, aVars)
+		, mTarget(aTarget)
+		, mFormat(1 << sAttribPosition)
+		, mDrawMode(GL_TRIANGLES)
+	{
+#ifdef DRAWLIST_NORMALS
+		// current vertex component values
+		memcpy(mNormal, sNormalDefault, sizeof(mNormal));
+#endif
+#ifdef DRAWLIST_FLOAT_COLOR
+		memcpy(mColor, sColorDefault, sizeof(mColor));
+#else
+		mColor[0] = mColor[1] = mColor[2] = 0;
+		mColor[3] = 255;
+#endif
+		memcpy(mTexCoord, sTexCoordDefault, sizeof(mTexCoord));
+	}
+};
 
 // flush static geometry
-static void FlushStatic(std::vector<unsigned int> &buffer)
+static void FlushStatic(BakeContext &aContext)
 {
 	if (sVertexCount == 0 && sIndexCount == 0)
 		return;
-	assert(sDrawMode == GL_POINTS || sIndexCount > 0);
+	assert(aContext.mDrawMode == GL_POINTS || sIndexCount > 0);
 
-	assert(sStaticActive);
+	// TO DO: use shader program
+	// TO DO: set up attributes
 
-	// if the vertex buffer is full...
-	if (sVertexBuffer->mEnd + sVertexUsed * sizeof(float) > sVertexBuffer->mSize)
-	{
-		DebugPrint("Static vertex buffer is full");
-		return;
-	}
-
-	// if the element array buffer is full...
-	if (sIndexBuffer->mEnd + sIndexCount * sizeof(unsigned short) > sIndexBuffer->mSize)
-	{
-		DebugPrint("Static index buffer is full");
-		return;
-	}
-
-	DebugPrint("VB start=%d size=%d count=%d\n", sVertexBuffer->mEnd, sVertexUsed * sizeof(float), sVertexCount);
+	DebugPrint("VB start=%d size=%d count=%d\n", sStaticVertexBuffer.mEnd, sVertexUsed * sizeof(float), sVertexCount);
 	const float *vertex = sVertexWork;
 	for (size_t i = 0; i < sVertexCount; ++i)
 	{
 		DebugPrint("\t%d: p(%.2f %.2f %.2f)", i, vertex[0], vertex[1], vertex[2]);
 		vertex += 3;
-		if (sNormalActive)
+#ifdef DRAWLIST_NORMALS
+		if (aContext.mFormat & (1 << sAttribNormal))
 		{
 			DebugPrint(" n(%.2f %.2f %.2f)", vertex[0], vertex[1], vertex[2]);
 			vertex += 3;
 		}
-		if (sColorActive)
+#endif
+		if (aContext.mFormat & (1 << sAttribColor))
 		{
 #ifdef DRAWLIST_FLOAT_COLOR
 			DebugPrint(" c(%.2f %.2f %.2f %.2f)", vertex[0], vertex[1], vertex[2], vertex[3]);
@@ -463,16 +331,17 @@ static void FlushStatic(std::vector<unsigned int> &buffer)
 			vertex += 1;
 #endif
 		}
-		if (sTexCoordActive)
+		if (aContext.mFormat & (1 << sAttribTexCoord))
 		{
 			DebugPrint(" t(%.2f %.2f)", vertex[0], vertex[1]);
 			vertex += 2;
 		}
 		DebugPrint("\n");
 	}
-	DebugPrint("IB start=%d size=%d count=%d\n", sIndexBuffer->mEnd, sIndexCount * sizeof(unsigned short), sIndexCount);
+
+	DebugPrint("IB start=%d size=%d count=%d\n", sStaticIndexBuffer.mEnd, sIndexCount * sizeof(unsigned short), sIndexCount);
 	const unsigned short *index = sIndexWork;
-	switch (sDrawMode)
+	switch (aContext.mDrawMode)
 	{
 	case GL_POINTS:
 		for (size_t i = 0; i < sIndexCount; ++i)
@@ -493,37 +362,33 @@ static void FlushStatic(std::vector<unsigned int> &buffer)
 
 #ifdef DRAWLIST_STATIC_BUFFER
 	// copy vertex work buffer to the array buffer
-	glBufferSubData(GL_ARRAY_BUFFER, sVertexBuffer->mEnd, sVertexUsed * sizeof(float), sVertexWork);
-
-	// copy index work buffer to the element array buffer
-	glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, sIndexBuffer->mEnd, sIndexCount * sizeof(unsigned short), sIndexWork);
-#endif
-
+	BufferAppendData(sStaticVertexBuffer, sVertexUsed * sizeof(float), sVertexWork);
+	BufferAppendData(sStaticIndexBuffer, sIndexCount * sizeof(unsigned short), sIndexWork);
+#else
 	// save a persistent copy
-	memcpy(reinterpret_cast<unsigned char *>(sVertexBuffer->mData) + sVertexBuffer->mEnd, sVertexWork, sVertexUsed * sizeof(float));
-	memcpy(reinterpret_cast<unsigned char *>(sIndexBuffer->mData) + sIndexBuffer->mEnd, sIndexWork, sIndexCount * sizeof(float));
+	memcpy(reinterpret_cast<unsigned char *>(sStaticVertexBuffer.mPersist) + sStaticVertexBuffer.mEnd, sVertexWork, sVertexUsed * sizeof(float));
+	memcpy(reinterpret_cast<unsigned char *>(sStaticIndexBuffer.mPersist) + sStaticIndexBuffer.mEnd, sIndexWork, sIndexCount * sizeof(unsigned short));
 
 	// advance end offsets
-	sVertexBuffer->mEnd += sVertexUsed * sizeof(float);
-	sIndexBuffer->mEnd += sIndexCount * sizeof(unsigned short);
+	sStaticVertexBuffer.mEnd += sVertexUsed * sizeof(float);
+	sStaticIndexBuffer.mEnd += sIndexCount * sizeof(unsigned short);
+#endif
 
 	// add a draw elements command
 	PackedRenderState state;
-	state.mMode = unsigned char(sDrawMode);
-	state.mNormal = sNormalActive;
-	state.mColor = sColorActive;
-	state.mTexCoord = sTexCoordActive;
+	state.mMode = unsigned char(aContext.mDrawMode);
+	state.mFormat = unsigned short(aContext.mFormat);
 #if defined(DRAWLIST_STATIC_BUFFER) && defined(DRAWLIST_STATIC_THRESHOLD)
 	if (sVertexCount < DRAWLIST_STATIC_THRESHOLD)
 #endif
 #if !defined(DRAWLIST_STATIC_BUFFER) || defined(DRAWLIST_STATIC_THRESHOLD)
-		Expression::Append(buffer, DO_CopyElements, state, sVertexBuffer->mStart, sVertexCount, sIndexBuffer->mStart, sIndexCount);
+		Expression::Append(*aContext.mTarget, DO_CopyElements, state, sStaticVertexBuffer.mStart, sVertexCount, sStaticIndexBuffer.mStart, sIndexCount);
 #endif
 #ifdef DRAWLIST_STATIC_BUFFER
 #if defined(DRAWLIST_STATIC_THRESHOLD)
 	else
 #endif
-		Expression::Append(buffer, DO_DrawElements, state, sVertexBuffer->mStart, sVertexCount, sIndexBuffer->mStart, sIndexCount);
+		Expression::Append(*aContext.mTarget, DO_DrawElements, state, sStaticVertexBuffer.mStart, sVertexCount, sStaticIndexBuffer.mStart, sIndexCount);
 #endif
 
 	// reset work buffer
@@ -533,153 +398,9 @@ static void FlushStatic(std::vector<unsigned int> &buffer)
 	sIndexCount = 0;
 
 	// get ready for the next batch
-	sVertexBuffer->mStart = sVertexBuffer->mEnd;
-	sIndexBuffer->mStart = sIndexBuffer->mEnd;
+	sStaticVertexBuffer.mStart = sStaticVertexBuffer.mEnd;
+	sStaticIndexBuffer.mStart = sStaticIndexBuffer.mEnd;
 }
-
-// flush dynamic geometry
-static void FlushDynamic(void)
-{
-	if (sVertexCount == 0 && sIndexCount == 0)
-		return;
-	assert(sDrawMode == GL_POINTS || sIndexCount > 0);
-
-	assert(!sStaticActive);
-
-#ifdef DEBUG_FLUSH_DYNAMIC
-	DebugPrint("Flush draw=%d n=%d c=%d t=%d\n", sDrawMode, sNormalActive, sColorActive, sTexCoordActive);
-	DebugPrint("DVB start=%d size=%d count=%d\n", sVertexBuffer->mStart, sVertexBuffer->mEnd - sVertexBuffer->mStart, sVertexCount);
-	const float *vertex = sVertexWork;
-	for (size_t i = 0; i < sVertexCount; ++i)
-	{
-		DebugPrint("\t%d: p(%.2f %.2f %.2f)", i, vertex[0], vertex[1], vertex[2]);
-		vertex += 3;
-		if (sNormalActive)
-		{
-			DebugPrint(" n(%.2f %.2f %.2f)", vertex[0], vertex[1], vertex[2]);
-			vertex += 3;
-		}
-		if (sColorActive)
-		{
-#ifdef DRAWLIST_FLOAT_COLOR
-			DebugPrint(" c(%.2f %.2f %.2f %.2f)", vertex[0], vertex[1], vertex[2], vertex[3]);
-			vertex += 4;
-#else
-			const GLubyte *c = reinterpret_cast<const GLubyte *>(&vertex[0]);
-			DebugPrint(" c(%d %d %d %d)", c[0], c[1], c[2], c[3]);
-			vertex += 1;
-#endif
-		}
-		if (sTexCoordActive)
-		{
-			DebugPrint(" t(%.2f %.2f)", vertex[0], vertex[1]);
-			vertex += 2;
-		}
-		DebugPrint("\n");
-	}
-	glUnmapBuffer(GL_ARRAY_BUFFER);
-
-	DebugPrint("DIB start=%d size=%d count=%d\n", sIndexBuffer->mStart, sIndexBuffer->mEnd - sIndexBuffer->mStart, sIndexCount);
-	const unsigned short *index = sIndexWork;
-	switch (sDrawMode)
-	{
-	case GL_POINTS:
-		for (size_t i = 0; i < sIndexCount; ++i)
-			DebugPrint("\t%d\n", index[i]);
-		break;
-	case GL_LINES:
-		for (size_t i = 0; i < sIndexCount; i += 2)
-			DebugPrint("\t%d %d\n", index[i], index[i + 1]);
-		break;
-	case GL_TRIANGLES:
-		for (size_t i = 0; i < sIndexCount; i += 3)
-			DebugPrint("\t%d %d %d\n", index[i], index[i + 1], index[i + 2]);
-		break;
-	default:
-		assert(0);
-		break;
-	}
-	glUnmapBuffer(GL_ELEMENT_ARRAY_BUFFER);
-#endif
-
-#ifndef DRAWLIST_DYNAMIC_BUFFER_RANGE
-
-	// copy vertex work buffer to the dynamic vertex buffer
-	// (this seems faster than using map buffer range)
-	sVertexBuffer->mStart = 0;
-	sVertexBuffer->mEnd = sVertexUsed * sizeof(float);
-	glBufferData(GL_ARRAY_BUFFER, sVertexBuffer->mEnd, sVertexWork, GL_STREAM_DRAW);
-
-	// copy index work buffer to the dynamic index buffer
-	// (this seems faster than using map buffer range)
-	sIndexBuffer->mStart = 0;
-	sIndexBuffer->mEnd = sIndexCount * sizeof(unsigned short);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sIndexBuffer->mEnd, sIndexWork, GL_STREAM_DRAW);
-
-#else
-
-	// if the vertex buffer is full...
-	if (sVertexBuffer->mEnd + sVertexUsed * sizeof(float) > sVertexBuffer->mSize)
-	{
-		// reset buffer data
-		glBufferData(GL_ARRAY_BUFFER, sVertexBuffer->mSize, NULL, GL_STREAM_DRAW);
-		sVertexBuffer->mStart = 0;
-		sVertexBuffer->mEnd = 0;
-	}
-
-	// if the element array buffer is full...
-	if (sIndexBuffer->mEnd + sIndexCount * sizeof(unsigned short) > sIndexBuffer->mSize)
-	{
-		// reset buffer data
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sIndexBuffer->mSize, NULL, GL_STREAM_DRAW);
-		sIndexBuffer->mStart = 0;
-		sIndexBuffer->mEnd = 0;
-	}
-
-	if (glMapBufferRange)
-	{
-		// copy vertex work buffer to the array buffer
-		if (void *data = glMapBufferRange(GL_ARRAY_BUFFER, sVertexBuffer->mEnd, sVertexUsed * sizeof(float), GL_MAP_WRITE_BIT|GL_MAP_INVALIDATE_RANGE_BIT|GL_MAP_UNSYNCHRONIZED_BIT))
-		{
-			memcpy(data, sVertexWork, sVertexUsed * sizeof(float));
-			glUnmapBuffer(GL_ARRAY_BUFFER);
-		}
-
-		// copy index work buffer to the element array buffer
-		if (void *data = glMapBufferRange(GL_ELEMENT_ARRAY_BUFFER, sIndexBuffer->mEnd, sIndexCount * sizeof(unsigned short), GL_MAP_WRITE_BIT|GL_MAP_INVALIDATE_RANGE_BIT|GL_MAP_UNSYNCHRONIZED_BIT))
-		{
-			memcpy(data, sIndexWork, sIndexCount * sizeof(unsigned short));
-			glUnmapBuffer(GL_ELEMENT_ARRAY_BUFFER);
-		}
-	}
-	else
-	{
-		// copy vertex work buffer to the array buffer
-		glBufferSubData(GL_ARRAY_BUFFER, sVertexBuffer->mEnd, sVertexUsed * sizeof(float), sVertexWork);
-
-		// copy index work buffer to the element array buffer
-		glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, sIndexBuffer->mEnd, sIndexCount * sizeof(unsigned short), sIndexWork);
-	}
-
-	// advance end offsets
-	sVertexBuffer->mEnd += sVertexUsed * sizeof(float);
-	sIndexBuffer->mEnd += sIndexCount * sizeof(unsigned short);
-#endif
-
-	// draw elements
-	DrawElements(sDrawMode, sNormalActive, sColorActive, sTexCoordActive, sVertexBuffer->mStart, sVertexCount, sIndexBuffer->mStart, sIndexCount);
-
-	// reset work buffer
-	sVertexUsed = 0;
-	sVertexCount = 0;
-	sVertexBase = 0;
-	sIndexCount = 0;
-
-	// get ready for the next batch
-	sVertexBuffer->mStart = sVertexBuffer->mEnd;
-	sIndexBuffer->mStart = sIndexBuffer->mEnd;
-}
-
 
 namespace Database
 {
@@ -707,9 +428,7 @@ namespace Database
 			assert(generate.size() == 0);
 			std::vector<unsigned int> &buffer = Database::drawlist.Open(aId);
 			assert(buffer.size() == 0);
-			BeginStatic();
-			ConfigureDrawItems(aId, element, generate, true);
-			EndStatic(aId, buffer, generate);
+			ConfigureStatic(aId, element, buffer, generate);
 			Database::drawlist.Close(aId);
 			Database::generatedrawlist.Close(genId);
 		}
@@ -786,31 +505,22 @@ bool EvaluateVariableOperator(EntityContext &aContext)
 // DRAWLIST OPERATIONS
 //
 
-#if 0
-void DO_Begin(EntityContext &aContext)
-{
-	glBegin(Expression::Read<GLenum>(aContext));
-}
-#endif
-
-struct BakeContext : public EntityContext
-{
-	std::vector<unsigned int> *mTarget;
-
-	BakeContext(std::vector<unsigned int> *aTarget, const unsigned int *aBuffer, const size_t aSize, float aParam, unsigned int aId, Database::Typed<float> *aVars = NULL)
-		: EntityContext(aBuffer, aSize, aParam, aId, aVars)
-		, mTarget(aTarget)
-	{
-	}
-};
-
 void DO_CallListBake(BakeContext &aContext)
 {
 	const unsigned int name(Expression::Read<unsigned int>(aContext));
 
 	const std::vector<unsigned int> &generate = Database::generatedrawlist.Get(name);
-	BakeContext context(aContext.mTarget, &generate[0], generate.size(), 0.0f, aContext.mId, aContext.mVars);
-	ExecuteDrawItems(context);
+//	BakeContext context(aContext);
+	const unsigned int *stream = aContext.mStream;
+	const unsigned int *begin = aContext.mBegin;
+	const unsigned int *end = aContext.mEnd;
+	aContext.mBegin = &generate[0];
+	aContext.mEnd = aContext.mBegin + generate.size();
+	aContext.Restart();
+	ExecuteDrawItems(aContext);
+	aContext.mStream = stream;
+	aContext.mBegin = begin;
+	aContext.mEnd = end;
 }
 
 void DO_DrawMode(EntityContext &aContext)
@@ -818,31 +528,14 @@ void DO_DrawMode(EntityContext &aContext)
 	// get the render state
 	PackedRenderState state(Expression::Read<PackedRenderState>(aContext));
 
-	// switch to dynamic mode
-	SetStaticActive(false);
+	// set work format
+	// include color attribute even if the state doesn't
+	GLuint format = state.mFormat;
+	format |= 1 << sAttribColor;
+	SetWorkFormat(format);
 
-	// different draw mode or vertex format is different
-	if (sDrawMode != state.mMode ||
-		sNormalActive != state.mNormal ||
-		sColorActive != state.mColor ||
-		sTexCoordActive != state.mTexCoord)
-	{
-		// flush geometry
-		FlushDynamic();
-
-		// switch to the requested render state
-#ifdef DEBUG_DYNAMIC_DRAW_MODE_CHANGE
-		DebugPrint("DrawMode: mode=%d->%d normal=%d->%d color=%d->%d texcoord=%d->%d\n",
-			sDrawMode, state.mMode, 
-			sNormalActive, state.mNormal,
-			sColorActive, state.mColor,
-			sTexCoordActive, state.mTexCoord);
-#endif
-		sDrawMode = state.mMode;
-		sNormalActive = state.mNormal;
-		sColorActive = state.mColor;
-		sTexCoordActive = state.mTexCoord;
-	}
+	// set draw mode
+	SetDrawMode(state.mMode);
 
 	// set the vertex base
 	sVertexBase = sVertexCount;
@@ -853,20 +546,16 @@ void DO_DrawModeBake(BakeContext &aContext)
 	// get the render state
 	PackedRenderState state(Expression::Read<PackedRenderState>(aContext));
 
-	// different draw mode or vertex format is different
-	if (sDrawMode != state.mMode ||
-		sNormalActive < state.mNormal ||
-		sColorActive < state.mColor ||
-		sTexCoordActive < state.mTexCoord)
+	// different draw mode or vertex format is incompatible
+	if (state.mMode != aContext.mDrawMode ||
+		state.mFormat & ~aContext.mFormat)
 	{
 		// flush geometry
-		FlushStatic(*aContext.mTarget);
+		FlushStatic(aContext);
 
 		// switch to the requested render state
-		sDrawMode = state.mMode;
-		sNormalActive |= state.mNormal;
-		sColorActive |= state.mColor;
-		sTexCoordActive |= state.mTexCoord;
+		aContext.mDrawMode = state.mMode;
+		aContext.mFormat |= state.mFormat;
 	}
 
 	// set the vertex base
@@ -884,42 +573,27 @@ void DO_BindTexture(EntityContext &aContext)
 
 void DO_BindTextureBake(BakeContext &aContext)
 {
-	FlushStatic(*aContext.mTarget);
+	FlushStatic(aContext);
 
 	const GLenum target(Expression::Read<GLenum>(aContext));
 	const GLuint texture(Expression::Read<GLuint>(aContext));
 	Expression::Append(*aContext.mTarget, DO_BindTexture, target, texture);
 }
 
-void DO_BlendFunc(EntityContext &aContext)
-{
-	FlushDynamic();
-
-	const GLenum sfactor(Expression::Read<GLenum>(aContext));
-	const GLenum dfactor(Expression::Read<GLenum>(aContext));
-	glBlendFunc(sfactor, dfactor);
-}
-
-void DO_BlendFuncBake(BakeContext &aContext)
-{
-	FlushStatic(*aContext.mTarget);
-
-	const GLenum sfactor(Expression::Read<GLenum>(aContext));
-	const GLenum dfactor(Expression::Read<GLenum>(aContext));
-	Expression::Append(*aContext.mTarget, DO_BlendFunc, sfactor, dfactor);
-}
-
 void DO_Color(EntityContext &aContext)
 {
-	sColorActive = true;
+	SetAttribValue(sAttribColor, Expression::Evaluate<DLColor>(aContext));
+}
+
+void DO_ColorBake(BakeContext &aContext)
+{
+	aContext.mFormat |= 1 << sAttribColor;
+	DLColor color(Expression::Evaluate<DLColor>(aContext));
 #ifdef DRAWLIST_FLOAT_COLOR
-	sColor = Expression::Evaluate<DLColor>(aContext);
+	_mm_storeu_ps(aContext.mColor, color);
 #else
-	DLColor c(Expression::Evaluate<DLColor>(aContext));
-	sColor[0] = GLubyte(Clamp(xs_RoundToInt(c.m128_f32[0]*255), 0, 255));
-	sColor[1] = GLubyte(Clamp(xs_RoundToInt(c.m128_f32[1]*255), 0, 255));
-	sColor[2] = GLubyte(Clamp(xs_RoundToInt(c.m128_f32[2]*255), 0, 255));
-	sColor[3] = GLubyte(Clamp(xs_RoundToInt(c.m128_f32[3]*255), 0, 255));
+	for (register int i = 0; i < 4; ++i)
+		aContext.mColor[i] = GLubyte(Clamp(xs_RoundToInt(color.m128_f32[i] * 255), 0, 255));
 #endif
 }
 
@@ -932,11 +606,12 @@ void DO_Disable(EntityContext &aContext)
 
 void DO_DisableBake(BakeContext &aContext)
 {
-	FlushStatic(*aContext.mTarget);
+	FlushStatic(aContext);
 	GLenum cap(Expression::Read<GLenum>(aContext));
 	Expression::Append(*aContext.mTarget, DO_Disable, cap);
 }
 
+#pragma optimize("t", on)
 void DO_CopyElements(EntityContext &aContext)
 {
 	// get rendering state
@@ -946,145 +621,187 @@ void DO_CopyElements(EntityContext &aContext)
 	GLuint indexOffset(Expression::Read<GLuint>(aContext));
 	GLuint indexCount(Expression::Read<GLuint>(aContext));
 
-	// switch to dynamic mode
-	SetStaticActive(false);
+	// get the source format
+	GLuint srcformat = state.mFormat;
 
-	// different draw mode or vertex format is different
-	if (sDrawMode != state.mMode ||
-		sNormalActive < state.mNormal ||
-		sColorActive < state.mColor ||
-		sTexCoordActive < state.mTexCoord)
-	{
-		// flush geometry
-		FlushDynamic();
+	// set new work format
+	GLuint dstformat = srcformat | GetWorkFormat();
+	SetWorkFormat(dstformat);
 
-		// switch to the requested render state
-		sDrawMode = state.mMode;
-		sNormalActive |= state.mNormal;
-		sColorActive |= state.mColor;
-		sTexCoordActive |= state.mTexCoord;
-	}
+	// set draw mode
+	SetDrawMode(state.mMode);
 
-	// component sizes
-	const size_t sizeposition = sPositionWidth * sizeof(float);
-	const size_t sizedstnormal = sNormalActive * sNormalWidth * sizeof(float);
-	const size_t sizesrcnormal = state.mNormal * sNormalWidth * sizeof(float);
-#ifdef DRAWLIST_FLOAT_COLOR
-	const size_t sizedstcolor = sColorActive * sColorWidth * sizeof(float);
-	const size_t sizesrccolor = state.mColor * sColorWidth * sizeof(float);
-#else
-	const size_t sizedstcolor = sColorActive * sColorWidth * sizeof(GLubyte);
-	const size_t sizesrccolor = state.mColor * sColorWidth * sizeof(GLubyte);
-#endif
-	const size_t sizedsttexcoord = sTexCoordActive * sTexCoordWidth * sizeof(float);
-	const size_t sizesrctexcoord = state.mTexCoord * sTexCoordWidth * sizeof(float);
+	assert(sVertexWorkFormat != 0);
+	assert(sVertexWorkSize != 0);
 
-	// combined size
-	const size_t sizevertex = sizeposition + sizedstnormal + sizedstcolor + sizedsttexcoord;
+	// get the vertex base
+	size_t base = GetVertexCount();
 
-	// if a work buffer is full...
-	if (sVertexUsed * sizeof(float) + vertexCount * sizevertex > sizeof(sVertexWork) ||
-		(sIndexCount + indexCount) * sizeof(unsigned short) > sizeof(sIndexWork))
-	{
-		// flush geometry
-		FlushDynamic();
-	}
-
-	// set the vertex base
-	sVertexBase = sVertexCount;
-
-	// get static data source
-	const float *srcVertex = reinterpret_cast<const float *>(intptr_t(sBuffer[BUFFER_STATIC_VERTEX].mData) + vertexOffset);
-	const unsigned short *srcIndex = reinterpret_cast<unsigned short *>(intptr_t(sBuffer[BUFFER_STATIC_INDEX].mData) + indexOffset);
+	// get data source
+	const unsigned char *srcConst = sVertexPacked;
+	const unsigned char *srcVertex = reinterpret_cast<const unsigned char *>(intptr_t(sStaticVertexBuffer.mPersist) + vertexOffset);
 
 	// get work data destination
-	float *dstVertex = sVertexWork + sVertexUsed;
-	unsigned short *dstIndex = sIndexWork + sIndexCount;
+	unsigned char *dstVertex = static_cast<unsigned char *>(AllocVertices(vertexCount));
 
 	// copy and transform vertex data
-	DLPosition pos = _mm_set_ps1(1);
-	DLNormal nrm = _mm_set_ps1(0);
+	DLPosition pos = _mm_loadu_ps(sPositionDefault);
+#ifdef DRAWLIST_NORMALS
+	DLNormal nrm = _mm_loadu_ps(sNormalDefault);
+#endif
 	for (size_t i = 0; i < vertexCount; ++i)
 	{
-#if 1
-		memcpy(&pos, srcVertex, sizeposition);
-		pos = StackTransformPosition(pos);
-		memcpy(dstVertex, &pos, sizeposition);
-#else
-		_mm_storeu_ps(dstVertex, StackTransformPosition(_mm_loadu_ps(srcVertex)));
-#endif
-		srcVertex += sizeposition / sizeof(float);
-		dstVertex += sizeposition / sizeof(float);
-
-		if (sizedstnormal)
+		// position array always active
 		{
-#if 1
-			if (sizesrcnormal)
-				memcpy(&nrm, srcVertex, sizesrcnormal);
+			// copy position
+			const size_t dstDisplace = sAttribDisplace[sAttribPosition];
+			memcpy(&pos, srcVertex, sPositionWidth * sizeof(float));
+			pos = StackTransformPosition(pos);
+			memcpy(dstVertex + dstDisplace, &pos, sPositionWidth * sizeof(float));
+			srcVertex += sPositionWidth * sizeof(float);
+		}
+
+#ifdef DRAWLIST_NORMALS
+		// if normal array active...
+		if (dstformat & (1 << sAttribNormal))
+		{
+			// copy normal
+			const size_t dstDisplace = sAttribDisplace[sAttribNormal];
+			if (srcformat & (1 << sAttribNormal))
+			{
+				// copy source normal
+				memcpy(&nrm, srcVertex, sNormalWidth * sizeof(float));
+				srcVertex += sNormalWidth * sizeof(float);
+			}
 			else
-				nrm = sNormal;
+			{
+				// copy constant normal
+				memcpy(&nrm, srcConst + dstDisplace, sNormalWidth * sizeof(float));
+			}
 			nrm = StackTransformNormal(nrm);
-			memcpy(dstVertex, &nrm, sizedstnormal);
-#else
-			if (sizesrcnormal)
-				_mm_storeu_ps(dstVertex, StackTransformNormal(_mm_loadu_ps(srcVertex)));
-			else
-				_mm_storeu_ps(dstVertex, StackTransformNormal(sNormal));
+			memcpy(dstVertex + dstDisplace, &nrm, sNormalWidth * sizeof(float));
+		}
 #endif
-		}
-		srcVertex += sizesrcnormal / sizeof(float);
-		dstVertex += sizedstnormal / sizeof(float);
 
-		if (sizedstcolor)
+		// if color array active...
+		if (dstformat & (1 << sAttribColor))
 		{
-			if (sizesrccolor)
-				memcpy(dstVertex, srcVertex, sizesrccolor);
+			// copy color
+			const size_t dstDisplace = sAttribDisplace[sAttribColor];
+			if (srcformat & (1 << sAttribColor))
+			{
+				// copy source color
+#ifdef DRAWLIST_FLOAT_COLOR
+				memcpy(dstVertex + dstDisplace, srcVertex, sColorWidth * sizeof(float));
+				srcVertex += sColorWidth * sizeof(float);
+#elif 1
+				memcpy(dstVertex + dstDisplace, srcVertex, sColorWidth * sizeof(unsigned char));
+				srcVertex += sColorWidth * sizeof(unsigned char);
+#else
+#error
+#endif
+			}
 			else
-				memcpy(dstVertex, &sColor, sizedstcolor);
+			{
+				// copy constant color
+#ifdef DRAWLIST_FLOAT_COLOR
+				memcpy(dstVertex + dstDisplace, srcConst + dstDisplace, sColorWidth * sizeof(float));
+#elif 1
+				memcpy(dstVertex + dstDisplace, srcConst + dstDisplace, sColorWidth * sizeof(unsigned char));
+#else
+#error
+#endif
+			}
 		}
-		srcVertex += sizesrccolor / sizeof(float);
-		dstVertex += sizedstcolor / sizeof(float);
 
-		if (sizedsttexcoord)
+		// if texcoord array active...
+		if (dstformat & (1 << sAttribTexCoord))
 		{
-			if (sizesrctexcoord)
-				memcpy(dstVertex, srcVertex, sizesrctexcoord);
+			// copy texcoord
+			const size_t dstDisplace = sAttribDisplace[sAttribTexCoord];
+			if (srcformat & (1 << sAttribTexCoord))
+			{
+				// copy source color
+				memcpy(dstVertex + dstDisplace, srcVertex, sTexCoordWidth * sizeof(float));
+				srcVertex += sTexCoordWidth * sizeof(float);
+			}
 			else
-				memcpy(dstVertex, &sTexCoord, sizedsttexcoord);
+			{
+				// copy constant color
+				memcpy(dstVertex + dstDisplace, srcConst + dstDisplace, sTexCoordWidth * sizeof(float));
+			}
 		}
-		srcVertex += sizesrctexcoord / sizeof(float);
-		dstVertex += sizedsttexcoord / sizeof(float);
+
+		// advance to the next vertex
+		dstVertex += sVertexWorkSize;
 	}
 
 	// copy and adjust indices
+	const unsigned short *srcIndex = reinterpret_cast<unsigned short *>(intptr_t(sStaticIndexBuffer.mPersist) + indexOffset);
+	unsigned short *dstIndex = static_cast<unsigned short *>(AllocIndices(indexCount));
 	for (size_t i = 0; i < indexCount; ++i)
 	{
-		*dstIndex++ = unsigned short(*srcIndex++ + sVertexBase);
+		*dstIndex++ = unsigned short(*srcIndex++ + base);
 	}
-
-	// update vertex work buffer
-	sVertexUsed = dstVertex - sVertexWork;
-	sVertexCount += vertexCount;
-
-	// update index work buffer
-	sIndexCount += indexCount;
 }
+#pragma optimize("", on)
 
 #ifdef DRAWLIST_STATIC_BUFFER
+extern void SetAttribConstantInternal(GLint aIndex, __m128 aValue);
+extern void SetAttribBufferInternal(GLint aIndex, BufferObject &aBuffer, GLuint aStride, GLuint aOffset);
+
+static void SetupStaticAttribs(GLuint aFormat, GLuint aOffset)
+{
+	// get vertex stride
+	size_t vertexsize = 0;
+	for (int index = 0; index < sAttribCount; ++index)
+	{
+		if (aFormat & (1 << index))
+		{
+			vertexsize += sAttribSize[index];
+		}
+	}
+
+	// set up attribute pointers and values
+	size_t offset = aOffset;
+	for (int index = 0; index < sAttribCount; ++index)
+	{
+		if (aFormat & (1 << index))
+		{
+			SetAttribBufferInternal(index, sStaticVertexBuffer, vertexsize, offset);
+			offset += sAttribSize[index];
+		}
+		else
+		{
+			SetAttribConstantInternal(index, sAttribValue[index]);
+		}
+	}
+}
+
 void DO_DrawElements(EntityContext &aContext)
 {
 	// if not currently in static mode...
-	if (!sStaticActive)
+	if (IsDynamicActive())
 	{
 		// flush dynamic geometry
 		FlushDynamic();
-
-		// switch to static mode
-		SetStaticActive(true);
 	}
 
+#ifndef DYNAMIC_GEOMETRY_IN_VIEW_SPACE
+	// combine view and world matrix
+	GLfloat world[16];
+	memcpy(world, StackGet(), sizeof(world));
+	StackPush();
+	StackLoad(ViewGet());
+	StackMult(world);
+#endif
+
 	// sync opengl matrix
-	glUniformMatrix4fv(sUniformModelView, 1, GL_FALSE, StackGet());
+	SetUniformMatrix4(sUniformModelView, StackGet());
+
+#ifndef DYNAMIC_GEOMETRY_IN_VIEW_SPACE
+	StackPop();
+#endif
 
 	// get rendering state
 	PackedRenderState state(Expression::Read<PackedRenderState>(aContext));
@@ -1093,8 +810,23 @@ void DO_DrawElements(EntityContext &aContext)
 	GLuint indexOffset(Expression::Read<GLuint>(aContext));
 	GLuint indexCount(Expression::Read<GLuint>(aContext));
 
-	// draw elements using the specified rendering state
-	DrawElements(state.mMode, state.mNormal, state.mColor, state.mTexCoord, vertexOffset, vertexCount, indexOffset, indexCount);
+	// set up attributes
+	SetupStaticAttribs(state.mFormat, vertexOffset);
+
+	// emit a draw call
+	if (indexCount > 0)
+	{
+		// set index buffer
+		SetIndexBuffer(sStaticIndexBuffer);
+
+		// draw indexed primitive
+		DrawElements(state.mMode, vertexCount, indexCount, indexOffset);
+	}
+	else
+	{
+		// draw non-indexed primitive
+		DrawArrays(state.mMode, vertexCount);
+	}
 }
 #endif
 
@@ -1107,7 +839,7 @@ void DO_Enable(EntityContext &aContext)
 
 void DO_EnableBake(BakeContext &aContext)
 {
-	FlushStatic(*aContext.mTarget);
+	FlushStatic(aContext);
 	GLenum cap(Expression::Read<GLenum>(aContext));
 	Expression::Append(*aContext.mTarget, DO_Enable, cap);
 }
@@ -1119,113 +851,47 @@ void DO_IndexPoints(EntityContext &aContext)
 
 void DO_IndexLines(EntityContext &aContext)
 {
-	const GLuint start(sVertexBase);
-	const GLuint count(sVertexCount - sVertexBase);
-	for (register GLuint i = 0; i < count; ++i)
-	{
-		sIndexWork[sIndexCount++] = unsigned short(start + i);
-	}
+	IndexLines(sVertexBase, sVertexCount - sVertexBase);
 }
 
 void DO_IndexLineLoop(EntityContext &aContext)
 {
-	const GLuint start(sVertexBase);
-	const GLuint count(sVertexCount - sVertexBase);
-	for (register GLuint i = 0; i < count - 1; ++i)
-	{
-		sIndexWork[sIndexCount++] = unsigned short(start + i);
-		sIndexWork[sIndexCount++] = unsigned short(start + i + 1);
-	}
-	sIndexWork[sIndexCount++] = unsigned short(start + count - 1);
-	sIndexWork[sIndexCount++] = unsigned short(start);
+	IndexLineLoop(sVertexBase, sVertexCount - sVertexBase);
 }
 
 void DO_IndexLineStrip(EntityContext &aContext)
 {
-	const GLuint start(sVertexBase);
-	const GLuint count(sVertexCount - sVertexBase);
-	for (register GLuint i = 0; i < count - 1; ++i)
-	{
-		sIndexWork[sIndexCount++] = unsigned short(start + i);
-		sIndexWork[sIndexCount++] = unsigned short(start + i + 1);
-	}
+	IndexLineStrip(sVertexBase, sVertexCount - sVertexBase);
 }
 
 void DO_IndexTriangles(EntityContext &aContext)
 {
-	const GLuint start(sVertexBase);
-	const GLuint count(sVertexCount - sVertexBase);
-	for (register GLuint i = 0; i < count; ++i)
-	{
-		sIndexWork[sIndexCount++] = unsigned short(start + i);
-	}
+	IndexTriangles(sVertexBase, sVertexCount - sVertexBase);
 }
 
 void DO_IndexTriangleStrip(EntityContext &aContext)
 {
-	const GLuint start(sVertexBase);
-	const GLuint count(sVertexCount - sVertexBase);
-	for (register GLuint i = 0; i < count - 2; ++i)
-	{
-		const int odd = i & 1;
-		sIndexWork[sIndexCount++] = unsigned short(start + i + odd);
-		sIndexWork[sIndexCount++] = unsigned short(start + i + 1 - odd);
-		sIndexWork[sIndexCount++] = unsigned short(start + i + 2);
-	}
+	IndexTriangleStrip(sVertexBase, sVertexCount - sVertexBase);
 }
 
 void DO_IndexTriangleFan(EntityContext &aContext)
 {
-	const GLuint start(sVertexBase);
-	const GLuint count(sVertexCount - sVertexBase);
-	for (register GLuint i = 1; i < count - 1; ++i)
-	{
-		sIndexWork[sIndexCount++] = unsigned short(start);
-		sIndexWork[sIndexCount++] = unsigned short(start + i);
-		sIndexWork[sIndexCount++] = unsigned short(start + i + 1);
-	}
+	IndexTriangleFan(sVertexBase, sVertexCount - sVertexBase);
 }
 
 void DO_IndexQuads(EntityContext &aContext)
 {
-	const GLuint start(sVertexBase);
-	const GLuint count(sVertexCount - sVertexBase);
-	for (register GLuint i = 0; i < count; i += 4)
-	{
-		sIndexWork[sIndexCount++] = unsigned short(start + i);
-		sIndexWork[sIndexCount++] = unsigned short(start + i + 1);
-		sIndexWork[sIndexCount++] = unsigned short(start + i + 2);
-		sIndexWork[sIndexCount++] = unsigned short(start + i);
-		sIndexWork[sIndexCount++] = unsigned short(start + i + 2);
-		sIndexWork[sIndexCount++] = unsigned short(start + i + 3);
-	}
+	IndexQuads(sVertexBase, sVertexCount - sVertexBase);
 }
 
 void DO_IndexQuadStrip(EntityContext &aContext)
 {
-	const GLuint start(sVertexBase);
-	const GLuint count(sVertexCount - sVertexBase);
-	for (register GLuint i = 0; i < count - 2; i += 2)
-	{
-		sIndexWork[sIndexCount++] = unsigned short(start + i);
-		sIndexWork[sIndexCount++] = unsigned short(start + i + 1);
-		sIndexWork[sIndexCount++] = unsigned short(start + i + 3);
-		sIndexWork[sIndexCount++] = unsigned short(start + i);
-		sIndexWork[sIndexCount++] = unsigned short(start + i + 3);
-		sIndexWork[sIndexCount++] = unsigned short(start + i + 2);
-	}
+	IndexQuadStrip(sVertexBase, sVertexCount - sVertexBase);
 }
 
 void DO_IndexPolygon(EntityContext &aContext)
 {
-	const GLuint start(sVertexBase);
-	const GLuint count(sVertexCount - sVertexBase);
-	for (register GLuint i = 1; i < count - 1; ++i)
-	{
-		sIndexWork[sIndexCount++] = unsigned short(start);
-		sIndexWork[sIndexCount++] = unsigned short(start + i);
-		sIndexWork[sIndexCount++] = unsigned short(start + i + 1);
-	}
+	IndexPolygon(sVertexBase, sVertexCount - sVertexBase);
 }
 
 void DO_LineWidth(EntityContext &aContext)
@@ -1238,7 +904,7 @@ void DO_LineWidth(EntityContext &aContext)
 
 void DO_LineWidthBake(BakeContext &aContext)
 {
-	FlushStatic(*aContext.mTarget);
+	FlushStatic(aContext);
 
 	const GLfloat width(Expression::Read<GLfloat>(aContext));
 	Expression::Append(*aContext.mTarget, DO_LineWidth, width);
@@ -1254,7 +920,7 @@ void DO_LineWidthWorld(EntityContext &aContext)
 
 void DO_LineWidthWorldBake(BakeContext &aContext)
 {
-	FlushStatic(*aContext.mTarget);
+	FlushStatic(aContext);
 
 	const GLfloat width(Expression::Read<GLfloat>(aContext));
 	Expression::Append(*aContext.mTarget, DO_LineWidthWorld, width);
@@ -1280,11 +946,18 @@ void DO_MultMatrix(EntityContext &aContext)
 	aContext.mStream += (16*sizeof(GLfloat)+sizeof(unsigned int)-1)/sizeof(unsigned int);
 }
 
+#ifdef DRAWLIST_NORMALS
 void DO_Normal(EntityContext &aContext)
 {
-	sNormalActive = true;
-	sNormal = StackTransformNormal(Expression::Evaluate<DLNormal>(aContext));
+	SetAttribValue(sAttribNormal, Expression::Evaluate<DLNormal>(aContext));
 }
+
+void DO_NormalBake(BakeContext &aContext)
+{
+	aContext.mFormat |= 1 << sAttribNormal;
+	_mm_storeu_ps(aContext.mNormal, Expression::Evaluate<DLNormal>(aContext));
+}
+#endif
 
 void DO_PointSize(EntityContext &aContext)
 {
@@ -1296,7 +969,7 @@ void DO_PointSize(EntityContext &aContext)
 
 void DO_PointSizeBake(BakeContext &aContext)
 {
-	FlushStatic(*aContext.mTarget);
+	FlushStatic(aContext);
 
 	const GLfloat size(Expression::Read<GLfloat>(aContext));
 	Expression::Append(*aContext.mTarget, DO_PointSize, size);
@@ -1312,7 +985,7 @@ void DO_PointSizeWorld(EntityContext &aContext)
 
 void DO_PointSizeWorldBake(BakeContext &aContext)
 {
-	FlushStatic(*aContext.mTarget);
+	FlushStatic(aContext);
 
 	const GLfloat size(Expression::Read<GLfloat>(aContext));
 	Expression::Append(*aContext.mTarget, DO_PointSizeWorld, size);
@@ -1327,7 +1000,7 @@ void DO_PopAttrib(EntityContext &aContext)
 
 void DO_PopAttribBake(BakeContext &aContext)
 {
-	FlushStatic(*aContext.mTarget);
+	FlushStatic(aContext);
 
 	Expression::Append(*aContext.mTarget, DO_PopAttrib);
 }
@@ -1348,7 +1021,7 @@ void DO_PushAttrib(EntityContext &aContext)
 
 void DO_PushAttribBake(BakeContext &aContext)
 {
-	FlushStatic(*aContext.mTarget);
+	FlushStatic(aContext);
 
 	GLbitfield mask(Expression::Read<GLbitfield>(aContext));
 	Expression::Append(*aContext.mTarget, DO_PushAttrib, mask);
@@ -1375,26 +1048,13 @@ void DO_Scale(EntityContext &aContext)
 
 void DO_TexCoord(EntityContext &aContext)
 {
-	sTexCoordActive = true;
-	sTexCoord = Expression::Evaluate<DLTexCoord>(aContext);
+	SetAttribValue(sAttribTexCoord, Expression::Evaluate<DLTexCoord>(aContext));
 }
 
-void DO_TexEnvi(EntityContext &aContext)
+void DO_TexCoordBake(BakeContext &aContext)
 {
-	FlushDynamic();
-
-	const GLenum pname(Expression::Read<GLint>(aContext));
-	const GLint param(Expression::Read<GLint>(aContext));
-	glTexEnvi( GL_TEXTURE_ENV, pname, param );
-}
-
-void DO_TexEnviBake(BakeContext &aContext)
-{
-	FlushStatic(*aContext.mTarget);
-
-	const GLenum pname(Expression::Read<GLint>(aContext));
-	const GLint param(Expression::Read<GLint>(aContext));
-	Expression::Append(*aContext.mTarget, DO_TexEnvi, pname, param);
+	aContext.mFormat |= 1 << sAttribTexCoord;
+	_mm_storeu_ps(aContext.mTexCoord, Expression::Evaluate<DLTexCoord>(aContext));
 }
 
 void DO_Translate(EntityContext &aContext)
@@ -1405,41 +1065,62 @@ void DO_Translate(EntityContext &aContext)
 
 void DO_Vertex(EntityContext &aContext)
 {
-	const DLPosition value(StackTransformPosition(Expression::Evaluate<DLPosition>(aContext)));
+	SetAttribValue(sAttribPosition, StackTransformPosition(Expression::Evaluate<DLPosition>(aContext)));
+	AddVertex();
+}
+
+void DO_VertexBake(BakeContext &aContext)
+{
+	const DLPosition position(StackTransformPosition(Expression::Evaluate<DLPosition>(aContext)));
 
 	// component sizes
 	const size_t sizeposition = sPositionWidth * sizeof(float);
-	const size_t sizenormal = sNormalActive * sNormalWidth * sizeof(float);
-#ifdef DRAWLIST_FLOAT_COLOR
-	const size_t sizecolor = sColorActive * sColorWidth * sizeof(float);
-#else
-	const size_t sizecolor = sColorActive * sColorWidth * sizeof(GLubyte);
+#ifdef DRAWLIST_NORMALS
+	const size_t sizenormal = ((aContext.mFormat >> sAttribNormal) & 1) * sNormalWidth * sizeof(float);
 #endif
-	const size_t sizetexcoord = sTexCoordActive * sTexCoordWidth * sizeof(float);
+#ifdef DRAWLIST_FLOAT_COLOR
+	const size_t sizecolor = ((aContext.mFormat >> sAttribColor) & 1) * sColorWidth * sizeof(float);
+#else
+	const size_t sizecolor = ((aContext.mFormat >> sAttribColor) & 1) * sColorWidth * sizeof(GLubyte);
+#endif
+	const size_t sizetexcoord = ((aContext.mFormat >> sAttribTexCoord) & 1) * sTexCoordWidth * sizeof(float);
 
+#ifdef DEBUG
 	// combined size
-	size_t sizevertex = sizeposition + sizenormal + sizecolor + sizetexcoord;
+	size_t sizevertex = sizeposition
+#ifdef DRAWLIST_NORMALS
+		+ sizenormal
+#endif
+		+ sizecolor
+		+ sizetexcoord;
 
 	// make sure there's enough room for the data
-	assert(sVertexUsed * sizeof(float) + sizevertex < sizeof(sVertexWork));
+	if (sVertexUsed + sizevertex / sizeof(float) >= sVertexLimit)
+	{
+		FlushStatic(aContext);
+	}
+#endif
 
 	// add data to the work buffer
 	// NOTE: this generates interleaved vertex data
-	memcpy(sVertexWork + sVertexUsed, &value, sizeposition);
+	memcpy(sVertexWork + sVertexUsed, &position, sizeposition);
 	sVertexUsed += sizeposition / sizeof(float);
-	if (sNormalActive)
+#ifdef DRAWLIST_NORMALS
+	if (aContext.mFormat & (1 << sAttribNormal))
 	{
-		memcpy(sVertexWork + sVertexUsed, &sNormal, sizenormal);
+		const DLNormal normal(StackTransformNormal(_mm_loadu_ps(aContext.mNormal)));
+		memcpy(sVertexWork + sVertexUsed, &normal, sizenormal);
 		sVertexUsed += sizenormal / sizeof(float);
 	}
-	if (sColorActive)
+#endif
+	if (aContext.mFormat & (1 << sAttribColor))
 	{
-		memcpy(sVertexWork + sVertexUsed, &sColor, sizecolor);
+		memcpy(sVertexWork + sVertexUsed, &aContext.mColor, sizecolor);
 		sVertexUsed += sizecolor / sizeof(float);
 	}
-	if (sTexCoordActive)
+	if (aContext.mFormat & (1 << sAttribTexCoord))
 	{
-		memcpy(sVertexWork + sVertexUsed, &sTexCoord, sizetexcoord);
+		memcpy(sVertexWork + sVertexUsed, &aContext.mTexCoord, sizetexcoord);
 		sVertexUsed += sizetexcoord / sizeof(float);
 	}
 	++sVertexCount;
@@ -1449,13 +1130,21 @@ void DO_Repeat(EntityContext &aContext)
 {
 	const int repeat(Expression::Read<int>(aContext));
 	const size_t size(Expression::Read<size_t>(aContext));
-	EntityContext context(aContext.mStream, size, aContext.mParam, aContext.mId, aContext.mVars);
+
+	const unsigned int *begin = aContext.mBegin;
+	const unsigned int *end = aContext.mEnd;
+	aContext.mBegin = aContext.mStream;
+	aContext.mEnd = aContext.mBegin + size;
+
 	for (int i = 0; i < repeat; i++)
 	{
-		ExecuteDrawItems(context);
-		context.Restart();
+		ExecuteDrawItems(aContext);
+		aContext.Restart();
 	}
-	aContext.mStream += size;
+
+	aContext.mStream = aContext.mEnd;
+	aContext.mBegin = begin;
+	aContext.mEnd = end;
 }
 
 void DO_Block(EntityContext &aContext)
@@ -1465,6 +1154,13 @@ void DO_Block(EntityContext &aContext)
 	const float scale(Expression::Read<float>(aContext));
 	const int repeat(Expression::Read<int>(aContext));
 	const size_t size(Expression::Read<size_t>(aContext));
+
+	const unsigned int *begin = aContext.mBegin;
+	const unsigned int *end = aContext.mEnd;
+	const float param = aContext.mParam;
+	aContext.mBegin = aContext.mStream;
+	aContext.mEnd = aContext.mBegin + size;
+
 	float t = aContext.mParam - start;
 	if (t >= 0.0f && length > 0.0f)
 	{
@@ -1473,11 +1169,15 @@ void DO_Block(EntityContext &aContext)
 		{
 			t -= loop * length;
 			t *= scale;
-			EntityContext context(aContext.mStream, size, t, aContext.mId, aContext.mVars);
-			ExecuteDrawItems(context);
+			aContext.mParam = t;
+			ExecuteDrawItems(aContext);
 		}
 	}
-	aContext.mStream += size;
+
+	aContext.mStream = aContext.mEnd;
+	aContext.mBegin = begin;
+	aContext.mEnd = end;
+	aContext.mParam = param;
 }
 
 void DO_Swizzle(EntityContext &aContext)
@@ -1512,30 +1212,36 @@ void DO_Loop(EntityContext &aContext)
 	const float by   = Expression::Read<float>(aContext);
 	const size_t size = Expression::Read<size_t>(aContext);
 
+	const unsigned int *begin = aContext.mBegin;
+	const unsigned int *end = aContext.mEnd;
+	aContext.mBegin = aContext.mStream;
+	aContext.mEnd = aContext.mBegin + size;
+
 //		Database::Typed<float> &variables = Database::variable.Open(aContext.mId);
-	EntityContext context(aContext.mStream, size, aContext.mParam, aContext.mId, aContext.mVars);
 	if (by > 0)
 	{
 		for (float value = from; value <= to; value += by)
 		{
-			context.mVars->Put(name, value);
-			ExecuteDrawItems(context);
-			context.Restart();
+			aContext.mVars->Put(name, value);
+			ExecuteDrawItems(aContext);
+			aContext.Restart();
 		}
 	}
 	else
 	{
 		for (float value = from; value >= to; value += by)
 		{
-			context.mVars->Put(name, value);
-			ExecuteDrawItems(context);
-			context.Restart();
+			aContext.mVars->Put(name, value);
+			ExecuteDrawItems(aContext);
+			aContext.Restart();
 		}
 	}
-	context.mVars->Delete(name);
+	aContext.mVars->Delete(name);
 //		Database::variable.Close(aContext.mId);
 
-	aContext.mStream += size;
+	aContext.mStream = aContext.mEnd;
+	aContext.mBegin = begin;
+	aContext.mEnd = end;
 }
 #endif
 
@@ -1570,66 +1276,39 @@ void ConfigureVariableClear(const tinyxml2::XMLElement *element, std::vector<uns
 	Expression::Append(buffer, DO_Clear, name, width);
 }
 
-
-void ConfigurePrimitive(GLenum mode, unsigned int aId, const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer, bool bake)
+static const GLenum sModeTable[] =
 {
-	typedef void (*Op)(EntityContext &);
-	Op indexop;
-	GLenum drawmode;
-	switch (mode)
-	{
-	default:
-		assert(false);
-	case GL_POINTS:
-		drawmode = GL_POINTS;
-		indexop = DO_IndexPoints;
-		break;
+	GL_POINTS,		// GL_POINTS
+	GL_LINES,		// GL_LINES
+	GL_LINES,		// GL_LINE_LOOP
+	GL_LINES,		// GL_LINE_STRIP
+	GL_TRIANGLES,	// GL_TRIANGLES
+	GL_TRIANGLES,	// GL_TRIANGLE_STRIP
+	GL_TRIANGLES,	// GL_TRIANGLE_FAN
+	GL_TRIANGLES,	// GL_QUADS
+	GL_TRIANGLES,	// GL_QUAD_STRIP
+	GL_TRIANGLES,	// GL_POLYGON
+};
 
-	case GL_LINES:
-		drawmode = GL_LINES;
-		indexop = DO_IndexLines;
-		break;
+typedef void (*Op)(EntityContext &);
+static const Op sIndexOpTable[] =
+{
+	DO_IndexPoints,			// GL_POINTS
+	DO_IndexLines,			// GL_LINES
+	DO_IndexLineLoop,		// GL_LINE_LOOP
+	DO_IndexLineStrip,		// GL_LINE_STRIP
+	DO_IndexTriangles,		// GL_TRIANGLES
+	DO_IndexTriangleStrip,	// GL_TRIANGLE_STRIP
+	DO_IndexTriangleFan,	// GL_TRIANGLE_FAN
+	DO_IndexQuads,			// GL_QUADS
+	DO_IndexQuadStrip,		// GL_QUAD_STRIP
+	DO_IndexPolygon,		// GL_POLYGON
+};
 
-	case GL_LINE_LOOP:
-		drawmode = GL_LINES;
-		indexop = DO_IndexLineLoop;
-		break;
-
-	case GL_LINE_STRIP:
-		drawmode = GL_LINES;
-		indexop = DO_IndexLineStrip;
-		break;
-
-	case GL_TRIANGLES:
-		drawmode = GL_TRIANGLES;
-		indexop = DO_IndexTriangles;
-		break;
-
-	case GL_TRIANGLE_STRIP:
-		drawmode = GL_TRIANGLES;
-		indexop = DO_IndexTriangleStrip;
-		break;
-
-	case GL_TRIANGLE_FAN:
-		drawmode = GL_TRIANGLES;
-		indexop = DO_IndexTriangleFan;
-		break;
-
-	case GL_QUADS:
-		drawmode = GL_TRIANGLES;
-		indexop = DO_IndexQuads;
-		break;
-
-	case GL_QUAD_STRIP:
-		drawmode = GL_TRIANGLES;
-		indexop = DO_IndexQuadStrip;
-		break;
-
-	case GL_POLYGON:
-		drawmode = GL_TRIANGLES;
-		indexop = DO_IndexPolygon;
-		break;
-	}
+void ConfigurePrimitive(GLenum mode, unsigned int aId, const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer, bool bake, BakeContext *context)
+{
+	GLenum drawmode = sModeTable[mode];
+	Op indexop = sIndexOpTable[mode];
 
 	// set draw mode
 	// this operator does two things:
@@ -1645,16 +1324,22 @@ void ConfigurePrimitive(GLenum mode, unsigned int aId, const tinyxml2::XMLElemen
 	size_t start = buffer.size();
 	Expression::Alloc(buffer, sizeof(PackedRenderState));
 
+	// HACK: temp bake for collecting active attributes
+	BakeContext temp(NULL, NULL, 0, 0, aId);
+	if (!context)
+	{
+		temp.mTarget = &buffer;
+		context = &temp;
+	}
+
 	// add vertex-generation operations
 	// this will set active components
-	ConfigureDrawItems(aId, element, buffer, bake);
+	ConfigureDrawItems(aId, element, buffer, bake, context);
 
 	// fill in the draw mode render state
 	PackedRenderState &state = *new (&buffer[start]) PackedRenderState;
 	state.mMode = unsigned char(drawmode);
-	state.mNormal = sNormalActive;
-	state.mColor = sColorActive;
-	state.mTexCoord = sTexCoordActive;
+	state.mFormat = unsigned short(context->mFormat);
 
 	// add index operation
 	Expression::Append(buffer, indexop);
@@ -1695,7 +1380,7 @@ static void ConfigureMatrix(const tinyxml2::XMLElement *element, float m[])
 // geometry: vertex, normal, color, texcoord
 // grouping: drawlist, dynamicdrawlist, repeat, block, loop
 // variable: set, add, sub, mul, div, min, max, swizzle, clear
-// renderstate: pushattrib, popattrib, bindtexture, texenv, blendfunc
+// renderstate: pushattrib, popattrib, bindtexture, texenv
 
 // leave point primitives alone (no need to index)
 // convert line primitives to indexed lines
@@ -1729,7 +1414,7 @@ static void ConfigureMatrix(const tinyxml2::XMLElement *element, float m[])
 // normal, color, or texcoord command outside of primitive saves value and activates component
 #endif
 
-void ConfigureDrawItem(unsigned int aId, const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer, bool bake)
+void ConfigureDrawItem(unsigned int aId, const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer, bool bake, BakeContext *context)
 {
 	const char *label = element->Value();
 	switch (Hash(label))
@@ -1740,7 +1425,7 @@ void ConfigureDrawItem(unsigned int aId, const tinyxml2::XMLElement *element, st
 	case 0x974c9474 /* "pushmatrix" */:
 		{
 			Expression::Append(buffer, DO_PushMatrix);
-			ConfigureDrawItems(aId, element, buffer, bake);
+			ConfigureDrawItems(aId, element, buffer, bake, context);
 			Expression::Append(buffer, DO_PopMatrix);
 		}
 		break;
@@ -1795,31 +1480,48 @@ void ConfigureDrawItem(unsigned int aId, const tinyxml2::XMLElement *element, st
 
 	case 0x945367a7 /* "vertex" */:
 		{
-			Expression::Append(buffer, DO_Vertex);
+			if (bake)
+				Expression::Append(buffer, DO_VertexBake);
+			else
+				Expression::Append(buffer, DO_Vertex);
 			Expression::Loader<DLPosition>::ConfigureRoot(element, buffer, sPositionNames, sPositionDefault);
 		}
 		break;
 
+#ifdef DRAWLIST_NORMALS
 	case 0xe68b9c52 /* "normal" */:
 		{
-			sNormalActive = true;
-			Expression::Append(buffer, DO_Normal);
+			if (context)
+				context->mFormat |= (1 << sAttribNormal);
+			if (bake)
+				Expression::Append(buffer, DO_NormalBake);
+			else
+				Expression::Append(buffer, DO_Normal);
 			Expression::Loader<DLNormal>::ConfigureRoot(element, buffer, sNormalNames, sNormalDefault);
 		}
 		break;
+#endif
 
 	case 0x3d7e6258 /* "color" */:
 		{
-			sColorActive = true;
-			Expression::Append(buffer, DO_Color);
+			if (context)
+				context->mFormat |= 1 << sAttribColor;
+			if (bake)
+				Expression::Append(buffer, DO_ColorBake);
+			else
+				Expression::Append(buffer, DO_Color);
 			Expression::Loader<DLColor>::ConfigureRoot(element, buffer, sColorNames, sColorDefault);
 		}
 		break;
 
 	case 0xdd612dd3 /* "texcoord" */:
 		{
-			sTexCoordActive = true;
-			Expression::Append(buffer, DO_TexCoord);
+			if (context)
+				context->mFormat |= 1 << sAttribTexCoord;
+			if (bake)
+				Expression::Append(buffer, DO_TexCoordBake);
+			else
+				Expression::Append(buffer, DO_TexCoord);
 			Expression::Loader<DLTexCoord>::ConfigureRoot(element, buffer, sTexCoordNames, sTexCoordDefault);
 		}
 		break;
@@ -1844,7 +1546,7 @@ void ConfigureDrawItem(unsigned int aId, const tinyxml2::XMLElement *element, st
 					Expression::Append(buffer, DO_PointSizeWorld, size);
 				}
 			}
-			ConfigurePrimitive(GL_POINTS, aId, element, buffer, bake);
+			ConfigurePrimitive(GL_POINTS, aId, element, buffer, bake, context);
 			if (size != 0.0f)
 			{
 				if (bake)
@@ -1876,7 +1578,7 @@ void ConfigureDrawItem(unsigned int aId, const tinyxml2::XMLElement *element, st
 					Expression::Append(buffer, DO_LineWidthWorld, width);
 				}
 			}
-			ConfigurePrimitive(GL_LINES, aId, element, buffer, bake);
+			ConfigurePrimitive(GL_LINES, aId, element, buffer, bake, context);
 			if (width != 0.0f)
 			{
 				if (bake)
@@ -1908,7 +1610,7 @@ void ConfigureDrawItem(unsigned int aId, const tinyxml2::XMLElement *element, st
 					Expression::Append(buffer, DO_LineWidthWorld, width);
 				}
 			}
-			ConfigurePrimitive(GL_LINE_LOOP, aId, element, buffer, bake);
+			ConfigurePrimitive(GL_LINE_LOOP, aId, element, buffer, bake, context);
 			if (width != 0.0f)
 			{
 				if (bake)
@@ -1940,7 +1642,7 @@ void ConfigureDrawItem(unsigned int aId, const tinyxml2::XMLElement *element, st
 					Expression::Append(buffer, DO_LineWidthWorld, width);
 				}
 			}
-			ConfigurePrimitive(GL_LINE_STRIP, aId, element, buffer, bake);
+			ConfigurePrimitive(GL_LINE_STRIP, aId, element, buffer, bake, context);
 			if (width != 0.0f)
 			{
 				if (bake)
@@ -1957,37 +1659,37 @@ void ConfigureDrawItem(unsigned int aId, const tinyxml2::XMLElement *element, st
 
 	case 0xd8a57342 /* "triangles" */:
 		{
-			ConfigurePrimitive(GL_TRIANGLES, aId, element, buffer, bake);
+			ConfigurePrimitive(GL_TRIANGLES, aId, element, buffer, bake, context);
 		}
 		break;
 
 	case 0x668b2dd8 /* "triangle_strip" */:
 		{
-			ConfigurePrimitive(GL_TRIANGLE_STRIP, aId, element, buffer, bake);
+			ConfigurePrimitive(GL_TRIANGLE_STRIP, aId, element, buffer, bake, context);
 		}
 		break;
 
 	case 0xcfa6904f /* "triangle_fan" */:
 		{
-			ConfigurePrimitive(GL_TRIANGLE_FAN, aId, element, buffer, bake);
+			ConfigurePrimitive(GL_TRIANGLE_FAN, aId, element, buffer, bake, context);
 		}
 		break;
 
 	case 0x5667b307 /* "quads" */:
 		{
-			ConfigurePrimitive(GL_QUADS, aId, element, buffer, bake);
+			ConfigurePrimitive(GL_QUADS, aId, element, buffer, bake, context);
 		}
 		break;
 
 	case 0xb47cad9b /* "quad_strip" */:
 		{
-			ConfigurePrimitive(GL_QUAD_STRIP, aId, element, buffer, bake);
+			ConfigurePrimitive(GL_QUAD_STRIP, aId, element, buffer, bake, context);
 		}
 		break;
 
 	case 0x051cb889 /* "polygon" */:
 		{
-			ConfigurePrimitive(GL_POLYGON, aId, element, buffer, bake);
+			ConfigurePrimitive(GL_POLYGON, aId, element, buffer, bake, context);
 		}
 		break;
 
@@ -2033,13 +1735,13 @@ void ConfigureDrawItem(unsigned int aId, const tinyxml2::XMLElement *element, st
 			if (bake)
 			{
 				Expression::Append(buffer, DO_PushAttribBake, mask);
-				ConfigureDrawItems(aId, element, buffer, bake);
+				ConfigureDrawItems(aId, element, buffer, bake, context);
 				Expression::Append(buffer, DO_PopAttribBake);
 			}
 			else
 			{
 				Expression::Append(buffer, DO_PushAttrib, mask);
-				ConfigureDrawItems(aId, element, buffer, bake);
+				ConfigureDrawItems(aId, element, buffer, bake, context);
 				Expression::Append(buffer, DO_PopAttrib);
 			}
 
@@ -2072,65 +1774,6 @@ void ConfigureDrawItem(unsigned int aId, const tinyxml2::XMLElement *element, st
 			}
 		}
 
-	case 0x059e3a91 /* "texenv" */:
-		{
-			// set blend mode
-			GLenum blendmode;
-			switch (Hash(element->Attribute("mode")))
-			{
-			default:
-			case 0x818f75ae /* "modulate" */:	blendmode = GL_MODULATE; break;
-			case 0xde15f6ae /* "decal" */:		blendmode = GL_DECAL; break;
-			case 0x0bbc40d8 /* "blend" */:		blendmode = GL_BLEND; break;
-			case 0xa13884c3 /* "replace" */:	blendmode = GL_REPLACE; break;
-			}
-			if (bake)
-				Expression::Append(buffer, DO_TexEnvi, GL_TEXTURE_ENV_MODE, blendmode);
-			else
-				Expression::Append(buffer, DO_TexEnviBake, GL_TEXTURE_ENV_MODE, blendmode);
-		}
-		break;
-
-	case 0xe3e74f7e /* "blendfunc" */:
-		{
-			const char *src = element->Attribute("src");
-			GLenum srcfactor;
-			switch(Hash(src))
-			{
-			case 0x8b6fe763 /* "zero" */:					srcfactor = GL_ZERO; break;
-			default:
-			case 0xba2719ef /* "one" */:					srcfactor = GL_ONE; break;
-			case 0x7fe1449a /* "src_alpha" */:				srcfactor = GL_SRC_ALPHA; break;
-			case 0x1d491ada /* "one_minus_src_alpha" */:	srcfactor = GL_ONE_MINUS_SRC_ALPHA; break;
-			case 0x201e0c0f /* "dst_alpha" */:				srcfactor = GL_DST_ALPHA; break;
-			case 0x1ad7d24f /* "one_minus_dst_alpha" */:	srcfactor = GL_ONE_MINUS_DST_ALPHA; break;
-			case 0xc913d33c /* "dst_color" */:				srcfactor = GL_DST_COLOR; break;
-			case 0xc3cc067c /* "one_minus_dst_color" */:	srcfactor = GL_ONE_MINUS_DST_COLOR; break;
-			case 0xe03d4f7e /* "src_alpha_saturate" */:		srcfactor = GL_SRC_ALPHA_SATURATE; break;
-			}
-
-			const char *dst = element->Attribute("dst");
-			GLenum dstfactor;
-			switch(Hash(dst))
-			{
-			default:
-			case 0x8b6fe763 /* "zero" */:					dstfactor = GL_ZERO; break;
-			case 0xba2719ef /* "one" */:					dstfactor = GL_ONE; break;
-			case 0x4dba79b5 /* "src_color" */:				dstfactor = GL_SRC_COLOR; break;
-			case 0xd1d59af5 /* "one_minus_src_color" */:	dstfactor = GL_ONE_MINUS_SRC_COLOR; break;
-			case 0x7fe1449a /* "src_alpha" */:				dstfactor = GL_SRC_ALPHA; break;
-			case 0x1d491ada /* "one_minus_src_alpha" */:	dstfactor = GL_ONE_MINUS_SRC_ALPHA; break;
-			case 0x201e0c0f /* "dst_alpha" */:				dstfactor = GL_DST_ALPHA; break;
-			case 0x1ad7d24f /* "one_minus_dst_alpha" */:	dstfactor = GL_ONE_MINUS_DST_ALPHA; break;
-			}
-
-			if (bake)
-				Expression::Append(buffer, DO_BlendFuncBake, srcfactor, dstfactor);
-			else
-				Expression::Append(buffer, DO_BlendFunc, srcfactor, dstfactor);
-		}
-		break;
-
 		//
 		// DRAWLIST COMMANDS
 
@@ -2138,7 +1781,7 @@ void ConfigureDrawItem(unsigned int aId, const tinyxml2::XMLElement *element, st
 		if (bake)
 		{
 			// inline the drawlist contents
-			ConfigureDrawItems(aId, element, buffer, bake);
+			ConfigureDrawItems(aId, element, buffer, bake, context);
 		}
 		else
 		{
@@ -2148,9 +1791,7 @@ void ConfigureDrawItem(unsigned int aId, const tinyxml2::XMLElement *element, st
 			assert(generate.size() == 0);
 
 			// configure static data
-			BeginStatic();
-			ConfigureDrawItems(aId, element, generate, true);
-			EndStatic(aId, buffer, generate);
+			ConfigureStatic(aId, element, buffer, generate);
 
 			// close generator drawlist
 			Database::generatedrawlist.Close(handle);
@@ -2242,7 +1883,7 @@ void ConfigureDrawItem(unsigned int aId, const tinyxml2::XMLElement *element, st
 	
 			buffer.push_back(0);
 			const int start = buffer.size();
-			ConfigureDrawItems(aId, element, buffer, bake);
+			ConfigureDrawItems(aId, element, buffer, bake, context);
 			buffer[start-1] = buffer.size() - start;
 		}
 		break;
@@ -2262,7 +1903,7 @@ void ConfigureDrawItem(unsigned int aId, const tinyxml2::XMLElement *element, st
 
 			buffer.push_back(0);
 			int size = buffer.size();
-			ConfigureDrawItems(aId, element, buffer, bake);
+			ConfigureDrawItems(aId, element, buffer, bake, context);
 			buffer[size-1] = buffer.size() - size;
 		}
 		break;
@@ -2288,7 +1929,7 @@ void ConfigureDrawItem(unsigned int aId, const tinyxml2::XMLElement *element, st
 
 			buffer.push_back(0);
 			const int start = buffer.size();
-			ConfigureDrawItems(aId, element, buffer, bake);
+			ConfigureDrawItems(aId, element, buffer, bake, context);
 			buffer[start-1] = buffer.size() - start;
 		}
 		break;
@@ -2414,20 +2055,17 @@ void ConfigureDrawItem(unsigned int aId, const tinyxml2::XMLElement *element, st
 	}
 }
 
-void ConfigureDrawItems(unsigned int aId, const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer, bool bake)
+void ConfigureDrawItems(unsigned int aId, const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer, bool bake, BakeContext *context)
 {
 	// process child elements
 	for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
-		ConfigureDrawItem(aId, child, buffer, bake);
+		ConfigureDrawItem(aId, child, buffer, bake, context);
 	}
 }
 
-static void BeginStatic()
+static void ConfigureStatic(unsigned int aId, const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer, std::vector<unsigned int> &generate)
 {
-	// switch to static mode
-	SetStaticActive(true);
-
 	// push matrix stack
 	StackPush();
 
@@ -2442,20 +2080,16 @@ static void BeginStatic()
 	assert(sIndexCount == 0);
 	sIndexCount = 0;
 
-	// clear active elements
-	sNormalActive = false;
-	sColorActive = false;
-	sTexCoordActive = false;
-}
+	// configure draw items
+	BakeContext context(&buffer, NULL, 0, 0.0f, aId);
+	ConfigureDrawItems(aId, element, generate, true, &context);
 
-static void EndStatic(unsigned int aId, std::vector<unsigned int> &buffer, const std::vector<unsigned int> &generate)
-{
-	// execute the drawlist
-	BakeContext context(&buffer, &generate[0], generate.size(), 0.0f, aId);
+	// bake static geometry
+	context.mBegin = &generate[0];
+	context.mEnd = context.mBegin + generate.size();
+	context.Restart();
 	ExecuteDrawItems(context);
-
-	// flush static
-	FlushStatic(buffer);
+	FlushStatic(context);
 
 	// pop stack matrix
 	StackPop();
@@ -2544,347 +2178,137 @@ void ExecuteDrawItems(EntityContext &aContext)
 }
 #pragma optimize( "", on )
 
-void InitDrawlists(void)
+static void InitBasicProgram(void)
 {
-	// bind 1.2 function pointers
-	glDrawRangeElements = static_cast<PFNGLDRAWRANGEELEMENTSPROC>(glfwGetProcAddress("glDrawRangeElements"));
+#ifdef DRAWLIST_FIXED_FUNCTION
+	// no shader program
+	sBasicProgramId = 0;
 
-	// bind 1.5 function pointers
-	glGenBuffers = static_cast<PFNGLGENBUFFERSPROC>(glfwGetProcAddress("glGenBuffers"));
-	glDeleteBuffers = static_cast<PFNGLDELETEBUFFERSPROC>(glfwGetProcAddress("glDeleteBuffers"));
-	glBindBuffer = static_cast<PFNGLBINDBUFFERPROC>(glfwGetProcAddress("glBindBuffer"));
-	glBufferData = static_cast<PFNGLBUFFERDATAPROC>(glfwGetProcAddress("glBufferData"));
-	glBufferSubData = static_cast<PFNGLBUFFERSUBDATAPROC>(glfwGetProcAddress("glBufferSubData"));
-	glMapBuffer = static_cast<PFNGLMAPBUFFERPROC>(glfwGetProcAddress("glMapBuffer"));
-	glMapBufferRange = static_cast<PFNGLMAPBUFFERRANGEPROC>(glfwGetProcAddress("glMapBufferRange"));
-	glUnmapBuffer = static_cast<PFNGLUNMAPBUFFERPROC>(glfwGetProcAddress("glUnmapBuffer"));
+	// use matrix locations to pass matrix modes
+	sUniformProjection = GL_PROJECTION;
+	sUniformModelView = GL_MODELVIEW;
 
-	// bind 2.0 function pointers
-	glAttachShader = static_cast<PFNGLATTACHSHADERPROC>(glfwGetProcAddress("glAttachShader"));
-	glDrawBuffers = static_cast<PFNGLDRAWBUFFERSPROC>(glfwGetProcAddress("glDrawBuffers"));
-	glBindAttribLocation = static_cast<PFNGLBINDATTRIBLOCATIONPROC>(glfwGetProcAddress("glBindAttribLocation"));
-	glCompileShader = static_cast<PFNGLCOMPILESHADERPROC>(glfwGetProcAddress("glCompileShader"));
-	glCreateProgram = static_cast<PFNGLCREATEPROGRAMPROC>(glfwGetProcAddress("glCreateProgram"));
-	glCreateShader = static_cast<PFNGLCREATESHADERPROC>(glfwGetProcAddress("glCreateShader"));
-	glDeleteProgram = static_cast<PFNGLDELETEPROGRAMPROC>(glfwGetProcAddress("glDeleteProgram"));
-	glDetachShader = static_cast<PFNGLDETACHSHADERPROC>(glfwGetProcAddress("glDetachShader"));
-	glDisableVertexAttribArray = static_cast<PFNGLDISABLEVERTEXATTRIBARRAYPROC>(glfwGetProcAddress("glDisableVertexAttribArray"));
-	glEnableVertexAttribArray = static_cast<PFNGLENABLEVERTEXATTRIBARRAYPROC>(glfwGetProcAddress("glEnableVertexAttribArray"));
-	glGetAttribLocation = static_cast<PFNGLGETATTRIBLOCATIONPROC>(glfwGetProcAddress("glGetAttribLocation"));
-	glGetUniformLocation = static_cast<PFNGLGETUNIFORMLOCATIONPROC>(glfwGetProcAddress("glGetUniformLocation"));
-	glIsProgram = static_cast<PFNGLISPROGRAMPROC>(glfwGetProcAddress("glIsProgram"));
-	glIsShader = static_cast<PFNGLISSHADERPROC>(glfwGetProcAddress("glIsShader"));
-	glLinkProgram = static_cast<PFNGLLINKPROGRAMPROC>(glfwGetProcAddress("glLinkProgram"));
-	glShaderSource = static_cast<PFNGLSHADERSOURCEPROC>(glfwGetProcAddress("glShaderSource"));
-	glUseProgram = static_cast<PFNGLUSEPROGRAMPROC>(glfwGetProcAddress("glUseProgram"));
-	glUniform1f = static_cast<PFNGLUNIFORM1FPROC>(glfwGetProcAddress("glUniform1f"));
-	glUniform2f = static_cast<PFNGLUNIFORM2FPROC>(glfwGetProcAddress("glUniform2f"));
-	glUniform3f = static_cast<PFNGLUNIFORM3FPROC>(glfwGetProcAddress("glUniform3f"));
-	glUniform4f = static_cast<PFNGLUNIFORM4FPROC>(glfwGetProcAddress("glUniform4f"));
-	glUniform1fv = static_cast<PFNGLUNIFORM1FVPROC>(glfwGetProcAddress("glUniform1fv"));
-	glUniform2fv = static_cast<PFNGLUNIFORM2FVPROC>(glfwGetProcAddress("glUniform2fv"));
-	glUniform3fv = static_cast<PFNGLUNIFORM3FVPROC>(glfwGetProcAddress("glUniform3fv"));
-	glUniform4fv = static_cast<PFNGLUNIFORM4FVPROC>(glfwGetProcAddress("glUniform4fv"));
-	glUniformMatrix4fv = static_cast<PFNGLUNIFORMMATRIX4FVPROC>(glfwGetProcAddress("glUniformMatrix4fv"));
-	glValidateProgram = static_cast<PFNGLVALIDATEPROGRAMPROC>(glfwGetProcAddress("glValidateProgram"));
-	glVertexAttrib1f = static_cast<PFNGLVERTEXATTRIB1FPROC>(glfwGetProcAddress("glVertexAttrib1f"));
-	glVertexAttrib1fv = static_cast<PFNGLVERTEXATTRIB1FVPROC>(glfwGetProcAddress("glVertexAttrib1fv"));
-	glVertexAttrib2f = static_cast<PFNGLVERTEXATTRIB2FPROC>(glfwGetProcAddress("glVertexAttrib2f"));
-	glVertexAttrib2fv = static_cast<PFNGLVERTEXATTRIB2FVPROC>(glfwGetProcAddress("glVertexAttrib2fv"));
-	glVertexAttrib3f = static_cast<PFNGLVERTEXATTRIB3FPROC>(glfwGetProcAddress("glVertexAttrib3f"));
-	glVertexAttrib3fv = static_cast<PFNGLVERTEXATTRIB3FVPROC>(glfwGetProcAddress("glVertexAttrib3fv"));
-	glVertexAttrib4f = static_cast<PFNGLVERTEXATTRIB4FPROC>(glfwGetProcAddress("glVertexAttrib4f"));
-	glVertexAttrib4fv = static_cast<PFNGLVERTEXATTRIB4FVPROC>(glfwGetProcAddress("glVertexAttrib4fv"));
-	glVertexAttrib4Nubv = static_cast<PFNGLVERTEXATTRIB4NUBVPROC>(glfwGetProcAddress("glVertexAttrib4Nubv"));
-	glVertexAttribPointer = static_cast<PFNGLVERTEXATTRIBPOINTERPROC>(glfwGetProcAddress("glVertexAttribPointer"));
-
-	// ARB vertex array object
-	glBindVertexArray = static_cast<PFNGLBINDVERTEXARRAYPROC>(glfwGetProcAddress("glBindVertexArray"));
-	glDeleteVertexArray = static_cast<PFNGLDELETEVERTEXARRAYSPROC>(glfwGetProcAddress("glDeleteVertexArray"));
-	glGenVertexArrays = static_cast<PFNGLGENVERTEXARRAYSPROC>(glfwGetProcAddress("glGenVertexArrays"));
-	glIsVertexArray = static_cast<PFNGLISVERTEXARRAYPROC>(glfwGetProcAddress("glIsVertexArray"));
-
-	// compile vertex shader
-	GLuint vertexShaderId = glCreateShader(GL_VERTEX_SHADER);
-	glShaderSource(vertexShaderId, 1, &sVertexShader, NULL);
-	glCompileShader(vertexShaderId);
-
-	// compile fragment shader
-	GLuint fragmentShaderId = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(fragmentShaderId, 1, &sFragmentShader, NULL);
-	glCompileShader(fragmentShaderId);
-
-	// create shader program
-	sProgram = glCreateProgram();
-	glAttachShader(sProgram, vertexShaderId);
-	glAttachShader(sProgram, fragmentShaderId);
-	glLinkProgram(sProgram);
-
-	// use the program
-	glUseProgram(sProgram);
+	// fixed-function attribute locations
+	sAttribPosition = 0;
+#ifdef DRAWLIST_NORMALS
+	sAttribNormal = 1;
+#endif
+	sAttribColor = 2;
+	sAttribTexCoord = 3;
+#else
+	// create basic program
+	sBasicVertexId = CreateVertexShader(sBasicVertexShader);
+	sBasicFragmentId = CreateFragmentShader(sBasicFragmentShader);
+	sBasicProgramId = CreateProgram(sBasicVertexId, sBasicFragmentId);
 
 	// get uniform location
-	sUniformProjection = glGetUniformLocation(sProgram, "projection");
-	sUniformModelView = glGetUniformLocation(sProgram, "modelview");
+	sUniformProjection = glGetUniformLocation(sBasicProgramId, "projection");
+	sUniformModelView = glGetUniformLocation(sBasicProgramId, "modelview");
 
 	// get attribute locations
-	sAttribPosition = glGetAttribLocation(sProgram, "position");
-	sAttribNormal = glGetAttribLocation(sProgram, "normal");
-	sAttribColor = glGetAttribLocation(sProgram, "color");
-	sAttribTexCoord = glGetAttribLocation(sProgram, "texcoord");
-
-	// set up dynamic vertex buffer
-	{
-		BufferState &state = sBuffer[BUFFER_DYNAMIC_VERTEX];
-		state.mSize = 256 * 1024;
-		glGenBuffers(1, &state.mHandle);
-#ifdef DRAWLIST_DYNAMIC_BUFFER_RANGE
-		glBindBuffer(GL_ARRAY_BUFFER, state.mHandle);
-		glBufferData(GL_ARRAY_BUFFER, state.mSize, NULL, GL_STREAM_DRAW);
+	sAttribPosition = glGetAttribLocation(sBasicProgramId, "position");
+#ifdef DRAWLIST_NORMALS
+	sAttribNormal = glGetAttribLocation(sBasicProgramId, "normal");
+#endif
+	sAttribColor = glGetAttribLocation(sBasicProgramId, "color");
+	sAttribTexCoord = glGetAttribLocation(sBasicProgramId, "texcoord");
 #endif
 
-		state.mData = NULL;
-		state.mStart = 0;
-		state.mEnd = 0;
-	}
-
-	// set up dynamic index buffer
-	{
-		BufferState &state = sBuffer[BUFFER_DYNAMIC_INDEX];
-		state.mSize = 64 * 1024;
-		glGenBuffers(1, &state.mHandle);
-#ifdef DRAWLIST_DYNAMIC_BUFFER_RANGE
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, state.mHandle);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, state.mSize, NULL, GL_STREAM_DRAW);
+	// set up attributes for drawlilst
+	SetAttribFormat(sAttribPosition, sPositionWidth, GL_FLOAT);
+#ifdef DRAWLIST_NORMALS
+	SetAttribFormat(sAttribNormal, sNormalWidth, GL_FLOAT);
 #endif
-		state.mData = NULL;
-		state.mStart = 0;
-		state.mEnd = 0;
-	}
+#ifdef DRAWLIST_FLOAT_COLOR
+	SetAttribFormat(sAttribColor, sColorWidth, GL_FLOAT);
+#else
+	SetAttribFormat(sAttribColor, sColorWidth, GL_UNSIGNED_BYTE);
+#endif
+	SetAttribFormat(sAttribTexCoord, sTexCoordWidth, GL_FLOAT);
+}
+
+static void CleanupBasicProgram(void)
+{
+#ifndef DRAWLIST_FIXED_FUNCTION
+	glDetachShader(sBasicProgramId, sBasicVertexId);
+	glDetachShader(sBasicProgramId, sBasicFragmentId);
+	glDeleteProgram(sBasicProgramId);
+	sBasicProgramId = 0;
+	glDeleteShader(sBasicFragmentId);
+	sBasicFragmentId = 0;
+	glDeleteShader(sBasicVertexId);
+	sBasicVertexId = 0;
+#endif
+}
+
+void InitDrawlists(void)
+{
+	// setup basic program
+	InitBasicProgram();
 
 	// set up static vertex buffer
-	{
-		BufferState &state = sBuffer[BUFFER_STATIC_VERTEX];
-		state.mSize = 256 * 1024;
+	BufferInit(sStaticVertexBuffer, GL_ARRAY_BUFFER, GL_STATIC_DRAW);
 #ifdef DRAWLIST_STATIC_BUFFER
-		glGenBuffers(1, &state.mHandle);
-		glBindBuffer(GL_ARRAY_BUFFER, state.mHandle);
-		glBufferData(GL_ARRAY_BUFFER, state.mSize, NULL, GL_STATIC_DRAW);
+	BufferGen(sStaticVertexBuffer);
+	BufferSetData(sStaticVertexBuffer, 256 * 1024, NULL);
+#else
+	sStaticVertexBuffer.mSize = 256 * 1024;
 #endif
-		state.mData = malloc(state.mSize);
-		state.mStart = 0;
-		state.mEnd = 0;
-	}
+	sStaticVertexBuffer.mPersist = malloc(sStaticVertexBuffer.mSize);
 
 	// set up static index buffer
-	{
-		BufferState &state = sBuffer[BUFFER_STATIC_INDEX];
-		state.mSize = 64 * 1024;
+	BufferInit(sStaticIndexBuffer, GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW);
 #ifdef DRAWLIST_STATIC_BUFFER
-		glGenBuffers(1, &state.mHandle);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, state.mHandle);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, state.mSize, NULL, GL_STATIC_DRAW);
-#endif
-		state.mData = malloc(state.mSize);
-		state.mStart = 0;
-		state.mEnd = 0;
-	}
-
-	// TO DO set up vertex array objects
-
-	// vertex work buffer
-	// this get copied to the array buffer on flush
-	sVertexUsed = 0;
-	sVertexCount = 0;
-	sVertexBase = 0;
-
-	// index work buffer
-	// this gets copied to the element array buffer on flush
-	sIndexCount = 0;
-
-	// set to static mode for configure phase
-	sStaticActive = true;
-	sVertexBuffer = &sBuffer[BUFFER_STATIC_VERTEX];
-	sIndexBuffer = &sBuffer[BUFFER_STATIC_INDEX];
-
-#ifdef DRAWLIST_STATIC_BUFFER
-	// bind static buffer
-	glBindBuffer(GL_ARRAY_BUFFER, sVertexBuffer->mHandle);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, sIndexBuffer->mHandle);
+	BufferGen(sStaticIndexBuffer);
+	BufferSetData(sStaticIndexBuffer, 64 * 1024, NULL);
 #else
-	// bind dynamic buffer since that's the only choice
-	glBindBuffer(GL_ARRAY_BUFFER, sBuffer[BUFFER_DYNAMIC_VERTEX].mHandle);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, sBuffer[BUFFER_DYNAMIC_INDEX].mHandle);
+	sStaticIndexBuffer.mSize = 64 * 1024;
 #endif
-
-	// current vertex component values
-	memcpy(&sNormal, sNormalDefault, sNormalWidth * sizeof(float));
-#ifdef DRAWLIST_FLOAT_COLOR
-	memcpy(&sColor, sColorDefault, sColorWidth * sizeof(float));
-#else
-	sColor[0] = sColor[1] = sColor[2] = sColor[3] = 255;
-#endif
-	memcpy(&sTexCoord, sTexCoordDefault, sTexCoordWidth * sizeof(float));
-
-	// current drawing mode
-	sDrawMode = GL_TRIANGLES;
-
-	// active vertex components
-	sNormalActive = false;
-	sColorActive = false;
-	sTexCoordActive = false;
+	sStaticIndexBuffer.mPersist = malloc(sStaticIndexBuffer.mSize);
 
 	// initialize matrix stack
 	StackInit();
 }
 
-void CleanupDrawlists(void)
+void PreResetDrawlists(void)
 {
+	CleanupBasicProgram();
+
 	// delete buffer objects
-	for (int i = 0; i < BUFFER_COUNT; ++i)
-	{
-		glDeleteBuffers(1, &sBuffer[i].mHandle);
-	}
+	BufferCleanup(sStaticVertexBuffer);
+	BufferCleanup(sStaticIndexBuffer);
+
 }
 
-void RebuildDrawlists(void)
+void PostResetDrawlists(void)
 {
-#if 1
-
-	// rebuild dynamic vertex buffer
-	{
-		BufferState &state = sBuffer[BUFFER_DYNAMIC_VERTEX];
-		glGenBuffers(1, &state.mHandle);
-#ifdef DRAWLIST_DYNAMIC_BUFFER_RANGE
-		glBindBuffer(GL_ARRAY_BUFFER, state.mHandle);
-		glBufferData(GL_ARRAY_BUFFER, state.mSize, NULL, GL_STREAM_DRAW);
-#endif
-		state.mStart = 0;
-		state.mEnd = 0;
-	}
-
-	// rebuild dynamic index buffer
-	{
-		BufferState &state = sBuffer[BUFFER_DYNAMIC_INDEX];
-		glGenBuffers(1, &state.mHandle);
-#ifdef DRAWLIST_DYNAMIC_BUFFER_RANGE
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, state.mHandle);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, state.mSize, NULL, GL_STREAM_DRAW);
-#endif
-		state.mStart = 0;
-		state.mEnd = 0;
-	}
+	// setup basic program
+	InitBasicProgram();
 
 #ifdef DRAWLIST_STATIC_BUFFER
 	// rebuild static vertex buffer
-	{
-		BufferState &state = sBuffer[BUFFER_STATIC_VERTEX];
-		glGenBuffers(1, &state.mHandle);
-		glBindBuffer(GL_ARRAY_BUFFER, state.mHandle);
-		glBufferData(GL_ARRAY_BUFFER, state.mSize, sVertexBuffer->mData, GL_STATIC_DRAW);
-	}
+	BufferGen(sStaticVertexBuffer);
+	BufferSetData(sStaticVertexBuffer, sStaticVertexBuffer.mSize, sStaticVertexBuffer.mPersist);
 
 	// rebuild static index buffer
-	{
-		BufferState &state = sBuffer[BUFFER_STATIC_INDEX];
-		glGenBuffers(1, &state.mHandle);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, state.mHandle);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, state.mSize, sIndexBuffer->mData, GL_STATIC_DRAW);
-	}
-#endif
-
-#ifdef DRAWLIST_STATIC_BUFFER
-	// set to static mode for configure phase
-	sStaticActive = true;
-	sVertexBuffer = &sBuffer[BUFFER_STATIC_VERTEX];
-	sIndexBuffer = &sBuffer[BUFFER_STATIC_INDEX];
-	glBindBuffer(GL_ARRAY_BUFFER, sVertexBuffer->mHandle);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, sIndexBuffer->mHandle);
-#endif
-
-	// current vertex component values
-	memcpy(&sNormal, sNormalDefault, sNormalWidth * sizeof(float));
-#ifdef DRAWLIST_FLOAT_COLOR
-	memcpy(&sColor, sColorDefault, sColorWidth * sizeof(float));
-#else
-	sColor[0] = sColor[1] = sColor[2] = 0;
-	sColor[3] = 255;
-#endif
-	memcpy(&sTexCoord, sTexCoordDefault, sTexCoordWidth * sizeof(float));
-
-#else
-
-	CleanupDrawlists();
-	InitDrawlists();
-
-	// for each entry in the generator drawlist database...
-	for (Database::Typed<std::vector<unsigned int> >::Iterator itor(&Database::generatedrawlist); itor.IsValid(); ++itor)
-	{
-		// get the generator
-		Database::Key id = itor.GetKey();
-		const std::vector<unsigned int> &generate = itor.GetValue();
-		if (!generate.empty())
-		{
-			DebugPrint("rebuilding drawlist \"%s\"\n", Database::name.Get(id).c_str());
-
-			// create a dummy drawlist
-			std::vector<unsigned int> dummy;
-
-			// rebuild the static buffers
-			BeginStatic();
-			EndStatic(id, dummy, generate);
-
-			// TO DO: compare dummy against the original drawlist
-			const std::vector<unsigned int> &drawlist = Database::drawlist.Get(id);
-			if (!drawlist.empty())
-			{
-				if (drawlist.size() != dummy.size())
-				{
-					DebugPrint("size mismatch: before=%d after=%d\n", drawlist.size(), dummy.size());
-				}
-				else
-				{
-					for (size_t i = 0; i < drawlist.size(); ++i)
-					{
-						if (drawlist[i] != dummy[i])
-						{
-							DebugPrint("data mismatch at %d: before=%08x after=%08x\n", i, drawlist[i], dummy[i]);
-							break;
-						}
-					}
-				}
-			}
-		}
-	}
-
+	BufferGen(sStaticIndexBuffer);
+	BufferSetData(sStaticIndexBuffer, sStaticIndexBuffer.mSize, sStaticIndexBuffer.mPersist);
 #endif
 }
 
-// set static mode
-static bool SetStaticActive(bool aStatic)
+void CleanupDrawlists(void)
 {
-	if (sStaticActive == aStatic)
-		return false;
+	CleanupBasicProgram();
 
-	if (aStatic)
-	{
-		sVertexBuffer = &sBuffer[BUFFER_STATIC_VERTEX];
-		sIndexBuffer = &sBuffer[BUFFER_STATIC_INDEX];
-	}
-	else
-	{
-		sVertexBuffer = &sBuffer[BUFFER_DYNAMIC_VERTEX];
-		sIndexBuffer = &sBuffer[BUFFER_DYNAMIC_INDEX];
+	// delete buffer objects
+	BufferCleanup(sStaticVertexBuffer);
+	BufferCleanup(sStaticIndexBuffer);
 
-		// sync opengl matrix
-		glUniformMatrix4fv(sUniformModelView, 1, GL_FALSE, IdentityGet());
-	}
-#ifdef DRAWLIST_STATIC_BUFFER
-	glBindBuffer(GL_ARRAY_BUFFER, sVertexBuffer->mHandle);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, sIndexBuffer->mHandle);
-#endif
-	sStaticActive = aStatic;
-	return true;
+	// free permanent storage
+	free(sStaticVertexBuffer.mPersist);
+	sStaticVertexBuffer.mPersist = NULL;
+	free(sStaticIndexBuffer.mPersist);
+	sStaticIndexBuffer.mPersist = NULL;
 }
 
 void RenderDynamicDrawlist(unsigned int aId, float aTime, const Transform2 &aTransform)
@@ -2945,14 +2369,27 @@ void RenderDrawlist(EntityContext &context, const Transform2 &aTransform)
 
 void RenderBegin(void)
 {
-	// use the program
-	glUseProgram(sProgram);
+	// use the basic program
+	UseProgram(sBasicProgramId);
+
+	// set up attributes
+	SetAttribFormat(sAttribPosition, sPositionWidth, GL_FLOAT);
+#ifdef DRAWLIST_NORMALS
+	SetAttribFormat(sAttribNormal, sNormalWidth, GL_FLOAT);
+#endif
+#ifdef DRAWLIST_FLOAT_COLOR	// always use float for dynamic stuff
+	SetAttribFormat(sAttribColor, sColorWidth, GL_FLOAT);
+#else
+	SetAttribFormat(sAttribColor, sColorWidth, GL_UNSIGNED_BYTE);
+#endif
+	SetAttribFormat(sAttribTexCoord, sTexCoordWidth, GL_FLOAT);
+
+	// set default work format
+	// TO DO: find a smarter way to set this
+	SetWorkFormat((1<<0)|(1<<2));
 
 	// load projection
-	glUniformMatrix4fv(sUniformProjection, 1, GL_FALSE, ProjectionGet());
-
-	// load model view
-	glUniformMatrix4fv(sUniformModelView, 1, GL_FALSE, IdentityGet());
+	SetUniformMatrix4(sUniformProjection, ProjectionGet());
 }
 
 void RenderFlush(void)
@@ -2960,7 +2397,4 @@ void RenderFlush(void)
 	// flush dynamic geometry
 	// TO DO: only call this at the end of the frame
 	FlushDynamic();
-
-	// disable the program
-	glUseProgram(0);
 }

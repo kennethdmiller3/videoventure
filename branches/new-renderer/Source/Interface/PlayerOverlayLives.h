@@ -5,7 +5,6 @@
 class PlayerOverlayLives : public Overlay
 {
 public:
-	GLuint lives_handle;
 	int cur_lives;
 
 public:

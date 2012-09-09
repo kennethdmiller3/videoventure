@@ -48,6 +48,7 @@ void PlayerOverlayScore::Render(unsigned int aId, float aTime, const Transform2 
 	// get player score
 	int new_score = player->mScore;
 
+#ifdef PLAYER_OVERLAY_SCORE_DISPLAY_LIST
 	// if the score has not changed...
 	if (new_score == cur_score && glIsList(score_handle))
 	{
@@ -56,11 +57,14 @@ void PlayerOverlayScore::Render(unsigned int aId, float aTime, const Transform2 
 	}
 	else
 	{
+#endif
 		// update score
 		cur_score = new_score;
 
+#ifdef PLAYER_OVERLAY_SCORE_DISPLAY_LIST
 		// start a new draw list list
 		glNewList(score_handle, GL_COMPILE_AND_EXECUTE);
+#endif
 
 		// draw player score (HACK)
 		char score[9];
@@ -68,13 +72,16 @@ void PlayerOverlayScore::Render(unsigned int aId, float aTime, const Transform2 
 		bool leading = true;
 
 		FontDrawBegin(sDefaultFontHandle);
+		FontDrawColor(scorecolor[leading]);
 
 		for (char *s = score; *s != '\0'; ++s)
 		{
 			char c = *s;
-			if (c != '0')
+			if (leading && c != '0')
+			{
 				leading = false;
-			glColor4fv(scorecolor[leading]);
+				FontDrawColor(scorecolor[leading]);
+			}
 			FontDrawCharacter(c,
 				scorerect.x + scorerect.w * (s - score), scorerect.y + scorerect.h,
 				scorerect.w, -scorerect.h, 0);
@@ -82,6 +89,8 @@ void PlayerOverlayScore::Render(unsigned int aId, float aTime, const Transform2 
 
 		FontDrawEnd();
 
+#ifdef PLAYER_OVERLAY_SCORE_DISPLAY_LIST
 		glEndList();
 	}
+#endif
 }

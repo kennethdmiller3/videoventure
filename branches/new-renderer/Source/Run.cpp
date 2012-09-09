@@ -13,6 +13,7 @@
 #include "Sound.h"
 #include "Font.h"
 #include "Texture.h"
+#include "Render.h"
 #include "MatrixStack.h"
 
 #include "Console.h"
@@ -187,6 +188,7 @@ void KeyCallback(int aIndex, int aState)
 			}
 			break;
 		case GLFW_KEY_PAUSE:
+		case 'P':
 			if (glfwGetKey(GLFW_KEY_LSHIFT) || glfwGetKey(GLFW_KEY_RSHIFT))
 			{
 				paused = true;
@@ -443,6 +445,59 @@ static void ReadInput()
 #endif
 }
 
+struct Vertex
+{
+	Vector3 pos;
+	unsigned int color;
+};
+
+struct BlurVertex
+{
+	Vector3 pos;
+	unsigned int color;
+	Vector2 texcoord;
+};
+
+// apply motion blur
+static void ApplyMotionBlur(int blur)
+{
+	assert(GetProgramInUse() == 0);
+
+	// set projection matrix
+	ProjectionOrtho(0, 1, 0, 1, -1, 1);
+	SetUniformMatrix4(GL_PROJECTION, ProjectionGet());
+
+	// set model view matrix
+	//StackIdentity();
+	SetUniformMatrix4(GL_MODELVIEW, IdentityGet());
+
+	// position, color, texcoord
+	SetWorkFormat((1 << 0) | (1 << 2) | (1 << 3));
+
+	SetDrawMode(GL_TRIANGLES);
+
+	// add vertices
+	unsigned int color = (255 * blur) / (blur + 1) << 24 | 0x00FFFFFF;
+	register BlurVertex * __restrict v = static_cast<BlurVertex *>(AllocVertices(4));
+	v->pos = Vector3(0, 0, 0); v->color = color; v->texcoord = Vector2(0, 0); ++v;
+	v->pos = Vector3(1, 0, 0); v->color = color; v->texcoord = Vector2(1, 0); ++v;
+	v->pos = Vector3(1, 1, 0); v->color = color; v->texcoord = Vector2(1, 1); ++v;
+	v->pos = Vector3(0, 1, 0); v->color = color; v->texcoord = Vector2(0, 1); ++v;
+
+	// add indices
+	IndexQuads(0, 4);
+
+	FlushDynamic();
+}
+
+// collect motion blur
+static void CollectMotionBlur(void)
+{
+	CopyTexSubImage(0, 0, 0, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+}
+
+
+
 // common run state
 void RunState()
 {
@@ -518,7 +573,7 @@ void RunState()
 	accumTexture.mMagFilter = GL_NEAREST;
 	accumTexture.mWrapS = GL_CLAMP;
 	accumTexture.mWrapT = GL_CLAMP;
-	BindTexture(accumHandle, accumTexture);
+	InstantiateTexture(accumHandle, accumTexture);
 #endif
 
 
@@ -597,16 +652,14 @@ void RunState()
 		sim_fraction += frame_turns;
 		sim_fraction -= MOTIONBLUR_STEPS * step_turns;
 
+		// begin the scene
+		BeginScene();
+
 		// for each motion-blur step
 		for (int blur = 0; blur < MOTIONBLUR_STEPS; ++blur)
 		{
 			// clear the screen
-			glClear(
-				GL_COLOR_BUFFER_BIT
-#ifdef ENABLE_DEPTH_TEST
-				| GL_DEPTH_BUFFER_BIT
-#endif
-				);
+			ClearFrame();
 
 			/*
 			// set projection
@@ -793,34 +846,23 @@ void RunState()
 			render_timer.Start();
 #endif
 
+			//
 			// RENDERING PHASE
+			//
 
+			// set projection matrix
 			//glFrustum( -0.5*VIEW_SIZE*SCREEN_WIDTH/SCREEN_HEIGHT, 0.5*VIEW_SIZE*SCREEN_WIDTH/SCREEN_HEIGHT, 0.5f*VIEW_SIZE, -0.5f*VIEW_SIZE, 256.0f*1.0f, 256.0f*5.0f );
-			const float 
-				l = -0.5f*VIEW_SIZE*SCREEN_WIDTH/SCREEN_HEIGHT, 
-				r = 0.5f*VIEW_SIZE*SCREEN_WIDTH/SCREEN_HEIGHT,
-				b = 0.5f*VIEW_SIZE,
-				t = -0.5f*VIEW_SIZE,
-				n = 256.0f, 
-				f = 256.0f * 5.0f;
-			const float proj[16] = 
-			{
-				2*n/(r-l), 0, 0, 0,
-				0, 2*n/(t-b), 0, 0,
-				(r+l)/(r-l), (t+b)/(t-b), -(f+n)/(f-n), -1,
-				0, 0, -2*f*n/(f-n), 0
-			};
-			ProjectionLoad(proj);
-
-			// push view transform
-			StackPush();
+			ProjectionFrustum(-0.5f*VIEW_SIZE*SCREEN_WIDTH/SCREEN_HEIGHT, 0.5f*VIEW_SIZE*SCREEN_WIDTH/SCREEN_HEIGHT, 0.5f*VIEW_SIZE, -0.5f*VIEW_SIZE, 256.0f, 256.0f * 5.0f);
 
 			// get interpolated track position
 			Vector2 viewpos(Lerp(camerapos[0], camerapos[1], sim_fraction));
 
 			// set view matrix
+			StackIdentity();
 			StackScale(_mm_setr_ps(-1, -1, -1, 0));
 			StackTranslate(_mm_setr_ps(-viewpos.x, -viewpos.y, CAMERA_DISTANCE, 0));
+			ViewLoad(StackGet());
+			StackIdentity();
 
 			// calculate view area
 			AlignedBox2 view;
@@ -839,75 +881,44 @@ void RunState()
 			// commit pending draw
 			RenderFlush();
 
-			// reset view transform
-			StackPop();
-
-#ifdef USE_ACCUMULATION_BUFFER
 			// if performing motion blur...
 			if (MOTIONBLUR_STEPS > 1)
 			{
+#ifdef USE_ACCUMULATION_BUFFER
 				// accumulate the image
 				glAccum(blur ? GL_ACCUM : GL_LOAD, 1.0f / float(MOTIONBLUR_STEPS));
-			}
 #else
-			if (blur > 0)
-			{
-				// push projection transform
-				glMatrixMode(GL_PROJECTION);
-				glPushMatrix();
-				glLoadIdentity();
-				glOrtho(0, 1, 0, 1, -1, 1);
-
-				glMatrixMode(GL_MODELVIEW);
-				glPushMatrix();
-				glLoadIdentity();
-
-				// save texture state
-				glPushAttrib(GL_COLOR_BUFFER_BIT | GL_TEXTURE_BIT);
-				glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
-
+#if 1
+				BindTexture(accumHandle);
+#else
 				// bind the texture object
 				glEnable(GL_TEXTURE_2D);
 				glBindTexture(GL_TEXTURE_2D, accumHandle);
-
-				glBegin(GL_QUADS);
-
-				glColor4f(1.0f, 1.0f, 1.0f, float(blur) / float(blur + 1));
-
-				glTexCoord2f(0.0f, 0.0f);
-				glVertex2f(0.0f, 0.0f);
-				glTexCoord2f(1.0f, 0.0f);
-				glVertex2f(1.0f, 0.0f);
-				glTexCoord2f(1.0f, 1.0f);
-				glVertex2f(1.0f, 1.0f);
-				glTexCoord2f(0.0f, 1.0f);
-				glVertex2f(0.0f, 1.0f);
-
-				glEnd();
-
-				glPopAttrib();
-
-				glMatrixMode(GL_PROJECTION);
-				glPopMatrix();
-
-				glMatrixMode(GL_MODELVIEW);
-				glPopMatrix();
-			}
-
-			if (blur < MOTIONBLUR_STEPS)
-			{
-				glPushAttrib(GL_TEXTURE_BIT);
-				glBindTexture(GL_TEXTURE_2D, accumHandle);
-				glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
-				glPopAttrib();
-			}
 #endif
+
+				if (blur > 0)
+				{
+					ApplyMotionBlur(blur);
+				}
+
+				if (blur < MOTIONBLUR_STEPS)
+				{
+					CollectMotionBlur();
+				}
+#if 1
+				BindTexture(0);
+#else
+				glDisable(GL_TEXTURE_2D);
+				glBindTexture(GL_TEXTURE_2D, 0);
+#endif
+#endif
+			}
 
 #ifdef GET_PERFORMANCE_DETAILS
 			render_timer.Stop();
 #endif
 		}
-
+		
 #ifdef GET_PERFORMANCE_DETAILS
 		render_timer.Start();
 #endif
@@ -922,43 +933,47 @@ void RunState()
 #endif
 
 		// switch blend mode
-		glPushAttrib(GL_COLOR_BUFFER_BIT | GL_TEXTURE_BIT);
-		glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
+		//glPushAttrib(GL_COLOR_BUFFER_BIT | GL_TEXTURE_BIT);
+		//glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
 
 #ifdef GET_PERFORMANCE_DETAILS
 		render_timer.Stop();
 
 		overlay_timer.Start();
 #endif
-
+				
 #ifdef COLLECT_DEBUG_DRAW
 		if (DEBUG_DRAW)
 		{
-		// push camera transform
-		glPushMatrix();
+			// push camera transform
+			glPushMatrix();
 
-		// get interpolated track position
-		Vector2 viewpos(Lerp(camerapos[0], camerapos[1], sim_fraction));
+			// get interpolated track position
+			Vector2 viewpos(Lerp(camerapos[0], camerapos[1], sim_fraction));
 
-		// set camera to track position
-		glTranslatef( -viewpos.x, -viewpos.y, 0 );
+			// set camera to track position
+			glTranslatef( -viewpos.x, -viewpos.y, 0 );
 
-		// debug draw
-		glCallList(debugdraw);
+			// debug draw
+			glCallList(debugdraw);
 
-		// pop camera transform
-		glPopMatrix();
+			// pop camera transform
+			glPopMatrix();
 		}
 #endif
+		//
+		// OVERLAY PHASE
+		//
 
-		// push projection transform
-		glMatrixMode(GL_PROJECTION);
-		glLoadIdentity();
-		glOrtho(0, 640, 480, 0, -1, 1);
+		// set projection matrix
+		ProjectionOrtho(0, 640, 480, 0, -1, 1);
 
-		// use 640x480 screen coordinates
-		glMatrixMode(GL_MODELVIEW);
-		glLoadIdentity();
+		// set view matrix
+		StackIdentity();
+		ViewLoad(StackGet());
+
+		// begin rendering
+		RenderBegin();
 
 		// render all overlays
 		Overlay::RenderAll();
@@ -968,7 +983,9 @@ void RunState()
 
 #ifdef GET_PERFORMANCE_DETAILS
 		overlay_timer.Stop();
+#endif
 
+#ifdef GET_PERFORMANCE_DETAILS
 		if (!OPENGL_SWAPCONTROL)
 		{
 			display_timer.Start();
@@ -985,20 +1002,17 @@ void RunState()
 			struct BandInfo
 			{
 				const LONGLONG * time;
-				float r;
-				float g;
-				float b;
-				float a;
+				Color4 color;
 			};
 			static BandInfo band_info[] =
 			{
-				{ control_timer.mHistory,	1.0f,	0.0f,	0.0f,	0.5f },
-				{ simulate_timer.mHistory,	1.0f,	1.0f,	0.0f,	0.5f },
-				{ collide_timer.mHistory,	0.0f,	1.0f,	0.0f,	0.5f },
-				{ update_timer.mHistory,	0.0f,	0.5f,	1.0f,	0.5f },
-				{ render_timer.mHistory,	1.0f,	0.0f,	1.0f,	0.5f },
-				{ overlay_timer.mHistory,	1.0f,	0.5f,	0.0f,	0.5f },
-				{ display_timer.mHistory,	0.5f,	0.5f,	0.5f,	0.5f },
+				{ control_timer.mHistory,	Color4(1.0f,	0.0f,	0.0f,	0.5f) },
+				{ simulate_timer.mHistory,	Color4(1.0f,	1.0f,	0.0f,	0.5f) },
+				{ collide_timer.mHistory,	Color4(0.0f,	1.0f,	0.0f,	0.5f) },
+				{ update_timer.mHistory,	Color4(0.0f,	0.5f,	1.0f,	0.5f) },
+				{ render_timer.mHistory,	Color4(1.0f,	0.0f,	1.0f,	0.5f) },
+				{ overlay_timer.mHistory,	Color4(1.0f,	0.5f,	0.0f,	0.5f) },
+				{ display_timer.mHistory,	Color4(0.5f,	0.5f,	0.5f,	0.5f) },
 			};
 
 			// generate y samples
@@ -1017,22 +1031,29 @@ void RunState()
 					index = 0;
 			}
 
-			glBegin(GL_QUADS);
+			SetAttribFormat(0, 2, GL_FLOAT);
+			SetWorkFormat(1<<0);
+			SetDrawMode(GL_TRIANGLE_STRIP);
 			for (int band = 0; band < SDL_arraysize(band_info); ++band)
 			{
-				glColor4fv(&band_info[band].r);
+				Vector2 *v0 = static_cast<Vector2 *>(AllocVertices(PerfTimer::NUM_SAMPLES * 2));
+				register Vector2 * __restrict v = v0;
+				const Color4 &color = band_info[band].color;
+				SetAttribConstant(2, _mm_loadu_ps(&color.r));
 				float x = 0;
 				float dx = 640.0f / PerfTimer::NUM_SAMPLES;
 				for (int i = 0; i < PerfTimer::NUM_SAMPLES; i++)
 				{
-					glVertex3f(x, sample_y[band][i], 0);
-					glVertex3f(x+dx, sample_y[band][i], 0);
-					glVertex3f(x+dx, sample_y[band+1][i], 0);
-					glVertex3f(x, sample_y[band+1][i], 0);
+					*v++ = Vector2(x, sample_y[band][i]);
+					*v++ = Vector2(x, sample_y[band+1][i]);
+					//*v++ = Vector2(x+dx, sample_y[band][i]);
+					//*v++ = Vector2(x+dx, sample_y[band+1][i]);
 					x += dx;
 				}
+				//IndexQuads(base, GetVertexCount() - base);
+				FlushDynamic();
 			}
-			glEnd();
+			SetAttribFormat(0, 3, GL_FLOAT);
 		}
 #endif
 
@@ -1086,13 +1107,13 @@ void RunState()
 
 				char fps[16];
 				sprintf(fps, "%.2f max", rate_max);
-				glColor4f(0.5f, 0.5f, 0.5f, 1.0f);
+				FontDrawColor(Color4(0.5f, 0.5f, 0.5f, 1.0f));
 				FontDrawString(fps, float(640 - 16 - 8 * strlen(fps)), 16, 8, -8, 0);
 				sprintf(fps, "%.2f avg", rate_avg);
-				glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+				FontDrawColor(Color4(1.0f, 1.0f, 1.0f, 1.0f));
 				FontDrawString(fps, float(640 - 16 - 8 * strlen(fps)), 24, 8, -8, 0);
 				sprintf(fps, "%.2f min", rate_min);
-				glColor4f(0.5f, 0.5f, 0.5f, 1.0f);
+				FontDrawColor(Color4(0.5f, 0.5f, 0.5f, 1.0f));
 				FontDrawString(fps, float(640 - 16 - 8 * strlen(fps)), 32, 8, -8, 0);
 
 				FontDrawEnd();
@@ -1123,11 +1144,11 @@ void RunState()
 					if (sound->IsActive())
 					{
 						++active;
-						glColor4f(0.0f, 0.5f, 1.0f, 1.0f);
+						FontDrawColor(Color4(0.0f, 0.5f, 1.0f, 1.0f));
 					}
 					else
 					{
-						glColor4f(0.5f, 0.5f, 0.5f, 1.0f);
+						FontDrawColor(Color4(0.5f, 0.5f, 0.5f, 1.0f));
 					}
 					const char *name = Database::name.Get(outer.GetKey()).c_str();
 					const char *cue = Database::name.Get(inner.GetKey()).c_str();
@@ -1141,17 +1162,20 @@ void RunState()
 			char buf[64];
 			sprintf(buf, "sound: %d/%d", active, total);
 
-			glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+			FontDrawColor(Color4(1.0f, 1.0f, 1.0f, 1.0f));
 			FontDrawString(buf, 200, 16, 8, -8, 0);
 			FontDrawEnd();
 		}
 #endif
 
 		// restore blend mode
-		glPopAttrib();
+		//glPopAttrib();
 
 		/* Render our console */
 		console->Render();
+
+		// end scene
+		EndScene();
 
 		// show the back buffer
 		Platform::Present();

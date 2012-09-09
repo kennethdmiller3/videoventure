@@ -1,6 +1,11 @@
 #include "StdAfx.h"
 #include "PointsOverlay.h"
 #include "Font.h"
+#include "Render.h"
+#include "MatrixStack.h"
+
+
+extern float CAMERA_DISTANCE;
 
 
 namespace Database
@@ -43,27 +48,22 @@ void PointsOverlay::AddItem(const Vector2 &aPosition, int aValue, int aCombo)
 // render
 void PointsOverlay::Render(unsigned int aId, float aTime, const Transform2 &aTransform)
 {
+	// flush geometry
+	FlushDynamic();
+
 	// set projection
-	glMatrixMode( GL_PROJECTION );
-	glPushMatrix();
-	glLoadIdentity();
-	glFrustum( -0.5*VIEW_SIZE*SCREEN_WIDTH/SCREEN_HEIGHT, 0.5*VIEW_SIZE*SCREEN_WIDTH/SCREEN_HEIGHT, 0.5f*VIEW_SIZE, -0.5f*VIEW_SIZE, 256.0f*1.0f, 256.0f*5.0f );
-
-	// set base modelview matrix
-	glMatrixMode( GL_MODELVIEW );
-	glPushMatrix();
-	glLoadIdentity();
-	glTranslatef( 0.0f, 0.0f, -256.0f );
-	glScalef( -1.0f, -1.0f, -1.0f );
-
-	// push camera transform
-	glPushMatrix();
+	ProjectionPush();
+	ProjectionFrustum( -0.5f*VIEW_SIZE*SCREEN_WIDTH/SCREEN_HEIGHT, 0.5f*VIEW_SIZE*SCREEN_WIDTH/SCREEN_HEIGHT, 0.5f*VIEW_SIZE, -0.5f*VIEW_SIZE, 256.0f*1.0f, 256.0f*5.0f );
 
 	// get interpolated track position
 	Vector2 viewpos(Lerp(camerapos[0], camerapos[1], sim_fraction));
 
-	// set view position
-	glTranslatef( -viewpos.x, -viewpos.y, 0 );
+	// set view matrix
+	StackPush();
+	StackIdentity();
+	StackScale(_mm_setr_ps(-1, -1, -1, 0));
+	StackTranslate(_mm_setr_ps(-viewpos.x, -viewpos.y, CAMERA_DISTANCE, 0));
+	ViewLoad(StackGet());
 
 	// start drawing
 	FontDrawBegin(sDefaultFontHandle);
@@ -82,7 +82,7 @@ void PointsOverlay::Render(unsigned int aId, float aTime, const Transform2 &aTra
 			sprintf(buf, "%d", item.mValue);
 
 		// draw point value
-		glColor4f(1.0f, 1.0f, 1.0f, std::min(item.mTime, 1.0f));
+		FontDrawColor(Color4(1.0f, 1.0f, 1.0f, std::min(item.mTime, 1.0f)));
 		float w = 4 * VIEW_SIZE / 240;
 		FontDrawString(buf, item.mPosition.x + w * 0.5f * strlen(buf), item.mPosition.y - w * 0.5f, -w, w, 0);
 
@@ -98,13 +98,8 @@ void PointsOverlay::Render(unsigned int aId, float aTime, const Transform2 &aTra
 	FontDrawEnd();
 
 	// reset camera transform
-	glPopMatrix();
-
-	// reset camera transform
-	glMatrixMode(GL_PROJECTION);
-	glPopMatrix();
-	glMatrixMode(GL_MODELVIEW);
-	glPopMatrix();
+	StackPop();
+	ProjectionPop();
 
 	// hide if empty...
 	if (mItemFirst == mItemLast)

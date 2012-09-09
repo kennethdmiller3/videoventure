@@ -4,8 +4,16 @@
 extern const float *IdentityGet(void);
 
 // projection matrix operations
-extern void ProjectionLoad(const float *values);
+extern void ProjectionPush(void);
+extern void ProjectionPop(void);
+extern void ProjectionLoad(const float *aValues);
+extern void ProjectionOrtho(float aLeft, float aRight, float aBottom, float aTop, float aNear, float aFar);
+extern void ProjectionFrustum(float aLeft, float aRight, float aBottom, float aTop, float aNear, float aFar);
 extern const float *ProjectionGet(void);
+
+// view matrix operations
+extern void ViewLoad(const float *aValues);
+extern const float *ViewGet(void);
 
 // matrix stack operations
 extern void StackInit(void);
@@ -13,10 +21,10 @@ extern const float *StackGet(void);
 extern void StackPush(void);
 extern void StackPop(void);
 extern void StackIdentity(void);
-extern void StackLoad(const float *values);
-extern void StackMult(const float *values);
-extern void StackRotate(const float value);
-extern void StackScale(const __m128 value);
-extern void StackTranslate(const __m128 value);
-extern __m128 StackTransformNormal(const __m128 value);
-extern __m128 StackTransformPosition(const __m128 value);
+extern void StackLoad(const float *aValues);
+extern void StackMult(const float *aValues);
+extern void StackRotate(const float aValue);
+extern void StackScale(const __m128 aValue);
+extern void StackTranslate(const __m128 aValue);
+extern __m128 StackTransformNormal(const __m128 aValue);
+extern __m128 StackTransformPosition(const __m128 aValue);

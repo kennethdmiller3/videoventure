@@ -54,7 +54,7 @@ void PlayerOverlayGameOver::Render(unsigned int aId, float aTime, const Transfor
 		const float z = 0;
 		const float a = lerp * lerp;
 
-		glColor4f(0.1f, 0.1f, 0.1f, a);
+		FontDrawColor(Color4(0.1f, 0.1f, 0.1f, a));
 		FontDrawString(text, x - 2, y - 2, w, h, z);
 		FontDrawString(text, x    , y - 2, w, h, z);
 		FontDrawString(text, x + 2, y - 2, w, h, z);
@@ -64,7 +64,7 @@ void PlayerOverlayGameOver::Render(unsigned int aId, float aTime, const Transfor
 		FontDrawString(text, x    , y + 2, w, h, z);
 		FontDrawString(text, x + 2, y + 2, w, h, z);
 
-		glColor4f(1.0f, 0.2f, 0.1f, a);
+		FontDrawColor(Color4(1.0f, 0.2f, 0.1f, a));
 		FontDrawString(text, x, y, w, h, z);
 
 		FontDrawEnd();

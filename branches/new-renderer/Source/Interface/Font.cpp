@@ -1,5 +1,8 @@
 #include "StdAfx.h"
 #include "Texture.h"
+#include "Render.h"
+#include "Drawlist.h"
+#include "MatrixStack.h"
 
 static const int FIRST_CHARACTER = '\x00';
 static const int LAST_CHARACTER  = '\x7F';
@@ -84,8 +87,80 @@ static const unsigned char aTextureData[] =
 	0x06, 0x60, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1e, 0x00, 0x00, 0x18, 0x00, 0x00, 0x00, 
 };
 
+#ifdef FONT_USE_SHADER
+//
+// SHADER
+//
+
+// font vertex shader program
+static const GLchar * const sFontVertexShader =
+	"#version 130\n"
+	"\n"
+	"uniform mat4 projection;\n"
+	"uniform mat4 modelview;\n"
+	"\n"
+	"in vec3 position;\n"
+	"in vec4 color;\n"
+	"in vec2 texcoord;\n"
+	"\n"
+	"out vec4 vscolor;\n"
+	"out vec2 vstexcoord;\n"
+	"\n"
+	"void main()\n"
+	"{\n"
+	"    gl_Position = projection * modelview * vec4(position, 1.0);\n"
+	"    vscolor = color;\n"
+	"    vstexcoord = texcoord;\n"
+	"}\n";
+
+// font fragment shader program
+static const GLchar * const sFontFragmentShader =
+	"#version 130\n"
+	"\n"
+	"uniform sampler2D texture;\n"
+	"\n"
+	"in vec4 vscolor;\n"
+	"in vec2 vstexcoord;\n"
+	"\n"
+	"out vec4 fragmentcolor;\n"
+	"\n"
+	"void main(void)\n"
+	"{\n"
+	"    fragmentcolor = vscolor * texture2D(texture, vstexcoord);\n"
+	"}\n";
+
+// font shader program
+static GLuint sFontProgram;
+
+// uniform locations
+static GLint sUniformProjection;
+static GLint sUniformModelView;
+static GLint sUniformTexture;
+
+// attribute locations
+static GLint sAttribPosition;
+static GLint sAttribNormal;
+static GLint sAttribColor;
+static GLint sAttribTexCoord;
+#endif
+
 void CreateDefaultFont()
 {
+#ifdef FONT_USE_SHADER
+	// create font shader
+	sFontProgram = CreateProgram(sFontVertexShader, sFontFragmentShader);
+
+	// get uniform location
+	sUniformProjection = glGetUniformLocation(sFontProgram, "projection");
+	sUniformModelView = glGetUniformLocation(sFontProgram, "modelview");
+	sUniformTexture = glGetUniformLocation(sFontProgram, "texture");
+
+	// get attribute locations
+	sAttribPosition = glGetAttribLocation(sFontProgram, "position");
+	sAttribColor = glGetAttribLocation(sFontProgram, "color");
+	sAttribTexCoord = glGetAttribLocation(sFontProgram, "texcoord");
+#endif
+
 	// generate a texture handle
 	glGenTextures(1, &sDefaultFontHandle);
 
@@ -124,8 +199,8 @@ void CreateDefaultFont()
 		*dst++ = -(s & 1);
 	}
 
-	// bind the texture
-	BindTexture(sDefaultFontHandle, texture);
+	// instantiate the texture
+	InstantiateTexture(sDefaultFontHandle, texture);
 
 	// done with texture template
 	Database::texturetemplate.Close(sDefaultFontHandle);
@@ -158,22 +233,78 @@ int FontGetHeight(GLuint handle)
 	return 8;
 }
 
+struct FontVertex
+{
+	Vector3 pos;
+#ifdef FONT_FLOAT_COLOR
+	Color4 color;
+#else
+	unsigned int color;
+#endif
+	Vector2 texcoord;
+};
+#ifdef FONT_FLOAT_COLOR
+static Color4 sColor;
+#else
+static unsigned int sColor;
+#endif
+static size_t sVertexBase;
+
 void FontDrawBegin(GLuint handle)
 {
-    glPushAttrib(GL_TEXTURE_BIT);
-
-    glEnable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, handle);
-	glTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
-
-    glBegin(GL_QUADS);
+	BindTexture(handle);
+#ifdef FONT_USE_SHADER
+	UseProgram(sFontProgram);
+	SetUniformMatrix4(sUniformProjection, ProjectionGet());
+	SetUniformMatrix4(sUniformModelView, IdentityGet());
+	SetUniformInt1(sUniformTexture, handle);
+#else
+	SetWorkFormat((1<<0)|(1<<2)|(1<<3));
+	SetUniformMatrix4(GL_PROJECTION, ProjectionGet());
+	//SetUniformMatrix4(GL_MODELVIEW, ViewGet());
+#endif
+	SetDrawMode(GL_TRIANGLES);
+	sVertexBase = GetVertexCount();
 }
 
 void FontDrawEnd()
 {
-	glEnd();
+#ifdef FONT_USE_SHADER
+	glBufferData(GL_ARRAY_BUFFER, sVertexCount*sizeof(FontVertex), sVertexWork, GL_STREAM_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sIndexCount*sizeof(unsigned short), sIndexWork, GL_STREAM_DRAW);
 
-    glPopAttrib();
+	glEnableVertexAttribArray(sAttribPosition);
+	glVertexAttribPointer(sAttribPosition, 3, GL_FLOAT, GL_FALSE, sizeof(FontVertex), reinterpret_cast<GLvoid *>(offsetof(FontVertex, x)));
+	glEnableVertexAttribArray(sAttribColor);
+	glVertexAttribPointer(sAttribColor, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(FontVertex), reinterpret_cast<GLvoid *>(offsetof(FontVertex, c)));
+	glEnableVertexAttribArray(sAttribTexCoord);
+	glVertexAttribPointer(sAttribTexCoord, 2, GL_FLOAT, GL_FALSE, sizeof(FontVertex), reinterpret_cast<GLvoid *>(offsetof(FontVertex, u)));
+
+	glDrawRangeElements(GL_TRIANGLES, 0, sVertexCount, sIndexCount, GL_UNSIGNED_SHORT, sIndexWork);
+
+	glDisableVertexAttribArray(sAttribPosition);
+	glDisableVertexAttribArray(sAttribColor);
+	glDisableVertexAttribArray(sAttribTexCoord);
+
+	glDisable(GL_TEXTURE_2D);
+	glUseProgram(0);
+#else
+	IndexQuads(sVertexBase, GetVertexCount() - sVertexBase);
+	BindTexture(0);
+#endif
+}
+
+void FontDrawColor(const Color4 &color)
+{
+#ifdef FONT_FLOAT_COLOR
+	sColor = color;
+#else
+	sColor = 
+		GLubyte(Clamp(xs_RoundToInt(color.r * 255), 0, 255)) |
+		GLubyte(Clamp(xs_RoundToInt(color.g * 255), 0, 255)) << 8 |
+		GLubyte(Clamp(xs_RoundToInt(color.b * 255), 0, 255)) << 16 |
+		GLubyte(Clamp(xs_RoundToInt(color.a * 255), 0, 255)) << 24;
+#endif
 }
 
 void FontDrawCharacter(int c, float x, float y, float w, float h, float z)
@@ -182,26 +313,39 @@ void FontDrawCharacter(int c, float x, float y, float w, float h, float z)
 	const Rect<float> &uv = sDefaultFontUVs[c - FIRST_CHARACTER];
 
 	// submit vertex data
-    glTexCoord2f(uv.x,        uv.y       ); glVertex3f(x,     y,     z);
-    glTexCoord2f(uv.x + uv.w, uv.y       ); glVertex3f(x + w, y,     z);
-    glTexCoord2f(uv.x + uv.w, uv.y + uv.h); glVertex3f(x + w, y + h, z);
-    glTexCoord2f(uv.x,        uv.y + uv.h); glVertex3f(x,     y + h, z);
+	register FontVertex * __restrict v = static_cast<FontVertex *>(AllocVertices(4));
+	v->pos = Vector3(x    , y    , z);
+	v->color = sColor;
+	v->texcoord = Vector2(uv.x       , uv.y       );
+	++v;
+	v->pos = Vector3(x + w, y    , z);
+	v->color = sColor;
+	v->texcoord = Vector2(uv.x + uv.w, uv.y       );
+	++v;
+	v->pos = Vector3(x + w, y + h, z);
+	v->color = sColor;
+	v->texcoord = Vector2(uv.x + uv.w, uv.y + uv.h);
+	++v;
+	v->pos = Vector3(x    , y + h, z);
+	v->color = sColor;
+	v->texcoord = Vector2(uv.x       , uv.y + uv.h);
+	++v;
 }
 
 void FontDrawString(const char *s, float x, float y, float w, float h, float z, float wrap)
 {
 	float x0 = x;
 
-    while (*s)
-    {
+	while (*s)
+	{
 		if (x + w >= wrap)
 		{
 			x = x0;
 			y += h;
 		}
 
-        FontDrawCharacter(*s, x, y, w, h, z);
-        s++;
-        x += w;
-    }
+		FontDrawCharacter(*s, x, y, w, h, z);
+		s++;
+		x += w;
+	}
 }

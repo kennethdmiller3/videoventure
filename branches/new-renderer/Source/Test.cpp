@@ -7,6 +7,7 @@
 #include "Preferences.h"
 #include "Sound.h"
 #include "Command.h"
+#include "Render.h"
 #include "Drawlist.h"
 #include "Texture.h"
 
@@ -189,11 +190,14 @@ bool OpenWindow(void)
 
 	if (runtime)
 	{
+		// rebuild rendering
+		PostResetRender();
+
 		// rebuild textures
 		RebuildTextures();
 
-		// rebuild draw lists
-		RebuildDrawlists();
+		// post-reset draw lists
+		PostResetDrawlists();
 
 		// rebuild console
 		console->Resize();
@@ -206,6 +210,12 @@ void CloseWindow(void)
 {
 	if (runtime)
 	{
+		// pre-reset draw lists
+		PreResetDrawlists();
+
+		// pre-reset rendering
+		PreResetRender();
+
 		// platform-specific close
 		Platform::CloseWindow();
 	}

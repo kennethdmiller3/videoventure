@@ -9,6 +9,7 @@
 #include "Collidable.h"
 #include "Library.h"
 #include "Font.h"
+#include "Render.h"
 #include "Drawlist.h"
 #include "Texture.h"
 
@@ -52,6 +53,9 @@ void RenderShellOptions(unsigned int aId, float aTime, const Transform2 &aTransf
 // enter shell state
 void EnterShellState()
 {
+	// set up render
+	InitRender();
+
 	// set up drawlists
 	InitDrawlists();
 
@@ -111,11 +115,14 @@ void ExitShellState()
 	delete Database::overlay.Get(0xef286ca5 /* "options" */);
 	Database::overlay.Delete(0xef286ca5 /* "options" */);
 
-	// cleanup drawlists
+	// clean up drawlists
 	CleanupDrawlists();
 
-	// cleanup textures
+	// clean up textures
 	CleanupTextures();
+
+	// clean up render
+	CleanupRender();
 
 	// clear all databases
 	Database::Cleanup();

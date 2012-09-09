@@ -213,8 +213,8 @@ namespace Database
 				}
 			}
 
-			// bind the texture
-			BindTexture(handle, texture);
+			// instantiate the texture
+			InstantiateTexture(handle, texture);
 
 			// done with texture template
 			Database::texturetemplate.Close(handle);
@@ -223,10 +223,10 @@ namespace Database
 	}
 }
 
-void BindTexture(GLuint handle, TextureTemplate const &texture)
+void InstantiateTexture(GLuint handle, TextureTemplate const &texture)
 {
 	// save texture state
-	glPushAttrib(GL_TEXTURE_BIT);
+	//glPushAttrib(GL_TEXTURE_BIT);
 
 	// bind the texture object
 	glBindTexture(GL_TEXTURE_2D, handle);
@@ -245,7 +245,8 @@ void BindTexture(GLuint handle, TextureTemplate const &texture)
 		glTexImage2D(GL_TEXTURE_2D, 0, texture.mInternalFormat, texture.mWidth, texture.mHeight, 0, texture.mFormat, GL_UNSIGNED_BYTE, texture.mPixels);
 
 	// restore texture state
-	glPopAttrib();
+	glBindTexture(GL_TEXTURE_2D, 0);
+	//glPopAttrib();
 }
 
 void CleanupTextures(void)
@@ -273,7 +274,7 @@ void RebuildTextures(void)
 		if (texture.mWidth == 0 || texture.mHeight == 0)
 			continue;
 
-		// bind the texture
-		BindTexture(handle, texture);
+		// instantiate the texture
+		InstantiateTexture(handle, texture);
 	}
 }

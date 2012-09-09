@@ -7,6 +7,7 @@
 #include "Sound.h"
 #include "Collidable.h"
 #include "World.h"
+#include "Render.h"
 #include "Drawlist.h"
 #include "Texture.h"
 #include "Escape.h"
@@ -219,6 +220,9 @@ void PlayerQuitListener(unsigned int aId)
 // enter play state
 void EnterPlayState()
 {
+	// set up rendering
+	InitRender();
+
 	// set up drawlists
 	InitDrawlists();
 
@@ -296,6 +300,9 @@ void ExitPlayState()
 
 	// cleanup textures
 	CleanupTextures();
+
+	// clean up render
+	CleanupRender();
 
 	// clear all databases
 	Database::Cleanup();

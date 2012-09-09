@@ -61,7 +61,12 @@ Matrix4 operator *(const Matrix4 &a, const Matrix4 &b)
 const Matrix4 Matrix4::Identity = { 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 };
 
 // projection matrix
-static Matrix4 sProjMatrix;
+static const int sProjEntries = 4;
+static Matrix4 sProjMatrix[sProjEntries];
+static int sProjTop;
+
+// view matrix
+static Matrix4 sViewMatrix;
 
 // matrix stack
 static const int sStackEntries = 64;
@@ -83,14 +88,83 @@ const float *IdentityGet(void)
 // PROJECTION MATRIX OPERATIONS
 //
 
-void ProjectionLoad(const float *values)
+void ProjectionPush(void)
 {
-	memcpy(&sProjMatrix, values, sizeof(Matrix4));
+	if (sProjTop < sProjEntries - 1)
+	{
+		++sProjTop;
+		sProjMatrix[sProjTop] = sProjMatrix[sProjTop-1];
+	}
+	else
+	{
+		DebugPrint("Projection stack overflow\n");
+		assert(false);
+	}
+}
+
+void ProjectionPop(void)
+{
+	if (sProjTop > 0)
+	{
+#ifdef DEBUG
+		memset(sProjMatrix + sProjTop, 0, sizeof(Matrix4));
+#endif
+		--sProjTop;
+	}
+	else
+	{
+		DebugPrint("Projection stack underflow\n");
+		assert(false);
+	}
+}
+
+void ProjectionOrtho(float aLeft, float aRight, float aBottom, float aTop, float aNear, float aFar)
+{
+	const float ortho[16] = 
+	{
+		2/(aRight-aLeft), 0, 0, 0,
+		0, 2/(aTop-aBottom), 0, 0,
+		0, 0, -2/(aFar-aNear), 0,
+		-(aRight+aLeft)/(aRight-aLeft),-(aTop+aBottom)/(aTop-aBottom),-(aFar+aNear)/(aFar-aNear), 1
+	};
+	memcpy(&sProjMatrix[sProjTop], ortho, sizeof(Matrix4));
+}
+
+void ProjectionFrustum(float aLeft, float aRight, float aBottom, float aTop, float aNear, float aFar)
+{
+	const float frustum[16] =
+	{
+		2*aNear/(aRight-aLeft), 0, 0, 0,
+		0, 2*aNear/(aTop-aBottom), 0, 0,
+		(aRight+aLeft)/(aRight-aLeft), (aTop+aBottom)/(aTop-aBottom), -(aFar+aNear)/(aFar-aNear), -1,
+		0, 0, -2*aFar*aNear/(aFar-aNear), 0
+	};
+	memcpy(&sProjMatrix[sProjTop], frustum, sizeof(Matrix4));
+}
+
+void ProjectionLoad(const float *aValues)
+{
+	memcpy(&sProjMatrix, aValues, sizeof(Matrix4));
 }
 
 const float *ProjectionGet(void)
 {
-	return sProjMatrix.m->m128_f32;
+	return sProjMatrix[sProjTop].m->m128_f32;
+}
+
+
+//
+// VIEW MATRIX OPERATIONS
+//
+
+void ViewLoad(const float *aValues)
+{
+	memcpy(&sViewMatrix, aValues, sizeof(Matrix4));
+}
+
+const float *ViewGet(void)
+{
+	return sViewMatrix.m->m128_f32;
 }
 
 
@@ -117,17 +191,33 @@ const float *StackGet(void)
 // push the current entry
 void StackPush(void)
 {
-	++sStackTop;
-	sStackMatrix[sStackTop] = sStackMatrix[sStackTop-1];
+	if (sStackTop < sStackEntries - 1)
+	{
+		++sStackTop;
+		sStackMatrix[sStackTop] = sStackMatrix[sStackTop-1];
+	}
+	else
+	{
+		DebugPrint("ModelView stack overflow\n");
+		assert(false);
+	}
 }
 
 // pop the current entry
 void StackPop(void)
 {
+	if (sStackTop > 0)
+	{
 #ifdef DEBUG
-	memset(sStackMatrix + sStackTop, 0, sizeof(Matrix4));
+		memset(sStackMatrix + sStackTop, 0, sizeof(Matrix4));
 #endif
-	--sStackTop;
+		--sStackTop;
+	}
+	else
+	{
+		DebugPrint("ModelView stack underflow\n");
+		assert(false);
+	}
 }
 
 // load an identity matrix
@@ -138,23 +228,23 @@ void StackIdentity(void)
 }
 
 // load a matrix
-void StackLoad(const float *values)
+void StackLoad(const float *aValues)
 {
 	Matrix4 &m = sStackMatrix[sStackTop];
-	memcpy(&m, &values, sizeof(Matrix4));
+	memcpy(&m, aValues, sizeof(Matrix4));
 }
 
 // multiply by a matrix
-void StackMult(const float *values)
+void StackMult(const float *aValues)
 {
 	Matrix4 &m = sStackMatrix[sStackTop];
 	Matrix4 b;
-	memcpy(&b, &values, sizeof(Matrix4));
+	memcpy(&b, aValues, sizeof(Matrix4));
 	m = m * b;
 }
 
 // apply rotation
-void StackRotate(const float value)
+void StackRotate(const float aValue)
 {
 	Matrix4 &m = sStackMatrix[sStackTop];
 	//const Matrix4 r = 
@@ -167,13 +257,13 @@ void StackRotate(const float value)
 	//m = m * r;
 	const Matrix4 o = m;
 #ifdef MATRIX_STACK_SSE
-	const __m128 s(_mm_set_ps1(sinf(value))), c(_mm_set_ps1(cosf(value)));
+	const __m128 s(_mm_set_ps1(sinf(aValue))), c(_mm_set_ps1(cosf(aValue)));
 	m.m[0] = _mm_add_ps(_mm_mul_ps(o.m[0], c), _mm_mul_ps(o.m[1], s));
 	m.m[1] = _mm_sub_ps(_mm_mul_ps(o.m[1], c), _mm_mul_ps(o.m[0], s));
 	m.m[2] = o.m[2];
 	m.m[3] = o.m[3];
 #else
-	const float s(sinf(value*float(M_PI/180.0f))), c(cosf(value*float(M_PI/180.0f)));
+	const float s(sinf(aValue*float(M_PI/180.0f))), c(cosf(aValue*float(M_PI/180.0f)));
 	m.m[0][0] = o.m[0][0] * c + o.m[1][0] * s;
 	m.m[0][1] = o.m[0][1] * c + o.m[1][1] * s;
 	m.m[0][2] = o.m[0][2] * c + o.m[1][2] * s;
@@ -190,55 +280,55 @@ void StackRotate(const float value)
 }
 
 // apply scale
-void StackScale(const __m128 value)
+void StackScale(const __m128 aValue)
 {
-	//glScalef(value.m128_f32[0], value.m128_f32[1], value.m128_f32[2]);
+	//glScalef(aValue.m128_f32[0], aValue.m128_f32[1], aValue.m128_f32[2]);
 	Matrix4 &m = sStackMatrix[sStackTop];
 #ifdef MATRIX_STACK_SSE
-	m.m[0] = _mm_mul_ps(m.m[0], _mm_shuffle_ps(value, value, _MM_SHUFFLE(0, 0, 0, 0)));
-	m.m[1] = _mm_mul_ps(m.m[1], _mm_shuffle_ps(value, value, _MM_SHUFFLE(1, 1, 1, 1)));
-	m.m[2] = _mm_mul_ps(m.m[2], _mm_shuffle_ps(value, value, _MM_SHUFFLE(2, 2, 2, 2)));
+	m.m[0] = _mm_mul_ps(m.m[0], _mm_shuffle_ps(aValue, aValue, _MM_SHUFFLE(0, 0, 0, 0)));
+	m.m[1] = _mm_mul_ps(m.m[1], _mm_shuffle_ps(aValue, aValue, _MM_SHUFFLE(1, 1, 1, 1)));
+	m.m[2] = _mm_mul_ps(m.m[2], _mm_shuffle_ps(aValue, aValue, _MM_SHUFFLE(2, 2, 2, 2)));
 #else
-	m.m[0][0] *= value.m128_f32[0];
-	m.m[0][1] *= value.m128_f32[0];
-	m.m[0][2] *= value.m128_f32[0];
-	m.m[1][0] *= value.m128_f32[1];
-	m.m[1][1] *= value.m128_f32[1];
-	m.m[1][2] *= value.m128_f32[1];
-	m.m[2][0] *= value.m128_f32[2];
-	m.m[2][1] *= value.m128_f32[2];
-	m.m[2][2] *= value.m128_f32[2];
+	m.m[0][0] *= aValue.m128_f32[0];
+	m.m[0][1] *= aValue.m128_f32[0];
+	m.m[0][2] *= aValue.m128_f32[0];
+	m.m[1][0] *= aValue.m128_f32[1];
+	m.m[1][1] *= aValue.m128_f32[1];
+	m.m[1][2] *= aValue.m128_f32[1];
+	m.m[2][0] *= aValue.m128_f32[2];
+	m.m[2][1] *= aValue.m128_f32[2];
+	m.m[2][2] *= aValue.m128_f32[2];
 #endif
 }
 
 // apply translation
-void StackTranslate(const __m128 value)
+void StackTranslate(const __m128 aValue)
 {
-	//glTranslatef(value.m128_f32[0], value.m128_f32[1], value.m128_f32[2]);
+	//glTranslatef(aValue.m128_f32[0], aValue.m128_f32[1], aValue.m128_f32[2]);
 	Matrix4 &m = sStackMatrix[sStackTop];
 #ifdef MATRIX_STACK_SSE
 	m.m[3] = 
 		_mm_add_ps(
 			_mm_add_ps(
 				_mm_add_ps(
-					_mm_mul_ps(m.m[0], _mm_shuffle_ps(value, value, _MM_SHUFFLE(0, 0, 0, 0))),
-					_mm_mul_ps(m.m[1], _mm_shuffle_ps(value, value, _MM_SHUFFLE(1, 1, 1, 1)))
+					_mm_mul_ps(m.m[0], _mm_shuffle_ps(aValue, aValue, _MM_SHUFFLE(0, 0, 0, 0))),
+					_mm_mul_ps(m.m[1], _mm_shuffle_ps(aValue, aValue, _MM_SHUFFLE(1, 1, 1, 1)))
 				),
-				_mm_mul_ps(m.m[2], _mm_shuffle_ps(value, value, _MM_SHUFFLE(2, 2, 2, 2)))
+				_mm_mul_ps(m.m[2], _mm_shuffle_ps(aValue, aValue, _MM_SHUFFLE(2, 2, 2, 2)))
 			),
 			m.m[3]
 		);
 
 
 #else
-	m.m[3][0] += m.m[0][0] * value.m128_f32[0] + m.m[1][0] * value.m128_f32[1] + m.m[2][0] * value.m128_f32[2];
-	m.m[3][1] += m.m[0][1] * value.m128_f32[0] + m.m[1][1] * value.m128_f32[1] + m.m[2][1] * value.m128_f32[2];
-	m.m[3][2] += m.m[0][2] * value.m128_f32[0] + m.m[1][2] * value.m128_f32[1] + m.m[2][2] * value.m128_f32[2];
+	m.m[3][0] += m.m[0][0] * aValue.m128_f32[0] + m.m[1][0] * aValue.m128_f32[1] + m.m[2][0] * aValue.m128_f32[2];
+	m.m[3][1] += m.m[0][1] * aValue.m128_f32[0] + m.m[1][1] * aValue.m128_f32[1] + m.m[2][1] * aValue.m128_f32[2];
+	m.m[3][2] += m.m[0][2] * aValue.m128_f32[0] + m.m[1][2] * aValue.m128_f32[1] + m.m[2][2] * aValue.m128_f32[2];
 #endif
 }
 
 // transform a position
-__m128 StackTransformPosition(const __m128 value)
+__m128 StackTransformPosition(const __m128 aValue)
 {
 	const Matrix4 &m = sStackMatrix[sStackTop];
 	__m128 p;
@@ -246,39 +336,39 @@ __m128 StackTransformPosition(const __m128 value)
 	p = _mm_add_ps(
 		_mm_add_ps(
 			_mm_add_ps(
-				_mm_mul_ps(_mm_shuffle_ps(value, value, _MM_SHUFFLE(0, 0, 0, 0)), m.m[0]),
-				_mm_mul_ps(_mm_shuffle_ps(value, value, _MM_SHUFFLE(1, 1, 1, 1)), m.m[1])
+				_mm_mul_ps(_mm_shuffle_ps(aValue, aValue, _MM_SHUFFLE(0, 0, 0, 0)), m.m[0]),
+				_mm_mul_ps(_mm_shuffle_ps(aValue, aValue, _MM_SHUFFLE(1, 1, 1, 1)), m.m[1])
 			),
-			_mm_mul_ps(_mm_shuffle_ps(value, value, _MM_SHUFFLE(2, 2, 2, 2)), m.m[2])
+			_mm_mul_ps(_mm_shuffle_ps(aValue, aValue, _MM_SHUFFLE(2, 2, 2, 2)), m.m[2])
 		),
 		m.m[3]
 	);
 #else
-	p.m128_f32[0] = value.m128_f32[0] * m.m[0][0] + value.m128_f32[1] * m.m[1][0] + value.m128_f32[2] * m.m[2][0] + m.m[3][0];
-	p.m128_f32[1] = value.m128_f32[0] * m.m[0][1] + value.m128_f32[1] * m.m[1][1] + value.m128_f32[2] * m.m[2][1] + m.m[3][1];
-	p.m128_f32[2] = value.m128_f32[0] * m.m[0][2] + value.m128_f32[1] * m.m[1][2] + value.m128_f32[2] * m.m[2][2] + m.m[3][2];
+	p.m128_f32[0] = aValue.m128_f32[0] * m.m[0][0] + aValue.m128_f32[1] * m.m[1][0] + aValue.m128_f32[2] * m.m[2][0] + m.m[3][0];
+	p.m128_f32[1] = aValue.m128_f32[0] * m.m[0][1] + aValue.m128_f32[1] * m.m[1][1] + aValue.m128_f32[2] * m.m[2][1] + m.m[3][1];
+	p.m128_f32[2] = aValue.m128_f32[0] * m.m[0][2] + aValue.m128_f32[1] * m.m[1][2] + aValue.m128_f32[2] * m.m[2][2] + m.m[3][2];
 	p.m128_f32[3] = 1;
 #endif
 	return p;
 }
 
 // transform a normal
-__m128 StackTransformNormal(const __m128 value)
+__m128 StackTransformNormal(const __m128 aValue)
 {
 	const Matrix4 &m = sStackMatrix[sStackTop];
 	__m128 n;
 #ifdef MATRIX_STACK_SSE
 	n = _mm_add_ps(
 		_mm_add_ps(
-			_mm_mul_ps(_mm_shuffle_ps(value, value, _MM_SHUFFLE(0, 0, 0, 0)), m.m[0]),
-			_mm_mul_ps(_mm_shuffle_ps(value, value, _MM_SHUFFLE(1, 1, 1, 1)), m.m[1])
+			_mm_mul_ps(_mm_shuffle_ps(aValue, aValue, _MM_SHUFFLE(0, 0, 0, 0)), m.m[0]),
+			_mm_mul_ps(_mm_shuffle_ps(aValue, aValue, _MM_SHUFFLE(1, 1, 1, 1)), m.m[1])
 		),
-		_mm_mul_ps(_mm_shuffle_ps(value, value, _MM_SHUFFLE(2, 2, 2, 2)), m.m[2])
+		_mm_mul_ps(_mm_shuffle_ps(aValue, aValue, _MM_SHUFFLE(2, 2, 2, 2)), m.m[2])
 	);
 #else
-	n.m128_f32[0] = value.m128_f32[0] * m.m[0][0] + value.m128_f32[1] * m.m[1][0] + value.m128_f32[2] * m.m[2][0];
-	n.m128_f32[1] = value.m128_f32[0] * m.m[0][1] + value.m128_f32[1] * m.m[1][1] + value.m128_f32[2] * m.m[2][1];
-	n.m128_f32[2] = value.m128_f32[0] * m.m[0][2] + value.m128_f32[1] * m.m[1][2] + value.m128_f32[2] * m.m[2][2];
+	n.m128_f32[0] = aValue.m128_f32[0] * m.m[0][0] + aValue.m128_f32[1] * m.m[1][0] + aValue.m128_f32[2] * m.m[2][0];
+	n.m128_f32[1] = aValue.m128_f32[0] * m.m[0][1] + aValue.m128_f32[1] * m.m[1][1] + aValue.m128_f32[2] * m.m[2][1];
+	n.m128_f32[2] = aValue.m128_f32[0] * m.m[0][2] + aValue.m128_f32[1] * m.m[1][2] + aValue.m128_f32[2] * m.m[2][2];
 	n.m128_f32[3] = 0;
 #endif
 	float scale = InvSqrt(n.m128_f32[0]*n.m128_f32[0]+n.m128_f32[1]*n.m128_f32[1]+n.m128_f32[2]*n.m128_f32[2]);
