@@ -473,13 +473,13 @@ void ShellTitle::Render(unsigned int aId, float aTime, const Transform2 &aTransf
 #if defined(USE_TITLE_MIRROR_WATER_EFFECT)
 	// mirror offset
 	const float titleheight = titleh * (rows + 1);
-	const float mirrortop = titley + titleheight + titleh * 2 + 4;
+	const float mirrortop = titley + titleheight + 4;
 	const float mirrorbottom = mirrortop - mirrorscale * titleheight;
-	const float mirroralphadelta = -0.375f / 32;
-	const float mirroralphastart = 0.375f - mirroralphadelta * mirrortop;
+	const float mirroralphadelta = -0.5f / 48;
+	const float mirroralphastart = 0.5f - mirroralphadelta * mirrortop;
 
 	// starting mirror properties
-	float mirror_y0 = mirrorbottom + MirrorWaveY(titley - titleh);
+	float mirror_y0 = mirrorbottom + MirrorWaveY(-titleh);
 	float mirror_d0 = MirrorWaveX(mirror_y0);
 	float mirror_a0 = mirroralphastart + mirroralphadelta * mirror_y0;
 #endif
@@ -490,7 +490,7 @@ void ShellTitle::Render(unsigned int aId, float aTime, const Transform2 &aTransf
 
 #if defined(USE_TITLE_MIRROR_WATER_EFFECT)
 		// row mirror properties
-		float mirror_y1 = mirrorbottom + MirrorWaveY(y + titleh);
+		float mirror_y1 = mirrorbottom + MirrorWaveY((row + 1) * titleh);
 		float mirror_yd = (mirror_y1 - mirror_y0) / titleh;
 		float mirror_d1 = MirrorWaveX(mirror_y1);
 		float mirror_dd = (mirror_d1 - mirror_d0) / titleh;
