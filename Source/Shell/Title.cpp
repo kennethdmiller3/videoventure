@@ -417,14 +417,6 @@ ShellTitle::~ShellTitle()
 // draw title
 void ShellTitle::Render(unsigned int aId, float aTime, const Transform2 &aTransform)
 {
-//#define USE_TITLE_VERTEX_ARRAY
-#if defined(USE_TITLE_VERTEX_ARRAY)
-	static Vector2 vertexarray[32768];
-	static unsigned int colorarray[32768];
-	Vector2 *vertexptr = vertexarray;
-	unsigned int *colorptr = colorarray;
-#endif
-
 	// begin drawing
 #if defined(USE_TITLE_PACKED_VERTEX)
 	SetAttribFormat(0, 2, GL_FLOAT);
@@ -534,17 +526,7 @@ void ShellTitle::Render(unsigned int aId, float aTime, const Transform2 &aTransf
 						float y1 = y + block[i][1][1];
 
 						// upright
-#if defined(USE_TITLE_VERTEX_ARRAY)
-						unsigned int color = 0xFF000000 | (xs_RoundToInt(B * 255) << 16) | (xs_RoundToInt(G * 255) << 8) | (xs_RoundToInt(R * 255) );
-						*colorptr++ = color;
-						*colorptr++ = color;
-						*colorptr++ = color;
-						*colorptr++ = color;
-						*vertexptr++ = Vector2(x0, y0);
-						*vertexptr++ = Vector2(x1, y0);
-						*vertexptr++ = Vector2(x1, y1);
-						*vertexptr++ = Vector2(x0, y1);
-#elif defined(USE_TITLE_PACKED_VERTEX)
+#if defined(USE_TITLE_PACKED_VERTEX)
 						unsigned int color = 0xFF000000 | (xs_RoundToInt(B * 255) << 16) | (xs_RoundToInt(G * 255) << 8) | (xs_RoundToInt(R * 255) );
 						v->pos = Vector2(x0, y0);
 						v->color = color;
@@ -585,20 +567,7 @@ void ShellTitle::Render(unsigned int aId, float aTime, const Transform2 &aTransf
 							float dx1 = mirror_d0 + mirror_dd * m1;
 							float yy0 = mirror_y0 + mirror_yd * m0;
 							float yy1 = mirror_y0 + mirror_yd * m1;
-#if defined(USE_TITLE_VERTEX_ARRAY)
-							color &= 0x00FFFFFF;
-							color |= xs_RoundToInt(a1 * a1 * 255) << 24;
-							*colorptr++ = color;
-							*colorptr++ = color;
-							*vertexptr++ = Vector2(x0 + dx1, yy1);
-							*vertexptr++ = Vector2(x1 + dx1, yy1);
-							color &= 0x00FFFFFF;
-							color |= xs_RoundToInt(a0 * a0 * 255) << 24;
-							*colorptr++ = color;
-							*colorptr++ = color;
-							*vertexptr++ = Vector2(x1 + dx0, yy0);
-							*vertexptr++ = Vector2(x0 + dx0, yy0);
-#elif defined(USE_TITLE_PACKED_VERTEX)
+#if defined(USE_TITLE_PACKED_VERTEX)
 							color &= 0x00FFFFFF;
 							color |= xs_RoundToInt(a1 * a1 * 255) << 24;
 							v->pos = Vector2(x0 + dx1, yy1);
@@ -646,17 +615,7 @@ void ShellTitle::Render(unsigned int aId, float aTime, const Transform2 &aTransf
 #endif
 	}
 
-#if defined(USE_TITLE_VERTEX_ARRAY)
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-//	glEnableClientState(GL_VERTEX_ARRAY);
-//	glEnableClientState(GL_COLOR_ARRAY);
-	glVertexPointer(2, GL_FLOAT, 0, vertexarray);
-	glColorPointer(4, GL_UNSIGNED_BYTE, 0, colorarray);
-	glDrawArrays(GL_QUADS, 0, vertexptr - vertexarray);
-//	glDisableClientState(GL_VERTEX_ARRAY);
-//	glDisableClientState(GL_COLOR_ARRAY);
-	glBindBuffer(GL_ARRAY_BUFFER, GetBoundVertexBuffer().mHandle);
-#elif 1
+#if 1
 	AllocVertices(v - v0);
 	FlushDynamic();
 #ifdef USE_TITLE_PACKED_VERTEX
