@@ -134,9 +134,7 @@ void PlayerOverlayHealth::Render(unsigned int aId, float aTime, const Transform2
 	int band = (health > 0.5f);
 	float ratio = health * 2.0f - band;
 
-	Color4 fillcolor;
-	for (int i = 0; i < 4; i++)
-		fillcolor[i] = Lerp(Lerp(healthcolor[band][0][i], healthcolor[band+1][0][i], ratio), Lerp(healthcolor[band][1][i], healthcolor[band+1][1][i], ratio), pulse);
+	Color4 fillcolor = Lerp(Lerp(healthcolor[band][0], healthcolor[band+1][0], ratio), Lerp(healthcolor[band][1], healthcolor[band+1][1], ratio), pulse);
 
 	// begin drawing
 	SetWorkFormat((1<<0)|(1<<2));
