@@ -307,45 +307,54 @@ void FontDrawColor(const Color4 &color)
 #endif
 }
 
-void FontDrawCharacter(int c, float x, float y, float w, float h, float z)
+static FontVertex *FontDrawCharacterInternal(FontVertex *v, int c, float x, float y, float w, float h, float z)
 {
 	// texture coordinates
 	const Rect<float> &uv = sDefaultFontUVs[c - FIRST_CHARACTER];
 
 	// submit vertex data
-	register FontVertex * __restrict v = static_cast<FontVertex *>(AllocVertices(4));
-	v->pos = Vector3(x    , y    , z);
+	v->pos = Vector3(x, y, z);
 	v->color = sColor;
-	v->texcoord = Vector2(uv.x       , uv.y       );
+	v->texcoord = Vector2(uv.x , uv.y);
 	++v;
-	v->pos = Vector3(x + w, y    , z);
+	v->pos = Vector3(x + w, y, z);
 	v->color = sColor;
-	v->texcoord = Vector2(uv.x + uv.w, uv.y       );
+	v->texcoord = Vector2(uv.x + uv.w, uv.y);
 	++v;
 	v->pos = Vector3(x + w, y + h, z);
 	v->color = sColor;
 	v->texcoord = Vector2(uv.x + uv.w, uv.y + uv.h);
 	++v;
-	v->pos = Vector3(x    , y + h, z);
+	v->pos = Vector3(x, y + h, z);
 	v->color = sColor;
-	v->texcoord = Vector2(uv.x       , uv.y + uv.h);
+	v->texcoord = Vector2(uv.x , uv.y + uv.h);
 	++v;
+	return v;
+}
+
+void FontDrawCharacter(int c, float x, float y, float w, float h, float z)
+{
+	register FontVertex * __restrict v = static_cast<FontVertex *>(AllocVertices(4));
+	FontDrawCharacterInternal(v, c, x, y, w, h, z);
 }
 
 void FontDrawString(const char *s, float x, float y, float w, float h, float z, float wrap)
 {
 	float x0 = x;
 
+	register FontVertex * __restrict v = static_cast<FontVertex *>(AllocVertices(4 * strlen(s)));
+
 	while (*s)
 	{
-		if (x + w >= wrap)
+		v = FontDrawCharacterInternal(v, *s, x, y, w, h, z);
+
+		s++;
+		x += w;
+
+		if (x >= wrap)
 		{
 			x = x0;
 			y += h;
 		}
-
-		FontDrawCharacter(*s, x, y, w, h, z);
-		s++;
-		x += w;
 	}
 }
