@@ -107,10 +107,8 @@ void ShellMenuItem::Render(unsigned int aId, float aTime, const Transform2 &aTra
 		}
 
 		// render label
-		Color4 color;
 		float interp = ((sim_turn & 16) ? 16 - (sim_turn & 15) : (sim_turn & 15)) / 16.0f;
-		for (int c = 0; c < 4; c++)
-			color[c] = Lerp(mLabelColor[state][0][c], mLabelColor[state][1][c], interp);
+		Color4 color = Lerp(mLabelColor[state][0], mLabelColor[state][1], interp);
 		FontDrawColor(color);
 		FontDrawString(mLabel, labelcorner.x, labelcorner.y, mCharSize.x, -mCharSize.y, 0);
 
