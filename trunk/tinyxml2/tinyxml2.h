@@ -24,11 +24,21 @@ distribution.
 #ifndef TINYXML2_INCLUDED
 #define TINYXML2_INCLUDED
 
-#include <cctype>
-#include <climits>
-#include <cstdio>
-#include <cstring>
-#include <cstdarg>
+#ifdef ANDROID_NDK
+	#include <ctype.h>
+	#include <limits.h>
+	#include <stdio.h>
+	#include <stdlib.h>
+	#include <string.h>
+	#include <stdarg.h>
+#else
+	#include <cctype>
+	#include <climits>
+	#include <cstdio>
+	#include <cstdlib>
+	#include <cstring>
+	#include <cstdarg>
+#endif
 
 /* 
    TODO: intern strings instead of allocation.
@@ -85,7 +95,7 @@ distribution.
 
 static const int TIXML2_MAJOR_VERSION = 1;
 static const int TIXML2_MINOR_VERSION = 0;
-static const int TIXML2_PATCH_VERSION = 6;
+static const int TIXML2_PATCH_VERSION = 7;
 
 namespace tinyxml2
 {
@@ -112,6 +122,7 @@ public:
 	enum {
 		NEEDS_ENTITY_PROCESSING			= 0x01,
 		NEEDS_NEWLINE_NORMALIZATION		= 0x02,
+		COLLAPSE_WHITESPACE				= 0x04,
 
 		TEXT_ELEMENT		= NEEDS_ENTITY_PROCESSING | NEEDS_NEWLINE_NORMALIZATION,
 		TEXT_ELEMENT_LEAVE_ENTITIES		= NEEDS_NEWLINE_NORMALIZATION,
@@ -140,6 +151,7 @@ public:
 
 private:
 	void Reset();
+	void CollapseWhitespace();
 
 	enum {
 		NEEDS_FLUSH = 0x100,
@@ -282,7 +294,9 @@ public:
 		if ( !mem ) return;
 		--currentAllocs;
 		Chunk* chunk = (Chunk*)mem;
+#ifdef DEBUG
 		memset( chunk, 0xfe, sizeof(Chunk) );
+#endif
 		chunk->next = root;
 		root = chunk;
 	}
@@ -365,6 +379,7 @@ public:
 	// correct, but simple, and usually works.
 	static const char* SkipWhiteSpace( const char* p )	{ while( !IsUTF8Continuation(*p) && isspace( *reinterpret_cast<const unsigned char*>(p) ) ) { ++p; } return p; }
 	static char* SkipWhiteSpace( char* p )				{ while( !IsUTF8Continuation(*p) && isspace( *reinterpret_cast<unsigned char*>(p) ) )		{ ++p; } return p; }
+	static bool IsWhiteSpace( char p )					{ return !IsUTF8Continuation(p) && isspace( static_cast<unsigned char>(p) ); }
 
 	inline static bool StringEqual( const char* p, const char* q, int nChar=INT_MAX )  {
 		int n = 0;
@@ -1031,6 +1046,12 @@ private:
 };
 
 
+enum Whitespace {
+	PRESERVE_WHITESPACE,
+	COLLAPSE_WHITESPACE
+};	   
+
+	
 /** A Document binds together all the functionality. 
 	It can be saved, loaded, and printed to the screen.
 	All Nodes are connected and allocated to a Document.
@@ -1041,7 +1062,7 @@ class XMLDocument : public XMLNode
 	friend class XMLElement;
 public:
 	/// constructor
-	XMLDocument( bool processEntities = true ); 
+	XMLDocument( bool processEntities = true, Whitespace = PRESERVE_WHITESPACE ); 
 	~XMLDocument();
 
 	virtual XMLDocument* ToDocument()				{ return this; }
@@ -1075,7 +1096,7 @@ public:
 		Returns XML_NO_ERROR (0) on success, or
 		an errorID.
 	*/
-	int SaveFile( const char* filename );
+	int SaveFile( const char* filename, bool compact = false );
 
 	/**
 		Save the XML file to disk. You are responsible
@@ -1084,9 +1105,10 @@ public:
 		Returns XML_NO_ERROR (0) on success, or
 		an errorID.
 	*/
-	int SaveFile( FILE* );
+	int SaveFile( FILE* fp, bool compact = false );
 
-	bool ProcessEntities() const						{ return processEntities; }
+	bool ProcessEntities() const		{ return processEntities; }
+	Whitespace WhitespaceMode() const	{ return whitespace; }
 
 	/**
 		Returns true if this document has a leading Byte Order Mark of UTF8.
@@ -1189,6 +1211,7 @@ private:
 	bool writeBOM;
 	bool processEntities;
 	int errorID;
+	Whitespace whitespace;
 	const char* errorStr1;
 	const char* errorStr2;
 	char* charBuffer;
