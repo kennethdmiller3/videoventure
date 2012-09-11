@@ -1,0 +1,17 @@
+<?xml version="1.0" ?>
+<template name="multiple" type="playerbomb">
+	<weapon>
+		<shot delay="0.1"/>
+		<action>
+			<ordnance name="playerbombbullet">
+				<position x="0" y="3"/>
+				<velocity x="0" y="480"/>
+			</ordnance>
+			<flash name="playerweaponflash">
+				<position x="0" y="3"/>
+			</flash>
+		</action>
+	</weapon>
+	<gunner follow="24" />
+	<team name="blue" />
+</template>

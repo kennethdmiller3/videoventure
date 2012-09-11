@@ -1,0 +1,10 @@
+<?xml version="1.0" ?>
+<template name="dreadcommandbridge">
+	<link name="lbridge" secondary="dreadcommandbridgeleft">
+		<offset x="16" y="0" />
+	</link>
+	<link name="rbridge" secondary="dreadcommandbridgeright">
+		<offset x="-16" y="0" />
+	</link>
+	<team name="red" />
+</template>

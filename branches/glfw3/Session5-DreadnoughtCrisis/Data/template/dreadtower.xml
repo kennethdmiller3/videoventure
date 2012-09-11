@@ -1,0 +1,65 @@
+<?xml version="1.0" ?>
+<template name="dreadtower">
+	<collidable>
+		<body name="main">
+			<circle radius="12">
+				<density value="1" />
+				<friction value="0.5" />
+				<restitution value="0.5" />
+				<filter name="ground" />
+			</circle>
+			<fixedrotation value="1" />
+		</body>
+	</collidable>
+	<renderable radius="192" depth="256" period="1">
+		<translate z="256" />
+		<triangle_strip>
+			<color r="0.6" g="0.8" b="0.15" a="1.0" />
+			<vertex x="16" y="12" />
+			<vertex x="16" y="-12" />
+			<vertex x="12" y="16" />
+			<vertex x="12" y="-16" />
+			<vertex x="-12" y="16" />
+			<vertex x="-12" y="-16" />
+			<vertex x="-16" y="12" />
+			<vertex x="-16" y="-12" />
+		</triangle_strip>
+		<drawlist>
+			<color r="1.0" g="1.0" b="0.3" a="1.0" />
+			<pushmatrix>
+				<translate y="-2" />
+				<scale x="12" y="10" />
+				<calllist name="circle16" />
+			</pushmatrix>
+		</drawlist>
+		<quads>
+			<color>
+				<key time="0.0" r="1.0" g="0.2" b="0.1" a="1.0" />
+				<key time="0.5" r="0.1" g="0.1" b="0.1" a="1.0" />
+				<key time="1.0" r="1.0" g="0.2" b="0.1" a="1.0" />
+			</color>
+			<vertex x="4" y="0" />
+			<vertex x="-4" y="0" />
+			<vertex x="-4" y="-4" />
+			<vertex x="4" y="-4" />
+		</quads>
+	</renderable>
+	<damagable health="10" spawnondeath="dreadpartexplosion" switchondeath="dreadtowerdestroyed" />
+	<weapon>
+		<offset x="0" y="-2" />
+		<velocity x="0" y="30" />
+		<variance x="15" y="15" />
+		<ordnance name="dreadtowerbullet" />
+		<shot delay="0.5" track="3" />
+	</weapon>
+	<soundcue>
+		<cue name="fire" sound="stargate-dynamofire" />
+	</soundcue>
+	<aimer>
+		<target range="256" filter="redbullet" />
+		<aim strength="1" leading="0" />
+		<fire channel="1" range="256" angle="90" />
+	</aimer>
+	<points value="5" />
+	<team name="red" />
+</template>

@@ -1,0 +1,37 @@
+<?xml version="1.0" ?>
+<template name="enemyshiptiny">
+	<collidable>
+		<body name="main">
+			<circle radius="4">
+				<density value="1" />
+				<friction value="0.5" />
+				<restitution value="0.5" />
+				<filter name="redunit" />
+			</circle>
+		</body>
+	</collidable>
+	<renderable radius="4">
+		<color r="1.0" g="0.2" b="0.1" a="1.0" />
+		<calllist name="shiptiny" />
+	</renderable>
+	<!--aimer range="128" attack="64" drift="0.5" wanderturn="0.25" wanderturnrate="0.25" leading="240" evade="1" close="32" filter="redbullet" /-->
+	<aimer>
+		<drift strength="0.5" />
+		<wander turn="0.25" turnrate="0.25" />
+		<target range="128" filter="redbullet" />
+		<aim strength="1" leading="240" />
+		<pursue strength="1" leading="0" />
+		<fire channel="1" range="64" />
+		<evade strength="1" />
+		<close range="32" />
+		<edge strength="0.015625" distance="64" />
+	</aimer>
+	<ship maxveloc="120" maxaccel="120" minaccel="10" maxomega="2" />
+	<damagable health="1" spawnondeath="enemyfireballexplosion" />
+	<link name="gun" secondary="enemyweapon">
+		<offset x="0" y="4" angle="0" />
+	</link>
+	<team name="red" />
+	<points value="150" />
+	<capturable resistance="1" spawnoncapture="friendshiptiny" />
+</template>

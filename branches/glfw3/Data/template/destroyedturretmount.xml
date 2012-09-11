@@ -1,0 +1,58 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<template name="destroyedturretmount">
+	<collidable>
+		<body name="main">
+			<circle radius="6">
+				<density value="1" />
+				<filter name="inert" />
+				<layers default="0" />
+			</circle>
+		</body>
+	</collidable>
+	<renderable radius="8">
+		<drawlist>
+			<pushmatrix>
+				<scale x="8" y="8" />
+				<triangle_fan>
+					<color r="0.0" g="0.0" b="0.0" a="1.0" />
+					<vertex x="0" y="0" />
+					<color r="0.0" g="0.0" b="0.0" a="0.0" />
+					<vertex x="1.000000" y="0.000000" />
+					<vertex x="0.923880" y="0.382683" />
+					<vertex x="0.707107" y="0.707107" />
+					<vertex x="0.382683" y="0.923880" />
+					<vertex x="0.000000" y="1.000000" />
+					<vertex x="-0.382683" y="0.923880" />
+					<vertex x="-0.707107" y="0.707107" />
+					<vertex x="-0.923880" y="0.382683" />
+					<vertex x="-1.000000" y="0.00000" />
+					<vertex x="-0.923880" y="-0.382683" />
+					<vertex x="-0.707107" y="-0.707107" />
+					<vertex x="-0.382683" y="-0.923880" />
+					<vertex x="0.000000" y="-1.00000" />
+					<vertex x="0.382683" y="-0.923880" />
+					<vertex x="0.707107" y="-0.707107" />
+					<vertex x="0.923880" y="-0.382683" />
+					<vertex x="1.000000" y="0.000000" />
+				</triangle_fan>
+			</pushmatrix>
+			<color r="0.2" g="0.2" b="0.2" a="1.0" />
+			<pushmatrix>
+				<scale x="5" y="5" />
+				<calllist name="circle16" />
+			</pushmatrix>
+			<color r="0.1" g="0.1" b="0.1" a="1.0" />
+			<pushmatrix>
+				<scale x="4" y="4" />
+				<calllist name="circle12" />
+			</pushmatrix>
+		</drawlist>
+	</renderable>
+	<spawner>
+		<offset x="0" y="-3" />
+		<scatter x="3" y="3" angle="180" />
+		<inherit x="0" y="0" />
+		<variance x="4" y="4" />
+		<spawn name="darksmokepuff" start="0" cycle="0.2" track="0" />
+	</spawner>
+</template>

@@ -1,0 +1,34 @@
+<?xml version="1.0" ?>
+<template name="friendbase">
+	<renderable radius="120">
+		<color r="0.1" g="0.2" b="1.0" a="0.125" />
+		<quads>
+			<vertex x="-85" y="-85" />
+			<vertex x="85" y="-85" />
+			<vertex x="85" y="85" />
+			<vertex x="-85" y="85" />
+		</quads>
+	</renderable>
+	<tilemap x="88" y="88" dx="-16" dy="-16">
+		<tile name="#" spawn="friendwall" angle="0" />
+		<tile name="[" spawn="gate" angle="0" />
+		<tile name="]" spawn="gate" angle="180" />
+		<tile name="n" spawn="gate" angle="90" />
+		<tile name="u" spawn="gate" angle="270" />
+		<tile name="-" spawn="friendforcewall" angle="0" />
+		<tile name="|" spawn="friendforcewall" angle="90" />
+		<tile name="+" spawn="health3spawner" />
+		<row data="###]----[###" />
+		<row data="#          #" />
+		<row data="# +      + #" />
+		<row data="u          u" />
+		<row data="|          |" />
+		<row data="|          |" />
+		<row data="|          |" />
+		<row data="|          |" />
+		<row data="n          n" />
+		<row data="# +      + #" />
+		<row data="#          #" />
+		<row data="###]----[###" />
+	</tilemap>
+</template>

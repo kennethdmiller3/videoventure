@@ -1,0 +1,87 @@
+<?xml version="1.0" ?>
+<template name="missilecommandexplosion">
+	<expire time="1.0" />
+	<explosion life="1.0" category="2" bit1="0" bit2="0">
+		<radius>
+			<key time="0.0" inner="4" outer="6" />
+			<key time="0.5" inner="32" outer="34" />
+			<key time="1.0" inner="4" outer="6" />
+		</radius>
+		<damage inner="100" outer="0" />
+	</explosion>
+	<renderable radius="32">
+		<pushmatrix>
+			<pushmatrix>
+				<block length="0.1" repeat="10">
+					<color>
+						<key time="0.00" r="0.1" g="0.8" b="1.0" a="0.375" />
+						<key time="0.05" r="0.1" g="0.3" b="1.0" a="0.375" />
+						<key time="0.10" r="0.1" g="0.8" b="1.0" a="0.375" />
+					</color>
+				</block>
+				<scale>
+					<key time="0.0" x="6.0" y="6.0" />
+					<key time="0.5" x="34.0" y="34.0" />
+					<key time="1.0" x="6.0" y="6.0" />
+				</scale>
+				<calllist name="circle32" />
+			</pushmatrix>
+			<pushmatrix>
+				<block length="0.1" repeat="10">
+					<color>
+						<key time="0.00" r="0.1" g="0.8" b="1.0" a="0.633" />
+						<key time="0.05" r="0.1" g="0.3" b="1.0" a="0.633" />
+						<key time="0.10" r="0.1" g="0.8" b="1.0" a="0.633" />
+					</color>
+				</block>
+				<scale>
+					<key time="0.0" x="5.0" y="5.0" />
+					<key time="0.5" x="33.0" y="33.0" />
+					<key time="1.0" x="5.0" y="5.0" />
+				</scale>
+				<calllist name="circle32" />
+			</pushmatrix>
+			<!-- missile command color cycle
+				<block length="0.3466667" repeat="8">
+					<color>
+						<key time="0.000000" r="1.0" g="1.0" b="1.0" a="1.0"/>
+						<key time="0.033333" r="1.0" g="1.0" b="1.0" a="1.0"/>
+						<key time="0.033333" r="1.0" g="1.0" b="0.0" a="1.0"/>
+						<key time="0.066667" r="1.0" g="1.0" b="0.0" a="1.0"/>
+						<key time="0.066667" r="1.0" g="0.0" b="1.0" a="1.0"/>
+						<key time="0.100000" r="1.0" g="0.0" b="1.0" a="1.0"/>
+						<key time="0.100000" r="1.0" g="0.0" b="0.0" a="1.0"/>
+						<key time="0.133333" r="1.0" g="0.0" b="0.0" a="1.0"/>
+						<key time="0.133333" r="0.0" g="1.0" b="1.0" a="1.0"/>
+						<key time="0.166667" r="0.0" g="1.0" b="1.0" a="1.0"/>
+						<key time="0.166667" r="0.0" g="1.0" b="0.0" a="1.0"/>
+						<key time="0.200000" r="0.0" g="1.0" b="0.0" a="1.0"/>
+						<key time="0.200000" r="0.0" g="0.0" b="1.0" a="1.0"/>
+						<key time="0.233333" r="0.0" g="0.0" b="1.0" a="1.0"/>
+						<key time="0.233333" r="0.0" g="0.0" b="0.0" a="1.0"/>
+						<key time="0.346667" r="0.0" g="0.0" b="0.0" a="1.0"/>
+					</color>
+				</block>
+				-->
+			<!-- orange color cycle -->
+			<pushmatrix>
+				<block length="0.1" repeat="10">
+					<color>
+						<key time="0.00" r="0.1" g="0.8" b="1.0" a="1.0" />
+						<key time="0.05" r="0.1" g="0.3" b="1.0" a="1.0" />
+						<key time="0.10" r="0.1" g="0.8" b="1.0" a="1.0" />
+					</color>
+				</block>
+				<scale>
+					<key time="0.0" x="4.0" y="4.0" />
+					<key time="0.5" x="32.0" y="32.0" />
+					<key time="1.0" x="4.0" y="4.0" />
+				</scale>
+				<calllist name="circle32" />
+			</pushmatrix>
+		</pushmatrix>
+	</renderable>
+	<soundcue>
+		<cue sound="missilecommand-explosion" />
+	</soundcue>
+</template>

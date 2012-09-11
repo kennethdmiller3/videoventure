@@ -1,0 +1,17 @@
+<?xml version="1.0" ?>
+<template name="health1expire">
+	<expire time="0.25" />
+	<renderable radius="8">
+		<pushmatrix>
+			<color>
+				<key time="0.00" r="0.7" g="1.0" b="0.4" a="0.5" />
+				<key time="0.25" r="0.0" g="1.0" b="0.0" a="0.0" />
+			</color>
+			<scale>
+				<key time="0.00" x="2.0" y="2.0" />
+				<key time="0.25" x="8.0" y="8.0" />
+			</scale>
+			<calllist name="circle16" />
+		</pushmatrix>
+	</renderable>
+</template>

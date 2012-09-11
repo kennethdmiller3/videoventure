@@ -1,0 +1,48 @@
+<?xml version="1.0" ?>
+<template name="friendvapormine">
+	<collidable>
+		<body name="main">
+			<circle radius="4">
+				<friction value="0.5" />
+				<restitution value="0.5" />
+				<density value="0" />
+				<filter name="bluemissile" />
+			</circle>
+			<circle radius="8">
+				<friction value="0" />
+				<restitution value="1" />
+				<density value="0" />
+				<filter name="bluemissile" />
+				<sensor value="1" />
+			</circle>
+			<fixedrotation value="1" />
+		</body>
+	</collidable>
+	<renderable radius="4" period="0.066667">
+		<triangles>
+			<color r="1.0" g="1.0" b="1.0" a="1.0" />
+			<vertex x="0" y="4" />
+			<vertex x="-3" y="0" />
+			<vertex x="3" y="0" />
+			<vertex x="0" y="-4" />
+			<vertex x="-3" y="0" />
+			<vertex x="3" y="0" />
+			<color>
+				<key time="0.000000" r="0.1" g="1.0" b="1.0" a="1.0" />
+				<key time="0.033333" r="0.1" g="1.0" b="1.0" a="1.0" />
+				<key time="0.033333" r="0.1" g="0.8" b="1.0" a="1.0" />
+				<key time="0.066667" r="0.1" g="0.8" b="1.0" a="1.0" />
+			</color>
+			<vertex x="0" y="3" />
+			<vertex x="-2" y="0.5" />
+			<vertex x="2" y="0.5" />
+			<vertex x="0" y="-3" />
+			<vertex x="-2" y="-0.5" />
+			<vertex x="2" y="-0.5" />
+		</triangles>
+	</renderable>
+	<bullet damage="3" spawnondeath="friendvapormineexplosion" />
+	<damagable health="5" spawnondeath="friendvapormineexplosion" />
+	<team name="blue" />
+	<points value="100" />
+</template>

@@ -1,0 +1,95 @@
+<?xml version="1.0" ?>
+<template name="forcecannon" type="forceweapon">
+	<renderable radius="14" period="0.3">
+		<pushmatrix>
+			<pushmatrix>
+				<scale x="2.0" y="2.0" />
+				<color>
+					<key time="0.00" r="0.25" g="1.0" b="0.0" a="0.125" />
+					<key time="0.15" r="0.0" g="1.0" b="0.0" a="0.0" />
+					<key time="0.15" r="0.5" g="1.0" b="0.0" a="0.25" />
+					<key time="0.30" r="0.25" g="1.0" b="0.0" a="0.125" />
+				</color>
+				<calllist name="circle8" />
+			</pushmatrix>
+			<pushmatrix>
+				<scale x="1.5" y="1.5" />
+				<color>
+					<key time="0.00" r="0.6" g="1.0" b="0.2" a="0.25" />
+					<key time="0.15" r="0.5" g="1.0" b="0.0" a="0.0" />
+					<key time="0.15" r="0.7" g="1.0" b="0.4" a="0.5" />
+					<key time="0.30" r="0.6" g="1.0" b="0.2" a="0.25" />
+				</color>
+				<calllist name="circle8" />
+			</pushmatrix>
+			<translate>
+				<key time="0.00" x="0" y="7.5" />
+				<key time="0.15" x="0" y="12" />
+				<key time="0.15" x="0" y="3" />
+				<key time="0.30" x="0" y="7.5" />
+			</translate>
+			<pushmatrix>
+				<scale x="1" y="1" />
+				<color>
+					<key time="0.00" r="0.85" g="1.0" b="0.7" a="0.5" />
+					<key time="0.15" r="0.7" g="1.0" b="0.4" a="0.0" />
+					<key time="0.15" r="1.0" g="1.0" b="1.0" a="1.0" />
+					<key time="0.30" r="0.85" g="1.0" b="0.7" a="0.5" />
+				</color>
+				<calllist name="circle8" />
+			</pushmatrix>
+		</pushmatrix>
+		<pushmatrix>
+			<pushmatrix>
+				<scale x="2.0" y="2.0" />
+				<color>
+					<key time="0.0" r="0.5" g="1.0" b="0.0" a="0.25" />
+					<key time="0.3" r="0.0" g="1.0" b="0.0" a="0.0" />
+				</color>
+				<calllist name="circle8" />
+			</pushmatrix>
+			<pushmatrix>
+				<scale x="1.5" y="1.5" />
+				<color>
+					<key time="0.0" r="0.7" g="1.0" b="0.4" a="0.5" />
+					<key time="0.3" r="0.5" g="1.0" b="0.0" a="0.0" />
+				</color>
+				<calllist name="circle8" />
+			</pushmatrix>
+			<translate>
+				<key time="0.0" x="0" y="3" />
+				<key time="0.3" x="0" y="12" />
+			</translate>
+			<pushmatrix>
+				<scale x="1" y="1" />
+				<color>
+					<key time="0.0" r="1.0" g="1.0" b="1.0" a="1.0" />
+					<key time="0.3" r="0.7" g="1.0" b="0.4" a="0.0" />
+				</color>
+				<calllist name="circle8" />
+			</pushmatrix>
+		</pushmatrix>
+		<drawlist>
+			<color r="0.5" g="0.5" b="0.5" a="1.0" />
+			<pushmatrix>
+				<quads>
+					<vertex x="2.5" y="10" />
+					<vertex x="4" y="1.5" />
+					<vertex x="1.5" y="3" />
+					<vertex x="1.5" y="9" />
+					<vertex x="-1.5" y="9" />
+					<vertex x="-1.5" y="3" />
+					<vertex x="-4" y="1.5" />
+					<vertex x="-2.5" y="10" />
+					<vertex x="1.5" y="1" />
+					<vertex x="1" y="6" />
+					<vertex x="-1" y="6" />
+					<vertex x="-1.5" y="1" />
+				</quads>
+			</pushmatrix>
+		</drawlist>
+	</renderable>
+	<weapon>
+		<offset x="0" y="5" />
+	</weapon>
+</template>

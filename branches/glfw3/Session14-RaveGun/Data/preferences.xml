@@ -1,0 +1,9 @@
+<?1.0?>
+<preferences>
+    <resolution width="1280" height="960"/>
+    <fullscreen enable="0"/>
+    <verticalsync enable="1"/>
+    <multisample samples="4"/>
+    <motionblur steps="4" strength="100"/>
+    <sound channels="8" effectvolume="50" musicvolume="50"/>
+</preferences>

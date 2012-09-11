@@ -1,0 +1,25 @@
+<?xml version="1.0" ?>
+<template name="friendmissilewing_l" type="friendmissilewing">
+	<collidable>
+		<body name="main">
+			<box w="2" h="5">
+				<position x="3" y="0.5" />
+				<density value="0.5" />
+				<friction value="0.5" />
+				<restitution value="0.5" />
+				<filter name="blueunit" />
+				<group value="-1" />
+			</box>
+		</body>
+	</collidable>
+	<renderable radius="7">
+		<calllist name="missilewing" />
+		<calllist name="friendmissilewing" />
+	</renderable>
+	<link name="fire1">
+		<offset x="4.5" y="6.0" angle="-30" />
+	</link>
+	<link name="fire2">
+		<offset x="5.25" y="3.5" angle="-60" />
+	</link>
+</template>

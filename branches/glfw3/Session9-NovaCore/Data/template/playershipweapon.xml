@@ -1,0 +1,11 @@
+<?xml version="1.0" ?>
+<template name="playershipweapon">
+	<weapon>
+		<velocity x="0" y="480" />
+		<ordnance name="playerbullet" />
+		<shot delay="0.2" />
+	</weapon>
+	<soundcue>
+		<cue name="fire" sound="stargate-playershot" />
+	</soundcue>
+</template>

@@ -1,0 +1,234 @@
+Index: lib/win32/win32_init.c
+===================================================================
+--- lib/win32/win32_init.c	(revision 1245)
++++ lib/win32/win32_init.c	(working copy)
+@@ -49,7 +49,7 @@
+ {
+     // gdi32.dll (OpenGL pixel format functions & SwapBuffers)
+ #ifndef _GLFW_NO_DLOAD_GDI32
+-    _glfwLibrary.Libs.gdi32 = LoadLibrary( "gdi32.dll" );
++    _glfwLibrary.Libs.gdi32 = LoadLibraryA( "gdi32.dll" );
+     if( _glfwLibrary.Libs.gdi32 != NULL )
+     {
+         _glfwLibrary.Libs.ChoosePixelFormat   = (CHOOSEPIXELFORMAT_T)
+@@ -81,7 +81,7 @@
+ 
+     // winmm.dll (for joystick and timer support)
+ #ifndef _GLFW_NO_DLOAD_WINMM
+-    _glfwLibrary.Libs.winmm = LoadLibrary( "winmm.dll" );
++    _glfwLibrary.Libs.winmm = LoadLibraryA( "winmm.dll" );
+     if( _glfwLibrary.Libs.winmm != NULL )
+     {
+         _glfwLibrary.Libs.joyGetDevCapsA = (JOYGETDEVCAPSA_T)
+Index: lib/win32/win32_joystick.c
+===================================================================
+--- lib/win32/win32_joystick.c	(revision 1245)
++++ lib/win32/win32_joystick.c	(working copy)
+@@ -91,7 +91,7 @@
+ 
+ int _glfwPlatformGetJoystickParam( int joy, int param )
+ {
+-    JOYCAPS jc;
++    JOYCAPSA jc;
+ 
+ //  return 0;
+ 
+@@ -134,7 +134,7 @@
+ 
+ int _glfwPlatformGetJoystickPos( int joy, float *pos, int numaxes )
+ {
+-    JOYCAPS   jc;
++    JOYCAPSA  jc;
+     JOYINFOEX ji;
+     int       axis;
+ 
+@@ -164,7 +164,7 @@
+     }
+     if( axis < numaxes )
+     {
+-        pos[ axis++ ] = -_glfwCalcJoystickPos( ji.dwYpos, jc.wYmin,
++        pos[ axis++ ] = _glfwCalcJoystickPos( ji.dwYpos, jc.wYmin,
+                                                jc.wYmax );
+     }
+     if( axis < numaxes && jc.wCaps & JOYCAPS_HASZ )
+@@ -184,7 +184,7 @@
+     }
+     if( axis < numaxes && jc.wCaps & JOYCAPS_HASV )
+     {
+-        pos[ axis++ ] = -_glfwCalcJoystickPos( ji.dwVpos, jc.wVmin,
++        pos[ axis++ ] = _glfwCalcJoystickPos( ji.dwVpos, jc.wVmin,
+                                                jc.wVmax );
+     }
+ 
+@@ -200,7 +200,7 @@
+ int _glfwPlatformGetJoystickButtons( int joy, unsigned char *buttons,
+     int numbuttons )
+ {
+-    JOYCAPS   jc;
++    JOYCAPSA  jc;
+     JOYINFOEX ji;
+     int       button;
+ 
+Index: lib/win32/win32_window.c
+===================================================================
+--- lib/win32/win32_window.c	(revision 1245)
++++ lib/win32/win32_window.c	(working copy)
+@@ -838,23 +838,11 @@
+             NewMouseX = (int)((short)LOWORD(lParam));
+             NewMouseY = (int)((short)HIWORD(lParam));
+ 
+-            if( NewMouseX != _glfwInput.OldMouseX ||
+-                NewMouseY != _glfwInput.OldMouseY )
++            if( NewMouseX != _glfwInput.MousePosX ||
++                NewMouseY != _glfwInput.MousePosY )
+             {
+-                if( _glfwWin.mouseLock )
+-                {
+-                    _glfwInput.MousePosX += NewMouseX -
+-                                            _glfwInput.OldMouseX;
+-                    _glfwInput.MousePosY += NewMouseY -
+-                                            _glfwInput.OldMouseY;
+-                }
+-                else
+-                {
+-                    _glfwInput.MousePosX = NewMouseX;
+-                    _glfwInput.MousePosY = NewMouseY;
+-                }
+-                _glfwInput.OldMouseX = NewMouseX;
+-                _glfwInput.OldMouseY = NewMouseY;
++                _glfwInput.MousePosX = NewMouseX;
++                _glfwInput.MousePosY = NewMouseY;
+                 _glfwInput.MouseMoved = GL_TRUE;
+ 
+                 if( _glfwWin.mousePosCallback )
+@@ -891,8 +879,10 @@
+             if( _glfwWin.mouseLock )
+             {
+                 RECT ClipWindowRect;
+-                if( GetWindowRect( _glfwWin.window, &ClipWindowRect ) )
++                if( GetClientRect( _glfwWin.window, &ClipWindowRect ) )
+                 {
++                    ClientToScreen( _glfwWin.window, (LPPOINT)&ClipWindowRect.left );
++                    ClientToScreen( _glfwWin.window, (LPPOINT)&ClipWindowRect.right );
+                     ClipCursor( &ClipWindowRect );
+                 }
+             }
+@@ -910,8 +900,10 @@
+             if( _glfwWin.mouseLock )
+             {
+                 RECT ClipWindowRect;
+-                if( GetWindowRect( _glfwWin.window, &ClipWindowRect ) )
++                if( GetClientRect( _glfwWin.window, &ClipWindowRect ) )
+                 {
++                    ClientToScreen( _glfwWin.window, (LPPOINT)&ClipWindowRect.left );
++                    ClientToScreen( _glfwWin.window, (LPPOINT)&ClipWindowRect.right );
+                     ClipCursor( &ClipWindowRect );
+                 }
+             }
+@@ -1213,8 +1205,8 @@
+     // Initialize mouse position data
+     GetCursorPos( &pos );
+     ScreenToClient( _glfwWin.window, &pos );
+-    _glfwInput.OldMouseX = _glfwInput.MousePosX = pos.x;
+-    _glfwInput.OldMouseY = _glfwInput.MousePosY = pos.y;
++    _glfwInput.MousePosX = pos.x;
++    _glfwInput.MousePosY = pos.y;
+ 
+     return GL_TRUE;
+ }
+@@ -1678,16 +1670,6 @@
+     // Flag: mouse was not moved (will be changed by _glfwGetNextEvent if
+     // there was a mouse move event)
+     _glfwInput.MouseMoved = GL_FALSE;
+-    if( _glfwWin.mouseLock )
+-    {
+-        _glfwInput.OldMouseX = _glfwWin.width/2;
+-        _glfwInput.OldMouseY = _glfwWin.height/2;
+-    }
+-    else
+-    {
+-        _glfwInput.OldMouseX = _glfwInput.MousePosX;
+-        _glfwInput.OldMouseY = _glfwInput.MousePosY;
+-    }
+ 
+     // Check for new window messages
+     while( PeekMessage( &msg, NULL, 0, 0, PM_REMOVE ) )
+@@ -1730,13 +1712,6 @@
+         }
+     }
+ 
+-    // Did we have mouse movement in locked cursor mode?
+-    if( _glfwInput.MouseMoved && _glfwWin.mouseLock )
+-    {
+-        _glfwPlatformSetMouseCursorPos( _glfwWin.width / 2,
+-                                        _glfwWin.height / 2 );
+-    }
+-
+     // Was there a window close request?
+     if( winclosed && _glfwWin.windowCloseCallback )
+     {
+@@ -1772,9 +1747,11 @@
+ 
+     ShowCursor( FALSE );
+ 
+-    // Clip cursor to the window
+-    if( GetWindowRect( _glfwWin.window, &ClipWindowRect ) )
++    // Clip cursor to the window client area
++    if( GetClientRect( _glfwWin.window, &ClipWindowRect ) )
+     {
++        ClientToScreen( _glfwWin.window, (LPPOINT)&ClipWindowRect.left );
++        ClientToScreen( _glfwWin.window, (LPPOINT)&ClipWindowRect.right );
+         ClipCursor( &ClipWindowRect );
+     }
+ 
+Index: support/msvc90/GLFW.vcproj
+===================================================================
+--- support/msvc90/GLFW.vcproj	(revision 1245)
++++ support/msvc90/GLFW.vcproj	(working copy)
+@@ -1,7 +1,7 @@
+ <?xml version="1.0" encoding="Windows-1252"?>
+ <VisualStudioProject
+ 	ProjectType="Visual C++"
+-	Version="9,00"
++	Version="9.00"
+ 	Name="GLFW"
+ 	ProjectGUID="{BAA85EB9-BE33-45FB-B552-0AB3AC4D9CA9}"
+ 	RootNamespace="GLFW"
+@@ -21,7 +21,7 @@
+ 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
+ 			IntermediateDirectory="$(ConfigurationName)"
+ 			ConfigurationType="4"
+-			CharacterSet="2"
++			CharacterSet="0"
+ 			>
+ 			<Tool
+ 				Name="VCPreBuildEventTool"
+@@ -46,6 +46,7 @@
+ 				MinimalRebuild="true"
+ 				BasicRuntimeChecks="3"
+ 				RuntimeLibrary="3"
++				FloatingPointModel="2"
+ 				UsePrecompiledHeader="0"
+ 				WarningLevel="3"
+ 				Detect64BitPortabilityProblems="false"
+@@ -84,7 +85,7 @@
+ 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
+ 			IntermediateDirectory="$(ConfigurationName)"
+ 			ConfigurationType="4"
+-			CharacterSet="2"
++			CharacterSet="0"
+ 			WholeProgramOptimization="1"
+ 			>
+ 			<Tool
+@@ -104,9 +105,11 @@
+ 			/>
+ 			<Tool
+ 				Name="VCCLCompilerTool"
++				Optimization="1"
+ 				AdditionalIncludeDirectories="&quot;$(ProjectDir)../../lib&quot;;&quot;$(ProjectDir)../../lib/win32&quot;;&quot;$(ProjectDir)../../include&quot;"
+ 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
+ 				RuntimeLibrary="2"
++				FloatingPointModel="2"
+ 				UsePrecompiledHeader="0"
+ 				WarningLevel="3"
+ 				Detect64BitPortabilityProblems="false"

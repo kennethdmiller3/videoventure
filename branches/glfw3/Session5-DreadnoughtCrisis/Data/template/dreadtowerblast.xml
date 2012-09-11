@@ -1,0 +1,36 @@
+<?xml version="1.0" ?>
+<template name="dreadtowerblast">
+	<expire time="0.3" />
+	<explosion>
+		<radius inner="12" outer="24" />
+		<damage inner="10" outer="0" />
+	</explosion>
+	<renderable radius="32">
+		<pushmatrix>
+			<color>
+				<key time="0.0" r="1.0" g="0.8" b="0.1" a="1.0" />
+				<key time="0.3" r="1.0" g="0.3" b="0.1" a="0.0" />
+			</color>
+			<scale>
+				<key time="0.0" x="12.0" y="12.0" />
+				<key time="0.3" x="24.0" y="24.0" />
+			</scale>
+			<calllist name="circle32" />
+		</pushmatrix>
+	</renderable>
+	<sound>
+		<pokey length="0.3" frequency="1250000" tone="poly17">
+			<divider quantize="28">
+				<key time="0.0" value="448" />
+				<key time="0.3" value="1456" />
+			</divider>
+			<amplitude quantize="0.066667">
+				<key time="0.0" value="0.4" />
+				<key time="0.3" value="0.0" />
+			</amplitude>
+		</pokey>
+	</sound>
+	<soundcue>
+		<cue sound="dreadtowerblast" />
+	</soundcue>
+</template>

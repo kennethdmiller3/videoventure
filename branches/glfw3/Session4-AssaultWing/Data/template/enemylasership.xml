@@ -1,0 +1,88 @@
+<?xml version="1.0" ?>
+<template name="enemylasership">
+	<collidable>
+		<body name="main">
+			<circle radius="6">
+				<density value="1" />
+				<friction value="0.5" />
+				<restitution value="0.5" />
+				<filter name="redunit" />
+			</circle>
+		</body>
+	</collidable>
+	<renderable radius="6">
+		<drawlist>
+			<color r="1.0" g="0.2" b="0.1" a="1.0" />
+			<triangle_strip>
+				<vertex x="-2.5" y="-3" />
+				<vertex x="-5.5" y="-3" />
+				<vertex x="-2.5" y="-2.5" />
+				<vertex x="-5.5" y="-2.5" />
+				<vertex x="-3.5" y="-1.5" />
+				<vertex x="-4.5" y="-1.5" />
+				<vertex x="-3.5" y="3" />
+				<vertex x="-4.5" y="3" />
+				<vertex x="-4" y="3.5" />
+			</triangle_strip>
+			<triangle_strip>
+				<vertex x="2.5" y="-3" />
+				<vertex x="5.5" y="-3" />
+				<vertex x="2.5" y="-2.5" />
+				<vertex x="5.5" y="-2.5" />
+				<vertex x="3.5" y="-1.5" />
+				<vertex x="4.5" y="-1.5" />
+				<vertex x="3.5" y="3" />
+				<vertex x="4.5" y="3" />
+				<vertex x="4" y="3.5" />
+			</triangle_strip>
+			<color r="0.5" g="0.6" b="0.7" a="1.0" />
+			<triangle_strip>
+				<vertex x="1.5" y="-5" />
+				<vertex x="-1.5" y="-5" />
+				<vertex x="1.5" y="-3.5" />
+				<vertex x="-1.5" y="-3.5" />
+				<vertex x="0.5" y="-2.5" />
+				<vertex x="-0.5" y="-2.5" />
+				<vertex x="0.75" y="-1" />
+				<vertex x="-0.75" y="-1" />
+				<vertex x="3.5" y="-1" />
+				<vertex x="-3.5" y="-1" />
+				<vertex x="3.5" y="1" />
+				<vertex x="-3.5" y="1" />
+				<vertex x="1.5" y="2" />
+				<vertex x="-1.5" y="2" />
+				<vertex x="1.0" y="3" />
+				<vertex x="-1.0" y="3" />
+			</triangle_strip>
+			<color r="1.0" g="0.8" b="0.1" a="1.0" />
+			<quads>
+				<vertex x="0.75" y="2" />
+				<vertex x="-0.75" y="2" />
+				<vertex x="-0.5" y="6" />
+				<vertex x="0.5" y="6" />
+			</quads>
+		</drawlist>
+	</renderable>
+	<!--aimer range="256" focus="3" attack="128" drift="0.5" wanderturn="0.25" wanderturnrate="0.25" leading="0" angle="30" evade="1" close="64" closedistscale="0.0625" closespeedscale="0.015625" filter="redbullet" /-->
+	<aimer>
+		<drift strength="0.5" />
+		<wander turn="0.25" turnrate="0.25" />
+		<target range="256" focus="3" filter="redbullet" />
+		<pursue strength="1" leading="0" />
+		<aim strength="1" leading="0" />
+		<fire channel="1" range="128" angle="30" />
+		<evade strength="1" />
+		<close range="64" scaledist="0.0625" scalespeed="0.015625" />
+		<edge strength="0.015625" distance="64" />
+	</aimer>
+	<ship maxveloc="30" maxaccel="120" minaccel="10" maxomega="0.5" />
+	<damagable health="6" spawnondeath="enemyexplosion" />
+	<weapon>
+		<offset x="0" y="5" angle="0" />
+		<flash name="enemylasershiptracer" />
+		<shot delay="3.0" />
+	</weapon>
+	<team name="red" />
+	<points value="300" />
+	<capturable resistance="6" spawnoncapture="friendlasership" />
+</template>
