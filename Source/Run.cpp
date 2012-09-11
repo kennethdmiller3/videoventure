@@ -468,8 +468,9 @@ static void ApplyMotionBlur(int blur)
 	SetUniformMatrix4(GL_PROJECTION, ProjectionGet());
 
 	// set model view matrix
-	//StackIdentity();
-	SetUniformMatrix4(GL_MODELVIEW, IdentityGet());
+	StackIdentity();
+	ViewLoad(StackGet());
+	//SetUniformMatrix4(GL_MODELVIEW, IdentityGet());
 
 	// position, color, texcoord
 	SetWorkFormat((1 << 0) | (1 << 2) | (1 << 3));
