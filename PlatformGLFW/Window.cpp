@@ -1,63 +1,90 @@
 #include "StdAfx.h"
 
 // input callbacks
-extern void KeyCallback(int aIndex, int aState);
-extern void CharCallback(int aIndex, int aState);
-extern void MousePosCallback(int aPosX, int aPosY);
-extern void MouseButtonCallback(int aIndex, int aState);
-extern void MouseWheelCallback(int aPos);
-extern int WindowCloseCallback();
+extern void KeyCallback(GLFWwindow aWindow, int aKey, int aAction);
+extern void CharCallback(GLFWwindow aWindow, int aChar);
+extern void MousePosCallback(GLFWwindow aWindow, int aPosX, int aPosY);
+extern void MouseButtonCallback(GLFWwindow aWindow, int aButton, int aAction);
+extern void ScrollCallback(GLFWwindow aWindow, double aScrollX, double aScrollY);
+extern int WindowCloseCallback(GLFWwindow aWindow);
 
 namespace Platform
 {
+	static GLFWwindow sWindow;
+
 	bool OpenWindow(void)
 	{
 		// set window hints
 #ifdef ENABLE_ACCUMULATION_BUFFER
-		glfwOpenWindowHint(GLFW_ACCUM_RED_BITS, 16);
-		glfwOpenWindowHint(GLFW_ACCUM_GREEN_BITS, 16);
-		glfwOpenWindowHint(GLFW_ACCUM_BLUE_BITS, 16);
-		glfwOpenWindowHint(GLFW_ACCUM_ALPHA_BITS, 16);
+		glfwWindowHint(GLFW_ACCUM_RED_BITS, 16);
+		glfwWindowHint(GLFW_ACCUM_GREEN_BITS, 16);
+		glfwWindowHint(GLFW_ACCUM_BLUE_BITS, 16);
+		glfwWindowHint(GLFW_ACCUM_ALPHA_BITS, 16);
 #endif
-		glfwOpenWindowHint(GLFW_FSAA_SAMPLES, OPENGL_MULTISAMPLE);
-
-		// create the window
-		if (!glfwOpenWindow(SCREEN_WIDTH, SCREEN_HEIGHT,
+		glfwWindowHint(GLFW_FSAA_SAMPLES, OPENGL_MULTISAMPLE);
+		glfwWindowHint(GLFW_RED_BITS, 8);
+		glfwWindowHint(GLFW_GREEN_BITS, 8);
+		glfwWindowHint(GLFW_BLUE_BITS, 8);
 #ifdef ENABLE_SRC_ALPHA_SATURATE
-			8, 8, 8, 8,
+		glfwWindowHint(GLFW_ALPHA_BITS, 8);
 #else
-			8, 8, 8, 0,
+		glfwWindowHint(GLFW_ALPHA_BITS, 0);
 #endif
 #ifdef ENABLE_DEPTH
-			16, 0,
+		glfwWindowHint(GLFW_DEPTH_BITS, 16);
 #else
-			0, 0,
+		glfwWindowHint(GLFW_DEPTH_BITS, 0);
 #endif
-			SCREEN_FULLSCREEN ? GLFW_FULLSCREEN : GLFW_WINDOW))
+		glfwWindowHint(GLFW_STENCIL_BITS, 0);
+		
+		// create the window
+		sWindow = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT,
+			SCREEN_FULLSCREEN ? GLFW_FULLSCREEN : GLFW_WINDOWED, "VideoVenture", NULL);
+		if (!sWindow)
 			return false;
 
-		// set the title
-		glfwSetWindowTitle("Shmup!");
-
 		// set vertical sync
-		glfwSwapInterval( OPENGL_SWAPCONTROL );
+		glfwSwapInterval(OPENGL_SWAPCONTROL);
 
 		// hide the mouse cursor
-		glfwDisable(GLFW_MOUSE_CURSOR);
+		ShowCursor(false);
 
 		// set callbacks
 		glfwSetKeyCallback(KeyCallback);
 		glfwSetCharCallback(CharCallback);
-		glfwSetMousePosCallback(MousePosCallback);
+		glfwSetCursorPosCallback(MousePosCallback);
 		glfwSetMouseButtonCallback(MouseButtonCallback);
-		glfwSetMouseWheelCallback(MouseWheelCallback);
+		glfwSetScrollCallback(ScrollCallback);
 		glfwSetWindowCloseCallback(WindowCloseCallback);
+
+		// make it the current context
+		glfwMakeContextCurrent(sWindow);
 
 		return true;
 	}
 
 	void CloseWindow(void)
 	{
-		glfwCloseWindow();
+		glfwDestroyWindow(sWindow);
+	}
+
+	// show/hide the cursor
+	void ShowCursor(bool aShow)
+	{
+		if (aShow)
+			glfwSetInputMode(sWindow, GLFW_CURSOR_MODE, GLFW_CURSOR_NORMAL);
+		else
+			glfwSetInputMode(sWindow, GLFW_CURSOR_MODE, GLFW_CURSOR_CAPTURED);
+	}
+
+	// grab input
+	void GrabInput(bool aGrab)
+	{
+	}
+
+	// show back buffer
+	void Present(void)
+	{
+		glfwSwapBuffers(sWindow);
 	}
 }
