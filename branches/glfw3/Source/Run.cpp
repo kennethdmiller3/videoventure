@@ -152,26 +152,26 @@ static void Screenshot(void)
 
 static int consolekeyevent = 0;
 
-void KeyCallback(int aIndex, int aState)
+void KeyCallback(GLFWwindow aWindow, int aKey, int aAction)
 {
-	if (aState == GLFW_PRESS)
+	if (aAction == GLFW_PRESS)
 	{
-		consolekeyevent = console->KeyEvent(aIndex, (glfwGetKey(GLFW_KEY_LSHIFT)) | (glfwGetKey(GLFW_KEY_RSHIFT) << 1));
+		consolekeyevent = console->KeyEvent(aKey, (glfwGetKey(aWindow, GLFW_KEY_LEFT_SHIFT)) | (glfwGetKey(aWindow, GLFW_KEY_RIGHT_SHIFT) << 1));
 		if (consolekeyevent)
 			return;
 		if (console->GetVisibility())
 			return;
 
-		input.OnPress(Input::TYPE_KEYBOARD, 0, aIndex);
+		input.OnPress(Input::TYPE_KEYBOARD, 0, aKey);
 
-		switch (aIndex)
+		switch (aKey)
 		{
 		case GLFW_KEY_F4:
-			if (glfwGetKey(GLFW_KEY_LALT) || glfwGetKey(GLFW_KEY_RALT))
+			if (glfwGetKey(aWindow, GLFW_KEY_LEFT_ALT) || glfwGetKey(aWindow, GLFW_KEY_RIGHT_ALT))
 				setgamestate = STATE_QUIT;
 			break;
 		case GLFW_KEY_ENTER:
-			if (glfwGetKey(GLFW_KEY_LALT) || glfwGetKey(GLFW_KEY_RALT))
+			if (glfwGetKey(aWindow, GLFW_KEY_LEFT_ALT) || glfwGetKey(aWindow, GLFW_KEY_RIGHT_ALT))
 			{
 				CloseWindow();
 				SCREEN_FULLSCREEN = !SCREEN_FULLSCREEN;
@@ -188,7 +188,7 @@ void KeyCallback(int aIndex, int aState)
 			}
 			break;
 		case GLFW_KEY_PAUSE:
-			if (glfwGetKey(GLFW_KEY_LSHIFT) || glfwGetKey(GLFW_KEY_RSHIFT))
+			if (glfwGetKey(aWindow, GLFW_KEY_LEFT_SHIFT) || glfwGetKey(aWindow, GLFW_KEY_RIGHT_SHIFT))
 			{
 				paused = true;
 				singlestep = true;
@@ -207,40 +207,42 @@ void KeyCallback(int aIndex, int aState)
 	}
 	else
 	{
-		input.OnRelease(Input::TYPE_KEYBOARD, 0, aIndex);
+		input.OnRelease(Input::TYPE_KEYBOARD, 0, aKey);
 	}
 }
 
-void CharCallback(int aIndex, int aState)
+void CharCallback(GLFWwindow aWindow, int aChar)
 {
-	if (aState == GLFW_PRESS)
-	{
-		if (consolekeyevent)
-			return;
-		if (console->CharEvent(aIndex))
-			return;
-	}
+	if (consolekeyevent)
+		return;
+	if (console->CharEvent(aChar))
+		return;
 }
 
-void MousePosCallback(int aPosX, int aPosY)
+void MousePosCallback(GLFWwindow aWindow, int aPosX, int aPosY)
 {
+	// clamp position to the window boundary
+	aPosX = Clamp(aPosX, 0, SCREEN_WIDTH);
+	aPosY = Clamp(aPosY, 0, SCREEN_HEIGHT);
+	glfwSetCursorPos(aWindow, aPosX, aPosY);
+
 	input.OnAxis(Input::TYPE_MOUSE_AXIS, 0, 0, float(aPosX * 2 - SCREEN_WIDTH) / float(SCREEN_HEIGHT));
 	input.OnAxis(Input::TYPE_MOUSE_AXIS, 0, 1, float(aPosY * 2 - SCREEN_HEIGHT) / float(SCREEN_HEIGHT));
 }
 
-void MouseButtonCallback(int aIndex, int aState)
+void MouseButtonCallback(GLFWwindow aWindow, int aButton, int aAction)
 {
-	if (aState == GLFW_PRESS)
-		input.OnPress(Input::TYPE_MOUSE_BUTTON, 0, aIndex);
+	if (aAction == GLFW_PRESS)
+		input.OnPress(Input::TYPE_MOUSE_BUTTON, 0, aButton);
 	else
-		input.OnRelease(Input::TYPE_MOUSE_BUTTON, 0, aIndex);
+		input.OnRelease(Input::TYPE_MOUSE_BUTTON, 0, aButton);
 }
 
-void MouseWheelCallback(int aPos)
+void ScrollCallback(GLFWwindow aWindow, double aScrollX, double aScrollY)
 {
 }
 
-int WindowCloseCallback()
+int WindowCloseCallback(GLFWwindow aWindow)
 {
 	setgamestate = STATE_QUIT;
 	return TRUE;
@@ -425,12 +427,16 @@ static void ReadInput()
 			}
 		}
 #elif defined(USE_GLFW)
+		// poll events
+		glfwPollEvents();
+
+		// get current joystick state
 		if (glfwGetJoystickParam(0, GLFW_PRESENT))
 		{
 			// get joystick axis positions
 			int axiscount = glfwGetJoystickParam(0, GLFW_AXES);
 			float *axis = static_cast<float *>(_alloca(axiscount * sizeof(float)));
-			axiscount = glfwGetJoystickPos(0, axis, axiscount);
+			axiscount = glfwGetJoystickAxes(0, axis, axiscount);
 			for (int i = 0; i < axiscount; ++i)
 				input.OnAxis(Input::TYPE_JOYSTICK_AXIS, 0, i, axis[i]);
 
