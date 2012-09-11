@@ -2,6 +2,7 @@
 
 #include "Title.h"
 #include "Render.h"
+#include "Magic.h"
 
 #define USE_TITLE_PACKED_VERTEX
 #if defined(USE_TITLE_PACKED_VERTEX)
@@ -116,8 +117,11 @@ static GLuint titledrawlist;
 #endif
 
 #if defined(USE_TITLE_MIRROR_WATER_EFFECT)
-// mirror offset
+// mirror effect properties
 static const float mirrorscale = -0.75f;
+static const float mirroralpha = 0.5f;
+static const float mirrorheight = 48.0f;
+static const int mirrorrows = int(ceilf(mirrorheight / (titleh * -mirrorscale)));
 
 // mirror y-axis wave function
 static float MirrorWaveY(float y)
@@ -184,6 +188,7 @@ ShellTitleTemplate::ShellTitleTemplate(void)
 , rows(0)
 , titlefill(NULL)
 , rowalpha(NULL)
+, vertcount(0)
 {
 }
 
@@ -245,8 +250,13 @@ bool ShellTitleTemplate::Configure(const tinyxml2::XMLElement *element, unsigned
 					continue;
 				memcpy(&titlemap[row*cols], text, strlen(text));
 
-				rowalpha[row] = 0.0f;
-				child->QueryFloatAttribute("bar", &rowalpha[row]);
+				float alpha = 0.0f;
+				child->QueryFloatAttribute("bar", &alpha);
+
+				if (alpha != 0.0f)
+					vertcount += 4;
+
+				rowalpha[row] = alpha;
 
 				++row;
 			}
@@ -282,8 +292,16 @@ bool ShellTitleTemplate::Configure(const tinyxml2::XMLElement *element, unsigned
 				}
 			}
 
-			if (fill & (1<<4))
-				fill = (1<<4);
+			if (fill & (1<<BORDER_C))
+				fill = (1<<BORDER_C);
+
+			if (fill)
+			{
+				int quads = count_ones(fill) * 4;
+				vertcount += quads;
+				if (row > rows - mirrorrows)
+					vertcount += quads;
+			}
 
 			*titlefillptr++ = unsigned short(fill | (phase << 9));
 		}
@@ -406,6 +424,7 @@ ShellTitle::ShellTitle(const ShellTitleTemplate &aTemplate, unsigned int aId)
 	, rows(aTemplate.rows)
 	, titlefill(aTemplate.titlefill)
 	, rowalpha(aTemplate.rowalpha)
+	, vertcount(aTemplate.vertcount)
 {
 	SetAction(Action(this, &ShellTitle::Render));
 }
@@ -424,7 +443,7 @@ void ShellTitle::Render(unsigned int aId, float aTime, const Transform2 &aTransf
 #endif
 	SetWorkFormat((1<<0)|(1<<2));
 	SetDrawMode(GL_QUADS);
-	Vertex *v0 = static_cast<Vertex *>(AllocVertices(0));
+	Vertex *v0 = static_cast<Vertex *>(AllocVertices(vertcount));
 	register Vertex * __restrict v = v0;
 
 	// draw title bar
@@ -475,8 +494,8 @@ void ShellTitle::Render(unsigned int aId, float aTime, const Transform2 &aTransf
 	const float titleheight = titleh * (rows + 1);
 	const float mirrortop = titley + titleheight + 4;
 	const float mirrorbottom = mirrortop - mirrorscale * titleheight;
-	const float mirroralphadelta = -0.5f / 48;
-	const float mirroralphastart = 0.5f - mirroralphadelta * mirrortop;
+	const float mirroralphadelta = -mirroralpha / mirrorheight;
+	const float mirroralphastart = mirroralpha - mirroralphadelta * mirrortop;
 
 	// starting mirror properties
 	float mirror_y0 = mirrorbottom + MirrorWaveY(-titleh);
@@ -510,7 +529,7 @@ void ShellTitle::Render(unsigned int aId, float aTime, const Transform2 &aTransf
 				// get block color
 				float R, G, B;
 				float h = BlockHue(col, row);
-				bool border = (fill & ~(1<<4)) != 0;
+				bool border = (fill & ~(1<<BORDER_C)) != 0;
 				HSV2RGB(h + phase * 0.5f + border * 0.5f, 1.0f, 1.0f - 0.25f * border, R, G, B);
 
 				// for each block...
@@ -556,7 +575,7 @@ void ShellTitle::Render(unsigned int aId, float aTime, const Transform2 &aTransf
 #endif
 
 #if defined(USE_TITLE_MIRROR_WATER_EFFECT)
-						if (mirror_a0 > 0.0f || mirror_a1 > 0.0f)
+						if (row > rows - mirrorrows) //(mirror_a0 > 0.0f || mirror_a1 > 0.0f)
 						{
 							// mirrored
 							float m0 = y0 - y;
@@ -616,7 +635,7 @@ void ShellTitle::Render(unsigned int aId, float aTime, const Transform2 &aTransf
 	}
 
 #if 1
-	AllocVertices(v - v0);
+	assert(v == v0 + vertcount);
 	FlushDynamic();
 #ifdef USE_TITLE_PACKED_VERTEX
 	SetAttribFormat(0, 3, GL_FLOAT);
@@ -655,7 +674,7 @@ void ShellTitle::Render(unsigned int aId, float aTime, const Transform2 &aTransf
 				// get block color
 				float R, G, B;
 				float h = BlockHue(col, row);
-				bool border = (fill & ~(1<<4)) != 0;
+				bool border = (fill & ~(1<<BORDER_C)) != 0;
 				HSV2RGB(h + phase * 0.5f + border * 0.5f, 1.0f, 1.0f - 0.25f * border, R, G, B);
 
 				texturedata[row+1][col+1][0] = (unsigned char)(int)(R * 255);

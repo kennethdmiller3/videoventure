@@ -9,6 +9,7 @@ class ShellTitleTemplate : public OverlayTemplate
 	int rows;
 	unsigned short *titlefill;
 	float *rowalpha;
+	unsigned int vertcount;
 
 public:
 	ShellTitleTemplate(void);
@@ -24,6 +25,7 @@ class ShellTitle : public Overlay
 	int rows;
 	unsigned short *titlefill;
 	float *rowalpha;
+	unsigned int vertcount;
 
 public:
 	// constructor
