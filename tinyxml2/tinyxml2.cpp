@@ -23,10 +23,12 @@ distribution.
 
 #include "tinyxml2.h"
 
-#include <cstdio>
-#include <cstdlib>
-#include <new>
-#include <cstddef>
+#include <new>		// yes, this one new style header, is in the Android SDK.
+#ifdef ANDROID_NDK
+	#include <stddef.h>
+#else
+	#include <cstddef>
+#endif
 
 using namespace tinyxml2;
 
@@ -134,16 +136,12 @@ char* StrPair::ParseName( char* p )
 		return 0;
 	}
 
-	if ( !XMLUtil::IsAlpha( *p ) ) {
-		return 0;
-	}
-
 	while( *p && (
 			   XMLUtil::IsAlphaNum( (unsigned char) *p ) 
 			|| *p == '_'
-			|| *p == '-'
-			|| *p == '.'
-			|| *p == ':' ))
+			|| *p == ':'
+			|| (*p == '-' && p>start )		// can be in a name, but not lead it.
+			|| (*p == '.' && p>start ) ))	// can be in a name, but not lead it.
 	{
 		++p;
 	}
@@ -155,6 +153,31 @@ char* StrPair::ParseName( char* p )
 	return 0;
 }
 
+
+void StrPair::CollapseWhitespace()
+{
+	// Trim leading space.
+	start = XMLUtil::SkipWhiteSpace( start );
+
+	if ( start && *start ) {
+		char* p = start;	// the read pointer
+		char* q = start;	// the write pointer
+
+		while( *p ) {
+			if ( XMLUtil::IsWhiteSpace( *p )) {
+				p = XMLUtil::SkipWhiteSpace( p );
+				if ( *p == 0 ) 
+					break;	// don't write to q; this trims the trailing space.
+				*q = ' ';
+				++q;
+			}
+			*q = *p;
+			++q;
+			++p;
+		}
+		*q = 0;
+	}
+}
 
 
 const char* StrPair::GetStr()
@@ -231,6 +254,11 @@ const char* StrPair::GetStr()
 				}
 			}
 			*q = 0;
+		}
+		// The loop below has plenty going on, and this
+		// is a less useful mode. Break it out.
+		if ( flags & COLLAPSE_WHITESPACE ) {
+			CollapseWhitespace();
 		}
 		flags = (flags & NEEDS_DELETE);
 	}
@@ -815,7 +843,11 @@ char* XMLText::ParseDeep( char* p, StrPair* )
 		return p;
 	}
 	else {
-		p = value.ParseText( p, "<", document->ProcessEntities() ? StrPair::TEXT_ELEMENT : StrPair::TEXT_ELEMENT_LEAVE_ENTITIES );
+		int flags = document->ProcessEntities() ? StrPair::TEXT_ELEMENT : StrPair::TEXT_ELEMENT_LEAVE_ENTITIES;
+		if ( document->WhitespaceMode() == COLLAPSE_WHITESPACE )
+			flags |= StrPair::COLLAPSE_WHITESPACE;
+
+		p = value.ParseText( p, "<", flags );
 		if ( !p ) {
 			document->SetError( XML_ERROR_PARSING_TEXT, start, 0 );
 		}
@@ -1416,11 +1448,12 @@ bool XMLElement::Accept( XMLVisitor* visitor ) const
 
 
 // --------- XMLDocument ----------- //
-XMLDocument::XMLDocument( bool _processEntities ) :
+XMLDocument::XMLDocument( bool _processEntities, Whitespace _whitespace ) :
 	XMLNode( 0 ),
 	writeBOM( false ),
 	processEntities( _processEntities ),
 	errorID( 0 ),
+	whitespace( _whitespace ),
 	errorStr1( 0 ),
 	errorStr2( 0 ),
 	charBuffer( 0 )
@@ -1509,16 +1542,15 @@ int XMLDocument::LoadFile( const char* filename )
 {
 	DeleteChildren();
 	InitDocument();
+	FILE* fp = 0;
 
-#if defined(_MSC_VER)
-#pragma warning ( push )
-#pragma warning ( disable : 4996 )		// Fail to see a compelling reason why this should be deprecated.
-#endif
-	FILE* fp = fopen( filename, "rb" );
-#if defined(_MSC_VER)
-#pragma warning ( pop )
-#endif
-	if ( !fp ) {
+	#if defined(_MSC_VER) && (_MSC_VER >= 1400 )
+		errno_t err = fopen_s(&fp, filename, "rb" );
+		if ( !fp || err) {
+	#else
+		fp = fopen( filename, "rb" );
+		if ( !fp) {
+	#endif
 		SetError( XML_ERROR_FILE_NOT_FOUND, filename, 0 );
 		return errorID;
 	}
@@ -1563,29 +1595,28 @@ int XMLDocument::LoadFile( FILE* fp )
 }
 
 
-int XMLDocument::SaveFile( const char* filename )
+int XMLDocument::SaveFile( const char* filename, bool compact )
 {
-#if defined(_MSC_VER)
-#pragma warning ( push )
-#pragma warning ( disable : 4996 )		// Fail to see a compelling reason why this should be deprecated.
-#endif
-	FILE* fp = fopen( filename, "w" );
-#if defined(_MSC_VER)
-#pragma warning ( pop )
-#endif
-	if ( !fp ) {
+	FILE* fp = 0;
+	#if defined(_MSC_VER) && (_MSC_VER >= 1400 )
+		errno_t err = fopen_s(&fp, filename, "w" );
+		if ( !fp || err) {
+	#else
+		fp = fopen( filename, "rb" );
+		if ( !fp) {
+	#endif
 		SetError( XML_ERROR_FILE_COULD_NOT_BE_OPENED, filename, 0 );
 		return errorID;
 	}
-	SaveFile(fp);
+	SaveFile(fp, compact);
 	fclose( fp );
 	return errorID;
 }
 
 
-int XMLDocument::SaveFile( FILE* fp )
+int XMLDocument::SaveFile( FILE* fp, bool compact )
 {
-	XMLPrinter stream( fp );
+	XMLPrinter stream( fp, compact );
 	Print( &stream );
 	return errorID;
 }

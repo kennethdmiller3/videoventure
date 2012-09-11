@@ -296,6 +296,8 @@ int main( int /*argc*/, const char ** /*argv*/ )
 			doc->Print( &streamer );
 			XMLTest( "Compact mode", "<element><sub attrib=\"1\"/><sub/></element>", streamer.CStr(), false );
 		}
+		doc->SaveFile( "./resources/out/pretty.xml" );
+		doc->SaveFile( "./resources/out/compact.xml", true );
 		delete doc;
 	}
 	{
@@ -938,6 +940,38 @@ int main( int /*argc*/, const char ** /*argv*/ )
 		XMLTest( "QueryBoolText", boolValue, true,					false );
 	}
 
+	{
+		const char* xml = "<element><_sub/><:sub/><sub:sub/><sub-sub/></element>";
+		XMLDocument doc;
+		doc.Parse( xml );
+		XMLTest( "Non-alpha element lead letter parses.", doc.Error(), false );
+	}
+
+	// ----------- Whitespace ------------
+	{
+		const char* xml = "<element>"
+							"<a> This \nis &apos;  text  &apos; </a>"
+							"<b>  This is &apos; text &apos;  \n</b>"
+							"<c>This  is  &apos;  \n\n text &apos;</c>"
+						  "</element>";
+		XMLDocument doc( true, COLLAPSE_WHITESPACE );
+		doc.Parse( xml );
+
+		const XMLElement* element = doc.FirstChildElement();
+		for( const XMLElement* parent = element->FirstChildElement();
+			 parent;
+			 parent = parent->NextSiblingElement() )
+		{
+			XMLTest( "Whitespace collapse", "This is ' text '", parent->GetText() );
+		}
+	}
+
+	{
+		const char* xml = "<element>    </element>";
+		XMLDocument doc( true, COLLAPSE_WHITESPACE );
+		doc.Parse( xml );
+		XMLTest( "Whitespace  all space", true, 0 == doc.FirstChildElement()->FirstChild() );
+	}
 	
 	// ----------- Performance tracking --------------
 	{
