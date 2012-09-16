@@ -99,6 +99,7 @@ void PointsOverlay::Render(unsigned int aId, float aTime, const Transform2 &aTra
 
 	// reset camera transform
 	StackPop();
+	ViewLoad(StackGet());
 	ProjectionPop();
 
 	// hide if empty...
