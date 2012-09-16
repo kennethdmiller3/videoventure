@@ -15,9 +15,6 @@ extern void RenderStaticDrawlist(unsigned int aId, float aTime, const Transform2
 struct EntityContext;
 extern void RenderDrawlist(EntityContext &aContext, const Transform2 &aTransform);
 
-extern void RenderBegin(void);
-extern void RenderFlush(void);
-
 // drawlist operations
 extern void DO_DrawMode(EntityContext &aContext);
 extern void DO_BindTexture(EntityContext &aContext);
