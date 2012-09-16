@@ -3,6 +3,7 @@
 #include "Title.h"
 #include "Render.h"
 #include "Magic.h"
+#include "MatrixStack.h"
 
 #define USE_TITLE_PACKED_VERTEX
 #if defined(USE_TITLE_PACKED_VERTEX)
@@ -43,6 +44,7 @@ static void HSV2RGB(const float h, const float s, const float v, float &r, float
 	case 3: r = p; g = q; b = v; break;
 	case 4: r = t; g = p; b = v; break;
 	case 5: r = v; g = p; b = q; break;
+	default: __assume(0);
 	}
 #else
 	// http://www.xmission.com/~trevin/atari/video_notes.html
@@ -437,11 +439,14 @@ ShellTitle::~ShellTitle()
 void ShellTitle::Render(unsigned int aId, float aTime, const Transform2 &aTransform)
 {
 	// begin drawing
+	UseProgram(0);
 #if defined(USE_TITLE_PACKED_VERTEX)
 	SetAttribFormat(0, 2, GL_FLOAT);
 	SetAttribFormat(2, 4, GL_UNSIGNED_BYTE);
 #endif
 	SetWorkFormat((1<<0)|(1<<2));
+	SetUniformMatrix4(GL_PROJECTION, ProjectionGet());
+	SetUniformMatrix4(GL_MODELVIEW, IdentityGet());
 	SetDrawMode(GL_QUADS);
 	Vertex *v0 = static_cast<Vertex *>(AllocVertices(vertcount));
 	register Vertex * __restrict v = v0;
@@ -531,6 +536,10 @@ void ShellTitle::Render(unsigned int aId, float aTime, const Transform2 &aTransf
 				float h = BlockHue(col, row);
 				bool border = (fill & ~(1<<BORDER_C)) != 0;
 				HSV2RGB(h + phase * 0.5f + border * 0.5f, 1.0f, 1.0f - 0.25f * border, R, G, B);
+				unsigned int color = 0xFF000000 
+					| (xs_RoundToInt(B * 255) << 16) 
+					| (xs_RoundToInt(G * 255) << 8)
+					| (xs_RoundToInt(R * 255) );
 
 				// for each block...
 				for (int i = 0; i < 9; ++i)
@@ -546,7 +555,6 @@ void ShellTitle::Render(unsigned int aId, float aTime, const Transform2 &aTransf
 
 						// upright
 #if defined(USE_TITLE_PACKED_VERTEX)
-						unsigned int color = 0xFF000000 | (xs_RoundToInt(B * 255) << 16) | (xs_RoundToInt(G * 255) << 8) | (xs_RoundToInt(R * 255) );
 						v->pos = Vector2(x0, y0);
 						v->color = color;
 						++v;
@@ -587,21 +595,20 @@ void ShellTitle::Render(unsigned int aId, float aTime, const Transform2 &aTransf
 							float yy0 = mirror_y0 + mirror_yd * m0;
 							float yy1 = mirror_y0 + mirror_yd * m1;
 #if defined(USE_TITLE_PACKED_VERTEX)
-							color &= 0x00FFFFFF;
-							color |= xs_RoundToInt(a1 * a1 * 255) << 24;
+							unsigned int color1 = xs_RoundToInt(a1 * a1 * 255) << 24 | (color & 0x00FFFFFF);
 							v->pos = Vector2(x0 + dx1, yy1);
-							v->color = color;
+							v->color = color1;
 							++v;
 							v->pos = Vector2(x1 + dx1, yy1);
-							v->color = color;
+							v->color = color1;
 							++v;
-							color &= 0x00FFFFFF;
+							unsigned int color0 = xs_RoundToInt(a0 * a0 * 255) << 24 | (color & 0x00FFFFFF);
 							color |= xs_RoundToInt(a0 * a0 * 255) << 24;
 							v->pos = Vector2(x1 + dx0, yy0);
-							v->color = color;
+							v->color = color0;
 							++v;
 							v->pos = Vector2(x0 + dx0, yy0);
-							v->color = color;
+							v->color = color0;
 							++v;
 #else
 							v->pos = Vector3(x0 + dx1, yy1, 0);
@@ -637,11 +644,6 @@ void ShellTitle::Render(unsigned int aId, float aTime, const Transform2 &aTransf
 #if 1
 	assert(v == v0 + vertcount);
 	FlushDynamic();
-#ifdef USE_TITLE_PACKED_VERTEX
-	SetAttribFormat(0, 3, GL_FLOAT);
-//	SetAttribFormat(2, 4, GL_FLOAT);
-	SetWorkFormat((1<<0)|(1<<2));
-#endif
 #else
 	// finish drawing
 	IndexQuads(base, GetVertexCount() - base);

@@ -87,6 +87,8 @@ static const unsigned char aTextureData[] =
 	0x06, 0x60, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1e, 0x00, 0x00, 0x18, 0x00, 0x00, 0x00, 
 };
 
+//#define FONT_USE_SHADER
+
 #ifdef FONT_USE_SHADER
 //
 // SHADER
@@ -96,8 +98,7 @@ static const unsigned char aTextureData[] =
 static const GLchar * const sFontVertexShader =
 	"#version 130\n"
 	"\n"
-	"uniform mat4 projection;\n"
-	"uniform mat4 modelview;\n"
+	"uniform mat4 modelviewproj;\n"
 	"\n"
 	"in vec3 position;\n"
 	"in vec4 color;\n"
@@ -108,7 +109,7 @@ static const GLchar * const sFontVertexShader =
 	"\n"
 	"void main()\n"
 	"{\n"
-	"    gl_Position = projection * modelview * vec4(position, 1.0);\n"
+	"    gl_Position = modelviewproj * vec4(position, 1.0);\n"
 	"    vscolor = color;\n"
 	"    vstexcoord = texcoord;\n"
 	"}\n";
@@ -126,16 +127,17 @@ static const GLchar * const sFontFragmentShader =
 	"\n"
 	"void main(void)\n"
 	"{\n"
-	"    fragmentcolor = vscolor * texture2D(texture, vstexcoord);\n"
+	"    fragmentcolor = vscolor;\n"
+	"    fragmentcolor.a *= texture2D(texture, vstexcoord).a;\n"
 	"}\n";
 
 // font shader program
-static GLuint sFontProgram;
+static GLuint sFontProgramId;
+static GLuint sFontVertexId;
+static GLuint sFontFragmentId;
 
 // uniform locations
-static GLint sUniformProjection;
-static GLint sUniformModelView;
-static GLint sUniformTexture;
+static GLint sUniformModelViewProj;
 
 // attribute locations
 static GLint sAttribPosition;
@@ -148,17 +150,17 @@ void CreateDefaultFont()
 {
 #ifdef FONT_USE_SHADER
 	// create font shader
-	sFontProgram = CreateProgram(sFontVertexShader, sFontFragmentShader);
+	sFontVertexId = CreateVertexShader(sFontVertexShader);
+	sFontFragmentId = CreateFragmentShader(sFontFragmentShader);
+	sFontProgramId = CreateProgram(sFontVertexId, sFontFragmentId);
 
 	// get uniform location
-	sUniformProjection = glGetUniformLocation(sFontProgram, "projection");
-	sUniformModelView = glGetUniformLocation(sFontProgram, "modelview");
-	sUniformTexture = glGetUniformLocation(sFontProgram, "texture");
+	sUniformModelViewProj = glGetUniformLocation(sFontProgramId, "modelviewproj");
 
 	// get attribute locations
-	sAttribPosition = glGetAttribLocation(sFontProgram, "position");
-	sAttribColor = glGetAttribLocation(sFontProgram, "color");
-	sAttribTexCoord = glGetAttribLocation(sFontProgram, "texcoord");
+	sAttribPosition = glGetAttribLocation(sFontProgramId, "position");
+	sAttribColor = glGetAttribLocation(sFontProgramId, "color");
+	sAttribTexCoord = glGetAttribLocation(sFontProgramId, "texcoord");
 #endif
 
 	// generate a texture handle
@@ -254,14 +256,20 @@ void FontDrawBegin(GLuint handle)
 {
 	BindTexture(handle);
 #ifdef FONT_USE_SHADER
-	UseProgram(sFontProgram);
-	SetUniformMatrix4(sUniformProjection, ProjectionGet());
-	SetUniformMatrix4(sUniformModelView, IdentityGet());
-	SetUniformInt1(sUniformTexture, handle);
+	UseProgram(sFontProgramId);
+	SetUniformMatrix4(sUniformModelViewProj, ProjectionGet());
+	SetAttribFormat(sAttribPosition, 3, GL_FLOAT);
+	SetAttribFormat(sAttribColor, 4, GL_UNSIGNED_BYTE);
+	SetAttribFormat(sAttribTexCoord, 2, GL_FLOAT);
+	SetWorkFormat((1<<sAttribPosition)|(1<<sAttribColor)|(1<<sAttribTexCoord));
 #else
-	SetWorkFormat((1<<0)|(1<<2)|(1<<3));
+	UseProgram(0);
 	SetUniformMatrix4(GL_PROJECTION, ProjectionGet());
-	//SetUniformMatrix4(GL_MODELVIEW, ViewGet());
+	SetUniformMatrix4(GL_MODELVIEW, ViewGet());
+	SetAttribFormat(0, 3, GL_FLOAT);
+	SetAttribFormat(2, 4, GL_UNSIGNED_BYTE);
+	SetAttribFormat(3, 2, GL_FLOAT);
+	SetWorkFormat((1<<0)|(1<<2)|(1<<3));
 #endif
 	SetDrawMode(GL_TRIANGLES);
 	sVertexBase = GetVertexCount();
@@ -269,29 +277,8 @@ void FontDrawBegin(GLuint handle)
 
 void FontDrawEnd()
 {
-#ifdef FONT_USE_SHADER
-	glBufferData(GL_ARRAY_BUFFER, sVertexCount*sizeof(FontVertex), sVertexWork, GL_STREAM_DRAW);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sIndexCount*sizeof(unsigned short), sIndexWork, GL_STREAM_DRAW);
-
-	glEnableVertexAttribArray(sAttribPosition);
-	glVertexAttribPointer(sAttribPosition, 3, GL_FLOAT, GL_FALSE, sizeof(FontVertex), reinterpret_cast<GLvoid *>(offsetof(FontVertex, x)));
-	glEnableVertexAttribArray(sAttribColor);
-	glVertexAttribPointer(sAttribColor, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(FontVertex), reinterpret_cast<GLvoid *>(offsetof(FontVertex, c)));
-	glEnableVertexAttribArray(sAttribTexCoord);
-	glVertexAttribPointer(sAttribTexCoord, 2, GL_FLOAT, GL_FALSE, sizeof(FontVertex), reinterpret_cast<GLvoid *>(offsetof(FontVertex, u)));
-
-	glDrawRangeElements(GL_TRIANGLES, 0, sVertexCount, sIndexCount, GL_UNSIGNED_SHORT, sIndexWork);
-
-	glDisableVertexAttribArray(sAttribPosition);
-	glDisableVertexAttribArray(sAttribColor);
-	glDisableVertexAttribArray(sAttribTexCoord);
-
-	glDisable(GL_TEXTURE_2D);
-	glUseProgram(0);
-#else
 	IndexQuads(sVertexBase, GetVertexCount() - sVertexBase);
 	BindTexture(0);
-#endif
 }
 
 void FontDrawColor(const Color4 &color)

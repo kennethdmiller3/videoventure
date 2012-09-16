@@ -137,6 +137,9 @@ void PlayerOverlayHealth::Render(unsigned int aId, float aTime, const Transform2
 	Color4 fillcolor = Lerp(Lerp(healthcolor[band][0], healthcolor[band+1][0], ratio), Lerp(healthcolor[band][1], healthcolor[band+1][1], ratio), pulse);
 
 	// begin drawing
+	UseProgram(0);
+	SetAttribFormat(0, 3, GL_FLOAT);
+	SetAttribFormat(2, 4, GL_UNSIGNED_BYTE);
 	SetWorkFormat((1<<0)|(1<<2));
 	SetDrawMode(GL_TRIANGLES);
 
