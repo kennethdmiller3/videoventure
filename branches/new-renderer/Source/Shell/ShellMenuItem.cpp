@@ -57,6 +57,13 @@ void ShellMenuItem::Render(unsigned int aId, float aTime, const Transform2 &aTra
 	if (mButtonColor)
 	{
 		// render button
+		UseProgram(0);
+		SetAttribFormat(0, 3, GL_FLOAT);
+#ifdef SHELL_MENU_FLOAT_COLOR
+		SetAttribFormat(2, 4, GL_FLOAT);
+#else
+		SetAttribFormat(2, 4, GL_UNSIGNED_BYTE);
+#endif
 		SetWorkFormat((1<<0)|(1<<2));
 		SetDrawMode(GL_TRIANGLES);
 

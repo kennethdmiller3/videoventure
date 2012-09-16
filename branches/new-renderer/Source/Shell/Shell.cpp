@@ -85,6 +85,9 @@ void EnterShellState()
 	// level configuration
 	InitLevel("shell.xml");
 
+	// activate any queued items
+	Database::Update();
+
 	// create options overlay
 	shellmenu.mActive = NULL;
 	shellmenu.Push(&shellmenumainpage);

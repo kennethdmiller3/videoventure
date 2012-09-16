@@ -109,6 +109,11 @@ public:
 		const Vector2 aPos0 = aTransform.p;
 		const Vector2 aPos1 = Lerp(mSourcePos, aPos0, float(sim_turn - mStart + sim_fraction - mFraction) / float(mEnd - mStart - mFraction));
 
+		UseProgram(0);
+		if (&GetBoundVertexBuffer() != &GetDynamicVertexBuffer())
+			SetUniformMatrix4(GL_MODELVIEW, ViewGet());
+		SetAttribFormat(0, 3, GL_FLOAT);
+		SetAttribFormat(2, 4, GL_UNSIGNED_BYTE);
 		SetWorkFormat((1<<0)|(1<<2));
 		SetDrawMode(GL_TRIANGLES);
 

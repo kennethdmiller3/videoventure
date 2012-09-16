@@ -5,24 +5,9 @@
 #include "Expression.h"
 #include "MatrixStack.h"
 
-// how to copy work buffer to the dynamic buffer
-// defined: completely replace the dynamic buffer each time
-// undefined: use normal buffer data copy
-//#define RENDER_DYNAMIC_BUFFER_REPLACE
-
-// how to copy work data to the buffer
-// defined: use glMapBufferRange to copy work data (if available)
-// undefined: use glBufferSubData to copy work data
-//#define RENDER_MAP_BUFFER_RANGE
-
 // queue rendering operations?
 #define RENDER_USE_QUEUE
 
-#ifdef RENDER_USE_QUEUE
-// map the dynamic buffer between BeginScene/EndScene
-// this bypasses other dynamic buffer fill types
-//#define RENDER_DYNAMIC_BUFFER_MAP
-#endif
 
 //
 // OPENGL FUNCTIONS
@@ -256,20 +241,12 @@ void InitRender(void)
 	// set up dynamic vertex buffer
 	BufferInit(sDynamicVertexBuffer, GL_ARRAY_BUFFER, GL_STREAM_DRAW);
 	BufferGen(sDynamicVertexBuffer);
-#ifdef RENDER_DYNAMIC_BUFFER_REPLACE
-	BufferBind(sDynamicVertexBuffer);
-#else
 	BufferSetData(sDynamicVertexBuffer, 512 * 1024, NULL);
-#endif
 
 	// set up dynamic index buffer
 	BufferInit(sDynamicIndexBuffer, GL_ELEMENT_ARRAY_BUFFER, GL_STREAM_DRAW);
 	BufferGen(sDynamicIndexBuffer);
-#ifdef RENDER_DYNAMIC_BUFFER_REPLACE
-	BufferBind(sDynamicIndexBuffer);
-#else
 	BufferSetData(sDynamicIndexBuffer, 128 * 1024, NULL);
-#endif
 
 	// initialize work buffer
 	InitWorkBuffer();
@@ -303,17 +280,13 @@ void PostResetRender(void)
 {
 	// rebuild dynamic vertex buffer
 	BufferGen(sDynamicVertexBuffer);
-#ifndef RENDER_DYNAMIC_BUFFER_REPLACE
 	BufferSetData(sDynamicVertexBuffer, sDynamicVertexBuffer.mSize, NULL);
-#endif
 	sDynamicVertexBuffer.mStart = 0;
 	sDynamicVertexBuffer.mEnd = 0;
 
 	// rebuild dynamic index buffer
 	BufferGen(sDynamicIndexBuffer);
-#ifndef RENDER_DYNAMIC_BUFFER_REPLACE
 	BufferSetData(sDynamicIndexBuffer, sDynamicIndexBuffer.mSize, NULL);
-#endif
 	sDynamicIndexBuffer.mStart = 0;
 	sDynamicIndexBuffer.mEnd = 0;
 
@@ -343,6 +316,7 @@ void RQ_UseProgram(Expression::Context &aContext)
 {
 	GLuint program(Expression::Read<GLuint>(aContext));
 	glUseProgram(program);
+	sProgram = program;
 }
 
 // set uniform matrix (shader)
@@ -366,6 +340,14 @@ void RQ_LoadMatrix4(Expression::Context &aContext)
 	if (mode == GL_PROJECTION)
 		glMatrixMode(GL_MODELVIEW);
 	aContext.mStream += 16;
+}
+
+// disable an attribute
+void RQ_AttribDisable(Expression::Context &aContext)
+{
+	assert(sProgram != 0);
+	GLint index(Expression::Read<GLint>(aContext));
+	glDisableVertexAttribArray(index);
 }
 
 // set an attribute constant (shader)
@@ -612,6 +594,39 @@ void UseProgram(GLuint aProgram)
 
 	FlushDynamic();
 
+	if (sProgram)
+	{
+		// switch off vertex attribute arrays
+		for (int i = 0; i < sAttribCount; ++i)
+		{
+			if (sAttribBuffer[i])
+			{
+				if (sProgram)
+				{
+#ifdef RENDER_USE_QUEUE
+					Expression::Append(sRenderQueue, RQ_AttribDisable, i);
+#else
+					glDisableVertexAttribArray(i);
+#endif
+				}
+			}
+		}
+	}
+
+	// invalidate attribs
+	memset(sAttribBuffer, 0, sAttribCount * sizeof(sAttribBuffer[0]));
+	memset(sAttribWidth, 0, sAttribCount * sizeof(sAttribWidth[0]));
+	memset(sAttribType, 0, sAttribCount * sizeof(sAttribType[0]));
+	memset(sAttribSize, 0, sAttribCount * sizeof(sAttribSize[0]));
+	memset(sAttribStride, 0, sAttribCount * sizeof(sAttribStride[0]));
+	memset(sAttribOffset, 0, sAttribCount * sizeof(sAttribOffset[0]));
+	memset(sAttribDisplace, 0, sAttribCount * sizeof(sAttribDisplace[0]));
+	sAttribCount = 0;
+
+	// invalidate vertex format
+	sVertexWorkFormat = 0;
+	sVertexWorkSize = 0;
+
 #ifdef RENDER_USE_QUEUE
 	// queue use program command
 	Expression::Append(sRenderQueue, RQ_UseProgram, aProgram);
@@ -619,13 +634,6 @@ void UseProgram(GLuint aProgram)
 	glUseProgram(aProgram);
 #endif
 	sProgram = aProgram;
-
-	// invalidate attribs
-	sAttribCount = 0;
-
-	// invalidate vertex format
-	sVertexWorkFormat = 0;
-	sVertexWorkSize = 0;
 }
 
 // get shader program currently in use
@@ -704,33 +712,8 @@ void BufferAppendData(BufferObject &aBuffer, GLuint aSize, void *aData)
 	// bind the buffer
 	BufferBind(aBuffer);
 
-#ifdef RENDER_DYNAMIC_BUFFER_REPLACE
-	// if using stream draw...
-	if (aBuffer.mUsage == GL_STREAM_DRAW)
-	{
-		// replace entire buffer contents
-		aBuffer.mStart = 0;
-		aBuffer.mEnd = 0;
-		glBufferData(aBuffer.mTarget, aSize, aData, aBuffer.mUsage);
-	}
-	else
-#endif
-#ifdef RENDER_MAP_BUFFER_RANGE
-	if (glMapBufferRange)
-	{
-		// append data to the buffer
-		if (void *data = glMapBufferRange(aBuffer.mTarget, aBuffer.mEnd, aSize, GL_MAP_WRITE_BIT|GL_MAP_INVALIDATE_RANGE_BIT|GL_MAP_UNSYNCHRONIZED_BIT))
-		{
-			memcpy(data, aData, aSize);
-			glUnmapBuffer(aBuffer.mTarget);
-		}
-	}
-	else
-#endif
-	{
-		// append data to the buffer
-		glBufferSubData(aBuffer.mTarget, aBuffer.mEnd, aSize, aData);
-	}
+	// append data to the buffer
+	glBufferSubData(aBuffer.mTarget, aBuffer.mEnd, aSize, aData);
 
 	// if the buffer has persistent storage...
 	if (aBuffer.mPersist)
@@ -775,6 +758,11 @@ BufferObject &GetDynamicIndexBuffer(void)
 // set uniform matrix
 static void SetUniformMatrix4Internal(GLint aIndex, const float aValue[])
 {
+	assert(
+		(sProgram != 0 && (aIndex != GL_PROJECTION && aIndex != GL_MODELVIEW)) || 
+		(sProgram == 0 && (aIndex == GL_PROJECTION || aIndex == GL_MODELVIEW))
+		);
+
 #ifdef RENDER_USE_QUEUE
 	// queue matrix command
 	Expression::Append(sRenderQueue, sProgram ? RQ_UniformMatrix4 : RQ_LoadMatrix4, aIndex);
@@ -1127,20 +1115,6 @@ void SetIndexBuffer(BufferObject &aBuffer)
 // begin scene
 void BeginScene(void)
 {
-#ifdef RENDER_USE_QUEUE
-#ifdef RENDER_DYNAMIC_BUFFER_MAP
-	// map dynamic buffers
-	glBindBuffer(sDynamicVertexBuffer.mTarget, sDynamicVertexBuffer.mHandle);
-	//sVertexWork = reinterpret_cast<float *>(glMapBufferRange(sDynamicVertexBuffer.mTarget, 0, sDynamicVertexBuffer.mSize, GL_MAP_WRITE_BIT|GL_MAP_INVALIDATE_BUFFER_BIT|GL_MAP_UNSYNCHRONIZED_BIT));
-	sVertexWork = reinterpret_cast<float *>(glMapBuffer(sDynamicVertexBuffer.mTarget, GL_WRITE_ONLY));
-	sVertexLimit = sDynamicVertexBuffer.mSize / sizeof(float);
-	glBindBuffer(sDynamicIndexBuffer.mTarget, sDynamicIndexBuffer.mHandle);
-	//sIndexWork = reinterpret_cast<unsigned short *>(glMapBufferRange(sDynamicIndexBuffer.mTarget, 0, sDynamicIndexBuffer.mSize, GL_MAP_WRITE_BIT|GL_MAP_INVALIDATE_BUFFER_BIT|GL_MAP_UNSYNCHRONIZED_BIT));
-	sIndexWork = reinterpret_cast<unsigned short *>(glMapBuffer(sDynamicIndexBuffer.mTarget, GL_WRITE_ONLY));
-	sIndexLimit = sDynamicIndexBuffer.mSize / sizeof(unsigned short);
-#endif
-#endif
-
 	// clear active buffer
 	sVertexBuffer = NULL;
 	sIndexBuffer = NULL;
@@ -1160,14 +1134,6 @@ void EndScene(void)
 	FlushDynamic();
 
 #ifdef RENDER_USE_QUEUE
-#ifdef RENDER_DYNAMIC_BUFFER_MAP
-	// unmap the dynamic buffers
-	glBindBuffer(sDynamicVertexBuffer.mTarget, sDynamicVertexBuffer.mHandle);
-	glUnmapBuffer(sDynamicVertexBuffer.mTarget);
-	glBindBuffer(sDynamicIndexBuffer.mTarget, sDynamicIndexBuffer.mHandle);
-	glUnmapBuffer(sDynamicIndexBuffer.mTarget);
-#endif
-
 	// clear active buffer
 	sVertexBuffer = NULL;
 	sIndexBuffer = NULL;
@@ -1186,13 +1152,11 @@ void EndScene(void)
 	}
 #endif
 
-#ifndef RENDER_DYNAMIC_BUFFER_REPLACE
 	// reset dynamic buffers
 	BufferSetData(sDynamicVertexBuffer, sDynamicVertexBuffer.mSize, NULL);
 	sDynamicVertexBuffer.mStart = sDynamicVertexBuffer.mEnd = 0;
 	BufferSetData(sDynamicIndexBuffer, sDynamicIndexBuffer.mSize, NULL);
 	sDynamicIndexBuffer.mStart = sDynamicIndexBuffer.mEnd = 0;
-#endif
 
 	UseProgram(0);
 }
@@ -1443,13 +1407,7 @@ extern void *AllocVertices(GLuint aCount)
 {
 	if (sVertexUsed + aCount * sVertexWorkSize / sizeof(float) >= sVertexLimit)
 	{
-#ifdef RENDER_DYNAMIC_BUFFER_MAP
-		DebugPrint("WARNING: vertex buffer full\n");
-		EndScene();
-		BeginScene();
-#else
 		FlushDynamic();
-#endif
 	}
 	void *dest = sVertexWork + sVertexUsed;
 	sVertexUsed += aCount * sVertexWorkSize / sizeof(float);
@@ -1461,13 +1419,7 @@ extern void *AllocIndices(GLuint aCount)
 {
 	if (sIndexCount + aCount >= sIndexLimit)
 	{
-#ifdef RENDER_DYNAMIC_BUFFER_MAP
-		DebugPrint("WARNING: index buffer full\n");
-		EndScene();
-		BeginScene();
-#else
 		FlushDynamic();
-#endif
 	}
 	void *dest = sIndexWork + sIndexCount;
 	sIndexCount += aCount;
@@ -1626,6 +1578,7 @@ void FlushDynamic(void)
 	if (sVertexCount == 0)
 		return;
 
+#if 0
 	// sync opengl matrix
 	// how to handle this correctly?
 	//SetUniformMatrix4(sUniformModelView, IdentityGet());
@@ -1635,30 +1588,23 @@ void FlushDynamic(void)
 #else
 	SetUniformMatrix4Internal(GL_MODELVIEW, ViewGet());
 #endif
+#endif
 
 	// make sure work buffer is still valid
 	assert(sVertexWorkFormat != 0);
 	assert(sVertexWorkSize != 0);
 
 	// set up dynamic attributes
-	SetupDynamicAttribs(sVertexWorkFormat, sDynamicVertexBuffer.mEnd);
+	SetupDynamicAttribs(sVertexWorkFormat, sDynamicVertexBuffer.mStart);
 
-#ifdef RENDER_DYNAMIC_BUFFER_MAP
-	sDynamicVertexBuffer.mEnd += sVertexUsed * sizeof(float);
-#else
 	// copy vertex work buffer to the array buffer
 	BufferAppendData(sDynamicVertexBuffer, sVertexUsed * sizeof(float), sVertexWork);
-#endif
 
 	// emit a draw call
 	if (sIndexCount > 0)
 	{
-#ifdef RENDER_DYNAMIC_BUFFER_MAP
-		sDynamicIndexBuffer.mEnd += sIndexCount * sizeof(unsigned short);
-#else
 		// copy index work buffer to the array buffer
 		BufferAppendData(sDynamicIndexBuffer, sIndexCount * sizeof(unsigned short), sIndexWork);
-#endif
 
 		// set index buffer
 		SetIndexBuffer(sDynamicIndexBuffer);
@@ -1671,13 +1617,6 @@ void FlushDynamic(void)
 		// draw non-indexed primitive
 		DrawArrays(sDrawMode, sVertexCount);
 	}
-
-	
-#ifdef RENDER_DYNAMIC_BUFFER_MAP
-	// advance work pointers
-	sVertexWork += sVertexUsed;
-	sIndexWork += sIndexCount;
-#endif
 
 	// reset work buffer
 	InitWorkBuffer();

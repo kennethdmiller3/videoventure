@@ -463,6 +463,8 @@ static void ApplyMotionBlur(int blur)
 {
 	assert(GetProgramInUse() == 0);
 
+	UseProgram(0);
+
 	// set projection matrix
 	ProjectionOrtho(0, 1, 0, 1, -1, 1);
 	SetUniformMatrix4(GL_PROJECTION, ProjectionGet());
@@ -470,9 +472,12 @@ static void ApplyMotionBlur(int blur)
 	// set model view matrix
 	StackIdentity();
 	ViewLoad(StackGet());
-	//SetUniformMatrix4(GL_MODELVIEW, IdentityGet());
+	SetUniformMatrix4(GL_MODELVIEW, ViewGet());
 
 	// position, color, texcoord
+	SetAttribFormat(0, 3, GL_FLOAT);
+	SetAttribFormat(2, 4, GL_UNSIGNED_BYTE);
+	SetAttribFormat(3, 2, GL_FLOAT);
 	SetWorkFormat((1 << 0) | (1 << 2) | (1 << 3));
 
 	SetDrawMode(GL_TRIANGLES);
@@ -854,6 +859,7 @@ void RunState()
 			// set projection matrix
 			//glFrustum( -0.5*VIEW_SIZE*SCREEN_WIDTH/SCREEN_HEIGHT, 0.5*VIEW_SIZE*SCREEN_WIDTH/SCREEN_HEIGHT, 0.5f*VIEW_SIZE, -0.5f*VIEW_SIZE, 256.0f*1.0f, 256.0f*5.0f );
 			ProjectionFrustum(-0.5f*VIEW_SIZE*SCREEN_WIDTH/SCREEN_HEIGHT, 0.5f*VIEW_SIZE*SCREEN_WIDTH/SCREEN_HEIGHT, 0.5f*VIEW_SIZE, -0.5f*VIEW_SIZE, 256.0f, 256.0f * 5.0f);
+			SetUniformMatrix4(GL_PROJECTION, ProjectionGet());
 
 			// get interpolated track position
 			Vector2 viewpos(Lerp(camerapos[0], camerapos[1], sim_fraction));
@@ -863,6 +869,9 @@ void RunState()
 			StackScale(_mm_setr_ps(-1, -1, -1, 0));
 			StackTranslate(_mm_setr_ps(-viewpos.x, -viewpos.y, CAMERA_DISTANCE, 0));
 			ViewLoad(StackGet());
+			SetUniformMatrix4(GL_MODELVIEW, ViewGet());
+
+			// set model matrix
 			StackIdentity();
 
 			// calculate view area
@@ -872,15 +881,12 @@ void RunState()
 			view.min.y = viewpos.y - VIEW_SIZE * 0.5f;
 			view.max.y = viewpos.y + VIEW_SIZE * 0.5f;
 
-			// begin rendering
-			RenderBegin();
-
 			// render all entities
 			// (send interpolation ratio and offset from simulation time)
 			Renderable::RenderAll(view);
 
 			// commit pending draw
-			RenderFlush();
+			FlushDynamic();
 
 			// if performing motion blur...
 			if (MOTIONBLUR_STEPS > 1)
@@ -968,19 +974,18 @@ void RunState()
 
 		// set projection matrix
 		ProjectionOrtho(0, 640, 480, 0, -1, 1);
+		SetUniformMatrix4(GL_PROJECTION, ProjectionGet());
 
 		// set view matrix
 		StackIdentity();
 		ViewLoad(StackGet());
-
-		// begin rendering
-		RenderBegin();
+		SetUniformMatrix4(GL_MODELVIEW, ViewGet());
 
 		// render all overlays
 		Overlay::RenderAll();
 
 		// commit pending draw
-		RenderFlush();
+		FlushDynamic();
 
 #ifdef GET_PERFORMANCE_DETAILS
 		overlay_timer.Stop();
@@ -1032,6 +1037,7 @@ void RunState()
 					index = 0;
 			}
 
+			UseProgram(0);
 			SetAttribFormat(0, 2, GL_FLOAT);
 			SetWorkFormat(1<<0);
 			SetDrawMode(GL_TRIANGLE_STRIP);

@@ -36,6 +36,9 @@ void RenderEscapeOptions(unsigned int aId, float aTime, const Transform2 &aTrans
 #else
 	const unsigned int color = 0x7F000000;
 #endif
+	UseProgram(0);
+	SetAttribFormat(0, 3, GL_FLOAT);
+	SetAttribFormat(2, 4, GL_UNSIGNED_BYTE);
 	SetWorkFormat((1<<0)|(1<<2));
 	SetDrawMode(GL_TRIANGLES);
 	int base = GetVertexCount();

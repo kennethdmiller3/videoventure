@@ -124,15 +124,12 @@ void Console::Render()
 		return;
 
 	// load the projection matrix
-	GLfloat original[16];
-	memcpy(original, ProjectionGet(), 16 * sizeof(GLfloat));
+	ProjectionPush();
 	ProjectionLoad(projectionMatrix);
 
 	// load the model/view matrix
 	StackPush();
 	StackLoad(modelviewMatrix);
-
-	RenderBegin();
 
     /* Render hiding / showing console in a special manner. Zero means hidden. 1
      * means visible. All other values are traveling toward zero or one. TODO:
@@ -164,6 +161,11 @@ void Console::Render()
 		Vector3 pos;
 		unsigned int color;
 	};
+	UseProgram(0);
+	SetUniformMatrix4(GL_PROJECTION, ProjectionGet());
+	SetUniformMatrix4(GL_MODELVIEW, StackGet());
+	SetAttribFormat(0, 3, GL_FLOAT);
+	SetAttribFormat(2, 4, GL_UNSIGNED_BYTE);
 	SetWorkFormat((1<<0)|(1<<2));
 	SetDrawMode(GL_TRIANGLES);
 	size_t base = GetVertexCount();
@@ -246,14 +248,14 @@ void Console::Render()
 	// finish drawing text
 	FontDrawEnd();
 
+	// flush any pending geometry
+	FlushDynamic();
+
 	// restore projection matrix
-	ProjectionLoad(original);
+	ProjectionPop();
 
 	// restore model/view matrix
 	StackPop();
-
-	// 
-	RenderFlush();
 }
 
 // formatted print

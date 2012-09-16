@@ -43,8 +43,8 @@
 // undefined: disable support for normals
 //#define DRAWLIST_NORMALS
 
-// use fixed function?
-#define DRAWLIST_FIXED_FUNCTION
+// use shader for drawlist?
+//#define DRAWLIST_USE_SHADER
 
 // debug static geometry flush
 // defined: full details of VB and IB contents
@@ -198,6 +198,7 @@ struct PackedRenderState
 };
 
 
+#ifdef DRAWLIST_USE_SHADER
 //
 // SHADER
 //
@@ -251,6 +252,21 @@ static GLint sAttribNormal;
 #endif
 static GLint sAttribColor;
 static GLint sAttribTexCoord;
+
+#else
+
+// fixed function attributes
+static const GLuint sBasicProgramId = 0;
+static const GLint sUniformProjection = GL_PROJECTION;
+static const GLint sUniformModelView = GL_MODELVIEW;
+static const GLint sAttribPosition = 0;
+#ifdef DRAWLIST_NORMALS
+static const GLint sNormalPosition = 1;
+#endif
+static const GLint sAttribColor = 2;
+static const GLint sAttribTexCoord = 3;
+
+#endif
 
 // tag appended to generator drawlist name to prevent it from matching a template name:
 // this fixes a bug where a generator would be duplicated when a template inherited from
@@ -536,6 +552,38 @@ void DO_DrawMode(EntityContext &aContext)
 	// get the render state
 	PackedRenderState state(Expression::Read<PackedRenderState>(aContext));
 
+	// changing program?
+	bool changeProgram = (sBasicProgramId != GetProgramInUse());
+
+	// use the basic program
+	UseProgram(sBasicProgramId);
+
+	// set up attributes
+	SetAttribFormat(sAttribPosition, sPositionWidth, GL_FLOAT);
+#ifdef DRAWLIST_NORMALS
+	SetAttribFormat(sAttribNormal, sNormalWidth, GL_FLOAT);
+#endif
+#ifdef DRAWLIST_FLOAT_COLOR	// always use float for dynamic stuff
+	SetAttribFormat(sAttribColor, sColorWidth, GL_FLOAT);
+#else
+	SetAttribFormat(sAttribColor, sColorWidth, GL_UNSIGNED_BYTE);
+#endif
+	SetAttribFormat(sAttribTexCoord, sTexCoordWidth, GL_FLOAT);
+
+	// set projection matrix
+	// (this is only necessary the first time the program gets used)
+	if (sBasicProgramId && changeProgram)
+		SetUniformMatrix4(sUniformProjection, ProjectionGet());
+
+	// set model view matrix
+	// (if switching back from non-dynamic geometry)
+	if (&GetBoundVertexBuffer() != &GetDynamicVertexBuffer())
+#ifdef DYNAMIC_GEOMETRY_IN_VIEW_SPACE
+		SetUniformMatrix4(sUniformModelView, IdentityGet());
+#else
+		SetUniformMatrix4(sUniformModelView, ViewGet());
+#endif
+
 	// set work format
 	// include color attribute even if the state doesn't
 	GLuint format = state.mFormat;
@@ -631,6 +679,38 @@ void DO_CopyElements(EntityContext &aContext)
 
 	// get the source format
 	GLuint srcformat = state.mFormat;
+
+	// changing program?
+	bool changeProgram = (sBasicProgramId != GetProgramInUse());
+
+	// use the basic program
+	UseProgram(sBasicProgramId);
+
+	// set up attributes
+	SetAttribFormat(sAttribPosition, sPositionWidth, GL_FLOAT);
+#ifdef DRAWLIST_NORMALS
+	SetAttribFormat(sAttribNormal, sNormalWidth, GL_FLOAT);
+#endif
+#ifdef DRAWLIST_FLOAT_COLOR	// always use float for dynamic stuff
+	SetAttribFormat(sAttribColor, sColorWidth, GL_FLOAT);
+#else
+	SetAttribFormat(sAttribColor, sColorWidth, GL_UNSIGNED_BYTE);
+#endif
+	SetAttribFormat(sAttribTexCoord, sTexCoordWidth, GL_FLOAT);
+
+	// set projection matrix
+	// (this is only necessary the first time the program gets used)
+	if (sBasicProgramId && changeProgram)
+		SetUniformMatrix4(sUniformProjection, ProjectionGet());
+
+	// set model view matrix
+	// (if switching back from non-dynamic geometry)
+	if (&GetBoundVertexBuffer() != &GetDynamicVertexBuffer())
+#ifdef DYNAMIC_GEOMETRY_IN_VIEW_SPACE
+		SetUniformMatrix4(sUniformModelView, IdentityGet());
+#else
+		SetUniformMatrix4(sUniformModelView, ViewGet());
+#endif
 
 	// set new work format
 	GLuint dstformat = srcformat | GetWorkFormat();
@@ -795,6 +875,15 @@ void DO_DrawElements(EntityContext &aContext)
 		FlushDynamic();
 	}
 
+	// changing program?
+	bool changeProgram = (sBasicProgramId != GetProgramInUse());
+
+	// use the basic program
+	UseProgram(sBasicProgramId);
+
+	if (sBasicProgramId && changeProgram)
+		SetUniformMatrix4(sUniformProjection, ProjectionGet());
+
 #ifndef DYNAMIC_GEOMETRY_IN_VIEW_SPACE
 	// combine view and world matrix
 	GLfloat world[16];
@@ -804,12 +893,24 @@ void DO_DrawElements(EntityContext &aContext)
 	StackMult(world);
 #endif
 
-	// sync opengl matrix
+	// set model view matrix
 	SetUniformMatrix4(sUniformModelView, StackGet());
 
 #ifndef DYNAMIC_GEOMETRY_IN_VIEW_SPACE
 	StackPop();
 #endif
+
+	// set up attributes
+	SetAttribFormat(sAttribPosition, sPositionWidth, GL_FLOAT);
+#ifdef DRAWLIST_NORMALS
+	SetAttribFormat(sAttribNormal, sNormalWidth, GL_FLOAT);
+#endif
+#ifdef DRAWLIST_FLOAT_COLOR	// always use float for dynamic stuff
+	SetAttribFormat(sAttribColor, sColorWidth, GL_FLOAT);
+#else
+	SetAttribFormat(sAttribColor, sColorWidth, GL_UNSIGNED_BYTE);
+#endif
+	SetAttribFormat(sAttribTexCoord, sTexCoordWidth, GL_FLOAT);
 
 	// get rendering state
 	PackedRenderState state(Expression::Read<PackedRenderState>(aContext));
@@ -2188,22 +2289,7 @@ void ExecuteDrawItems(EntityContext &aContext)
 
 static void InitBasicProgram(void)
 {
-#ifdef DRAWLIST_FIXED_FUNCTION
-	// no shader program
-	sBasicProgramId = 0;
-
-	// use matrix locations to pass matrix modes
-	sUniformProjection = GL_PROJECTION;
-	sUniformModelView = GL_MODELVIEW;
-
-	// fixed-function attribute locations
-	sAttribPosition = 0;
-#ifdef DRAWLIST_NORMALS
-	sAttribNormal = 1;
-#endif
-	sAttribColor = 2;
-	sAttribTexCoord = 3;
-#else
+#ifdef DRAWLIST_USE_SHADER
 	// create basic program
 	sBasicVertexId = CreateVertexShader(sBasicVertexShader);
 	sBasicFragmentId = CreateFragmentShader(sBasicFragmentShader);
@@ -2237,7 +2323,7 @@ static void InitBasicProgram(void)
 
 static void CleanupBasicProgram(void)
 {
-#ifndef DRAWLIST_FIXED_FUNCTION
+#ifdef DRAWLIST_USE_SHADER
 	glDetachShader(sBasicProgramId, sBasicVertexId);
 	glDetachShader(sBasicProgramId, sBasicFragmentId);
 	glDeleteProgram(sBasicProgramId);
@@ -2374,35 +2460,3 @@ void RenderDrawlist(EntityContext &context, const Transform2 &aTransform)
 	// pop matrix stack
 	StackPop();
 };
-
-void RenderBegin(void)
-{
-	// use the basic program
-	UseProgram(sBasicProgramId);
-
-	// set up attributes
-	SetAttribFormat(sAttribPosition, sPositionWidth, GL_FLOAT);
-#ifdef DRAWLIST_NORMALS
-	SetAttribFormat(sAttribNormal, sNormalWidth, GL_FLOAT);
-#endif
-#ifdef DRAWLIST_FLOAT_COLOR	// always use float for dynamic stuff
-	SetAttribFormat(sAttribColor, sColorWidth, GL_FLOAT);
-#else
-	SetAttribFormat(sAttribColor, sColorWidth, GL_UNSIGNED_BYTE);
-#endif
-	SetAttribFormat(sAttribTexCoord, sTexCoordWidth, GL_FLOAT);
-
-	// set default work format
-	// TO DO: find a smarter way to set this
-	SetWorkFormat((1<<0)|(1<<2));
-
-	// load projection
-	SetUniformMatrix4(sUniformProjection, ProjectionGet());
-}
-
-void RenderFlush(void)
-{
-	// flush dynamic geometry
-	// TO DO: only call this at the end of the frame
-	FlushDynamic();
-}
