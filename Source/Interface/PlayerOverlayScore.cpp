@@ -25,18 +25,12 @@ PlayerOverlayScore::PlayerOverlayScore(unsigned int aPlayerId = 0)
 	: Overlay(aPlayerId)
 	, cur_score(-1)
 {
-	// allocate score draw list
-	score_handle = glGenLists(1);
-
 	Overlay::SetAction(Overlay::Action(this, &PlayerOverlayScore::Render));
 }
 
 // destructor
 PlayerOverlayScore::~PlayerOverlayScore()
 {
-	// free score draw list
-	if (glIsList(score_handle))
-		glDeleteLists(score_handle, 1);
 }
 
 // render
@@ -48,49 +42,29 @@ void PlayerOverlayScore::Render(unsigned int aId, float aTime, const Transform2 
 	// get player score
 	int new_score = player->mScore;
 
-#ifdef PLAYER_OVERLAY_SCORE_DISPLAY_LIST
-	// if the score has not changed...
-	if (new_score == cur_score && glIsList(score_handle))
+	// update score
+	cur_score = new_score;
+
+	// draw player score (HACK)
+	char score[9];
+	sprintf(score, "%08d", new_score);
+	bool leading = true;
+
+	FontDrawBegin(sDefaultFontHandle);
+	FontDrawColor(scorecolor[leading]);
+
+	for (char *s = score; *s != '\0'; ++s)
 	{
-		// call the existing draw list
-		glCallList(score_handle);
-	}
-	else
-	{
-#endif
-		// update score
-		cur_score = new_score;
-
-#ifdef PLAYER_OVERLAY_SCORE_DISPLAY_LIST
-		// start a new draw list list
-		glNewList(score_handle, GL_COMPILE_AND_EXECUTE);
-#endif
-
-		// draw player score (HACK)
-		char score[9];
-		sprintf(score, "%08d", new_score);
-		bool leading = true;
-
-		FontDrawBegin(sDefaultFontHandle);
-		FontDrawColor(scorecolor[leading]);
-
-		for (char *s = score; *s != '\0'; ++s)
+		char c = *s;
+		if (leading && c != '0')
 		{
-			char c = *s;
-			if (leading && c != '0')
-			{
-				leading = false;
-				FontDrawColor(scorecolor[leading]);
-			}
-			FontDrawCharacter(c,
-				scorerect.x + scorerect.w * (s - score), scorerect.y + scorerect.h,
-				scorerect.w, -scorerect.h, 0);
+			leading = false;
+			FontDrawColor(scorecolor[leading]);
 		}
-
-		FontDrawEnd();
-
-#ifdef PLAYER_OVERLAY_SCORE_DISPLAY_LIST
-		glEndList();
+		FontDrawCharacter(c,
+			scorerect.x + scorerect.w * (s - score), scorerect.y + scorerect.h,
+			scorerect.w, -scorerect.h, 0);
 	}
-#endif
+
+	FontDrawEnd();
 }
