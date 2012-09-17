@@ -6,6 +6,7 @@
 #include "MatrixStack.h"
 
 // queue rendering operations?
+// (disabling reduces performance but makes debugging easier)
 #define RENDER_USE_QUEUE
 
 
@@ -332,7 +333,6 @@ void RQ_UniformMatrix4(Expression::Context &aContext)
 // load a matrix (fixed-function)
 void RQ_LoadMatrix4(Expression::Context &aContext)
 {
-	assert(sProgram == 0);
 	GLenum mode(Expression::Read<GLint>(aContext));
 	if (mode == GL_PROJECTION)
 		glMatrixMode(GL_PROJECTION);
@@ -758,30 +758,29 @@ BufferObject &GetDynamicIndexBuffer(void)
 // set uniform matrix
 static void SetUniformMatrix4Internal(GLint aIndex, const float aValue[])
 {
-	assert(
-		(sProgram != 0 && (aIndex != GL_PROJECTION && aIndex != GL_MODELVIEW)) || 
-		(sProgram == 0 && (aIndex == GL_PROJECTION || aIndex == GL_MODELVIEW))
-		);
-
 #ifdef RENDER_USE_QUEUE
 	// queue matrix command
-	Expression::Append(sRenderQueue, sProgram ? RQ_UniformMatrix4 : RQ_LoadMatrix4, aIndex);
+	Expression::Append(sRenderQueue, 
+		(aIndex == GL_PROJECTION || aIndex == GL_MODELVIEW) ? RQ_LoadMatrix4 : RQ_UniformMatrix4,
+		aIndex);
 	memcpy(Expression::Alloc(sRenderQueue, 16 * sizeof(float)), aValue, 16 * sizeof(float));
 #else
-	// if using a shader program...
-	if (sProgram)
+	if (aIndex == GL_PROJECTION)
 	{
-		// shader path
-		glUniformMatrix4fv(aIndex, 1, GL_FALSE, aValue);
+		// fixed-function projection
+		glMatrixMode(GL_PROJECTION);
+		glLoadMatrixf(aValue);
+		glMatrixMode(GL_MODELVIEW);
+	}
+	else if (aIndex == GL_MODELVIEW)
+	{
+		// fixed-function modelview
+		glLoadMatrixf(aValue);
 	}
 	else
 	{
-		// fixed-function path
-		if (aIndex == GL_PROJECTION)
-			glMatrixMode(GL_PROJECTION);
-		glLoadMatrixf(aValue);
-		if (aIndex == GL_PROJECTION)
-			glMatrixMode(GL_MODELVIEW);
+		// set uniform matrix
+		glUniformMatrix4fv(aIndex, 1, GL_FALSE, aValue);
 	}
 #endif
 }
@@ -927,6 +926,9 @@ void SetAttribFormat(GLint aIndex, GLuint aWidth, GLenum aType)
 // (not bound to a buffer object)
 void SetAttribConstantInternal(GLint aIndex, __m128 aValue)
 {
+	// switch to constant
+	sAttribBuffer[aIndex] = 0;
+
 	// set the constant attribute value
 	sAttribValue[aIndex] = aValue;
 
@@ -939,9 +941,15 @@ void SetAttribConstantInternal(GLint aIndex, __m128 aValue)
 		Expression::Append(sRenderQueue, sFixedAttribConstant[aIndex], aValue);
 #else
 	if (sProgram)
+	{
+		glDisableVertexAttribArray(aIndex);
 		glVertexAttrib4fv(aIndex, aValue.m128_f32);
+	}
 	else
+	{
+		glDisableClientState(sFixedAttrib[aIndex]);
 		sFixedAttribConstant[aIndex](aValue.m128_f32);
+	}
 #endif
 }
 void SetAttribConstant(GLint aIndex, __m128 aValue)
@@ -975,19 +983,8 @@ void SetAttribConstant(GLint aIndex, __m128 aValue)
 			sVertexWorkFormat = 0;
 			sVertexWorkSize = 0;
 		}
-
-		// switch to constant
-		sAttribBuffer[aIndex] = 0;
-
-#ifndef RENDER_USE_QUEUE
-		// disable array state
-		if (sProgram)
-			glDisableVertexAttribArray(aIndex);
-		else
-			glDisableClientState(sFixedAttrib[aIndex]);
-#endif
 	}
-	
+
 	// set the actual value
 	SetAttribConstantInternal(aIndex, aValue);
 }
@@ -1029,19 +1026,17 @@ void SetAttribBufferInternal(GLint aIndex, BufferObject &aBuffer, GLuint aStride
 	}
 	if (sProgram)
 	{
-		if (sAttribBuffer[aIndex] == 0)
-			glEnableVertexAttribArray(aIndex);
+		glEnableVertexAttribArray(aIndex);
 		glVertexAttribPointer(aIndex, sAttribWidth[aIndex], sAttribType[aIndex], GL_TRUE, aStride, reinterpret_cast<const GLvoid *>(aOffset));
 	}
 	else
 	{
-		if (sAttribBuffer[aIndex] == 0)
-			glEnableClientState(sFixedAttrib[aIndex]);
-		sAttribBuffer[aIndex] = sVertexBuffer->mHandle;
+		glEnableClientState(sFixedAttrib[aIndex]);
 		sFixedAttribArray[aIndex](sAttribWidth[aIndex], sAttribType[aIndex], aStride, reinterpret_cast<const GLvoid *>(aOffset));
 	}
 #endif
 
+	// switch to buffer
 	sAttribBuffer[aIndex] = aBuffer.mHandle;
 	sAttribStride[aIndex] = aStride;
 	sAttribOffset[aIndex] = aOffset;
@@ -1303,6 +1298,11 @@ void SetWorkFormat(GLuint aFormat)
 	// save vertex format
 	sVertexWorkFormat = aFormat;
 
+#ifdef DEBUG
+	// pave the packed vertex buffer
+	memset(sVertexPacked, -1, sizeof(sVertexPacked));
+#endif
+
 	// compute work vertex size and interleaved offsets
 	sVertexWorkSize = 0;
 	for (int index = 0; index < sAttribCount; ++index)
@@ -1312,11 +1312,9 @@ void SetWorkFormat(GLuint aFormat)
 			// add to interleaved offset
 			sAttribDisplace[index] = sVertexWorkSize;
 			sVertexWorkSize += sAttribSize[index];
+			PackAttribValue(index, sAttribValue[index]);
 		}
 	}
-
-	// pave the packed vertex buffer
-	memset(sVertexPacked, -1, sizeof(sVertexPacked));
 }
 
 // get work format

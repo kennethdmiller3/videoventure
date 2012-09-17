@@ -4,6 +4,11 @@
 #include "Drawlist.h"
 #include "MatrixStack.h"
 
+// use shader for font?
+// defined: use a shader program
+// undefined: use fixed-function
+//#define FONT_USE_SHADER
+
 static const int FIRST_CHARACTER = '\x00';
 static const int LAST_CHARACTER  = '\x7F';
 
@@ -87,8 +92,6 @@ static const unsigned char aTextureData[] =
 	0x06, 0x60, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1e, 0x00, 0x00, 0x18, 0x00, 0x00, 0x00, 
 };
 
-//#define FONT_USE_SHADER
-
 #ifdef FONT_USE_SHADER
 //
 // SHADER
@@ -118,7 +121,7 @@ static const GLchar * const sFontVertexShader =
 static const GLchar * const sFontFragmentShader =
 	"#version 130\n"
 	"\n"
-	"uniform sampler2D texture;\n"
+	"uniform sampler2D sampler;\n"
 	"\n"
 	"in vec4 vscolor;\n"
 	"in vec2 vstexcoord;\n"
@@ -128,7 +131,7 @@ static const GLchar * const sFontFragmentShader =
 	"void main(void)\n"
 	"{\n"
 	"    fragmentcolor = vscolor;\n"
-	"    fragmentcolor.a *= texture2D(texture, vstexcoord).a;\n"
+	"    fragmentcolor.a *= texture(sampler, vstexcoord).a;\n"
 	"}\n";
 
 // font shader program
@@ -257,7 +260,10 @@ void FontDrawBegin(GLuint handle)
 	BindTexture(handle);
 #ifdef FONT_USE_SHADER
 	UseProgram(sFontProgramId);
+	ProjectionPush();
+	ProjectionMult(StackGet());
 	SetUniformMatrix4(sUniformModelViewProj, ProjectionGet());
+	ProjectionPop();
 	SetAttribFormat(sAttribPosition, 3, GL_FLOAT);
 	SetAttribFormat(sAttribColor, 4, GL_UNSIGNED_BYTE);
 	SetAttribFormat(sAttribTexCoord, 2, GL_FLOAT);
@@ -265,7 +271,7 @@ void FontDrawBegin(GLuint handle)
 #else
 	UseProgram(0);
 	SetUniformMatrix4(GL_PROJECTION, ProjectionGet());
-	SetUniformMatrix4(GL_MODELVIEW, ViewGet());
+	SetUniformMatrix4(GL_MODELVIEW, StackGet());
 	SetAttribFormat(0, 3, GL_FLOAT);
 	SetAttribFormat(2, 4, GL_UNSIGNED_BYTE);
 	SetAttribFormat(3, 2, GL_FLOAT);

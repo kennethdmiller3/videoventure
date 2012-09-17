@@ -5,6 +5,8 @@
 #include "Font.h"
 #include "Render.h"
 #include "MatrixStack.h"
+#include "Expression.h"
+#include "ExpressionEntity.h"
 
 
 // lives indicator position
@@ -20,6 +22,18 @@ PlayerOverlayLives::PlayerOverlayLives(unsigned int aPlayerId = 0)
 	: Overlay(aPlayerId)
 {
 	Overlay::SetAction(Overlay::Action(this, &PlayerOverlayLives::Render));
+
+	const std::vector<unsigned int> &drawlist = Database::drawlist.Get(0xeec1dafa /* "playership" */);
+	if (drawlist.size())
+	{
+		// create drawlist for icon
+		Expression::Append(icon_drawlist, DO_Color, Expression::Read<__m128>, 0.4f,  0.5f, 1.0f, 1.0f);
+		Expression::Append(icon_drawlist, DO_PushMatrix);
+		Expression::Append(icon_drawlist, DO_Translate, Expression::Read<__m128>, livespos.x, livespos.y, 0.0f, 1.0f);
+		Expression::Append(icon_drawlist, DO_Scale, Expression::Read<__m128>, -0.5f, -0.5f, 1.0f, 1.0f);
+		icon_drawlist.insert(icon_drawlist.end(), drawlist.begin(), drawlist.end());
+		Expression::Append(icon_drawlist, DO_PopMatrix);
+	}
 }
 
 // destructor
@@ -41,13 +55,10 @@ void PlayerOverlayLives::Render(unsigned int aId, float aTime, const Transform2 
 	// update lives
 	cur_lives = new_lives;
 
-	// draw the player ship
-	SetAttribConstant(2, _mm_setr_ps(0.4f, 0.5f, 1.0f, 1.0f));
-	StackPush();
-	StackTranslate(_mm_setr_ps(livespos.x, livespos.y, 0.0f, 1.0f));
-	StackScale(_mm_setr_ps(-0.5f, -0.5f, 1.0f, 1.0f));
-	RenderStaticDrawlist(0xeec1dafa /* "playership" */, 0.0f, Transform2::Identity());
-	StackPop();
+	// draw icon
+	EntityContext context(&icon_drawlist[0], icon_drawlist.size(), 0.0f, aId);
+	while (context.mStream < context.mEnd)
+		Expression::Evaluate<void>(context);
 
 	// draw remaining lives
 	char lives[16];

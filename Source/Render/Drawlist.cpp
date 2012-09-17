@@ -44,6 +44,8 @@
 //#define DRAWLIST_NORMALS
 
 // use shader for drawlist?
+// defined: use a shader program
+// undefined: use fixed-function
 //#define DRAWLIST_USE_SHADER
 
 // debug static geometry flush
@@ -209,8 +211,7 @@ struct PackedRenderState
 static const GLchar * const sBasicVertexShader =
 	"#version 130\n"
 	"\n"
-	"uniform mat4 projection;\n"
-	"uniform mat4 modelview;\n"
+	"uniform mat4 modelviewproj;\n"
 	"\n"
 	"in vec3 position;\n"
 	"in vec4 color;\n"
@@ -219,7 +220,7 @@ static const GLchar * const sBasicVertexShader =
 	"\n"
 	"void main()\n"
 	"{\n"
-	"    gl_Position = projection * modelview * vec4(position, 1.0);\n"
+	"    gl_Position = modelviewproj * vec4(position, 1.0);\n"
 	"    vscolor = color;\n"
 	"}\n";
 
@@ -242,8 +243,7 @@ static GLuint sBasicVertexId;
 static GLuint sBasicFragmentId;
 
 // uniform locations
-static GLint sUniformProjection;
-static GLint sUniformModelView;
+static GLint sUniformModelViewProj;
 
 // attribute locations
 static GLint sAttribPosition;
@@ -256,9 +256,6 @@ static GLint sAttribTexCoord;
 #else
 
 // fixed function attributes
-static const GLuint sBasicProgramId = 0;
-static const GLint sUniformProjection = GL_PROJECTION;
-static const GLint sUniformModelView = GL_MODELVIEW;
 static const GLint sAttribPosition = 0;
 #ifdef DRAWLIST_NORMALS
 static const GLint sNormalPosition = 1;
@@ -552,11 +549,36 @@ void DO_DrawMode(EntityContext &aContext)
 	// get the render state
 	PackedRenderState state(Expression::Read<PackedRenderState>(aContext));
 
-	// changing program?
-	bool changeProgram = (sBasicProgramId != GetProgramInUse());
-
+#ifdef DRAWLIST_USE_SHADER
 	// use the basic program
 	UseProgram(sBasicProgramId);
+
+	// set combined model view projection matrix
+	// (if switching back from non-dynamic geometry)
+	if (&GetBoundVertexBuffer() != &GetDynamicVertexBuffer())
+	{
+#ifdef DYNAMIC_GEOMETRY_IN_VIEW_SPACE
+		SetUniformMatrix4(sUniformModelViewProj, ProjectionGet());
+#else
+		ProjectionPush();
+		ProjectionMult(ViewGet());
+		SetUniformMatrix4(sUniformModelViewProj, ProjectionGet());
+		ProjectionPop();
+#endif
+	}
+#else
+	// fixed-function
+	UseProgram(0);
+
+	// set model view projection matrix
+	// (if switching back from non-dynamic geometry)
+	if (&GetBoundVertexBuffer() != &GetDynamicVertexBuffer())
+#ifdef DYNAMIC_GEOMETRY_IN_VIEW_SPACE
+		SetUniformMatrix4(GL_MODELVIEW, IdentityGet());
+#else
+		SetUniformMatrix4(GL_MODELVIEW, ViewGet());
+#endif
+#endif
 
 	// set up attributes
 	SetAttribFormat(sAttribPosition, sPositionWidth, GL_FLOAT);
@@ -569,20 +591,6 @@ void DO_DrawMode(EntityContext &aContext)
 	SetAttribFormat(sAttribColor, sColorWidth, GL_UNSIGNED_BYTE);
 #endif
 	SetAttribFormat(sAttribTexCoord, sTexCoordWidth, GL_FLOAT);
-
-	// set projection matrix
-	// (this is only necessary the first time the program gets used)
-	if (sBasicProgramId && changeProgram)
-		SetUniformMatrix4(sUniformProjection, ProjectionGet());
-
-	// set model view matrix
-	// (if switching back from non-dynamic geometry)
-	if (&GetBoundVertexBuffer() != &GetDynamicVertexBuffer())
-#ifdef DYNAMIC_GEOMETRY_IN_VIEW_SPACE
-		SetUniformMatrix4(sUniformModelView, IdentityGet());
-#else
-		SetUniformMatrix4(sUniformModelView, ViewGet());
-#endif
 
 	// set work format
 	// include color attribute even if the state doesn't
@@ -670,21 +678,43 @@ void DO_DisableBake(BakeContext &aContext)
 #pragma optimize("t", on)
 void DO_CopyElements(EntityContext &aContext)
 {
+#ifdef DRAWLIST_USE_SHADER
+	// use the basic program
+	UseProgram(sBasicProgramId);
+
+	// set combined model view projection matrix
+	// (if switching back from non-dynamic geometry)
+	if (&GetBoundVertexBuffer() != &GetDynamicVertexBuffer())
+	{
+#ifdef DYNAMIC_GEOMETRY_IN_VIEW_SPACE
+		SetUniformMatrix4(sUniformModelViewProj, ProjectionGet());
+#else
+		ProjectionPush();
+		ProjectionMult(ViewGet());
+		SetUniformMatrix4(sUniformModelViewProj, ProjectionGet());
+		ProjectionPop();
+#endif
+	}
+#else
+	// fixed function
+	UseProgram(0);
+
+	// set model view matrix
+	// (if switching back from non-dynamic geometry)
+	if (&GetBoundVertexBuffer() != &GetDynamicVertexBuffer())
+#ifdef DYNAMIC_GEOMETRY_IN_VIEW_SPACE
+		SetUniformMatrix4(GL_MODELVIEW, IdentityGet());
+#else
+		SetUniformMatrix4(GL_MODELVIEW, ViewGet());
+#endif
+#endif
+
 	// get rendering state
 	PackedRenderState state(Expression::Read<PackedRenderState>(aContext));
 	GLuint vertexOffset(Expression::Read<GLuint>(aContext));
 	GLuint vertexCount(Expression::Read<GLuint>(aContext));
 	GLuint indexOffset(Expression::Read<GLuint>(aContext));
 	GLuint indexCount(Expression::Read<GLuint>(aContext));
-
-	// get the source format
-	GLuint srcformat = state.mFormat;
-
-	// changing program?
-	bool changeProgram = (sBasicProgramId != GetProgramInUse());
-
-	// use the basic program
-	UseProgram(sBasicProgramId);
 
 	// set up attributes
 	SetAttribFormat(sAttribPosition, sPositionWidth, GL_FLOAT);
@@ -698,19 +728,8 @@ void DO_CopyElements(EntityContext &aContext)
 #endif
 	SetAttribFormat(sAttribTexCoord, sTexCoordWidth, GL_FLOAT);
 
-	// set projection matrix
-	// (this is only necessary the first time the program gets used)
-	if (sBasicProgramId && changeProgram)
-		SetUniformMatrix4(sUniformProjection, ProjectionGet());
-
-	// set model view matrix
-	// (if switching back from non-dynamic geometry)
-	if (&GetBoundVertexBuffer() != &GetDynamicVertexBuffer())
-#ifdef DYNAMIC_GEOMETRY_IN_VIEW_SPACE
-		SetUniformMatrix4(sUniformModelView, IdentityGet());
-#else
-		SetUniformMatrix4(sUniformModelView, ViewGet());
-#endif
+	// get the source format
+	GLuint srcformat = state.mFormat;
 
 	// set new work format
 	GLuint dstformat = srcformat | GetWorkFormat();
@@ -875,14 +894,19 @@ void DO_DrawElements(EntityContext &aContext)
 		FlushDynamic();
 	}
 
-	// changing program?
-	bool changeProgram = (sBasicProgramId != GetProgramInUse());
-
+#ifdef DRAWLIST_USE_SHADER
 	// use the basic program
 	UseProgram(sBasicProgramId);
 
-	if (sBasicProgramId && changeProgram)
-		SetUniformMatrix4(sUniformProjection, ProjectionGet());
+	// get combined model view projection matrix
+	ProjectionPush();
+	ProjectionMult(ViewGet());
+	ProjectionMult(StackGet());
+	SetUniformMatrix4(sUniformModelViewProj, ProjectionGet());
+	ProjectionPop();
+#else
+	// fixed function
+	UseProgram(0);
 
 #ifndef DYNAMIC_GEOMETRY_IN_VIEW_SPACE
 	// combine view and world matrix
@@ -894,10 +918,11 @@ void DO_DrawElements(EntityContext &aContext)
 #endif
 
 	// set model view matrix
-	SetUniformMatrix4(sUniformModelView, StackGet());
+	SetUniformMatrix4(GL_MODELVIEW, StackGet());
 
 #ifndef DYNAMIC_GEOMETRY_IN_VIEW_SPACE
 	StackPop();
+#endif
 #endif
 
 	// set up attributes
@@ -2296,8 +2321,7 @@ static void InitBasicProgram(void)
 	sBasicProgramId = CreateProgram(sBasicVertexId, sBasicFragmentId);
 
 	// get uniform location
-	sUniformProjection = glGetUniformLocation(sBasicProgramId, "projection");
-	sUniformModelView = glGetUniformLocation(sBasicProgramId, "modelview");
+	sUniformModelViewProj = glGetUniformLocation(sBasicProgramId, "modelviewproj");
 
 	// get attribute locations
 	sAttribPosition = glGetAttribLocation(sBasicProgramId, "position");

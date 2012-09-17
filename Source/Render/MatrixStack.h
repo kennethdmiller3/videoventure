@@ -6,7 +6,9 @@ extern const float *IdentityGet(void);
 // projection matrix operations
 extern void ProjectionPush(void);
 extern void ProjectionPop(void);
+extern void ProjectionIdentity(void);
 extern void ProjectionLoad(const float *aValues);
+extern void ProjectionMult(const float *aValues);
 extern void ProjectionOrtho(float aLeft, float aRight, float aBottom, float aTop, float aNear, float aFar);
 extern void ProjectionFrustum(float aLeft, float aRight, float aBottom, float aTop, float aNear, float aFar);
 extern const float *ProjectionGet(void);

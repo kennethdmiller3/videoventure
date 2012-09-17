@@ -6,6 +6,8 @@
 #include "Font.h"
 #include "Render.h"
 #include "MatrixStack.h"
+#include "Expression.h"
+#include "ExpressionEntity.h"
 
 
 // special ammo position
@@ -21,18 +23,24 @@ PlayerOverlaySpecial::PlayerOverlaySpecial(unsigned int aPlayerId = 0)
 	: Overlay(aPlayerId)
 	, cur_special(-1)
 {
-	// allocate special draw list
-	special_handle = glGenLists(1);
-
 	Overlay::SetAction(Overlay::Action(this, &PlayerOverlaySpecial::Render));
+
+	const std::vector<unsigned int> &drawlist = Database::drawlist.Get(0x8cdedbba /* "circle16" */);
+	if (drawlist.size())
+	{
+		// create drawlist for icon
+		Expression::Append(icon_drawlist, DO_Color, Expression::Read<__m128>, 0.4f,  0.5f, 1.0f, 1.0f);
+		Expression::Append(icon_drawlist, DO_PushMatrix);
+		Expression::Append(icon_drawlist, DO_Translate, Expression::Read<__m128>, specialpos.x, specialpos.y, 0.0f, 1.0f);
+		Expression::Append(icon_drawlist, DO_Scale, Expression::Read<__m128>, 4.0f, 4.0f, 1.0f, 1.0f);
+		icon_drawlist.insert(icon_drawlist.end(), drawlist.begin(), drawlist.end());
+		Expression::Append(icon_drawlist, DO_PopMatrix);
+	}
 }
 
 // destructor
 PlayerOverlaySpecial::~PlayerOverlaySpecial()
 {
-	// free special draw list
-	if (glIsList(special_handle))
-		glDeleteLists(special_handle, 1);
 }
 
 // render
@@ -50,27 +58,13 @@ void PlayerOverlaySpecial::Render(unsigned int aId, float aTime, const Transform
 		return;
 	int new_special = xs_FloorToInt(specialresource->GetValue());
 
-	// if the special has not changed...
-	if (new_special == cur_special && glIsList(special_handle))
-	{
-		// call the existing draw list
-		glCallList(special_handle);
-		return;
-	}
-
 	// update special
 	cur_special = new_special;
 
-	// start a new draw list list
-	glNewList(special_handle, GL_COMPILE_AND_EXECUTE);
-
 	// draw the special ammo icon
-	SetAttribConstant(2, _mm_setr_ps(0.4f, 0.5f, 1.0f, 1.0f));
-	StackPush();
-	StackTranslate(_mm_setr_ps(specialpos.x, specialpos.y, 0.0f, 1.0f));
-	StackScale(_mm_setr_ps(4.0f, 4.0f, 1.0f, 1.0f));
-	RenderStaticDrawlist(0x8cdedbba /* "circle16" */, 0.0f, Transform2::Identity());
-	StackPop();
+	EntityContext context(&icon_drawlist[0], icon_drawlist.size(), 0.0f, aId);
+	while (context.mStream < context.mEnd)
+		Expression::Evaluate<void>(context);
 
 	// draw remaining special ammo
 	char special[16];
@@ -88,6 +82,4 @@ void PlayerOverlaySpecial::Render(unsigned int aId, float aTime, const Transform
 	FontDrawString(special, x, y, w, h, z);
 
 	FontDrawEnd();
-
-	glEndList();
 }
