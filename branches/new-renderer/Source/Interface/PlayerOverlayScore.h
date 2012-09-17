@@ -5,7 +5,6 @@
 class PlayerOverlayScore : public Overlay
 {
 public:
-	GLuint score_handle;
 	int cur_score;
 
 public:
