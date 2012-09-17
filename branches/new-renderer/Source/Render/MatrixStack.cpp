@@ -118,6 +118,12 @@ void ProjectionPop(void)
 	}
 }
 
+void ProjectionIdentity(void)
+{
+	Matrix4 &m = sProjMatrix[sProjTop];
+	m = Matrix4::Identity;
+}
+
 void ProjectionOrtho(float aLeft, float aRight, float aBottom, float aTop, float aNear, float aFar)
 {
 	const float ortho[16] = 
@@ -145,6 +151,14 @@ void ProjectionFrustum(float aLeft, float aRight, float aBottom, float aTop, flo
 void ProjectionLoad(const float *aValues)
 {
 	memcpy(&sProjMatrix, aValues, sizeof(Matrix4));
+}
+
+void ProjectionMult(const float *aValues)
+{
+	Matrix4 &m = sProjMatrix[sProjTop];
+	Matrix4 b;
+	memcpy(&b, aValues, sizeof(Matrix4));
+	m = m * b;
 }
 
 const float *ProjectionGet(void)

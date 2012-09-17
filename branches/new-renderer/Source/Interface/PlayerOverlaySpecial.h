@@ -4,8 +4,8 @@
 
 class PlayerOverlaySpecial : public Overlay
 {
-	GLuint special_handle;
 	int cur_special;
+	std::vector<unsigned int> icon_drawlist;
 
 public:
 	PlayerOverlaySpecial(unsigned int aPlayerId);

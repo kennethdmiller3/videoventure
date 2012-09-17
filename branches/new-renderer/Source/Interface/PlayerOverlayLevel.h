@@ -6,6 +6,7 @@ class PlayerOverlayLevel : public Overlay
 {
 	int cur_level;
 	float cur_part;
+	std::vector<unsigned int> icon_drawlist;
 
 public:
 	PlayerOverlayLevel(unsigned int aPlayerId);

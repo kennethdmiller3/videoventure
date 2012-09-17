@@ -6,6 +6,7 @@ class PlayerOverlayLives : public Overlay
 {
 public:
 	int cur_lives;
+	std::vector<unsigned int> icon_drawlist;
 
 public:
 	PlayerOverlayLives(unsigned int aPlayerId);

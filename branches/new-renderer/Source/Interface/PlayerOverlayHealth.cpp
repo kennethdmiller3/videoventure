@@ -264,14 +264,13 @@ void PlayerOverlayHealth::Render(unsigned int aId, float aTime, const Transform2
 	if (maxhealth > 1)
 	{
 		// tick marks
-		base = GetVertexCount();
 		int ticks = xs_FloorToInt(maxhealth);
 #ifdef PLAYER_HEALTH_FLOAT_COLOR
 		const Color4 color(0.0f, 0.0f, 0.0f, 0.125f);
 #else
 		unsigned int color = 0x1F000000;
 #endif
-		v = static_cast<Vertex *>(AllocVertices(ticks * 2));
+		v = static_cast<Vertex *>(AllocVertices((ticks - 1) * 4));
 
 		for (int i = 1; i < ticks; ++i)
 		{

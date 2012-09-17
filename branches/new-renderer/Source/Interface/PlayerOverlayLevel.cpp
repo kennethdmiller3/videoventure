@@ -6,6 +6,8 @@
 #include "Font.h"
 #include "Render.h"
 #include "MatrixStack.h"
+#include "Expression.h"
+#include "ExpressionEntity.h"
 
 
 // level indicator position
@@ -67,6 +69,18 @@ PlayerOverlayLevel::PlayerOverlayLevel(unsigned int aPlayerId = 0)
 	, cur_level(-1)
 {
 	Overlay::SetAction(Overlay::Action(this, &PlayerOverlayLevel::Render));
+
+	const std::vector<unsigned int> &drawlist = Database::drawlist.Get(0x8cdedbba /* "circle16" */);
+	if (drawlist.size())
+	{
+		// create drawlist for icon
+		Expression::Append(icon_drawlist, DO_Color, Expression::Read<__m128>, 0.4f,  0.5f, 1.0f, 1.0f);
+		Expression::Append(icon_drawlist, DO_PushMatrix);
+		Expression::Append(icon_drawlist, DO_Translate, Expression::Read<__m128>, levelpos.x, levelpos.y, 0.0f, 1.0f);
+		Expression::Append(icon_drawlist, DO_Scale, Expression::Read<__m128>, 4.0f, 4.0f, 1.0f, 1.0f);
+		icon_drawlist.insert(icon_drawlist.end(), drawlist.begin(), drawlist.end());
+		Expression::Append(icon_drawlist, DO_PopMatrix);
+	}
 }
 
 // destructor
@@ -138,12 +152,9 @@ void PlayerOverlayLevel::Render(unsigned int aId, float aTime, const Transform2 
 	IndexQuads(base, GetVertexCount() - base);
 
 	// draw the level icon
-	SetAttribConstant(2, _mm_setr_ps(0.4f, 0.5f, 1.0f, 1.0f));
-	StackPush();
-	StackTranslate(_mm_setr_ps(levelpos.x, levelpos.y, 0.0f, 1.0f));
-	StackScale(_mm_setr_ps(4.0f, 4.0f, 1.0f, 1.0f));
-	RenderStaticDrawlist(0x8cdedbba /* "circle16" */, 0.0f, Transform2::Identity());
-	StackPop();
+	EntityContext context(&icon_drawlist[0], icon_drawlist.size(), 0.0f, aId);
+	while (context.mStream < context.mEnd)
+		Expression::Evaluate<void>(context);
 
 	// draw level number
 	char level[16];
