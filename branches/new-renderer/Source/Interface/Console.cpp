@@ -93,7 +93,7 @@ void Console::Resize()
 
 	// set total number of screen lines
 	maxLines = DEFAULT_MAX_LINES;
-	
+
 	// reallocate lines
 	if (lines)
 		free(lines);
@@ -131,28 +131,28 @@ void Console::Render()
 	StackPush();
 	StackLoad(modelviewMatrix);
 
-    /* Render hiding / showing console in a special manner. Zero means hidden. 1
-     * means visible. All other values are traveling toward zero or one. TODO:
-     * Make this time dependent */
-    if (visibility != 1)
-    {
-        int v = visibility;
+	/* Render hiding / showing console in a special manner. Zero means hidden. 1
+	* means visible. All other values are traveling toward zero or one. TODO:
+	* Make this time dependent */
+	if (visibility != 1)
+	{
+		int v = visibility;
 
-        /* Count down in both directions */
-        if (v < 0)
-        {
-            v ^= -1;
-            visibility++;
-        }
-        else
-        {
-            v = SLIDE_STEPS - v;
-            visibility--;
-        }
+		/* Count down in both directions */
+		if (v < 0)
+		{
+			v ^= -1;
+			visibility++;
+		}
+		else
+		{
+			v = SLIDE_STEPS - v;
+			visibility--;
+		}
 
-        float d = textHeight * characterHeight * (1.0f - v * (1.0f / SLIDE_STEPS));
-        glTranslatef(0, d, 0);
-    }
+		float d = textHeight * characterHeight * (1.0f - v * (1.0f / SLIDE_STEPS));
+		StackTranslate(_mm_setr_ps(0, d, 0, 1));
+	}
 
 	// draw the background:
 	// untextured translucent black rectangle
@@ -526,7 +526,7 @@ int Console::KeyEvent(int sym, int mod)
 
 		return 1;
 
-	// Arrow key down
+		// Arrow key down
 	case KEY_DOWN:
 
 		// Shift key is for scrolling the output display
@@ -560,7 +560,7 @@ int Console::KeyEvent(int sym, int mod)
 
 		return 1;
 
-	// Arrow key left
+		// Arrow key left
 	case KEY_LEFT:
 
 		/* Yank the command history if necessary */
@@ -572,7 +572,7 @@ int Console::KeyEvent(int sym, int mod)
 		return 1;
 
 
-	// Arrow key right
+		// Arrow key right
 	case KEY_RIGHT:
 
 		/* Yank the command history if necessary */
