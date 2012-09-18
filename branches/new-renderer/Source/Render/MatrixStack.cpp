@@ -133,7 +133,8 @@ void ProjectionOrtho(float aLeft, float aRight, float aBottom, float aTop, float
 		0, 0, -2/(aFar-aNear), 0,
 		-(aRight+aLeft)/(aRight-aLeft),-(aTop+aBottom)/(aTop-aBottom),-(aFar+aNear)/(aFar-aNear), 1
 	};
-	memcpy(&sProjMatrix[sProjTop], ortho, sizeof(Matrix4));
+	Matrix4 &m = sProjMatrix[sProjTop];
+	memcpy(&m, ortho, sizeof(Matrix4));
 }
 
 void ProjectionFrustum(float aLeft, float aRight, float aBottom, float aTop, float aNear, float aFar)
@@ -145,12 +146,14 @@ void ProjectionFrustum(float aLeft, float aRight, float aBottom, float aTop, flo
 		(aRight+aLeft)/(aRight-aLeft), (aTop+aBottom)/(aTop-aBottom), -(aFar+aNear)/(aFar-aNear), -1,
 		0, 0, -2*aFar*aNear/(aFar-aNear), 0
 	};
-	memcpy(&sProjMatrix[sProjTop], frustum, sizeof(Matrix4));
+	Matrix4 &m = sProjMatrix[sProjTop];
+	memcpy(&m, frustum, sizeof(Matrix4));
 }
 
 void ProjectionLoad(const float *aValues)
 {
-	memcpy(&sProjMatrix, aValues, sizeof(Matrix4));
+	Matrix4 &m = sProjMatrix[sProjTop];
+	memcpy(&m, aValues, sizeof(Matrix4));
 }
 
 void ProjectionMult(const float *aValues)
