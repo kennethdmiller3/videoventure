@@ -46,7 +46,7 @@
 // use shader for drawlist?
 // defined: use a shader program
 // undefined: use fixed-function
-//#define DRAWLIST_USE_SHADER
+#define DRAWLIST_USE_SHADER
 
 // debug static geometry flush
 // defined: full details of VB and IB contents

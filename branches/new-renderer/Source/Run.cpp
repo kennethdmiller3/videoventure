@@ -445,15 +445,9 @@ static void ReadInput()
 #endif
 }
 
-struct Vertex
-{
-	Vector3 pos;
-	unsigned int color;
-};
-
 struct BlurVertex
 {
-	Vector3 pos;
+	Vector2 pos;
 	unsigned int color;
 	Vector2 texcoord;
 };
@@ -466,16 +460,13 @@ static void ApplyMotionBlur(int blur)
 	UseProgram(0);
 
 	// set projection matrix
-	ProjectionOrtho(0, 1, 0, 1, -1, 1);
-	SetUniformMatrix4(GL_PROJECTION, ProjectionGet());
+	SetUniformMatrix4(GL_PROJECTION, IdentityGet());
 
 	// set model view matrix
-	StackIdentity();
-	ViewLoad(StackGet());
-	SetUniformMatrix4(GL_MODELVIEW, ViewGet());
+	SetUniformMatrix4(GL_MODELVIEW, IdentityGet());
 
 	// position, color, texcoord
-	SetAttribFormat(0, 3, GL_FLOAT);
+	SetAttribFormat(0, 2, GL_FLOAT);
 	SetAttribFormat(2, 4, GL_UNSIGNED_BYTE);
 	SetAttribFormat(3, 2, GL_FLOAT);
 	SetWorkFormat((1 << 0) | (1 << 2) | (1 << 3));
@@ -485,10 +476,10 @@ static void ApplyMotionBlur(int blur)
 	// add vertices
 	unsigned int color = (255 * blur) / (blur + 1) << 24 | 0x00FFFFFF;
 	register BlurVertex * __restrict v = static_cast<BlurVertex *>(AllocVertices(4));
-	v->pos = Vector3(0, 0, 0); v->color = color; v->texcoord = Vector2(0, 0); ++v;
-	v->pos = Vector3(1, 0, 0); v->color = color; v->texcoord = Vector2(1, 0); ++v;
-	v->pos = Vector3(1, 1, 0); v->color = color; v->texcoord = Vector2(1, 1); ++v;
-	v->pos = Vector3(0, 1, 0); v->color = color; v->texcoord = Vector2(0, 1); ++v;
+	v->pos = Vector2(-1, -1); v->color = color; v->texcoord = Vector2(0, 0); ++v;
+	v->pos = Vector2(1, -1); v->color = color; v->texcoord = Vector2(1, 0); ++v;
+	v->pos = Vector2(1, 1); v->color = color; v->texcoord = Vector2(1, 1); ++v;
+	v->pos = Vector2(-1, 1); v->color = color; v->texcoord = Vector2(0, 1); ++v;
 
 	// add indices
 	IndexQuads(0, 4);
@@ -577,8 +568,8 @@ void RunState()
 	accumTexture.mFormat = GL_RGB;
 	accumTexture.mMinFilter = GL_NEAREST;
 	accumTexture.mMagFilter = GL_NEAREST;
-	accumTexture.mWrapS = GL_CLAMP;
-	accumTexture.mWrapT = GL_CLAMP;
+	accumTexture.mWrapS = GL_CLAMP_TO_EDGE;
+	accumTexture.mWrapT = GL_CLAMP_TO_EDGE;
 	InstantiateTexture(accumHandle, accumTexture);
 #endif
 
