@@ -10,6 +10,7 @@
 #include "Render.h"
 #include "Drawlist.h"
 #include "Texture.h"
+#include "Shader.h"
 #include "Escape.h"
 #include "Library.h"
 #include "Font.h"
@@ -220,14 +221,16 @@ void PlayerQuitListener(unsigned int aId)
 // enter play state
 void EnterPlayState()
 {
+	DebugPrint("EnterPlayState\n");
+
 	// set up rendering
 	InitRender();
 
 	// set up drawlists
 	InitDrawlists();
 
-	// create default font
-	CreateDefaultFont();
+	// set up fonts
+	InitFonts();
 
 	// clear the screen
 	glClear(
@@ -283,7 +286,7 @@ void EnterPlayState()
 // exit play state
 void ExitPlayState()
 {
-	DebugPrint("Quitting...\n");
+	DebugPrint("ExitPlayState\n");
 
 	// stop audio
 	Sound::Pause();
@@ -295,11 +298,17 @@ void ExitPlayState()
 	delete Database::overlay.Get(0x9e212406 /* "escape" */);
 	Database::overlay.Delete(0x9e212406 /* "escape" */);
 
+	// clean up fonts
+	CleanupFonts();
+
 	// cleanup drawlists
 	CleanupDrawlists();
 
 	// cleanup textures
 	CleanupTextures();
+
+	// cleanup shaders
+	CleanupShaders();
 
 	// clean up render
 	CleanupRender();

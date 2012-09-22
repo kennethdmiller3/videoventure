@@ -46,7 +46,7 @@
 // use shader for drawlist?
 // defined: use a shader program
 // undefined: use fixed-function
-#define DRAWLIST_USE_SHADER
+//#define DRAWLIST_USE_SHADER
 
 // debug static geometry flush
 // defined: full details of VB and IB contents
@@ -2331,25 +2331,11 @@ static void InitBasicProgram(void)
 	sAttribColor = glGetAttribLocation(sBasicProgramId, "color");
 	sAttribTexCoord = glGetAttribLocation(sBasicProgramId, "texcoord");
 #endif
-
-	// set up attributes for drawlilst
-	SetAttribFormat(sAttribPosition, sPositionWidth, GL_FLOAT);
-#ifdef DRAWLIST_NORMALS
-	SetAttribFormat(sAttribNormal, sNormalWidth, GL_FLOAT);
-#endif
-#ifdef DRAWLIST_FLOAT_COLOR
-	SetAttribFormat(sAttribColor, sColorWidth, GL_FLOAT);
-#else
-	SetAttribFormat(sAttribColor, sColorWidth, GL_UNSIGNED_BYTE);
-#endif
-	SetAttribFormat(sAttribTexCoord, sTexCoordWidth, GL_FLOAT);
 }
 
 static void CleanupBasicProgram(void)
 {
 #ifdef DRAWLIST_USE_SHADER
-	glDetachShader(sBasicProgramId, sBasicVertexId);
-	glDetachShader(sBasicProgramId, sBasicFragmentId);
 	glDeleteProgram(sBasicProgramId);
 	sBasicProgramId = 0;
 	glDeleteShader(sBasicFragmentId);
@@ -2372,7 +2358,7 @@ void InitDrawlists(void)
 #else
 	sStaticVertexBuffer.mSize = 256 * 1024;
 #endif
-	sStaticVertexBuffer.mPersist = malloc(sStaticVertexBuffer.mSize);
+	sStaticVertexBuffer.mPersist = calloc(sStaticVertexBuffer.mSize, 1);
 
 	// set up static index buffer
 	BufferInit(sStaticIndexBuffer, GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW);
@@ -2382,7 +2368,7 @@ void InitDrawlists(void)
 #else
 	sStaticIndexBuffer.mSize = 64 * 1024;
 #endif
-	sStaticIndexBuffer.mPersist = malloc(sStaticIndexBuffer.mSize);
+	sStaticIndexBuffer.mPersist = calloc(sStaticIndexBuffer.mSize, 1);
 
 	// initialize matrix stack
 	StackInit();

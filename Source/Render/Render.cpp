@@ -149,6 +149,15 @@ size_t sVertexBase;
 unsigned short *sIndexWork = sIndexPool;
 size_t sIndexCount;
 
+// clear color
+Color4 sClearColor;
+
+// fog properties
+bool sFogEnabled;
+Color4 sFogColor;
+float sFogStart;
+float sFogEnd;
+
 
 //
 // RENDER SYSTEM FUNCTIONS
@@ -234,6 +243,52 @@ static void InitWorkBuffer(void)
 	sIndexCount = 0;
 }
 
+// reset attributes
+static void InitAttribs(void)
+{
+	memset(sAttribBuffer, 0, sAttribCount * sizeof(sAttribBuffer[0]));
+	memset(sAttribWidth, 0, sAttribCount * sizeof(sAttribWidth[0]));
+	memset(sAttribType, 0, sAttribCount * sizeof(sAttribType[0]));
+	memset(sAttribSize, 0, sAttribCount * sizeof(sAttribSize[0]));
+	memset(sAttribStride, 0, sAttribCount * sizeof(sAttribStride[0]));
+	memset(sAttribOffset, 0, sAttribCount * sizeof(sAttribOffset[0]));
+	memset(sAttribDisplace, 0, sAttribCount * sizeof(sAttribDisplace[0]));
+	sAttribCount = 0;
+}
+
+// init vertex format
+static void InitVertexFormat(void)
+{
+	sVertexWorkFormat = 0;
+	sVertexWorkSize = 0;
+}
+
+// clear render state
+static void ClearRenderState(void)
+{
+	// clear program
+	sProgram = 0;
+
+	// set to triangle mode
+	sDrawMode = GL_TRIANGLES;
+
+	// no texture
+	sTexture = 0;
+
+	// clear active buffer
+	sVertexBuffer = NULL;
+	sIndexBuffer = NULL;
+
+	// initialize attribs
+	InitAttribs();
+
+	// init vertex format
+	InitVertexFormat();
+
+	// initialize work buffer
+	InitWorkBuffer();
+}
+
 // initialize rendering
 void InitRender(void)
 {
@@ -248,14 +303,30 @@ void InitRender(void)
 	BufferInit(sDynamicIndexBuffer, GL_ELEMENT_ARRAY_BUFFER, GL_STREAM_DRAW);
 	BufferGen(sDynamicIndexBuffer);
 	BufferSetData(sDynamicIndexBuffer, 128 * 1024, NULL);
+	
+	// clear render state
+	ClearRenderState();
 
-	// initialize work buffer
-	InitWorkBuffer();
+	// disable attribute arrays
+	for (int i = 0; i < RENDER_MAX_ATTRIB; ++i)
+		glDisableVertexAttribArray(i);
+	glDisableClientState(GL_NORMAL_ARRAY);
+	glDisableClientState(GL_COLOR_ARRAY);
+	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 
 #ifdef RENDER_USE_QUEUE
 	// initialize render queue
 	sRenderQueue.reserve(16 * 1024);
 #endif
+
+	// clear color
+	sClearColor = Color4(0, 0, 0, 1);
+
+	// fog
+	sFogEnabled = false;
+	sFogColor = Color4(0, 0, 0, 1);
+	sFogStart = FLT_MAX;
+	sFogEnd = FLT_MAX;
 }
 
 // pre-reset rendering system
@@ -266,12 +337,11 @@ void PreResetRender(void)
 #endif
 	EndScene();
 
-	// clear active buffer
-	sVertexBuffer = NULL;
-	sIndexBuffer = NULL;
+	// release program so it can be freed
+	sProgram = 0;
+	glUseProgram(0);
 
-	UseProgram(0);
-
+	// release buffers
 	BufferCleanup(sDynamicVertexBuffer);
 	BufferCleanup(sDynamicIndexBuffer);
 }
@@ -291,16 +361,33 @@ void PostResetRender(void)
 	sDynamicIndexBuffer.mStart = 0;
 	sDynamicIndexBuffer.mEnd = 0;
 
-	// argh...
-	BeginScene();
+	// clear render state
+	ClearRenderState();
 
-	// initialize work buffer
-	InitWorkBuffer();
+	// restore colors
+	SetClearColor(sClearColor);
+	SetFogEnabled(sFogEnabled);
+	SetFogColor(sFogColor);
+	SetFogStart(sFogStart);
+	SetFogEnd(sFogEnd);
 }
 
 // clean up rendering
 void CleanupRender(void)
 {
+#ifdef RENDER_USE_QUEUE
+	// clear render queue
+	sRenderQueue.clear();
+#endif
+
+	// clear program
+	sProgram = 0;
+	glUseProgram(0);
+
+	// clear active buffer
+	sVertexBuffer = NULL;
+	sIndexBuffer = NULL;
+
 	BufferCleanup(sDynamicVertexBuffer);
 	BufferCleanup(sDynamicIndexBuffer);
 }
@@ -316,8 +403,37 @@ void CleanupRender(void)
 void RQ_UseProgram(Expression::Context &aContext)
 {
 	GLuint program(Expression::Read<GLuint>(aContext));
+	if (sProgram)
+	{
+		// switch off vertex attribute arrays
+		for (int i = 0; i < sAttribCount; ++i)
+		{
+			if (sAttribBuffer[i])
+			{
+				glDisableVertexAttribArray(i);
+			}
+		}
+	}
 	glUseProgram(program);
 	sProgram = program;
+}
+
+// set uniform float (shader)
+void RQ_UniformFloat(Expression::Context &aContext)
+{
+	assert(sProgram != 0);
+	GLint index(Expression::Read<GLint>(aContext));
+	GLfloat value(Expression::Read<GLfloat>(aContext));
+	glUniform1f(index, value);
+}
+
+// set uniform vector (shader)
+void RQ_UniformVector4(Expression::Context &aContext)
+{
+	assert(sProgram != 0);
+	GLint index(Expression::Read<GLint>(aContext));
+	glUniform4fv(index, 1, reinterpret_cast<const float *>(aContext.mStream));
+	aContext.mStream += 4;
 }
 
 // set uniform matrix (shader)
@@ -586,6 +702,20 @@ GLuint CreateProgram(GLuint aVertexShaderId, GLuint aFragmentShaderId)
 	return program;
 }
 
+// delete a shader
+void DeleteShader(GLuint aShaderId)
+{
+	if (glIsShader(aShaderId))
+		glDeleteShader(aShaderId);
+}
+
+// delete a shader program
+void DeleteProgram(GLuint aProgramId)
+{
+	if (glIsProgram(aProgramId))
+		glDeleteProgram(aProgramId);
+}
+
 // use shader program
 void UseProgram(GLuint aProgram)
 {
@@ -594,6 +724,7 @@ void UseProgram(GLuint aProgram)
 
 	FlushDynamic();
 
+#ifndef RENDER_USE_QUEUE
 	if (sProgram)
 	{
 		// switch off vertex attribute arrays
@@ -601,31 +732,17 @@ void UseProgram(GLuint aProgram)
 		{
 			if (sAttribBuffer[i])
 			{
-				if (sProgram)
-				{
-#ifdef RENDER_USE_QUEUE
-					Expression::Append(sRenderQueue, RQ_AttribDisable, i);
-#else
-					glDisableVertexAttribArray(i);
-#endif
-				}
+				glDisableVertexAttribArray(i);
 			}
 		}
 	}
+#endif
 
-	// invalidate attribs
-	memset(sAttribBuffer, 0, sAttribCount * sizeof(sAttribBuffer[0]));
-	memset(sAttribWidth, 0, sAttribCount * sizeof(sAttribWidth[0]));
-	memset(sAttribType, 0, sAttribCount * sizeof(sAttribType[0]));
-	memset(sAttribSize, 0, sAttribCount * sizeof(sAttribSize[0]));
-	memset(sAttribStride, 0, sAttribCount * sizeof(sAttribStride[0]));
-	memset(sAttribOffset, 0, sAttribCount * sizeof(sAttribOffset[0]));
-	memset(sAttribDisplace, 0, sAttribCount * sizeof(sAttribDisplace[0]));
-	sAttribCount = 0;
+	// initialize attribs
+	InitAttribs();
 
-	// invalidate vertex format
-	sVertexWorkFormat = 0;
-	sVertexWorkSize = 0;
+	// init vertex format
+	InitVertexFormat();
 
 #ifdef RENDER_USE_QUEUE
 	// queue use program command
@@ -754,6 +871,27 @@ BufferObject &GetDynamicIndexBuffer(void)
 //
 // UNIFORM FUNCTIONS
 //
+
+// set uniform float
+extern void SetUniformFloat(GLint aIndex, const float aValue)
+{
+#ifdef RENDER_USE_QUEUE
+	Expression::Append(sRenderQueue, RQ_UniformFloat, aIndex, aValue);
+#else
+	glUniform1f(aIndex, aValue);
+#endif
+}
+
+// set uniform vector
+extern void SetUniformVector4(GLint aIndex, const float aValue[])
+{
+#ifdef RENDER_USE_QUEUE
+	Expression::Append(sRenderQueue, RQ_UniformVector4, aIndex);
+	memcpy(Expression::Alloc(sRenderQueue, 4 * sizeof(float)), aValue, 4 * sizeof(float));
+#else
+	glUniform4fv(aIndex, 1, aValue);
+#endif
+}
 
 // set uniform matrix
 static void SetUniformMatrix4Internal(GLint aIndex, const float aValue[])
@@ -917,9 +1055,8 @@ void SetAttribFormat(GLint aIndex, GLuint aWidth, GLenum aType)
 		break;
 	}
 
-	// invalidate vertex format
-	sVertexWorkFormat = 0;
-	sVertexWorkSize = 0;
+	// init vertex format
+	InitVertexFormat();
 }
 
 // set attribute constant
@@ -979,9 +1116,8 @@ void SetAttribConstant(GLint aIndex, __m128 aValue)
 			// flush dynamic geometry
 			FlushDynamic();
 
-			// invalidate vertex format
-			sVertexWorkFormat = 0;
-			sVertexWorkSize = 0;
+			// init vertex format
+			InitVertexFormat();
 		}
 	}
 
@@ -1076,9 +1212,8 @@ void SetAttribBuffer(GLint aIndex, BufferObject &aBuffer, GLuint aStride, GLuint
 			// flush dynamic geometry
 			FlushDynamic();
 
-			// invalidate vertex format
-			sVertexWorkFormat = 0;
-			sVertexWorkSize = 0;
+			// init vertex format
+			InitVertexFormat();
 		}
 	}
 
@@ -1110,16 +1245,8 @@ void SetIndexBuffer(BufferObject &aBuffer)
 // begin scene
 void BeginScene(void)
 {
-	// clear active buffer
-	sVertexBuffer = NULL;
-	sIndexBuffer = NULL;
-
-	// clear vertex work format
-	sVertexWorkFormat = 0;
-	sVertexWorkSize = 0;
-
-	// initialize work buffer
-	InitWorkBuffer();
+	// clear render state
+	ClearRenderState();
 }
 
 // end scene
@@ -1132,6 +1259,9 @@ void EndScene(void)
 	// clear active buffer
 	sVertexBuffer = NULL;
 	sIndexBuffer = NULL;
+
+	// reset shader program
+	sProgram = 0;
 
 	if (!sRenderQueue.empty())
 	{
@@ -1152,8 +1282,6 @@ void EndScene(void)
 	sDynamicVertexBuffer.mStart = sDynamicVertexBuffer.mEnd = 0;
 	BufferSetData(sDynamicIndexBuffer, sDynamicIndexBuffer.mSize, NULL);
 	sDynamicIndexBuffer.mStart = sDynamicIndexBuffer.mEnd = 0;
-
-	UseProgram(0);
 }
 
 // is dynamic mode active?
@@ -1667,4 +1795,78 @@ void ClearFrame(void)
 #endif
 		);
 #endif
+}
+
+// set clear color
+void SetClearColor(const Color4 &aColor)
+{
+	// should this be queued?
+	sClearColor = aColor;
+
+	glClearColor( aColor.r, aColor.g, aColor.b, 0 );
+}
+
+// get clear color
+const Color4 &GetClearColor(void)
+{
+	return sClearColor;
+}
+
+// set fog enable
+void SetFogEnabled(bool bEnable)
+{
+	sFogEnabled = bEnable;
+
+	// fixed-function
+	if (bEnable)
+		glEnable(GL_FOG);
+	else
+		glDisable(GL_FOG);
+}
+
+// get fog enable
+bool GetFogEnabled(void)
+{
+	return sFogEnabled;
+}
+
+// set fog color
+void SetFogColor(const Color4 &aColor)
+{
+	sFogColor = aColor;
+
+	// fixed-function
+	glFogfv( GL_FOG_COLOR, aColor );
+}
+
+// get fog color
+const Color4 &GetFogColor(void)
+{
+	return sFogColor;
+}
+
+void SetFogStart(float aStart)
+{
+	sFogStart = aStart;
+
+	// fixed-function
+	glFogf( GL_FOG_START, aStart );
+}
+
+void SetFogEnd(float aEnd)
+{
+	sFogEnd = aEnd;
+
+	// fixed-function
+	glFogf( GL_FOG_END, aEnd );
+}
+
+float GetFogStart(void)
+{
+	return sFogStart;
+}
+
+float GetFogEnd(void)
+{
+	return sFogEnd;
 }

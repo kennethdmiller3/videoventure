@@ -12,6 +12,7 @@
 #include "Render.h"
 #include "Drawlist.h"
 #include "Texture.h"
+#include "Shader.h"
 
 
 extern bool InitInput(const char *config);
@@ -53,14 +54,16 @@ void RenderShellOptions(unsigned int aId, float aTime, const Transform2 &aTransf
 // enter shell state
 void EnterShellState()
 {
+	DebugPrint("EnterShellState\n");
+
 	// set up render
 	InitRender();
 
 	// set up drawlists
 	InitDrawlists();
 
-	// create default font
-	CreateDefaultFont();
+	// set up fonts
+	InitFonts();
 
 	// clear the screen
 	glClear(
@@ -108,6 +111,8 @@ void EnterShellState()
 
 void ExitShellState()
 {
+	DebugPrint("ExitShellState\n");
+
 	// stop audio
 	Sound::Pause();
 
@@ -118,11 +123,17 @@ void ExitShellState()
 	delete Database::overlay.Get(0xef286ca5 /* "options" */);
 	Database::overlay.Delete(0xef286ca5 /* "options" */);
 
+	// clean up fonts
+	CleanupFonts();
+
 	// clean up drawlists
 	CleanupDrawlists();
 
 	// clean up textures
 	CleanupTextures();
+
+	// cleanup shaders
+	CleanupShaders();
 
 	// clean up render
 	CleanupRender();

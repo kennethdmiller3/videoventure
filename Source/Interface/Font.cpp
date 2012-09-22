@@ -149,7 +149,7 @@ static GLint sAttribColor;
 static GLint sAttribTexCoord;
 #endif
 
-void CreateDefaultFont()
+static void InitFontProgram(void)
 {
 #ifdef FONT_USE_SHADER
 	// create font shader
@@ -165,6 +165,25 @@ void CreateDefaultFont()
 	sAttribColor = glGetAttribLocation(sFontProgramId, "color");
 	sAttribTexCoord = glGetAttribLocation(sFontProgramId, "texcoord");
 #endif
+}
+
+static void CleanupFontProgram(void)
+{
+#ifdef FONT_USE_SHADER
+	DeleteProgram(sFontProgramId);
+	sFontProgramId = 0;
+	DeleteShader(sFontFragmentId);
+	sFontFragmentId = 0;
+	DeleteShader(sFontVertexId);
+	sFontVertexId = 0;
+#endif
+}
+
+void InitFonts()
+{
+	// initialize font shader program
+	// (this should be part of a font system initialization...)
+	InitFontProgram();
 
 	// generate a texture handle
 	glGenTextures(1, &sDefaultFontHandle);
@@ -225,6 +244,26 @@ void CreateDefaultFont()
 		uv.h = float(-aCharacterHeight) / float(aTextureHeight);
 	}
 }
+
+void PreResetFonts(void)
+{
+	CleanupFontProgram();
+}
+
+void PostResetFonts(void)
+{
+	InitFontProgram();
+}
+
+void CleanupFonts(void)
+{
+	CleanupFontProgram();
+
+	// clear default font handle
+	// (texture system releases the font texture)
+	sDefaultFontHandle = 0;
+}
+
 
 int FontGetWidth(GLuint handle, int c)
 {

@@ -1030,6 +1030,7 @@ void RunState()
 
 			UseProgram(0);
 			SetAttribFormat(0, 2, GL_FLOAT);
+			SetAttribConstant(2, _mm_setzero_ps());
 			SetWorkFormat(1<<0);
 			SetDrawMode(GL_TRIANGLE_STRIP);
 			for (int band = 0; band < SDL_arraysize(band_info); ++band)
@@ -1051,7 +1052,6 @@ void RunState()
 				//IndexQuads(base, GetVertexCount() - base);
 				FlushDynamic();
 			}
-			SetAttribFormat(0, 3, GL_FLOAT);
 		}
 #endif
 
