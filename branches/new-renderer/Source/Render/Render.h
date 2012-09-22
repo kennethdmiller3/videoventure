@@ -105,6 +105,12 @@ extern GLuint CreateFragmentShader(const char * aShaderCode);
 // create a shader program
 extern GLuint CreateProgram(GLuint aVertexShaderId, GLuint aFragmentShaderId);
 
+// delete a shader
+extern void DeleteShader(GLuint aShaderId);
+
+// delete a shader program
+extern void DeleteProgram(GLuint aProgramId);
+
 // use a shader program
 // program 0 returns to fixed-function mode
 // forces a render flush if different from the current program
@@ -161,6 +167,8 @@ extern BufferObject &GetDynamicIndexBuffer(void);
 // UNIFORM FUNCTIONS
 //
 
+extern void SetUniformFloat(GLint aIndex, const float aValue);
+extern void SetUniformVector4(GLint aIndex, const float aValue[]);
 extern void SetUniformMatrix4(GLint aIndex, const float aValue[]);
 
 
@@ -223,3 +231,17 @@ extern void CopyTexSubImage(GLint aLevel, GLint aXOffset, GLint aYOffset, GLint 
 
 // clear the screen
 extern void ClearFrame(void);
+
+// clear color
+extern void SetClearColor(const Color4 &aColor);
+extern const Color4 &GetClearColor(void);
+
+// set fog properties
+extern void SetFogEnabled(bool aEnable);
+extern bool GetFogEnabled(void);
+extern void SetFogColor(const Color4 &aColor);
+extern const Color4 &GetFogColor(void);
+extern void SetFogStart(float aStart);
+extern void SetFogEnd(float aEnd);
+extern float GetFogStart(void);
+extern float GetFogEnd(void);

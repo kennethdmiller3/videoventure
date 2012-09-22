@@ -2,6 +2,7 @@
 #include "World.h"
 #include "Entity.h"
 #include "Collidable.h"
+#include "Render.h"
 
 namespace Database
 {
@@ -43,13 +44,7 @@ namespace Database
 			// set up depth fog
 			bool enable = false;
 			if (element->QueryBoolAttribute("enable", &enable) == tinyxml2::XML_SUCCESS)
-			{
-				if (enable)
-					glEnable( GL_FOG );
-				else
-					glDisable( GL_FOG );
-			}
-			glHint( GL_FOG_HINT, GL_DONT_CARE );
+				SetFogEnabled(enable);
 
 			switch (Hash(element->Attribute("mode")))
 			{
@@ -63,14 +58,15 @@ namespace Database
 
 					float start = 0;
 					if (element->QueryFloatAttribute("start", &start) == tinyxml2::XML_SUCCESS)
-						glFogf( GL_FOG_START, start );
+						SetFogStart(start);
 
 					float end = 1;
 					if (element->QueryFloatAttribute("end", &end) == tinyxml2::XML_SUCCESS)
-						glFogf( GL_FOG_END, end );
+						SetFogEnd(end);
 				}
 				break;
 
+#if 0
 			case 0x72a68728 /* "exp" */:
 				{
 					glFogi( GL_FOG_MODE, GL_EXP );
@@ -90,15 +86,16 @@ namespace Database
 						glFogf( GL_FOG_DENSITY, density );
 				}
 				break;
+#endif
 			}
 
-			GLfloat fogColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
-			element->QueryFloatAttribute("r", &fogColor[0]);
-			element->QueryFloatAttribute("g", &fogColor[1]);
-			element->QueryFloatAttribute("b", &fogColor[2]);
-			element->QueryFloatAttribute("a", &fogColor[3]);
-			glFogfv( GL_FOG_COLOR, fogColor );
-			glClearColor( fogColor[0], fogColor[1], fogColor[2], 0 );
+			Color4 fogColor(0.0f, 0.0f, 0.0f, 1.0f);
+			element->QueryFloatAttribute("r", &fogColor.r);
+			element->QueryFloatAttribute("g", &fogColor.g);
+			element->QueryFloatAttribute("b", &fogColor.b);
+			element->QueryFloatAttribute("a", &fogColor.a);
+			SetFogColor(fogColor);
+			SetClearColor(fogColor);
 		}
 		Configure fogconfigure(0xa1f3723f /* "fog" */, FogConfigure);
 	}

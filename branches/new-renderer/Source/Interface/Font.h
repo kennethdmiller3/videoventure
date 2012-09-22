@@ -2,7 +2,11 @@
 
 extern GLuint sDefaultFontHandle;
 
-extern void CreateDefaultFont();
+extern void InitFonts();
+extern void PreResetFonts(void);
+extern void PostResetFonts(void);
+extern void CleanupFonts();
+
 extern int FontGetWidth(GLuint handle, int c);
 extern int FontGetHeight(GLuint handle);
 extern void FontDrawBegin(GLuint handle);

@@ -10,6 +10,8 @@
 #include "Render.h"
 #include "Drawlist.h"
 #include "Texture.h"
+#include "Font.h"
+#include "Shader.h"
 
 #include <cstdarg>
 
@@ -190,14 +192,22 @@ bool OpenWindow(void)
 
 	if (runtime)
 	{
+		DebugPrint("Post-reset\n");
+
 		// rebuild rendering
 		PostResetRender();
 
 		// rebuild textures
 		RebuildTextures();
 
+		// rebuild shaders
+		RebuildShaders();
+
 		// post-reset draw lists
 		PostResetDrawlists();
+
+		// post-reset font
+		PostResetFonts();
 
 		// rebuild console
 		console->Resize();
@@ -210,11 +220,22 @@ void CloseWindow(void)
 {
 	if (runtime)
 	{
+		DebugPrint("Pre-reset\n");
+
 		// pre-reset draw lists
 		PreResetDrawlists();
 
 		// pre-reset rendering
 		PreResetRender();
+
+		// pre-reset font
+		PreResetFonts();
+
+		// cleanup textures
+		CleanupTextures();
+
+		// cleanup shaders
+		CleanupShaders();
 
 		// platform-specific close
 		Platform::CloseWindow();
