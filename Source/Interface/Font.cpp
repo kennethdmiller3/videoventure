@@ -182,8 +182,8 @@ void CreateDefaultFont()
 	texture.mFormat = GL_ALPHA;
 	texture.mMinFilter = GL_NEAREST;
 	texture.mMagFilter = GL_NEAREST;
-	texture.mWrapS = GL_CLAMP;
-	texture.mWrapT = GL_CLAMP;
+	texture.mWrapS = GL_CLAMP_TO_EDGE;
+	texture.mWrapT = GL_CLAMP_TO_EDGE;
 
 	// allocate space
 	texture.Allocate(aTextureComponents);

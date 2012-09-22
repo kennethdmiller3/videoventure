@@ -3,6 +3,7 @@
 #include "Texture.h"
 #include "ExpressionConfigure.h"
 #include "Noise.h"
+#include "Render.h"
 
 static const char * sColorNames[] = { "r", "g", "b", "a" };
 static const float sColorDefault[] = { 0.0f, 0.0f, 0.0f, 1.0f };
@@ -50,7 +51,7 @@ namespace Database
 			switch (Hash(element->Attribute("wraps")))
 			{
 			default:
-			case 0xa82efcbc /* "clamp" */:				texture.mWrapS = GL_CLAMP; break;
+			case 0xa82efcbc /* "clamp" */:				texture.mWrapS = GL_CLAMP_TO_EDGE; break;
 			case 0xd99ba82a /* "repeat" */:				texture.mWrapS = GL_REPEAT; break;
 			}
 
@@ -58,7 +59,7 @@ namespace Database
 			switch (Hash(element->Attribute("wrapt")))
 			{
 			default:
-			case 0xa82efcbc /* "clamp" */:				texture.mWrapT = GL_CLAMP; break;
+			case 0xa82efcbc /* "clamp" */:				texture.mWrapT = GL_CLAMP_TO_EDGE; break;
 			case 0xd99ba82a /* "repeat" */:				texture.mWrapT = GL_REPEAT; break;
 			}
 
