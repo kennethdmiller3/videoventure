@@ -12,6 +12,8 @@
 #include "Texture.h"
 #include "Font.h"
 #include "Shader.h"
+#include "ShaderColor.h"
+#include "ShaderModulate.h"
 
 #include <cstdarg>
 
@@ -114,14 +116,19 @@ void cmdCB(const char *cmd)
 
 bool InitOpenGL()
 {	
+	// bind function pointers
+	BindFunctionPointers();
+
 	// set clear color
 	glClearColor( 0, 0, 0, 0 );
 
 	// set viewport
 	glViewport( 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT );
 
+#ifdef SUPPORT_FIXED_FUNCTION
 	// disable lighting
 	glDisable( GL_LIGHTING );
+#endif
 
 	// enable blending
 	glEnable( GL_BLEND );
@@ -140,11 +147,15 @@ bool InitOpenGL()
 	glDisable( GL_DEPTH_TEST );
 #endif
 
+#ifdef SUPPORT_FIXED_FUNCTION
 	// diable fog by default
 	glDisable( GL_FOG );
+#endif
 
+#ifdef SUPPORT_FIXED_FUNCTION
 	// allow vertex arrays
 	glEnableClientState(GL_VERTEX_ARRAY);
+#endif
 
 	// return true if no errors
 	return glGetError() == GL_NO_ERROR;
@@ -162,19 +173,29 @@ void PrintAttributes(void)
 
 	// OpenGL extensions
 	DebugPrint( "Extensions : \n" );
-	const GLubyte *extensions = glGetString( GL_EXTENSIONS );
-	size_t size = strlen(reinterpret_cast<const char *>(extensions))+1;
-	char *buf = static_cast<char *>(_alloca(size));
-	memcpy(buf, extensions, size);
-
-	char *extension = strtok(buf, " ");
-	do
+	if (glGetStringi)
 	{
-		DebugPrint( "%s\n", extension );
-		extension = strtok(NULL, " ");
+		GLint n, i;
+		glGetIntegerv(GL_NUM_EXTENSIONS, &n);
+		for (i = 0; i < n; i++) {
+			DebugPrint("%s\n", glGetStringi(GL_EXTENSIONS, i));
+		}
 	}
-	while(extension);
-	DebugPrint("\n");
+	else if (const GLubyte *extensions = glGetString( GL_EXTENSIONS ))
+	{
+		size_t size = strlen(reinterpret_cast<const char *>(extensions))+1;
+		char *buf = static_cast<char *>(_alloca(size));
+		memcpy(buf, extensions, size);
+
+		char *extension = strtok(buf, " ");
+		do
+		{
+			DebugPrint( "%s\n", extension );
+			extension = strtok(NULL, " ");
+		}
+		while(extension);
+		DebugPrint("\n");
+	}
 }
 
 bool OpenWindow(void)
@@ -200,14 +221,16 @@ bool OpenWindow(void)
 		// rebuild textures
 		RebuildTextures();
 
-		// rebuild shaders
-		RebuildShaders();
-
 		// post-reset draw lists
 		PostResetDrawlists();
 
 		// post-reset font
 		PostResetFonts();
+
+		// rebuild shaders
+		ShaderColor::PostReset();
+		ShaderModulate::PostReset();
+		RebuildShaders();
 
 		// rebuild console
 		console->Resize();
@@ -236,6 +259,8 @@ void CloseWindow(void)
 
 		// cleanup shaders
 		CleanupShaders();
+		ShaderModulate::PreReset();
+		ShaderColor::PreReset();
 
 		// platform-specific close
 		Platform::CloseWindow();
@@ -245,7 +270,11 @@ void CloseWindow(void)
 bool Init(void)
 {
 	// platform-specific initialization
-	Platform::Init();
+	if (!Platform::Init())
+	{
+		DebugPrint("Platform initialization failed\n");
+		exit(1);
+	}
 
 	// create window
 	OpenWindow();

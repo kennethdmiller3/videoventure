@@ -13,6 +13,8 @@
 #include "Drawlist.h"
 #include "Texture.h"
 #include "Shader.h"
+#include "ShaderColor.h"
+#include "ShaderModulate.h"
 
 
 extern bool InitInput(const char *config);
@@ -64,6 +66,10 @@ void EnterShellState()
 
 	// set up fonts
 	InitFonts();
+
+	// set up common shaders
+	ShaderColor::Init();
+	ShaderModulate::Init();
 
 	// clear the screen
 	glClear(

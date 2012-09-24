@@ -10,6 +10,7 @@
 #include "Renderable.h"
 #include "Render.h"
 #include "MatrixStack.h"
+#include "ShaderColor.h"
 
 
 #ifdef USE_POOL_ALLOCATOR
@@ -109,12 +110,25 @@ public:
 		const Vector2 aPos0 = aTransform.p;
 		const Vector2 aPos1 = Lerp(mSourcePos, aPos0, float(sim_turn - mStart + sim_fraction - mFraction) / float(mEnd - mStart - mFraction));
 
-		UseProgram(0);
-		if (&GetBoundVertexBuffer() != &GetDynamicVertexBuffer())
-			SetUniformMatrix4(GL_MODELVIEW, ViewGet());
-		SetAttribFormat(0, 3, GL_FLOAT);
-		SetAttribFormat(2, 4, GL_UNSIGNED_BYTE);
-		SetWorkFormat((1<<0)|(1<<2));
+		// use the color shader
+		if (UseProgram(ShaderColor::gProgramId) || &GetBoundVertexBuffer() != &GetDynamicVertexBuffer())
+		{
+			// shader changed or switching back from non-dynamic geometry:
+			// set model view projection matrix
+			ProjectionPush();
+			ProjectionMult(ViewGet());
+			SetUniformMatrix4(ShaderColor::gUniformModelViewProj, ProjectionGet());
+			ProjectionPop();
+		}
+
+		// set attribute formats
+		SetAttribFormat(ShaderColor::gAttribPosition, 3, GL_FLOAT);
+		SetAttribFormat(ShaderColor::gAttribColor, 4, GL_UNSIGNED_BYTE);
+
+		// set work buffer format
+		SetWorkFormat((1<<ShaderColor::gAttribPosition)|(1<<ShaderColor::gAttribColor));
+
+		// draw triangles
 		SetDrawMode(GL_TRIANGLES);
 
 		size_t base = GetVertexCount();

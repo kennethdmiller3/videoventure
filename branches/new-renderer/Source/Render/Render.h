@@ -70,10 +70,16 @@ extern PFNGLDELETEVERTEXARRAYSPROC glDeleteVertexArray;
 extern PFNGLGENVERTEXARRAYSPROC glGenVertexArrays;
 extern PFNGLISVERTEXARRAYPROC glIsVertexArray;
 
+// Opengl 3.0
+extern PFNGLGETSTRINGIPROC glGetStringi;
+
 
 //
 // RENDER SYSTEM FUNCTIONS
 //
+
+// bind OpenGL function pointers
+extern void BindFunctionPointers(void);
 
 // initalize rendering system
 // (allocate persistent resources)
@@ -114,7 +120,8 @@ extern void DeleteProgram(GLuint aProgramId);
 // use a shader program
 // program 0 returns to fixed-function mode
 // forces a render flush if different from the current program
-extern void UseProgram(GLuint aProgram);
+// returns true if it changed the program
+extern bool UseProgram(GLuint aProgram);
 
 // get shader program currently in use
 extern GLuint GetProgramInUse(void);

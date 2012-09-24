@@ -4,6 +4,9 @@
 #include "Font.h"
 #include "Drawlist.h"
 #include "Render.h"
+#include "MatrixStack.h"
+#include "ShaderColor.h"
+
 
 // color palette
 const Color4 optionbackcolor[NUM_BUTTON_STATES] =
@@ -57,14 +60,24 @@ void ShellMenuItem::Render(unsigned int aId, float aTime, const Transform2 &aTra
 	if (mButtonColor)
 	{
 		// render button
-		UseProgram(0);
-		SetAttribFormat(0, 3, GL_FLOAT);
-#ifdef SHELL_MENU_FLOAT_COLOR
-		SetAttribFormat(2, 4, GL_FLOAT);
-#else
-		SetAttribFormat(2, 4, GL_UNSIGNED_BYTE);
-#endif
-		SetWorkFormat((1<<0)|(1<<2));
+
+		// use the color shader
+		if (UseProgram(ShaderColor::gProgramId) || &GetBoundVertexBuffer() != &GetDynamicVertexBuffer())
+		{
+			// changed program or switching back from non-dynamic geometry:
+			// set model view projection matrix
+			ProjectionPush();
+			ProjectionMult(ViewGet());
+			SetUniformMatrix4(ShaderColor::gUniformModelViewProj, ProjectionGet());
+			ProjectionPop();
+		}
+
+		// set attribute formats
+		SetAttribFormat(ShaderColor::gAttribPosition, 3, GL_FLOAT);
+		SetAttribFormat(ShaderColor::gAttribColor, 4, GL_UNSIGNED_BYTE);
+
+		// set work buffer format
+		SetWorkFormat((1<<ShaderColor::gAttribPosition)|(1<<ShaderColor::gAttribColor));
 		SetDrawMode(GL_TRIANGLES);
 
 		size_t base = GetVertexCount();

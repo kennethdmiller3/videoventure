@@ -7,7 +7,7 @@
 // use shader for font?
 // defined: use a shader program
 // undefined: use fixed-function
-//#define FONT_USE_SHADER
+#define FONT_USE_SHADER
 
 static const int FIRST_CHARACTER = '\x00';
 static const int LAST_CHARACTER  = '\x7F';
@@ -298,11 +298,13 @@ void FontDrawBegin(GLuint handle)
 {
 	BindTexture(handle);
 #ifdef FONT_USE_SHADER
-	UseProgram(sFontProgramId);
-	ProjectionPush();
-	ProjectionMult(StackGet());
-	SetUniformMatrix4(sUniformModelViewProj, ProjectionGet());
-	ProjectionPop();
+	if (UseProgram(sFontProgramId))
+	{
+		ProjectionPush();
+		ProjectionMult(StackGet());
+		SetUniformMatrix4(sUniformModelViewProj, ProjectionGet());
+		ProjectionPop();
+	}
 	SetAttribFormat(sAttribPosition, 3, GL_FLOAT);
 	SetAttribFormat(sAttribColor, 4, GL_UNSIGNED_BYTE);
 	SetAttribFormat(sAttribTexCoord, 2, GL_FLOAT);

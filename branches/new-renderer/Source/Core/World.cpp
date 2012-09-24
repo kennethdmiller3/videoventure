@@ -54,7 +54,9 @@ namespace Database
 			default:
 			case 0xd00594c0 /* "linear" */:
 				{
+#ifdef SUPPORT_FIXED_FUNCTION
 					glFogi( GL_FOG_MODE, GL_LINEAR );
+#endif
 
 					float start = 0;
 					if (element->QueryFloatAttribute("start", &start) == tinyxml2::XML_SUCCESS)

@@ -4,6 +4,7 @@
 #include "Render.h"
 #include "Magic.h"
 #include "MatrixStack.h"
+#include "ShaderColor.h"
 
 #define USE_TITLE_PACKED_VERTEX
 #if defined(USE_TITLE_PACKED_VERTEX)
@@ -439,14 +440,27 @@ ShellTitle::~ShellTitle()
 void ShellTitle::Render(unsigned int aId, float aTime, const Transform2 &aTransform)
 {
 	// begin drawing
-	UseProgram(0);
-#if defined(USE_TITLE_PACKED_VERTEX)
-	SetAttribFormat(0, 2, GL_FLOAT);
-	SetAttribFormat(2, 4, GL_UNSIGNED_BYTE);
-#endif
-	SetWorkFormat((1<<0)|(1<<2));
-	SetUniformMatrix4(GL_PROJECTION, ProjectionGet());
-	SetUniformMatrix4(GL_MODELVIEW, IdentityGet());
+
+	// use the color shader
+	if (UseProgram(ShaderColor::gProgramId) || &GetBoundVertexBuffer() != &GetDynamicVertexBuffer())
+	{
+		// changed program or switching back from non-dynamic geometry:
+		// set model view projection matrix
+		ProjectionPush();
+		ProjectionMult(ViewGet());
+		SetUniformMatrix4(ShaderColor::gUniformModelViewProj, ProjectionGet());
+		ProjectionPop();
+	}
+
+	// set attribute formats
+	SetAttribFormat(ShaderColor::gAttribPosition, 2, GL_FLOAT);
+	SetAttribFormat(ShaderColor::gAttribColor, 4, GL_UNSIGNED_BYTE);
+
+	// set work buffer format
+	SetWorkFormat((1<<ShaderColor::gAttribPosition)|(1<<ShaderColor::gAttribColor));
+
+	// draw quads to save on indices
+	// TO DO: replace with non-deprecated mode
 	SetDrawMode(GL_QUADS);
 	Vertex *v0 = static_cast<Vertex *>(AllocVertices(vertcount));
 	register Vertex * __restrict v = v0;
