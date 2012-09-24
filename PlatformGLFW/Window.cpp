@@ -21,6 +21,9 @@ namespace Platform
 #endif
 		glfwOpenWindowHint(GLFW_FSAA_SAMPLES, OPENGL_MULTISAMPLE);
 		glfwOpenWindowHint(GLFW_OPENGL_VERSION_MAJOR, 2);
+		//glfwOpenWindowHint(GLFW_OPENGL_VERSION_MAJOR, 3);
+		//glfwOpenWindowHint(GLFW_OPENGL_VERSION_MINOR, 3);
+		//glfwOpenWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);	// not ready for this yet...
 #ifdef DEBUG
 		glfwOpenWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, 1);
 #endif

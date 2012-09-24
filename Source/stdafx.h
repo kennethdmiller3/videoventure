@@ -40,8 +40,9 @@
 #define USE_POOL_ALLOCATOR
 #define USE_CHANGE_DYNAMIC_TYPE
 
-#define COLLECT_DEBUG_DRAW
-#define COLLIDABLE_DEBUG_DRAW
+// TO DO: rewrite debug draw using modern OpenGL
+//#define COLLECT_DEBUG_DRAW
+//#define COLLIDABLE_DEBUG_DRAW
 
 const int AUDIO_FREQUENCY = 48000;
 

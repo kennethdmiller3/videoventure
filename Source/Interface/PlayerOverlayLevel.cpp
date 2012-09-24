@@ -6,6 +6,7 @@
 #include "Font.h"
 #include "Render.h"
 #include "MatrixStack.h"
+#include "ShaderColor.h"
 #include "Expression.h"
 #include "ExpressionEntity.h"
 
@@ -110,11 +111,23 @@ void PlayerOverlayLevel::Render(unsigned int aId, float aTime, const Transform2 
 
 	// draw level gauge
 
-	// begin drawing
-	UseProgram(0);
-	SetAttribFormat(0, 3, GL_FLOAT);
-	SetAttribFormat(2, 4, GL_UNSIGNED_BYTE);
-	SetWorkFormat((1<<0)|(1<<2));
+	// use the color shader
+	if (UseProgram(ShaderColor::gProgramId) || &GetBoundVertexBuffer() != &GetDynamicVertexBuffer())
+	{
+		// shader changed or switching back from non-dynamic geometry:
+		ProjectionPush();
+		ProjectionMult(ViewGet());
+		SetUniformMatrix4(ShaderColor::gUniformModelViewProj, ProjectionGet());
+		ProjectionPop();
+	}
+
+	// set attribute formats
+	SetAttribFormat(ShaderColor::gAttribPosition, 3, GL_FLOAT);
+	SetAttribFormat(ShaderColor::gAttribColor, 4, GL_UNSIGNED_BYTE);
+
+	// set work buffer format
+	SetWorkFormat((1<<ShaderColor::gAttribPosition)|(1<<ShaderColor::gAttribColor));
+
 	SetDrawMode(GL_TRIANGLES);
 
 	int base = GetVertexCount();

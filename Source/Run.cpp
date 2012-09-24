@@ -15,6 +15,8 @@
 #include "Texture.h"
 #include "Render.h"
 #include "MatrixStack.h"
+#include "ShaderColor.h"
+#include "ShaderModulate.h"
 
 #include "Console.h"
 
@@ -455,21 +457,17 @@ struct BlurVertex
 // apply motion blur
 static void ApplyMotionBlur(int blur)
 {
-	assert(GetProgramInUse() == 0);
+	// use texture modulate shader
+	UseProgram(ShaderModulate::gProgramId);
 
-	UseProgram(0);
+	// set model view projection matrix
+	SetUniformMatrix4(ShaderModulate::gUniformModelViewProj, IdentityGet());
 
-	// set projection matrix
-	SetUniformMatrix4(GL_PROJECTION, IdentityGet());
-
-	// set model view matrix
-	SetUniformMatrix4(GL_MODELVIEW, IdentityGet());
-
-	// position, color, texcoord
-	SetAttribFormat(0, 2, GL_FLOAT);
-	SetAttribFormat(2, 4, GL_UNSIGNED_BYTE);
-	SetAttribFormat(3, 2, GL_FLOAT);
-	SetWorkFormat((1 << 0) | (1 << 2) | (1 << 3));
+	// set attribute formats
+	SetAttribFormat(ShaderModulate::gAttribPosition, 2, GL_FLOAT);
+	SetAttribFormat(ShaderModulate::gAttribColor, 4, GL_UNSIGNED_BYTE);
+	SetAttribFormat(ShaderModulate::gAttribTexCoord, 2, GL_FLOAT);
+	SetWorkFormat((1 << ShaderModulate::gAttribPosition) | (1 << ShaderModulate::gAttribColor) | (1 << ShaderModulate::gAttribTexCoord));
 
 	SetDrawMode(GL_TRIANGLES);
 
@@ -850,7 +848,9 @@ void RunState()
 			// set projection matrix
 			//glFrustum( -0.5*VIEW_SIZE*SCREEN_WIDTH/SCREEN_HEIGHT, 0.5*VIEW_SIZE*SCREEN_WIDTH/SCREEN_HEIGHT, 0.5f*VIEW_SIZE, -0.5f*VIEW_SIZE, 256.0f*1.0f, 256.0f*5.0f );
 			ProjectionFrustum(-0.5f*VIEW_SIZE*SCREEN_WIDTH/SCREEN_HEIGHT, 0.5f*VIEW_SIZE*SCREEN_WIDTH/SCREEN_HEIGHT, 0.5f*VIEW_SIZE, -0.5f*VIEW_SIZE, 256.0f, 256.0f * 5.0f);
+#ifdef SUPPORT_FIXED_FUNCTION
 			SetUniformMatrix4(GL_PROJECTION, ProjectionGet());
+#endif
 
 			// get interpolated track position
 			Vector2 viewpos(Lerp(camerapos[0], camerapos[1], sim_fraction));
@@ -860,7 +860,9 @@ void RunState()
 			StackScale(_mm_setr_ps(-1, -1, -1, 0));
 			StackTranslate(_mm_setr_ps(-viewpos.x, -viewpos.y, CAMERA_DISTANCE, 0));
 			ViewLoad(StackGet());
+#ifdef SUPPORT_FIXED_FUNCTION
 			SetUniformMatrix4(GL_MODELVIEW, ViewGet());
+#endif
 
 			// set model matrix
 			StackIdentity();
@@ -965,12 +967,16 @@ void RunState()
 
 		// set projection matrix
 		ProjectionOrtho(0, 640, 480, 0, -1, 1);
+#ifdef SUPPORT_FIXED_FUNCTION
 		SetUniformMatrix4(GL_PROJECTION, ProjectionGet());
+#endif
 
 		// set view matrix
 		StackIdentity();
 		ViewLoad(StackGet());
+#ifdef SUPPORT_FIXED_FUNCTION
 		SetUniformMatrix4(GL_MODELVIEW, ViewGet());
+#endif
 
 		// render all overlays
 		Overlay::RenderAll();
@@ -1028,19 +1034,36 @@ void RunState()
 					index = 0;
 			}
 
-			UseProgram(0);
-			SetAttribFormat(0, 2, GL_FLOAT);
-			SetAttribConstant(2, _mm_setzero_ps());
-			SetWorkFormat(1<<0);
+			// use color shader
+			if (UseProgram(ShaderColor::gProgramId))
+			{
+				// set model view projection matrix
+				ProjectionPush();
+				ProjectionMult(ViewGet());
+				SetUniformMatrix4(ShaderColor::gUniformModelViewProj, ProjectionGet());
+				ProjectionPop();
+			}
+
+			// set attribs
+			SetAttribFormat(ShaderColor::gAttribPosition, 2, GL_FLOAT);
+			SetAttribConstant(ShaderColor::gAttribColor, _mm_setzero_ps());
+			SetWorkFormat(1<<ShaderColor::gAttribPosition);
+
+			// draw triangle strips
 			SetDrawMode(GL_TRIANGLE_STRIP);
+
+			// for each band...
 			for (int band = 0; band < SDL_arraysize(band_info); ++band)
 			{
+				// allocate graph vertices
 				Vector2 *v0 = static_cast<Vector2 *>(AllocVertices(PerfTimer::NUM_SAMPLES * 2));
 				register Vector2 * __restrict v = v0;
 				const Color4 &color = band_info[band].color;
-				SetAttribConstant(2, _mm_loadu_ps(&color.r));
+				SetAttribConstant(ShaderColor::gAttribColor, _mm_loadu_ps(&color.r));
 				float x = 0;
 				float dx = 640.0f / PerfTimer::NUM_SAMPLES;
+
+				// generate graph vertices
 				for (int i = 0; i < PerfTimer::NUM_SAMPLES; i++)
 				{
 					*v++ = Vector2(x, sample_y[band][i]);

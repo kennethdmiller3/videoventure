@@ -7,7 +7,7 @@
 
 // queue rendering operations?
 // (disabling reduces performance but makes debugging easier)
-#define RENDER_USE_QUEUE
+//#define RENDER_USE_QUEUE
 
 
 //
@@ -78,6 +78,8 @@ PFNGLDELETEVERTEXARRAYSPROC glDeleteVertexArray;
 PFNGLGENVERTEXARRAYSPROC glGenVertexArrays;
 PFNGLISVERTEXARRAYPROC glIsVertexArray;
 
+// OpenGL 3.0
+PFNGLGETSTRINGIPROC glGetStringi;
 
 //
 // BUFFER OBJECTS
@@ -164,7 +166,7 @@ float sFogEnd;
 //
 
 // bind function pointers
-static void BindFunctionPointers(void)
+void BindFunctionPointers(void)
 {
 	// bind 1.2 function pointers
 	glDrawRangeElements = static_cast<PFNGLDRAWRANGEELEMENTSPROC>(glfwGetProcAddress("glDrawRangeElements"));
@@ -229,6 +231,9 @@ static void BindFunctionPointers(void)
 	glDeleteVertexArray = static_cast<PFNGLDELETEVERTEXARRAYSPROC>(glfwGetProcAddress("glDeleteVertexArray"));
 	glGenVertexArrays = static_cast<PFNGLGENVERTEXARRAYSPROC>(glfwGetProcAddress("glGenVertexArrays"));
 	glIsVertexArray = static_cast<PFNGLISVERTEXARRAYPROC>(glfwGetProcAddress("glIsVertexArray"));
+
+	// bind 3.0 function pointers
+	glGetStringi = static_cast<PFNGLGETSTRINGIPROC>(glfwGetProcAddress("glGetStringi"));
 }
 
 // initialize work buffer
@@ -292,8 +297,6 @@ static void ClearRenderState(void)
 // initialize rendering
 void InitRender(void)
 {
-	BindFunctionPointers();
-
 	// set up dynamic vertex buffer
 	BufferInit(sDynamicVertexBuffer, GL_ARRAY_BUFFER, GL_STREAM_DRAW);
 	BufferGen(sDynamicVertexBuffer);
@@ -310,9 +313,11 @@ void InitRender(void)
 	// disable attribute arrays
 	for (int i = 0; i < RENDER_MAX_ATTRIB; ++i)
 		glDisableVertexAttribArray(i);
+#ifdef SUPPORT_FIXED_FUNCTION
 	glDisableClientState(GL_NORMAL_ARRAY);
 	glDisableClientState(GL_COLOR_ARRAY);
 	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+#endif
 
 #ifdef RENDER_USE_QUEUE
 	// initialize render queue
@@ -717,10 +722,10 @@ void DeleteProgram(GLuint aProgramId)
 }
 
 // use shader program
-void UseProgram(GLuint aProgram)
+bool UseProgram(GLuint aProgram)
 {
 	if (sProgram == aProgram)
-		return;
+		return false;
 
 	FlushDynamic();
 
@@ -751,6 +756,8 @@ void UseProgram(GLuint aProgram)
 	glUseProgram(aProgram);
 #endif
 	sProgram = aProgram;
+
+	return true;
 }
 
 // get shader program currently in use
@@ -1817,12 +1824,15 @@ void SetFogEnabled(bool bEnable)
 {
 	sFogEnabled = bEnable;
 
+#ifdef SUPPORT_FIXED_FUNCTION
 	// fixed-function
 	if (bEnable)
 		glEnable(GL_FOG);
 	else
 		glDisable(GL_FOG);
+#endif
 }
+
 
 // get fog enable
 bool GetFogEnabled(void)
@@ -1835,8 +1845,10 @@ void SetFogColor(const Color4 &aColor)
 {
 	sFogColor = aColor;
 
+#ifdef SUPPORT_FIXED_FUNCTION
 	// fixed-function
 	glFogfv( GL_FOG_COLOR, aColor );
+#endif
 }
 
 // get fog color
@@ -1849,16 +1861,20 @@ void SetFogStart(float aStart)
 {
 	sFogStart = aStart;
 
+#ifdef SUPPORT_FIXED_FUNCTION
 	// fixed-function
 	glFogf( GL_FOG_START, aStart );
+#endif
 }
 
 void SetFogEnd(float aEnd)
 {
 	sFogEnd = aEnd;
 
+#ifdef SUPPORT_FIXED_FUNCTION
 	// fixed-function
 	glFogf( GL_FOG_END, aEnd );
+#endif
 }
 
 float GetFogStart(void)

@@ -46,7 +46,7 @@
 // use shader for drawlist?
 // defined: use a shader program
 // undefined: use fixed-function
-//#define DRAWLIST_USE_SHADER
+#define DRAWLIST_USE_SHADER
 
 // debug static geometry flush
 // defined: full details of VB and IB contents
@@ -551,12 +551,10 @@ void DO_DrawMode(EntityContext &aContext)
 
 #ifdef DRAWLIST_USE_SHADER
 	// use the basic program
-	UseProgram(sBasicProgramId);
-
-	// set combined model view projection matrix
-	// (if switching back from non-dynamic geometry)
-	if (&GetBoundVertexBuffer() != &GetDynamicVertexBuffer())
+	if (UseProgram(sBasicProgramId) || &GetBoundVertexBuffer() != &GetDynamicVertexBuffer())
 	{
+		// shader changed or switching back from non-dynamic geometry:
+		// set model view projection matrix
 #ifdef DYNAMIC_GEOMETRY_IN_VIEW_SPACE
 		SetUniformMatrix4(sUniformModelViewProj, ProjectionGet());
 #else
@@ -680,12 +678,10 @@ void DO_CopyElements(EntityContext &aContext)
 {
 #ifdef DRAWLIST_USE_SHADER
 	// use the basic program
-	UseProgram(sBasicProgramId);
-
-	// set combined model view projection matrix
-	// (if switching back from non-dynamic geometry)
-	if (&GetBoundVertexBuffer() != &GetDynamicVertexBuffer())
+	if (UseProgram(sBasicProgramId) || &GetBoundVertexBuffer() != &GetDynamicVertexBuffer())
 	{
+		// shader changed or switching back from non-dynamic geometry:
+		// set model view projection matrix
 #ifdef DYNAMIC_GEOMETRY_IN_VIEW_SPACE
 		SetUniformMatrix4(sUniformModelViewProj, ProjectionGet());
 #else

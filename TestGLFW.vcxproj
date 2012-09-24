@@ -128,6 +128,8 @@
     <ClInclude Include="Source\Render\MatrixStack.h" />
     <ClInclude Include="Source\Render\Render.h" />
     <ClInclude Include="Source\Render\Shader.h" />
+    <ClInclude Include="Source\Render\ShaderColor.h" />
+    <ClInclude Include="Source\Render\ShaderModulate.h" />
     <ClInclude Include="Source\Render\Texture.h" />
     <ClInclude Include="Source\Shell\Escape.h" />
     <ClInclude Include="Source\Shell\ShellMenu.h" />
@@ -241,6 +243,8 @@
     <ClCompile Include="Source\Render\MatrixStack.cpp" />
     <ClCompile Include="Source\Render\Render.cpp" />
     <ClCompile Include="Source\Render\Shader.cpp" />
+    <ClCompile Include="Source\Render\ShaderColor.cpp" />
+    <ClCompile Include="Source\Render\ShaderModulate.cpp" />
     <ClCompile Include="Source\Render\Texture.cpp" />
     <ClCompile Include="Source\Shell\Escape.cpp" />
     <ClCompile Include="Source\Shell\EscapeMenuMain.cpp" />

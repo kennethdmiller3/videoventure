@@ -5,6 +5,7 @@
 #include "Render.h"
 #include "MatrixStack.h"
 #include "Drawlist.h"
+#include "ShaderColor.h"
 
 
 // number of frames to transition between hidden and visible states
@@ -161,12 +162,25 @@ void Console::Render()
 		Vector3 pos;
 		unsigned int color;
 	};
-	UseProgram(0);
-	SetUniformMatrix4(GL_PROJECTION, ProjectionGet());
-	SetUniformMatrix4(GL_MODELVIEW, StackGet());
-	SetAttribFormat(0, 3, GL_FLOAT);
-	SetAttribFormat(2, 4, GL_UNSIGNED_BYTE);
-	SetWorkFormat((1<<0)|(1<<2));
+
+	// use the color shader
+	if (UseProgram(ShaderColor::gProgramId))
+	{
+		// shader changed:
+		// set model view projection matrix
+		ProjectionPush();
+		ProjectionMult(ViewGet());
+		SetUniformMatrix4(ShaderColor::gUniformModelViewProj, ProjectionGet());
+		ProjectionPop();
+	}
+
+	// set attribute formats
+	SetAttribFormat(ShaderColor::gAttribPosition, 3, GL_FLOAT);
+	SetAttribFormat(ShaderColor::gAttribColor, 4, GL_UNSIGNED_BYTE);
+
+	// set work buffer format
+	SetWorkFormat((1<<ShaderColor::gAttribPosition)|(1<<ShaderColor::gAttribColor));
+
 	SetDrawMode(GL_TRIANGLES);
 	size_t base = GetVertexCount();
 	register Vertex * __restrict v = static_cast<Vertex *>(AllocVertices(4));
