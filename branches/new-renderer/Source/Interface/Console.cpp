@@ -249,7 +249,7 @@ void Console::Render()
 			0);
 
 		// draw a cursor in white
-		FontDrawColor(Color4(1.0f, 1.0f, 1.0f));
+		FontDrawColor(Color4(1.0f, 1.0f, 1.0f, 1.0f));
 		FontDrawCharacter(
 			'_',
 			inputCursorPos * characterWidth,
