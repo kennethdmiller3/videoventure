@@ -97,7 +97,7 @@ int example_2()
 
 int example_3()
 {
-	static const char* xml = 
+	static const char* xml =
 		"<?xml version=\"1.0\"?>"
 		"<!DOCTYPE PLAY SYSTEM \"play.dtd\">"
 		"<PLAY>"
@@ -110,7 +110,7 @@ int example_3()
 	XMLElement* titleElement = doc.FirstChildElement( "PLAY" )->FirstChildElement( "TITLE" );
 	const char* title = titleElement->GetText();
 	printf( "Name of play (1): %s\n", title );
-		
+
 	XMLText* textNode = titleElement->FirstChild()->ToText();
 	title = textNode->Value();
 	printf( "Name of play (2): %s\n", title );
@@ -128,7 +128,7 @@ bool example_4()
 		"		<v>2</v>"
 		"	</textApproach>"
 		"</information>";
-	
+
 	XMLDocument doc;
 	doc.Parse( xml );
 
@@ -151,11 +151,6 @@ int main( int /*argc*/, const char ** /*argv*/ )
 {
 	#if defined( _MSC_VER ) && defined( DEBUG )
 		_CrtMemCheckpoint( &startMemState );
-	#endif	
-
-	#if defined(_MSC_VER)
-	#pragma warning ( push )
-	#pragma warning ( disable : 4996 )		// Fail to see a compelling reason why this should be deprecated.
 	#endif
 
 	#if defined(_MSC_VER)
@@ -178,16 +173,12 @@ int main( int /*argc*/, const char ** /*argv*/ )
 	}
 	fclose( fp );
 
-	#if defined(_MSC_VER)
-	#pragma warning ( pop )
-	#endif
-
 	XMLTest( "Example-1", 0, example_1() );
 	XMLTest( "Example-2", 0, example_2() );
 	XMLTest( "Example-3", 0, example_3() );
 	XMLTest( "Example-4", true, example_4() );
 
-	/* ------ Example 2: Lookup information. ---- */	
+	/* ------ Example 2: Lookup information. ---- */
 
 	{
 		static const char* test[] = {	"<element />",
@@ -268,7 +259,7 @@ int main( int /*argc*/, const char ** /*argv*/ )
 		XMLTest( "Programmatic DOM", "comment", doc->FirstChildElement( "element" )->FirstChild()->Value() );
 		XMLTest( "Programmatic DOM", "0", doc->FirstChildElement( "element" )->FirstChildElement()->Attribute( "attrib" ) );
 		XMLTest( "Programmatic DOM", 2, doc->FirstChildElement()->LastChildElement( "sub" )->IntAttribute( "attrib" ) );
-		XMLTest( "Programmatic DOM", "& Text!", 
+		XMLTest( "Programmatic DOM", "& Text!",
 				 doc->FirstChildElement()->LastChildElement( "sub" )->FirstChild()->ToText()->Value() );
 
 		// And now deletion:
@@ -402,7 +393,7 @@ int main( int /*argc*/, const char ** /*argv*/ )
 
 		// Get the attribute "value" from the "Russian" element and check it.
 		XMLElement* element = doc.FirstChildElement( "document" )->FirstChildElement( "Russian" );
-		const unsigned char correctValue[] = {	0xd1U, 0x86U, 0xd0U, 0xb5U, 0xd0U, 0xbdU, 0xd0U, 0xbdU, 
+		const unsigned char correctValue[] = {	0xd1U, 0x86U, 0xd0U, 0xb5U, 0xd0U, 0xbdU, 0xd0U, 0xbdU,
 												0xd0U, 0xbeU, 0xd1U, 0x81U, 0xd1U, 0x82U, 0xd1U, 0x8cU, 0 };
 
 		XMLTest( "UTF-8: Russian value.", (const char*)correctValue, element->Attribute( "value" ) );
@@ -424,16 +415,8 @@ int main( int /*argc*/, const char ** /*argv*/ )
 		// Check the round trip.
 		int okay = 0;
 
-
-#if defined(_MSC_VER)
-#pragma warning ( push )
-#pragma warning ( disable : 4996 )		// Fail to see a compelling reason why this should be deprecated.
-#endif
 		FILE* saved  = fopen( "resources/out/utf8testout.xml", "r" );
 		FILE* verify = fopen( "resources/utf8testverify.xml", "r" );
-#if defined(_MSC_VER)
-#pragma warning ( pop )
-#endif
 
 		if ( saved && verify )
 		{
@@ -491,7 +474,7 @@ int main( int /*argc*/, const char ** /*argv*/ )
 		doc.Parse( str );
 		doc.Print();
 
-		XMLTest( "CDATA parse.", doc.FirstChildElement()->FirstChild()->Value(), 
+		XMLTest( "CDATA parse.", doc.FirstChildElement()->FirstChild()->Value(),
 								 "I am > the rules!\n...since I make symbolic puns",
 								 false );
 	}
@@ -508,7 +491,7 @@ int main( int /*argc*/, const char ** /*argv*/ )
 		doc.Parse( str );
 		doc.Print();
 
-		XMLTest( "CDATA parse. [ tixml1:1480107 ]", doc.FirstChildElement()->FirstChild()->Value(), 
+		XMLTest( "CDATA parse. [ tixml1:1480107 ]", doc.FirstChildElement()->FirstChild()->Value(),
 								 "<b>I am > the rules!</b>\n...since I make symbolic puns",
 								 false );
 	}
@@ -548,28 +531,15 @@ int main( int /*argc*/, const char ** /*argv*/ )
 
 		XMLTest( "Entity transformation: read. ", expected, context, true );
 
-#if defined(_MSC_VER)
-#pragma warning ( push )
-#pragma warning ( disable : 4996 )		// Fail to see a compelling reason why this should be deprecated.
-#endif
 		FILE* textfile = fopen( "resources/out/textfile.txt", "w" );
-#if defined(_MSC_VER)
-#pragma warning ( pop )
-#endif
 		if ( textfile )
 		{
 			XMLPrinter streamer( textfile );
 			psg->Accept( &streamer );
 			fclose( textfile );
 		}
-#if defined(_MSC_VER)
-#pragma warning ( push )
-#pragma warning ( disable : 4996 )		// Fail to see a compelling reason why this should be deprecated.
-#endif
-		textfile = fopen( "resources/out/textfile.txt", "r" );
-#if defined(_MSC_VER)
-#pragma warning ( pop )
-#endif
+
+        textfile = fopen( "resources/out/textfile.txt", "r" );
 		TIXMLASSERT( textfile );
 		if ( textfile )
 		{
@@ -590,11 +560,11 @@ int main( int /*argc*/, const char ** /*argv*/ )
 			"<passages count=\"006\" formatversion=\"20020620\">"
 				"<psg context=\"Line 5 has &quot;quotation marks&quot; and &apos;apostrophe marks&apos;.\">Crazy &ttk;</psg>"
 			"</passages>";
-		
+
 		XMLDocument doc( false );
 		doc.Parse( passages );
 
-		XMLTest( "No entity parsing.", doc.FirstChildElement()->FirstChildElement()->Attribute( "context" ), 
+		XMLTest( "No entity parsing.", doc.FirstChildElement()->FirstChildElement()->Attribute( "context" ),
 				 "Line 5 has &quot;quotation marks&quot; and &apos;apostrophe marks&apos;." );
 		XMLTest( "No entity parsing.", doc.FirstChildElement()->FirstChildElement()->FirstChild()->Value(),
 				 "Crazy &ttk;" );
@@ -625,7 +595,7 @@ int main( int /*argc*/, const char ** /*argv*/ )
 
 	{
 		// DOCTYPE not preserved (950171)
-		// 
+		//
 		const char* doctype =
 			"<?xml version=\"1.0\" ?>"
 			"<!DOCTYPE PLAY SYSTEM 'play.dtd'>"
@@ -639,7 +609,7 @@ int main( int /*argc*/, const char ** /*argv*/ )
 		doc.DeleteChild( doc.RootElement() );
 		doc.LoadFile( "resources/out/test7.xml" );
 		doc.Print();
-		
+
 		const XMLUnknown* decl = doc.FirstChild()->NextSibling()->ToUnknown();
 		XMLTest( "Correct value of unknown.", "DOCTYPE PLAY SYSTEM 'play.dtd'", decl->Value() );
 
@@ -647,7 +617,7 @@ int main( int /*argc*/, const char ** /*argv*/ )
 
 	{
 		// Comments do not stream out correctly.
-		const char* doctype = 
+		const char* doctype =
 			"<!-- Somewhat<evil> -->";
 		XMLDocument doc;
 		doc.Parse( doctype );
@@ -662,7 +632,7 @@ int main( int /*argc*/, const char ** /*argv*/ )
 
 		XMLDocument doc;
 		doc.Parse( doctype );
-		
+
 		XMLTest( "Parsing repeated attributes.", (int)XML_ERROR_PARSING_ATTRIBUTE, doc.ErrorID() );	// is an  error to tinyxml (didn't use to be, but caused issues)
 		doc.PrintError();
 	}
@@ -709,7 +679,7 @@ int main( int /*argc*/, const char ** /*argv*/ )
 		XMLTest("Missing end tag with trailing whitespace", xml.Error(), true);
 		xml.Parse("<x></y>");
 		XMLTest("Mismatched tags", xml.ErrorID(), (int)XML_ERROR_MISMATCHED_ELEMENT);
-	} 
+	}
 
 
 	{
@@ -756,7 +726,7 @@ int main( int /*argc*/, const char ** /*argv*/ )
 
 		XMLDocument doc;
 		doc.Parse( (const char*)buf);
-	} 
+	}
 
 
 	{
@@ -806,14 +776,14 @@ int main( int /*argc*/, const char ** /*argv*/ )
 		}
 		XMLTest( "Error in snprinf handling.", true, doc.Error() );
 	}
-	
+
 	{
 		// Attribute ordering.
 		static const char* xml = "<element attrib1=\"1\" attrib2=\"2\" attrib3=\"3\" />";
 		XMLDocument doc;
 		doc.Parse( xml );
 		XMLElement* ele = doc.FirstChildElement();
-		
+
 		const XMLAttribute* a = ele->FirstAttribute();
 		XMLTest( "Attribute order", "1", a->Value() );
 		a = a->Next();
@@ -821,13 +791,13 @@ int main( int /*argc*/, const char ** /*argv*/ )
 		a = a->Next();
 		XMLTest( "Attribute order", "3", a->Value() );
 		XMLTest( "Attribute order", "attrib3", a->Name() );
-		
+
 		ele->DeleteAttribute( "attrib2" );
 		a = ele->FirstAttribute();
 		XMLTest( "Attribute order", "1", a->Value() );
 		a = a->Next();
 		XMLTest( "Attribute order", "3", a->Value() );
-		
+
 		ele->DeleteAttribute( "attrib1" );
 		ele->DeleteAttribute( "attrib3" );
 		XMLTest( "Attribute order (empty)", false, ele->FirstAttribute() ? true : false );
@@ -879,7 +849,7 @@ int main( int /*argc*/, const char ** /*argv*/ )
 		ele = docH.FirstChildElement( "none" ).FirstChildElement( "element" ).ToElement();
 		XMLTest( "Handle, dne, mutable", false, ele != 0 );
 	}
-	
+
 	{
 		static const char* xml = "<element attrib='bar'><sub>Text</sub></element>";
 		XMLDocument doc;
@@ -897,7 +867,7 @@ int main( int /*argc*/, const char ** /*argv*/ )
 		XMLDocument doc;
 		doc.InsertEndChild( doc.NewDeclaration() );
 		doc.SetBOM( true );
-		
+
 		XMLPrinter printer;
 		doc.Print( &printer );
 
@@ -947,6 +917,13 @@ int main( int /*argc*/, const char ** /*argv*/ )
 		XMLTest( "Non-alpha element lead letter parses.", doc.Error(), false );
 	}
 
+	{
+		const char* xml = "<element/>WOA THIS ISN'T GOING TO PARSE";
+		XMLDocument doc;
+		doc.Parse( xml, 10 );
+		XMLTest( "Set length of incoming data", doc.Error(), false );
+	}
+
 	// ----------- Whitespace ------------
 	{
 		const char* xml = "<element>"
@@ -972,7 +949,19 @@ int main( int /*argc*/, const char ** /*argv*/ )
 		doc.Parse( xml );
 		XMLTest( "Whitespace  all space", true, 0 == doc.FirstChildElement()->FirstChild() );
 	}
-	
+
+#if 0		// the question being explored is what kind of print to use: 
+			// https://github.com/leethomason/tinyxml2/issues/63
+	{
+		const char* xml = "<element attrA='123456789.123456789' attrB='1.001e9'/>";
+		XMLDocument doc;
+		doc.Parse( xml );
+		doc.FirstChildElement()->SetAttribute( "attrA", 123456789.123456789 );
+		doc.FirstChildElement()->SetAttribute( "attrB", 1.001e9 );
+		doc.Print();
+	}
+#endif
+
 	// ----------- Performance tracking --------------
 	{
 #if defined( _MSC_VER )
@@ -980,14 +969,7 @@ int main( int /*argc*/, const char ** /*argv*/ )
 		QueryPerformanceFrequency( (LARGE_INTEGER*) &freq );
 #endif
 
-#if defined(_MSC_VER)
-#pragma warning ( push )
-#pragma warning ( disable : 4996 )		// Fail to see a compelling reason why this should be deprecated.
-#endif
 		FILE* fp  = fopen( "resources/dream.xml", "r" );
-#if defined(_MSC_VER)
-#pragma warning ( pop )
-#endif
 		fseek( fp, 0, SEEK_END );
 		long size = ftell( fp );
 		fseek( fp, 0, SEEK_SET );
@@ -1015,7 +997,7 @@ int main( int /*argc*/, const char ** /*argv*/ )
 
 		delete [] mem;
 
-		static const char* note = 
+		static const char* note =
 #ifdef DEBUG
 			"DEBUG";
 #else
@@ -1030,7 +1012,7 @@ int main( int /*argc*/, const char ** /*argv*/ )
 	}
 
 	#if defined( _MSC_VER ) &&  defined( DEBUG )
-		_CrtMemCheckpoint( &endMemState );  
+		_CrtMemCheckpoint( &endMemState );
 		//_CrtMemDumpStatistics( &endMemState );
 
 		_CrtMemState diffMemState;
