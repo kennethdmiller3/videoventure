@@ -888,13 +888,7 @@ void RunState()
 				// accumulate the image
 				glAccum(blur ? GL_ACCUM : GL_LOAD, 1.0f / float(MOTIONBLUR_STEPS));
 #else
-#if 1
 				BindTexture(accumHandle);
-#else
-				// bind the texture object
-				glEnable(GL_TEXTURE_2D);
-				glBindTexture(GL_TEXTURE_2D, accumHandle);
-#endif
 
 				if (blur > 0)
 				{
@@ -905,12 +899,8 @@ void RunState()
 				{
 					CollectMotionBlur();
 				}
-#if 1
+
 				BindTexture(0);
-#else
-				glDisable(GL_TEXTURE_2D);
-				glBindTexture(GL_TEXTURE_2D, 0);
-#endif
 #endif
 			}
 
