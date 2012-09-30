@@ -314,6 +314,8 @@ void ExitPlayState()
 	CleanupTextures();
 
 	// cleanup shaders
+	ShaderModulate::Cleanup();
+	ShaderColor::Cleanup();
 	CleanupShaders();
 
 	// clean up render
