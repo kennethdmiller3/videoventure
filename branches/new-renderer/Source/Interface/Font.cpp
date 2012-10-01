@@ -298,12 +298,9 @@ void FontDrawBegin(GLuint handle)
 {
 	BindTexture(handle);
 #ifdef FONT_USE_SHADER
-	if (UseProgram(sFontProgramId))
+	if (UseProgram(sFontProgramId) || &GetBoundVertexBuffer() != &GetDynamicVertexBuffer() || ViewProjChanged())
 	{
-		ProjectionPush();
-		ProjectionMult(StackGet());
-		SetUniformMatrix4(sUniformModelViewProj, ProjectionGet());
-		ProjectionPop();
+		SetUniformMatrix4(sUniformModelViewProj, ViewProjGet());
 	}
 	SetAttribFormat(sAttribPosition, 3, GL_FLOAT);
 	SetAttribFormat(sAttribColor, 4, GL_UNSIGNED_BYTE);
