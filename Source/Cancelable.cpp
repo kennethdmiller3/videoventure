@@ -111,14 +111,11 @@ public:
 		const Vector2 aPos1 = Lerp(mSourcePos, aPos0, float(sim_turn - mStart + sim_fraction - mFraction) / float(mEnd - mStart - mFraction));
 
 		// use the color shader
-		if (UseProgram(ShaderColor::gProgramId) || &GetBoundVertexBuffer() != &GetDynamicVertexBuffer())
+		if (UseProgram(ShaderColor::gProgramId) || &GetBoundVertexBuffer() != &GetDynamicVertexBuffer() || ViewProjChanged())
 		{
 			// shader changed or switching back from non-dynamic geometry:
 			// set model view projection matrix
-			ProjectionPush();
-			ProjectionMult(ViewGet());
-			SetUniformMatrix4(ShaderColor::gUniformModelViewProj, ProjectionGet());
-			ProjectionPop();
+			SetUniformMatrix4(ShaderColor::gUniformModelViewProj, ViewProjGet());
 		}
 
 		// set attribute formats

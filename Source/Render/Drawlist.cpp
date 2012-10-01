@@ -10,6 +10,8 @@
 
 #include "Render.h"
 #include "MatrixStack.h"
+#include "ShaderColor.h"
+#include "ShaderModulate.h"
 
 //
 // DEFINES
@@ -199,72 +201,6 @@ struct PackedRenderState
 	unsigned short mFormat;
 };
 
-
-#ifdef DRAWLIST_USE_SHADER
-//
-// SHADER
-//
-
-// basic vertex shader program
-// vertex position: transform by modelview and projection
-// vertex color: pass through unmodified
-static const GLchar * const sBasicVertexShader =
-	"#version 130\n"
-	"\n"
-	"uniform mat4 modelviewproj;\n"
-	"\n"
-	"in vec3 position;\n"
-	"in vec4 color;\n"
-	"\n"
-	"out vec4 vscolor;\n"
-	"\n"
-	"void main()\n"
-	"{\n"
-	"    gl_Position = modelviewproj * vec4(position, 1.0);\n"
-	"    vscolor = color;\n"
-	"}\n";
-
-// basic fragment shader program
-static const GLchar * const sBasicFragmentShader =
-	"#version 130\n"
-	"\n"
-	"in vec4 vscolor;\n"
-	"\n"
-	"out vec4 fragmentcolor;\n"
-	"\n"
-	"void main(void)\n"
-	"{\n"
-	"    fragmentcolor = vscolor;\n"
-	"}\n";
-
-// shader program
-static GLuint sBasicProgramId;
-static GLuint sBasicVertexId;
-static GLuint sBasicFragmentId;
-
-// uniform locations
-static GLint sUniformModelViewProj;
-
-// attribute locations
-static GLint sAttribPosition;
-#ifdef DRAWLIST_NORMALS
-static GLint sAttribNormal;
-#endif
-static GLint sAttribColor;
-static GLint sAttribTexCoord;
-
-#else
-
-// fixed function attributes
-static const GLint sAttribPosition = 0;
-#ifdef DRAWLIST_NORMALS
-static const GLint sNormalPosition = 1;
-#endif
-static const GLint sAttribColor = 2;
-static const GLint sAttribTexCoord = 3;
-
-#endif
-
 // tag appended to generator drawlist name to prevent it from matching a template name:
 // this fixes a bug where a generator would be duplicated when a template inherited from
 // a template containing a drawlist (e.g. "playershipinvunlerable" from "playership"),
@@ -276,6 +212,9 @@ struct BakeContext : public EntityContext
 {
 	// output drawlist
 	std::vector<unsigned int> *mTarget;
+
+	// active shader program
+	GLuint mProgram;
 
 	// active vertex format
 	// TO DO: replace with bitfield/bool[] indexed by attrib location
@@ -298,7 +237,8 @@ struct BakeContext : public EntityContext
 	BakeContext(std::vector<unsigned int> *aTarget, const unsigned int *aBuffer, const size_t aSize, float aParam, unsigned int aId, Database::Typed<float> *aVars = NULL)
 		: EntityContext(aBuffer, aSize, aParam, aId, aVars)
 		, mTarget(aTarget)
-		, mFormat(1 << sAttribPosition)
+		, mProgram(ShaderColor::gProgramId)
+		, mFormat(1 << ShaderColor::gAttribPosition)
 		, mDrawMode(GL_TRIANGLES)
 	{
 #ifdef DRAWLIST_NORMALS
@@ -332,13 +272,13 @@ static void FlushStatic(BakeContext &aContext)
 		DebugPrint("\t%d: p(%.2f %.2f %.2f)", i, vertex[0], vertex[1], vertex[2]);
 		vertex += 3;
 #ifdef DRAWLIST_NORMALS
-		if (aContext.mFormat & (1 << sAttribNormal))
+		if (aContext.mFormat & (1 << ShaderColor::gAttribNormal))
 		{
 			DebugPrint(" n(%.2f %.2f %.2f)", vertex[0], vertex[1], vertex[2]);
 			vertex += 3;
 		}
 #endif
-		if (aContext.mFormat & (1 << sAttribColor))
+		if (aContext.mFormat & (1 << ShaderColor::gAttribColor))
 		{
 #ifdef DRAWLIST_FLOAT_COLOR
 			DebugPrint(" c(%.2f %.2f %.2f %.2f)", vertex[0], vertex[1], vertex[2], vertex[3]);
@@ -349,7 +289,7 @@ static void FlushStatic(BakeContext &aContext)
 			vertex += 1;
 #endif
 		}
-		if (aContext.mFormat & (1 << sAttribTexCoord))
+		if (aContext.mFormat & (1 << ShaderColor::gAttribTexCoord))
 		{
 			DebugPrint(" t(%.2f %.2f)", vertex[0], vertex[1]);
 			vertex += 2;
@@ -551,18 +491,11 @@ void DO_DrawMode(EntityContext &aContext)
 
 #ifdef DRAWLIST_USE_SHADER
 	// use the basic program
-	if (UseProgram(sBasicProgramId) || &GetBoundVertexBuffer() != &GetDynamicVertexBuffer())
+	if (UseProgram(ShaderColor::gProgramId) || &GetBoundVertexBuffer() != &GetDynamicVertexBuffer() || ViewProjChanged())
 	{
 		// shader changed or switching back from non-dynamic geometry:
 		// set model view projection matrix
-#ifdef DYNAMIC_GEOMETRY_IN_VIEW_SPACE
-		SetUniformMatrix4(sUniformModelViewProj, ProjectionGet());
-#else
-		ProjectionPush();
-		ProjectionMult(ViewGet());
-		SetUniformMatrix4(sUniformModelViewProj, ProjectionGet());
-		ProjectionPop();
-#endif
+		SetUniformMatrix4(ShaderColor::gUniformModelViewProj, ViewProjGet());
 	}
 #else
 	// fixed-function
@@ -571,29 +504,25 @@ void DO_DrawMode(EntityContext &aContext)
 	// set model view projection matrix
 	// (if switching back from non-dynamic geometry)
 	if (&GetBoundVertexBuffer() != &GetDynamicVertexBuffer())
-#ifdef DYNAMIC_GEOMETRY_IN_VIEW_SPACE
-		SetUniformMatrix4(GL_MODELVIEW, IdentityGet());
-#else
 		SetUniformMatrix4(GL_MODELVIEW, ViewGet());
-#endif
 #endif
 
 	// set up attributes
-	SetAttribFormat(sAttribPosition, sPositionWidth, GL_FLOAT);
+	SetAttribFormat(ShaderColor::gAttribPosition, sPositionWidth, GL_FLOAT);
 #ifdef DRAWLIST_NORMALS
-	SetAttribFormat(sAttribNormal, sNormalWidth, GL_FLOAT);
+	SetAttribFormat(ShaderColor::gAttribNormal, sNormalWidth, GL_FLOAT);
 #endif
 #ifdef DRAWLIST_FLOAT_COLOR	// always use float for dynamic stuff
-	SetAttribFormat(sAttribColor, sColorWidth, GL_FLOAT);
+	SetAttribFormat(ShaderColor::gAttribColor, sColorWidth, GL_FLOAT);
 #else
-	SetAttribFormat(sAttribColor, sColorWidth, GL_UNSIGNED_BYTE);
+	SetAttribFormat(ShaderColor::gAttribColor, sColorWidth, GL_UNSIGNED_BYTE);
 #endif
-	SetAttribFormat(sAttribTexCoord, sTexCoordWidth, GL_FLOAT);
+	//SetAttribFormat(ShaderColor::gAttribTexCoord, sTexCoordWidth, GL_FLOAT);
 
 	// set work format
 	// include color attribute even if the state doesn't
 	GLuint format = state.mFormat;
-	format |= 1 << sAttribColor;
+	format |= 1 << ShaderColor::gAttribColor;
 	SetWorkFormat(format);
 
 	// set draw mode
@@ -644,12 +573,12 @@ void DO_BindTextureBake(BakeContext &aContext)
 
 void DO_Color(EntityContext &aContext)
 {
-	SetAttribValue(sAttribColor, Expression::Evaluate<DLColor>(aContext));
+	SetAttribValue(ShaderColor::gAttribColor, Expression::Evaluate<DLColor>(aContext));
 }
 
 void DO_ColorBake(BakeContext &aContext)
 {
-	aContext.mFormat |= 1 << sAttribColor;
+	aContext.mFormat |= 1 << ShaderColor::gAttribColor;
 	DLColor color(Expression::Evaluate<DLColor>(aContext));
 #ifdef DRAWLIST_FLOAT_COLOR
 	_mm_storeu_ps(aContext.mColor, color);
@@ -678,18 +607,11 @@ void DO_CopyElements(EntityContext &aContext)
 {
 #ifdef DRAWLIST_USE_SHADER
 	// use the basic program
-	if (UseProgram(sBasicProgramId) || &GetBoundVertexBuffer() != &GetDynamicVertexBuffer())
+	if (UseProgram(ShaderColor::gProgramId) || &GetBoundVertexBuffer() != &GetDynamicVertexBuffer() || ViewProjChanged())
 	{
 		// shader changed or switching back from non-dynamic geometry:
 		// set model view projection matrix
-#ifdef DYNAMIC_GEOMETRY_IN_VIEW_SPACE
-		SetUniformMatrix4(sUniformModelViewProj, ProjectionGet());
-#else
-		ProjectionPush();
-		ProjectionMult(ViewGet());
-		SetUniformMatrix4(sUniformModelViewProj, ProjectionGet());
-		ProjectionPop();
-#endif
+		SetUniformMatrix4(ShaderColor::gUniformModelViewProj, ViewProjGet());
 	}
 #else
 	// fixed function
@@ -698,11 +620,7 @@ void DO_CopyElements(EntityContext &aContext)
 	// set model view matrix
 	// (if switching back from non-dynamic geometry)
 	if (&GetBoundVertexBuffer() != &GetDynamicVertexBuffer())
-#ifdef DYNAMIC_GEOMETRY_IN_VIEW_SPACE
-		SetUniformMatrix4(GL_MODELVIEW, IdentityGet());
-#else
 		SetUniformMatrix4(GL_MODELVIEW, ViewGet());
-#endif
 #endif
 
 	// get rendering state
@@ -713,16 +631,16 @@ void DO_CopyElements(EntityContext &aContext)
 	GLuint indexCount(Expression::Read<GLuint>(aContext));
 
 	// set up attributes
-	SetAttribFormat(sAttribPosition, sPositionWidth, GL_FLOAT);
+	SetAttribFormat(ShaderColor::gAttribPosition, sPositionWidth, GL_FLOAT);
 #ifdef DRAWLIST_NORMALS
-	SetAttribFormat(sAttribNormal, sNormalWidth, GL_FLOAT);
+	SetAttribFormat(ShaderColor::gAttribNormal, sNormalWidth, GL_FLOAT);
 #endif
 #ifdef DRAWLIST_FLOAT_COLOR	// always use float for dynamic stuff
-	SetAttribFormat(sAttribColor, sColorWidth, GL_FLOAT);
+	SetAttribFormat(ShaderColor::gAttribColor, sColorWidth, GL_FLOAT);
 #else
-	SetAttribFormat(sAttribColor, sColorWidth, GL_UNSIGNED_BYTE);
+	SetAttribFormat(ShaderColor::gAttribColor, sColorWidth, GL_UNSIGNED_BYTE);
 #endif
-	SetAttribFormat(sAttribTexCoord, sTexCoordWidth, GL_FLOAT);
+	//SetAttribFormat(ShaderColor::gAttribTexCoord, sTexCoordWidth, GL_FLOAT);
 
 	// get the source format
 	GLuint srcformat = state.mFormat;
@@ -757,7 +675,7 @@ void DO_CopyElements(EntityContext &aContext)
 		// position array always active
 		{
 			// copy position
-			const size_t dstDisplace = sAttribDisplace[sAttribPosition];
+			const size_t dstDisplace = sAttribDisplace[ShaderColor::gAttribPosition];
 			memcpy(&pos, srcVertex, sPositionWidth * sizeof(float));
 			pos = StackTransformPosition(pos);
 			memcpy(dstVertex + dstDisplace, &pos, sPositionWidth * sizeof(float));
@@ -766,11 +684,11 @@ void DO_CopyElements(EntityContext &aContext)
 
 #ifdef DRAWLIST_NORMALS
 		// if normal array active...
-		if (dstformat & (1 << sAttribNormal))
+		if (dstformat & (1 << ShaderColor::gAttribNormal))
 		{
 			// copy normal
-			const size_t dstDisplace = sAttribDisplace[sAttribNormal];
-			if (srcformat & (1 << sAttribNormal))
+			const size_t dstDisplace = sAttribDisplace[ShaderColor::gAttribNormal];
+			if (srcformat & (1 << ShaderColor::gAttribNormal))
 			{
 				// copy source normal
 				memcpy(&nrm, srcVertex, sNormalWidth * sizeof(float));
@@ -786,52 +704,26 @@ void DO_CopyElements(EntityContext &aContext)
 		}
 #endif
 
-		// if color array active...
-		if (dstformat & (1 << sAttribColor))
+		// for other attributes...
+		assert(Shader::gAttribPosition == 0);
+		for (int i = 1; i < sAttribCount; ++i)
 		{
-			// copy color
-			const size_t dstDisplace = sAttribDisplace[sAttribColor];
-			if (srcformat & (1 << sAttribColor))
+			// if attribute array active...
+			if (dstformat & (1 << i))
 			{
-				// copy source color
-#ifdef DRAWLIST_FLOAT_COLOR
-				memcpy(dstVertex + dstDisplace, srcVertex, sColorWidth * sizeof(float));
-				srcVertex += sColorWidth * sizeof(float);
-#elif 1
-				memcpy(dstVertex + dstDisplace, srcVertex, sColorWidth * sizeof(unsigned char));
-				srcVertex += sColorWidth * sizeof(unsigned char);
-#else
-#error
-#endif
-			}
-			else
-			{
-				// copy constant color
-#ifdef DRAWLIST_FLOAT_COLOR
-				memcpy(dstVertex + dstDisplace, srcConst + dstDisplace, sColorWidth * sizeof(float));
-#elif 1
-				memcpy(dstVertex + dstDisplace, srcConst + dstDisplace, sColorWidth * sizeof(unsigned char));
-#else
-#error
-#endif
-			}
-		}
-
-		// if texcoord array active...
-		if (dstformat & (1 << sAttribTexCoord))
-		{
-			// copy texcoord
-			const size_t dstDisplace = sAttribDisplace[sAttribTexCoord];
-			if (srcformat & (1 << sAttribTexCoord))
-			{
-				// copy source color
-				memcpy(dstVertex + dstDisplace, srcVertex, sTexCoordWidth * sizeof(float));
-				srcVertex += sTexCoordWidth * sizeof(float);
-			}
-			else
-			{
-				// copy constant color
-				memcpy(dstVertex + dstDisplace, srcConst + dstDisplace, sTexCoordWidth * sizeof(float));
+				// copy attribute
+				const size_t dstDisplace = sAttribDisplace[i];
+				if (srcformat & (1 << i))
+				{
+					// copy source attribute
+					memcpy(dstVertex + dstDisplace, srcVertex, sAttribSize[i]);
+					srcVertex += sAttribSize[i];
+				}
+				else
+				{
+					// copy constant attribute
+					memcpy(dstVertex + dstDisplace, srcConst + dstDisplace, sAttribSize[i]);
+				}
 			}
 		}
 
@@ -892,14 +784,10 @@ void DO_DrawElements(EntityContext &aContext)
 
 #ifdef DRAWLIST_USE_SHADER
 	// use the basic program
-	UseProgram(sBasicProgramId);
+	UseProgram(ShaderColor::gProgramId);
 
 	// get combined model view projection matrix
-	ProjectionPush();
-	ProjectionMult(ViewGet());
-	ProjectionMult(StackGet());
-	SetUniformMatrix4(sUniformModelViewProj, ProjectionGet());
-	ProjectionPop();
+	SetUniformMatrix4(ShaderColor::gUniformModelViewProj, ModelViewProjGet());
 #else
 	// fixed function
 	UseProgram(0);
@@ -922,16 +810,16 @@ void DO_DrawElements(EntityContext &aContext)
 #endif
 
 	// set up attributes
-	SetAttribFormat(sAttribPosition, sPositionWidth, GL_FLOAT);
+	SetAttribFormat(ShaderColor::gAttribPosition, sPositionWidth, GL_FLOAT);
 #ifdef DRAWLIST_NORMALS
-	SetAttribFormat(sAttribNormal, sNormalWidth, GL_FLOAT);
+	SetAttribFormat(ShaderColor::gAttribNormal, sNormalWidth, GL_FLOAT);
 #endif
 #ifdef DRAWLIST_FLOAT_COLOR	// always use float for dynamic stuff
-	SetAttribFormat(sAttribColor, sColorWidth, GL_FLOAT);
+	SetAttribFormat(ShaderColor::gAttribColor, sColorWidth, GL_FLOAT);
 #else
-	SetAttribFormat(sAttribColor, sColorWidth, GL_UNSIGNED_BYTE);
+	SetAttribFormat(ShaderColor::gAttribColor, sColorWidth, GL_UNSIGNED_BYTE);
 #endif
-	SetAttribFormat(sAttribTexCoord, sTexCoordWidth, GL_FLOAT);
+	//SetAttribFormat(ShaderColor::gAttribTexCoord, sTexCoordWidth, GL_FLOAT);
 
 	// get rendering state
 	PackedRenderState state(Expression::Read<PackedRenderState>(aContext));
@@ -1079,12 +967,12 @@ void DO_MultMatrix(EntityContext &aContext)
 #ifdef DRAWLIST_NORMALS
 void DO_Normal(EntityContext &aContext)
 {
-	SetAttribValue(sAttribNormal, Expression::Evaluate<DLNormal>(aContext));
+	SetAttribValue(ShaderColor::gAttribNormal, Expression::Evaluate<DLNormal>(aContext));
 }
 
 void DO_NormalBake(BakeContext &aContext)
 {
-	aContext.mFormat |= 1 << sAttribNormal;
+	aContext.mFormat |= 1 << ShaderColor::gAttribNormal;
 	_mm_storeu_ps(aContext.mNormal, Expression::Evaluate<DLNormal>(aContext));
 }
 #endif
@@ -1178,12 +1066,12 @@ void DO_Scale(EntityContext &aContext)
 
 void DO_TexCoord(EntityContext &aContext)
 {
-	SetAttribValue(sAttribTexCoord, Expression::Evaluate<DLTexCoord>(aContext));
+	//SetAttribValue(ShaderColor::gAttribTexCoord, Expression::Evaluate<DLTexCoord>(aContext));
 }
 
 void DO_TexCoordBake(BakeContext &aContext)
 {
-	aContext.mFormat |= 1 << sAttribTexCoord;
+	//aContext.mFormat |= 1 << ShaderColor::gAttribTexCoord;
 	_mm_storeu_ps(aContext.mTexCoord, Expression::Evaluate<DLTexCoord>(aContext));
 }
 
@@ -1195,7 +1083,7 @@ void DO_Translate(EntityContext &aContext)
 
 void DO_Vertex(EntityContext &aContext)
 {
-	SetAttribValue(sAttribPosition, StackTransformPosition(Expression::Evaluate<DLPosition>(aContext)));
+	SetAttribValue(ShaderColor::gAttribPosition, StackTransformPosition(Expression::Evaluate<DLPosition>(aContext)));
 	AddVertex();
 }
 
@@ -1206,14 +1094,14 @@ void DO_VertexBake(BakeContext &aContext)
 	// component sizes
 	const size_t sizeposition = sPositionWidth * sizeof(float);
 #ifdef DRAWLIST_NORMALS
-	const size_t sizenormal = ((aContext.mFormat >> sAttribNormal) & 1) * sNormalWidth * sizeof(float);
+	const size_t sizenormal = ((aContext.mFormat >> ShaderColor::gAttribNormal) & 1) * sNormalWidth * sizeof(float);
 #endif
 #ifdef DRAWLIST_FLOAT_COLOR
-	const size_t sizecolor = ((aContext.mFormat >> sAttribColor) & 1) * sColorWidth * sizeof(float);
+	const size_t sizecolor = ((aContext.mFormat >> ShaderColor::gAttribColor) & 1) * sColorWidth * sizeof(float);
 #else
-	const size_t sizecolor = ((aContext.mFormat >> sAttribColor) & 1) * sColorWidth * sizeof(GLubyte);
+	const size_t sizecolor = ((aContext.mFormat >> ShaderColor::gAttribColor) & 1) * sColorWidth * sizeof(GLubyte);
 #endif
-	const size_t sizetexcoord = ((aContext.mFormat >> sAttribTexCoord) & 1) * sTexCoordWidth * sizeof(float);
+	//const size_t sizetexcoord = ((aContext.mFormat >> ShaderColor::gAttribTexCoord) & 1) * sTexCoordWidth * sizeof(float);
 
 #ifdef DEBUG
 	// combined size
@@ -1236,23 +1124,23 @@ void DO_VertexBake(BakeContext &aContext)
 	memcpy(sVertexWork + sVertexUsed, &position, sizeposition);
 	sVertexUsed += sizeposition / sizeof(float);
 #ifdef DRAWLIST_NORMALS
-	if (aContext.mFormat & (1 << sAttribNormal))
+	if (aContext.mFormat & (1 << ShaderColor::gAttribNormal))
 	{
 		const DLNormal normal(StackTransformNormal(_mm_loadu_ps(aContext.mNormal)));
 		memcpy(sVertexWork + sVertexUsed, &normal, sizenormal);
 		sVertexUsed += sizenormal / sizeof(float);
 	}
 #endif
-	if (aContext.mFormat & (1 << sAttribColor))
+	if (aContext.mFormat & (1 << ShaderColor::gAttribColor))
 	{
 		memcpy(sVertexWork + sVertexUsed, &aContext.mColor, sizecolor);
 		sVertexUsed += sizecolor / sizeof(float);
 	}
-	if (aContext.mFormat & (1 << sAttribTexCoord))
-	{
-		memcpy(sVertexWork + sVertexUsed, &aContext.mTexCoord, sizetexcoord);
-		sVertexUsed += sizetexcoord / sizeof(float);
-	}
+	//if (aContext.mFormat & (1 << ShaderColor::gAttribTexCoord))
+	//{
+	//	memcpy(sVertexWork + sVertexUsed, &aContext.mTexCoord, sizetexcoord);
+	//	sVertexUsed += sizetexcoord / sizeof(float);
+	//}
 	++sVertexCount;
 }
 
@@ -1622,7 +1510,7 @@ void ConfigureDrawItem(unsigned int aId, const tinyxml2::XMLElement *element, st
 	case 0xe68b9c52 /* "normal" */:
 		{
 			if (context)
-				context->mFormat |= (1 << sAttribNormal);
+				context->mFormat |= (1 << ShaderColor::gAttribNormal);
 			if (bake)
 				Expression::Append(buffer, DO_NormalBake);
 			else
@@ -1635,7 +1523,7 @@ void ConfigureDrawItem(unsigned int aId, const tinyxml2::XMLElement *element, st
 	case 0x3d7e6258 /* "color" */:
 		{
 			if (context)
-				context->mFormat |= 1 << sAttribColor;
+				context->mFormat |= 1 << ShaderColor::gAttribColor;
 			if (bake)
 				Expression::Append(buffer, DO_ColorBake);
 			else
@@ -1646,13 +1534,13 @@ void ConfigureDrawItem(unsigned int aId, const tinyxml2::XMLElement *element, st
 
 	case 0xdd612dd3 /* "texcoord" */:
 		{
-			if (context)
-				context->mFormat |= 1 << sAttribTexCoord;
-			if (bake)
-				Expression::Append(buffer, DO_TexCoordBake);
-			else
-				Expression::Append(buffer, DO_TexCoord);
-			Expression::Loader<DLTexCoord>::ConfigureRoot(element, buffer, sTexCoordNames, sTexCoordDefault);
+			//if (context)
+			//	context->mFormat |= 1 << ShaderColor::gAttribTexCoord;
+			//if (bake)
+			//	Expression::Append(buffer, DO_TexCoordBake);
+			//else
+			//	Expression::Append(buffer, DO_TexCoord);
+			//Expression::Loader<DLTexCoord>::ConfigureRoot(element, buffer, sTexCoordNames, sTexCoordDefault);
 		}
 		break;
 
@@ -1888,12 +1776,16 @@ void ConfigureDrawItem(unsigned int aId, const tinyxml2::XMLElement *element, st
 					// bind the texture object
 					if (bake)
 					{
+#if 0
 						Expression::Append(buffer, DO_EnableBake, GL_TEXTURE_2D);
+#endif
 						Expression::Append(buffer, DO_BindTextureBake, GL_TEXTURE_2D, texture);
 					}
 					else
 					{
+#if 0
 						Expression::Append(buffer, DO_Enable, GL_TEXTURE_2D);
+#endif
 						Expression::Append(buffer, DO_BindTexture, GL_TEXTURE_2D, texture);
 					}
 				}
@@ -2308,44 +2200,8 @@ void ExecuteDrawItems(EntityContext &aContext)
 }
 #pragma optimize( "", on )
 
-static void InitBasicProgram(void)
-{
-#ifdef DRAWLIST_USE_SHADER
-	// create basic program
-	sBasicVertexId = CreateVertexShader(sBasicVertexShader);
-	sBasicFragmentId = CreateFragmentShader(sBasicFragmentShader);
-	sBasicProgramId = CreateProgram(sBasicVertexId, sBasicFragmentId);
-
-	// get uniform location
-	sUniformModelViewProj = glGetUniformLocation(sBasicProgramId, "modelviewproj");
-
-	// get attribute locations
-	sAttribPosition = glGetAttribLocation(sBasicProgramId, "position");
-#ifdef DRAWLIST_NORMALS
-	sAttribNormal = glGetAttribLocation(sBasicProgramId, "normal");
-#endif
-	sAttribColor = glGetAttribLocation(sBasicProgramId, "color");
-	sAttribTexCoord = glGetAttribLocation(sBasicProgramId, "texcoord");
-#endif
-}
-
-static void CleanupBasicProgram(void)
-{
-#ifdef DRAWLIST_USE_SHADER
-	glDeleteProgram(sBasicProgramId);
-	sBasicProgramId = 0;
-	glDeleteShader(sBasicFragmentId);
-	sBasicFragmentId = 0;
-	glDeleteShader(sBasicVertexId);
-	sBasicVertexId = 0;
-#endif
-}
-
 void InitDrawlists(void)
 {
-	// setup basic program
-	InitBasicProgram();
-
 	// set up static vertex buffer
 	BufferInit(sStaticVertexBuffer, GL_ARRAY_BUFFER, GL_STATIC_DRAW);
 #ifdef DRAWLIST_STATIC_BUFFER
@@ -2372,8 +2228,6 @@ void InitDrawlists(void)
 
 void PreResetDrawlists(void)
 {
-	CleanupBasicProgram();
-
 	// delete buffer objects
 	BufferCleanup(sStaticVertexBuffer);
 	BufferCleanup(sStaticIndexBuffer);
@@ -2382,9 +2236,6 @@ void PreResetDrawlists(void)
 
 void PostResetDrawlists(void)
 {
-	// setup basic program
-	InitBasicProgram();
-
 #ifdef DRAWLIST_STATIC_BUFFER
 	// rebuild static vertex buffer
 	BufferGen(sStaticVertexBuffer);
@@ -2398,8 +2249,6 @@ void PostResetDrawlists(void)
 
 void CleanupDrawlists(void)
 {
-	CleanupBasicProgram();
-
 	// delete buffer objects
 	BufferCleanup(sStaticVertexBuffer);
 	BufferCleanup(sStaticIndexBuffer);

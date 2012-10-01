@@ -7,7 +7,7 @@
 
 // queue rendering operations?
 // (disabling reduces performance but makes debugging easier)
-//#define RENDER_USE_QUEUE
+#define RENDER_USE_QUEUE
 
 
 //
@@ -408,7 +408,7 @@ void CleanupRender(void)
 void RQ_UseProgram(Expression::Context &aContext)
 {
 	GLuint program(Expression::Read<GLuint>(aContext));
-	if (sProgram)
+	if (sProgram && !program)
 	{
 		// switch off vertex attribute arrays
 		for (int i = 0; i < sAttribCount; ++i)
@@ -578,10 +578,12 @@ void RQ_TexCoordArray(Expression::Context &aContext)
 void RQ_BindTexture(Expression::Context &aContext)
 {
 	GLuint texture(Expression::Read<GLuint>(aContext));
+#if 0
 	if (texture)
 		glEnable(GL_TEXTURE_2D);
 	else
 		glDisable(GL_TEXTURE_2D);
+#endif
 	glBindTexture(GL_TEXTURE_2D, texture);
 }
 
@@ -730,7 +732,7 @@ bool UseProgram(GLuint aProgram)
 	FlushDynamic();
 
 #ifndef RENDER_USE_QUEUE
-	if (sProgram)
+	if (sProgram && !aProgram)
 	{
 		// switch off vertex attribute arrays
 		for (int i = 0; i < sAttribCount; ++i)

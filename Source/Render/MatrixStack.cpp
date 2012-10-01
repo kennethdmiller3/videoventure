@@ -73,6 +73,18 @@ static const int sStackEntries = 64;
 static Matrix4 sStackMatrix[sStackEntries];
 static int sStackTop;
 
+// model-view-projection matrix
+// (increment every time model view projection changes)
+static unsigned int sViewProjSequence;
+static unsigned int sViewProjGenerated;
+static Matrix4 sViewProjMatrix;
+
+// model-view-projection matrix
+// (increment every time model view projection changes)
+static unsigned int sModelViewProjSequence;
+static unsigned int sModelViewProjGenerated;
+static Matrix4 sModelViewProjMatrix;
+
 
 //
 // IDENTITY MATRIX OPERATIONS
@@ -110,6 +122,8 @@ void ProjectionPop(void)
 		memset(sProjMatrix + sProjTop, 0, sizeof(Matrix4));
 #endif
 		--sProjTop;
+		++sViewProjSequence;
+		++sModelViewProjSequence;
 	}
 	else
 	{
@@ -122,6 +136,8 @@ void ProjectionIdentity(void)
 {
 	Matrix4 &m = sProjMatrix[sProjTop];
 	m = Matrix4::Identity;
+	++sViewProjSequence;
+	++sModelViewProjSequence;
 }
 
 void ProjectionOrtho(float aLeft, float aRight, float aBottom, float aTop, float aNear, float aFar)
@@ -135,6 +151,8 @@ void ProjectionOrtho(float aLeft, float aRight, float aBottom, float aTop, float
 	};
 	Matrix4 &m = sProjMatrix[sProjTop];
 	memcpy(&m, ortho, sizeof(Matrix4));
+	++sViewProjSequence;
+	++sModelViewProjSequence;
 }
 
 void ProjectionFrustum(float aLeft, float aRight, float aBottom, float aTop, float aNear, float aFar)
@@ -148,12 +166,16 @@ void ProjectionFrustum(float aLeft, float aRight, float aBottom, float aTop, flo
 	};
 	Matrix4 &m = sProjMatrix[sProjTop];
 	memcpy(&m, frustum, sizeof(Matrix4));
+	++sViewProjSequence;
+	++sModelViewProjSequence;
 }
 
 void ProjectionLoad(const float *aValues)
 {
 	Matrix4 &m = sProjMatrix[sProjTop];
 	memcpy(&m, aValues, sizeof(Matrix4));
+	++sViewProjSequence;
+	++sModelViewProjSequence;
 }
 
 void ProjectionMult(const float *aValues)
@@ -162,6 +184,8 @@ void ProjectionMult(const float *aValues)
 	Matrix4 b;
 	memcpy(&b, aValues, sizeof(Matrix4));
 	m = m * b;
+	++sViewProjSequence;
+	++sModelViewProjSequence;
 }
 
 const float *ProjectionGet(void)
@@ -177,6 +201,8 @@ const float *ProjectionGet(void)
 void ViewLoad(const float *aValues)
 {
 	memcpy(&sViewMatrix, aValues, sizeof(Matrix4));
+	++sViewProjSequence;
+	++sModelViewProjSequence;
 }
 
 const float *ViewGet(void)
@@ -192,11 +218,28 @@ const float *ViewGet(void)
 // initialize the stack
 void StackInit(void)
 {
+	// initialize projection stack
+	sProjTop = 0;
+	ProjectionIdentity();
+#ifdef DEBUG
+	memset(sProjMatrix+1, 0, sizeof(Matrix4) * (sProjEntries - 1));
+#endif
+
+	// initialize view matrix
+	ViewLoad(IdentityGet());
+
+	// initialize model stack
 	sStackTop = 0;
 	StackIdentity();
 #ifdef DEBUG
 	memset(sStackMatrix+1, 0, sizeof(Matrix4) * (sStackEntries - 1));
 #endif
+
+	// invalidate view-proj and model-view-proj
+	sViewProjSequence = 0U;
+	sViewProjGenerated = ~0U;
+	sModelViewProjSequence = 0U;
+	sModelViewProjGenerated = ~0U;
 }
 
 // get the current matrix
@@ -229,6 +272,7 @@ void StackPop(void)
 		memset(sStackMatrix + sStackTop, 0, sizeof(Matrix4));
 #endif
 		--sStackTop;
+		++sModelViewProjSequence;
 	}
 	else
 	{
@@ -242,6 +286,7 @@ void StackIdentity(void)
 {
 	Matrix4 &m = sStackMatrix[sStackTop];
 	m = Matrix4::Identity;
+	++sModelViewProjSequence;
 }
 
 // load a matrix
@@ -249,6 +294,7 @@ void StackLoad(const float *aValues)
 {
 	Matrix4 &m = sStackMatrix[sStackTop];
 	memcpy(&m, aValues, sizeof(Matrix4));
+	++sModelViewProjSequence;
 }
 
 // multiply by a matrix
@@ -258,6 +304,7 @@ void StackMult(const float *aValues)
 	Matrix4 b;
 	memcpy(&b, aValues, sizeof(Matrix4));
 	m = m * b;
+	++sModelViewProjSequence;
 }
 
 // apply rotation
@@ -294,6 +341,7 @@ void StackRotate(const float aValue)
 	m.m[3][1] = o.m[3][1];
 	m.m[3][2] = o.m[3][2];
 #endif
+	++sModelViewProjSequence;
 }
 
 // apply scale
@@ -316,6 +364,7 @@ void StackScale(const __m128 aValue)
 	m.m[2][1] *= aValue.m128_f32[2];
 	m.m[2][2] *= aValue.m128_f32[2];
 #endif
+	++sModelViewProjSequence;
 }
 
 // apply translation
@@ -335,13 +384,12 @@ void StackTranslate(const __m128 aValue)
 			),
 			m.m[3]
 		);
-
-
 #else
 	m.m[3][0] += m.m[0][0] * aValue.m128_f32[0] + m.m[1][0] * aValue.m128_f32[1] + m.m[2][0] * aValue.m128_f32[2];
 	m.m[3][1] += m.m[0][1] * aValue.m128_f32[0] + m.m[1][1] * aValue.m128_f32[1] + m.m[2][1] * aValue.m128_f32[2];
 	m.m[3][2] += m.m[0][2] * aValue.m128_f32[0] + m.m[1][2] * aValue.m128_f32[1] + m.m[2][2] * aValue.m128_f32[2];
 #endif
+	++sModelViewProjSequence;
 }
 
 // transform a position
@@ -393,4 +441,48 @@ __m128 StackTransformNormal(const __m128 aValue)
 	n.m128_f32[1] *= scale;
 	n.m128_f32[2] *= scale;
 	return n;
+}
+
+
+//
+// VIEW-PROJECTION OPERATIONS
+//
+
+// has the model-view-projectiom matrix changed?
+bool ViewProjChanged(void)
+{
+	return sViewProjGenerated != sViewProjSequence;
+}
+
+// get the combined model-view-projection matrix
+const float *ViewProjGet(void)
+{
+	if (sViewProjGenerated != sViewProjSequence)
+	{
+		sViewProjMatrix = sProjMatrix[sProjTop] * sViewMatrix;
+		sViewProjGenerated = sViewProjSequence;
+	}
+	return sViewProjMatrix.m->m128_f32;
+}
+
+
+//
+// MODEL-VIEW-PROJECTION OPERATIONS
+//
+
+// has the model-view-projectiom matrix changed?
+bool ModelViewProjChanged(void)
+{
+	return sModelViewProjGenerated != sModelViewProjSequence;
+}
+
+// get the combined model-view-projection matrix
+const float *ModelViewProjGet(void)
+{
+	if (sModelViewProjGenerated != sModelViewProjSequence)
+	{
+		sModelViewProjMatrix = sProjMatrix[sProjTop] * sViewMatrix * sStackMatrix[sStackTop];
+		sModelViewProjGenerated = sModelViewProjSequence;
+	}
+	return sModelViewProjMatrix.m->m128_f32;
 }

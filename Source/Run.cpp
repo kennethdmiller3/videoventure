@@ -1025,13 +1025,10 @@ void RunState()
 			}
 
 			// use color shader
-			if (UseProgram(ShaderColor::gProgramId))
+			if (UseProgram(ShaderColor::gProgramId) || &GetBoundVertexBuffer() != &GetDynamicVertexBuffer() || ViewProjChanged())
 			{
 				// set model view projection matrix
-				ProjectionPush();
-				ProjectionMult(ViewGet());
-				SetUniformMatrix4(ShaderColor::gUniformModelViewProj, ProjectionGet());
-				ProjectionPop();
+				SetUniformMatrix4(ShaderColor::gUniformModelViewProj, ViewProjGet());
 			}
 
 			// set attribs
