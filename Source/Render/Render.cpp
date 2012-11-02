@@ -1507,7 +1507,6 @@ void AddVertex(void)
 	assert(sVertexWorkSize > 0);
 	assert(sVertexUsed + sVertexWorkSize / sizeof(float) < sVertexLimit);
 
-#if 1
 	// copy the packed vertex state
 	__movsd(
 		reinterpret_cast<unsigned long *>(sVertexWork + sVertexUsed),
@@ -1515,24 +1514,6 @@ void AddVertex(void)
 		sVertexWorkSize / sizeof(unsigned long)
 		);
 	sVertexUsed += sVertexWorkSize / sizeof(float);
-#else
-	// for each active attribute...
-	for (int index = 0; index < sAttribCount; ++index)
-	{
-		// if array enabled for the attribute...
-		if (sVertexWorkFormat & (1 << index))
-		{
-			// copy attribute value to the work buffer
-			//memcpy(vertex + sAttribOffset[index] / sizeof(float), &sAttribValue[index], sAttribSize[index]);
-			__movsd(
-				reinterpret_cast<unsigned long *>(sVertexWork + sVertexUsed), 
-				reinterpret_cast<const unsigned long *>(&sAttribPacked[index]),
-				(sAttribSize[index] + sizeof(float) - 1) / sizeof(float)	//sAttribWidth[index]
-				);
-			sVertexUsed += (sAttribSize[index] + sizeof(float) - 1) / sizeof(float);
-		}
-	}
-#endif
 
 	// get ready for the next vertex
 	++sVertexCount;

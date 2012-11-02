@@ -8,6 +8,7 @@
 #include "MatrixStack.h"
 #include "Expression.h"
 #include "ExpressionEntity.h"
+#include "ShaderColor.h"
 
 
 // special ammo position
@@ -29,7 +30,8 @@ PlayerOverlaySpecial::PlayerOverlaySpecial(unsigned int aPlayerId = 0)
 	if (drawlist.size())
 	{
 		// create drawlist for icon
-		Expression::Append(icon_drawlist, DO_Color, Expression::Read<__m128>, 0.4f,  0.5f, 1.0f, 1.0f);
+		Expression::Append(icon_drawlist, DO_AttribValue, ShaderColor::gAttribColor);
+		Expression::Append(icon_drawlist, Expression::Read<__m128>, 0.4f,  0.5f, 1.0f, 1.0f);
 		Expression::Append(icon_drawlist, DO_PushMatrix);
 		Expression::Append(icon_drawlist, DO_Translate, Expression::Read<__m128>, specialpos.x, specialpos.y, 0.0f, 1.0f);
 		Expression::Append(icon_drawlist, DO_Scale, Expression::Read<__m128>, 4.0f, 4.0f, 1.0f, 1.0f);
