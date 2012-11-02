@@ -16,10 +16,10 @@ struct EntityContext;
 extern void RenderDrawlist(EntityContext &aContext, const Transform2 &aTransform);
 
 // drawlist operations
+extern void DO_AttribValue(EntityContext &aContext);
 extern void DO_DrawMode(EntityContext &aContext);
 extern void DO_BindTexture(EntityContext &aContext);
 extern void DO_BlendFunc(EntityContext &aContext);
-extern void DO_Color(EntityContext &aContext);
 extern void DO_Disable(EntityContext &aContext);
 extern void DO_CopyElements(EntityContext &aContext);
 extern void DO_DrawElements(EntityContext &aContext);

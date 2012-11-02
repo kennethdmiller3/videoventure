@@ -174,6 +174,11 @@ extern GLuint sAttribStride[RENDER_MAX_ATTRIB];
 extern GLuint sAttribOffset[RENDER_MAX_ATTRIB];
 extern GLuint sAttribDisplace[RENDER_MAX_ATTRIB];
 
+// drawlist attributes
+static unsigned int sAttribTag[RENDER_MAX_ATTRIB] = { 0x934f4e0a /* "position" */, 0x3d7e6258 /* "color" */, 0xdd612dd3 /* "texcoord" */ };
+static const char * const * sAttribNames[RENDER_MAX_ATTRIB] = { sPositionNames, sColorNames, sTexCoordNames };
+static const GLfloat * sAttribDefault[RENDER_MAX_ATTRIB] = { sPositionDefault, sColorDefault, sTexCoordDefault };
+
 // packed vertex data
 extern GLubyte sVertexPacked[RENDER_MAX_ATTRIB*16];
 
@@ -220,17 +225,6 @@ struct BakeContext : public EntityContext
 	// TO DO: replace with bitfield/bool[] indexed by attrib location
 	GLuint mFormat;
 
-	// current vertex component values
-#ifdef DRAWLIST_NORMALS
-	GLfloat mNormal[4];
-#endif
-#ifdef DRAWLIST_FLOAT_COLOR
-	GLfloat mColor[4];
-#else
-	GLubyte mColor[4];
-#endif
-	GLfloat mTexCoord[4];
-
 	// current drawing mode
 	GLenum mDrawMode;
 
@@ -241,17 +235,6 @@ struct BakeContext : public EntityContext
 		, mFormat(1 << ShaderColor::gAttribPosition)
 		, mDrawMode(GL_TRIANGLES)
 	{
-#ifdef DRAWLIST_NORMALS
-		// current vertex component values
-		memcpy(mNormal, sNormalDefault, sizeof(mNormal));
-#endif
-#ifdef DRAWLIST_FLOAT_COLOR
-		memcpy(mColor, sColorDefault, sizeof(mColor));
-#else
-		mColor[0] = mColor[1] = mColor[2] = 0;
-		mColor[3] = 255;
-#endif
-		memcpy(mTexCoord, sTexCoordDefault, sizeof(mTexCoord));
 	}
 };
 
@@ -466,6 +449,19 @@ bool EvaluateVariableOperator(EntityContext &aContext)
 // DRAWLIST OPERATIONS
 //
 
+void DO_AttribValue(EntityContext &aContext)
+{
+	const GLint index(Expression::Read<GLint>(aContext));
+	SetAttribValue(index, Expression::Evaluate<__m128>(aContext));
+}
+
+void DO_AttribValueBake(BakeContext &aContext)
+{
+	const GLint index(Expression::Read<GLint>(aContext));
+	aContext.mFormat |= 1 << index;
+	SetAttribValue(index, Expression::Evaluate<__m128>(aContext));
+}
+
 void DO_CallListBake(BakeContext &aContext)
 {
 	const unsigned int name(Expression::Read<unsigned int>(aContext));
@@ -569,23 +565,6 @@ void DO_BindTextureBake(BakeContext &aContext)
 	const GLenum target(Expression::Read<GLenum>(aContext));
 	const GLuint texture(Expression::Read<GLuint>(aContext));
 	Expression::Append(*aContext.mTarget, DO_BindTexture, target, texture);
-}
-
-void DO_Color(EntityContext &aContext)
-{
-	SetAttribValue(ShaderColor::gAttribColor, Expression::Evaluate<DLColor>(aContext));
-}
-
-void DO_ColorBake(BakeContext &aContext)
-{
-	aContext.mFormat |= 1 << ShaderColor::gAttribColor;
-	DLColor color(Expression::Evaluate<DLColor>(aContext));
-#ifdef DRAWLIST_FLOAT_COLOR
-	_mm_storeu_ps(aContext.mColor, color);
-#else
-	for (register int i = 0; i < 4; ++i)
-		aContext.mColor[i] = GLubyte(Clamp(xs_RoundToInt(color.m128_f32[i] * 255), 0, 255));
-#endif
 }
 
 void DO_Disable(EntityContext &aContext)
@@ -705,7 +684,7 @@ void DO_CopyElements(EntityContext &aContext)
 #endif
 
 		// for other attributes...
-		assert(Shader::gAttribPosition == 0);
+		assert(ShaderColor::gAttribPosition == 0);
 		for (int i = 1; i < sAttribCount; ++i)
 		{
 			// if attribute array active...
@@ -1029,22 +1008,6 @@ void DO_PopMatrix(EntityContext &aContext)
 	StackPop();
 }
 
-void DO_PushAttrib(EntityContext &aContext)
-{
-	FlushDynamic();
-
-	GLbitfield mask(Expression::Read<GLbitfield>(aContext));
-	glPushAttrib(mask);
-}
-
-void DO_PushAttribBake(BakeContext &aContext)
-{
-	FlushStatic(aContext);
-
-	GLbitfield mask(Expression::Read<GLbitfield>(aContext));
-	Expression::Append(*aContext.mTarget, DO_PushAttrib, mask);
-}
-
 void DO_PushMatrix(EntityContext &aContext)
 {
 	//glPushMatrix();
@@ -1064,17 +1027,6 @@ void DO_Scale(EntityContext &aContext)
 	StackScale(value);
 }
 
-void DO_TexCoord(EntityContext &aContext)
-{
-	//SetAttribValue(ShaderColor::gAttribTexCoord, Expression::Evaluate<DLTexCoord>(aContext));
-}
-
-void DO_TexCoordBake(BakeContext &aContext)
-{
-	//aContext.mFormat |= 1 << ShaderColor::gAttribTexCoord;
-	_mm_storeu_ps(aContext.mTexCoord, Expression::Evaluate<DLTexCoord>(aContext));
-}
-
 void DO_Translate(EntityContext &aContext)
 {
 	const DLTranslation value(Expression::Evaluate<DLTranslation>(aContext));
@@ -1083,65 +1035,14 @@ void DO_Translate(EntityContext &aContext)
 
 void DO_Vertex(EntityContext &aContext)
 {
-	SetAttribValue(ShaderColor::gAttribPosition, StackTransformPosition(Expression::Evaluate<DLPosition>(aContext)));
+	SetAttribValue(0, StackTransformPosition(Expression::Evaluate<DLPosition>(aContext)));
 	AddVertex();
 }
 
 void DO_VertexBake(BakeContext &aContext)
 {
-	const DLPosition position(StackTransformPosition(Expression::Evaluate<DLPosition>(aContext)));
-
-	// component sizes
-	const size_t sizeposition = sPositionWidth * sizeof(float);
-#ifdef DRAWLIST_NORMALS
-	const size_t sizenormal = ((aContext.mFormat >> ShaderColor::gAttribNormal) & 1) * sNormalWidth * sizeof(float);
-#endif
-#ifdef DRAWLIST_FLOAT_COLOR
-	const size_t sizecolor = ((aContext.mFormat >> ShaderColor::gAttribColor) & 1) * sColorWidth * sizeof(float);
-#else
-	const size_t sizecolor = ((aContext.mFormat >> ShaderColor::gAttribColor) & 1) * sColorWidth * sizeof(GLubyte);
-#endif
-	//const size_t sizetexcoord = ((aContext.mFormat >> ShaderColor::gAttribTexCoord) & 1) * sTexCoordWidth * sizeof(float);
-
-#ifdef DEBUG
-	// combined size
-	size_t sizevertex = sizeposition
-#ifdef DRAWLIST_NORMALS
-		+ sizenormal
-#endif
-		+ sizecolor
-		+ sizetexcoord;
-
-	// make sure there's enough room for the data
-	if (sVertexUsed + sizevertex / sizeof(float) >= sVertexLimit)
-	{
-		FlushStatic(aContext);
-	}
-#endif
-
-	// add data to the work buffer
-	// NOTE: this generates interleaved vertex data
-	memcpy(sVertexWork + sVertexUsed, &position, sizeposition);
-	sVertexUsed += sizeposition / sizeof(float);
-#ifdef DRAWLIST_NORMALS
-	if (aContext.mFormat & (1 << ShaderColor::gAttribNormal))
-	{
-		const DLNormal normal(StackTransformNormal(_mm_loadu_ps(aContext.mNormal)));
-		memcpy(sVertexWork + sVertexUsed, &normal, sizenormal);
-		sVertexUsed += sizenormal / sizeof(float);
-	}
-#endif
-	if (aContext.mFormat & (1 << ShaderColor::gAttribColor))
-	{
-		memcpy(sVertexWork + sVertexUsed, &aContext.mColor, sizecolor);
-		sVertexUsed += sizecolor / sizeof(float);
-	}
-	//if (aContext.mFormat & (1 << ShaderColor::gAttribTexCoord))
-	//{
-	//	memcpy(sVertexWork + sVertexUsed, &aContext.mTexCoord, sizetexcoord);
-	//	sVertexUsed += sizetexcoord / sizeof(float);
-	//}
-	++sVertexCount;
+	SetAttribValue(0, StackTransformPosition(Expression::Evaluate<DLPosition>(aContext)));
+	AddVertex();
 }
 
 void DO_Repeat(EntityContext &aContext)
@@ -1435,7 +1336,8 @@ static void ConfigureMatrix(const tinyxml2::XMLElement *element, float m[])
 void ConfigureDrawItem(unsigned int aId, const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer, bool bake, BakeContext *context)
 {
 	const char *label = element->Value();
-	switch (Hash(label))
+	const unsigned int hash = Hash(label);
+	switch (hash)
 	{
 		//
 		// TRANSFORM COMMANDS
@@ -1506,44 +1408,6 @@ void ConfigureDrawItem(unsigned int aId, const tinyxml2::XMLElement *element, st
 		}
 		break;
 
-#ifdef DRAWLIST_NORMALS
-	case 0xe68b9c52 /* "normal" */:
-		{
-			if (context)
-				context->mFormat |= (1 << ShaderColor::gAttribNormal);
-			if (bake)
-				Expression::Append(buffer, DO_NormalBake);
-			else
-				Expression::Append(buffer, DO_Normal);
-			Expression::Loader<DLNormal>::ConfigureRoot(element, buffer, sNormalNames, sNormalDefault);
-		}
-		break;
-#endif
-
-	case 0x3d7e6258 /* "color" */:
-		{
-			if (context)
-				context->mFormat |= 1 << ShaderColor::gAttribColor;
-			if (bake)
-				Expression::Append(buffer, DO_ColorBake);
-			else
-				Expression::Append(buffer, DO_Color);
-			Expression::Loader<DLColor>::ConfigureRoot(element, buffer, sColorNames, sColorDefault);
-		}
-		break;
-
-	case 0xdd612dd3 /* "texcoord" */:
-		{
-			//if (context)
-			//	context->mFormat |= 1 << ShaderColor::gAttribTexCoord;
-			//if (bake)
-			//	Expression::Append(buffer, DO_TexCoordBake);
-			//else
-			//	Expression::Append(buffer, DO_TexCoord);
-			//Expression::Loader<DLTexCoord>::ConfigureRoot(element, buffer, sTexCoordNames, sTexCoordDefault);
-		}
-		break;
-
 		//
 		// PRIMITIVE COMMANDS
 
@@ -1554,27 +1418,17 @@ void ConfigureDrawItem(unsigned int aId, const tinyxml2::XMLElement *element, st
 			if (size != 0.0f)
 			{
 				if (bake)
-				{
-					Expression::Append(buffer, DO_PushAttribBake, GL_POINT_BIT);
 					Expression::Append(buffer, DO_PointSizeWorldBake, size);
-				}
 				else
-				{
-					Expression::Append(buffer, DO_PushAttrib, GL_POINT_BIT);
 					Expression::Append(buffer, DO_PointSizeWorld, size);
-				}
 			}
 			ConfigurePrimitive(GL_POINTS, aId, element, buffer, bake, context);
 			if (size != 0.0f)
 			{
 				if (bake)
-				{
-					Expression::Append(buffer, DO_PopAttribBake);
-				}
+					Expression::Append(buffer, DO_PointSizeBake, 1);
 				else
-				{
-					Expression::Append(buffer, DO_PopAttrib);
-				}
+					Expression::Append(buffer, DO_PointSize, 1);
 			}
 		}
 		break;
@@ -1586,27 +1440,17 @@ void ConfigureDrawItem(unsigned int aId, const tinyxml2::XMLElement *element, st
 			if (width != 0.0f)
 			{
 				if (bake)
-				{
-					Expression::Append(buffer, DO_PushAttribBake, GL_LINE_BIT);
 					Expression::Append(buffer, DO_LineWidthWorldBake, width);
-				}
 				else
-				{
-					Expression::Append(buffer, DO_PushAttrib, GL_LINE_BIT);
 					Expression::Append(buffer, DO_LineWidthWorld, width);
-				}
 			}
 			ConfigurePrimitive(GL_LINES, aId, element, buffer, bake, context);
 			if (width != 0.0f)
 			{
 				if (bake)
-				{
-					Expression::Append(buffer, DO_PopAttribBake);
-				}
+					Expression::Append(buffer, DO_LineWidthBake, 1);
 				else
-				{
-					Expression::Append(buffer, DO_PopAttrib);
-				}
+					Expression::Append(buffer, DO_LineWidth, 1);
 			}
 		}
 		break;
@@ -1618,27 +1462,17 @@ void ConfigureDrawItem(unsigned int aId, const tinyxml2::XMLElement *element, st
 			if (width != 0.0f)
 			{
 				if (bake)
-				{
-					Expression::Append(buffer, DO_PushAttribBake, GL_LINE_BIT);
 					Expression::Append(buffer, DO_LineWidthWorldBake, width);
-				}
 				else
-				{
-					Expression::Append(buffer, DO_PushAttrib, GL_LINE_BIT);
 					Expression::Append(buffer, DO_LineWidthWorld, width);
-				}
 			}
 			ConfigurePrimitive(GL_LINE_LOOP, aId, element, buffer, bake, context);
 			if (width != 0.0f)
 			{
 				if (bake)
-				{
-					Expression::Append(buffer, DO_PopAttribBake);
-				}
+					Expression::Append(buffer, DO_LineWidthBake, 1);
 				else
-				{
-					Expression::Append(buffer, DO_PopAttrib);
-				}
+					Expression::Append(buffer, DO_LineWidth, 1);
 			}
 		}
 		break;
@@ -1650,27 +1484,17 @@ void ConfigureDrawItem(unsigned int aId, const tinyxml2::XMLElement *element, st
 			if (width != 0.0f)
 			{
 				if (bake)
-				{
-					Expression::Append(buffer, DO_PushAttribBake, GL_LINE_BIT);
 					Expression::Append(buffer, DO_LineWidthWorldBake, width);
-				}
 				else
-				{
-					Expression::Append(buffer, DO_PushAttrib, GL_LINE_BIT);
 					Expression::Append(buffer, DO_LineWidthWorld, width);
-				}
 			}
 			ConfigurePrimitive(GL_LINE_STRIP, aId, element, buffer, bake, context);
 			if (width != 0.0f)
 			{
 				if (bake)
-				{
-					Expression::Append(buffer, DO_PopAttribBake);
-				}
+					Expression::Append(buffer, DO_LineWidthBake, 1);
 				else
-				{
-					Expression::Append(buffer, DO_PopAttrib);
-				}
+					Expression::Append(buffer, DO_LineWidth, 1);
 			}
 		}
 		break;
@@ -1714,58 +1538,6 @@ void ConfigureDrawItem(unsigned int aId, const tinyxml2::XMLElement *element, st
 		//
 		// RENDERSTATE COMMANDS
 
-	case 0x937cff81 /* "pushattrib" */:
-		{
-			GLuint mask = 0U;
-			for (const tinyxml2::XMLAttribute *attrib = element->FirstAttribute(); attrib != NULL; attrib = attrib->Next())
-			{
-				GLuint bit = 0U;
-				switch (Hash(attrib->Name()))
-				{
-				case 0xd965bbda /* "current" */:			bit = GL_CURRENT_BIT; break;
-				case 0x18ae6c91 /* "point" */:				bit = GL_POINT_BIT; break;
-				case 0x17db1627 /* "line" */:				bit = GL_LINE_BIT; break;
-				case 0x051cb889 /* "polygon" */:			bit = GL_POLYGON_BIT; break;
-				case 0x67b14997 /* "polygon_stipple" */:	bit = GL_POLYGON_STIPPLE_BIT; break;
-				case 0xccde91eb /* "pixel_mode" */:			bit = GL_PIXEL_MODE_BIT; break;
-				case 0x827eb1c9 /* "lighting" */:			bit = GL_LIGHTING_BIT; break;
-				case 0xa1f3723f /* "fog" */:				bit = GL_FOG_BIT; break;
-				case 0x65e5b825 /* "depth_buffer" */:		bit = GL_DEPTH_BUFFER_BIT; break;
-				case 0x907f6213 /* "accum_buffer" */:		bit = GL_ACCUM_BUFFER_BIT; break;
-				case 0x632020be /* "stencil_buffer" */:		bit = GL_STENCIL_BUFFER_BIT; break;
-				case 0xe4abbac3 /* "viewport" */:			bit = GL_VIEWPORT_BIT; break;
-				case 0xe1ad931b /* "transform" */:			bit = GL_TRANSFORM_BIT; break;
-				case 0xaf8bb8ce /* "enable" */:				bit = GL_ENABLE_BIT; break;
-				case 0x0d759bbb /* "color_buffer" */:		bit = GL_COLOR_BUFFER_BIT; break;
-				case 0x4bc809b8 /* "hint" */:				bit = GL_HINT_BIT; break;
-				case 0x08d22e0f /* "eval" */:				bit = GL_EVAL_BIT; break;
-				case 0x0cfb5881 /* "list" */:				bit = GL_LIST_BIT; break;
-				case 0x3c6468f4 /* "texture" */:			bit = GL_TEXTURE_BIT; break;
-				case 0x0adbc081 /* "scissor" */:			bit = GL_SCISSOR_BIT; break;
-				case 0x13254bc4 /* "all" */:				bit = GL_ALL_ATTRIB_BITS; break;
-				}
-				if (attrib->BoolValue())
-					mask |= bit;
-				else
-					mask &= ~bit;
-			}
-
-			if (bake)
-			{
-				Expression::Append(buffer, DO_PushAttribBake, mask);
-				ConfigureDrawItems(aId, element, buffer, bake, context);
-				Expression::Append(buffer, DO_PopAttribBake);
-			}
-			else
-			{
-				Expression::Append(buffer, DO_PushAttrib, mask);
-				ConfigureDrawItems(aId, element, buffer, bake, context);
-				Expression::Append(buffer, DO_PopAttrib);
-			}
-
-		}
-		break;
-
 	case 0x4dead571 /* "bindtexture" */:
 		{
 			if (const char *name = element->Attribute("name"))
@@ -1792,6 +1564,23 @@ void ConfigureDrawItem(unsigned int aId, const tinyxml2::XMLElement *element, st
 				else
 				{
 					DebugPrint("Missing texture %s", name);
+				}
+			}
+			else
+			{
+				if (bake)
+				{
+#if 0
+					Expression::Append(buffer, DO_EnableBake, GL_TEXTURE_2D);
+#endif
+					Expression::Append(buffer, DO_BindTextureBake, GL_TEXTURE_2D, 0);
+				}
+				else
+				{
+#if 0
+					Expression::Append(buffer, DO_Enable, GL_TEXTURE_2D);
+#endif
+					Expression::Append(buffer, DO_BindTexture, GL_TEXTURE_2D, 0);
 				}
 			}
 		}
@@ -2072,6 +1861,21 @@ void ConfigureDrawItem(unsigned int aId, const tinyxml2::XMLElement *element, st
 		break;
 
 	default:
+		for (int index = 0; index < sAttribCount; ++index)
+		{
+			if (sAttribTag[index] == hash)
+			{
+				if (context)
+					context->mFormat |= 1 << index;
+				if (bake)
+					Expression::Append(buffer, DO_AttribValueBake, index);
+				else
+					Expression::Append(buffer, DO_AttribValue, index);
+				Expression::Loader<__m128>::ConfigureRoot(element, buffer, sAttribNames[index], sAttribDefault[index]);
+				return;
+			}
+		}
+
 		DebugPrint("Unknown draw item \"%s\"\n", element->Value());
 		break;
 	}
@@ -2102,9 +1906,17 @@ static void ConfigureStatic(unsigned int aId, const tinyxml2::XMLElement *elemen
 	assert(sIndexCount == 0);
 	sIndexCount = 0;
 
+	// set format
+	// TO DO: get this from the shader
+	SetAttribFormat(ShaderColor::gAttribPosition, sPositionWidth, GL_FLOAT);
+	SetAttribFormat(ShaderColor::gAttribColor, sColorWidth, GL_UNSIGNED_BYTE);
+
 	// configure draw items
 	BakeContext context(&buffer, NULL, 0, 0.0f, aId);
 	ConfigureDrawItems(aId, element, generate, true, &context);
+
+	// set the work format for bake
+	SetWorkFormat(context.mFormat);
 
 	// bake static geometry
 	context.mBegin = &generate[0];
