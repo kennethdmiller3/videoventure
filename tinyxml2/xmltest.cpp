@@ -1,5 +1,8 @@
-#include "tinyxml2.h"
+#if defined( _MSC_VER )
+	#define _CRT_SECURE_NO_WARNINGS		// This test file is not intended to be secure.
+#endif
 
+#include "tinyxml2.h"
 #include <cstdlib>
 #include <cstring>
 #include <ctime>
@@ -334,7 +337,7 @@ int main( int /*argc*/, const char ** /*argv*/ )
 
 		XMLDocument doc;
 		doc.Parse( error );
-		XMLTest( "Bad XML", doc.ErrorID(), (int)XML_ERROR_PARSING_ATTRIBUTE );
+		XMLTest( "Bad XML", doc.ErrorID(), XML_ERROR_PARSING_ATTRIBUTE );
 	}
 
 	{
@@ -633,7 +636,7 @@ int main( int /*argc*/, const char ** /*argv*/ )
 		XMLDocument doc;
 		doc.Parse( doctype );
 
-		XMLTest( "Parsing repeated attributes.", (int)XML_ERROR_PARSING_ATTRIBUTE, doc.ErrorID() );	// is an  error to tinyxml (didn't use to be, but caused issues)
+		XMLTest( "Parsing repeated attributes.", XML_ERROR_PARSING_ATTRIBUTE, doc.ErrorID() );	// is an  error to tinyxml (didn't use to be, but caused issues)
 		doc.PrintError();
 	}
 
@@ -651,7 +654,7 @@ int main( int /*argc*/, const char ** /*argv*/ )
 		const char* str = "    ";
 		XMLDocument doc;
 		doc.Parse( str );
-		XMLTest( "Empty document error", (int)XML_ERROR_EMPTY_DOCUMENT, doc.ErrorID() );
+		XMLTest( "Empty document error", XML_ERROR_EMPTY_DOCUMENT, doc.ErrorID() );
 	}
 
 	{
@@ -678,7 +681,7 @@ int main( int /*argc*/, const char ** /*argv*/ )
 		xml.Parse("<x> ");
 		XMLTest("Missing end tag with trailing whitespace", xml.Error(), true);
 		xml.Parse("<x></y>");
-		XMLTest("Mismatched tags", xml.ErrorID(), (int)XML_ERROR_MISMATCHED_ELEMENT);
+		XMLTest("Mismatched tags", xml.ErrorID(), XML_ERROR_MISMATCHED_ELEMENT);
 	}
 
 
@@ -943,6 +946,19 @@ int main( int /*argc*/, const char ** /*argv*/ )
 		}
 	}
 
+#if 0
+	{
+		// Passes if assert doesn't fire.
+		XMLDocument xmlDoc;
+
+	    xmlDoc.NewDeclaration();
+	    xmlDoc.NewComment("Configuration file");
+
+	    XMLElement *root = xmlDoc.NewElement("settings");
+	    root->SetAttribute("version", 2);
+	}
+#endif
+
 	{
 		const char* xml = "<element>    </element>";
 		XMLDocument doc( true, COLLAPSE_WHITESPACE );
@@ -961,6 +977,15 @@ int main( int /*argc*/, const char ** /*argv*/ )
 		doc.Print();
 	}
 #endif
+
+	{
+		// An assert should not fire.
+		const char* xml = "<element/>";
+		XMLDocument doc;
+		doc.Parse( xml );
+		XMLElement* ele = doc.NewElement( "unused" );		// This will get cleaned up with the 'doc' going out of scope.
+		XMLTest( "Tracking unused elements", true, ele != 0, false );
+	}
 
 	// ----------- Performance tracking --------------
 	{
