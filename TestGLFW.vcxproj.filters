@@ -375,9 +375,6 @@
     <ClInclude Include="Source\Expression\ExpressionOperator.h">
       <Filter>Expression</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Expression\ExpressionOperatorSIMD.h">
-      <Filter>Expression</Filter>
-    </ClInclude>
     <ClInclude Include="Source\Expression\ExpressionOscillator.h">
       <Filter>Expression</Filter>
     </ClInclude>
@@ -412,6 +409,9 @@
     </ClInclude>
     <ClInclude Include="Source\Physics\PhysicsUtilities.h">
       <Filter>Physics</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Core\UtilitySIMD.h">
+      <Filter>Core</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -764,9 +764,6 @@
       <Filter>Expression</Filter>
     </ClCompile>
     <ClCompile Include="Source\Expression\ExpressionOperator.cpp">
-      <Filter>Expression</Filter>
-    </ClCompile>
-    <ClCompile Include="Source\Expression\ExpressionOperatorSIMD.cpp">
       <Filter>Expression</Filter>
     </ClCompile>
     <ClCompile Include="Source\Expression\ExpressionOscillator.cpp">
