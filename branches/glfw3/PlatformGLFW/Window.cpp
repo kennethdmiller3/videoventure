@@ -50,12 +50,12 @@ namespace Platform
 		ShowCursor(false);
 
 		// set callbacks
-		glfwSetKeyCallback(KeyCallback);
-		glfwSetCharCallback(CharCallback);
-		glfwSetCursorPosCallback(MousePosCallback);
-		glfwSetMouseButtonCallback(MouseButtonCallback);
-		glfwSetScrollCallback(ScrollCallback);
-		glfwSetWindowCloseCallback(WindowCloseCallback);
+		glfwSetKeyCallback(sWindow, KeyCallback);
+		glfwSetCharCallback(sWindow, CharCallback);
+		glfwSetCursorPosCallback(sWindow, MousePosCallback);
+		glfwSetMouseButtonCallback(sWindow, MouseButtonCallback);
+		glfwSetScrollCallback(sWindow, ScrollCallback);
+		glfwSetWindowCloseCallback(sWindow, WindowCloseCallback);
 
 		// make it the current context
 		glfwMakeContextCurrent(sWindow);

@@ -89,6 +89,7 @@
     <ClInclude Include="Source\Core\TreeNode.h" />
     <ClInclude Include="Source\Core\Updatable.h" />
     <ClInclude Include="Source\Core\Utility.h" />
+    <ClInclude Include="Source\Core\UtilitySIMD.h" />
     <ClInclude Include="Source\Core\Variable.h" />
     <ClInclude Include="Source\Core\VarItem.h" />
     <ClInclude Include="Source\Core\Vector2.h" />
@@ -175,7 +176,6 @@
     <ClInclude Include="Source\Expression\ExpressionLogical.h" />
     <ClInclude Include="Source\Expression\ExpressionNoise.h" />
     <ClInclude Include="Source\Expression\ExpressionOperator.h" />
-    <ClInclude Include="Source\Expression\ExpressionOperatorSIMD.h" />
     <ClInclude Include="Source\Expression\ExpressionOscillator.h" />
     <ClInclude Include="Source\Expression\ExpressionRandom.h" />
     <ClInclude Include="Source\Expression\ExpressionRelational.h" />
@@ -309,7 +309,6 @@
     <ClCompile Include="Source\Expression\ExpressionLogical.cpp" />
     <ClCompile Include="Source\Expression\ExpressionNoise.cpp" />
     <ClCompile Include="Source\Expression\ExpressionOperator.cpp" />
-    <ClCompile Include="Source\Expression\ExpressionOperatorSIMD.cpp" />
     <ClCompile Include="Source\Expression\ExpressionOscillator.cpp" />
     <ClCompile Include="Source\Expression\ExpressionRandom.cpp" />
     <ClCompile Include="Source\Expression\ExpressionRelational.cpp" />
@@ -326,7 +325,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Chipmunk-6.1.1\msvc\vc10\chipmunk\chipmunk.vcxproj">
+    <ProjectReference Include="..\Chipmunk-6.1.3\msvc\vc10\chipmunk\chipmunk.vcxproj">
       <Project>{c1ace86e-5a14-490a-9678-104ba2546723}</Project>
     </ProjectReference>
     <ProjectReference Include="..\glfw3\msvc100\src\glfw.vcxproj">
