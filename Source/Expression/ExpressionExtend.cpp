@@ -15,6 +15,6 @@ namespace Expression
 	__m128 Extend(Context &aContext)
 	{
 		float arg(Evaluate<float>(aContext));
-		return _mm_set_ps1(arg);
+		return ::Extend<__m128>(arg);
 	}
 }

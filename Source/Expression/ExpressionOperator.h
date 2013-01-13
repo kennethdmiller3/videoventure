@@ -293,4 +293,4 @@ template <typename T, typename A, typename C> void ConfigureVariadic(T (expr)(C)
 	while (arg2);
 }
 
-#include "ExpressionOperatorSIMD.h"
+//#include "ExpressionOperatorSIMD.h"
