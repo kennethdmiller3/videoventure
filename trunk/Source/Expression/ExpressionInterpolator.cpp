@@ -68,7 +68,7 @@ template <> __m128 EvaluateApplyInterpolator<__m128>(int aCount, const float aKe
 	const float time1 = key[aStride];
 	const __m128 data1 = _mm_loadu_ps(&key[aStride + 1]);
 	const float t = (aTime - time0) / (time1 - time0 + FLT_EPSILON);
-	return _mm_add_ps(data0, _mm_mul_ps(_mm_sub_ps(data1, data0), _mm_set_ps1(t)));
+	return Lerp(data0, data1, t);
 }
 
 // apply constant interpolator (specialization for SIMD)

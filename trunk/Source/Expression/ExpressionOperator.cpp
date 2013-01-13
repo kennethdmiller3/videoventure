@@ -57,24 +57,23 @@ namespace Expression
 	}
 
 	// reciprocal
-	inline float Rcp(float v) { return 1.0f / v; };
 	template <typename T> T Rcp(Context &aContext)
 	{
-		return ComponentUnary<T>(aContext, Rcp);
+		return Unary<T, T>(aContext, ::Rcp);
 	}
 
 	// increment
-	inline float Inc(float v) { return v + 1.0f; };
 	template <typename T> T Inc(Context &aContext)
 	{
-		return ComponentUnary<T>(aContext, Inc);
+		const T arg1(Evaluate<T>(aContext));
+		return arg1 + ::Extend<T>(1);
 	}
 
 	// decrement
-	inline float Dec(float v) { return v - 1.0f; };
 	template <typename T> T Dec(Context &aContext)
 	{
-		return ComponentUnary<T>(aContext, Dec);
+		const T arg1(Evaluate<T>(aContext));
+		return arg1 - ::Extend<T>(1);
 	}
 
 
@@ -173,13 +172,13 @@ namespace Expression
 	// square root
 	template <typename T> T Sqrt(Context &aContext)
 	{
-		return ComponentUnary<T>(aContext, sqrtf);
+		return Unary<T>(aContext, ::Sqrt);
 	}
 
 	// reciprocal square root
 	template <typename T> T InvSqrt(Context &aContext)
 	{
-		return ComponentUnary<T>(aContext, ::InvSqrt);
+		return Unary<T>(aContext, ::InvSqrt);
 	}
 
 
@@ -190,14 +189,13 @@ namespace Expression
 	// absolute value
 	template <typename T> T Abs(Context &aContext)
 	{
-		return ComponentUnary<T>(aContext, fabsf);
+		return Unary<T>(aContext, ::Abs);
 	}
 
 	// sign
-	inline float Sign(float v) { return (v == 0) ? (0.0f) : ((v > 0) ? (1.0f) : (-1.0f)); }
 	template <typename T> T Sign(Context &aContext)
 	{
-		return ComponentUnary<T>(aContext, Sign);
+		return ComponentUnary<T>(aContext, ::Sign);
 	}
 
 	// floor
@@ -213,10 +211,9 @@ namespace Expression
 	}
 
 	// fraction
-	inline float Frac(float v) { return v - xs_FloorToInt(v); }
 	template <typename T> T Frac(Context &aContext)
 	{
-		return ComponentUnary<T>(aContext, Frac);
+		return ComponentUnary<T>(aContext, ::Frac);
 	}
 
 	// modulo
@@ -226,49 +223,39 @@ namespace Expression
 	}
 
 	// minimum
-	inline float Min(float a, float b) { return a < b ? a : b; };
 	template <typename T> T Min(Context &aContext)
 	{
-		return ComponentBinary<T>(aContext, Min);
+		return Binary<T, T, T>(aContext, ::Min);
 	}
 
 	// maximum
-	inline float Max(float a, float b) { return a > b ? a : b; };
 	template <typename T> T Max(Context &aContext)
 	{
-		return ComponentBinary<T>(aContext, Max);
+		return Binary<T, T, T>(aContext, ::Max);
 	}
 
 	// clamp
 	template <typename T> T Clamp(Context &aContext)
 	{
-		return ComponentTernary<T>(aContext, ::Clamp<float>);
+		return Ternary<T, T, T, T>(aContext, ::Clamp);
 	}
 
 	// linear interpolate
 	template <typename T> T Lerp(Context &aContext)
 	{
-		return Ternary<T, T, T, float>(aContext, ::Lerp<T>);
+		return Ternary<T, T, T, float>(aContext, ::Lerp);
 	}
 
 	// step
-	inline float Step(float e, float v) { return v < e ? 0.0f : 1.0f; }
 	template <typename T> T Step(Context &aContext)
 	{
-		return ComponentBinary<T>(aContext, Step);
+		return Binary<T, T, T>(aContext, ::Step);
 	}
 
 	// smooth step
-	inline float SmoothStep(float e0, float e1, float v)
-	{
-		if (v <= e0) return 0.0f;
-		if (v >= e1) return 1.0f;
-		float t = (v - e0) / (e1 - e0);
-		return t * t * (3 - 2 * t);
-	}
 	template <typename T> T SmoothStep(Context &aContext)
 	{
-		return ComponentTernary<T>(aContext, SmoothStep);
+		return Ternary<T, T, T, T>(aContext, ::SmoothStep);
 	}
 }
 
