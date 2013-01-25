@@ -75,9 +75,12 @@ static void ShellMenuVideoUpdateResolutionList(void)
 		}
 	}
 #elif defined(USE_GLFW)
+	// get the primary monitor
+	GLFWmonitor *monitor = glfwGetPrimaryMonitor();
+
 	// GLFW returns modes sorted by increasing depth, then by increasing resolution
 	int modecount;
-    GLFWvidmode* modes = glfwGetVideoModes(&modecount);
+    const GLFWvidmode* modes = glfwGetVideoModes(monitor, &modecount);
 
 	int depth = SCREEN_DEPTH ? std::min(SCREEN_DEPTH, 24) : 24;		// HACK
 	for (int i = 0; i < modecount; ++i)

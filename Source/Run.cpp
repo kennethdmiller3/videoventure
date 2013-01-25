@@ -152,7 +152,7 @@ static void Screenshot(void)
 
 static int consolekeyevent = 0;
 
-void KeyCallback(GLFWwindow aWindow, int aKey, int aAction)
+void KeyCallback(GLFWwindow *aWindow, int aKey, int aAction)
 {
 	if (aAction == GLFW_PRESS)
 	{
@@ -211,7 +211,7 @@ void KeyCallback(GLFWwindow aWindow, int aKey, int aAction)
 	}
 }
 
-void CharCallback(GLFWwindow aWindow, int aChar)
+void CharCallback(GLFWwindow *aWindow, int aChar)
 {
 	if (consolekeyevent)
 		return;
@@ -219,7 +219,7 @@ void CharCallback(GLFWwindow aWindow, int aChar)
 		return;
 }
 
-void MousePosCallback(GLFWwindow aWindow, int aPosX, int aPosY)
+void MousePosCallback(GLFWwindow *aWindow, int aPosX, int aPosY)
 {
 	// clamp position to the window boundary
 	aPosX = Clamp(aPosX, 0, SCREEN_WIDTH);
@@ -230,7 +230,7 @@ void MousePosCallback(GLFWwindow aWindow, int aPosX, int aPosY)
 	input.OnAxis(Input::TYPE_MOUSE_AXIS, 0, 1, float(aPosY * 2 - SCREEN_HEIGHT) / float(SCREEN_HEIGHT));
 }
 
-void MouseButtonCallback(GLFWwindow aWindow, int aButton, int aAction)
+void MouseButtonCallback(GLFWwindow *aWindow, int aButton, int aAction)
 {
 	if (aAction == GLFW_PRESS)
 		input.OnPress(Input::TYPE_MOUSE_BUTTON, 0, aButton);
@@ -238,11 +238,11 @@ void MouseButtonCallback(GLFWwindow aWindow, int aButton, int aAction)
 		input.OnRelease(Input::TYPE_MOUSE_BUTTON, 0, aButton);
 }
 
-void ScrollCallback(GLFWwindow aWindow, double aScrollX, double aScrollY)
+void ScrollCallback(GLFWwindow *aWindow, double aScrollX, double aScrollY)
 {
 }
 
-int WindowCloseCallback(GLFWwindow aWindow)
+int WindowCloseCallback(GLFWwindow *aWindow)
 {
 	setgamestate = STATE_QUIT;
 	return TRUE;
