@@ -1,16 +1,16 @@
 #include "StdAfx.h"
 
 // input callbacks
-extern void KeyCallback(GLFWwindow aWindow, int aKey, int aAction);
-extern void CharCallback(GLFWwindow aWindow, int aChar);
-extern void MousePosCallback(GLFWwindow aWindow, int aPosX, int aPosY);
-extern void MouseButtonCallback(GLFWwindow aWindow, int aButton, int aAction);
-extern void ScrollCallback(GLFWwindow aWindow, double aScrollX, double aScrollY);
-extern int WindowCloseCallback(GLFWwindow aWindow);
+extern void KeyCallback(GLFWwindow *aWindow, int aKey, int aAction);
+extern void CharCallback(GLFWwindow *aWindow, int aChar);
+extern void MousePosCallback(GLFWwindow *aWindow, int aPosX, int aPosY);
+extern void MouseButtonCallback(GLFWwindow *aWindow, int aButton, int aAction);
+extern void ScrollCallback(GLFWwindow *aWindow, double aScrollX, double aScrollY);
+extern int WindowCloseCallback(GLFWwindow *aWindow);
 
 namespace Platform
 {
-	static GLFWwindow sWindow;
+	static GLFWwindow *sWindow;
 
 	bool OpenWindow(void)
 	{
@@ -21,7 +21,7 @@ namespace Platform
 		glfwWindowHint(GLFW_ACCUM_BLUE_BITS, 16);
 		glfwWindowHint(GLFW_ACCUM_ALPHA_BITS, 16);
 #endif
-		glfwWindowHint(GLFW_FSAA_SAMPLES, OPENGL_MULTISAMPLE);
+		glfwWindowHint(GLFW_SAMPLES, OPENGL_MULTISAMPLE);
 		glfwWindowHint(GLFW_RED_BITS, 8);
 		glfwWindowHint(GLFW_GREEN_BITS, 8);
 		glfwWindowHint(GLFW_BLUE_BITS, 8);
@@ -37,9 +37,11 @@ namespace Platform
 #endif
 		glfwWindowHint(GLFW_STENCIL_BITS, 0);
 		
+		// get the primary monitor
+		GLFWmonitor *monitor = SCREEN_FULLSCREEN ? glfwGetPrimaryMonitor() : NULL;
+
 		// create the window
-		sWindow = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT,
-			SCREEN_FULLSCREEN ? GLFW_FULLSCREEN : GLFW_WINDOWED, "VideoVenture", NULL);
+		sWindow = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "VideoVenture", monitor, NULL);
 		if (!sWindow)
 			return false;
 
