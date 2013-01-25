@@ -188,6 +188,7 @@ void KeyCallback(GLFWwindow *aWindow, int aKey, int aAction)
 			}
 			break;
 		case GLFW_KEY_PAUSE:
+		case 'P':
 			if (glfwGetKey(aWindow, GLFW_KEY_LEFT_SHIFT) || glfwGetKey(aWindow, GLFW_KEY_RIGHT_SHIFT))
 			{
 				paused = true;
@@ -293,6 +294,7 @@ static void ReadInput()
 					}
 					break;
 				case SDLK_PAUSE:
+				case SDLK_p:
 					if (event.key.keysym.mod & KMOD_SHIFT)
 					{
 						paused = true;
@@ -382,6 +384,7 @@ static void ReadInput()
 					}
 					break;
 				case sf::Key::Pause:
+				case sf::Key::P:
 					if (event.Key.Shift)
 					{
 						paused = true;
