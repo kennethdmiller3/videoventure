@@ -17,6 +17,9 @@
 // OpenGL 1.2
 PFNGLDRAWRANGEELEMENTSPROC glDrawRangeElements;
 
+// OpenGL 1.3
+PFNGLACTIVETEXTUREPROC glActiveTexture;
+
 // OpenGL 1.5
 PFNGLGENBUFFERSPROC glGenBuffers;
 PFNGLDELETEBUFFERSPROC glDeleteBuffers;
@@ -74,7 +77,7 @@ PFNGLVERTEXATTRIBPOINTERPROC glVertexAttribPointer;
 
 // ARB vertex array object
 PFNGLBINDVERTEXARRAYPROC glBindVertexArray;
-PFNGLDELETEVERTEXARRAYSPROC glDeleteVertexArray;
+PFNGLDELETEVERTEXARRAYSPROC glDeleteVertexArrays;
 PFNGLGENVERTEXARRAYSPROC glGenVertexArrays;
 PFNGLISVERTEXARRAYPROC glIsVertexArray;
 
@@ -171,6 +174,9 @@ void BindFunctionPointers(void)
 	// bind 1.2 function pointers
 	glDrawRangeElements = static_cast<PFNGLDRAWRANGEELEMENTSPROC>(glfwGetProcAddress("glDrawRangeElements"));
 
+	// bind 1.3 function pointers
+	glActiveTexture = static_cast<PFNGLACTIVETEXTUREPROC>(glfwGetProcAddress("glActiveTexture"));
+
 	// bind 1.5 function pointers
 	glGenBuffers = static_cast<PFNGLGENBUFFERSPROC>(glfwGetProcAddress("glGenBuffers"));
 	glDeleteBuffers = static_cast<PFNGLDELETEBUFFERSPROC>(glfwGetProcAddress("glDeleteBuffers"));
@@ -228,7 +234,7 @@ void BindFunctionPointers(void)
 
 	// ARB vertex array object
 	glBindVertexArray = static_cast<PFNGLBINDVERTEXARRAYPROC>(glfwGetProcAddress("glBindVertexArray"));
-	glDeleteVertexArray = static_cast<PFNGLDELETEVERTEXARRAYSPROC>(glfwGetProcAddress("glDeleteVertexArray"));
+	glDeleteVertexArrays = static_cast<PFNGLDELETEVERTEXARRAYSPROC>(glfwGetProcAddress("glDeleteVertexArrays"));
 	glGenVertexArrays = static_cast<PFNGLGENVERTEXARRAYSPROC>(glfwGetProcAddress("glGenVertexArrays"));
 	glIsVertexArray = static_cast<PFNGLISVERTEXARRAYPROC>(glfwGetProcAddress("glIsVertexArray"));
 
