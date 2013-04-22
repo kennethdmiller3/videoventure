@@ -2,11 +2,11 @@
 
 // input callbacks
 extern void KeyCallback(GLFWwindow *aWindow, int aKey, int aAction);
-extern void CharCallback(GLFWwindow *aWindow, int aChar);
-extern void MousePosCallback(GLFWwindow *aWindow, int aPosX, int aPosY);
+extern void CharCallback(GLFWwindow *aWindow, unsigned int aChar);
+extern void MousePosCallback(GLFWwindow *aWindow, double aPosX, double aPosY);
 extern void MouseButtonCallback(GLFWwindow *aWindow, int aButton, int aAction);
 extern void ScrollCallback(GLFWwindow *aWindow, double aScrollX, double aScrollY);
-extern int WindowCloseCallback(GLFWwindow *aWindow);
+extern void WindowCloseCallback(GLFWwindow *aWindow);
 
 namespace Platform
 {
