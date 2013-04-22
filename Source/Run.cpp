@@ -154,8 +154,13 @@ static int consolekeyevent = 0;
 
 void KeyCallback(GLFWwindow *aWindow, int aKey, int aAction)
 {
-	if (aAction == GLFW_PRESS)
+	switch (aAction)
 	{
+	case GLFW_RELEASE:
+		input.OnRelease(Input::TYPE_KEYBOARD, 0, aKey);
+		break;
+
+	case GLFW_PRESS:
 		consolekeyevent = console->KeyEvent(aKey, (glfwGetKey(aWindow, GLFW_KEY_LEFT_SHIFT)) | (glfwGetKey(aWindow, GLFW_KEY_RIGHT_SHIFT) << 1));
 		if (consolekeyevent)
 			return;
@@ -205,14 +210,16 @@ void KeyCallback(GLFWwindow *aWindow, int aKey, int aAction)
 				Resume();
 			break;
 		}
-	}
-	else
-	{
-		input.OnRelease(Input::TYPE_KEYBOARD, 0, aKey);
+		break;
+
+	case GLFW_REPEAT:
+		consolekeyevent = console->KeyEvent(aKey, (glfwGetKey(aWindow, GLFW_KEY_LEFT_SHIFT)) | (glfwGetKey(aWindow, GLFW_KEY_RIGHT_SHIFT) << 1));
+		if (consolekeyevent)
+			return;
 	}
 }
 
-void CharCallback(GLFWwindow *aWindow, int aChar)
+void CharCallback(GLFWwindow *aWindow, unsigned int aChar)
 {
 	if (consolekeyevent)
 		return;
@@ -220,11 +227,11 @@ void CharCallback(GLFWwindow *aWindow, int aChar)
 		return;
 }
 
-void MousePosCallback(GLFWwindow *aWindow, int aPosX, int aPosY)
+void MousePosCallback(GLFWwindow *aWindow, double aPosX, double aPosY)
 {
 	// clamp position to the window boundary
-	aPosX = Clamp(aPosX, 0, SCREEN_WIDTH);
-	aPosY = Clamp(aPosY, 0, SCREEN_HEIGHT);
+	aPosX = Clamp<double>(aPosX, 0, SCREEN_WIDTH);
+	aPosY = Clamp<double>(aPosY, 0, SCREEN_HEIGHT);
 	glfwSetCursorPos(aWindow, aPosX, aPosY);
 
 	input.OnAxis(Input::TYPE_MOUSE_AXIS, 0, 0, float(aPosX * 2 - SCREEN_WIDTH) / float(SCREEN_HEIGHT));
@@ -243,10 +250,9 @@ void ScrollCallback(GLFWwindow *aWindow, double aScrollX, double aScrollY)
 {
 }
 
-int WindowCloseCallback(GLFWwindow *aWindow)
+void WindowCloseCallback(GLFWwindow *aWindow)
 {
 	setgamestate = STATE_QUIT;
-	return TRUE;
 }
 
 #endif
