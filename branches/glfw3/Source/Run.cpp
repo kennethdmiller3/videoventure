@@ -152,7 +152,7 @@ static void Screenshot(void)
 
 static int consolekeyevent = 0;
 
-void KeyCallback(GLFWwindow *aWindow, int aKey, int aAction)
+void KeyCallback(GLFWwindow *aWindow, int aKey, int aAction, int aMods)
 {
 	switch (aAction)
 	{
@@ -172,11 +172,11 @@ void KeyCallback(GLFWwindow *aWindow, int aKey, int aAction)
 		switch (aKey)
 		{
 		case GLFW_KEY_F4:
-			if (glfwGetKey(aWindow, GLFW_KEY_LEFT_ALT) || glfwGetKey(aWindow, GLFW_KEY_RIGHT_ALT))
+			if (aMods & GLFW_MOD_ALT)
 				setgamestate = STATE_QUIT;
 			break;
 		case GLFW_KEY_ENTER:
-			if (glfwGetKey(aWindow, GLFW_KEY_LEFT_ALT) || glfwGetKey(aWindow, GLFW_KEY_RIGHT_ALT))
+			if (aMods & GLFW_MOD_ALT)
 			{
 				CloseWindow();
 				SCREEN_FULLSCREEN = !SCREEN_FULLSCREEN;
@@ -194,7 +194,7 @@ void KeyCallback(GLFWwindow *aWindow, int aKey, int aAction)
 			break;
 		case GLFW_KEY_PAUSE:
 		case 'P':
-			if (glfwGetKey(aWindow, GLFW_KEY_LEFT_SHIFT) || glfwGetKey(aWindow, GLFW_KEY_RIGHT_SHIFT))
+			if (aMods & GLFW_MOD_SHIFT)
 			{
 				paused = true;
 				singlestep = true;
@@ -238,7 +238,7 @@ void MousePosCallback(GLFWwindow *aWindow, double aPosX, double aPosY)
 	input.OnAxis(Input::TYPE_MOUSE_AXIS, 0, 1, float(aPosY * 2 - SCREEN_HEIGHT) / float(SCREEN_HEIGHT));
 }
 
-void MouseButtonCallback(GLFWwindow *aWindow, int aButton, int aAction)
+void MouseButtonCallback(GLFWwindow *aWindow, int aButton, int aAction, int aMods)
 {
 	if (aAction == GLFW_PRESS)
 		input.OnPress(Input::TYPE_MOUSE_BUTTON, 0, aButton);
@@ -440,19 +440,17 @@ static void ReadInput()
 		glfwPollEvents();
 
 		// get current joystick state
-		if (glfwGetJoystickParam(0, GLFW_PRESENT))
+		if (glfwJoystickPresent(0))
 		{
 			// get joystick axis positions
-			int axiscount = glfwGetJoystickParam(0, GLFW_AXES);
-			float *axis = static_cast<float *>(_alloca(axiscount * sizeof(float)));
-			axiscount = glfwGetJoystickAxes(0, axis, axiscount);
+			int axiscount;
+			float *axis = glfwGetJoystickAxes(0, &axiscount);
 			for (int i = 0; i < axiscount; ++i)
 				input.OnAxis(Input::TYPE_JOYSTICK_AXIS, 0, i, axis[i]);
 
 			// get joystick button states
-			int buttoncount = glfwGetJoystickParam(0, GLFW_BUTTONS);
-			unsigned char *button = static_cast<unsigned char *>(_alloca(buttoncount * sizeof(unsigned char)));
-			buttoncount = glfwGetJoystickButtons(0, button, buttoncount);
+			int buttoncount;
+			unsigned char *button = glfwGetJoystickButtons(0, &buttoncount);
 			for (int i = 0; i < buttoncount; ++i)
 				input.OnAxis(Input::TYPE_JOYSTICK_BUTTON, 0, i, button[i]);
 		}
