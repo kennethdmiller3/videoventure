@@ -351,7 +351,7 @@ void Console::YankHistory()
 #define KEY_PAGEDOWN    SDLK_PAGEDOWN
 #endif
 #ifdef USE_GLFW
-#include <GL/glfw3.h>
+#include <GLFW/glfw3.h>
 #define KEY_BACKSPACE   GLFW_KEY_BACKSPACE
 #define KEY_DELETE      GLFW_KEY_DEL
 #define KEY_RETURN      GLFW_KEY_ENTER

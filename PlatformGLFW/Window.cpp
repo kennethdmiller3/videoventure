@@ -1,10 +1,10 @@
 #include "StdAfx.h"
 
 // input callbacks
-extern void KeyCallback(GLFWwindow *aWindow, int aKey, int aAction);
+extern void KeyCallback(GLFWwindow *aWindow, int aKey, int aAction, int aMods);
 extern void CharCallback(GLFWwindow *aWindow, unsigned int aChar);
 extern void MousePosCallback(GLFWwindow *aWindow, double aPosX, double aPosY);
-extern void MouseButtonCallback(GLFWwindow *aWindow, int aButton, int aAction);
+extern void MouseButtonCallback(GLFWwindow *aWindow, int aButton, int aAction, int aMods);
 extern void ScrollCallback(GLFWwindow *aWindow, double aScrollX, double aScrollY);
 extern void WindowCloseCallback(GLFWwindow *aWindow);
 
@@ -74,9 +74,9 @@ namespace Platform
 	void ShowCursor(bool aShow)
 	{
 		if (aShow)
-			glfwSetInputMode(sWindow, GLFW_CURSOR_MODE, GLFW_CURSOR_NORMAL);
+			glfwSetInputMode(sWindow, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 		else
-			glfwSetInputMode(sWindow, GLFW_CURSOR_MODE, GLFW_CURSOR_CAPTURED);
+			glfwSetInputMode(sWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	}
 
 	// grab input
