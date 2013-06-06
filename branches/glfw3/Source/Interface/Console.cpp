@@ -353,14 +353,14 @@ void Console::YankHistory()
 #ifdef USE_GLFW
 #include <GLFW/glfw3.h>
 #define KEY_BACKSPACE   GLFW_KEY_BACKSPACE
-#define KEY_DELETE      GLFW_KEY_DEL
+#define KEY_DELETE      GLFW_KEY_DELETE
 #define KEY_RETURN      GLFW_KEY_ENTER
 #define KEY_UP          GLFW_KEY_UP
 #define KEY_DOWN        GLFW_KEY_DOWN
 #define KEY_LEFT        GLFW_KEY_LEFT
 #define KEY_RIGHT       GLFW_KEY_RIGHT
-#define KEY_PAGEUP      GLFW_KEY_PAGEUP
-#define KEY_PAGEDOWN    GLFW_KEY_PAGEDOWN
+#define KEY_PAGEUP      GLFW_KEY_PAGE_UP
+#define KEY_PAGEDOWN    GLFW_KEY_PAGE_DOWN
 #define KMOD_LSHIFT     1
 #define KMOD_RSHIFT     2
 #define KMOD_SHIFT      (KMOD_LSHIFT|KMOD_RSHIFT)
