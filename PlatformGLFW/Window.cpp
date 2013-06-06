@@ -1,7 +1,7 @@
 #include "StdAfx.h"
 
 // input callbacks
-extern void KeyCallback(GLFWwindow *aWindow, int aKey, int aAction, int aMods);
+extern void KeyCallback(GLFWwindow *aWindow, int aKey, int aCode, int aAction, int aMods);
 extern void CharCallback(GLFWwindow *aWindow, unsigned int aChar);
 extern void MousePosCallback(GLFWwindow *aWindow, double aPosX, double aPosY);
 extern void MouseButtonCallback(GLFWwindow *aWindow, int aButton, int aAction, int aMods);

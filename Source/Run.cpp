@@ -152,7 +152,7 @@ static void Screenshot(void)
 
 static int consolekeyevent = 0;
 
-void KeyCallback(GLFWwindow *aWindow, int aKey, int aAction, int aMods)
+void KeyCallback(GLFWwindow *aWindow, int aKey, int aCode, int aAction, int aMods)
 {
 	switch (aAction)
 	{
@@ -183,7 +183,7 @@ void KeyCallback(GLFWwindow *aWindow, int aKey, int aAction, int aMods)
 				OpenWindow();
 			}
 			break;
-		case GLFW_KEY_ESC:
+		case GLFW_KEY_ESCAPE:
 			if (curgamestate == STATE_PLAY)
 			{
 				if (escape)
@@ -444,13 +444,13 @@ static void ReadInput()
 		{
 			// get joystick axis positions
 			int axiscount;
-			float *axis = glfwGetJoystickAxes(0, &axiscount);
+			const float *axis = glfwGetJoystickAxes(0, &axiscount);
 			for (int i = 0; i < axiscount; ++i)
 				input.OnAxis(Input::TYPE_JOYSTICK_AXIS, 0, i, axis[i]);
 
 			// get joystick button states
 			int buttoncount;
-			unsigned char *button = glfwGetJoystickButtons(0, &buttoncount);
+			const unsigned char *button = glfwGetJoystickButtons(0, &buttoncount);
 			for (int i = 0; i < buttoncount; ++i)
 				input.OnAxis(Input::TYPE_JOYSTICK_BUTTON, 0, i, button[i]);
 		}
