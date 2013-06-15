@@ -172,74 +172,74 @@ float sFogEnd;
 void BindFunctionPointers(void)
 {
 	// bind 1.2 function pointers
-	glDrawRangeElements = static_cast<PFNGLDRAWRANGEELEMENTSPROC>(glfwGetProcAddress("glDrawRangeElements"));
+	glDrawRangeElements = reinterpret_cast<PFNGLDRAWRANGEELEMENTSPROC>(glfwGetProcAddress("glDrawRangeElements"));
 
 	// bind 1.3 function pointers
-	glActiveTexture = static_cast<PFNGLACTIVETEXTUREPROC>(glfwGetProcAddress("glActiveTexture"));
+	glActiveTexture = reinterpret_cast<PFNGLACTIVETEXTUREPROC>(glfwGetProcAddress("glActiveTexture"));
 
 	// bind 1.5 function pointers
-	glGenBuffers = static_cast<PFNGLGENBUFFERSPROC>(glfwGetProcAddress("glGenBuffers"));
-	glDeleteBuffers = static_cast<PFNGLDELETEBUFFERSPROC>(glfwGetProcAddress("glDeleteBuffers"));
-	glBindBuffer = static_cast<PFNGLBINDBUFFERPROC>(glfwGetProcAddress("glBindBuffer"));
-	glBufferData = static_cast<PFNGLBUFFERDATAPROC>(glfwGetProcAddress("glBufferData"));
-	glBufferSubData = static_cast<PFNGLBUFFERSUBDATAPROC>(glfwGetProcAddress("glBufferSubData"));
-	glMapBuffer = static_cast<PFNGLMAPBUFFERPROC>(glfwGetProcAddress("glMapBuffer"));
-	glMapBufferRange = static_cast<PFNGLMAPBUFFERRANGEPROC>(glfwGetProcAddress("glMapBufferRange"));
-	glUnmapBuffer = static_cast<PFNGLUNMAPBUFFERPROC>(glfwGetProcAddress("glUnmapBuffer"));
+	glGenBuffers = reinterpret_cast<PFNGLGENBUFFERSPROC>(glfwGetProcAddress("glGenBuffers"));
+	glDeleteBuffers = reinterpret_cast<PFNGLDELETEBUFFERSPROC>(glfwGetProcAddress("glDeleteBuffers"));
+	glBindBuffer = reinterpret_cast<PFNGLBINDBUFFERPROC>(glfwGetProcAddress("glBindBuffer"));
+	glBufferData = reinterpret_cast<PFNGLBUFFERDATAPROC>(glfwGetProcAddress("glBufferData"));
+	glBufferSubData = reinterpret_cast<PFNGLBUFFERSUBDATAPROC>(glfwGetProcAddress("glBufferSubData"));
+	glMapBuffer = reinterpret_cast<PFNGLMAPBUFFERPROC>(glfwGetProcAddress("glMapBuffer"));
+	glMapBufferRange = reinterpret_cast<PFNGLMAPBUFFERRANGEPROC>(glfwGetProcAddress("glMapBufferRange"));
+	glUnmapBuffer = reinterpret_cast<PFNGLUNMAPBUFFERPROC>(glfwGetProcAddress("glUnmapBuffer"));
 
 	// bind 2.0 function pointers
-	glAttachShader = static_cast<PFNGLATTACHSHADERPROC>(glfwGetProcAddress("glAttachShader"));
-	glDrawBuffers = static_cast<PFNGLDRAWBUFFERSPROC>(glfwGetProcAddress("glDrawBuffers"));
-	glBindAttribLocation = static_cast<PFNGLBINDATTRIBLOCATIONPROC>(glfwGetProcAddress("glBindAttribLocation"));
-	glCompileShader = static_cast<PFNGLCOMPILESHADERPROC>(glfwGetProcAddress("glCompileShader"));
-	glCreateProgram = static_cast<PFNGLCREATEPROGRAMPROC>(glfwGetProcAddress("glCreateProgram"));
-	glCreateShader = static_cast<PFNGLCREATESHADERPROC>(glfwGetProcAddress("glCreateShader"));
-	glDeleteProgram = static_cast<PFNGLDELETEPROGRAMPROC>(glfwGetProcAddress("glDeleteProgram"));
-	glDeleteShader = static_cast<PFNGLDELETESHADERPROC>(glfwGetProcAddress("glDeleteShader"));
-	glDetachShader = static_cast<PFNGLDETACHSHADERPROC>(glfwGetProcAddress("glDetachShader"));
-	glDisableVertexAttribArray = static_cast<PFNGLDISABLEVERTEXATTRIBARRAYPROC>(glfwGetProcAddress("glDisableVertexAttribArray"));
-	glEnableVertexAttribArray = static_cast<PFNGLENABLEVERTEXATTRIBARRAYPROC>(glfwGetProcAddress("glEnableVertexAttribArray"));
-	glGetAttribLocation = static_cast<PFNGLGETATTRIBLOCATIONPROC>(glfwGetProcAddress("glGetAttribLocation"));
-	glGetProgramiv = static_cast<PFNGLGETPROGRAMIVPROC>(glfwGetProcAddress("glGetProgramiv"));
-	glGetProgramInfoLog = static_cast<PFNGLGETPROGRAMINFOLOGPROC>(glfwGetProcAddress("glGetProgramInfoLog"));
-	glGetShaderiv = static_cast<PFNGLGETSHADERIVPROC>(glfwGetProcAddress("glGetShaderiv"));
-	glGetShaderInfoLog = static_cast<PFNGLGETSHADERINFOLOGPROC>(glfwGetProcAddress("glGetShaderInfoLog"));
-	glGetUniformLocation = static_cast<PFNGLGETUNIFORMLOCATIONPROC>(glfwGetProcAddress("glGetUniformLocation"));
-	glIsProgram = static_cast<PFNGLISPROGRAMPROC>(glfwGetProcAddress("glIsProgram"));
-	glIsShader = static_cast<PFNGLISSHADERPROC>(glfwGetProcAddress("glIsShader"));
-	glLinkProgram = static_cast<PFNGLLINKPROGRAMPROC>(glfwGetProcAddress("glLinkProgram"));
-	glShaderSource = static_cast<PFNGLSHADERSOURCEPROC>(glfwGetProcAddress("glShaderSource"));
-	glUseProgram = static_cast<PFNGLUSEPROGRAMPROC>(glfwGetProcAddress("glUseProgram"));
-	glUniform1f = static_cast<PFNGLUNIFORM1FPROC>(glfwGetProcAddress("glUniform1f"));
-	glUniform2f = static_cast<PFNGLUNIFORM2FPROC>(glfwGetProcAddress("glUniform2f"));
-	glUniform3f = static_cast<PFNGLUNIFORM3FPROC>(glfwGetProcAddress("glUniform3f"));
-	glUniform4f = static_cast<PFNGLUNIFORM4FPROC>(glfwGetProcAddress("glUniform4f"));
-	glUniform1i = static_cast<PFNGLUNIFORM1IPROC>(glfwGetProcAddress("glUniform1i"));
-	glUniform1fv = static_cast<PFNGLUNIFORM1FVPROC>(glfwGetProcAddress("glUniform1fv"));
-	glUniform2fv = static_cast<PFNGLUNIFORM2FVPROC>(glfwGetProcAddress("glUniform2fv"));
-	glUniform3fv = static_cast<PFNGLUNIFORM3FVPROC>(glfwGetProcAddress("glUniform3fv"));
-	glUniform4fv = static_cast<PFNGLUNIFORM4FVPROC>(glfwGetProcAddress("glUniform4fv"));
-	glUniformMatrix4fv = static_cast<PFNGLUNIFORMMATRIX4FVPROC>(glfwGetProcAddress("glUniformMatrix4fv"));
-	glValidateProgram = static_cast<PFNGLVALIDATEPROGRAMPROC>(glfwGetProcAddress("glValidateProgram"));
-	glVertexAttrib1f = static_cast<PFNGLVERTEXATTRIB1FPROC>(glfwGetProcAddress("glVertexAttrib1f"));
-	glVertexAttrib1fv = static_cast<PFNGLVERTEXATTRIB1FVPROC>(glfwGetProcAddress("glVertexAttrib1fv"));
-	glVertexAttrib2f = static_cast<PFNGLVERTEXATTRIB2FPROC>(glfwGetProcAddress("glVertexAttrib2f"));
-	glVertexAttrib2fv = static_cast<PFNGLVERTEXATTRIB2FVPROC>(glfwGetProcAddress("glVertexAttrib2fv"));
-	glVertexAttrib3f = static_cast<PFNGLVERTEXATTRIB3FPROC>(glfwGetProcAddress("glVertexAttrib3f"));
-	glVertexAttrib3fv = static_cast<PFNGLVERTEXATTRIB3FVPROC>(glfwGetProcAddress("glVertexAttrib3fv"));
-	glVertexAttrib4f = static_cast<PFNGLVERTEXATTRIB4FPROC>(glfwGetProcAddress("glVertexAttrib4f"));
-	glVertexAttrib4fv = static_cast<PFNGLVERTEXATTRIB4FVPROC>(glfwGetProcAddress("glVertexAttrib4fv"));
-	glVertexAttrib4Nubv = static_cast<PFNGLVERTEXATTRIB4NUBVPROC>(glfwGetProcAddress("glVertexAttrib4Nubv"));
-	glVertexAttribPointer = static_cast<PFNGLVERTEXATTRIBPOINTERPROC>(glfwGetProcAddress("glVertexAttribPointer"));
+	glAttachShader = reinterpret_cast<PFNGLATTACHSHADERPROC>(glfwGetProcAddress("glAttachShader"));
+	glDrawBuffers = reinterpret_cast<PFNGLDRAWBUFFERSPROC>(glfwGetProcAddress("glDrawBuffers"));
+	glBindAttribLocation = reinterpret_cast<PFNGLBINDATTRIBLOCATIONPROC>(glfwGetProcAddress("glBindAttribLocation"));
+	glCompileShader = reinterpret_cast<PFNGLCOMPILESHADERPROC>(glfwGetProcAddress("glCompileShader"));
+	glCreateProgram = reinterpret_cast<PFNGLCREATEPROGRAMPROC>(glfwGetProcAddress("glCreateProgram"));
+	glCreateShader = reinterpret_cast<PFNGLCREATESHADERPROC>(glfwGetProcAddress("glCreateShader"));
+	glDeleteProgram = reinterpret_cast<PFNGLDELETEPROGRAMPROC>(glfwGetProcAddress("glDeleteProgram"));
+	glDeleteShader = reinterpret_cast<PFNGLDELETESHADERPROC>(glfwGetProcAddress("glDeleteShader"));
+	glDetachShader = reinterpret_cast<PFNGLDETACHSHADERPROC>(glfwGetProcAddress("glDetachShader"));
+	glDisableVertexAttribArray = reinterpret_cast<PFNGLDISABLEVERTEXATTRIBARRAYPROC>(glfwGetProcAddress("glDisableVertexAttribArray"));
+	glEnableVertexAttribArray = reinterpret_cast<PFNGLENABLEVERTEXATTRIBARRAYPROC>(glfwGetProcAddress("glEnableVertexAttribArray"));
+	glGetAttribLocation = reinterpret_cast<PFNGLGETATTRIBLOCATIONPROC>(glfwGetProcAddress("glGetAttribLocation"));
+	glGetProgramiv = reinterpret_cast<PFNGLGETPROGRAMIVPROC>(glfwGetProcAddress("glGetProgramiv"));
+	glGetProgramInfoLog = reinterpret_cast<PFNGLGETPROGRAMINFOLOGPROC>(glfwGetProcAddress("glGetProgramInfoLog"));
+	glGetShaderiv = reinterpret_cast<PFNGLGETSHADERIVPROC>(glfwGetProcAddress("glGetShaderiv"));
+	glGetShaderInfoLog = reinterpret_cast<PFNGLGETSHADERINFOLOGPROC>(glfwGetProcAddress("glGetShaderInfoLog"));
+	glGetUniformLocation = reinterpret_cast<PFNGLGETUNIFORMLOCATIONPROC>(glfwGetProcAddress("glGetUniformLocation"));
+	glIsProgram = reinterpret_cast<PFNGLISPROGRAMPROC>(glfwGetProcAddress("glIsProgram"));
+	glIsShader = reinterpret_cast<PFNGLISSHADERPROC>(glfwGetProcAddress("glIsShader"));
+	glLinkProgram = reinterpret_cast<PFNGLLINKPROGRAMPROC>(glfwGetProcAddress("glLinkProgram"));
+	glShaderSource = reinterpret_cast<PFNGLSHADERSOURCEPROC>(glfwGetProcAddress("glShaderSource"));
+	glUseProgram = reinterpret_cast<PFNGLUSEPROGRAMPROC>(glfwGetProcAddress("glUseProgram"));
+	glUniform1f = reinterpret_cast<PFNGLUNIFORM1FPROC>(glfwGetProcAddress("glUniform1f"));
+	glUniform2f = reinterpret_cast<PFNGLUNIFORM2FPROC>(glfwGetProcAddress("glUniform2f"));
+	glUniform3f = reinterpret_cast<PFNGLUNIFORM3FPROC>(glfwGetProcAddress("glUniform3f"));
+	glUniform4f = reinterpret_cast<PFNGLUNIFORM4FPROC>(glfwGetProcAddress("glUniform4f"));
+	glUniform1i = reinterpret_cast<PFNGLUNIFORM1IPROC>(glfwGetProcAddress("glUniform1i"));
+	glUniform1fv = reinterpret_cast<PFNGLUNIFORM1FVPROC>(glfwGetProcAddress("glUniform1fv"));
+	glUniform2fv = reinterpret_cast<PFNGLUNIFORM2FVPROC>(glfwGetProcAddress("glUniform2fv"));
+	glUniform3fv = reinterpret_cast<PFNGLUNIFORM3FVPROC>(glfwGetProcAddress("glUniform3fv"));
+	glUniform4fv = reinterpret_cast<PFNGLUNIFORM4FVPROC>(glfwGetProcAddress("glUniform4fv"));
+	glUniformMatrix4fv = reinterpret_cast<PFNGLUNIFORMMATRIX4FVPROC>(glfwGetProcAddress("glUniformMatrix4fv"));
+	glValidateProgram = reinterpret_cast<PFNGLVALIDATEPROGRAMPROC>(glfwGetProcAddress("glValidateProgram"));
+	glVertexAttrib1f = reinterpret_cast<PFNGLVERTEXATTRIB1FPROC>(glfwGetProcAddress("glVertexAttrib1f"));
+	glVertexAttrib1fv = reinterpret_cast<PFNGLVERTEXATTRIB1FVPROC>(glfwGetProcAddress("glVertexAttrib1fv"));
+	glVertexAttrib2f = reinterpret_cast<PFNGLVERTEXATTRIB2FPROC>(glfwGetProcAddress("glVertexAttrib2f"));
+	glVertexAttrib2fv = reinterpret_cast<PFNGLVERTEXATTRIB2FVPROC>(glfwGetProcAddress("glVertexAttrib2fv"));
+	glVertexAttrib3f = reinterpret_cast<PFNGLVERTEXATTRIB3FPROC>(glfwGetProcAddress("glVertexAttrib3f"));
+	glVertexAttrib3fv = reinterpret_cast<PFNGLVERTEXATTRIB3FVPROC>(glfwGetProcAddress("glVertexAttrib3fv"));
+	glVertexAttrib4f = reinterpret_cast<PFNGLVERTEXATTRIB4FPROC>(glfwGetProcAddress("glVertexAttrib4f"));
+	glVertexAttrib4fv = reinterpret_cast<PFNGLVERTEXATTRIB4FVPROC>(glfwGetProcAddress("glVertexAttrib4fv"));
+	glVertexAttrib4Nubv = reinterpret_cast<PFNGLVERTEXATTRIB4NUBVPROC>(glfwGetProcAddress("glVertexAttrib4Nubv"));
+	glVertexAttribPointer = reinterpret_cast<PFNGLVERTEXATTRIBPOINTERPROC>(glfwGetProcAddress("glVertexAttribPointer"));
 
 	// ARB vertex array object
-	glBindVertexArray = static_cast<PFNGLBINDVERTEXARRAYPROC>(glfwGetProcAddress("glBindVertexArray"));
-	glDeleteVertexArrays = static_cast<PFNGLDELETEVERTEXARRAYSPROC>(glfwGetProcAddress("glDeleteVertexArrays"));
-	glGenVertexArrays = static_cast<PFNGLGENVERTEXARRAYSPROC>(glfwGetProcAddress("glGenVertexArrays"));
-	glIsVertexArray = static_cast<PFNGLISVERTEXARRAYPROC>(glfwGetProcAddress("glIsVertexArray"));
+	glBindVertexArray = reinterpret_cast<PFNGLBINDVERTEXARRAYPROC>(glfwGetProcAddress("glBindVertexArray"));
+	glDeleteVertexArrays = reinterpret_cast<PFNGLDELETEVERTEXARRAYSPROC>(glfwGetProcAddress("glDeleteVertexArrays"));
+	glGenVertexArrays = reinterpret_cast<PFNGLGENVERTEXARRAYSPROC>(glfwGetProcAddress("glGenVertexArrays"));
+	glIsVertexArray = reinterpret_cast<PFNGLISVERTEXARRAYPROC>(glfwGetProcAddress("glIsVertexArray"));
 
 	// bind 3.0 function pointers
-	glGetStringi = static_cast<PFNGLGETSTRINGIPROC>(glfwGetProcAddress("glGetStringi"));
+	glGetStringi = reinterpret_cast<PFNGLGETSTRINGIPROC>(glfwGetProcAddress("glGetStringi"));
 }
 
 // initialize work buffer
