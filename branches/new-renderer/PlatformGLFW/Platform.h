@@ -8,7 +8,8 @@
 #endif
 
 // GLFW includes
-#include <GL/glfw.h>
+#define GLFW_INCLUDE_GLU
+#include <GLFW/glfw3.h>
 
 #define USE_GLFW
 
@@ -25,22 +26,11 @@ namespace Platform
 	extern bool LoadTexture(TextureTemplate &aTexture, const char *aName);
 
 	// show/hide the cursor
-	inline void ShowCursor(bool aShow)
-	{
-		if (aShow)
-			glfwEnable(GLFW_MOUSE_CURSOR);
-		else
-			glfwDisable(GLFW_MOUSE_CURSOR);
-	}
+	extern void ShowCursor(bool aShow);
 
 	// grab input
-	inline void GrabInput(bool aGrab)
-	{
-	}
+	extern void GrabInput(bool aGrab);
 
 	// show back buffer
-	inline void Present(void)
-	{
-		glfwSwapBuffers();
-	}
+	extern void Present(void);
 }

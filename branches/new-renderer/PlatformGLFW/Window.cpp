@@ -1,70 +1,93 @@
 #include "StdAfx.h"
 
 // input callbacks
-extern void KeyCallback(int aIndex, int aState);
-extern void CharCallback(int aIndex, int aState);
-extern void MousePosCallback(int aPosX, int aPosY);
-extern void MouseButtonCallback(int aIndex, int aState);
-extern void MouseWheelCallback(int aPos);
-extern int WindowCloseCallback();
+extern void KeyCallback(GLFWwindow *aWindow, int aKey, int aCode, int aAction, int aMods);
+extern void CharCallback(GLFWwindow *aWindow, unsigned int aChar);
+extern void MousePosCallback(GLFWwindow *aWindow, double aPosX, double aPosY);
+extern void MouseButtonCallback(GLFWwindow *aWindow, int aButton, int aAction, int aMods);
+extern void ScrollCallback(GLFWwindow *aWindow, double aScrollX, double aScrollY);
+extern void WindowCloseCallback(GLFWwindow *aWindow);
 
 namespace Platform
 {
+	static GLFWwindow *sWindow;
+
 	bool OpenWindow(void)
 	{
 		// set window hints
+		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
 #ifdef ENABLE_ACCUMULATION_BUFFER
-		glfwOpenWindowHint(GLFW_ACCUM_RED_BITS, 16);
-		glfwOpenWindowHint(GLFW_ACCUM_GREEN_BITS, 16);
-		glfwOpenWindowHint(GLFW_ACCUM_BLUE_BITS, 16);
-		glfwOpenWindowHint(GLFW_ACCUM_ALPHA_BITS, 16);
+		glfwWindowHint(GLFW_ACCUM_RED_BITS, 16);
+		glfwWindowHint(GLFW_ACCUM_GREEN_BITS, 16);
+		glfwWindowHint(GLFW_ACCUM_BLUE_BITS, 16);
+		glfwWindowHint(GLFW_ACCUM_ALPHA_BITS, 16);
 #endif
-		glfwOpenWindowHint(GLFW_FSAA_SAMPLES, OPENGL_MULTISAMPLE);
-		glfwOpenWindowHint(GLFW_OPENGL_VERSION_MAJOR, 2);
-		//glfwOpenWindowHint(GLFW_OPENGL_VERSION_MAJOR, 3);
-		//glfwOpenWindowHint(GLFW_OPENGL_VERSION_MINOR, 3);
-		//glfwOpenWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);	// not ready for this yet...
-#ifdef DEBUG
-		glfwOpenWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, 1);
-#endif
-
-		// create the window
-		if (!glfwOpenWindow(SCREEN_WIDTH, SCREEN_HEIGHT,
+		glfwWindowHint(GLFW_SAMPLES, OPENGL_MULTISAMPLE);
+		glfwWindowHint(GLFW_RED_BITS, 8);
+		glfwWindowHint(GLFW_GREEN_BITS, 8);
+		glfwWindowHint(GLFW_BLUE_BITS, 8);
 #ifdef ENABLE_SRC_ALPHA_SATURATE
-			8, 8, 8, 8,
+		glfwWindowHint(GLFW_ALPHA_BITS, 8);
 #else
-			8, 8, 8, 0,
+		glfwWindowHint(GLFW_ALPHA_BITS, 0);
 #endif
 #ifdef ENABLE_DEPTH
-			16, 0,
+		glfwWindowHint(GLFW_DEPTH_BITS, 16);
 #else
-			0, 0,
+		glfwWindowHint(GLFW_DEPTH_BITS, 0);
 #endif
-			SCREEN_FULLSCREEN ? GLFW_FULLSCREEN : GLFW_WINDOW))
+		glfwWindowHint(GLFW_STENCIL_BITS, 0);
+		
+		// get the primary monitor
+		GLFWmonitor *monitor = SCREEN_FULLSCREEN ? glfwGetPrimaryMonitor() : NULL;
+
+		// create the window
+		sWindow = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "VideoVenture", monitor, NULL);
+		if (!sWindow)
 			return false;
 
-		// set the title
-		glfwSetWindowTitle("Shmup!");
-
 		// set vertical sync
-		glfwSwapInterval( OPENGL_SWAPCONTROL );
+		glfwSwapInterval(OPENGL_SWAPCONTROL);
 
 		// hide the mouse cursor
-		glfwDisable(GLFW_MOUSE_CURSOR);
+		ShowCursor(false);
 
 		// set callbacks
-		glfwSetKeyCallback(KeyCallback);
-		glfwSetCharCallback(CharCallback);
-		glfwSetMousePosCallback(MousePosCallback);
-		glfwSetMouseButtonCallback(MouseButtonCallback);
-		glfwSetMouseWheelCallback(MouseWheelCallback);
-		glfwSetWindowCloseCallback(WindowCloseCallback);
+		glfwSetKeyCallback(sWindow, KeyCallback);
+		glfwSetCharCallback(sWindow, CharCallback);
+		glfwSetCursorPosCallback(sWindow, MousePosCallback);
+		glfwSetMouseButtonCallback(sWindow, MouseButtonCallback);
+		glfwSetScrollCallback(sWindow, ScrollCallback);
+		glfwSetWindowCloseCallback(sWindow, WindowCloseCallback);
+
+		// make it the current context
+		glfwMakeContextCurrent(sWindow);
 
 		return true;
 	}
 
 	void CloseWindow(void)
 	{
-		glfwCloseWindow();
+		glfwDestroyWindow(sWindow);
+	}
+
+	// show/hide the cursor
+	void ShowCursor(bool aShow)
+	{
+		if (aShow)
+			glfwSetInputMode(sWindow, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+		else
+			glfwSetInputMode(sWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	}
+
+	// grab input
+	void GrabInput(bool aGrab)
+	{
+	}
+
+	// show back buffer
+	void Present(void)
+	{
+		glfwSwapBuffers(sWindow);
 	}
 }
