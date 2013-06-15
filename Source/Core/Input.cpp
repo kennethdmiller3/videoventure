@@ -173,9 +173,12 @@ void Input::Update(void)
 		scale = 1.0f;
 	output[MOVE_VERTICAL] = value[MOVE_VERTICAL] * scale;
 	output[MOVE_HORIZONTAL] = value[MOVE_HORIZONTAL] * scale;
-#else
+#elif 0
 	output[MOVE_VERTICAL] = Clamp(value[MOVE_VERTICAL], -1.0f, 1.0f);
 	output[MOVE_HORIZONTAL] = Clamp(value[MOVE_HORIZONTAL], -1.0f, 1.0f);
+#else
+	output[MOVE_VERTICAL] = value[MOVE_VERTICAL];
+	output[MOVE_HORIZONTAL] = value[MOVE_HORIZONTAL];
 #endif
 
 #ifdef INPUT_UNIT_VECTOR
@@ -187,7 +190,7 @@ void Input::Update(void)
 		scale = 1.0f;
 	output[AIM_VERTICAL] = value[AIM_VERTICAL] * scale;
 	output[AIM_HORIZONTAL] = value[AIM_HORIZONTAL] * scale;
-#elif 1
+#elif 0
 	output[AIM_VERTICAL] = Clamp(value[AIM_VERTICAL], -1.0f, 1.0f);
 	output[AIM_HORIZONTAL] = Clamp(value[AIM_HORIZONTAL], -1.0f, 1.0f);
 #else

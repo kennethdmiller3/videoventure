@@ -75,16 +75,20 @@ static void ShellMenuVideoUpdateResolutionList(void)
 		}
 	}
 #elif defined(USE_GLFW)
+	// get the primary monitor
+	GLFWmonitor *monitor = glfwGetPrimaryMonitor();
+
 	// GLFW returns modes sorted by increasing depth, then by increasing resolution
-	GLFWvidmode *modes = static_cast<GLFWvidmode *>(_alloca(256 * sizeof(GLFWvidmode)));
-	int modecount = glfwGetVideoModes(modes, 256);
+	int modecount;
+	const GLFWvidmode* modes = glfwGetVideoModes(monitor, &modecount);
+
 	int depth = SCREEN_DEPTH ? std::min(SCREEN_DEPTH, 24) : 24;		// HACK
 	for (int i = 0; i < modecount; ++i)
 	{
-		if (modes[i].RedBits + modes[i].GreenBits + modes[i].BlueBits == depth)
+		if (modes[i].redBits + modes[i].greenBits + modes[i].blueBits == depth)
 		{
-			shellmenuvideoresolutionlist[shellmenuvideoresolutioncount].w = static_cast<unsigned short>(modes[i].Width);
-			shellmenuvideoresolutionlist[shellmenuvideoresolutioncount].h = static_cast<unsigned short>(modes[i].Height);
+			shellmenuvideoresolutionlist[shellmenuvideoresolutioncount].w = static_cast<unsigned short>(modes[i].width);
+			shellmenuvideoresolutionlist[shellmenuvideoresolutioncount].h = static_cast<unsigned short>(modes[i].height);
 			++shellmenuvideoresolutioncount;
 		}
 	}
