@@ -328,13 +328,8 @@
     <ProjectReference Include="..\Chipmunk-6.1.5\msvc\vc10\chipmunk\chipmunk.vcxproj">
       <Project>{c1ace86e-5a14-490a-9678-104ba2546723}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\glfw\support\msvc100\GLFW.vcxproj">
-      <Project>{4da03747-f505-4a98-9124-03b3b73b9b3b}</Project>
-      <Private>true</Private>
-      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
-      <CopyLocalSatelliteAssemblies>false</CopyLocalSatelliteAssemblies>
-      <LinkLibraryDependencies>true</LinkLibraryDependencies>
-      <UseLibraryDependencyInputs>false</UseLibraryDependencyInputs>
+    <ProjectReference Include="..\glfw3\msvc100\src\glfw.vcxproj">
+      <Project>{7944cf84-a187-43f6-b024-5e8870572a77}</Project>
     </ProjectReference>
     <ProjectReference Include="tinyxml2\tinyxml2\tinyxml2.vcxproj">
       <Project>{16a1d446-5415-444e-a7b4-f35b7da7ee8c}</Project>

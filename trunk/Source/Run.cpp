@@ -152,33 +152,38 @@ static void Screenshot(void)
 
 static int consolekeyevent = 0;
 
-void KeyCallback(int aIndex, int aState)
+void KeyCallback(GLFWwindow *aWindow, int aKey, int aCode, int aAction, int aMods)
 {
-	if (aState == GLFW_PRESS)
+	switch (aAction)
 	{
-		consolekeyevent = console->KeyEvent(aIndex, (glfwGetKey(GLFW_KEY_LSHIFT)) | (glfwGetKey(GLFW_KEY_RSHIFT) << 1));
+	case GLFW_RELEASE:
+		input.OnRelease(Input::TYPE_KEYBOARD, 0, aKey);
+		break;
+
+	case GLFW_PRESS:
+		consolekeyevent = console->KeyEvent(aKey, (glfwGetKey(aWindow, GLFW_KEY_LEFT_SHIFT)) | (glfwGetKey(aWindow, GLFW_KEY_RIGHT_SHIFT) << 1));
 		if (consolekeyevent)
 			return;
 		if (console->GetVisibility())
 			return;
 
-		input.OnPress(Input::TYPE_KEYBOARD, 0, aIndex);
+		input.OnPress(Input::TYPE_KEYBOARD, 0, aKey);
 
-		switch (aIndex)
+		switch (aKey)
 		{
 		case GLFW_KEY_F4:
-			if (glfwGetKey(GLFW_KEY_LALT) || glfwGetKey(GLFW_KEY_RALT))
+			if (aMods & GLFW_MOD_ALT)
 				setgamestate = STATE_QUIT;
 			break;
 		case GLFW_KEY_ENTER:
-			if (glfwGetKey(GLFW_KEY_LALT) || glfwGetKey(GLFW_KEY_RALT))
+			if (aMods & GLFW_MOD_ALT)
 			{
 				CloseWindow();
 				SCREEN_FULLSCREEN = !SCREEN_FULLSCREEN;
 				OpenWindow();
 			}
 			break;
-		case GLFW_KEY_ESC:
+		case GLFW_KEY_ESCAPE:
 			if (curgamestate == STATE_PLAY)
 			{
 				if (escape)
@@ -189,7 +194,7 @@ void KeyCallback(int aIndex, int aState)
 			break;
 		case GLFW_KEY_PAUSE:
 		case 'P':
-			if (glfwGetKey(GLFW_KEY_LSHIFT) || glfwGetKey(GLFW_KEY_RSHIFT))
+			if (aMods & GLFW_MOD_SHIFT)
 			{
 				paused = true;
 				singlestep = true;
@@ -205,46 +210,49 @@ void KeyCallback(int aIndex, int aState)
 				Resume();
 			break;
 		}
-	}
-	else
-	{
-		input.OnRelease(Input::TYPE_KEYBOARD, 0, aIndex);
-	}
-}
+		break;
 
-void CharCallback(int aIndex, int aState)
-{
-	if (aState == GLFW_PRESS)
-	{
+	case GLFW_REPEAT:
+		consolekeyevent = console->KeyEvent(aKey, (glfwGetKey(aWindow, GLFW_KEY_LEFT_SHIFT)) | (glfwGetKey(aWindow, GLFW_KEY_RIGHT_SHIFT) << 1));
 		if (consolekeyevent)
 			return;
-		if (console->CharEvent(aIndex))
-			return;
 	}
 }
 
-void MousePosCallback(int aPosX, int aPosY)
+void CharCallback(GLFWwindow *aWindow, unsigned int aChar)
 {
+	if (consolekeyevent)
+		return;
+	if (console->CharEvent(aChar))
+		return;
+}
+
+void MousePosCallback(GLFWwindow *aWindow, double aPosX, double aPosY)
+{
+	// clamp position to the window boundary
+	aPosX = Clamp<double>(aPosX, 0, SCREEN_WIDTH);
+	aPosY = Clamp<double>(aPosY, 0, SCREEN_HEIGHT);
+	glfwSetCursorPos(aWindow, aPosX, aPosY);
+
 	input.OnAxis(Input::TYPE_MOUSE_AXIS, 0, 0, float(aPosX * 2 - SCREEN_WIDTH) / float(SCREEN_HEIGHT));
 	input.OnAxis(Input::TYPE_MOUSE_AXIS, 0, 1, float(aPosY * 2 - SCREEN_HEIGHT) / float(SCREEN_HEIGHT));
 }
 
-void MouseButtonCallback(int aIndex, int aState)
+void MouseButtonCallback(GLFWwindow *aWindow, int aButton, int aAction, int aMods)
 {
-	if (aState == GLFW_PRESS)
-		input.OnPress(Input::TYPE_MOUSE_BUTTON, 0, aIndex);
+	if (aAction == GLFW_PRESS)
+		input.OnPress(Input::TYPE_MOUSE_BUTTON, 0, aButton);
 	else
-		input.OnRelease(Input::TYPE_MOUSE_BUTTON, 0, aIndex);
+		input.OnRelease(Input::TYPE_MOUSE_BUTTON, 0, aButton);
 }
 
-void MouseWheelCallback(int aPos)
+void ScrollCallback(GLFWwindow *aWindow, double aScrollX, double aScrollY)
 {
 }
 
-int WindowCloseCallback()
+void WindowCloseCallback(GLFWwindow *aWindow)
 {
 	setgamestate = STATE_QUIT;
-	return TRUE;
 }
 
 #endif
@@ -428,19 +436,21 @@ static void ReadInput()
 			}
 		}
 #elif defined(USE_GLFW)
-		if (glfwGetJoystickParam(0, GLFW_PRESENT))
+		// poll events
+		glfwPollEvents();
+
+		// get current joystick state
+		if (glfwJoystickPresent(0))
 		{
 			// get joystick axis positions
-			int axiscount = glfwGetJoystickParam(0, GLFW_AXES);
-			float *axis = static_cast<float *>(_alloca(axiscount * sizeof(float)));
-			axiscount = glfwGetJoystickPos(0, axis, axiscount);
+			int axiscount;
+			const float *axis = glfwGetJoystickAxes(0, &axiscount);
 			for (int i = 0; i < axiscount; ++i)
 				input.OnAxis(Input::TYPE_JOYSTICK_AXIS, 0, i, axis[i]);
 
 			// get joystick button states
-			int buttoncount = glfwGetJoystickParam(0, GLFW_BUTTONS);
-			unsigned char *button = static_cast<unsigned char *>(_alloca(buttoncount * sizeof(unsigned char)));
-			buttoncount = glfwGetJoystickButtons(0, button, buttoncount);
+			int buttoncount;
+			const unsigned char *button = glfwGetJoystickButtons(0, &buttoncount);
 			for (int i = 0; i < buttoncount; ++i)
 				input.OnAxis(Input::TYPE_JOYSTICK_BUTTON, 0, i, button[i]);
 		}
