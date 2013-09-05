@@ -25,7 +25,7 @@ int gPass = 0;
 int gFail = 0;
 
 
-bool XMLTest (const char* testString, const char* expected, const char* found, bool echo=true )
+bool XMLTest (const char* testString, const char* expected, const char* found, bool echo=true, bool extraNL=false )
 {
 	bool pass = !strcmp( expected, found );
 	if ( pass )
@@ -33,10 +33,19 @@ bool XMLTest (const char* testString, const char* expected, const char* found, b
 	else
 		printf ("[fail]");
 
-	if ( !echo )
+	if ( !echo ) {
 		printf (" %s\n", testString);
-	else
-		printf (" %s [%s][%s]\n", testString, expected, found);
+	}
+	else {
+		if ( extraNL ) {
+			printf( " %s\n", testString );
+			printf( "%s\n", expected );
+			printf( "%s\n", found );
+		}
+		else {
+			printf (" %s [%s][%s]\n", testString, expected, found);
+		}
+	}
 
 	if ( pass )
 		++gPass;
@@ -142,7 +151,7 @@ int example_3()
 	@dontinclude ./xmltest.cpp
 	In this example, we navigate a simple XML
 	file, and read some interesting text. Note
-	that this is examlpe doesn't use error
+	that this example doesn't use error
 	checking; working code should check for null
 	pointers when walking an XML tree, or use
 	XMLHandle.
@@ -271,7 +280,12 @@ int main( int argc, const char ** argv )
 	#endif
 
 	#if defined(_MSC_VER) || defined(MINGW32) || defined(__MINGW32__)
-		_mkdir( "resources/out/" );
+		#if defined __MINGW64_VERSION_MAJOR && defined __MINGW64_VERSION_MINOR
+			//MINGW64: both 32 and 64-bit
+			mkdir( "resources/out/" );
+                #else
+                	_mkdir( "resources/out/" );
+                #endif
 	#else
 		mkdir( "resources/out/", S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 	#endif
@@ -287,9 +301,9 @@ int main( int argc, const char ** argv )
 
 		printf( "Test file '%s' loaded. ErrorID=%d\n", argv[1], errorID );
 		if ( !errorID ) {
-			printf( "Load time=%d\n", loadTime - startTime );
-			printf( "Delete time=%d\n", deleteTime - loadTime );
-			printf( "Total time=%d\n", deleteTime - startTime );
+			printf( "Load time=%u\n",   (unsigned)(loadTime - startTime) );
+			printf( "Delete time=%u\n", (unsigned)(deleteTime - loadTime) );
+			printf( "Total time=%u\n",  (unsigned)(deleteTime - startTime) );
 		}
 		exit(0);
 	}
@@ -487,6 +501,7 @@ int main( int argc, const char ** argv )
 		XMLTest( "Query attribute: int as double", result, (int)XML_NO_ERROR );
 		XMLTest( "Query attribute: int as double", (int)dVal, 1 );
 		result = ele->QueryDoubleAttribute( "attr1", &dVal );
+		XMLTest( "Query attribute: double as double", result, (int)XML_NO_ERROR );
 		XMLTest( "Query attribute: double as double", (int)dVal, 2 );
 		result = ele->QueryIntAttribute( "attr1", &iVal );
 		XMLTest( "Query attribute: double as int", result, (int)XML_NO_ERROR );
@@ -1158,6 +1173,35 @@ int main( int argc, const char ** argv )
 	}
 
 
+	{
+		XMLDocument doc;
+		XMLError error = doc.LoadFile( "resources/empty.xml" );
+		XMLTest( "Loading an empty file", XML_ERROR_EMPTY_DOCUMENT, error );
+	}
+
+	{
+        // BOM preservation
+        static const char* xml_bom_preservation  = "\xef\xbb\xbf<element/>\n";
+        {
+			XMLDocument doc;
+			XMLTest( "BOM preservation (parse)", XML_NO_ERROR, doc.Parse( xml_bom_preservation ), false );
+            XMLPrinter printer;
+            doc.Print( &printer );
+
+            XMLTest( "BOM preservation (compare)", xml_bom_preservation, printer.CStr(), false, true );
+			doc.SaveFile( "resources/bomtest.xml" );
+        }
+		{
+			XMLDocument doc;
+			doc.LoadFile( "resources/bomtest.xml" );
+			XMLTest( "BOM preservation (load)", true, doc.HasBOM(), false );
+
+            XMLPrinter printer;
+            doc.Print( &printer );
+            XMLTest( "BOM preservation (compare)", xml_bom_preservation, printer.CStr(), false, true );
+		}
+	}
+
 	// ----------- Performance tracking --------------
 	{
 #if defined( _MSC_VER )
@@ -1218,5 +1262,6 @@ int main( int argc, const char ** argv )
 	#endif
 
 	printf ("\nPass %d, Fail %d\n", gPass, gFail);
-	return 0;
+
+	return gFail;
 }
