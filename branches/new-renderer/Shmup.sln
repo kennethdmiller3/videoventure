@@ -1,11 +1,6 @@
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual C++ Express 2010
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tinyxml2", "tinyxml2\tinyxml2\tinyxml2.vcxproj", "{16A1D446-5415-444E-A7B4-F35B7DA7EE8C}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test", "test.vcxproj", "{FC5E6837-9810-43F3-AE5D-A4CDDDF5D1AF}"
-	ProjectSection(ProjectDependencies) = postProject
-		{16A1D446-5415-444E-A7B4-F35B7DA7EE8C} = {16A1D446-5415-444E-A7B4-F35B7DA7EE8C}
-	EndProjectSection
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tinyxml2", "tinyxml2\tinyxml2\tinyxml2.vcxproj", "{D1C528B6-AA02-4D29-9D61-DC08E317A70D}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Hash", "Hash\Hash.vcxproj", "{E6A62552-2C5D-430F-9DFF-DEA7FC3F723F}"
 EndProject
@@ -35,10 +30,10 @@ Global
 		Release|Win32 = Release|Win32
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{16A1D446-5415-444E-A7B4-F35B7DA7EE8C}.Debug|Win32.ActiveCfg = Debug|Win32
-		{16A1D446-5415-444E-A7B4-F35B7DA7EE8C}.Debug|Win32.Build.0 = Debug|Win32
-		{16A1D446-5415-444E-A7B4-F35B7DA7EE8C}.Release|Win32.ActiveCfg = Release|Win32
-		{16A1D446-5415-444E-A7B4-F35B7DA7EE8C}.Release|Win32.Build.0 = Release|Win32
+		{D1C528B6-AA02-4D29-9D61-DC08E317A70D}.Debug|Win32.ActiveCfg = Debug-Lib|Win32
+		{D1C528B6-AA02-4D29-9D61-DC08E317A70D}.Debug|Win32.Build.0 = Debug-Lib|Win32
+		{D1C528B6-AA02-4D29-9D61-DC08E317A70D}.Release|Win32.ActiveCfg = Release-Lib|Win32
+		{D1C528B6-AA02-4D29-9D61-DC08E317A70D}.Release|Win32.Build.0 = Release-Lib|Win32
 		{FC5E6837-9810-43F3-AE5D-A4CDDDF5D1AF}.Debug|Win32.ActiveCfg = Debug|Win32
 		{FC5E6837-9810-43F3-AE5D-A4CDDDF5D1AF}.Debug|Win32.Build.0 = Debug|Win32
 		{FC5E6837-9810-43F3-AE5D-A4CDDDF5D1AF}.Release|Win32.ActiveCfg = Release|Win32
