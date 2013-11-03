@@ -1,5 +1,6 @@
 TinyXML-2
 =========
+![TinyXML-2 Logo](http://www.grinninglizard.com/tinyxml2/TinyXML2_small.png)
 
 TinyXML-2 is a simple, small, efficient, C++ XML parser that can be 
 easily integrated into other programs.
@@ -59,7 +60,10 @@ complete XML needs, TinyXML-2 is not the parser for you.
 TinyXML-1 vs. TinyXML-2
 -----------------------
 
-Which should you use? TinyXML-2 uses a similar API to TinyXML-1 and the same
+TinyXML-2 is now the focus of all development, well tested, and your
+best choice unless you have a requirement to maintain TinyXML-1 code.
+
+TinyXML-2 uses a similar API to TinyXML-1 and the same
 rich test cases. But the implementation of the parser is completely re-written
 to make it more appropriate for use in a game. It uses less memory, is faster,
 and uses far fewer memory allocations.
@@ -165,7 +169,7 @@ characters. Namely:
 	&quot;	"
 	&apos;	'
 
-These are recognized when the XML document is read, and translated to there
+These are recognized when the XML document is read, and translated to their
 UTF-8 equivalents. For instance, text with the XML of:
 
 	Far &amp; Away
@@ -307,3 +311,6 @@ Berquin and Andrew Ellerton who were key contributors.
 TinyXML-2 grew from that effort. Lee Thomason is the original author
 of TinyXML-2 (and TinyXML-1) but hopefully TinyXML-2 will be improved
 by many contributors.
+
+Thanks to John Mackay for the TinyXML-2 logo.
+
