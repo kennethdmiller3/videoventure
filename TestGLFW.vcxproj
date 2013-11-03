@@ -332,12 +332,7 @@
       <Project>{7944cf84-a187-43f6-b024-5e8870572a77}</Project>
     </ProjectReference>
     <ProjectReference Include="tinyxml2\tinyxml2\tinyxml2.vcxproj">
-      <Project>{16a1d446-5415-444e-a7b4-f35b7da7ee8c}</Project>
-      <Private>true</Private>
-      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
-      <CopyLocalSatelliteAssemblies>false</CopyLocalSatelliteAssemblies>
-      <LinkLibraryDependencies>true</LinkLibraryDependencies>
-      <UseLibraryDependencyInputs>false</UseLibraryDependencyInputs>
+      <Project>{d1c528b6-aa02-4d29-9d61-dc08e317a70d}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
