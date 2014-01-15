@@ -422,16 +422,19 @@ void XMLUtil::ToStr( bool v, char* buffer, int bufferSize )
     TIXML_SNPRINTF( buffer, bufferSize, "%d", v ? 1 : 0 );
 }
 
-
+/*
+	ToStr() of a number is a very tricky topic.
+	https://github.com/leethomason/tinyxml2/issues/106
+*/
 void XMLUtil::ToStr( float v, char* buffer, int bufferSize )
 {
-    TIXML_SNPRINTF( buffer, bufferSize, "%f", v );
+    TIXML_SNPRINTF( buffer, bufferSize, "%.8g", v );
 }
 
 
 void XMLUtil::ToStr( double v, char* buffer, int bufferSize )
 {
-    TIXML_SNPRINTF( buffer, bufferSize, "%f", v );
+    TIXML_SNPRINTF( buffer, bufferSize, "%.17g", v );
 }
 
 
@@ -497,12 +500,7 @@ char* XMLDocument::Identify( char* p, XMLNode** node )
     }
 
     // What is this thing?
-    // - Elements start with a letter or underscore, but xml is reserved.
-    // - Comments: <!--
-    // - Declaration: <?
-    // - Everything else is unknown to tinyxml.
-    //
-
+	// These strings define the matching patters:
     static const char* xmlHeader		= { "<?" };
     static const char* commentHeader	= { "<!--" };
     static const char* dtdHeader		= { "<!" };
@@ -1639,6 +1637,13 @@ XMLError XMLDocument::LoadFile( FILE* fp )
 {
     Clear();
 
+    fseek( fp, 0, SEEK_SET );
+    fgetc( fp );
+    if ( ferror( fp ) != 0 ) {
+        SetError( XML_ERROR_FILE_READ_ERROR, 0, 0 );
+        return _errorID;
+    }
+
     fseek( fp, 0, SEEK_END );
     size_t size = ftell( fp );
     fseek( fp, 0, SEEK_SET );
@@ -1701,6 +1706,11 @@ XMLError XMLDocument::Parse( const char* p, size_t len )
 {
 	const char* start = p;
     Clear();
+
+    if ( len == 0 ) {
+        SetError( XML_ERROR_EMPTY_DOCUMENT, 0, 0 );
+        return _errorID;
+    }
 
     if ( !p || !*p ) {
         SetError( XML_ERROR_EMPTY_DOCUMENT, 0, 0 );
