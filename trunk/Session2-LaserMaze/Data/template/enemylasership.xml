@@ -75,8 +75,10 @@
 	<ship maxveloc="48" maxaccel="128" minaccel="32" maxomega="1" />
 	<damagable health="3" spawnondeath="enemyexplosion" />
 	<weapon>
+		<offset x="0" y="5" angle="0"/>
 		<flash name="enemylasershiptracer"/>
 		<shot delay="5.0" />
 	</weapon>
+	<team name="red"/>
 	<points value="300" />
 </template>
