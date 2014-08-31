@@ -1,5 +1,68 @@
 <?xml version="1.0" ?>
 <template name="enemylasership">
+	<collidable>
+		<body name="main">
+			<circle radius="6">
+				<density value="1"/>
+				<friction value="0.5"/>
+				<restitution value="0.5"/>
+				<category value="3"/>
+			</circle>
+		</body>
+	</collidable>
+	<renderable radius="6">
+		<drawlist>
+			<color r="1.0" g="0.8" b="0.1" a="1.0"/>
+			<quads>
+				<vertex x="0.75" y="2"/>
+				<vertex x="-0.75" y="2"/>
+				<vertex x="-0.5" y="6"/>
+				<vertex x="0.5" y="6"/>
+			</quads>
+			<color r="0.5" g="0.6" b="0.7" a="1.0"/>
+			<triangle_strip>
+				<vertex x="1.5" y="-5"/>
+				<vertex x="-1.5" y="-5"/>
+				<vertex x="1.5" y="-3.5"/>
+				<vertex x="-1.5" y="-3.5"/>
+				<vertex x="0.5" y="-2.5"/>
+				<vertex x="-0.5" y="-2.5"/>
+				<vertex x="0.75" y="-1"/>
+				<vertex x="-0.75" y="-1"/>
+				<vertex x="3.5" y="-1"/>
+				<vertex x="-3.5" y="-1"/>
+				<vertex x="3.5" y="1"/>
+				<vertex x="-3.5" y="1"/>
+				<vertex x="1.5" y="2"/>
+				<vertex x="-1.5" y="2"/>
+				<vertex x="1.0" y="3"/>
+				<vertex x="-1.0" y="3"/>
+			</triangle_strip>
+			<color r="1.0" g="0.2" b="0.1" a="1.0"/>
+			<triangle_strip>
+				<vertex x="2.5" y="-3"/>
+				<vertex x="5.5" y="-3"/>
+				<vertex x="2.5" y="-2.5"/>
+				<vertex x="5.5" y="-2.5"/>
+				<vertex x="3.5" y="-1.5"/>
+				<vertex x="4.5" y="-1.5"/>
+				<vertex x="3.5" y="3"/>
+				<vertex x="4.5" y="3"/>
+				<vertex x="4" y="3.5"/>
+			</triangle_strip>
+			<triangle_strip>
+				<vertex x="-2.5" y="-3"/>
+				<vertex x="-5.5" y="-3"/>
+				<vertex x="-2.5" y="-2.5"/>
+				<vertex x="-5.5" y="-2.5"/>
+				<vertex x="-3.5" y="-1.5"/>
+				<vertex x="-4.5" y="-1.5"/>
+				<vertex x="-3.5" y="3"/>
+				<vertex x="-4.5" y="3"/>
+				<vertex x="-4" y="3.5"/>
+			</triangle_strip>
+		</drawlist>
+	</renderable>
 	<!--aimer range="512" focus="5" attack="128" leading="0" angle="30" evade="1" close="64" closedistscale="0.0625" closespeedscale="0.015625" category="4" bit2="0" bit3="0" bit4="0"/-->
 	<aimer>
 		<target range="512" focus="" category="4" bit2="0" bit3="0" bit4="0" />
@@ -12,6 +75,7 @@
 	<ship maxveloc="48" maxaccel="128" minaccel="32" maxomega="1" />
 	<damagable health="3" spawnondeath="enemyexplosion" />
 	<weapon>
+		<flash name="enemylasershiptracer"/>
 		<shot delay="5.0" />
 	</weapon>
 	<points value="300" />
