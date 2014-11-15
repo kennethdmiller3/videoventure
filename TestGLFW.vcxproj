@@ -58,6 +58,7 @@
     <ClCompile>
       <AdditionalIncludeDirectories>Source;Source\Behavior;Source\Core;Source\Expression;Source\Interface;Source\Physics;Source\Render;Source\Shell;Source\Sound;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AssemblerOutput>All</AssemblerOutput>
+      <AdditionalOptions>/Zo %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <TargetMachine>MachineX86</TargetMachine>
