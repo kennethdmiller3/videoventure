@@ -23,6 +23,7 @@
 #endif
 
 using namespace tinyxml2;
+using namespace std;
 int gPass = 0;
 int gFail = 0;
 
@@ -298,10 +299,10 @@ int main( int argc, const char ** argv )
 		XMLDocument* doc = new XMLDocument();
 		clock_t startTime = clock();
 		doc->LoadFile( argv[1] );
-		clock_t loadTime = clock();
+ 		clock_t loadTime = clock();
 		int errorID = doc->ErrorID();
 		delete doc; doc = 0;
-		clock_t deleteTime = clock();
+ 		clock_t deleteTime = clock();
 
 		printf( "Test file '%s' loaded. ErrorID=%d\n", argv[1], errorID );
 		if ( !errorID ) {
@@ -1331,6 +1332,14 @@ int main( int argc, const char ** argv )
 		doc.Print();
 	}
 
+	{
+		// Test that it doesn't crash.
+		const char* xml = "<?xml version=\"1.0\"?><root><sample><field0><1</field0><field1>2</field1></sample></root>";
+		XMLDocument doc;
+		doc.Parse(xml);
+		doc.PrintError();
+	}
+
 #if 1
 		// the question being explored is what kind of print to use: 
 		// https://github.com/leethomason/tinyxml2/issues/63
@@ -1380,6 +1389,13 @@ int main( int argc, const char ** argv )
             doc.Parse("<?xml version=\"1.0\" encoding=\"UTF-8\"?><test>");
             doc.Clear();
         }
+    }
+    
+    {
+        // If this doesn't assert in DEBUG, all is well.
+        tinyxml2::XMLDocument doc;
+        tinyxml2::XMLElement *pRoot = doc.NewElement("Root");
+        doc.DeleteNode(pRoot);
     }
 
 
@@ -1434,12 +1450,10 @@ int main( int argc, const char ** argv )
 
 	#if defined( _MSC_VER ) &&  defined( DEBUG )
 		_CrtMemCheckpoint( &endMemState );
-		//_CrtMemDumpStatistics( &endMemState );
 
 		_CrtMemState diffMemState;
 		_CrtMemDifference( &diffMemState, &startMemState, &endMemState );
 		_CrtMemDumpStatistics( &diffMemState );
-		//printf( "new total=%d\n", gNewTotal );
 	#endif
 
 	printf ("\nPass %d, Fail %d\n", gPass, gFail);

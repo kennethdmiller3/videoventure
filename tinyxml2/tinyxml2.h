@@ -24,7 +24,7 @@ distribution.
 #ifndef TINYXML2_INCLUDED
 #define TINYXML2_INCLUDED
 
-#if defined(ANDROID_NDK) || defined(__BORLANDC__)
+#if defined(ANDROID_NDK) || defined(__BORLANDC__) || defined(__QNXNTO__)
 #   include <ctype.h>
 #   include <limits.h>
 #   include <stdio.h>
@@ -184,6 +184,8 @@ public:
     char* ParseText( char* in, const char* endTag, int strFlags );
     char* ParseName( char* in );
 
+    void TransferTo( StrPair* other );
+
 private:
     void Reset();
     void CollapseWhitespace();
@@ -197,6 +199,9 @@ private:
     int     _flags;
     char*   _start;
     char*   _end;
+
+    StrPair( const StrPair& other );	// not supported
+    void operator=( StrPair& other );	// not supported, use TransferTo()
 };
 
 
@@ -1486,7 +1491,9 @@ private:
     XMLElement( const XMLElement& );	// not supported
     void operator=( const XMLElement& );	// not supported
 
-    XMLAttribute* FindAttribute( const char* name );
+    XMLAttribute* FindAttribute( const char* name ) {
+        return const_cast<XMLAttribute*>(const_cast<const XMLElement*>(this)->FindAttribute( name ));
+    }
     XMLAttribute* FindOrCreateAttribute( const char* name );
     //void LinkAttribute( XMLAttribute* attrib );
     char* ParseAttributes( char* p );
@@ -1548,7 +1555,11 @@ public:
 
     /**
     	Load an XML file from disk. You are responsible
-    	for providing and closing the FILE*.
+    	for providing and closing the FILE*. 
+     
+        NOTE: The file should be opened as binary ("rb")
+        not text in order for TinyXML-2 to correctly
+        do newline normalization.
 
     	Returns XML_NO_ERROR (0) on success, or
     	an errorID.
@@ -1658,9 +1669,7 @@ public:
     	Delete a node associated with this document.
     	It will be unlinked from the DOM.
     */
-    void DeleteNode( XMLNode* node )	{
-        node->_parent->DeleteChild( node );
-    }
+    void DeleteNode( XMLNode* node );
 
     void SetError( XMLError error, const char* str1, const char* str2 );
 
@@ -1759,7 +1768,7 @@ private:
 
 	@verbatim
 	XMLHandle docHandle( &document );
-	XMLElement* child2 = docHandle.FirstChild( "Document" ).FirstChild( "Element" ).FirstChild().NextSibling().ToElement();
+	XMLElement* child2 = docHandle.FirstChildElement( "Document" ).FirstChildElement( "Element" ).FirstChildElement().NextSiblingElement();
 	if ( child2 )
 	{
 		// do something useful
