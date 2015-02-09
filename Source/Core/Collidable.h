@@ -13,21 +13,21 @@ struct cpShape;
 struct GAME_API CollidableFilter
 {
 	CollidableFilter()
-		: mType(0xFFFF0001U)
-		, mGroup(0U)
-		, mLayers(~0U)
+		: mGroup(0U)
+		, mCategories(1U)
+		, mMask(~0U)
 	{
 	}
-	CollidableFilter(unsigned int aType, unsigned int aGroup, unsigned int aLayers)
-		: mType(aType)
-		, mGroup(aGroup)
-		, mLayers(aLayers)
+	CollidableFilter(uintptr_t aGroup, unsigned int aCategories, unsigned int aMask)
+		: mGroup(aGroup)
+		, mCategories(aCategories)
+		, mMask(aMask)
 	{
 	}
 
-	unsigned int mType;
-	unsigned int mGroup;
-	unsigned int mLayers;
+	uintptr_t mGroup;
+	unsigned int mCategories;
+	unsigned int mMask;
 };
 
 struct CollidableShapeDef
@@ -213,11 +213,9 @@ namespace Collidable
 	{
 		if (aFilter1.mGroup != 0 && aFilter1.mGroup == aFilter2.mGroup)
 			return false;
-		if ((aFilter1.mLayers & aFilter2.mLayers) == 0)
+		if ((aFilter1.mCategories & aFilter2.mMask) == 0)
 			return false;
-		if ((unsigned short(aFilter1.mType) & unsigned short(aFilter2.mType >> 16)) == 0)
-			return false;
-		if ((unsigned short(aFilter1.mType >> 16) & unsigned short(aFilter2.mType)) == 0)
+		if ((aFilter2.mCategories & aFilter1.mMask) == 0)
 			return false;
 		return true;
 	}
@@ -232,7 +230,7 @@ namespace Collidable
 	GAME_API void QueryBox(const AlignedBox2 &aBox, const CollidableFilter &aFilter, QueryBoxDelegate aDelegate);
 
 	// query all shapes within radius of a point
-	typedef fastdelegate::FastDelegate<void (CollidableShape *aShape, float aRange, const Vector2 &aPoint)> QueryRadiusDelegate;
+	typedef fastdelegate::FastDelegate<void(CollidableShape *aShape, float aRange, const Vector2 &aPoint)> QueryRadiusDelegate;
 	GAME_API void QueryRadius(const Vector2 &aCenter, float aRadius, const CollidableFilter &aFilter, const QueryRadiusDelegate aDelegate);
 
 	// is a shape a sensor?
