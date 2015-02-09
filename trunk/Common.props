@@ -7,7 +7,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
-      <AdditionalIncludeDirectories>$(SolutionDir)\tinyxml2;$(SolutionDir)\oglconsole;$(SolutionDir)\..\Chipmunk-6.2.1\include;$(SolutionDir)\FastDelegate;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\tinyxml2;$(SolutionDir)\oglconsole;$(SolutionDir)\..\Chipmunk-7.0.0\include;$(SolutionDir)\FastDelegate;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_CRT_SECURE_NO_WARNINGS;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <ExceptionHandling>false</ExceptionHandling>
