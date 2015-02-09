@@ -330,7 +330,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Chipmunk-6.2.1\msvc\vc12\chipmunk\chipmunk.vcxproj">
+    <ProjectReference Include="..\chipmunk-7.0.0\msvc\vc13\chipmunk\chipmunk.vcxproj">
       <Project>{c1ace86e-5a14-490a-9678-104ba2546723}</Project>
     </ProjectReference>
     <ProjectReference Include="..\glfw3\msvc120\src\glfw.vcxproj">
