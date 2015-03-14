@@ -1,6 +1,6 @@
 <?1.0?>
 <preferences>
-    <resolution width="1280" height="960"/>
+    <resolution width="640" height="480"/>
     <fullscreen enable="0"/>
     <verticalsync enable="1"/>
     <multisample samples="4"/>
