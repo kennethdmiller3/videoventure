@@ -83,6 +83,7 @@
 	</aimer>
 	<ship maxveloc="30" maxaccel="120" minaccel="10" maxomega="2" />
 	<damagable health="3" spawnondeath="enemyexplosion" />
+	<cancelable switchoncancel="enemyexplosion" spawnoncancel="canceldrop" tethered="1" backlash="1"/>
 	<weapon>
 		<shot delay="3.0" track="4" />
 		<action>

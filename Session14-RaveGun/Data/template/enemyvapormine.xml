@@ -49,6 +49,7 @@
 		</triangles>
 	</renderable>
 	<bullet damage="1" spawnondeath="enemyvapormineexplosion" />
+	<cancelable switchoncancel="enemyexplosion" spawnoncancel="canceldrop" tethered="1" backlash="1"/>
 	<damagable health="5" spawnondeath="enemyvapormineexplosion" />
 	<team name="red" />
 	<points value="100" />

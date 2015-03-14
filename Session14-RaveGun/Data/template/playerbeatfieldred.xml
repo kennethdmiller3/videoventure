@@ -2,7 +2,7 @@
 <template name="playerbeatfieldred">
 	<explosion category="0" default="0" bit5="1" bit6="1">
 		<radius inner="32" outer="32"/>
-		<damage inner="1" outer="1"/>
+		<damage inner="0" outer="0"/>
 	</explosion>
 	<expire time="0.3"/>
 	<renderable depth="1">
