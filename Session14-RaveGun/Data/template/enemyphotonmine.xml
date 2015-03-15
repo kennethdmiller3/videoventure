@@ -34,6 +34,7 @@
 	</renderable>
 	<expire time="5" switchonexpire="enemyvapormine" />
 	<bullet damage="1" spawnondeath="enemymineexplosion" />
+	<cancelable switchoncancel="enemyexplosion" spawnoncancel="canceldrop" tethered="1" backlash="1"/>
 	<damagable health="3" spawnondeath="enemymineexplosion" />
 	<team name="red" />
 	<points value="50" />

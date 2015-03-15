@@ -1,6 +1,6 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Express 2013 for Windows Desktop
-VisualStudioVersion = 12.0.21005.1
+# Visual Studio 2013
+VisualStudioVersion = 12.0.31101.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tinyxml2", "tinyxml2\tinyxml2\tinyxml2.vcxproj", "{D1C528B6-AA02-4D29-9D61-DC08E317A70D}"
 EndProject
@@ -22,9 +22,9 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Session15", "Session15\Sess
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Session4", "Session4-AssaultWing\Session4.vcxproj", "{22E7D39F-2FFF-40DB-8AF6-9DC9D63131CF}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "chipmunk", "..\Chipmunk-6.2.1\msvc\vc12\chipmunk\chipmunk.vcxproj", "{C1ACE86E-5A14-490A-9678-104BA2546723}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "chipmunk", "..\chipmunk-7.0.0\msvc\vc13\chipmunk\chipmunk.vcxproj", "{C1ACE86E-5A14-490A-9678-104BA2546723}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "glfw", "..\glfw3\msvc120\src\glfw.vcxproj", "{51220C52-F310-4D53-9C3A-D178870C95D8}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "glfw", "..\glfw3\msvc120\src\glfw.vcxproj", "{05AC5C39-B9BF-4AC5-B11F-C9B41C24F26A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -36,10 +36,6 @@ Global
 		{D1C528B6-AA02-4D29-9D61-DC08E317A70D}.Debug|Win32.Build.0 = Debug-Lib|Win32
 		{D1C528B6-AA02-4D29-9D61-DC08E317A70D}.Release|Win32.ActiveCfg = Release-Lib|Win32
 		{D1C528B6-AA02-4D29-9D61-DC08E317A70D}.Release|Win32.Build.0 = Release-Lib|Win32
-		{FC5E6837-9810-43F3-AE5D-A4CDDDF5D1AF}.Debug|Win32.ActiveCfg = Debug|Win32
-		{FC5E6837-9810-43F3-AE5D-A4CDDDF5D1AF}.Debug|Win32.Build.0 = Debug|Win32
-		{FC5E6837-9810-43F3-AE5D-A4CDDDF5D1AF}.Release|Win32.ActiveCfg = Release|Win32
-		{FC5E6837-9810-43F3-AE5D-A4CDDDF5D1AF}.Release|Win32.Build.0 = Release|Win32
 		{E6A62552-2C5D-430F-9DFF-DEA7FC3F723F}.Debug|Win32.ActiveCfg = Debug|Win32
 		{E6A62552-2C5D-430F-9DFF-DEA7FC3F723F}.Debug|Win32.Build.0 = Debug|Win32
 		{E6A62552-2C5D-430F-9DFF-DEA7FC3F723F}.Release|Win32.ActiveCfg = Release|Win32
@@ -80,10 +76,10 @@ Global
 		{C1ACE86E-5A14-490A-9678-104BA2546723}.Debug|Win32.Build.0 = Debug|Win32
 		{C1ACE86E-5A14-490A-9678-104BA2546723}.Release|Win32.ActiveCfg = Release|Win32
 		{C1ACE86E-5A14-490A-9678-104BA2546723}.Release|Win32.Build.0 = Release|Win32
-		{51220C52-F310-4D53-9C3A-D178870C95D8}.Debug|Win32.ActiveCfg = Debug|Win32
-		{51220C52-F310-4D53-9C3A-D178870C95D8}.Debug|Win32.Build.0 = Debug|Win32
-		{51220C52-F310-4D53-9C3A-D178870C95D8}.Release|Win32.ActiveCfg = MinSizeRel|Win32
-		{51220C52-F310-4D53-9C3A-D178870C95D8}.Release|Win32.Build.0 = MinSizeRel|Win32
+		{05AC5C39-B9BF-4AC5-B11F-C9B41C24F26A}.Debug|Win32.ActiveCfg = Debug|Win32
+		{05AC5C39-B9BF-4AC5-B11F-C9B41C24F26A}.Debug|Win32.Build.0 = Debug|Win32
+		{05AC5C39-B9BF-4AC5-B11F-C9B41C24F26A}.Release|Win32.ActiveCfg = MinSizeRel|Win32
+		{05AC5C39-B9BF-4AC5-B11F-C9B41C24F26A}.Release|Win32.Build.0 = MinSizeRel|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -144,19 +144,12 @@ class ExplosionQueryCallback
 public:
 	unsigned int mId;
 	ExplosionTemplate mExplosion;
-	Transform2 mTransform;
 	float mCurRadius[2];
 	float mCurDamage[2];
 
 public:
 	void Report(CollidableShape* shape, float distance, const Vector2 &point)
 	{
-		// skip unhittable shapes
-		if (Collidable::IsSensor(shape))
-			return;
-		if (!Collidable::CheckFilter(mExplosion.mFilter, Collidable::GetFilter(shape)))
-			return;
-
 		// get the collidable identifier
 		unsigned int targetId = Collidable::GetId(shape);
 
@@ -240,27 +233,20 @@ void Explosion::Update(float aStep)
 		memcpy(callback.mCurDamage, &value, sizeof(callback.mCurDamage));
 	}
 
-	// if applying damage...
-	if ((callback.mCurDamage[0] != 0.0f) || (callback.mCurDamage[1] != 0.0f))
+	// if the explosion has a life span...
+	if (explosion.mLifeSpan > 0.0f)
 	{
-		// if applying damage over time...
-		if (explosion.mLifeSpan > 0.0f)
-		{
-			// scale by time step
-			callback.mCurDamage[0] *= aStep;
-			callback.mCurDamage[1] *= aStep;
-		}
-
-		// get parent entity
-		Entity *entity = Database::entity.Get(mId);
-
-		// world-to-local transform
-		callback.mTransform = entity->GetTransform().Inverse();
-
-		// get shapes within the radius
-		Collidable::QueryRadius(entity->GetPosition(), callback.mCurRadius[1], explosion.mFilter,
-			Collidable::QueryRadiusDelegate(&callback, &ExplosionQueryCallback::Report));
+		// scale damage by time step
+		callback.mCurDamage[0] *= aStep;
+		callback.mCurDamage[1] *= aStep;
 	}
+
+	// get parent entity
+	Entity *entity = Database::entity.Get(mId);
+
+	// get shapes within the radius
+	Collidable::QueryRadius(entity->GetPosition(), callback.mCurRadius[1], explosion.mFilter,
+		Collidable::QueryRadiusDelegate(&callback, &ExplosionQueryCallback::Report));
 
 	// advance life timer
 	mLife -= aStep;

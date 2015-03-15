@@ -7,6 +7,7 @@
 
 // Chipmunk includes
 #pragma message( "chipmunk" )
+#include "chipmunk/chipmunk_private.h"
 #include "chipmunk/chipmunk.h"
 
 namespace Database
@@ -65,9 +66,10 @@ static void ConfigureFilterCategory(CollidableFilter &aFilter, const tinyxml2::X
 	int category = 0;
 	if (element->QueryIntAttribute(name, &category) == tinyxml2::XML_SUCCESS)
 	{
-		aFilter.mType &= 0xFFFF0000;
 		if (category >= 0)
-			aFilter.mType |= 1U << category;
+			aFilter.mCategories = 1U << category;
+		else
+			aFilter.mCategories = 0U;
 	}
 }
 
@@ -75,19 +77,19 @@ static void ConfigureFilterMask(CollidableFilter &aFilter, const tinyxml2::XMLEl
 {
 	bool defvalue = true;
 	if (element->QueryBoolAttribute("default", &defvalue) == tinyxml2::XML_SUCCESS)
-		aFilter.mType = defvalue ? (aFilter.mType | 0xFFFF0000) : (aFilter.mType & 0x0000FFFF);
+		aFilter.mMask = defvalue ? ~0U : 0U;
 
 	char buf[16];
-	for (int i = 0; i < 16; i++)
+	for (int i = 0; i < 32; i++)
 	{
 		sprintf(buf, "bit%d", i);
 		bool bit = false;
 		if (element->QueryBoolAttribute(buf, &bit) == tinyxml2::XML_SUCCESS)
 		{
 			if (bit)
-				aFilter.mType |= (1 << (i + 16));
+				aFilter.mMask |= (1 << i);
 			else
-				aFilter.mType &= ~(1 << (i + 16));
+				aFilter.mMask &= ~(1 << i);
 		}
 	}
 }
@@ -99,6 +101,7 @@ static void ConfigureFilterGroup(CollidableFilter &aFilter, const tinyxml2::XMLE
 		aFilter.mGroup = -group;
 }
 
+#if 0
 static void ConfigureFilterLayers(CollidableFilter &aFilter, const tinyxml2::XMLElement *element)
 {
 	bool defvalue = true;
@@ -119,6 +122,7 @@ static void ConfigureFilterLayers(CollidableFilter &aFilter, const tinyxml2::XML
 		}
 	}
 }
+#endif
 
 void ConfigureFilterData(CollidableFilter &aFilter, const tinyxml2::XMLElement *element)
 {
@@ -128,7 +132,9 @@ void ConfigureFilterData(CollidableFilter &aFilter, const tinyxml2::XMLElement *
 	ConfigureFilterCategory(aFilter, element, "category");
 	ConfigureFilterMask(aFilter, element);
 	ConfigureFilterGroup(aFilter, element, "group");
+#if 0
 	ConfigureFilterLayers(aFilter, element);
+#endif
 
 	for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child != NULL; child = child->NextSiblingElement())
 	{
@@ -146,9 +152,11 @@ void ConfigureFilterData(CollidableFilter &aFilter, const tinyxml2::XMLElement *
 			ConfigureFilterGroup(aFilter, child, "value");
 			break;
 
+#if 0
 		case 0x8fb7915f /* "layers" */:
 			ConfigureFilterLayers(aFilter, child);
 			break;
+#endif
 		}
 	}
 }
@@ -202,9 +210,11 @@ bool CollidableTemplate::ConfigureShapeItem(const tinyxml2::XMLElement *element,
 		ConfigureFilterGroup(shape.mFilter, element, "value");
 		return true;
 
+#if 0
 	case 0x8fb7915f /* "layers" */:
 		ConfigureFilterLayers(shape.mFilter, element);
 		return true;
+#endif
 
 	case 0x83b6367b /* "sensor" */:
 		element->QueryBoolAttribute("value", &shape.mIsSensor);
@@ -503,10 +513,10 @@ bool CollidableTemplate::Configure(const tinyxml2::XMLElement *element, unsigned
 		size_t count = def.mVertices.size();
 		cpVect *verts = static_cast<cpVect *>(_alloca(sizeof(cpVect)*count));
 		for (size_t i = 0; i < count; ++i)
-			verts[i] = cpv(def.mVertices[count-1-i].x, def.mVertices[count-1-i].y);
-		float mass = def.mDensity * float(cpAreaForPoly(count, verts));
+			verts[i] = cpv(def.mVertices[i].x, def.mVertices[i].y);
+		float mass = def.mDensity * float(cpAreaForPoly(count, verts, 0.0f));
 		mBodyDef.mMass += mass;
-		mBodyDef.mMoment += float(cpMomentForPoly(mass, count, verts, cpv(def.mOffset.x, def.mOffset.y)));
+		mBodyDef.mMoment += float(cpMomentForPoly(mass, count, verts, cpv(def.mOffset.x, def.mOffset.y), 0.0f));
 	}
 
 	return true;
@@ -526,33 +536,28 @@ static void BodyUpdateVelocity(cpBody *body, cpVect gravity, cpFloat damping, cp
 	const CollidableTemplate &collidable = Database::collidabletemplate.Get(id);
 	const CollidableBodyDef &def = collidable.mBodyDef;
 
-	damping = 1.0f - dt * def.mLinearDamping;
-	body->v = cpvclamp(cpvadd(cpvmult(body->v, damping), cpvmult(cpvadd(gravity, cpvmult(body->f, body->m_inv)), dt)), body->v_limit);
+	body->f.x -= body->v.x * def.mLinearDamping * body->m;
+	body->f.y -= body->v.y * def.mLinearDamping * body->m;
+	body->t -= body->t * def.mAngularDamping * body->i;
 	
-	damping = 1.0f - dt * def.mAngularDamping;
-	cpFloat w_limit = body->w_limit;
-	body->w = cpfclamp(body->w*damping + body->t*body->i_inv*dt, -w_limit, w_limit);
-	
-	cpBodyAssertSane(body);
+	cpBodyUpdateVelocity(body, gravity, damping, dt);
 }
 
-static int BeginContact(cpArbiter *arb, cpSpace *space, void *data)
+static cpBool BeginContact(cpArbiter *arb, cpSpace *space, cpDataPointer data)
 {
 	CP_ARBITER_GET_SHAPES(arb, a, b);
 
-	// perform Box2D-style category/mask filtering
-	unsigned int type1 = cpShapeGetCollisionType(a);
-	unsigned int type2 = cpShapeGetCollisionType(b);
-	if ((unsigned short(type1) & unsigned short(type2 >> 16)) == 0)
-		return false;
-	if ((unsigned short(type1 >> 16) & unsigned short(type2)) == 0)
+	// arbiter begin contact
+	cpBool retA = cpArbiterCallWildcardBeginA(arb, space);
+	cpBool retB = cpArbiterCallWildcardBeginB(arb, space);
+	if (!retA || !retB)
 		return false;
 
 	// signal contact add
 	Database::Key id1 = reinterpret_cast<Database::Key>(cpShapeGetUserData(a));
 	Database::Key id2 = reinterpret_cast<Database::Key>(cpShapeGetUserData(b));
-	cpVect c = cpArbiterGetPoint(arb, 0);
-	cpVect n = cpArbiterGetNormal(arb, 0);
+	cpVect c = cpArbiterGetPointA(arb, 0);
+	cpVect n = cpArbiterGetNormal(arb);
 	const Vector2 contact(float(c.x), float(c.y));
 	const Vector2 normal(float(n.x), float(n.y));
 	Database::collidablecontactadd.Get(id1)(id1, id2, 0.0f, contact, normal);
@@ -560,7 +565,7 @@ static int BeginContact(cpArbiter *arb, cpSpace *space, void *data)
 	return true;
 }
 
-static void EndContact(cpArbiter *arb, cpSpace *space, void *data)
+static void EndContact(cpArbiter *arb, cpSpace *space, cpDataPointer data)
 {
 	CP_ARBITER_GET_SHAPES(arb, a, b);
 
@@ -569,6 +574,10 @@ static void EndContact(cpArbiter *arb, cpSpace *space, void *data)
 	Database::Key id2 = reinterpret_cast<Database::Key>(cpShapeGetUserData(b));
 	Database::collidablecontactremove.Get(id1)(id1, id2, 0.0f);
 	Database::collidablecontactremove.Get(id2)(id2, id1, 0.0f);
+
+	// arbiter end contact
+	cpArbiterCallWildcardSeparateA(arb, space);
+	cpArbiterCallWildcardSeparateB(arb, space);
 }
 
 
@@ -576,27 +585,21 @@ static void EndContact(cpArbiter *arb, cpSpace *space, void *data)
 
 static bool DebugDrawCollidable = false;
 
-typedef struct Color {
-	float r, g, b, a;
-} Color;
-
-static inline Color RGBAColor(float r, float g, float b, float a){
-	Color color = {r, g, b, a};
+static inline cpSpaceDebugColor RGBAColor(float r, float g, float b, float a){
+	cpSpaceDebugColor color = { r, g, b, a };
 	return color;
 }
 
-static inline Color LAColor(float l, float a){
-	Color color = {l, l, l, a};
+static inline cpSpaceDebugColor LAColor(float l, float a){
+	cpSpaceDebugColor color = { l, l, l, a };
 	return color;
 }
 
-static const Color LINE_COLOR = {200.0f/255.0f, 210.0f/255.0f, 230.0f/255.0f, 1.0f};
-static const Color CONSTRAINT_COLOR = {0.0f, 0.75f, 0.0f, 1.0f};
 static const float SHAPE_ALPHA = 0.75f;
 
 static float DebugDrawPointLineScale = 1.0f;
 
-static Color
+static cpSpaceDebugColor
 ColorFromHash(cpHashValue hash, float alpha)
 {
 	unsigned long val = (unsigned long)hash;
@@ -632,24 +635,24 @@ ColorFromHash(cpHashValue hash, float alpha)
 }
 
 static inline void
-glColor_from_color(Color color){
+glColor_from_color(cpSpaceDebugColor color){
 	glColor4fv((GLfloat *)&color);
 }
 
-static Color
-ColorForShape(cpShape *shape)
+static cpSpaceDebugColor
+ColorForShape(cpShape *shape, cpDataPointer data)
 {
 	if(cpShapeGetSensor(shape)){
 		return LAColor(1, 0);
 	} else {
-		Color color = ColorFromHash(shape->collision_type /*CP_PRIVATE(hashid)*/, SHAPE_ALPHA);
-		cpBody *body = shape->body;
+		cpSpaceDebugColor color = ColorFromHash(cpShapeGetFilter(shape).mask /*CP_PRIVATE(hashid)*/, SHAPE_ALPHA);
+		cpBody *body = cpShapeGetBody(shape);
 		
 		if(cpBodyIsSleeping(body)){
 			color.r *= 0.2f;
 			color.g *= 0.2f;
 			color.b *= 0.2f;
-		} else if(body->CP_PRIVATE(node).idleTime > shape->CP_PRIVATE(space)->sleepTimeThreshold) {
+		} else if(body->sleeping.idleTime > shape->space->sleepTimeThreshold) {
 			color.r *= 0.66f;
 			color.g *= 0.66f;
 			color.b *= 0.66f;
@@ -688,7 +691,7 @@ static const GLfloat circleVAR[] = {
 };
 static const int circleVAR_count = sizeof(circleVAR)/sizeof(GLfloat)/2;
 
-static void DebugDrawCircle(cpVect center, cpFloat angle, cpFloat radius, Color lineColor, Color fillColor)
+static void DebugDrawCircle(cpVect center, cpFloat angle, cpFloat radius, cpSpaceDebugColor lineColor, cpSpaceDebugColor fillColor, cpDataPointer data)
 {
 	glVertexPointer(2, GL_FLOAT, 0, circleVAR);
 
@@ -744,7 +747,7 @@ static const GLfloat pillVAR[] = {
 };
 static const int pillVAR_count = sizeof(pillVAR)/sizeof(GLfloat)/3;
 
-static void DebugDrawSegment(cpVect a, cpVect b, Color color)
+static void DebugDrawSegment(cpVect a, cpVect b, cpSpaceDebugColor color, cpDataPointer data)
 {
 	GLfloat verts[] =
 	{
@@ -757,7 +760,7 @@ static void DebugDrawSegment(cpVect a, cpVect b, Color color)
 	glDrawArrays(GL_LINES, 0, 2);
 }
 
-static void DebugDrawFatSegment(cpVect a, cpVect b, cpFloat radius, Color lineColor, Color fillColor)
+static void DebugDrawFatSegment(cpVect a, cpVect b, cpFloat radius, cpSpaceDebugColor lineColor, cpSpaceDebugColor fillColor, cpDataPointer data)
 {
 	if(radius)
 	{
@@ -793,11 +796,11 @@ static void DebugDrawFatSegment(cpVect a, cpVect b, cpFloat radius, Color lineCo
 	}
 	else
 	{
-		DebugDrawSegment(a, b, lineColor);
+		DebugDrawSegment(a, b, lineColor, data);
 	}
 }
 
-static void DebugDrawPolygon(int count, cpVect *verts, Color lineColor, Color fillColor)
+static void DebugDrawPolygon(int count, const cpVect *verts, cpFloat radius, cpSpaceDebugColor lineColor, cpSpaceDebugColor fillColor, cpDataPointer data)
 {
 #if CP_USE_DOUBLES
 	glVertexPointer(2, GL_DOUBLE, 0, verts);
@@ -818,69 +821,38 @@ static void DebugDrawPolygon(int count, cpVect *verts, Color lineColor, Color fi
 	}
 }
 
-static void DebugDrawPoints(cpFloat size, int count, cpVect *verts, Color color)
+static void DebugDrawDot(cpFloat size, cpVect pos, cpSpaceDebugColor color, cpDataPointer data)
 {
 #if CP_USE_DOUBLES
-	glVertexPointer(2, GL_DOUBLE, 0, verts);
+	glVertexPointer(2, GL_DOUBLE, 0, &pos);
 #else
 	glVertexPointer(2, GL_FLOAT, 0, verts);
 #endif
 	
 	glPointSize(GLfloat(size)*DebugDrawPointLineScale);
 	glColor_from_color(color);
-	glDrawArrays(GL_POINTS, 0, count);
-}
-
-static void DebugDrawBB(cpBB bb, Color color)
-{
-	cpVect verts[] =
-	{
-		cpv(bb.l, bb.b),
-		cpv(bb.l, bb.t),
-		cpv(bb.r, bb.t),
-		cpv(bb.r, bb.b),
-	};
-	DebugDrawPolygon(4, verts, color, LAColor(0, 0));
-}
-
-static void
-drawShape(cpShape *shape, void *unused)
-{
-	cpBody *body = shape->body;
-	Color color = ColorForShape(shape);
-	
-	switch(shape->CP_PRIVATE(klass)->type)
-	{
-	case CP_CIRCLE_SHAPE:
-		{
-			cpCircleShape *circle = (cpCircleShape *)shape;
-			DebugDrawCircle(circle->tc, body->a, circle->r, LINE_COLOR, color);
-			break;
-		}
-	case CP_SEGMENT_SHAPE:
-		{
-			cpSegmentShape *seg = (cpSegmentShape *)shape;
-			DebugDrawFatSegment(seg->ta, seg->tb, seg->r, LINE_COLOR, color);
-			break;
-		}
-	case CP_POLY_SHAPE:
-		{
-			cpPolyShape *poly = (cpPolyShape *)shape;
-			DebugDrawPolygon(poly->numVerts, poly->tVerts, LINE_COLOR, color);
-			break;
-		}
-	default: break;
-	}
-}
-
-static void DebugDrawShape(cpShape *shape)
-{
-	drawShape(shape, NULL);
+	glDrawArrays(GL_POINTS, 0, 1);
 }
 
 static void DebugDrawShapes(cpSpace *space)
 {
-	cpSpaceEachShape(space, drawShape, NULL);
+	cpSpaceDebugDrawOptions drawOptions = {
+		DebugDrawCircle,
+		DebugDrawSegment,
+		DebugDrawFatSegment,
+		DebugDrawPolygon,
+		DebugDrawDot,
+
+		(cpSpaceDebugDrawFlags)(CP_SPACE_DEBUG_DRAW_SHAPES | CP_SPACE_DEBUG_DRAW_CONSTRAINTS | CP_SPACE_DEBUG_DRAW_COLLISION_POINTS),
+
+		{ 200.0f / 255.0f, 210.0f / 255.0f, 230.0f / 255.0f, 1.0f },
+		ColorForShape,
+		{ 0.0f, 0.75f, 0.0f, 1.0f },
+		{ 1.0f, 0.0f, 0.0f, 1.0f },
+		NULL,
+	};
+
+	cpSpaceDebugDraw(space, &drawOptions);
 }
 
 // console
@@ -987,14 +959,14 @@ void Collidable::AddToWorld(unsigned int aId)
 		? cpBodyNewStatic()
 		: cpBodyNew(def.mMass, def.mMoment);
 
-	cpBodySetPos(body, cpv(def.mTransform.p.x, def.mTransform.p.y));
+	cpBodySetPosition(body, cpv(def.mTransform.p.x, def.mTransform.p.y));
 	cpBodySetAngle(body, def.mTransform.a);
-	cpBodySetVel(body, cpv(def.mVelocity.p.x, def.mVelocity.p.y));
-	cpBodySetAngVel(body, def.mVelocity.a);
+	cpBodySetVelocity(body, cpv(def.mVelocity.p.x, def.mVelocity.p.y));
+	cpBodySetAngularVelocity(body, def.mVelocity.a);
 
 	cpBodySetUserData(body, reinterpret_cast<void *>(aId));
-	if (def.mFixedRotation)
-		cpBodySetAngVelLimit(body, 0.0f);
+	//if (def.mFixedRotation)
+	//	cpBodySetAngularVelocityLimit(body, 0.0f);
 
 	if (def.mType == CollidableBodyDef::kType_Dynamic)
 	{
@@ -1016,9 +988,7 @@ void Collidable::AddToWorld(unsigned int aId)
 		cpShapeSetElasticity(shape, def.mElasticity);
 		cpShapeSetSurfaceVelocity(shape, cpv(def.mSurfaceVelocity.x, def.mSurfaceVelocity.y));
 		cpShapeSetUserData(shape, reinterpret_cast<void *>(aId));
-		cpShapeSetCollisionType(shape, def.mFilter.mType);
-		cpShapeSetGroup(shape, def.mFilter.mGroup);
-		cpShapeSetLayers(shape, def.mFilter.mLayers);
+		cpShapeSetFilter(shape, cpShapeFilterNew(def.mFilter.mGroup, def.mFilter.mCategories, def.mFilter.mMask));
 		cpSpaceAddShape(world, shape);
 	}
 	for (Database::Typed<CollidablePolygonDef>::Iterator itor(Database::collidablepolygons.Find(aId)); itor.IsValid(); ++itor)
@@ -1029,15 +999,13 @@ void Collidable::AddToWorld(unsigned int aId)
 		for (size_t i = 0; i < count; ++i)
 			verts[i] = cpv(def.mVertices[count-1-i].x, def.mVertices[count-1-i].y);
 		cpShape *shape = cpPolyShapeNew(body,
-			count, verts, cpv(def.mOffset.x, def.mOffset.y));
+			count, verts, cpTransformNew(1.0f, 0.0f, 0.0f, 1.0f, def.mOffset.x, def.mOffset.y), 0.0f);
 		cpShapeSetSensor(shape, def.mIsSensor);
 		cpShapeSetFriction(shape, def.mFriction);
 		cpShapeSetElasticity(shape, def.mElasticity);
 		cpShapeSetSurfaceVelocity(shape, cpv(def.mSurfaceVelocity.x, def.mSurfaceVelocity.y));
 		cpShapeSetUserData(shape,reinterpret_cast<void *>(aId));
-		cpShapeSetCollisionType(shape, def.mFilter.mType);
-		cpShapeSetGroup(shape, def.mFilter.mGroup);
-		cpShapeSetLayers(shape, def.mFilter.mLayers);
+		cpShapeSetFilter(shape, cpShapeFilterNew(def.mFilter.mGroup, def.mFilter.mCategories, def.mFilter.mMask));
 		cpSpaceAddShape(world, shape);
 	}
 	for (Database::Typed<CollidableEdgeDef>::Iterator itor(Database::collidableedges.Find(aId)); itor.IsValid(); ++itor)
@@ -1050,9 +1018,7 @@ void Collidable::AddToWorld(unsigned int aId)
 		cpShapeSetElasticity(shape, def.mElasticity);
 		cpShapeSetSurfaceVelocity(shape, cpv(def.mSurfaceVelocity.x, def.mSurfaceVelocity.y));
 		cpShapeSetUserData(shape, reinterpret_cast<void *>(aId));
-		cpShapeSetCollisionType(shape, def.mFilter.mType);
-		cpShapeSetGroup(shape, def.mFilter.mGroup);
-		cpShapeSetLayers(shape, def.mFilter.mLayers);
+		cpShapeSetFilter(shape, cpShapeFilterNew(def.mFilter.mGroup, def.mFilter.mCategories, def.mFilter.mMask));
 		cpSpaceAddShape(world, shape);
 	}
 	for (Database::Typed<CollidableChainDef>::Iterator itor(Database::collidablechains.Find(aId)); itor.IsValid(); ++itor)
@@ -1072,9 +1038,7 @@ void Collidable::AddToWorld(unsigned int aId)
 			cpShapeSetSurfaceVelocity(shape, cpv(def.mSurfaceVelocity.x, def.mSurfaceVelocity.y));
 			cpShapeSetUserData(shape, reinterpret_cast<void *>(aId));
 			cpSpaceAddShape(world, shape);
-			cpShapeSetCollisionType(shape, def.mFilter.mType);
-			cpShapeSetGroup(shape, def.mFilter.mGroup);
-			cpShapeSetLayers(shape, def.mFilter.mLayers);
+			cpShapeSetFilter(shape, cpShapeFilterNew(def.mFilter.mGroup, def.mFilter.mCategories, def.mFilter.mMask));
 			a = b;
 		}
 	}
@@ -1142,7 +1106,9 @@ void Collidable::WorldInit(float aMinX, float aMinY, float aMaxX, float aMaxY, b
 	cpSpaceSetCollisionBias(world, powf(0.5f, 60.0f));
 
 	// set default collision handler
-	cpSpaceSetDefaultCollisionHandler(world, BeginContact, NULL, NULL, EndContact, NULL);
+	cpCollisionHandler *handler = cpSpaceAddDefaultCollisionHandler(world);
+	handler->beginFunc = BeginContact;
+	handler->separateFunc = EndContact;
 
 #ifdef COLLIDABLE_DEBUG_DRAW
 	// set debug render
@@ -1164,7 +1130,7 @@ void Collidable::WorldInit(float aMinX, float aMinY, float aMaxX, float aMaxY, b
 			const Vector2 &a = vertex[i];
 			const Vector2 &b = vertex[(i+1)&3];
 			cpShape *wall = cpSegmentShapeNew(world->staticBody, cpv(a.x, a.y), cpv(b.x, b.y), 0.0f);
-			cpShapeSetCollisionType(wall, ~0U);
+			cpShapeSetFilter(wall, cpShapeFilterNew(0, ~0U, ~0U));
 			cpShapeSetFriction(wall, 0.2);
 			cpSpaceAddShape(world, wall);
 		}
@@ -1193,7 +1159,7 @@ void Collidable::CollideAll(float aStep)
 		cpBody *body = i.GetValue();
 
 		// if the body is not sleeping or static...
-		if (!cpBodyIsSleeping(body) && !cpBodyIsStatic(body))
+		if (!cpBodyIsSleeping(body) && cpBodyGetType(body) != CP_BODY_TYPE_STATIC)
 		{
 			// update the entity position (hack)
 			Database::Key id = i.GetKey();
@@ -1202,9 +1168,9 @@ void Collidable::CollideAll(float aStep)
 			{
 				entity->Step();
 				cpFloat ang(cpBodyGetAngle(body));
-				cpVect pos(cpBodyGetPos(body));
-				cpFloat omg(cpBodyGetAngVel(body));
-				cpVect vel(cpBodyGetVel(body));
+				cpVect pos(cpBodyGetPosition(body));
+				cpFloat omg(cpBodyGetAngularVelocity(body));
+				cpVect vel(cpBodyGetVelocity(body));
 				entity->SetTransform(float(ang), Vector2(float(pos.x), float(pos.y)));
 				entity->SetVelocity(Vector2(float(vel.x), float(vel.y)));
 				entity->SetOmega(float(omg));
@@ -1236,9 +1202,9 @@ public:
 	{
 	}
 
-	static void Query(cpShape *shape, cpFloat t, cpVect n, void *data)
+	static void Query(cpShape *shape, cpVect point, cpVect normal, cpFloat fraction, void *data)
 	{
-		static_cast<CollidableRayCast *>(data)->Report(shape, float(t), Vector2(float(n.x), float(n.y)));
+		static_cast<CollidableRayCast *>(data)->Report(shape, float(fraction), Vector2(float(normal.x), float(normal.y)));
 	}
 
 	virtual void Report(CollidableShape* shape, float fraction, const Vector2& normal)
@@ -1280,8 +1246,8 @@ unsigned int Collidable::TestSegment(const Vector2 &aStart, const Vector2 &aEnd,
 
 	// find the closest hit
 	CollidableRayCast raycast(aFilter, aId);
-	cpSpaceSegmentQuery(world, cpv(aStart.x - pad.x, aStart.y - pad.y), cpv(aEnd.x + pad.x, aEnd.y + pad.y), 
-		aFilter.mLayers, aFilter.mGroup, CollidableRayCast::Query, &raycast);
+	cpSpaceSegmentQuery(world, cpv(aStart.x - pad.x, aStart.y - pad.y), cpv(aEnd.x + pad.x, aEnd.y + pad.y), 0.0f,
+		cpShapeFilterNew(aFilter.mGroup, aFilter.mCategories, aFilter.mMask), CollidableRayCast::Query, &raycast);
 
 	// return result
 	aLambda = raycast.mHitFraction;
@@ -1296,10 +1262,10 @@ static void QueryBoxCallback(cpShape *shape, void *data)
 
 void Collidable::QueryBox(const AlignedBox2 &aBox, const CollidableFilter &aFilter, QueryBoxDelegate aDelegate)
 {
-	cpSpaceBBQuery(world, cpBBNew(aBox.min.x, aBox.min.y, aBox.max.x, aBox.max.y), aFilter.mLayers, aFilter.mGroup, QueryBoxCallback, &aDelegate); 
+	cpSpaceBBQuery(world, cpBBNew(aBox.min.x, aBox.min.y, aBox.max.x, aBox.max.y), cpShapeFilterNew(aFilter.mGroup, aFilter.mCategories, aFilter.mMask), QueryBoxCallback, &aDelegate); 
 }
 
-static void QueryRadiusCallback(cpShape *shape, cpFloat distance, cpVect point, void *data)
+static void QueryRadiusCallback(cpShape *shape, cpVect point, cpFloat distance, cpVect gradient, cpDataPointer data)
 {
 	(*static_cast<Collidable::QueryRadiusDelegate *>(data))(shape, float(distance), Vector2(float(point.x), float(point.y)));
 }
@@ -1307,7 +1273,7 @@ static void QueryRadiusCallback(cpShape *shape, cpFloat distance, cpVect point, 
 // 
 void Collidable::QueryRadius(const Vector2 &aCenter, float aRadius, const CollidableFilter &aFilter, QueryRadiusDelegate aDelegate)
 {
-	cpSpaceNearestPointQuery(world, cpv(aCenter.x, aCenter.y), aRadius, aFilter.mLayers, aFilter.mGroup, QueryRadiusCallback, &aDelegate);
+	cpSpacePointQuery(world, cpv(aCenter.x, aCenter.y), aRadius, cpShapeFilterNew(aFilter.mGroup, aFilter.mCategories, aFilter.mMask), QueryRadiusCallback, &aDelegate);
 }
 
 // is a shape a sensor?
@@ -1319,7 +1285,8 @@ bool Collidable::IsSensor(CollidableShape *aShape)
 // get the collision filter for a shape
 CollidableFilter Collidable::GetFilter(CollidableShape *aShape)
 {
-	return CollidableFilter(cpShapeGetCollisionType(aShape), cpShapeGetGroup(aShape), cpShapeGetLayers(aShape));
+	const cpShapeFilter filter(cpShapeGetFilter(aShape));
+	return CollidableFilter(filter.group, filter.categories, filter.mask);
 }
 
 // get the owner id of a shape
@@ -1338,7 +1305,7 @@ Vector2 Collidable::GetCenter(CollidableShape *aShape)
 // set the position of a body
 void Collidable::SetPosition(CollidableBody *aBody, const Vector2 &aPosition)
 {
-	cpBodySetPos(aBody, cpv(aPosition.x, aPosition.y));
+	cpBodySetPosition(aBody, cpv(aPosition.x, aPosition.y));
 }
 
 // set the angle of a body
@@ -1350,31 +1317,30 @@ void Collidable::SetAngle(CollidableBody *aBody, const float aAngle)
 // set the linear velocity of a body
 void Collidable::SetVelocity(CollidableBody *aBody, const Vector2 &aVelocity)
 {
-	cpBodySetVel(aBody, cpv(aVelocity.x, aVelocity.y));
+	cpBodySetVelocity(aBody, cpv(aVelocity.x, aVelocity.y));
 }
 
 // add linear velocity to a body
 void Collidable::AddVelocity(CollidableBody *aBody, const Vector2 &aDelta)
 {
-	cpFloat mass = cpBodyGetMass(aBody);
-	cpBodyApplyImpulse(aBody, cpv(aDelta.x*mass, aDelta.y*mass), cpvzero);
+	cpBodySetVelocity(aBody, cpvadd(cpBodyGetVelocity(aBody), cpv(aDelta.x, aDelta.y)));
 }
 
 // set the angular velocity of a body
 void Collidable::SetOmega(CollidableBody *aBody, const float aOmega)
 {
-	cpBodySetAngVel(aBody, aOmega);
+	cpBodySetAngularVelocity(aBody, aOmega);
 }
 
 // add angular velocity to a body
 void Collidable::AddOmega(CollidableBody *aBody, const float aDelta)
 {
-	cpBodySetAngVel(aBody, cpBodyGetAngVel(aBody) + aDelta);
+	cpBodySetAngularVelocity(aBody, cpBodyGetAngularVelocity(aBody) + aDelta);
 }
 
 // apply an impulse to a body
 void Collidable::ApplyImpulse(CollidableBody *aBody, const Vector2 &aImpulse)
 {
-	cpBodyApplyImpulse(aBody, cpv(aImpulse.x, aImpulse.y), cpvzero);
+	cpBodyApplyImpulseAtLocalPoint(aBody, cpv(aImpulse.x, aImpulse.y), cpvzero);
 }
 

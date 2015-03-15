@@ -41,6 +41,7 @@
 	</renderable>
 	<expire time="6" switchonexpire="enemybulletexplosion" />
 	<bullet damage="1" spawnondeath="enemyfireballexplosion" />
+	<cancelable switchoncancel="enemyfireballexplosion" spawnoncancel="canceldrop" tethered="1" backlash="1"/>
 	<damagable health="1" spawnondeath="enemyfireballexplosion" />
 	<aimer>
 		<drift strength="1"/>

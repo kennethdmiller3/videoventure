@@ -212,8 +212,7 @@ Status RipOffBehavior::AvoidFriendly(void)
 	const RipOffBehaviorTemplate &ripoffbehavior = Database::ripoffbehaviortemplate.Get(mId);
 
 	// close to a friendly?
-	CollidableFilter filter;
-	filter.mType = (1 << (3 + 16)) | 0xFFFF;
+	CollidableFilter filter(0, ~0U, 1U<<3);
 	unsigned int friendly = ClosestEntity(ripoffbehavior.mAvoidRadius, filter);
 	if (!friendly)
 		return failedTask;
@@ -232,8 +231,7 @@ Status RipOffBehavior::AttackEnemy(void)
 	const RipOffBehaviorTemplate &ripoffbehavior = Database::ripoffbehaviortemplate.Get(mId);
 
 	// close to an enemy?
-	CollidableFilter filter;
-	filter.mType = (1 << (1 + 16)) | 0xFFFF;
+	CollidableFilter filter(0, ~0U, 1U<<1);
 	unsigned int enemy = ClosestEntity(mTarget ? ripoffbehavior.mAttackRadius : 65536.0f, filter);
 	if (!enemy)
 		return failedTask;
@@ -246,8 +244,7 @@ Status RipOffBehavior::AttackEnemy(void)
 	// check line of fire
 	Vector2 shotstart = mEntity->GetPosition();
 	Vector2 shotend = mEntity->GetTransform().Transform(Vector2(0, 64));
-	CollidableFilter shotfilter;
-	shotfilter.mType = 0xFFFF | (1 << 4);
+	CollidableFilter shotfilter(0, 1U<<4, ~0U);
 	float lambda = 1.0f;
 	Vector2 normal;
 	CollidableShape *shape;
