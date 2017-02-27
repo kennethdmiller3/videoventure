@@ -447,7 +447,7 @@ int CommandDatabase(const char * const aParam[], int aCount)
 	{
 		// get the database identifier
 		unsigned int id;
-		if (!TIXML_SSCANF(aParam[0], "0x%x", &id))
+		if (!sscanf(aParam[0], "0x%x", &id))
 			id = Hash(aParam[0]);
 
 		// get the dtabase
@@ -484,7 +484,7 @@ int CommandFind(const char * const aParam[], int aCount)
 	{
 		// get the database identifier
 		unsigned int id;
-		if (!TIXML_SSCANF(aParam[0], "0x%x", &id))
+		if (!sscanf(aParam[0], "0x%x", &id))
 			id = Hash(aParam[0]);
 
 		// get the database
@@ -496,7 +496,7 @@ int CommandFind(const char * const aParam[], int aCount)
 			{
 				// if the key is an identifier...
 				unsigned int key = 0;
-				if (TIXML_SSCANF(aParam[1], "0x%x", &key))
+				if (sscanf(aParam[1], "0x%x", &key))
 				{
 					// look up the identifier
 					if (const void *value = db->Find(key))
@@ -554,7 +554,7 @@ int CommandComponents(const char * const aParam[], int aCount)
 	{
 		// get the identifier
 		unsigned int key;
-		if (!TIXML_SSCANF(aParam[0], "0x%x", &key))
+		if (!sscanf(aParam[0], "0x%x", &key))
 			key = Hash(aParam[0]);
 
 		// for each database...

@@ -64,7 +64,7 @@ bool SplitLevel(const char *config, const char *output)
 					{
 						// generate file path based on element type and name
 						char path[256];
-						TIXML_SNPRINTF(path, sizeof(path), "%s/%s.xml", element->Value(), name);
+						snprintf(path, sizeof(path), "%s/%s.xml", element->Value(), name);
 						DebugPrint("%s\n", path);
 
 						// create a new XML document

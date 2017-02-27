@@ -22,9 +22,9 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Session15", "Session15\Sess
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Session4", "Session4-AssaultWing\Session4.vcxproj", "{22E7D39F-2FFF-40DB-8AF6-9DC9D63131CF}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "chipmunk", "..\chipmunk-7.0.0\msvc\vc13\chipmunk\chipmunk.vcxproj", "{C1ACE86E-5A14-490A-9678-104BA2546723}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "chipmunk", "..\chipmunk-7.0.1\msvc\vc13\chipmunk\chipmunk.vcxproj", "{C1ACE86E-5A14-490A-9678-104BA2546723}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "glfw", "..\glfw3\msvc120\src\glfw.vcxproj", "{05AC5C39-B9BF-4AC5-B11F-C9B41C24F26A}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "glfw", "..\glfw-3.2.1\msvc120\src\glfw.vcxproj", "{8E17B868-49A7-36AA-AC43-15D49CB538EA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -76,10 +76,10 @@ Global
 		{C1ACE86E-5A14-490A-9678-104BA2546723}.Debug|Win32.Build.0 = Debug|Win32
 		{C1ACE86E-5A14-490A-9678-104BA2546723}.Release|Win32.ActiveCfg = Release|Win32
 		{C1ACE86E-5A14-490A-9678-104BA2546723}.Release|Win32.Build.0 = Release|Win32
-		{05AC5C39-B9BF-4AC5-B11F-C9B41C24F26A}.Debug|Win32.ActiveCfg = Debug|Win32
-		{05AC5C39-B9BF-4AC5-B11F-C9B41C24F26A}.Debug|Win32.Build.0 = Debug|Win32
-		{05AC5C39-B9BF-4AC5-B11F-C9B41C24F26A}.Release|Win32.ActiveCfg = MinSizeRel|Win32
-		{05AC5C39-B9BF-4AC5-B11F-C9B41C24F26A}.Release|Win32.Build.0 = MinSizeRel|Win32
+		{8E17B868-49A7-36AA-AC43-15D49CB538EA}.Debug|Win32.ActiveCfg = Debug|Win32
+		{8E17B868-49A7-36AA-AC43-15D49CB538EA}.Debug|Win32.Build.0 = Debug|Win32
+		{8E17B868-49A7-36AA-AC43-15D49CB538EA}.Release|Win32.ActiveCfg = MinSizeRel|Win32
+		{8E17B868-49A7-36AA-AC43-15D49CB538EA}.Release|Win32.Build.0 = MinSizeRel|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
