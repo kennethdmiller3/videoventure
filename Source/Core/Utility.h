@@ -132,3 +132,10 @@ template<typename T> struct Rect
 // SIMD utilities
 // including specializations of the above functions for SIMD
 #include "UtilitySIMD.h"
+
+// POSIX names
+#if defined _MSC_VER
+#define snprintf _snprintf
+#define vsnprintf _vsnprintf
+#endif
+
