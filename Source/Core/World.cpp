@@ -31,7 +31,7 @@ namespace Database
 			const char *name = element->Attribute("name");
 			tinyxml2::XMLDocument document;
 			if (document.LoadFile(name) != tinyxml2::XML_SUCCESS)
-				DebugPrint("error loading import file \"%s\": %s %s\n", name, document.GetErrorStr1(), document.GetErrorStr2());
+				DebugPrint("error loading import file \"%s\": %s\n", name, document.ErrorStr());
 
 			// process child elements
 			if (const tinyxml2::XMLElement *root = document.FirstChildElement())

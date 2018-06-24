@@ -300,7 +300,7 @@ int CommandImport(const char * const aParam[], int aCount)
 		// level configuration
 		tinyxml2::XMLDocument document;
 		if (document.LoadFile(aParam[0]) != tinyxml2::XML_SUCCESS)
-			DebugPrint("error loading import file \"%s\": %s %s\n", aParam[0], document.GetErrorStr1(), document.GetErrorStr2());
+			DebugPrint("error loading import file \"%s\": %s\n", aParam[0], document.ErrorStr());
 
 		// process child element
 		if (const tinyxml2::XMLElement *root = document.FirstChildElement())

@@ -530,7 +530,7 @@ void RunState()
 		if (playback)
 		{
 			if (inputlog.LoadFile(RECORD_CONFIG.c_str()) != tinyxml2::XML_SUCCESS)
-				DebugPrint("error loading recording file \"%s\": %s %s\n", RECORD_CONFIG.c_str(), inputlog.GetErrorStr1(), inputlog.GetErrorStr2());
+				DebugPrint("error loading recording file \"%s\": %s\n", RECORD_CONFIG.c_str(), inputlog.ErrorStr());
 			inputlogroot = inputlog.RootElement();
 			inputlognext = inputlogroot->FirstChildElement();
 		}

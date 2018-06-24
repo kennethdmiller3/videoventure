@@ -27,7 +27,7 @@ bool InitInput(const char *config)
 	DebugPrint("\nInput %s\n", config);
 	tinyxml2::XMLDocument document;
 	if (document.LoadFile(config) != tinyxml2::XML_SUCCESS)
-		DebugPrint("error loading input file \"%s\": %s %s\n", config, document.GetErrorStr1(), document.GetErrorStr2());
+		DebugPrint("error loading input file \"%s\": s\n", config, document.ErrorStr());
 
 	// process child elements of the root
 	if (const tinyxml2::XMLElement *root = document.FirstChildElement("input"))
@@ -45,7 +45,7 @@ bool SplitLevel(const char *config, const char *output)
 	DebugPrint("Level %s -> %s\n", config, output);
 	tinyxml2::XMLDocument document;
 	if (document.LoadFile(config) != tinyxml2::XML_SUCCESS)
-		DebugPrint("error loading level file \"%s\": %s %s\n", config, document.GetErrorStr1(), document.GetErrorStr2());
+		DebugPrint("error loading level file \"%s\": s\n", config, document.ErrorStr());
 
 	// if the document has a world section...
 	if (tinyxml2::XMLElement *root = document.FirstChildElement("world"))
@@ -88,7 +88,7 @@ bool SplitLevel(const char *config, const char *output)
 						}
 						else
 						{
-							DebugPrint("error loading import file \"%s\": %s %s\n", name, document.GetErrorStr1(), document.GetErrorStr2());
+							DebugPrint("error loading import file \"%s\": s\n", name, document.ErrorStr());
 						}
 					}
 				}
@@ -110,7 +110,7 @@ bool MergeLevel(const char *config, const char *output)
 	DebugPrint("Level %s -> %s\n", config, output);
 	tinyxml2::XMLDocument document;
 	if (document.LoadFile(config) != tinyxml2::XML_SUCCESS)
-		DebugPrint("error loading level file \"%s\": %s %s\n", config, document.GetErrorStr1(), document.GetErrorStr2());
+		DebugPrint("error loading level file \"%s\": s\n", config, document.ErrorStr());
 
 	// if the document has a world section...
 	if (tinyxml2::XMLElement *root = document.FirstChildElement("world"))
@@ -132,7 +132,7 @@ bool MergeLevel(const char *config, const char *output)
 						tinyxml2::XMLDocument piece;
 						if (piece.LoadFile(name) != tinyxml2::XML_SUCCESS)
 						{
-							DebugPrint("error loading import file \"%s\": %s %s\n", name, document.GetErrorStr1(), document.GetErrorStr2());
+							DebugPrint("error loading import file \"%s\": s\n", name, document.ErrorStr());
 							continue;
 						}
 
@@ -167,7 +167,7 @@ bool InitLevel(const char *config)
 	DebugPrint("\nLevel %s\n", config);
 	tinyxml2::XMLDocument document;
 	if (document.LoadFile(config) != tinyxml2::XML_SUCCESS)
-		DebugPrint("error loading level file \"%s\": %s %s\n", config, document.GetErrorStr1(), document.GetErrorStr2());
+		DebugPrint("error loading level file \"%s\": s\n", config, document.ErrorStr());
 
 	// if the document has a world section...
 	if (const tinyxml2::XMLElement *root = document.FirstChildElement("world"))
