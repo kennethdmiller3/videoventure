@@ -861,7 +861,7 @@ Weapon::Weapon(const WeaponTemplate &aTemplate, unsigned int aId)
 	if (aTemplate.mAction.empty())
 	{
 		// set to none
-		DebugPrint("warning: weapon \"%s\" has no action\n", Database::name.Get(aId));
+		DebugPrint("warning: weapon \"%s\" has no action\n", Database::name.Get(aId).c_str());
 		SetAction(Action(this, &Weapon::UpdateNone));
 	}
 	else

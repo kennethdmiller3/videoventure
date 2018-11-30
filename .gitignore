@@ -3,6 +3,7 @@
 *.user
 
 # Visual C++ cache files
+.vs/
 ipch/
 *.aps
 *.sdf

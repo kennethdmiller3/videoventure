@@ -42,7 +42,7 @@ namespace Database
 				// get import identifier
 				unsigned int aImportId = Hash(type);
 				if (!Database::name.Find(aImportId))
-					DebugPrint("warning: \"%s\" base type \"%s\" not found\n", Database::name.Get(aId), type);
+					DebugPrint("warning: \"%s\" base type \"%s\" not found\n", Database::name.Get(aId).c_str(), type);
 
 				// inherit components
 				Database::Inherit(aId, aImportId);
