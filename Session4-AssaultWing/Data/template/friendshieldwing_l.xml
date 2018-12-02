@@ -23,7 +23,6 @@
 		</body>
 	</collidable>
 	<renderable radius="7" period="0.033333">
-		<calllist name="shieldwing" />
 		<calllist name="friendshieldwing" />
 		<pushmatrix>
 			<translate x="1.25" />

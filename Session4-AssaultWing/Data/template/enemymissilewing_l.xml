@@ -12,7 +12,6 @@
 		</body>
 	</collidable>
 	<renderable radius="7">
-		<calllist name="missilewing" />
 		<calllist name="enemymissilewing" />
 	</renderable>
 	<link name="fire1">

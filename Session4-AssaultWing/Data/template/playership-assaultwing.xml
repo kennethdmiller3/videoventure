@@ -118,7 +118,7 @@
 				</circle>
 			</body>
 		</collidable>
-		<renderable radius="10">
+		<renderable radius="10" depth="-1">
 			<drawlist>
 				<quads>
 					<color r="0.0" g="0.5" b="1.0" a="1.0"/>
