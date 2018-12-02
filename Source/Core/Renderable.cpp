@@ -36,6 +36,8 @@ namespace Database
 			// process child elements
 			std::vector<unsigned int> &buffer = Database::dynamicdrawlist.Open(aId);
 
+			int buffersize = buffer.size();
+
 #ifdef DRAW_FRONT_TO_BACK
 			if (!inherit)
 				buffer.clear();
@@ -47,6 +49,8 @@ namespace Database
 			if (inherit)
 				buffer.insert(buffer.end(), original.begin(), original.end());
 #endif
+
+			DebugPrint("renderable buffer size %d -> %d\n", buffersize, buffer.size());
 
 			Database::dynamicdrawlist.Close(aId);
 		}
