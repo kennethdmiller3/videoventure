@@ -14,9 +14,6 @@
 // OPENGL FUNCTIONS
 //
 
-// OpenGL 1.2
-PFNGLDRAWRANGEELEMENTSPROC glDrawRangeElements;
-
 // OpenGL 1.3
 PFNGLACTIVETEXTUREPROC glActiveTexture;
 
@@ -171,9 +168,6 @@ float sFogEnd;
 // bind function pointers
 void BindFunctionPointers(void)
 {
-	// bind 1.2 function pointers
-	glDrawRangeElements = reinterpret_cast<PFNGLDRAWRANGEELEMENTSPROC>(glfwGetProcAddress("glDrawRangeElements"));
-
 	// bind 1.3 function pointers
 	glActiveTexture = reinterpret_cast<PFNGLACTIVETEXTUREPROC>(glfwGetProcAddress("glActiveTexture"));
 
@@ -619,18 +613,16 @@ void RQ_DrawArrays(Expression::Context &aContext)
 }
 
 // draw indexed primitive
-struct DrawRangeElementsDesc
+struct DrawElementsDesc
 {
 	GLubyte mode;
-	GLushort start;
-	GLushort end;
 	GLushort count;
 	GLuint offset;
 };
-void RQ_DrawRangeElements(Expression::Context &aContext)
+void RQ_DrawElements(Expression::Context &aContext)
 {
-	DrawRangeElementsDesc desc(Expression::Read<DrawRangeElementsDesc>(aContext));
-	glDrawRangeElements(desc.mode, desc.start, desc.end, desc.count, GL_UNSIGNED_SHORT, reinterpret_cast<const GLvoid *>(desc.offset));
+	DrawElementsDesc desc(Expression::Read<DrawElementsDesc>(aContext));
+	glDrawElements(desc.mode, desc.count, GL_UNSIGNED_SHORT, reinterpret_cast<const GLvoid *>(desc.offset));
 }
 
 void RQ_ClearFrame(Expression::Context &aContext)
@@ -1678,18 +1670,15 @@ void DrawArrays(GLenum aDrawMode, /*GLuint aVertexFirst,*/ GLuint aVertexCount)
 void DrawElements(GLenum aDrawMode, /*GLuint aVertexFirst,*/ GLuint aVertexCount, GLuint aIndexCount, GLuint aIndexOffset)
 {
 #ifdef RENDER_USE_QUEUE
-	DrawRangeElementsDesc desc;
+	DrawElementsDesc desc;
 	assert(sIndexBuffer->mHandle <= UCHAR_MAX);
 	desc.mode = GLubyte(aDrawMode);
-	desc.start = 0;
-	assert(sVertexCount <= USHRT_MAX);
-	desc.end = GLushort(aVertexCount);
 	assert(sIndexCount <= USHRT_MAX);
 	desc.count = GLushort(aIndexCount);
 	desc.offset = aIndexOffset;
-	Expression::Append(sRenderQueue, RQ_DrawRangeElements, desc);
+	Expression::Append(sRenderQueue, RQ_DrawElements, desc);
 #else
-	glDrawRangeElements(aDrawMode, 0, aVertexCount, aIndexCount, GL_UNSIGNED_SHORT, reinterpret_cast<const GLvoid *>(aIndexOffset));
+	glDrawElements(aDrawMode, aIndexCount, GL_UNSIGNED_SHORT, reinterpret_cast<const GLvoid *>(aIndexOffset));
 #endif
 }
 
