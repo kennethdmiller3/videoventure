@@ -96,6 +96,7 @@
 						<texcoord s="0" t="2" />
 						<vertex x="1024" y="-1024" z="256" />
 					</quads>
+					<bindtexture />
 				</pushattrib>
 			</drawlist>
 		</renderable>

@@ -92,6 +92,7 @@
 						<texcoord s="1" t="1" />
 						<vertex x="2048" y="-2048" z="512" />
 					</quads>
+					<bindtexture />
 				</pushattrib>
 			</drawlist>
 		</renderable>
