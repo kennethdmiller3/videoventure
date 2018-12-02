@@ -358,8 +358,9 @@ namespace Database
 		static void DynamicDrawlistConfigure(unsigned int aId, const tinyxml2::XMLElement *element)
 		{
 			std::vector<unsigned int> &buffer = Database::dynamicdrawlist.Open(aId);
-			assert(buffer.size() == 0);
+			size_t buffersize = buffer.size();
 			ConfigureDrawItems(aId, element, buffer, false);
+			DebugPrint("dynamic drawlist size %d -> %d\n", buffersize, buffer.size());
 			Database::dynamicdrawlist.Close(aId);
 		}
 		Configure dynamicdrawlistconfigure(0xdf3cf9c0 /* "dynamicdrawlist" */, DynamicDrawlistConfigure);
@@ -369,10 +370,12 @@ namespace Database
 			// configure static drawlist and generator drawlist
 			Database::Key genId(Hash(sGenTag, aId));
 			std::vector<unsigned int> &generate = Database::generatedrawlist.Open(genId);
-			assert(generate.size() == 0);
+			size_t generatesize = generate.size();
 			std::vector<unsigned int> &buffer = Database::drawlist.Open(aId);
-			assert(buffer.size() == 0);
+			size_t buffersize = buffer.size();
 			ConfigureStatic(aId, element, buffer, generate);
+			DebugPrint("generate drawlist size %d -> %d\n", generatesize, generate.size());
+			DebugPrint("static drawlist size %d -> %d\n", buffersize, buffer.size());
 			Database::drawlist.Close(aId);
 			Database::generatedrawlist.Close(genId);
 		}
@@ -1599,10 +1602,12 @@ void ConfigureDrawItem(unsigned int aId, const tinyxml2::XMLElement *element, st
 			// create a generator drawlist
 			Database::Key handle = Database::generatedrawlist.GetCount() + 1;
 			std::vector<unsigned int> &generate = Database::generatedrawlist.Open(handle);
-			assert(generate.size() == 0);
+			size_t generatesize = generate.size();
 
 			// configure static data
 			ConfigureStatic(aId, element, buffer, generate);
+
+			DebugPrint("generate drawlist size %d -> %d\n", generatesize, generate.size());
 
 			// close generator drawlist
 			Database::generatedrawlist.Close(handle);
@@ -1822,7 +1827,8 @@ void ConfigureDrawItem(unsigned int aId, const tinyxml2::XMLElement *element, st
 			const float *data;
 			GetTypeData(type, width, names, data);
 
-			unsigned int *map = static_cast<unsigned int *>(_alloca(width * sizeof(unsigned int)));
+			Expression::Append(buffer, DO_Swizzle, name, width);
+
 			for (int i = 0; i < width; ++i)
 			{
 				unsigned int map;
@@ -1837,6 +1843,7 @@ void ConfigureDrawItem(unsigned int aId, const tinyxml2::XMLElement *element, st
 				}
 				else if (unsigned int hash = Hash(attrib))
 				{
+					map = ~0U;
 					for (int j = 0; j < width; ++j)
 					{
 						if (Hash(names[j]) == hash)
@@ -1846,11 +1853,8 @@ void ConfigureDrawItem(unsigned int aId, const tinyxml2::XMLElement *element, st
 						}
 					}
 				}
+				buffer.push_back(map);
 			}
-
-			Expression::Append(buffer, DO_Swizzle, name, width);
-			for (int i = 0; i < width; ++i)
-				buffer.push_back(map[i]);
 		}
 		break;
 
@@ -1877,6 +1881,8 @@ void ConfigureDrawItem(unsigned int aId, const tinyxml2::XMLElement *element, st
 		}
 
 		DebugPrint("Unknown draw item \"%s\"\n", element->Value());
+		ConfigureDrawItems(aId, element, buffer, bake, context);
+
 		break;
 	}
 }
