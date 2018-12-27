@@ -15,7 +15,9 @@ namespace Platform
 	bool OpenWindow(void)
 	{
 		// set window hints
-		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
+		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
+		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_COMPAT_PROFILE);
 #ifdef ENABLE_ACCUMULATION_BUFFER
 		glfwWindowHint(GLFW_ACCUM_RED_BITS, 16);
 		glfwWindowHint(GLFW_ACCUM_GREEN_BITS, 16);

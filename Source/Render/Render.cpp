@@ -89,6 +89,8 @@ PFNGLGETSTRINGIPROC glGetStringi;
 static BufferObject sDynamicVertexBuffer;
 static BufferObject sDynamicIndexBuffer;
 
+// vertex array object
+static GLuint sVertexArray;
 
 //
 // DRAW STATE
@@ -306,7 +308,11 @@ void InitRender(void)
 	BufferInit(sDynamicIndexBuffer, GL_ELEMENT_ARRAY_BUFFER, GL_STREAM_DRAW);
 	BufferGen(sDynamicIndexBuffer);
 	BufferSetData(sDynamicIndexBuffer, 128 * 1024, NULL);
-	
+
+	// set up shared vertex array
+	glGenVertexArrays(1, &sVertexArray);
+	glBindVertexArray(sVertexArray);
+
 	// clear render state
 	ClearRenderState();
 
