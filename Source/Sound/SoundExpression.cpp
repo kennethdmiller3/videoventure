@@ -9,7 +9,7 @@ static bool Configure(SoundTemplate &self, const tinyxml2::XMLElement *element, 
 	// get sound length
 	float length;
 	element->QueryFloatAttribute("length", &length);
-	size_t count = xs_CeilToInt(length * AUDIO_FREQUENCY);
+	int count = xs_CeilToInt(length * AUDIO_FREQUENCY);
 
 	// reserve space
 	self.Reserve(count);
@@ -22,7 +22,7 @@ static bool Configure(SoundTemplate &self, const tinyxml2::XMLElement *element, 
 	EntityContext context(&buffer[0], buffer.size(), 0, id);
 
 	// for each sample...
-	for (size_t i = 0; i < count; ++i, context.Restart())
+	for (int i = 0; i < count; ++i, context.Restart())
 	{
 		// evaluate the expression
 		context.mParam = float(i) / AUDIO_FREQUENCY;

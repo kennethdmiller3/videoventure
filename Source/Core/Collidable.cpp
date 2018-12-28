@@ -510,9 +510,9 @@ bool CollidableTemplate::Configure(const tinyxml2::XMLElement *element, unsigned
 	for (Database::Typed<CollidablePolygonDef>::Iterator itor(Database::collidablepolygons.Find(id)); itor.IsValid(); ++itor)
 	{
 		const CollidablePolygonDef &def = itor.GetValue();
-		size_t count = def.mVertices.size();
+		int count = int(def.mVertices.size());
 		cpVect *verts = static_cast<cpVect *>(_alloca(sizeof(cpVect)*count));
-		for (size_t i = 0; i < count; ++i)
+		for (int i = 0; i < count; ++i)
 			verts[i] = cpv(def.mVertices[i].x, def.mVertices[i].y);
 		float mass = def.mDensity * float(cpAreaForPoly(count, verts, 0.0f));
 		mBodyDef.mMass += mass;
@@ -920,10 +920,10 @@ const AlignedBox2 &Collidable::GetBoundary(void)
 
 static void PostStepAddToWorld(cpSpace *space, void *key, void *id)
 {
-	Collidable::AddToWorld(reinterpret_cast<unsigned int>(id));
+	Collidable::AddToWorld(reinterpret_cast<Database::Key>(id));
 }
 
-void Collidable::AddToWorld(unsigned int aId)
+void Collidable::AddToWorld(Database::Key aId)
 {
 	if (cpSpaceIsLocked(world))
 	{
@@ -994,9 +994,9 @@ void Collidable::AddToWorld(unsigned int aId)
 	for (Database::Typed<CollidablePolygonDef>::Iterator itor(Database::collidablepolygons.Find(aId)); itor.IsValid(); ++itor)
 	{
 		const CollidablePolygonDef &def = itor.GetValue();
-		size_t count = def.mVertices.size();
+		int count = int(def.mVertices.size());
 		cpVect *verts = static_cast<cpVect *>(_alloca(sizeof(cpVect)*count));
-		for (size_t i = 0; i < count; ++i)
+		for (int i = 0; i < count; ++i)
 			verts[i] = cpv(def.mVertices[count-1-i].x, def.mVertices[count-1-i].y);
 		cpShape *shape = cpPolyShapeNew(body,
 			count, verts, cpTransformNew(1.0f, 0.0f, 0.0f, 1.0f, def.mOffset.x, def.mOffset.y), 0.0f);
@@ -1024,11 +1024,11 @@ void Collidable::AddToWorld(unsigned int aId)
 	for (Database::Typed<CollidableChainDef>::Iterator itor(Database::collidablechains.Find(aId)); itor.IsValid(); ++itor)
 	{
 		const CollidableChainDef &def = itor.GetValue();
-		size_t count = def.mVertices.size();
+		int count = int(def.mVertices.size());
 		cpVect a = def.mLoop
 			? cpv(def.mVertices[count-1].x, def.mVertices[count-1].y)
 			: cpv(def.mVertices[0].x, def.mVertices[0].y);
-		for (size_t i = def.mLoop ? 0 : 1; i < count; ++i)
+		for (int i = def.mLoop ? 0 : 1; i < count; ++i)
 		{
 			cpVect b = cpv(def.mVertices[i].x, def.mVertices[i].y);
 			cpShape *shape = cpSegmentShapeNew(body, a, b, def.mRadius);
@@ -1072,7 +1072,7 @@ static void PostStepRemoveFromWorld(cpSpace *space, void *key, void *id)
 	Collidable::RemoveFromWorld(reinterpret_cast<unsigned int>(id));
 }
 
-void Collidable::RemoveFromWorld(unsigned int aId)
+void Collidable::RemoveFromWorld(Database::Key aId)
 {
 	if (cpSpaceIsLocked(world))
 	{

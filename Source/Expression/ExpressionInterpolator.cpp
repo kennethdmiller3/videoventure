@@ -197,10 +197,11 @@ template <typename T> void ConfigureInterpolator(const tinyxml2::XMLElement *ele
 	}
 
 	// process interpolator data
-	buffer.push_back(0);
-	int start = buffer.size();
+	size_t buffer_size_at = buffer.size();
+	Expression::Alloc(buffer, sizeof(unsigned int));
+	size_t start = buffer.size();
 	ConfigureInterpolatorItem(element, buffer, sizeof(T)/sizeof(float), names, defaults);
-	buffer[start - 1] = buffer.size() - start;
+	*new (buffer.data() + buffer_size_at) unsigned int = unsigned int(buffer.size() - start);
 }
 
 

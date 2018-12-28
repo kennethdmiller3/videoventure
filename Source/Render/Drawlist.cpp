@@ -364,7 +364,7 @@ void DO_Vertex(EntityContext &aContext)
 void DO_Repeat(EntityContext &aContext)
 {
 	const int repeat(Expression::Read<int>(aContext));
-	const size_t size(Expression::Read<size_t>(aContext));
+	const unsigned int size(Expression::Read<unsigned int>(aContext));
 	EntityContext context(aContext.mStream, size, aContext.mParam, aContext.mId, aContext.mVars);
 	for (int i = 0; i < repeat; i++)
 	{
@@ -380,7 +380,7 @@ void DO_Block(EntityContext &aContext)
 	const float length(Expression::Read<float>(aContext));
 	const float scale(Expression::Read<float>(aContext));
 	const int repeat(Expression::Read<int>(aContext));
-	const size_t size(Expression::Read<size_t>(aContext));
+	const unsigned int size(Expression::Read<unsigned int>(aContext));
 	float t = aContext.mParam - start;
 	if (t >= 0.0f && length > 0.0f)
 	{
@@ -426,7 +426,7 @@ void DO_Loop(EntityContext &aContext)
 	const float from = Expression::Read<float>(aContext);
 	const float to   = Expression::Read<float>(aContext);
 	const float by   = Expression::Read<float>(aContext);
-	const size_t size = Expression::Read<size_t>(aContext);
+	const unsigned int size = Expression::Read<unsigned int>(aContext);
 
 //		Database::Typed<float> &variables = Database::variable.Open(aContext.mId);
 	EntityContext context(aContext.mStream, size, aContext.mParam, aContext.mId, aContext.mVars);
@@ -932,10 +932,11 @@ void ConfigureDrawItem(unsigned int aId, const tinyxml2::XMLElement *element, st
 
 			Expression::Append(buffer, DO_Repeat, count);
 
-			buffer.push_back(0);
-			const int start = buffer.size();
+			size_t buffer_size_at = buffer.size();
+			Expression::Alloc(buffer, sizeof(unsigned int));
+			size_t start = buffer.size();
 			ConfigureDrawItems(aId, element, buffer);
-			buffer[start-1] = buffer.size() - start;
+			*new (buffer.data() + buffer_size_at) unsigned int = unsigned int(buffer.size() - start);
 		}
 		break;
 
@@ -952,10 +953,11 @@ void ConfigureDrawItem(unsigned int aId, const tinyxml2::XMLElement *element, st
 
 			Expression::Append(buffer, DO_Block, start, length, scale, repeat);
 
-			buffer.push_back(0);
-			int size = buffer.size();
+			size_t buffer_size_at = buffer.size();
+			Expression::Alloc(buffer, sizeof(unsigned int));
+			size_t size = buffer.size();
 			ConfigureDrawItems(aId, element, buffer);
-			buffer[size-1] = buffer.size() - size;
+			*new (buffer.data() + buffer_size_at) unsigned int = unsigned int(buffer.size() - size);
 		}
 		break;
 
@@ -978,10 +980,11 @@ void ConfigureDrawItem(unsigned int aId, const tinyxml2::XMLElement *element, st
 
 			Expression::Append(buffer, DO_Loop, name, from, to, by);
 
-			buffer.push_back(0);
-			const int start = buffer.size();
+			size_t buffer_size_at = buffer.size();
+			Expression::Alloc(buffer, sizeof(unsigned int));
+			size_t start = buffer.size();
 			ConfigureDrawItems(aId, element, buffer);
-			buffer[start-1] = buffer.size() - start;
+			*new (buffer.data() + buffer_size_at) unsigned int = unsigned int(buffer.size() - start);
 		}
 		break;
 #endif
@@ -1000,10 +1003,11 @@ void ConfigureDrawItem(unsigned int aId, const tinyxml2::XMLElement *element, st
 
 			Expression::Append(buffer, DO_Emitter, count, period, x, y, a);
 
-			buffer.push_back(0);
-			const int start = buffer.size();
+			size_t buffer_size_at = buffer.size();
+			Expression::Alloc(buffer, sizeof(unsigned int));
+			size_t start = buffer.size();
 			ConfigureDrawItems(aId, element, buffer);
-			buffer[start-1] = buffer.size() - start;
+			*new (buffer.data() + buffer_size_at) unsigned int = unsigned int(buffer.size() - start);
 		}
 		break;
 #endif

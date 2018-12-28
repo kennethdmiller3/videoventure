@@ -11,7 +11,7 @@ namespace Database
 	class MemoryPoolRef : public MemoryPool
 	{
 	private:
-		size_t mRef;
+		unsigned int mRef;
 
 	private:
 		~MemoryPoolRef()
@@ -24,17 +24,17 @@ namespace Database
 		{
 		}
 
-		MemoryPoolRef(size_t aSize, size_t aStart, size_t aGrow)
+		MemoryPoolRef(unsigned int aSize, unsigned int aStart, unsigned int aGrow)
 			: MemoryPool(aSize, aStart, aGrow), mRef(1)
 		{
 		}
 
-		size_t AddRef(void)
+		unsigned int AddRef(void)
 		{
 			return ++mRef;
 		}
 
-		size_t Release(void)
+		unsigned int Release(void)
 		{
 			if (--mRef > 0)
 				return mRef;
@@ -54,18 +54,18 @@ namespace Database
 	protected:
 		const unsigned int mId;
 
-		static const size_t EMPTY = ~0U;
+		static const unsigned int EMPTY = ~0U;
 
 		MemoryPoolRef *mPool;	// (shared) memory pool
 
-		size_t mBits;		// bit count
-		size_t mLimit;		// maximum number of database records (1 << bit count)
-		size_t mCount;		// current number of database records
-		size_t mMask;		// map index mask
-		size_t *mMap;		// map key to database records (2x maximum)
-		Key *mKey;			// database record key pool
-		void **mData;		// database record data pool
-		void *mNil;			// database default record
+		unsigned int mBits;		// bit count
+		unsigned int mLimit;	// maximum number of database records (1 << bit count)
+		unsigned int mCount;	// current number of database records
+		unsigned int mMask;		// map index mask
+		unsigned int *mMap;		// map key to database records (2x maximum)
+		Key *mKey;				// database record key pool
+		void **mData;			// database record data pool
+		void *mNil;				// database default record
 
 	protected:
 		void Alloc(void);
@@ -73,24 +73,24 @@ namespace Database
 		void Grow(void);
 		void Copy(const Untyped &aSource);
 
-		inline size_t Index(Key aKey) const
+		inline unsigned int Index(Key aKey) const
 		{
 			// convert key to a hash map index
 			// (HACK: assume key is already a hash)
 			return ((aKey >> (mBits + 1)) ^ aKey) & mMask;
 		}
 
-		inline size_t Next(size_t aIndex) const
+		inline unsigned int Next(unsigned int aIndex) const
 		{
 			return (aIndex + 1) & mMask;
 		}
 
-		inline size_t FindIndex(Key aKey) const
+		inline unsigned int FindIndex(Key aKey) const
 		{
-			size_t index = Index(aKey);
+			unsigned int index = Index(aKey);
 
 			// while the slot is not empty...
-			size_t slot = mMap[index];
+			unsigned int slot = mMap[index];
 			while (slot != EMPTY && mKey[slot] != aKey)
 			{
 				index = Next(index);
@@ -100,12 +100,12 @@ namespace Database
 			return index;
 		}
 
-		inline size_t FindSlot(Key aKey) const
+		inline unsigned int FindSlot(Key aKey) const
 		{
-			size_t index = Index(aKey);
+			unsigned int index = Index(aKey);
 
 			// while the slot is not empty...
-			size_t slot = mMap[index];
+			unsigned int slot = mMap[index];
 			while (slot != EMPTY && mKey[slot] != aKey)
 			{
 				index = Next(index);
@@ -117,8 +117,8 @@ namespace Database
 
 		void *AllocRecord(Key aKey)
 		{
-			size_t slot = mCount++;
-			size_t index = FindIndex(aKey);
+			unsigned int slot = mCount++;
+			unsigned int index = FindIndex(aKey);
 			_ASSERTE(index >= 0 && index < mLimit * 2);
 			_ASSERTE(mMap[index] == EMPTY);
 			mMap[index] = slot;
@@ -130,7 +130,7 @@ namespace Database
 			return memset(GetRecord(slot), 0, GetStride());
 		}
 
-		inline void *GetRecord(size_t aSlot) const
+		inline void *GetRecord(unsigned int aSlot) const
 		{
 			_ASSERTE(aSlot >= 0 && aSlot < mCount);
 			_ASSERTE(mData[aSlot] != NULL);
@@ -155,7 +155,7 @@ namespace Database
 		};
 
 	public:
-		Untyped(unsigned int aId, size_t aStride, size_t aBits);
+		Untyped(unsigned int aId, unsigned int aStride, unsigned int aBits);
 		Untyped(const Untyped &aSource);
 		virtual ~Untyped();
 
@@ -175,11 +175,11 @@ namespace Database
 		{
 			return mPool->GetGrow();
 		}
-		size_t GetLimit(void) const
+		unsigned int GetLimit(void) const
 		{
 			return mLimit;
 		}
-		size_t GetCount(void) const
+		unsigned int GetCount(void) const
 		{
 			return mCount;
 		}
@@ -210,11 +210,11 @@ namespace Database
 		{
 		protected:
 			const Untyped *mDatabase;
-			size_t mSlot;
+			unsigned int mSlot;
 
 		public:
 			// default constructor
-			Iterator(const Untyped *aDatabase, size_t aSlot = 0)
+			Iterator(const Untyped *aDatabase, unsigned int aSlot = 0)
 				: mDatabase(aDatabase), mSlot(aSlot)
 			{
 			}
@@ -258,7 +258,7 @@ namespace Database
 			}
 
 			// get the iterator slot
-			size_t GetSlot(void)
+			unsigned int GetSlot(void)
 			{
 				return mSlot;
 			}

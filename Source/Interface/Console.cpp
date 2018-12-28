@@ -246,13 +246,13 @@ void Console::Render()
 }
 
 // formatted print
-void Console::Print(const char *s, ...)
+void Console::Print(const char *format, ...)
 {
 	// generate output text
 	va_list argument;
 	char buffer[4096];
-	va_start(argument, s);
-	vsnprintf(buffer, 4096, s, argument);
+	va_start(argument, format);
+	vsnprintf(buffer, 4096, format, argument);
 	va_end(argument);
 
 	// for each character in the buffer...
@@ -330,7 +330,7 @@ void Console::YankHistory()
 		strncpy(inputLine, history[historyScrollIndex], MAX_INPUT_LENGTH);
 
 		// move cursor to the end of the line
-		inputCursorPos = inputLineLength = strlen(inputLine);
+		inputCursorPos = inputLineLength = int(strlen(inputLine));
 
 		// go back to input mode
 		historyScrollIndex = -1;

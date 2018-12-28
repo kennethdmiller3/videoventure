@@ -47,7 +47,7 @@ void Expression::AddResource(EntityContext &aContext)
 void Expression::Repeat(EntityContext &aContext)
 {
 	int repeat(Expression::Read<int>(aContext));
-	size_t size(Expression::Read<size_t>(aContext));
+	unsigned int size(Expression::Read<unsigned int>(aContext));
 	EntityContext context(aContext.mStream, size, aContext.mParam, aContext.mId);
 	for (int i = 0; i < repeat; ++i, context.Restart())
 	{
@@ -62,7 +62,7 @@ void Expression::Loop(EntityContext &aContext)
 	float from = Expression::Read<float>(aContext);
 	float to   = Expression::Read<float>(aContext);
 	float by   = Expression::Read<float>(aContext);
-	size_t size = Expression::Read<size_t>(aContext);
+	unsigned int size = Expression::Read<unsigned int>(aContext);
 
 	EntityContext context(aContext.mStream, size, aContext.mParam, aContext.mId);
 	if (by > 0)
@@ -127,10 +127,11 @@ static void ConfigureActionItem(const tinyxml2::XMLElement *element, std::vector
 
 			Expression::Append(buffer, Expression::Repeat, count);
 
-			buffer.push_back(0);
-			int start = buffer.size();
+			size_t buffer_size_at = buffer.size();
+			Expression::Alloc(buffer, sizeof(unsigned int));
+			size_t start = buffer.size();
 			ConfigureAction(element, buffer);
-			buffer[start-1] = buffer.size() - start;
+			*new (buffer.data() + buffer_size_at) unsigned int = unsigned int(buffer.size() - start);
 		}
 		break;
 
@@ -152,10 +153,11 @@ static void ConfigureActionItem(const tinyxml2::XMLElement *element, std::vector
 
 			Expression::Append(buffer, Expression::Loop, name, from, to, by);
 
-			buffer.push_back(0);
-			int start = buffer.size();
+			size_t buffer_size_at = buffer.size();
+			Expression::Alloc(buffer, sizeof(unsigned int));
+			size_t start = buffer.size();
 			ConfigureAction(element, buffer);
-			buffer[start-1] = buffer.size() - start;
+			*new (buffer.data() + buffer_size_at) unsigned int = unsigned int(buffer.size() - start);
 		}
 		break;
 	}

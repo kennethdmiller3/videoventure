@@ -10,8 +10,8 @@ class SoundTemplate
 {
 public:
 	void *mData;		// data buffer
-	size_t mSize;		// data buffer size in bytes
-	size_t mLength;		// sound length
+	unsigned int mSize;		// data buffer size in bytes
+	unsigned int mLength;	// sound length
 	float mVolume;		// intrinsic volume
 	float mNear;		// maximum volume closer than this
 	float mFar;			// minimum volume further than this
@@ -31,7 +31,7 @@ public:
 
 	bool Configure(const tinyxml2::XMLElement *element, unsigned int id);
 
-	void Reserve(size_t count);
+	void Reserve(unsigned int count);
 	void Trim(void);
 
 	inline void Append(short value)
@@ -40,16 +40,16 @@ public:
 		static_cast<short *>(mData)[mLength++] = value;
 	}
 
-	inline void Append(short value, size_t count)
+	inline void Append(short value, unsigned int count)
 	{
 		// append samples
-		for (size_t i = 0; i < count; ++i)
+		for (unsigned int i = 0; i < count; ++i)
 		{
 			static_cast<short *>(mData)[mLength++] = value;
 		}
 	}
 
-	inline void Append(short *data, size_t count)
+	inline void Append(short *data, unsigned int count)
 	{
 		// append data
 		memcpy(static_cast<short *>(mData) + mLength, data, count * sizeof(short));
@@ -77,8 +77,8 @@ public:
 	float mFar;
 #elif defined(USE_SDL)
     void *mData;
-	size_t mLength;
-    size_t mOffset;
+	unsigned int mLength;
+    unsigned int mOffset;
 #endif
 	int mRepeat;
 	float mVolume;

@@ -518,12 +518,12 @@ bool SoundTemplate::Configure(const tinyxml2::XMLElement *element, unsigned int 
 	return true;
 }
 
-void SoundTemplate::Reserve(size_t count)
+void SoundTemplate::Reserve(unsigned int count)
 {
 	if (mSize < (mLength + count) * sizeof(short))
 	{
 		// reallocate
-		mSize = std::max(((mLength + count) * sizeof(short) + 255) & ~255, (mSize * 3 + 1) / 2);
+		mSize = std::max<unsigned int>(((mLength + count) * sizeof(short) + 255) & ~255, (mSize * 3 + 1) / 2);
 		mData = realloc(mData, mSize);
 	}
 }

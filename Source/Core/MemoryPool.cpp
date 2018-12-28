@@ -181,12 +181,11 @@ bool MemoryPool::IsValid(const void *aPtr)
 			void *first = reinterpret_cast<void *>((uintptr_t(chunk) + sizeof(void *) + (mAlign - 1)) & ~(mAlign - 1));
 
 			// check that the pointer matches a slot in this chunk
-			int slot = (uintptr_t(aPtr) - uintptr_t(first)) / mSize;
-			if (slot < 0)
+			if (aPtr < first)
 				return false;
-			int count = (uintptr_t(end) - uintptr_t(first)) / mSize;
-			if (slot >= count)
+			if (aPtr >= end)
 				return false;
+			size_t slot = (uintptr_t(aPtr) - uintptr_t(first)) / mSize;
 			if (uintptr_t(aPtr) != uintptr_t(first) + slot * mSize)
 				return false;
 			return true;

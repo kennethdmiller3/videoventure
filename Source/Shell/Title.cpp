@@ -203,7 +203,7 @@ bool ShellTitleTemplate::Configure(const tinyxml2::XMLElement *element, unsigned
 				if (!text)
 					continue;
 				++rows;
-				cols = std::max<int>(cols, strlen(text));
+				cols = std::max<int>(cols, int(strlen(text)));
 			}
 			break;
 		}
