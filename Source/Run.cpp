@@ -66,7 +66,7 @@ unsigned int sim_turn = 0;
 float sim_fraction = 1.0f;
 
 // random number seed (HACK)
-unsigned int Random::gSeed = 0x92D68CA2;
+Random::StateType Random::gState = Random::kInitialState;
 
 // camera position (HACK)
 Vector2 camerapos[2];
@@ -710,8 +710,7 @@ void RunState()
 #endif
 
 				// seed the random number generator
-				Random::Seed(0x92D68CA2 ^ sim_turn);
-				(void)Random::Int();
+				Random::Seed(Random::kInitialState ^ sim_turn);
 
 				// update database
 				Database::Update();
@@ -842,8 +841,7 @@ void RunState()
 			singlestep = false;
 
 			// seed the random number generator
-			Random::Seed(0x92D68CA2 ^ sim_turn ^ Cast<unsigned, float>(sim_fraction));
-			(void)Random::Int();
+			Random::Seed(Random::kInitialState ^ sim_turn ^ Cast<unsigned, float>(sim_fraction));
 
 #ifdef PRINT_SIMULATION_TIMER
 			DebugPrint("delta=%f ticks=%d sim_t=%f\n", delta, ticks, sim_fraction);
