@@ -128,7 +128,7 @@ public:
 		// draw triangles
 		SetDrawMode(GL_TRIANGLES);
 
-		size_t base = GetVertexCount();
+		GLuint base = GetVertexCount();
 		register Vertex * __restrict v = static_cast<Vertex *>(AllocVertices(4*10));
 
 		Vector2 perp(mSourcePos.y - aPos0.y, aPos0.x - mSourcePos.x);
@@ -186,7 +186,7 @@ public:
 			++v;
 		}
 
-		IndexQuads(base, GetVertexCount() - base);
+		IndexQuads(base, GLuint(GetVertexCount() - base));
 	}
 };
 

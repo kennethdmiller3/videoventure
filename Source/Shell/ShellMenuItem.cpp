@@ -77,7 +77,7 @@ void ShellMenuItem::Render(unsigned int aId, float aTime, const Transform2 &aTra
 		SetWorkFormat((1<<ShaderColor::gAttribPosition)|(1<<ShaderColor::gAttribColor));
 		SetDrawMode(GL_TRIANGLES);
 
-		size_t base = GetVertexCount();
+		GLuint base = GetVertexCount();
 		unsigned int color = 
 			GLubyte(Clamp(xs_RoundToInt(mButtonColor[state].r * 255), 0, 255)) |
 			GLubyte(Clamp(xs_RoundToInt(mButtonColor[state].g * 255), 0, 255)) << 8 |

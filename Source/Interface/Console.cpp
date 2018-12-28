@@ -179,7 +179,7 @@ void Console::Render()
 	SetWorkFormat((1<<ShaderColor::gAttribPosition)|(1<<ShaderColor::gAttribColor));
 
 	SetDrawMode(GL_TRIANGLES);
-	size_t base = GetVertexCount();
+	GLuint base = GetVertexCount();
 	register Vertex * __restrict v = static_cast<Vertex *>(AllocVertices(4));
 	const unsigned int color = 0x7F000000;	//Color4 color(0, 0, 0, 0.5f);
 	v->pos = Vector3(0, 0, 0);
@@ -194,7 +194,7 @@ void Console::Render()
 	v->pos = Vector3(0, textHeight * characterHeight, 0);
 	v->color = color;
 	++v;
-	IndexQuads(base, GetVertexCount() - base);
+	IndexQuads(base, GLuint(GetVertexCount() - base));
 
 	// start rendering text
 	FontDrawBegin(sDefaultFontHandle);

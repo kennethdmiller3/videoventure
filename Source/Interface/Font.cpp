@@ -292,7 +292,7 @@ static Color4 sColor;
 #else
 static unsigned int sColor;
 #endif
-static size_t sVertexBase;
+static GLuint sVertexBase;
 
 void FontDrawBegin(GLuint handle)
 {
@@ -373,7 +373,7 @@ void FontDrawString(const char *s, float x, float y, float w, float h, float z, 
 {
 	float x0 = x;
 
-	register FontVertex * __restrict v = static_cast<FontVertex *>(AllocVertices(4 * strlen(s)));
+	register FontVertex * __restrict v = static_cast<FontVertex *>(AllocVertices(GLuint(4 * strlen(s))));
 
 	while (*s)
 	{
