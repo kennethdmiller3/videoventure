@@ -11,6 +11,6 @@
 	<Tool
 		Name="VCLinkerTool"
 		AdditionalDependencies="TestGLFW.lib"
-		AdditionalLibraryDirectories="$(SolutionDir)$(ConfigurationName)"
+		<AdditionalLibraryDirectories>$(SolutionDir)$(Platform)\$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
 	/>
 </VisualStudioPropertySheet>
