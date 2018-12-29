@@ -386,11 +386,11 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\chipmunk-7.0.2\msvc\vc15\chipmunk\chipmunk.vcxproj">
+    <ProjectReference Include="chipmunk.vcxproj">
       <Project>{c1ace86e-5a14-490a-9678-104ba2546723}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\glfw-3.2.1\msvc141\src\glfw.vcxproj">
-      <Project>{7944cf84-a187-43f6-b024-5e8870572a77}</Project>
+    <ProjectReference Include="glfw.vcxproj">
+      <Project>{8e17b868-49a7-36aa-ac43-15d49cb538ea}</Project>
     </ProjectReference>
     <ProjectReference Include="tinyxml2\tinyxml2\tinyxml2.vcxproj">
       <Project>{d1c528b6-aa02-4d29-9d61-dc08e317a70d}</Project>
