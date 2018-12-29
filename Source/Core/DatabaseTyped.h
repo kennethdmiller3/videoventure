@@ -116,7 +116,7 @@ namespace Database
 		class Iterator : public Untyped::Iterator
 		{
 		public:
-			Iterator(const Typed *aDatabase, size_t aSlot = 0)
+			Iterator(const Typed *aDatabase, unsigned int aSlot = 0)
 				: Untyped::Iterator(aDatabase, aSlot)
 			{
 			}

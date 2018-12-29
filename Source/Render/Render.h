@@ -220,8 +220,8 @@ extern void IndexTriangleFan(GLuint aStart, GLuint aCount);
 extern void IndexQuads(GLuint aStart, GLuint aCount);
 extern void IndexQuadStrip(GLuint aStart, GLuint aCount);
 extern void IndexPolygon(GLuint aStart, GLuint aCount);
-extern GLint GetVertexCount(void);
-extern GLint GetIndexCount(void);
+extern GLuint GetVertexCount(void);
+extern GLuint GetIndexCount(void);
 extern void FlushDynamic(void);
 
 // draw non-indexed primitive from currently bound buffers

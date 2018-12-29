@@ -189,16 +189,16 @@ extern GLuint sVertexWorkSize;
 // vertex work buffer
 // TO DO: get rid of this
 extern float *sVertexWork;
-extern size_t sVertexLimit;
-extern size_t sVertexUsed;
-extern size_t sVertexCount;
-extern size_t sVertexBase;
+extern GLuint sVertexLimit;
+extern GLuint sVertexUsed;
+extern GLuint sVertexCount;
+extern GLuint sVertexBase;
 
 // index work buffer
 // TO DO: get rid of this
 extern unsigned short *sIndexWork;
-extern size_t sIndexLimit;
-extern size_t sIndexCount;
+extern GLuint sIndexLimit;
+extern GLuint sIndexCount;
 
 struct PackedRenderState
 {
@@ -250,7 +250,7 @@ static void FlushStatic(BakeContext &aContext)
 	DebugPrint("VB start=%d size=%d count=%d\n", sStaticVertexBuffer.mEnd, sVertexUsed * sizeof(float), sVertexCount);
 #ifdef DRAWLIST_DEBUG_FLUSH_STATIC
 	const float *vertex = sVertexWork;
-	for (size_t i = 0; i < sVertexCount; ++i)
+	for (GLuint i = 0; i < sVertexCount; ++i)
 	{
 		DebugPrint("\t%d: p(%.2f %.2f %.2f)", i, vertex[0], vertex[1], vertex[2]);
 		vertex += 3;
@@ -287,15 +287,15 @@ static void FlushStatic(BakeContext &aContext)
 	switch (aContext.mDrawMode)
 	{
 	case GL_POINTS:
-		for (size_t i = 0; i < sIndexCount; ++i)
+		for (GLuint i = 0; i < sIndexCount; ++i)
 			DebugPrint("\t%d\n", index[i]);
 		break;
 	case GL_LINES:
-		for (size_t i = 0; i < sIndexCount; i += 2)
+		for (GLuint i = 0; i < sIndexCount; i += 2)
 			DebugPrint("\t%d %d\n", index[i], index[i + 1]);
 		break;
 	case GL_TRIANGLES:
-		for (size_t i = 0; i < sIndexCount; i += 3)
+		for (GLuint i = 0; i < sIndexCount; i += 3)
 			DebugPrint("\t%d %d %d\n", index[i], index[i + 1], index[i + 2]);
 		break;
 	default:
@@ -638,7 +638,7 @@ void DO_CopyElements(EntityContext &aContext)
 	assert(sVertexWorkSize != 0);
 
 	// get the vertex base
-	size_t base = GetVertexCount();
+	GLuint base = GetVertexCount();
 
 	// get data source
 	const unsigned char *srcConst = sVertexPacked;
@@ -652,12 +652,12 @@ void DO_CopyElements(EntityContext &aContext)
 #ifdef DRAWLIST_NORMALS
 	DLNormal nrm = _mm_loadu_ps(sNormalDefault);
 #endif
-	for (size_t i = 0; i < vertexCount; ++i)
+	for (GLuint i = 0; i < vertexCount; ++i)
 	{
 		// position array always active
 		{
 			// copy position
-			const size_t dstDisplace = sAttribDisplace[ShaderColor::gAttribPosition];
+			const GLuint dstDisplace = sAttribDisplace[ShaderColor::gAttribPosition];
 			memcpy(&pos, srcVertex, sPositionWidth * sizeof(float));
 			pos = StackTransformPosition(pos);
 			memcpy(dstVertex + dstDisplace, &pos, sPositionWidth * sizeof(float));
@@ -716,7 +716,7 @@ void DO_CopyElements(EntityContext &aContext)
 	// copy and adjust indices
 	const unsigned short *srcIndex = reinterpret_cast<unsigned short *>(intptr_t(sStaticIndexBuffer.mPersist) + indexOffset);
 	unsigned short *dstIndex = static_cast<unsigned short *>(AllocIndices(indexCount));
-	for (size_t i = 0; i < indexCount; ++i)
+	for (GLuint i = 0; i < indexCount; ++i)
 	{
 		*dstIndex++ = unsigned short(*srcIndex++ + base);
 	}
@@ -730,7 +730,7 @@ extern void SetAttribBufferInternal(GLint aIndex, BufferObject &aBuffer, GLuint 
 static void SetupStaticAttribs(GLuint aFormat, GLuint aOffset)
 {
 	// get vertex stride
-	size_t vertexsize = 0;
+	GLuint vertexsize = 0;
 	for (int index = 0; index < sAttribCount; ++index)
 	{
 		if (aFormat & (1 << index))
@@ -740,7 +740,7 @@ static void SetupStaticAttribs(GLuint aFormat, GLuint aOffset)
 	}
 
 	// set up attribute pointers and values
-	size_t offset = aOffset;
+	GLuint offset = aOffset;
 	for (int index = 0; index < sAttribCount; ++index)
 	{
 		if (aFormat & (1 << index))
@@ -1051,7 +1051,7 @@ void DO_VertexBake(BakeContext &aContext)
 void DO_Repeat(EntityContext &aContext)
 {
 	const int repeat(Expression::Read<int>(aContext));
-	const size_t size(Expression::Read<size_t>(aContext));
+	const unsigned int size(Expression::Read<unsigned int>(aContext));
 
 	const unsigned int *begin = aContext.mBegin;
 	const unsigned int *end = aContext.mEnd;
@@ -1075,7 +1075,7 @@ void DO_Block(EntityContext &aContext)
 	const float length(Expression::Read<float>(aContext));
 	const float scale(Expression::Read<float>(aContext));
 	const int repeat(Expression::Read<int>(aContext));
-	const size_t size(Expression::Read<size_t>(aContext));
+	const unsigned int size(Expression::Read<unsigned int>(aContext));
 
 	const unsigned int *begin = aContext.mBegin;
 	const unsigned int *end = aContext.mEnd;
@@ -1132,7 +1132,7 @@ void DO_Loop(EntityContext &aContext)
 	const float from = Expression::Read<float>(aContext);
 	const float to   = Expression::Read<float>(aContext);
 	const float by   = Expression::Read<float>(aContext);
-	const size_t size = Expression::Read<size_t>(aContext);
+	const unsigned int size = Expression::Read<unsigned int>(aContext);
 
 	const unsigned int *begin = aContext.mBegin;
 	const unsigned int *end = aContext.mEnd;
@@ -1697,10 +1697,11 @@ void ConfigureDrawItem(unsigned int aId, const tinyxml2::XMLElement *element, st
 
 			Expression::Append(buffer, DO_Repeat, count);
 	
-			buffer.push_back(0);
-			const int start = buffer.size();
+			size_t buffer_size_at = buffer.size();
+			Expression::Alloc(buffer, sizeof(unsigned int));
+			const size_t start = buffer.size();
 			ConfigureDrawItems(aId, element, buffer, bake, context);
-			buffer[start-1] = buffer.size() - start;
+			*new (buffer.data() + buffer_size_at) unsigned int = unsigned int(buffer.size() - start);
 		}
 		break;
 
@@ -1717,10 +1718,11 @@ void ConfigureDrawItem(unsigned int aId, const tinyxml2::XMLElement *element, st
 
 			Expression::Append(buffer, DO_Block, start, length, scale, repeat);
 
-			buffer.push_back(0);
-			int size = buffer.size();
+			size_t buffer_size_at = buffer.size();
+			Expression::Alloc(buffer, sizeof(unsigned int));
+			size_t size = buffer.size();
 			ConfigureDrawItems(aId, element, buffer, bake, context);
-			buffer[size-1] = buffer.size() - size;
+			*new (buffer.data() + buffer_size_at) unsigned int = unsigned int(buffer.size() - size);
 		}
 		break;
 
@@ -1743,10 +1745,11 @@ void ConfigureDrawItem(unsigned int aId, const tinyxml2::XMLElement *element, st
 
 			Expression::Append(buffer, DO_Loop, name, from, to, by);
 
-			buffer.push_back(0);
-			const int start = buffer.size();
+			size_t buffer_size_at = buffer.size();
+			Expression::Alloc(buffer, sizeof(unsigned int));
+			size_t start = buffer.size();
 			ConfigureDrawItems(aId, element, buffer, bake, context);
-			buffer[start-1] = buffer.size() - start;
+			*new (buffer.data() + buffer_size_at) unsigned int = unsigned int(buffer.size() - start);
 		}
 		break;
 #endif
@@ -1765,10 +1768,11 @@ void ConfigureDrawItem(unsigned int aId, const tinyxml2::XMLElement *element, st
 
 			Expression::Append(buffer, DO_Emitter, count, period, x, y, a);
 
-			buffer.push_back(0);
-			const int start = buffer.size();
+			size_t buffer_size_at = buffer.size();
+			Expression::Alloc(buffer, sizeof(unsigned int));
+			size_t start = buffer.size();
 			ConfigureDrawItems(aId, element, buffer);
-			buffer[start-1] = buffer.size() - start;
+			*new (buffer.data() + buffer_size_at) unsigned int = unsigned int(buffer.size() - start);
 		}
 		break;
 #endif

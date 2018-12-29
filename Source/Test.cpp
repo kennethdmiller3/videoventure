@@ -350,7 +350,7 @@ int main( int argc, char *argv[] )
 #if !defined(USE_SDL) && defined(WIN32)
 	int argc = 1;
 	char *argv[64] = { NULL };
-	int argsize = strlen(lpCmdLine) + 1;
+	size_t argsize = strlen(lpCmdLine) + 1;
 	char *argdata = static_cast<char *>(_alloca(argsize));
 	memcpy(argdata, lpCmdLine, argsize);
 	{

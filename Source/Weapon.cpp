@@ -328,7 +328,7 @@ void WeaponRepeat(EntityContext &aContext)
 	unsigned int offset = Cast<unsigned int, float>(aContext.mVars->Get(name+1));
 
 	// get repeat block
-	size_t size(Expression::Read<size_t>(aContext));
+	unsigned int size = Expression::Read<unsigned int>(aContext);
 	const unsigned int *begin = aContext.mStream;
 	const unsigned int *end = aContext.mStream + size;
 
@@ -356,7 +356,7 @@ void WeaponRepeat(EntityContext &aContext)
 		{
 			// save repeat count and sequence offset
 			aContext.mVars->Put(name, count);
-			aContext.mVars->Put(name+1, Cast<float, unsigned int>(aContext.mStream - begin));
+			aContext.mVars->Put(name+1, Cast<float, unsigned int>(unsigned int(aContext.mStream - begin)));
 			aContext.mStream = reset;
 			return;
 		}
@@ -524,14 +524,15 @@ bool WeaponTemplate::ConfigureAction(const tinyxml2::XMLElement *element, unsign
 		case 0xc4642eff /* "action" */:
 			{
 				// reserve size
-				mAction.push_back(0);
-				int start = mAction.size();
+				size_t buffer_size_at = mAction.size();
+				Expression::Alloc(mAction, sizeof(unsigned int));
+				size_t start = mAction.size();
 
 				// configure actions
 				ConfigureAction(child, aId);
 
 				// set size
-				mAction[start-1] = mAction.size() - start;
+				*new (mAction.data() + buffer_size_at) unsigned int = unsigned int(mAction.size() - start);
 			}
 			break;
 
@@ -548,10 +549,11 @@ bool WeaponTemplate::ConfigureAction(const tinyxml2::XMLElement *element, unsign
 				Expression::Append(mAction, WeaponRepeat, id);
 
 				// configure loop body
-				mAction.push_back(0);
-				int start = mAction.size();
+				size_t buffer_size_at = mAction.size();
+				Expression::Alloc(mAction, sizeof(unsigned int));
+				size_t start = mAction.size();
 				ConfigureAction(child, aId);
-				mAction[start-1] = mAction.size() - start;
+				*new (mAction.data() + buffer_size_at) unsigned int = unsigned int(mAction.size() - start);
 			}
 			break;
 
@@ -591,10 +593,11 @@ bool WeaponTemplate::ConfigureAction(const tinyxml2::XMLElement *element, unsign
 
 				Expression::Append(mAction, Expression::Repeat, count);
 
-				mAction.push_back(0);
-				int start = mAction.size();
+				size_t buffer_size_at = mAction.size();
+				Expression::Alloc(mAction, sizeof(unsigned int));
+				size_t start = mAction.size();
 				ConfigureAction(child, aId);
-				mAction[start-1] = mAction.size() - start;
+				*new (mAction.data() + buffer_size_at) unsigned int = unsigned int(mAction.size() - start);
 			}
 			break;
 #endif
@@ -618,10 +621,11 @@ bool WeaponTemplate::ConfigureAction(const tinyxml2::XMLElement *element, unsign
 				Expression::Append(mAction, Expression::Loop, name);
 				Expression::Append(mAction, from, to, by);
 
-				mAction.push_back(0);
-				int start = mAction.size();
+				size_t buffer_size_at = mAction.size();
+				Expression::Alloc(mAction, sizeof(unsigned int));
+				size_t start = mAction.size();
 				ConfigureAction(child, aId);
-				mAction[start-1] = mAction.size() - start;
+				*new (mAction.data() + buffer_size_at) unsigned int = unsigned int(mAction.size() - start);
 			}
 			break;
 		}

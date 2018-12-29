@@ -190,10 +190,10 @@ namespace Collidable
 	void WorldDone(void);
 
 	// add an entity to the physics world
-	GAME_API void AddToWorld(unsigned int aId);
+	GAME_API void AddToWorld(Database::Key aId);
 
 	// remove an entity from the physics world
-	GAME_API void RemoveFromWorld(unsigned int aId);
+	GAME_API void RemoveFromWorld(Database::Key aId);
 
 	// get the physics world
 	GAME_API cpSpace *GetWorld(void);

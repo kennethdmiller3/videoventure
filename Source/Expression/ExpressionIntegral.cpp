@@ -6,7 +6,7 @@
 // evaluate integral
 float EvaluateIntegral(EntityContext &aContext)
 {
-	Database::Key key((aContext.mStream - aContext.mBegin)*4);
+	Database::Key key(unsigned int(aContext.mStream - aContext.mBegin)*4);
 	float &prev_param = aContext.mVars->Open(key);
 	float &prev_value = aContext.mVars->Open(key+1);
 	float param(Expression::Evaluate<float>(aContext));
@@ -22,7 +22,7 @@ float EvaluateIntegral(EntityContext &aContext)
 // evaluate differential
 float EvaluateDifferential(EntityContext &aContext)
 {
-	Database::Key key((aContext.mStream - aContext.mBegin)*4);
+	Database::Key key(unsigned int(aContext.mStream - aContext.mBegin)*4);
 	float &prev_param = aContext.mVars->Open(key);
 	float &prev_value = aContext.mVars->Open(key+1);
 	float param(Expression::Evaluate<float>(aContext));

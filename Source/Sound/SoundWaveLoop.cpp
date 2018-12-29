@@ -4,12 +4,12 @@
 #include "SoundConfigure.h"
 #include "SoundUtilities.h"
 
-static size_t ReadBinaryData(const char *data, unsigned char buffer[], size_t size)
+static unsigned int ReadBinaryData(const char *data, unsigned char buffer[], unsigned int size)
 {
-	size_t count = 0;
-	size_t len = strlen(data);
+	unsigned int count = 0;
+	unsigned int len = unsigned int(strlen(data));
 	bool high = false;
-	for (size_t i = 0; i < len; ++i)
+	for (unsigned int i = 0; i < len; ++i)
 	{
 		unsigned char value;
 		if (data[i] >= '0' && data[i] <= '9')
@@ -241,7 +241,7 @@ static bool Configure(SoundTemplate &self, const tinyxml2::XMLElement *element, 
 					{
 						nextticks += 3+(2+4)*pitch+5;
 
-						samples = OutputPulse(self, nextticks - prevticks, samplespertick, samples, 128 * output);
+						samples = OutputPulse(self, int(nextticks - prevticks), samplespertick, samples, 128 * output);
 						prevticks = nextticks;
 
 						output = unsigned char(*waveptr - fade * (*waveptr >> 4));
@@ -256,7 +256,7 @@ static bool Configure(SoundTemplate &self, const tinyxml2::XMLElement *element, 
 				nextticks -= 6*4+2*2+4;	// cancel delay from last iteration
 
 				// TO DO: compute cycle count
-				samples = OutputPulse(self, nextticks - prevticks, samplespertick, samples, 128 * output);
+				samples = OutputPulse(self, int(nextticks - prevticks), samplespertick, samples, 128 * output);
 				prevticks = nextticks;
 			}
 
@@ -285,7 +285,7 @@ static bool Configure(SoundTemplate &self, const tinyxml2::XMLElement *element, 
 
 		B = 0;
 		nextticks += 4+4+4+4+4+4+3+4+4+2;
-		nextticks -= (3+6+4+5+4+4+2+4+4+4)*(pitchptr-pitchsource);
+		nextticks -= (3+6+4+5+4+4+2+4+4+4)*unsigned(pitchptr-pitchsource);
 		do
 		{
 			// get pitch table entry plus pitch offset
@@ -321,7 +321,7 @@ FC2C:
 			++B;
 		}
 		while (++pitchptr < pitchbufferend);
-		nextticks += (3+6+4+5+4+4+2+4+4+4)*(pitchptr-pitchsource);
+		nextticks += (3+6+4+5+4+4+2+4+4+4)*unsigned(pitchptr-pitchsource);
 
 		if (B == 0)
 			break;
@@ -340,7 +340,7 @@ FC2C:
 	}
 	while (1);
 
-	samples = OutputPulse(self, nextticks - prevticks, samplespertick, samples, 128 * output);
+	samples = OutputPulse(self, int(nextticks - prevticks), samplespertick, samples, 128 * output);
 	prevticks = nextticks;
 	return true;
 }

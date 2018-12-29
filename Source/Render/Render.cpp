@@ -136,22 +136,22 @@ GLuint sVertexWorkSize;
 // vertex pool
 // TO DO: move this to drawlist?
 static float sVertexPool[64 * 1024];
-size_t sVertexLimit = 64 * 1024;
+GLuint sVertexLimit = 64 * 1024;
 
 // index pool
 // TO DO: move this to drawlist?
 static unsigned short sIndexPool[16 * 1024];
-size_t sIndexLimit = 16 * 1024;
+GLuint sIndexLimit = 16 * 1024;
 
 // vertex work buffer
 float *sVertexWork = sVertexPool;
-size_t sVertexUsed;
-size_t sVertexCount;
-size_t sVertexBase;
+GLuint sVertexUsed;
+GLuint sVertexCount;
+GLuint sVertexBase;
 
 // index work buffer
 unsigned short *sIndexWork = sIndexPool;
-size_t sIndexCount;
+GLuint sIndexCount;
 
 // clear color
 Color4 sClearColor;
@@ -1310,8 +1310,8 @@ static void PackAttribValue(GLint aIndex, __m128 aValue)
 	assert(aIndex >= 0 && aIndex < sAttribCount);
 
 	// get displacement from packed vertex start
-	register size_t displace = sAttribDisplace[aIndex];
-	register size_t width = sAttribWidth[aIndex];
+	register GLuint displace = sAttribDisplace[aIndex];
+	register GLuint width = sAttribWidth[aIndex];
 	assert(displace + sAttribSize[aIndex] < sizeof(sVertexPacked));
 
 	// set the packed attribute value
@@ -1321,10 +1321,10 @@ static void PackAttribValue(GLint aIndex, __m128 aValue)
 		{
 			register GLbyte *dst = reinterpret_cast<GLbyte *>(sVertexPacked + displace);
 			//if (sAttribNormalize[aIndex])
-				for (register size_t i = 0; i < width; ++i)
+				for (register GLuint i = 0; i < width; ++i)
 					*dst++ = GLbyte(Clamp(xs_FloorToInt(aValue.m128_f32[i] * 0x80), CHAR_MIN, CHAR_MAX));
 			//else
-			//	for (register size_t i = 0; i < width; ++i)
+			//	for (register GLuint i = 0; i < width; ++i)
 			//		*dst++ = GLbyte(Clamp(xs_FloorToInt(aValue.m128_f32[i]), CHAR_MIN, CHAR_MAX));
 		}
 		break;
@@ -1333,10 +1333,10 @@ static void PackAttribValue(GLint aIndex, __m128 aValue)
 		{
 			register GLubyte *dst = reinterpret_cast<GLubyte *>(sVertexPacked + displace);
 			//if (sAttribNormalize[aIndex])
-				for (register size_t i = 0; i < width; ++i)
+				for (register GLuint i = 0; i < width; ++i)
 					*dst++ = GLubyte(Clamp(xs_FloorToInt(aValue.m128_f32[i] * 0x100), 0, UCHAR_MAX));
 			//else
-			//	for (register size_t i = 0; i < width; ++i)
+			//	for (register GLuint i = 0; i < width; ++i)
 			//		reinterpret_cast<GLubyte *>(sAttribPacked[aIndex])[i] = GLubyte(Clamp(xs_FloorToInt(aValue.m128_f32[i]), 0, UCHAR_MAX));
 		}
 		break;
@@ -1345,10 +1345,10 @@ static void PackAttribValue(GLint aIndex, __m128 aValue)
 		{
 			//register GLshort *dst = reinterpret_cast<GLshort *>(sVertexPacked + displace);
 			//if (sAttribNormalize[aIndex])
-			//	for (register size_t i = 0; i < width; ++i)
+			//	for (register GLuint i = 0; i < width; ++i)
 			//		*dst++ = GLshort(Clamp(xs_FloorToInt(aValue.m128_f32[i] * 0x8000), SHRT_MIN, SHRT_MAX));
 			//else
-			//	for (register size_t i = 0; i < width; ++i)
+			//	for (register GLuint i = 0; i < width; ++i)
 			//		*dst++ = GLshort(Clamp(xs_FloorToInt(aValue.m128_f32[i]), SHRT_MIN, SHRT_MAX));
 		}
 		break;
@@ -1357,10 +1357,10 @@ static void PackAttribValue(GLint aIndex, __m128 aValue)
 		{
 			//register GLushort *dst = reinterpret_cast<GLushort *>(sVertexPacked + displace);
 			//if (sAttribNormalize[aIndex])
-			//	for (register size_t i = 0; i < width; ++i)
+			//	for (register GLuint i = 0; i < width; ++i)
 			//		*dst++ = GLushort(Clamp(xs_FloorToInt(aValue.m128_f32[i] * 0x10000), 0, USHRT_MAX));
 			//else
-			//	for (register size_t i = 0; i < width; ++i)
+			//	for (register GLuint i = 0; i < width; ++i)
 			//		*dst++ = GLushort(Clamp(xs_FloorToInt(aValue.m128_f32[i]), 0, USHRT_MAX));
 		}
 		break;
@@ -1369,10 +1369,10 @@ static void PackAttribValue(GLint aIndex, __m128 aValue)
 		{
 			//register GLint *dst = reinterpret_cast<GLint *>(sVertexPacked + displace);
 			//if (sAttribNormalize[aIndex])
-			//	for (register size_t i = 0; i < width; ++i)
+			//	for (register GLuint i = 0; i < width; ++i)
 			//		*dst++ = GLint(Clamp(xs_FloorToInt(aValue.m128_f32[i] * 0x80000000), INT_MIN, INT_MAX));
 			//else
-			//	for (register size_t i = 0; i < width; ++i)
+			//	for (register GLuint i = 0; i < width; ++i)
 			//		*dst++ = GLint(Clamp(xs_FloorToInt(aValue.m128_f32[i]), INT_MIN, INT_MAX));
 		}
 		break;
@@ -1381,10 +1381,10 @@ static void PackAttribValue(GLint aIndex, __m128 aValue)
 		{
 			//register GLuint *dst = reinterpret_cast<GLuint *>(sVertexPacked + displace);
 			//if (sAttribNormalize[aIndex])
-			//	for (register size_t i = 0; i < width; ++i)
+			//	for (register GLuint i = 0; i < width; ++i)
 			//		*dst++ = GLuint(Clamp<GLuint>(xs_FloorToInt(aValue.m128_f32[i] * 0x100000000), 0, UINT_MAX));
 			//else
-			//	for (register size_t i = 0; i < width; ++i)
+			//	for (register GLuint i = 0; i < width; ++i)
 			//		*dst++ = GLuint(Clamp<GLuint>(xs_FloorToInt(aValue.m128_f32[i]), 0, UINT_MAX));
 		}
 		break;
@@ -1402,7 +1402,7 @@ static void PackAttribValue(GLint aIndex, __m128 aValue)
 static void SetupDynamicAttribs(GLuint aFormat, GLuint aOffset)
 {
 	// get vertex stride
-	size_t vertexsize = 0;
+	GLuint vertexsize = 0;
 	for (int index = 0; index < sAttribCount; ++index)
 	{
 		if (aFormat & (1 << index))
@@ -1412,7 +1412,7 @@ static void SetupDynamicAttribs(GLuint aFormat, GLuint aOffset)
 	}
 
 	// set up attribute pointers and values
-	size_t offset = aOffset;
+	GLuint offset = aOffset;
 	for (int index = 0; index < sAttribCount; ++index)
 	{
 		if (aFormat & (1 << index))
@@ -1482,7 +1482,7 @@ void SetDrawMode(GLenum aDrawMode)
 
 /*
 // set attrib value
-void SetAttribValue(GLint aIndex, float const *aValue, size_t count)
+void SetAttribValue(GLint aIndex, float const *aValue, GLuint count)
 {
 	if (aIndex < 0)
 		return;
@@ -1648,13 +1648,13 @@ void IndexPolygon(GLuint aStart, GLuint aCount)
 }
 
 // get the current vertex count
-GLint GetVertexCount(void)
+GLuint GetVertexCount(void)
 {
 	return sVertexCount;
 }
 
 // get the current index count
-GLint GetIndexCount(void)
+GLuint GetIndexCount(void)
 {
 	return sIndexCount;
 }

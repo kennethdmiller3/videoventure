@@ -94,15 +94,16 @@ static void ConfigureShortCircuit(bool (*expr)(Expression::Context &), const tin
 	Expression::Append(buffer, expr);
 
 	// append all arguments
-	buffer.push_back(0);
-	int start = buffer.size();
+	size_t buffer_size_at = buffer.size();
+	Expression::Alloc(buffer, sizeof(unsigned int));
+	size_t start = buffer.size();
 	do
 	{
 		Expression::Loader<bool>::Configure(arg1, buffer, names, defaults);
 		arg1 = arg1->NextSiblingElement();
 	}
 	while (arg1);
-	buffer[start - 1] = buffer.size() - start;
+	*new (buffer.data() + buffer_size_at) unsigned int = unsigned int(buffer.size() - start);
 }
 
 static void ConfigureAnd(const tinyxml2::XMLElement *element, std::vector<unsigned int> &buffer, const char * const names[], const float defaults[])
