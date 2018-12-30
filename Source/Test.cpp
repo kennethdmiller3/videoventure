@@ -125,11 +125,6 @@ bool InitOpenGL()
 	// set viewport
 	glViewport( 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT );
 
-#ifdef SUPPORT_FIXED_FUNCTION
-	// disable lighting
-	glDisable( GL_LIGHTING );
-#endif
-
 	// enable blending
 	glEnable( GL_BLEND );
 #ifdef ENABLE_SRC_ALPHA_SATURATE
@@ -145,16 +140,6 @@ bool InitOpenGL()
 #else
 	// disable z test
 	glDisable( GL_DEPTH_TEST );
-#endif
-
-#ifdef SUPPORT_FIXED_FUNCTION
-	// diable fog by default
-	glDisable( GL_FOG );
-#endif
-
-#ifdef SUPPORT_FIXED_FUNCTION
-	// allow vertex arrays
-	glEnableClientState(GL_VERTEX_ARRAY);
 #endif
 
 	// return true if no errors

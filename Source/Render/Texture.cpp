@@ -103,7 +103,7 @@ namespace Database
 
 						texture.Allocate(4);
 
-						unsigned char *pixel = texture.mPixels;
+						unsigned char *pixel = reinterpret_cast<unsigned char *>(texture.mPixels);
 
 						for (int y = 0; y < texture.mHeight; ++y)
 						{
@@ -166,9 +166,9 @@ namespace Database
 
 						EntityContext context(&buffer[0], buffer.size(), 0, aId);
 
-						texture.mPixels = static_cast<unsigned char *>(malloc(texture.mWidth * texture.mHeight * 4));
+						texture.mPixels = malloc(texture.mWidth * texture.mHeight * 4);
 
-						unsigned char *pixel = texture.mPixels;
+						unsigned char *pixel = reinterpret_cast<unsigned char *>(texture.mPixels);
 
 						for (int y = 0; y < texture.mHeight; ++y)
 						{
@@ -241,9 +241,9 @@ void InstantiateTexture(GLuint handle, TextureTemplate const &texture)
 
 	// set texture image data
 	if (texture.mMipmaps)
-		gluBuild2DMipmaps(GL_TEXTURE_2D, texture.mInternalFormat, texture.mWidth, texture.mHeight, texture.mFormat, GL_UNSIGNED_BYTE, texture.mPixels);
+		gluBuild2DMipmaps(GL_TEXTURE_2D, texture.mInternalFormat, texture.mWidth, texture.mHeight, texture.mFormat, texture.mType, texture.mPixels);
 	else
-		glTexImage2D(GL_TEXTURE_2D, 0, texture.mInternalFormat, texture.mWidth, texture.mHeight, 0, texture.mFormat, GL_UNSIGNED_BYTE, texture.mPixels);
+		glTexImage2D(GL_TEXTURE_2D, 0, texture.mInternalFormat, texture.mWidth, texture.mHeight, 0, texture.mFormat, texture.mType, texture.mPixels);
 
 	// restore texture state
 	glBindTexture(GL_TEXTURE_2D, 0);

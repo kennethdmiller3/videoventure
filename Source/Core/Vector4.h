@@ -27,6 +27,16 @@ public:
 	{
 	}
 
+	operator float *()
+	{
+		return &x;
+	}
+
+	operator const float *() const
+	{
+		return &x;
+	}
+
 	float &operator [](int index)
 	{
 		return (&x)[index];

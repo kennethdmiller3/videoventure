@@ -10,8 +10,7 @@
 
 #include "Render.h"
 #include "MatrixStack.h"
-#include "ShaderColor.h"
-#include "ShaderModulate.h"
+#include "ShaderColorFog.h"
 
 //
 // DEFINES
@@ -44,11 +43,6 @@
 // defined: enable support for normals
 // undefined: disable support for normals
 //#define DRAWLIST_NORMALS
-
-// use shader for drawlist?
-// defined: use a shader program
-// undefined: use fixed-function
-#define DRAWLIST_USE_SHADER
 
 // debug static geometry flush
 // defined: full details of VB and IB contents
@@ -231,8 +225,8 @@ struct BakeContext : public EntityContext
 	BakeContext(std::vector<unsigned int> *aTarget, const unsigned int *aBuffer, const size_t aSize, float aParam, unsigned int aId, Database::Typed<float> *aVars = NULL)
 		: EntityContext(aBuffer, aSize, aParam, aId, aVars)
 		, mTarget(aTarget)
-		, mProgram(ShaderColor::gProgramId)
-		, mFormat(1 << ShaderColor::gAttribPosition)
+		, mProgram(ShaderColorFog::gProgramId)
+		, mFormat(1 << ShaderColorFog::gAttribPosition)
 		, mDrawMode(GL_TRIANGLES)
 	{
 	}
@@ -255,13 +249,13 @@ static void FlushStatic(BakeContext &aContext)
 		DebugPrint("\t%d: p(%.2f %.2f %.2f)", i, vertex[0], vertex[1], vertex[2]);
 		vertex += 3;
 #ifdef DRAWLIST_NORMALS
-		if (aContext.mFormat & (1 << ShaderColor::gAttribNormal))
+		if (aContext.mFormat & (1 << ShaderColorFog::gAttribNormal))
 		{
 			DebugPrint(" n(%.2f %.2f %.2f)", vertex[0], vertex[1], vertex[2]);
 			vertex += 3;
 		}
 #endif
-		if (aContext.mFormat & (1 << ShaderColor::gAttribColor))
+		if (aContext.mFormat & (1 << ShaderColorFog::gAttribColor))
 		{
 #ifdef DRAWLIST_FLOAT_COLOR
 			DebugPrint(" c(%.2f %.2f %.2f %.2f)", vertex[0], vertex[1], vertex[2], vertex[3]);
@@ -272,7 +266,7 @@ static void FlushStatic(BakeContext &aContext)
 			vertex += 1;
 #endif
 		}
-		if (aContext.mFormat & (1 << ShaderColor::gAttribTexCoord))
+		if (aContext.mFormat & (1 << ShaderColorFog::gAttribTexCoord))
 		{
 			DebugPrint(" t(%.2f %.2f)", vertex[0], vertex[1]);
 			vertex += 2;
@@ -488,40 +482,39 @@ void DO_DrawMode(EntityContext &aContext)
 	// get the render state
 	PackedRenderState state(Expression::Read<PackedRenderState>(aContext));
 
-#ifdef DRAWLIST_USE_SHADER
 	// use the basic program
-	if (UseProgram(ShaderColor::gProgramId) || &GetBoundVertexBuffer() != &GetDynamicVertexBuffer() || ViewProjChanged())
+	if (UseProgram(ShaderColorFog::gProgramId) || &GetBoundVertexBuffer() != &GetDynamicVertexBuffer() || ViewProjChanged())
 	{
 		// shader changed or switching back from non-dynamic geometry:
 		// set model view projection matrix
-		SetUniformMatrix4(ShaderColor::gUniformModelViewProj, ViewProjGet());
-	}
-#else
-	// fixed-function
-	UseProgram(0);
+		SetUniformMatrix4(ShaderColorFog::gUniformModelViewProj, ViewProjGet());
 
-	// set model view projection matrix
-	// (if switching back from non-dynamic geometry)
-	if (&GetBoundVertexBuffer() != &GetDynamicVertexBuffer())
-		SetUniformMatrix4(GL_MODELVIEW, ViewGet());
-#endif
+		// set model view matrix
+		SetUniformMatrix4(ShaderColorFog::gUniformModelView, ViewGet());
+
+		// set fog color and parameters
+		SetUniformVector4(ShaderColorFog::gUniformFogColor, GetFogColor());
+		const Vector4 fogparams(GetFogEnabled() ? 1.0f : 0.0f, GetFogStart(), GetFogEnd(), GetFogEnabled() ? 1.0f / (GetFogEnd() - GetFogStart()) : 0.f);
+		SetUniformVector4(ShaderColorFog::gUniformFogParams, fogparams);
+	}
 
 	// set up attributes
-	SetAttribFormat(ShaderColor::gAttribPosition, sPositionWidth, GL_FLOAT);
+	SetAttribFormat(ShaderColorFog::gAttribPosition, sPositionWidth, GL_FLOAT);
 #ifdef DRAWLIST_NORMALS
-	SetAttribFormat(ShaderColor::gAttribNormal, sNormalWidth, GL_FLOAT);
+	SetAttribFormat(ShaderColorFog::gAttribNormal, sNormalWidth, GL_FLOAT);
 #endif
 #ifdef DRAWLIST_FLOAT_COLOR	// always use float for dynamic stuff
-	SetAttribFormat(ShaderColor::gAttribColor, sColorWidth, GL_FLOAT);
+	SetAttribFormat(ShaderColorFog::gAttribColor, sColorWidth, GL_FLOAT);
 #else
-	SetAttribFormat(ShaderColor::gAttribColor, sColorWidth, GL_UNSIGNED_BYTE);
+	SetAttribFormat(ShaderColorFog::gAttribColor, sColorWidth, GL_UNSIGNED_BYTE);
 #endif
-	//SetAttribFormat(ShaderColor::gAttribTexCoord, sTexCoordWidth, GL_FLOAT);
+	// TO DO
+	//SetAttribFormat(ShaderColorFog::gAttribTexCoord, sTexCoordWidth, GL_FLOAT);
 
 	// set work format
 	// include color attribute even if the state doesn't
 	GLuint format = state.mFormat;
-	format |= 1 << ShaderColor::gAttribColor;
+	format |= 1 << ShaderColorFog::gAttribColor;
 	SetWorkFormat(format);
 
 	// set draw mode
@@ -587,23 +580,21 @@ void DO_DisableBake(BakeContext &aContext)
 #pragma optimize("t", on)
 void DO_CopyElements(EntityContext &aContext)
 {
-#ifdef DRAWLIST_USE_SHADER
 	// use the basic program
-	if (UseProgram(ShaderColor::gProgramId) || &GetBoundVertexBuffer() != &GetDynamicVertexBuffer() || ViewProjChanged())
+	if (UseProgram(ShaderColorFog::gProgramId) || &GetBoundVertexBuffer() != &GetDynamicVertexBuffer() || ViewProjChanged())
 	{
 		// shader changed or switching back from non-dynamic geometry:
 		// set model view projection matrix
-		SetUniformMatrix4(ShaderColor::gUniformModelViewProj, ViewProjGet());
-	}
-#else
-	// fixed function
-	UseProgram(0);
+		SetUniformMatrix4(ShaderColorFog::gUniformModelViewProj, ViewProjGet());
 
-	// set model view matrix
-	// (if switching back from non-dynamic geometry)
-	if (&GetBoundVertexBuffer() != &GetDynamicVertexBuffer())
-		SetUniformMatrix4(GL_MODELVIEW, ViewGet());
-#endif
+		// set model view matrix
+		SetUniformMatrix4(ShaderColorFog::gUniformModelView, ViewGet());
+
+		// set fog color and parameters
+		SetUniformVector4(ShaderColorFog::gUniformFogColor, GetFogColor());
+		const Vector4 fogparams(GetFogEnabled() ? 1.0f : 0.0f, GetFogStart(), GetFogEnd(), GetFogEnabled() ? 1.0f / (GetFogEnd() - GetFogStart()) : 0.f);
+		SetUniformVector4(ShaderColorFog::gUniformFogParams, fogparams);
+	}
 
 	// get rendering state
 	PackedRenderState state(Expression::Read<PackedRenderState>(aContext));
@@ -613,16 +604,16 @@ void DO_CopyElements(EntityContext &aContext)
 	GLuint indexCount(Expression::Read<GLuint>(aContext));
 
 	// set up attributes
-	SetAttribFormat(ShaderColor::gAttribPosition, sPositionWidth, GL_FLOAT);
+	SetAttribFormat(ShaderColorFog::gAttribPosition, sPositionWidth, GL_FLOAT);
 #ifdef DRAWLIST_NORMALS
-	SetAttribFormat(ShaderColor::gAttribNormal, sNormalWidth, GL_FLOAT);
+	SetAttribFormat(ShaderColorFog::gAttribNormal, sNormalWidth, GL_FLOAT);
 #endif
 #ifdef DRAWLIST_FLOAT_COLOR	// always use float for dynamic stuff
-	SetAttribFormat(ShaderColor::gAttribColor, sColorWidth, GL_FLOAT);
+	SetAttribFormat(ShaderColorFog::gAttribColor, sColorWidth, GL_FLOAT);
 #else
-	SetAttribFormat(ShaderColor::gAttribColor, sColorWidth, GL_UNSIGNED_BYTE);
+	SetAttribFormat(ShaderColorFog::gAttribColor, sColorWidth, GL_UNSIGNED_BYTE);
 #endif
-	//SetAttribFormat(ShaderColor::gAttribTexCoord, sTexCoordWidth, GL_FLOAT);
+	//SetAttribFormat(ShaderColorFog::gAttribTexCoord, sTexCoordWidth, GL_FLOAT);
 
 	// get the source format
 	GLuint srcformat = state.mFormat;
@@ -657,7 +648,7 @@ void DO_CopyElements(EntityContext &aContext)
 		// position array always active
 		{
 			// copy position
-			const GLuint dstDisplace = sAttribDisplace[ShaderColor::gAttribPosition];
+			const GLuint dstDisplace = sAttribDisplace[ShaderColorFog::gAttribPosition];
 			memcpy(&pos, srcVertex, sPositionWidth * sizeof(float));
 			pos = StackTransformPosition(pos);
 			memcpy(dstVertex + dstDisplace, &pos, sPositionWidth * sizeof(float));
@@ -666,11 +657,11 @@ void DO_CopyElements(EntityContext &aContext)
 
 #ifdef DRAWLIST_NORMALS
 		// if normal array active...
-		if (dstformat & (1 << ShaderColor::gAttribNormal))
+		if (dstformat & (1 << ShaderColorFog::gAttribNormal))
 		{
 			// copy normal
-			const size_t dstDisplace = sAttribDisplace[ShaderColor::gAttribNormal];
-			if (srcformat & (1 << ShaderColor::gAttribNormal))
+			const size_t dstDisplace = sAttribDisplace[ShaderColorFog::gAttribNormal];
+			if (srcformat & (1 << ShaderColorFog::gAttribNormal))
 			{
 				// copy source normal
 				memcpy(&nrm, srcVertex, sNormalWidth * sizeof(float));
@@ -687,7 +678,7 @@ void DO_CopyElements(EntityContext &aContext)
 #endif
 
 		// for other attributes...
-		assert(ShaderColor::gAttribPosition == 0);
+		assert(ShaderColorFog::gAttribPosition == 0);
 		for (int i = 1; i < sAttribCount; ++i)
 		{
 			// if attribute array active...
@@ -764,44 +755,31 @@ void DO_DrawElements(EntityContext &aContext)
 		FlushDynamic();
 	}
 
-#ifdef DRAWLIST_USE_SHADER
 	// use the basic program
-	UseProgram(ShaderColor::gProgramId);
+	UseProgram(ShaderColorFog::gProgramId);
 
 	// get combined model view projection matrix
-	SetUniformMatrix4(ShaderColor::gUniformModelViewProj, ModelViewProjGet());
-#else
-	// fixed function
-	UseProgram(0);
-
-#ifndef DYNAMIC_GEOMETRY_IN_VIEW_SPACE
-	// combine view and world matrix
-	GLfloat world[16];
-	memcpy(world, StackGet(), sizeof(world));
-	StackPush();
-	StackLoad(ViewGet());
-	StackMult(world);
-#endif
+	SetUniformMatrix4(ShaderColorFog::gUniformModelViewProj, ModelViewProjGet());
 
 	// set model view matrix
-	SetUniformMatrix4(GL_MODELVIEW, StackGet());
+	SetUniformMatrix4(ShaderColorFog::gUniformModelView, ModelViewGet());
 
-#ifndef DYNAMIC_GEOMETRY_IN_VIEW_SPACE
-	StackPop();
-#endif
-#endif
+	// set fog color and parameters
+	SetUniformVector4(ShaderColorFog::gUniformFogColor, GetFogColor());
+	const Vector4 fogparams(GetFogEnabled() ? 1.0f : 0.0f, GetFogStart(), GetFogEnd(), GetFogEnabled() ? 1.0f / (GetFogEnd() - GetFogStart()) : 0.f);
+	SetUniformVector4(ShaderColorFog::gUniformFogParams, fogparams);
 
 	// set up attributes
-	SetAttribFormat(ShaderColor::gAttribPosition, sPositionWidth, GL_FLOAT);
+	SetAttribFormat(ShaderColorFog::gAttribPosition, sPositionWidth, GL_FLOAT);
 #ifdef DRAWLIST_NORMALS
-	SetAttribFormat(ShaderColor::gAttribNormal, sNormalWidth, GL_FLOAT);
+	SetAttribFormat(ShaderColorFog::gAttribNormal, sNormalWidth, GL_FLOAT);
 #endif
 #ifdef DRAWLIST_FLOAT_COLOR	// always use float for dynamic stuff
-	SetAttribFormat(ShaderColor::gAttribColor, sColorWidth, GL_FLOAT);
+	SetAttribFormat(ShaderColorFog::gAttribColor, sColorWidth, GL_FLOAT);
 #else
-	SetAttribFormat(ShaderColor::gAttribColor, sColorWidth, GL_UNSIGNED_BYTE);
+	SetAttribFormat(ShaderColorFog::gAttribColor, sColorWidth, GL_UNSIGNED_BYTE);
 #endif
-	//SetAttribFormat(ShaderColor::gAttribTexCoord, sTexCoordWidth, GL_FLOAT);
+	//SetAttribFormat(ShaderColorFog::gAttribTexCoord, sTexCoordWidth, GL_FLOAT);
 
 	// get rendering state
 	PackedRenderState state(Expression::Read<PackedRenderState>(aContext));
@@ -949,12 +927,12 @@ void DO_MultMatrix(EntityContext &aContext)
 #ifdef DRAWLIST_NORMALS
 void DO_Normal(EntityContext &aContext)
 {
-	SetAttribValue(ShaderColor::gAttribNormal, Expression::Evaluate<DLNormal>(aContext));
+	SetAttribValue(ShaderColorFog::gAttribNormal, Expression::Evaluate<DLNormal>(aContext));
 }
 
 void DO_NormalBake(BakeContext &aContext)
 {
-	aContext.mFormat |= 1 << ShaderColor::gAttribNormal;
+	aContext.mFormat |= 1 << ShaderColorFog::gAttribNormal;
 	_mm_storeu_ps(aContext.mNormal, Expression::Evaluate<DLNormal>(aContext));
 }
 #endif
@@ -1918,8 +1896,8 @@ static void ConfigureStatic(unsigned int aId, const tinyxml2::XMLElement *elemen
 
 	// set format
 	// TO DO: get this from the shader
-	SetAttribFormat(ShaderColor::gAttribPosition, sPositionWidth, GL_FLOAT);
-	SetAttribFormat(ShaderColor::gAttribColor, sColorWidth, GL_UNSIGNED_BYTE);
+	SetAttribFormat(ShaderColorFog::gAttribPosition, sPositionWidth, GL_FLOAT);
+	SetAttribFormat(ShaderColorFog::gAttribColor, sColorWidth, GL_UNSIGNED_BYTE);
 
 	// configure draw items
 	BakeContext context(&buffer, NULL, 0, 0.0f, aId);

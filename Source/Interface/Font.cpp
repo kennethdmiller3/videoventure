@@ -4,11 +4,6 @@
 #include "Drawlist.h"
 #include "MatrixStack.h"
 
-// use shader for font?
-// defined: use a shader program
-// undefined: use fixed-function
-#define FONT_USE_SHADER
-
 static const int FIRST_CHARACTER = '\x00';
 static const int LAST_CHARACTER  = '\x7F';
 
@@ -21,7 +16,7 @@ static const unsigned int aDefaultFontId = 0x7bd2c61f /* "defaultfont" */;
 
 // modified Atari 8-bit font
 // TO DO: support other fonts
-static const int aTextureComponents = 1;
+static const int aBytesPerPixel = sizeof(unsigned short); // 1;
 static const size_t aTextureWidth = 128;
 static const size_t aTextureHeight = 64;
 static const unsigned char aTextureData[] = 
@@ -92,7 +87,6 @@ static const unsigned char aTextureData[] =
 	0x06, 0x60, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1e, 0x00, 0x00, 0x18, 0x00, 0x00, 0x00, 
 };
 
-#ifdef FONT_USE_SHADER
 //
 // SHADER
 //
@@ -147,11 +141,9 @@ static GLint sAttribPosition;
 static GLint sAttribNormal;
 static GLint sAttribColor;
 static GLint sAttribTexCoord;
-#endif
 
 static void InitFontProgram(void)
 {
-#ifdef FONT_USE_SHADER
 	// create font shader
 	sFontVertexId = CreateVertexShader(sFontVertexShader);
 	sFontFragmentId = CreateFragmentShader(sFontFragmentShader);
@@ -164,19 +156,16 @@ static void InitFontProgram(void)
 	sAttribPosition = glGetAttribLocation(sFontProgramId, "position");
 	sAttribColor = glGetAttribLocation(sFontProgramId, "color");
 	sAttribTexCoord = glGetAttribLocation(sFontProgramId, "texcoord");
-#endif
 }
 
 static void CleanupFontProgram(void)
 {
-#ifdef FONT_USE_SHADER
 	DeleteProgram(sFontProgramId);
 	sFontProgramId = 0;
 	DeleteShader(sFontFragmentId);
 	sFontFragmentId = 0;
 	DeleteShader(sFontVertexId);
 	sFontVertexId = 0;
-#endif
 }
 
 void InitFonts()
@@ -195,32 +184,33 @@ void InitFonts()
 	TextureTemplate &texture = Database::texturetemplate.Open(sDefaultFontHandle);
 
 	// fill in values
-	texture.mInternalFormat = GL_ALPHA8;
+	texture.mInternalFormat = GL_RGBA4; // GL_ALPHA8;
 	texture.mWidth = aTextureWidth;
 	texture.mHeight = aTextureHeight;
-	texture.mFormat = GL_ALPHA;
+	texture.mFormat = GL_RGBA;	//GL_ALPHA;
+	texture.mType = GL_UNSIGNED_SHORT_4_4_4_4_REV;
 	texture.mMinFilter = GL_NEAREST;
 	texture.mMagFilter = GL_NEAREST;
 	texture.mWrapS = GL_CLAMP_TO_EDGE;
 	texture.mWrapT = GL_CLAMP_TO_EDGE;
 
 	// allocate space
-	texture.Allocate(aTextureComponents);
+	texture.Allocate(aBytesPerPixel);
 
 	// unpack font data
 	const unsigned char * src = aTextureData;
-	unsigned char * dst = texture.mPixels;
+	unsigned short * dst = reinterpret_cast<unsigned short *>(texture.mPixels);
 	for (unsigned int i = 0; i < sizeof(aTextureData); ++i)
 	{
 		register unsigned char s = *src++;
-		*dst++ = -(s & 1); s >>= 1;
-		*dst++ = -(s & 1); s >>= 1;
-		*dst++ = -(s & 1); s >>= 1;
-		*dst++ = -(s & 1); s >>= 1;
-		*dst++ = -(s & 1); s >>= 1;
-		*dst++ = -(s & 1); s >>= 1;
-		*dst++ = -(s & 1); s >>= 1;
-		*dst++ = -(s & 1);
+		*dst++ = (s & 1) ? 0xFFFFu : 0x0FFFu; s >>= 1;
+		*dst++ = (s & 1) ? 0xFFFFu : 0x0FFFu; s >>= 1;
+		*dst++ = (s & 1) ? 0xFFFFu : 0x0FFFu; s >>= 1;
+		*dst++ = (s & 1) ? 0xFFFFu : 0x0FFFu; s >>= 1;
+		*dst++ = (s & 1) ? 0xFFFFu : 0x0FFFu; s >>= 1;
+		*dst++ = (s & 1) ? 0xFFFFu : 0x0FFFu; s >>= 1;
+		*dst++ = (s & 1) ? 0xFFFFu : 0x0FFFu; s >>= 1;
+		*dst++ = (s & 1) ? 0xFFFFu : 0x0FFFu;
 	}
 
 	// instantiate the texture
@@ -297,7 +287,6 @@ static GLuint sVertexBase;
 void FontDrawBegin(GLuint handle)
 {
 	BindTexture(handle);
-#ifdef FONT_USE_SHADER
 	if (UseProgram(sFontProgramId) || &GetBoundVertexBuffer() != &GetDynamicVertexBuffer() || ViewProjChanged())
 	{
 		SetUniformMatrix4(sUniformModelViewProj, ViewProjGet());
@@ -306,15 +295,6 @@ void FontDrawBegin(GLuint handle)
 	SetAttribFormat(sAttribColor, 4, GL_UNSIGNED_BYTE);
 	SetAttribFormat(sAttribTexCoord, 2, GL_FLOAT);
 	SetWorkFormat((1<<sAttribPosition)|(1<<sAttribColor)|(1<<sAttribTexCoord));
-#else
-	UseProgram(0);
-	SetUniformMatrix4(GL_PROJECTION, ProjectionGet());
-	SetUniformMatrix4(GL_MODELVIEW, StackGet());
-	SetAttribFormat(0, 3, GL_FLOAT);
-	SetAttribFormat(2, 4, GL_UNSIGNED_BYTE);
-	SetAttribFormat(3, 2, GL_FLOAT);
-	SetWorkFormat((1<<0)|(1<<2)|(1<<3));
-#endif
 	SetDrawMode(GL_TRIANGLES);
 	sVertexBase = GetVertexCount();
 }

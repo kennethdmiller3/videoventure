@@ -9,7 +9,8 @@ struct TextureTemplate
 	GLenum mFormat;
 	bool mMipmaps;
 	bool mAllocated;
-	unsigned char *mPixels;
+	GLenum mType;
+	void *mPixels;
 	GLint mMinFilter;
 	GLint mMagFilter;
 	GLint mWrapS;
@@ -22,6 +23,7 @@ struct TextureTemplate
 		, mFormat(0)
 		, mMipmaps(false)
 		, mAllocated(false)
+		, mType(GL_UNSIGNED_BYTE)
 		, mPixels(NULL)
 		, mMinFilter(0)
 		, mMagFilter(0)
@@ -39,7 +41,7 @@ struct TextureTemplate
 	{
 		Free();
 		mAllocated = true;
-		mPixels = static_cast<unsigned char *>(malloc(mWidth * mHeight * aBytesPerPixel));
+		mPixels = malloc(mWidth * mHeight * aBytesPerPixel);
 	}
 
 	void Assign(unsigned char *aPixels)

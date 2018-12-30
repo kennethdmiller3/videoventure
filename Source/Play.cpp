@@ -12,7 +12,9 @@
 #include "Texture.h"
 #include "Shader.h"
 #include "ShaderColor.h"
+#include "ShaderColorFog.h"
 #include "ShaderModulate.h"
+#include "ShaderModulateFog.h"
 #include "Escape.h"
 #include "Library.h"
 #include "Font.h"
@@ -236,7 +238,9 @@ void EnterPlayState()
 
 	// set up common shaders
 	ShaderColor::Init();
+	ShaderColorFog::Init();
 	ShaderModulate::Init();
+	ShaderModulateFog::Init();
 
 	// clear the screen
 	glClear(
@@ -314,7 +318,9 @@ void ExitPlayState()
 	CleanupTextures();
 
 	// cleanup shaders
+	ShaderModulateFog::Cleanup();
 	ShaderModulate::Cleanup();
+	ShaderColorFog::Cleanup();
 	ShaderColor::Cleanup();
 	CleanupShaders();
 

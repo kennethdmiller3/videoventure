@@ -31,6 +31,11 @@ extern void StackTranslate(const __m128 aValue);
 extern __m128 StackTransformNormal(const __m128 aValue);
 extern __m128 StackTransformPosition(const __m128 aValue);
 
+// model-view operations
+// (sequence increments every time the matrix is invalidated)
+extern bool ModelViewChanged(void);
+extern const float *ModelViewGet(void);
+
 // view-projection operations
 extern bool ViewProjChanged(void);
 extern const float *ViewProjGet(void);

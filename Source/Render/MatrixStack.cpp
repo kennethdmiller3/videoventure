@@ -73,14 +73,19 @@ static const int sStackEntries = 64;
 static Matrix4 sStackMatrix[sStackEntries];
 static int sStackTop;
 
-// model-view-projection matrix
-// (increment every time model view projection changes)
+// model-view matrix
+static unsigned int sModelViewSequence;
+static unsigned int sModelViewGenerated;
+static Matrix4 sModelViewMatrix;
+
+// view-projection matrix
+// (increment every time view or projection changes)
 static unsigned int sViewProjSequence;
 static unsigned int sViewProjGenerated;
 static Matrix4 sViewProjMatrix;
 
 // model-view-projection matrix
-// (increment every time model view projection changes)
+// (increment every time model, view, or projection changes)
 static unsigned int sModelViewProjSequence;
 static unsigned int sModelViewProjGenerated;
 static Matrix4 sModelViewProjMatrix;
@@ -201,6 +206,7 @@ const float *ProjectionGet(void)
 void ViewLoad(const float *aValues)
 {
 	memcpy(&sViewMatrix, aValues, sizeof(Matrix4));
+	++sModelViewSequence;
 	++sViewProjSequence;
 	++sModelViewProjSequence;
 }
@@ -272,6 +278,7 @@ void StackPop(void)
 		memset(sStackMatrix + sStackTop, 0, sizeof(Matrix4));
 #endif
 		--sStackTop;
+		++sModelViewSequence;
 		++sModelViewProjSequence;
 	}
 	else
@@ -286,6 +293,7 @@ void StackIdentity(void)
 {
 	Matrix4 &m = sStackMatrix[sStackTop];
 	m = Matrix4::Identity;
+	++sModelViewSequence;
 	++sModelViewProjSequence;
 }
 
@@ -294,6 +302,7 @@ void StackLoad(const float *aValues)
 {
 	Matrix4 &m = sStackMatrix[sStackTop];
 	memcpy(&m, aValues, sizeof(Matrix4));
+	++sModelViewSequence;
 	++sModelViewProjSequence;
 }
 
@@ -304,6 +313,7 @@ void StackMult(const float *aValues)
 	Matrix4 b;
 	memcpy(&b, aValues, sizeof(Matrix4));
 	m = m * b;
+	++sModelViewSequence;
 	++sModelViewProjSequence;
 }
 
@@ -341,6 +351,7 @@ void StackRotate(const float aValue)
 	m.m[3][1] = o.m[3][1];
 	m.m[3][2] = o.m[3][2];
 #endif
+	++sModelViewSequence;
 	++sModelViewProjSequence;
 }
 
@@ -364,6 +375,7 @@ void StackScale(const __m128 aValue)
 	m.m[2][1] *= aValue.m128_f32[2];
 	m.m[2][2] *= aValue.m128_f32[2];
 #endif
+	++sModelViewSequence;
 	++sModelViewProjSequence;
 }
 
@@ -389,6 +401,7 @@ void StackTranslate(const __m128 aValue)
 	m.m[3][1] += m.m[0][1] * aValue.m128_f32[0] + m.m[1][1] * aValue.m128_f32[1] + m.m[2][1] * aValue.m128_f32[2];
 	m.m[3][2] += m.m[0][2] * aValue.m128_f32[0] + m.m[1][2] * aValue.m128_f32[1] + m.m[2][2] * aValue.m128_f32[2];
 #endif
+	++sModelViewSequence;
 	++sModelViewProjSequence;
 }
 
@@ -441,6 +454,28 @@ __m128 StackTransformNormal(const __m128 aValue)
 	n.m128_f32[1] *= scale;
 	n.m128_f32[2] *= scale;
 	return n;
+}
+
+
+//
+// MODEL-VIEW OPERATIONS
+//
+
+// has the model-view-projectiom matrix changed?
+bool ModelViewChanged(void)
+{
+	return sModelViewGenerated != sModelViewSequence;
+}
+
+// get the combined model-view-projection matrix
+const float *ModelViewGet(void)
+{
+	if (sModelViewGenerated != sModelViewSequence)
+	{
+		sModelViewMatrix = sViewMatrix * sStackMatrix[sStackTop];
+		sModelViewGenerated = sModelViewSequence;
+	}
+	return sModelViewMatrix.m->m128_f32;
 }
 
 

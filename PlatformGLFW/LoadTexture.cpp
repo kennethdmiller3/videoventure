@@ -1,4 +1,5 @@
 #include "StdAfx.h"
+#include "Render.h"
 
 // get texture template definition
 #include "Texture.h"
@@ -381,8 +382,12 @@ namespace Platform
 		switch (components)
 		{
 		case 1:
-			aTexture.mFormat = GL_ALPHA;
-			aTexture.mInternalFormat = GL_ALPHA8;
+			aTexture.mFormat = GL_R8;			// GL_ALPHA;
+			aTexture.mInternalFormat = GL_R;	// GL_ALPHA8;
+			break;
+		case 2:
+			aTexture.mFormat = GL_RG8;
+			aTexture.mInternalFormat = GL_RG;
 			break;
 		case 3:
 			aTexture.mFormat = GL_RGB8;

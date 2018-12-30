@@ -135,13 +135,13 @@ GLuint sVertexWorkSize;
 
 // vertex pool
 // TO DO: move this to drawlist?
-static float sVertexPool[64 * 1024];
-GLuint sVertexLimit = 64 * 1024;
+const GLuint RENDER_VERTEX_POOL_SIZE = 64 * 1024 * 16;	// enough for 65536 vertices with 16 float components
+static float sVertexPool[RENDER_VERTEX_POOL_SIZE];
 
 // index pool
 // TO DO: move this to drawlist?
-static unsigned short sIndexPool[16 * 1024];
-GLuint sIndexLimit = 16 * 1024;
+const GLuint RENDER_INDEX_POOL_SIZE = 64 * 1024 * 2;	// enough for a line strip with 65536 vertices
+static unsigned short sIndexPool[RENDER_INDEX_POOL_SIZE];
 
 // vertex work buffer
 float *sVertexWork = sVertexPool;
@@ -319,11 +319,6 @@ void InitRender(void)
 	// disable attribute arrays
 	for (int i = 0; i < RENDER_MAX_ATTRIB; ++i)
 		glDisableVertexAttribArray(i);
-#ifdef SUPPORT_FIXED_FUNCTION
-	glDisableClientState(GL_NORMAL_ARRAY);
-	glDisableClientState(GL_COLOR_ARRAY);
-	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-#endif
 
 #ifdef RENDER_USE_QUEUE
 	// initialize render queue
@@ -410,7 +405,6 @@ void CleanupRender(void)
 //
 
 // use a shader program
-// 0 means fixed-function pipeline
 void RQ_UseProgram(Expression::Context &aContext)
 {
 	GLuint program(Expression::Read<GLuint>(aContext));
@@ -457,18 +451,6 @@ void RQ_UniformMatrix4(Expression::Context &aContext)
 	aContext.mStream += 16;
 }
 
-// load a matrix (fixed-function)
-void RQ_LoadMatrix4(Expression::Context &aContext)
-{
-	GLenum mode(Expression::Read<GLint>(aContext));
-	if (mode == GL_PROJECTION)
-		glMatrixMode(GL_PROJECTION);
-	glLoadMatrixf(reinterpret_cast<const float *>(aContext.mStream));
-	if (mode == GL_PROJECTION)
-		glMatrixMode(GL_MODELVIEW);
-	aContext.mStream += 16;
-}
-
 // disable an attribute
 void RQ_AttribDisable(Expression::Context &aContext)
 {
@@ -485,33 +467,6 @@ void RQ_AttribConst(Expression::Context &aContext)
 	__m128 value(Expression::Read<__m128>(aContext));
 	glDisableVertexAttribArray(index);
 	glVertexAttrib4fv(index, value.m128_f32);
-}
-
-// set normal constant (fixed-function)
-void RQ_NormalConst(Expression::Context &aContext)
-{
-	assert(sProgram == 0);
-	__m128 value(Expression::Read<__m128>(aContext));
-	glDisableClientState(GL_NORMAL_ARRAY);
-	glNormal3fv(value.m128_f32);
-}
-
-// set color constant (fixed-function)
-void RQ_ColorConst(Expression::Context &aContext)
-{
-	assert(sProgram == 0);
-	__m128 value(Expression::Read<__m128>(aContext));
-	glDisableClientState(GL_COLOR_ARRAY);
-	glColor4fv(value.m128_f32);
-}
-
-// set texture coordinate constant (fixed-function)
-void RQ_TexCoordConst(Expression::Context &aContext)
-{
-	assert(sProgram == 0);
-	__m128 value(Expression::Read<__m128>(aContext));
-	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-	glTexCoord2fv(value.m128_f32);
 }
 
 // bind vertex buffer
@@ -545,51 +500,10 @@ void RQ_AttribArray(Expression::Context &aContext)
 	glVertexAttribPointer(desc.index, desc.width, desc.type + GL_BYTE, GL_TRUE, desc.stride, reinterpret_cast<const GLvoid *>(desc.offset));
 }
 
-// set vertex array (fixed function)
-void RQ_VertexArray(Expression::Context &aContext)
-{
-	assert(sProgram == 0);
-	AttribArrayDesc desc(Expression::Read<AttribArrayDesc>(aContext));
-	glVertexPointer(desc.width, desc.type + GL_BYTE, desc.stride, reinterpret_cast<const GLvoid *>(desc.offset));
-}
-
-// set normal array (fixed function)
-void RQ_NormalArray(Expression::Context &aContext)
-{
-	assert(sProgram == 0);
-	AttribArrayDesc desc(Expression::Read<AttribArrayDesc>(aContext));
-	glEnableClientState(GL_NORMAL_ARRAY);
-	glNormalPointer(desc.type + GL_BYTE, desc.stride, reinterpret_cast<const GLvoid *>(desc.offset));
-}
-
-// set color array (fixed-function)
-void RQ_ColorArray(Expression::Context &aContext)
-{
-	assert(sProgram == 0);
-	AttribArrayDesc desc(Expression::Read<AttribArrayDesc>(aContext));
-	glEnableClientState(GL_COLOR_ARRAY);
-	glColorPointer(desc.width, desc.type + GL_BYTE, desc.stride, reinterpret_cast<const GLvoid *>(desc.offset));
-}
-
-// set color array (fixed-function)
-void RQ_TexCoordArray(Expression::Context &aContext)
-{
-	assert(sProgram == 0);
-	AttribArrayDesc desc(Expression::Read<AttribArrayDesc>(aContext));
-	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-	glTexCoordPointer(desc.width, desc.type + GL_BYTE, desc.stride, reinterpret_cast<const GLvoid *>(desc.offset));
-}
-
 // bind texture
 void RQ_BindTexture(Expression::Context &aContext)
 {
 	GLuint texture(Expression::Read<GLuint>(aContext));
-#if 0
-	if (texture)
-		glEnable(GL_TEXTURE_2D);
-	else
-		glDisable(GL_TEXTURE_2D);
-#endif
 	glBindTexture(GL_TEXTURE_2D, texture);
 }
 
@@ -609,8 +523,8 @@ void RQ_CopyTexSubImage(Expression::Context &aContext)
 // draw non-indexed primitive
 struct DrawArraysDesc
 {
-	GLubyte mode;
-	GLushort count;
+	GLuint mode : 8;
+	GLuint count : 24;
 };
 void RQ_DrawArrays(Expression::Context &aContext)
 {
@@ -621,8 +535,8 @@ void RQ_DrawArrays(Expression::Context &aContext)
 // draw indexed primitive
 struct DrawElementsDesc
 {
-	GLubyte mode;
-	GLushort count;
+	GLuint mode : 8;
+	GLuint count : 24;
 	GLuint offset;
 };
 void RQ_DrawElements(Expression::Context &aContext)
@@ -911,28 +825,11 @@ static void SetUniformMatrix4Internal(GLint aIndex, const float aValue[])
 {
 #ifdef RENDER_USE_QUEUE
 	// queue matrix command
-	Expression::Append(sRenderQueue, 
-		(aIndex == GL_PROJECTION || aIndex == GL_MODELVIEW) ? RQ_LoadMatrix4 : RQ_UniformMatrix4,
-		aIndex);
+	Expression::Append(sRenderQueue, RQ_UniformMatrix4, aIndex);
 	memcpy(Expression::Alloc(sRenderQueue, 16 * sizeof(float)), aValue, 16 * sizeof(float));
 #else
-	if (aIndex == GL_PROJECTION)
-	{
-		// fixed-function projection
-		glMatrixMode(GL_PROJECTION);
-		glLoadMatrixf(aValue);
-		glMatrixMode(GL_MODELVIEW);
-	}
-	else if (aIndex == GL_MODELVIEW)
-	{
-		// fixed-function modelview
-		glLoadMatrixf(aValue);
-	}
-	else
-	{
-		// set uniform matrix
-		glUniformMatrix4fv(aIndex, 1, GL_FALSE, aValue);
-	}
+	// set uniform matrix
+	glUniformMatrix4fv(aIndex, 1, GL_FALSE, aValue);
 #endif
 }
 void SetUniformMatrix4(GLint aIndex, const float aValue[])
@@ -947,74 +844,6 @@ void SetUniformMatrix4(GLint aIndex, const float aValue[])
 //
 // ATTRIB FUNCTIONS
 //
-
-// fixed-function attributes
-// TO DO: use indices based on GL_*_ARRAY enum
-static const GLenum sFixedAttrib[] =
-{
-	GL_VERTEX_ARRAY,
-	GL_NORMAL_ARRAY,
-	GL_COLOR_ARRAY,
-	GL_TEXTURE_COORD_ARRAY,
-};
-
-#ifdef RENDER_USE_QUEUE
-
-// TO DO: use indices based on GL_*_ARRAY enum
-typedef void (*FixedAttribOp)(Expression::Context &aContext);
-
-// fixed-function attribute array functions
-// TO DO: use indices based on GL_*_ARRAY enum
-const FixedAttribOp sFixedAttribArray[] =
-{
-	RQ_VertexArray,
-	RQ_NormalArray,
-	RQ_ColorArray,
-	RQ_TexCoordArray,
-};
-
-// fixed-function attribute constant functions
-// TO DO: use indices based on GL_*_ARRAY enum
-const FixedAttribOp sFixedAttribConstant[] =
-{
-	NULL,
-	RQ_NormalConst,
-	RQ_ColorConst,
-	RQ_TexCoordConst,
-};
-
-#else
-
-// adapt normal pointer function so it matches the other pointer functions
-static void APIENTRY glNormalPointerVV(GLint size, GLenum type, GLsizei stride, const GLvoid *pointer)
-{
-	assert(size == 3);
-	glNormalPointer(type, stride, pointer);
-}
-
-// fixed-function attribute array functions
-// TO DO: use indices based on GL_*_ARRAY enum
-typedef void (APIENTRY *FixedAttribArray)(GLint size, GLenum type, GLsizei stride, const GLvoid *pointer);
-static const FixedAttribArray sFixedAttribArray[] =
-{
-	glVertexPointer,
-	glNormalPointerVV,
-	glColorPointer,
-	glTexCoordPointer,
-};
-
-// fixed-function attribute constant functions
-// TO DO: use indices based on GL_*_ARRAY enum
-typedef void (APIENTRY *FixedAttribConstant)(const GLfloat *v);
-static const FixedAttribConstant sFixedAttribConstant[] =
-{
-	glVertex3fv,
-	glNormal3fv,
-	glColor4fv,
-	glTexCoord2fv,
-};
-
-#endif
 
 // set attrib count
 void SetAttribCount(GLint aCount)
@@ -1085,21 +914,10 @@ void SetAttribConstantInternal(GLint aIndex, __m128 aValue)
 	// TO DO: add "dirty" flag to attribute to avoid redundant changes?
 #ifdef RENDER_USE_QUEUE
 	// queue attrib value command
-	if (sProgram)
-		Expression::Append(sRenderQueue, RQ_AttribConst, aIndex, aValue);
-	else
-		Expression::Append(sRenderQueue, sFixedAttribConstant[aIndex], aValue);
+	Expression::Append(sRenderQueue, RQ_AttribConst, aIndex, aValue);
 #else
-	if (sProgram)
-	{
-		glDisableVertexAttribArray(aIndex);
-		glVertexAttrib4fv(aIndex, aValue.m128_f32);
-	}
-	else
-	{
-		glDisableClientState(sFixedAttrib[aIndex]);
-		sFixedAttribConstant[aIndex](aValue.m128_f32);
-	}
+	glDisableVertexAttribArray(aIndex);
+	glVertexAttrib4fv(aIndex, aValue.m128_f32);
 #endif
 }
 void SetAttribConstant(GLint aIndex, __m128 aValue)
@@ -1158,14 +976,7 @@ void SetAttribBufferInternal(GLint aIndex, BufferObject &aBuffer, GLuint aStride
 	assert(aStride <= UCHAR_MAX);
 	desc.stride = GLubyte(aStride);
 	desc.offset = aOffset;
-	if (sProgram)
-	{
-		Expression::Append(sRenderQueue, RQ_AttribArray, desc);
-	}
-	else
-	{
-		Expression::Append(sRenderQueue, sFixedAttribArray[aIndex], desc);
-	}
+	Expression::Append(sRenderQueue, RQ_AttribArray, desc);
 #else
 	// bind buffer
 	if (sVertexBuffer != &aBuffer)
@@ -1173,16 +984,8 @@ void SetAttribBufferInternal(GLint aIndex, BufferObject &aBuffer, GLuint aStride
 		sVertexBuffer = &aBuffer;
 		glBindBuffer(GL_ARRAY_BUFFER, aBuffer.mHandle);
 	}
-	if (sProgram)
-	{
-		glEnableVertexAttribArray(aIndex);
-		glVertexAttribPointer(aIndex, sAttribWidth[aIndex], sAttribType[aIndex], GL_TRUE, aStride, reinterpret_cast<const GLvoid *>(aOffset));
-	}
-	else
-	{
-		glEnableClientState(sFixedAttrib[aIndex]);
-		sFixedAttribArray[aIndex](sAttribWidth[aIndex], sAttribType[aIndex], aStride, reinterpret_cast<const GLvoid *>(aOffset));
-	}
+	glEnableVertexAttribArray(aIndex);
+	glVertexAttribPointer(aIndex, sAttribWidth[aIndex], sAttribType[aIndex], GL_TRUE, aStride, reinterpret_cast<const GLvoid *>(aOffset));
 #endif
 
 	// switch to buffer
@@ -1509,7 +1312,7 @@ void SetAttribValue(GLint aIndex, __m128 aValue)
 void AddVertex(void)
 {
 	assert(sVertexWorkSize > 0);
-	assert(sVertexUsed + sVertexWorkSize / sizeof(float) < sVertexLimit);
+	assert(sVertexUsed + sVertexWorkSize / sizeof(float) < RENDER_VERTEX_POOL_SIZE);
 
 	// copy the packed vertex state
 	__movsd(
@@ -1523,9 +1326,10 @@ void AddVertex(void)
 	++sVertexCount;
 }
 
-extern void *AllocVertices(GLuint aCount)
+// allocate vertices to work buffer
+void *AllocVertices(GLuint aCount)
 {
-	if (sVertexUsed + aCount * sVertexWorkSize / sizeof(float) >= sVertexLimit)
+	if (sVertexUsed + aCount * sVertexWorkSize / sizeof(float) >= RENDER_VERTEX_POOL_SIZE)
 	{
 		FlushDynamic();
 	}
@@ -1535,9 +1339,10 @@ extern void *AllocVertices(GLuint aCount)
 	return dest;
 }
 
-extern void *AllocIndices(GLuint aCount)
+// allocate indices from work buffer
+void *AllocIndices(GLuint aCount)
 {
-	if (sIndexCount + aCount >= sIndexLimit)
+	if (sIndexCount + aCount >= RENDER_INDEX_POOL_SIZE)
 	{
 		FlushDynamic();
 	}
@@ -1546,104 +1351,121 @@ extern void *AllocIndices(GLuint aCount)
 	return dest;
 }
 
-
-
+// add vertices to work buffer
 void AddVertices(GLuint aCount, const void *aData)
 {
 	void *dest = AllocVertices(aCount);
 	memcpy(dest, aData, aCount * sVertexWorkSize);
 }
 
+// generate indices for a line list primitive
 void IndexLines(GLuint aStart, GLuint aCount)
 {
+	assert(aStart + aCount <= USHRT_MAX);
 	for (register GLuint i = 0; i < aCount; ++i)
 	{
 		sIndexWork[sIndexCount++] = unsigned short(aStart + i);
 	}
 }
 
+// generate indices for a line loop primitive
 void IndexLineLoop(GLuint aStart, GLuint aCount)
 {
+	assert(aStart + aCount <= USHRT_MAX);
 	for (register GLuint i = 0; i < aCount - 1; ++i)
 	{
 		sIndexWork[sIndexCount++] = unsigned short(aStart + i);
-		sIndexWork[sIndexCount++] = unsigned short(aStart + i + 1);
+		sIndexWork[sIndexCount++] = unsigned short(aStart + i + 1u);
 	}
-	sIndexWork[sIndexCount++] = unsigned short(aStart + aCount - 1);
+	sIndexWork[sIndexCount++] = unsigned short(aStart + aCount - 1u);
 	sIndexWork[sIndexCount++] = unsigned short(aStart);
 }
 
+// generate indices for a line strip primitive
 void IndexLineStrip(GLuint aStart, GLuint aCount)
 {
-	for (register GLuint i = 0; i < aCount - 1; ++i)
+	assert(aStart + aCount <= USHRT_MAX);
+	for (register GLuint i = 0; i < aCount - 1u; ++i)
 	{
 		sIndexWork[sIndexCount++] = unsigned short(aStart + i);
-		sIndexWork[sIndexCount++] = unsigned short(aStart + i + 1);
+		sIndexWork[sIndexCount++] = unsigned short(aStart + i + 1u);
 	}
 }
 
+// generate indices for a triangle list primitive
 void IndexTriangles(GLuint aStart, GLuint aCount)
 {
+	assert(aStart + aCount <= USHRT_MAX);
 	for (register GLuint i = 0; i < aCount; ++i)
 	{
 		sIndexWork[sIndexCount++] = unsigned short(aStart + i);
 	}
 }
 
+// generate indices for a triangle strip primitive
 void IndexTriangleStrip(GLuint aStart, GLuint aCount)
 {
-	for (register GLuint i = 0; i < aCount - 2; ++i)
+	assert(aStart + aCount <= USHRT_MAX);
+	for (register GLuint i = 0; i < aCount - 2u; ++i)
 	{
-		const int odd = i & 1;
+		const unsigned int odd = i & 1u;
 		sIndexWork[sIndexCount++] = unsigned short(aStart + i + odd);
-		sIndexWork[sIndexCount++] = unsigned short(aStart + i + 1 - odd);
-		sIndexWork[sIndexCount++] = unsigned short(aStart + i + 2);
+		sIndexWork[sIndexCount++] = unsigned short(aStart + i + 1u - odd);
+		sIndexWork[sIndexCount++] = unsigned short(aStart + i + 2u);
 	}
 }
 
+// generate indices for a triangle fan primitive
 void IndexTriangleFan(GLuint aStart, GLuint aCount)
 {
-	for (register GLuint i = 1; i < aCount - 1; ++i)
+	assert(aStart + aCount <= USHRT_MAX);
+	for (register GLuint i = 1; i < aCount - 1u; ++i)
 	{
 		sIndexWork[sIndexCount++] = unsigned short(aStart);
 		sIndexWork[sIndexCount++] = unsigned short(aStart + i);
-		sIndexWork[sIndexCount++] = unsigned short(aStart + i + 1);
+		sIndexWork[sIndexCount++] = unsigned short(aStart + i + 1u);
 	}
 }
 
+// generate indices for a quad list primitive
 void IndexQuads(GLuint aStart, GLuint aCount)
 {
-	for (register GLuint i = 0; i < aCount; i += 4)
+	assert(aStart + aCount <= USHRT_MAX);
+	for (register GLuint i = 0; i < aCount; i += 4u)
 	{
 		sIndexWork[sIndexCount++] = unsigned short(aStart + i);
-		sIndexWork[sIndexCount++] = unsigned short(aStart + i + 1);
-		sIndexWork[sIndexCount++] = unsigned short(aStart + i + 2);
+		sIndexWork[sIndexCount++] = unsigned short(aStart + i + 1u);
+		sIndexWork[sIndexCount++] = unsigned short(aStart + i + 2u);
 		sIndexWork[sIndexCount++] = unsigned short(aStart + i);
-		sIndexWork[sIndexCount++] = unsigned short(aStart + i + 2);
-		sIndexWork[sIndexCount++] = unsigned short(aStart + i + 3);
+		sIndexWork[sIndexCount++] = unsigned short(aStart + i + 2u);
+		sIndexWork[sIndexCount++] = unsigned short(aStart + i + 3u);
 	}
 }
 
+// generate indices for a quad strip primitive
 void IndexQuadStrip(GLuint aStart, GLuint aCount)
 {
-	for (register GLuint i = 0; i < aCount - 2; i += 2)
+	assert(aStart + aCount <= USHRT_MAX);
+	for (register GLuint i = 0; i < aCount - 2u; i += 2u)
 	{
 		sIndexWork[sIndexCount++] = unsigned short(aStart + i);
-		sIndexWork[sIndexCount++] = unsigned short(aStart + i + 1);
-		sIndexWork[sIndexCount++] = unsigned short(aStart + i + 3);
+		sIndexWork[sIndexCount++] = unsigned short(aStart + i + 1u);
+		sIndexWork[sIndexCount++] = unsigned short(aStart + i + 3u);
 		sIndexWork[sIndexCount++] = unsigned short(aStart + i);
-		sIndexWork[sIndexCount++] = unsigned short(aStart + i + 3);
-		sIndexWork[sIndexCount++] = unsigned short(aStart + i + 2);
+		sIndexWork[sIndexCount++] = unsigned short(aStart + i + 3u);
+		sIndexWork[sIndexCount++] = unsigned short(aStart + i + 2u);
 	}
 }
 
+// generate indices for a polygon primitive
 void IndexPolygon(GLuint aStart, GLuint aCount)
 {
-	for (register GLuint i = 1; i < aCount - 1; ++i)
+	assert(aStart + aCount <= USHRT_MAX);
+	for (register GLuint i = 1; i < aCount - 1u; ++i)
 	{
 		sIndexWork[sIndexCount++] = unsigned short(aStart);
 		sIndexWork[sIndexCount++] = unsigned short(aStart + i);
-		sIndexWork[sIndexCount++] = unsigned short(aStart + i + 1);
+		sIndexWork[sIndexCount++] = unsigned short(aStart + i + 1u);
 	}
 }
 
@@ -1678,9 +1500,8 @@ void DrawElements(GLenum aDrawMode, /*GLuint aVertexFirst,*/ GLuint aVertexCount
 #ifdef RENDER_USE_QUEUE
 	DrawElementsDesc desc;
 	assert(sIndexBuffer->mHandle <= UCHAR_MAX);
-	desc.mode = GLubyte(aDrawMode);
-	assert(sIndexCount <= USHRT_MAX);
-	desc.count = GLushort(aIndexCount);
+	desc.mode = aDrawMode;
+	desc.count = aIndexCount;
 	desc.offset = aIndexOffset;
 	Expression::Append(sRenderQueue, RQ_DrawElements, desc);
 #else
@@ -1694,18 +1515,6 @@ void FlushDynamic(void)
 	// do nothing if the work buffer is empty
 	if (sVertexCount == 0)
 		return;
-
-#if 0
-	// sync opengl matrix
-	// how to handle this correctly?
-	//SetUniformMatrix4(sUniformModelView, IdentityGet());
-	assert(sProgram == 0);
-#ifdef DYNAMIC_GEOMETRY_IN_VIEW_SPACE
-	SetUniformMatrix4(sUniformModelView, IdentityGet());
-#else
-	SetUniformMatrix4Internal(GL_MODELVIEW, ViewGet());
-#endif
-#endif
 
 	// make sure work buffer is still valid
 	assert(sVertexWorkFormat != 0);
@@ -1743,6 +1552,7 @@ void FlushDynamic(void)
 	sDynamicIndexBuffer.mStart = sDynamicIndexBuffer.mEnd;
 }
 
+// bind a texture
 void BindTexture(GLuint aTexture)
 {
 	if (sTexture == aTexture)
@@ -1763,6 +1573,7 @@ void BindTexture(GLuint aTexture)
 #endif
 }
 
+// copy a texture sub-image
 void CopyTexSubImage(GLint aLevel, GLint aXOffset, GLint aYOffset, GLint aX, GLint aY, GLsizei aWidth, GLsizei aHeight)
 {
 #ifdef RENDER_USE_QUEUE
@@ -1773,6 +1584,7 @@ void CopyTexSubImage(GLint aLevel, GLint aXOffset, GLint aYOffset, GLint aX, GLi
 #endif
 }
 
+// clear the frame buffer
 void ClearFrame(void)
 {
 #ifdef RENDER_USE_QUEUE
@@ -1807,14 +1619,6 @@ const Color4 &GetClearColor(void)
 void SetFogEnabled(bool bEnable)
 {
 	sFogEnabled = bEnable;
-
-#ifdef SUPPORT_FIXED_FUNCTION
-	// fixed-function
-	if (bEnable)
-		glEnable(GL_FOG);
-	else
-		glDisable(GL_FOG);
-#endif
 }
 
 
@@ -1828,11 +1632,6 @@ bool GetFogEnabled(void)
 void SetFogColor(const Color4 &aColor)
 {
 	sFogColor = aColor;
-
-#ifdef SUPPORT_FIXED_FUNCTION
-	// fixed-function
-	glFogfv( GL_FOG_COLOR, aColor );
-#endif
 }
 
 // get fog color
@@ -1841,31 +1640,25 @@ const Color4 &GetFogColor(void)
 	return sFogColor;
 }
 
+// set fog start range
 void SetFogStart(float aStart)
 {
 	sFogStart = aStart;
-
-#ifdef SUPPORT_FIXED_FUNCTION
-	// fixed-function
-	glFogf( GL_FOG_START, aStart );
-#endif
 }
 
+// set fog end range
 void SetFogEnd(float aEnd)
 {
 	sFogEnd = aEnd;
-
-#ifdef SUPPORT_FIXED_FUNCTION
-	// fixed-function
-	glFogf( GL_FOG_END, aEnd );
-#endif
 }
 
+// get fog start range
 float GetFogStart(void)
 {
 	return sFogStart;
 }
 
+// get fog end range
 float GetFogEnd(void)
 {
 	return sFogEnd;

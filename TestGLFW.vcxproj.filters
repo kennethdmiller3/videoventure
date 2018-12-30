@@ -428,6 +428,12 @@
     <ClInclude Include="Source\Render\ShaderModulate.h">
       <Filter>Render</Filter>
     </ClInclude>
+    <ClInclude Include="Source\Render\ShaderModulateFog.h">
+      <Filter>Render</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Render\ShaderColorFog.h">
+      <Filter>Render</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\Core\Collidable.cpp">
@@ -828,6 +834,12 @@
       <Filter>Render</Filter>
     </ClCompile>
     <ClCompile Include="Source\Render\ShaderModulate.cpp">
+      <Filter>Render</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Render\ShaderModulateFog.cpp">
+      <Filter>Render</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Render\ShaderColorFog.cpp">
       <Filter>Render</Filter>
     </ClCompile>
   </ItemGroup>

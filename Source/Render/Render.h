@@ -118,7 +118,6 @@ extern void DeleteShader(GLuint aShaderId);
 extern void DeleteProgram(GLuint aProgramId);
 
 // use a shader program
-// program 0 returns to fixed-function mode
 // forces a render flush if different from the current program
 // returns true if it changed the program
 extern bool UseProgram(GLuint aProgram);

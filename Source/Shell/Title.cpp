@@ -456,9 +456,11 @@ void ShellTitle::Render(unsigned int aId, float aTime, const Transform2 &aTransf
 	// set work buffer format
 	SetWorkFormat((1<<ShaderColor::gAttribPosition)|(1<<ShaderColor::gAttribColor));
 
-	// draw quads to save on indices
-	// TO DO: replace with non-deprecated mode
-	SetDrawMode(GL_QUADS);
+	// draw triangle list 
+	// (because quads are deprecated)
+	SetDrawMode(GL_TRIANGLES);
+
+	// allocate vertex data
 	Vertex *v0 = static_cast<Vertex *>(AllocVertices(vertcount));
 	register Vertex * __restrict v = v0;
 
@@ -652,13 +654,12 @@ void ShellTitle::Render(unsigned int aId, float aTime, const Transform2 &aTransf
 #endif
 	}
 
-#if 1
+	// generate indices
+	IndexQuads(GetVertexCount() - vertcount, vertcount);
+
+	// finish drawing
 	assert(v == v0 + vertcount);
 	FlushDynamic();
-#else
-	// finish drawing
-	IndexQuads(base, GetVertexCount() - base);
-#endif
 
 #else
 	// texture-based variant

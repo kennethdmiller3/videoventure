@@ -858,9 +858,6 @@ void RunState()
 			// set projection matrix
 			//glFrustum( -0.5*VIEW_SIZE*SCREEN_WIDTH/SCREEN_HEIGHT, 0.5*VIEW_SIZE*SCREEN_WIDTH/SCREEN_HEIGHT, 0.5f*VIEW_SIZE, -0.5f*VIEW_SIZE, 256.0f*1.0f, 256.0f*5.0f );
 			ProjectionFrustum(-0.5f*VIEW_SIZE*SCREEN_WIDTH/SCREEN_HEIGHT, 0.5f*VIEW_SIZE*SCREEN_WIDTH/SCREEN_HEIGHT, 0.5f*VIEW_SIZE, -0.5f*VIEW_SIZE, 256.0f, 256.0f * 5.0f);
-#ifdef SUPPORT_FIXED_FUNCTION
-			SetUniformMatrix4(GL_PROJECTION, ProjectionGet());
-#endif
 
 			// get interpolated track position
 			Vector2 viewpos(Lerp(camerapos[0], camerapos[1], sim_fraction));
@@ -870,9 +867,6 @@ void RunState()
 			StackScale(_mm_setr_ps(-1, -1, -1, 0));
 			StackTranslate(_mm_setr_ps(-viewpos.x, -viewpos.y, CAMERA_DISTANCE, 0));
 			ViewLoad(StackGet());
-#ifdef SUPPORT_FIXED_FUNCTION
-			SetUniformMatrix4(GL_MODELVIEW, ViewGet());
-#endif
 
 			// set model matrix
 			StackIdentity();
@@ -967,16 +961,10 @@ void RunState()
 
 		// set projection matrix
 		ProjectionOrtho(0, 640, 480, 0, -1, 1);
-#ifdef SUPPORT_FIXED_FUNCTION
-		SetUniformMatrix4(GL_PROJECTION, ProjectionGet());
-#endif
 
 		// set view matrix
 		StackIdentity();
 		ViewLoad(StackGet());
-#ifdef SUPPORT_FIXED_FUNCTION
-		SetUniformMatrix4(GL_MODELVIEW, ViewGet());
-#endif
 
 		// render all overlays
 		Overlay::RenderAll();
