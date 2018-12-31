@@ -10,7 +10,5 @@ ipch/
 *.VC.db
 
 # Build results
-Debug/
-Debug-Lib/
-Release/
-Release-Lib/
+Win32/
+x64/
