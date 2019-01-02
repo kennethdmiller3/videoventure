@@ -247,7 +247,7 @@ void Capture::Update(float aStep)
 		// get nearby fixtures
 		// TO DO: optimize for angle
 		Collidable::QueryRadius(entity->GetPosition(), capture.mRadius,
-			CollidableFilter(~0U, 0, ~0U), Collidable::QueryRadiusDelegate(&callback, &CaptureQueryCallback::Report));
+			CollidableFilter(0, ~0U, ~0U), Collidable::QueryRadiusDelegate(&callback, &CaptureQueryCallback::Report));
 	}
 	else
 	{
