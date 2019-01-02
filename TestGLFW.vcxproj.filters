@@ -135,12 +135,6 @@
     <ClInclude Include="Source\Core\World.h">
       <Filter>Core</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Core\xs_Config.h">
-      <Filter>Core</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Core\xs_Float.h">
-      <Filter>Core</Filter>
-    </ClInclude>
     <ClInclude Include="Source\Interface\Console.h">
       <Filter>Interface</Filter>
     </ClInclude>

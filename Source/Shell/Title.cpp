@@ -28,7 +28,7 @@ static void HSV2RGB(const float h, const float s, const float v, float &r, float
 #if 1
 	// convert hue to index and fraction
 	const int bits = 20;
-	const int scaled = (xs_FloorToInt(h * (1 << bits)) & ((1 << bits) - 1)) * 6;
+	const int scaled = (int(floorf(h * (1 << bits))) & ((1 << bits) - 1)) * 6;
 	const int i = scaled >> bits;
 	const float f = scaled * (1.0f / (1 << bits)) - i;
 
@@ -472,7 +472,7 @@ void ShellTitle::Render(unsigned int aId, float aTime, const Transform2 &aTransf
 		{
 			const float y0 = titley + row * titleh, y1 = y0 + titleh;
 #if defined(USE_TITLE_PACKED_VERTEX)
-			const unsigned int color = 0x004C4C4C | (xs_RoundToInt(alpha * 255) << 24);
+			const unsigned int color = 0x004C4C4C | (unsigned int(floorf(0.5f + alpha * 255)) << 24);
 			v->pos = Vector2(0.0f, y0);
 			v->color = color;
 			++v;
@@ -550,9 +550,9 @@ void ShellTitle::Render(unsigned int aId, float aTime, const Transform2 &aTransf
 				bool border = (fill & ~(1<<BORDER_C)) != 0;
 				HSV2RGB(h + phase * 0.5f + border * 0.5f, 1.0f, 1.0f - 0.25f * border, R, G, B);
 				unsigned int color = 0xFF000000 
-					| (xs_RoundToInt(B * 255) << 16) 
-					| (xs_RoundToInt(G * 255) << 8)
-					| (xs_RoundToInt(R * 255) );
+					| (unsigned int(floorf(0.5f + B * 255)) << 16) 
+					| (unsigned int(floorf(0.5f + G * 255)) << 8)
+					| (unsigned int(floorf(0.5f + R * 255)));
 
 				// for each block...
 				for (int i = 0; i < 9; ++i)
@@ -608,15 +608,14 @@ void ShellTitle::Render(unsigned int aId, float aTime, const Transform2 &aTransf
 							float yy0 = mirror_y0 + mirror_yd * m0;
 							float yy1 = mirror_y0 + mirror_yd * m1;
 #if defined(USE_TITLE_PACKED_VERTEX)
-							unsigned int color1 = xs_RoundToInt(a1 * a1 * 255) << 24 | (color & 0x00FFFFFF);
+							unsigned int color1 = unsigned int(floorf(0.5f + a1 * a1 * 255)) << 24 | (color & 0x00FFFFFF);
 							v->pos = Vector2(x0 + dx1, yy1);
 							v->color = color1;
 							++v;
 							v->pos = Vector2(x1 + dx1, yy1);
 							v->color = color1;
 							++v;
-							unsigned int color0 = xs_RoundToInt(a0 * a0 * 255) << 24 | (color & 0x00FFFFFF);
-							color |= xs_RoundToInt(a0 * a0 * 255) << 24;
+							unsigned int color0 = unsigned int(floorf(0.5f + a0 * a0 * 255)) << 24 | (color & 0x00FFFFFF);
 							v->pos = Vector2(x1 + dx0, yy0);
 							v->color = color0;
 							++v;

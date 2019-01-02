@@ -58,7 +58,7 @@ void PlayerOverlaySpecial::Render(unsigned int aId, float aTime, const Transform
 	Resource *specialresource = Database::resource.Get(id).Get(0xd940d530 /* "special" */);
 	if (!specialresource)
 		return;
-	int new_special = xs_FloorToInt(specialresource->GetValue());
+	int new_special = int(specialresource->GetValue());
 
 	// update special
 	cur_special = new_special;

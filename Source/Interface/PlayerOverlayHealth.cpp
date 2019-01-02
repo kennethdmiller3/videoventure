@@ -42,10 +42,10 @@ struct Vertex
 unsigned int ToPacked(const Color4 &color)
 {
 	return
-		(Clamp(xs_RoundToInt(color.r * 255), 0, 255)) |
-		(Clamp(xs_RoundToInt(color.g * 255), 0, 255) << 8) |
-		(Clamp(xs_RoundToInt(color.b * 255), 0, 255) << 16) |
-		(Clamp(xs_RoundToInt(color.a * 255), 0, 255) << 24);
+		(Clamp<unsigned int>(int(floorf(0.5f + color.r * 255)), 0, 255)) |
+		(Clamp<unsigned int>(int(floorf(0.5f + color.g * 255)), 0, 255) << 8) |
+		(Clamp<unsigned int>(int(floorf(0.5f + color.b * 255)), 0, 255) << 16) |
+		(Clamp<unsigned int>(int(floorf(0.5f + color.a * 255)), 0, 255) << 24);
 }
 
 //
@@ -234,7 +234,7 @@ void PlayerOverlayHealth::Render(unsigned int aId, float aTime, const Transform2
 #ifdef PLAYER_HEALTH_FLOAT_COLOR
 		const Color4 color(1.0f, 1.0f, 1.0f, flashinfo.fade);
 #else
-		unsigned int color = Clamp(xs_RoundToInt(flashinfo.fade * 255), 0, 255) << 24 | 0x00FFFFFF;
+		unsigned int color = Clamp<unsigned int>(int(floorf(flashinfo.fade * 255)), 0, 255) << 24 | 0x00FFFFFF;
 #endif
 		v = static_cast<Vertex *>(AllocVertices(4));
 		v->pos = Vector3(healthrect.x + healthrect.w * flashinfo.left, healthrect.y - 2 * flashinfo.fade, 0);
@@ -275,8 +275,7 @@ void PlayerOverlayHealth::Render(unsigned int aId, float aTime, const Transform2
 
 	if (maxhealth > 1)
 	{
-		// tick marks
-		int ticks = xs_FloorToInt(maxhealth);
+		int ticks = int(maxhealth);
 #ifdef PLAYER_HEALTH_FLOAT_COLOR
 		const Color4 color(0.0f, 0.0f, 0.0f, 0.125f);
 #else
@@ -284,6 +283,7 @@ void PlayerOverlayHealth::Render(unsigned int aId, float aTime, const Transform2
 #endif
 		v = static_cast<Vertex *>(AllocVertices((ticks - 1) * 4));
 
+		// tick marks
 		for (int i = 1; i < ticks; ++i)
 		{
 			float x = healthrect.x + i * healthrect.w / maxhealth;

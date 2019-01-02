@@ -1125,7 +1125,7 @@ static void PackAttribValue(GLint aIndex, __m128 aValue)
 			register GLbyte *dst = reinterpret_cast<GLbyte *>(sVertexPacked + displace);
 			//if (sAttribNormalize[aIndex])
 				for (register GLuint i = 0; i < width; ++i)
-					*dst++ = GLbyte(Clamp(xs_FloorToInt(aValue.m128_f32[i] * 0x80), CHAR_MIN, CHAR_MAX));
+					*dst++ = GLbyte(Clamp(int(float(aValue.m128_f32[i] * 0x80)), CHAR_MIN, CHAR_MAX));
 			//else
 			//	for (register GLuint i = 0; i < width; ++i)
 			//		*dst++ = GLbyte(Clamp(xs_FloorToInt(aValue.m128_f32[i]), CHAR_MIN, CHAR_MAX));
@@ -1137,7 +1137,7 @@ static void PackAttribValue(GLint aIndex, __m128 aValue)
 			register GLubyte *dst = reinterpret_cast<GLubyte *>(sVertexPacked + displace);
 			//if (sAttribNormalize[aIndex])
 				for (register GLuint i = 0; i < width; ++i)
-					*dst++ = GLubyte(Clamp(xs_FloorToInt(aValue.m128_f32[i] * 0x100), 0, UCHAR_MAX));
+					*dst++ = GLubyte(Clamp(int(float(aValue.m128_f32[i] * 0x100)), 0, UCHAR_MAX));
 			//else
 			//	for (register GLuint i = 0; i < width; ++i)
 			//		reinterpret_cast<GLubyte *>(sAttribPacked[aIndex])[i] = GLubyte(Clamp(xs_FloorToInt(aValue.m128_f32[i]), 0, UCHAR_MAX));

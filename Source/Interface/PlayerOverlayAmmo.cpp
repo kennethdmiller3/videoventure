@@ -91,7 +91,7 @@ void PlayerOverlayAmmo::Render(unsigned int aId, float aTime, const Transform2 &
 	Resource *levelresource = Database::resource.Get(id).Get(0x9b99e7dd /* "level" */);
 	if (levelresource)
 	{
-		new_level = xs_FloorToInt(levelresource->GetValue());
+		new_level = int(levelresource->GetValue());
 	}
 
 	// update level

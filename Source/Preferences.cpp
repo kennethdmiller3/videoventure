@@ -88,13 +88,13 @@ bool WritePreferences(const char *config)
 
 	tinyxml2::XMLElement *motionblur = document.NewElement("motionblur");
 	motionblur->SetAttribute("steps", MOTIONBLUR_STEPS);
-	motionblur->SetAttribute("strength", xs_RoundToInt(MOTIONBLUR_TIME*6000));
+	motionblur->SetAttribute("strength", int(MOTIONBLUR_TIME*6000));
 	preferences->LinkEndChild(motionblur);
 
 	tinyxml2::XMLElement *sound = document.NewElement("sound");
 	sound->SetAttribute("channels", SOUND_CHANNELS);
-	sound->SetAttribute("effectvolume", xs_RoundToInt(SOUND_VOLUME_EFFECT*100));
-	sound->SetAttribute("musicvolume", xs_RoundToInt(SOUND_VOLUME_MUSIC*100));
+	sound->SetAttribute("effectvolume", int(SOUND_VOLUME_EFFECT*100));
+	sound->SetAttribute("musicvolume", int(SOUND_VOLUME_MUSIC*100));
 	preferences->LinkEndChild(sound);
 
 	document.SaveFile(config);

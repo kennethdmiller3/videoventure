@@ -311,10 +311,10 @@ void FontDrawColor(const Color4 &color)
 	sColor = color;
 #else
 	sColor = 
-		GLubyte(Clamp(xs_RoundToInt(color.r * 255), 0, 255)) |
-		GLubyte(Clamp(xs_RoundToInt(color.g * 255), 0, 255)) << 8 |
-		GLubyte(Clamp(xs_RoundToInt(color.b * 255), 0, 255)) << 16 |
-		GLubyte(Clamp(xs_RoundToInt(color.a * 255), 0, 255)) << 24;
+		(Clamp<unsigned int>(int(floorf(0.5f + color.r * 255)), 0, 255)) |
+		(Clamp<unsigned int>(int(floorf(0.5f + color.g * 255)), 0, 255)) << 8 |
+		(Clamp<unsigned int>(int(floorf(0.5f + color.b * 255)), 0, 255)) << 16 |
+		(Clamp<unsigned int>(int(floorf(0.5f + color.a * 255)), 0, 255)) << 24;
 #endif
 }
 

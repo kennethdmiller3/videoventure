@@ -79,10 +79,10 @@ void ShellMenuItem::Render(unsigned int aId, float aTime, const Transform2 &aTra
 
 		GLuint base = GetVertexCount();
 		unsigned int color = 
-			GLubyte(Clamp(xs_RoundToInt(mButtonColor[state].r * 255), 0, 255)) |
-			GLubyte(Clamp(xs_RoundToInt(mButtonColor[state].g * 255), 0, 255)) << 8 |
-			GLubyte(Clamp(xs_RoundToInt(mButtonColor[state].b * 255), 0, 255)) << 16 |
-			GLubyte(Clamp(xs_RoundToInt(mButtonColor[state].a * 255), 0, 255)) << 24;
+			GLubyte(Clamp(int(floorf(0.5f + mButtonColor[state].r * 255)), 0, 255)) |
+			GLubyte(Clamp(int(floorf(0.5f + mButtonColor[state].g * 255)), 0, 255)) << 8 |
+			GLubyte(Clamp(int(floorf(0.5f + mButtonColor[state].b * 255)), 0, 255)) << 16 |
+			GLubyte(Clamp(int(floorf(0.5f + mButtonColor[state].a * 255)), 0, 255)) << 24;
 		register Vertex * __restrict v = static_cast<Vertex *>(AllocVertices(4));
 		v->pos = Vector3(mButtonPos.x, mButtonPos.y, 0);
 		v->color = color;

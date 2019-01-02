@@ -23,9 +23,6 @@
 #include <deque>
 #include <algorithm>
 
-// fast floating-point
-#include "xs_Float.h"
-
 // TinyXML includes
 #include "tinyxml2.h"
 

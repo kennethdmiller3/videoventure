@@ -220,7 +220,7 @@ void Aimer::Control(float aStep)
 	glColor4f(1.0f, 0.0f, 1.0f, 1.0f);
 	glBegin(GL_LINE_STRIP);
 	glVertex2f(transform.p.x, transform.p.y);
-	int steps = xs_CeilToInt(mTurn * 16);
+	int steps = int(ceilf(mTurn * 16));
 	for(int i = 0; i < steps; i++)
 	{
 		float angle = float(M_PI) * i * mTurn / steps;

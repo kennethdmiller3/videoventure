@@ -103,7 +103,7 @@ void PlayerOverlayLevel::Render(unsigned int aId, float aTime, const Transform2 
 	Resource *levelresource = Database::resource.Get(id).Get(0x9b99e7dd /* "level" */);
 	if (!levelresource)
 		return;
-	int new_level = xs_FloorToInt(levelresource->GetValue());
+	int new_level = int(levelresource->GetValue());
 	float new_part = levelresource->GetValue() - new_level;
 
 	// update level

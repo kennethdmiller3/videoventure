@@ -441,7 +441,7 @@ bool SoundTemplate::Configure(const tinyxml2::XMLElement *element, unsigned int 
 	if (mChunk)
 	{
 		// set default volume
-		Mix_VolumeChunk(mChunk, xs_RoundToInt(mVolume * MIX_MAX_VOLUME));
+		Mix_VolumeChunk(mChunk, int(mVolume * MIX_MAX_VOLUME));
 	}
 #endif
 
@@ -824,7 +824,7 @@ void Sound::Update(float aStep)
 	}
 #endif
 	// update volume
-	Mix_Volume(mPlaying, xs_RoundToInt(volume * MIX_MAX_VOLUME));
+	Mix_Volume(mPlaying, int(volume * MIX_MAX_VOLUME));
 #else
 #if defined(DISTANCE_FALLOFF)
 	// if named and applying rolloff...
@@ -915,7 +915,7 @@ void Sound::Init(void)
 
 #elif defined(USE_SDL_MIXER)
 	// initialize mixer
-	if ( Mix_OpenAudio(AUDIO_FREQUENCY, AUDIO_S16SYS, 1, xs_CeilToInt(AUDIO_FREQUENCY / SIMULATION_RATE) ) < 0 )
+	if ( Mix_OpenAudio(AUDIO_FREQUENCY, AUDIO_S16SYS, 1, int(floorf(0.5f + AUDIO_FREQUENCY / SIMULATION_RATE)) ) < 0 )
 	{
 		DebugPrint("Unable to open audio: %s\n", Mix_GetError());
 		return;
@@ -1008,8 +1008,8 @@ void UpdateSoundVolume(void)
 {
 #if defined(USE_BASS)
 	// update effect volume
-	BASS_SetConfig(BASS_CONFIG_GVOL_SAMPLE, xs_CeilToInt(SOUND_VOLUME_EFFECT * 10000));
-	BASS_SetConfig(BASS_CONFIG_GVOL_STREAM, xs_CeilToInt(SOUND_VOLUME_EFFECT * 10000));
+	BASS_SetConfig(BASS_CONFIG_GVOL_SAMPLE, DWORD(floorf(0.5f + SOUND_VOLUME_EFFECT * 10000)));
+	BASS_SetConfig(BASS_CONFIG_GVOL_STREAM, DWORD(floorf(0.5f + SOUND_VOLUME_EFFECT * 10000)));
 #endif
 }
 
@@ -1017,7 +1017,7 @@ void UpdateMusicVolume(void)
 {
 #if defined(USE_BASS)
 	// update music volume
-	BASS_SetConfig(BASS_CONFIG_GVOL_MUSIC, xs_CeilToInt(SOUND_VOLUME_MUSIC * 10000));
+	BASS_SetConfig(BASS_CONFIG_GVOL_MUSIC, DWORD(floorf(0.5f + SOUND_VOLUME_MUSIC * 10000)));
 
 	// for each music handle...
 	for (Database::Typed<HMUSIC>::Iterator itor(&Database::music); itor.IsValid(); ++itor)
@@ -1038,7 +1038,7 @@ void UpdateMusicVolume(void)
 	}
 #elif defined(USE_SDL_MIXER)
 	// compute music volume
-	Mix_VolumeMusic(xs_CeilToInt(SOUND_VOLUME_MUSIC * MIX_MAX_VOLUME));
+	Mix_VolumeMusic(int(floorf(0.5f + SOUND_VOLUME_MUSIC * MIX_MAX_VOLUME)));
 #endif
 }
 

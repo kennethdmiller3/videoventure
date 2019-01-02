@@ -65,8 +65,8 @@ void Console::Resize()
 	// get viewport dimensions in characters
 	GLint viewport[4];
 	glGetIntegerv(GL_VIEWPORT, viewport);
-	textWidth = xs_FloorToInt(viewport[2]/characterWidth);
-	textHeight = xs_FloorToInt(viewport[3]/characterHeight);
+	textWidth = int(viewport[2] / characterWidth);
+	textHeight = int(viewport[3] / characterHeight);
 
 	// generate projection matrix
 	// (flip vertically so zero is at the top)

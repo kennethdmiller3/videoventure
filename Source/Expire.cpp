@@ -143,7 +143,7 @@ Expire::Expire(const ExpireTemplate &aTemplate, unsigned int aId)
 	{
 		// turn and fraction to expire
 		float turns = aTime * sim_rate;
-		mTurn = xs_FloorToInt(turns + sim_fraction);
+		mTurn = unsigned int(floorf(turns + sim_fraction));
 		mFraction = turns - mTurn + sim_fraction;
 		mTurn += sim_turn;
 	}

@@ -213,7 +213,7 @@ static bool Configure(SoundTemplate &self, const tinyxml2::XMLElement *element, 
 	// sample length
 	float length = 0;
 	element->QueryFloatAttribute("length", &length);
-	int samples = xs_CeilToInt(length * AUDIO_FREQUENCY);
+	int samples = int(ceilf(length * AUDIO_FREQUENCY));
 
 	// reserve space
 	self.Reserve(samples);
@@ -434,7 +434,7 @@ static bool Configure(SoundTemplate &self, const tinyxml2::XMLElement *element, 
 
 	const float sampleticks = float(frequency) / float(AUDIO_FREQUENCY);
 	const float ticksamples = float(AUDIO_FREQUENCY) / float(frequency);
-	const int startindex = xs_FloorToInt(self.mLength * ticksamples);
+	const int startindex = int(floorf(self.mLength * ticksamples));
 
 	float counter = 0;
 	int poly1index = startindex % poly1size;
@@ -461,31 +461,31 @@ static bool Configure(SoundTemplate &self, const tinyxml2::XMLElement *element, 
 
 		// get current divider value
 		float divider = Expression::Evaluate<float>(context);
-		divider = xs_RoundToInt(divider / dividerquant) * dividerquant;
+		divider = floorf(0.5f + divider / dividerquant) * dividerquant;
 		_ASSERTE(divider > 0);
 
 		// get current amplitude value
 		float amplitude = Expression::Evaluate<float>(context);
-		amplitude = xs_RoundToInt(amplitude / amplitudequant) * amplitudequant;
+		amplitude = floorf(0.5f + amplitude / amplitudequant) * amplitudequant;
 
 		// get current offset value
 		float offset = Expression::Evaluate<float>(context);
-		offset = xs_RoundToInt(offset / offsetquant) * offsetquant;
+		offset = floorf(0.5f + offset / offsetquant) * offsetquant;
 #else
 		// get current divider value
 		float divider;
 		dividerfunc(&divider, 1, dividerkey[0], reinterpret_cast<const float * __restrict>(&dividerkey[1]), time, dividerhint);
-		divider = xs_RoundToInt(divider / dividerquant) * dividerquant;
+		divider = floorf(0.5f + divider / dividerquant) * dividerquant;
 
 		// get current amplitude value
 		float amplitude;
 		amplitudefunc(&amplitude, 1, amplitudekey[0], reinterpret_cast<const float * __restrict>(&amplitudekey[1]), time, amplitudehint);
-		amplitude = xs_RoundToInt(amplitude / amplitudequant) * amplitudequant;
+		amplitude = floorf(0.5f + amplitude / amplitudequant) * amplitudequant;
 
 		// get current offset value
 		float offset;
 		offsetfunc(&offset, 1, offsetkey[0], reinterpret_cast<const float * __restrict>(&offsetkey[1]), time, offsethint);
-		offset = xs_RoundToInt(offset / offsetquant) * offsetquant;
+		offset = floorf(0.5f + offset / offsetquant) * offsetquant;
 
 		// advance time
 		time += steptime;
@@ -512,10 +512,10 @@ static bool Configure(SoundTemplate &self, const tinyxml2::XMLElement *element, 
 
 			// perform one update tick
 			if ((!poly1data) ||
-				(poly1data[poly1index = xs_FloorToInt(poly1index + divider) % poly1size]))
+				(poly1data[poly1index = int(floorf(poly1index + divider)) % poly1size]))
 			{
 				if (poly2data)
-					outputhigh = poly2data[poly2index = xs_FloorToInt(poly2index + divider) % poly2size];
+					outputhigh = poly2data[poly2index = int(floorf(poly2index + divider)) % poly2size];
 				else
 					outputhigh = !outputhigh;
 			}
@@ -534,7 +534,7 @@ static bool Configure(SoundTemplate &self, const tinyxml2::XMLElement *element, 
 		accum -= 1.0f;
 
 		// compute sample value
-		short sample = short(Clamp(xs_RoundToInt(SHRT_MAX * (offset + amplitude * accum)), SHRT_MIN, SHRT_MAX));
+		short sample = short(Clamp(int(floorf(0.5f + SHRT_MAX * (offset + amplitude * accum))), SHRT_MIN, SHRT_MAX));
 
 		// append sample
 		self.Append(sample);

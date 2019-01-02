@@ -117,7 +117,7 @@ void ShellMenuVideoEnter()
 	VarItem *varmotionblursteps = VarItem::CreateInteger("shell.menu.video.motionblur", MOTIONBLUR_STEPS, 1);
 	snprintf(shellmenuvideomotionblurstepstext, sizeof(shellmenuvideomotionblurstepstext), "%d", varmotionblursteps->GetInteger());
 
-	VarItem *varmotionblurtime = VarItem::CreateInteger("shell.menu.video.motionblurtime", xs_RoundToInt(MOTIONBLUR_TIME * 600), 0, 10);
+	VarItem *varmotionblurtime = VarItem::CreateInteger("shell.menu.video.motionblurtime", int(MOTIONBLUR_TIME * 600), 0, 10);
 	snprintf(shellmenuvideomotionblurtimetext, sizeof(shellmenuvideomotionblurtimetext), "%d%%", varmotionblurtime->GetInteger() * 10);
 }
 
