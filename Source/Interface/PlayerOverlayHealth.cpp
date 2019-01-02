@@ -186,7 +186,8 @@ void PlayerOverlayHealth::Render(unsigned int aId, float aTime, const Transform2
 		glColor4f(0.0f, 0.0f, 0.0f, 0.125f);
 
 		// tick marks
-		for (int i = 1; i < xs_FloorToInt(maxhealth); ++i)
+		int ticks = int(maxhealth);
+		for (int i = 1; i < ticks; ++i)
 		{
 			float x = healthrect.x + i * healthrect.w / maxhealth;
 			glVertex2f(x, healthrect.y);

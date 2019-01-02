@@ -58,9 +58,6 @@ const int AUDIO_FREQUENCY = 48000;
 // platform header
 #include "Platform.h"
 
-// fast floating-point
-#include "xs_Float.h"
-
 // TinyXML includes
 #include "tinyxml2.h"
 

@@ -57,7 +57,7 @@ static bool Configure(SoundTemplate &self, const tinyxml2::XMLElement *element, 
 	unsigned char output = 0xFF;
 
 	// pre-compute size
-	int count = xs_FloorToInt(outersteps * (innersteps * (innerdelay + innerdelta * (outersteps - 1) / 2) + outerdelay) * samplespertick);
+	int count = int(floorf(outersteps * (innersteps * (innerdelay + innerdelta * (outersteps - 1) / 2) + outerdelay) * samplespertick));
 	self.Reserve(count);
 
 	// for each outer step...

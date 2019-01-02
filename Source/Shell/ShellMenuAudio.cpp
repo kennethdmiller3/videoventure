@@ -30,11 +30,11 @@ void ShellMenuAudioEnter()
 	snprintf(shellmenuaudiosoundchannelstext, sizeof(shellmenuaudiosoundchannelstext), "%d", varsoundchannels->GetInteger());
 
 	shellmenuaudiosoundvolumeeffectonenter = SOUND_VOLUME_EFFECT;
-	VarItem *varsoundvolumeeffect = VarItem::CreateInteger("shell.menu.audio.volume.effect", xs_RoundToInt(SOUND_VOLUME_EFFECT * 10), 0, 20);
+	VarItem *varsoundvolumeeffect = VarItem::CreateInteger("shell.menu.audio.volume.effect", int(SOUND_VOLUME_EFFECT * 10), 0, 20);
 	snprintf(shellmenuaudiosoundvolumeeffecttext, sizeof(shellmenuaudiosoundvolumeeffecttext), "%d%%", varsoundvolumeeffect->GetInteger() * 10);
 
 	shellmenuaudiosoundvolumemusiconenter = SOUND_VOLUME_MUSIC;
-	VarItem *varsoundvolumemusic = VarItem::CreateInteger("shell.menu.audio.volume.music", xs_RoundToInt(SOUND_VOLUME_MUSIC * 10), 0, 20);
+	VarItem *varsoundvolumemusic = VarItem::CreateInteger("shell.menu.audio.volume.music", int(SOUND_VOLUME_MUSIC * 10), 0, 20);
 	snprintf(shellmenuaudiosoundvolumemusictext, sizeof(shellmenuaudiosoundvolumemusictext), "%d%%", varsoundvolumemusic->GetInteger() * 10);
 }
 

@@ -114,7 +114,7 @@ namespace Database
 									for (int i = 0; i < octaves; ++i)
 									{
 #if 0
-										value += a * Noise(x * f + seed[c], y * f - seed[c], xs_FloorToInt(texture.mWidth * f), xs_FloorToInt(texture.mHeight * f));
+										value += a * Noise(x * f + seed[c], y * f - seed[c], int(floorf(texture.mWidth * f)), int(floorf(texture.mHeight * f)));
 #else
 										value += a * (
 											Noise2D((x) * f, (y) * f) * (texture.mWidth - x) * (texture.mHeight - y) +
@@ -134,15 +134,15 @@ namespace Database
 									__m128 color = Expression::Evaluate<__m128>(context);
 #if 1
 									color = Clamp01(color) * Extend<__m128>(255);
-									*pixel++ = (unsigned char)xs_RoundToInt(color.m128_f32[0]);
-									*pixel++ = (unsigned char)xs_RoundToInt(color.m128_f32[1]);
-									*pixel++ = (unsigned char)xs_RoundToInt(color.m128_f32[2]);
-									*pixel++ = (unsigned char)xs_RoundToInt(color.m128_f32[3]);
+									*pixel++ = (unsigned char)floorf(0.5f + color.m128_f32[0]);
+									*pixel++ = (unsigned char)floorf(0.5f + color.m128_f32[1]);
+									*pixel++ = (unsigned char)floorf(0.5f + color.m128_f32[2]);
+									*pixel++ = (unsigned char)floorf(0.5f + color.m128_f32[3]);
 #else
-									*pixel++ = (unsigned char)xs_RoundToInt(Clamp(reinterpret_cast<float * __restrict>(&color)[0], 0.0f, 1.0f) * 255);
-									*pixel++ = (unsigned char)xs_RoundToInt(Clamp(reinterpret_cast<float * __restrict>(&color)[1], 0.0f, 1.0f) * 255);
-									*pixel++ = (unsigned char)xs_RoundToInt(Clamp(reinterpret_cast<float * __restrict>(&color)[2], 0.0f, 1.0f) * 255);
-									*pixel++ = (unsigned char)xs_RoundToInt(Clamp(reinterpret_cast<float * __restrict>(&color)[3], 0.0f, 1.0f) * 255);
+									*pixel++ = (unsigned char)floorf(0.5f + Clamp(reinterpret_cast<float * __restrict>(&color)[0], 0.0f, 1.0f) * 255);
+									*pixel++ = (unsigned char)floorf(0.5f + Clamp(reinterpret_cast<float * __restrict>(&color)[1], 0.0f, 1.0f) * 255);
+									*pixel++ = (unsigned char)floorf(0.5f + Clamp(reinterpret_cast<float * __restrict>(&color)[2], 0.0f, 1.0f) * 255);
+									*pixel++ = (unsigned char)floorf(0.5f + Clamp(reinterpret_cast<float * __restrict>(&color)[3], 0.0f, 1.0f) * 255);
 #endif
 								}
 							}
@@ -182,15 +182,15 @@ namespace Database
 									__m128 color = Expression::Evaluate<__m128>(context);
 #if 1
 									color = Clamp01(color) * Extend<__m128>(255);
-									*pixel++ = (unsigned char)xs_RoundToInt(color.m128_f32[0]);
-									*pixel++ = (unsigned char)xs_RoundToInt(color.m128_f32[1]);
-									*pixel++ = (unsigned char)xs_RoundToInt(color.m128_f32[2]);
-									*pixel++ = (unsigned char)xs_RoundToInt(color.m128_f32[3]);
+									*pixel++ = (unsigned char)floorf(0.5f + color.m128_f32[0]);
+									*pixel++ = (unsigned char)floorf(0.5f + color.m128_f32[1]);
+									*pixel++ = (unsigned char)floorf(0.5f + color.m128_f32[2]);
+									*pixel++ = (unsigned char)floorf(0.5f + color.m128_f32[3]);
 #else
-									*pixel++ = (unsigned char)xs_RoundToInt(Clamp(reinterpret_cast<float * __restrict>(&color)[0], 0.0f, 1.0f) * 255);
-									*pixel++ = (unsigned char)xs_RoundToInt(Clamp(reinterpret_cast<float * __restrict>(&color)[1], 0.0f, 1.0f) * 255);
-									*pixel++ = (unsigned char)xs_RoundToInt(Clamp(reinterpret_cast<float * __restrict>(&color)[2], 0.0f, 1.0f) * 255);
-									*pixel++ = (unsigned char)xs_RoundToInt(Clamp(reinterpret_cast<float * __restrict>(&color)[3], 0.0f, 1.0f) * 255);
+									*pixel++ = (unsigned char)floorf(0.5f + Clamp(reinterpret_cast<float * __restrict>(&color)[0], 0.0f, 1.0f) * 255);
+									*pixel++ = (unsigned char)floorf(0.5f + Clamp(reinterpret_cast<float * __restrict>(&color)[1], 0.0f, 1.0f) * 255);
+									*pixel++ = (unsigned char)floorf(0.5f + Clamp(reinterpret_cast<float * __restrict>(&color)[2], 0.0f, 1.0f) * 255);
+									*pixel++ = (unsigned char)floorf(0.5f + Clamp(reinterpret_cast<float * __restrict>(&color)[3], 0.0f, 1.0f) * 255);
 #endif
 								}
 							}

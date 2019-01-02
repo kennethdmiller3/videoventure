@@ -10,7 +10,7 @@ static bool Configure(SoundTemplate &self, const tinyxml2::XMLElement *element, 
 	// sample length
 	float length = 0;
 	element->QueryFloatAttribute("length", &length);
-	int samples = xs_CeilToInt(length * AUDIO_FREQUENCY);
+	int samples = int(ceilf(length * AUDIO_FREQUENCY));
 
 	// reserve space
 	self.Reserve(samples);
@@ -71,7 +71,7 @@ static bool Configure(SoundTemplate &self, const tinyxml2::XMLElement *element, 
 			// get current sample value
 			float sample;
 			samplefunc(&sample, 1, samplekey[0], reinterpret_cast<const float * __restrict>(&samplekey[1]), time, samplehint);
-			sample = xs_RoundToInt(sample / samplequant) * samplequant;
+			sample = floorf(0.5f + sample / samplequant) * samplequant;
 
 			// accumulate value
 			accum += offset + amplitude * sample;
@@ -81,7 +81,7 @@ static bool Configure(SoundTemplate &self, const tinyxml2::XMLElement *element, 
 		}
 
 		// append sample
-		self.Append(short(Clamp(xs_RoundToInt(SHRT_MAX * accum / oversample), SHRT_MIN, SHRT_MAX)));
+		self.Append(short(Clamp(int(floorf(0.5f + SHRT_MAX * accum / oversample)), SHRT_MIN, SHRT_MAX)));
 	}
 
 	return true;

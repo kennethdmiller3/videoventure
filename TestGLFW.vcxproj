@@ -155,8 +155,6 @@
     <ClInclude Include="Source\Core\Vector3.h" />
     <ClInclude Include="Source\Core\Vector4.h" />
     <ClInclude Include="Source\Core\World.h" />
-    <ClInclude Include="Source\Core\xs_Config.h" />
-    <ClInclude Include="Source\Core\xs_Float.h" />
     <ClInclude Include="Source\Interface\Console.h" />
     <ClInclude Include="Source\Interface\Font.h" />
     <ClInclude Include="Source\Interface\PlayerHUD.h" />
