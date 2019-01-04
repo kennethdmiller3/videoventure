@@ -54,9 +54,6 @@
     <ClInclude Include="glfw\src\mappings.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="glfw\msvc141\src\glfw_config.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="glfw\include\GLFW\glfw3.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -78,6 +75,7 @@
     <ClInclude Include="glfw\src\osmesa_context.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="glfw_config.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Header Files">

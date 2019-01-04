@@ -441,20 +441,40 @@ static void ReadInput()
 		// poll events
 		glfwPollEvents();
 
-		// get current joystick state
+		// if joystick 1 is connected...
 		if (glfwJoystickPresent(0))
 		{
-			// get joystick axis positions
-			int axiscount;
-			const float *axis = glfwGetJoystickAxes(0, &axiscount);
-			for (int i = 0; i < axiscount; ++i)
-				input.OnAxis(Input::TYPE_JOYSTICK_AXIS, 0, i, axis[i]);
+			// if the controller has a gamepad mapping...
+			if (glfwJoystickIsGamepad(0))
+			{
+				// get remapped gamepad state
+				GLFWgamepadstate state;
+				glfwGetGamepadState(0, &state);
 
-			// get joystick button states
-			int buttoncount;
-			const unsigned char *button = glfwGetJoystickButtons(0, &buttoncount);
-			for (int i = 0; i < buttoncount; ++i)
-				input.OnAxis(Input::TYPE_JOYSTICK_BUTTON, 0, i, button[i]);
+				// get gamepad axis positions
+				int axiscount = SDL_arraysize(state.axes);
+				for (int i = 0; i < axiscount; ++i)
+					input.OnAxis(Input::TYPE_JOYSTICK_AXIS, 0, i, state.axes[i]);
+
+				// get gamepad button states
+				int buttoncount = SDL_arraysize(state.buttons);
+				for (int i = 0; i < buttoncount; ++i)
+					input.OnAxis(Input::TYPE_JOYSTICK_BUTTON, 0, i, state.buttons[i]);
+			}
+			else
+			{
+				// get joystick axis positions
+				int axiscount;
+				const float *axis = glfwGetJoystickAxes(0, &axiscount);
+				for (int i = 0; i < axiscount; ++i)
+					input.OnAxis(Input::TYPE_JOYSTICK_AXIS, 0, i, axis[i]);
+
+				// get joystick button states
+				int buttoncount;
+				const unsigned char *button = glfwGetJoystickButtons(0, &buttoncount);
+				for (int i = 0; i < buttoncount; ++i)
+					input.OnAxis(Input::TYPE_JOYSTICK_BUTTON, 0, i, button[i]);
+			}
 		}
 #endif
 }
