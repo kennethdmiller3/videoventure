@@ -18,6 +18,7 @@ namespace Platform
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
 		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);	// GLFW_OPENGL_COMPAT_PROFILE
+		glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);	// apparently Apple needs this
 #ifdef ENABLE_ACCUMULATION_BUFFER
 		glfwWindowHint(GLFW_ACCUM_RED_BITS, 16);
 		glfwWindowHint(GLFW_ACCUM_GREEN_BITS, 16);
