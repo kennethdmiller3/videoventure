@@ -124,7 +124,7 @@
     <ProjectReference Include="..\TestGLFW.vcxproj">
       <Project>{8281103e-f163-404b-ada8-dde1aadc17af}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\tinyxml2\tinyxml2\tinyxml2.vcxproj">
+    <ProjectReference Include="..\TinyXML2.vcxproj">
       <Project>{d1c528b6-aa02-4d29-9d61-dc08e317a70d}</Project>
     </ProjectReference>
   </ItemGroup>

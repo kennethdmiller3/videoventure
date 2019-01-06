@@ -384,13 +384,13 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="chipmunk.vcxproj">
+    <ProjectReference Include="Chipmunk.vcxproj">
       <Project>{c1ace86e-5a14-490a-9678-104ba2546723}</Project>
     </ProjectReference>
-    <ProjectReference Include="glfw.vcxproj">
+    <ProjectReference Include="GLFW.vcxproj">
       <Project>{8e17b868-49a7-36aa-ac43-15d49cb538ea}</Project>
     </ProjectReference>
-    <ProjectReference Include="tinyxml2\tinyxml2\tinyxml2.vcxproj">
+    <ProjectReference Include="TinyXML2.vcxproj">
       <Project>{d1c528b6-aa02-4d29-9d61-dc08e317a70d}</Project>
     </ProjectReference>
   </ItemGroup>
