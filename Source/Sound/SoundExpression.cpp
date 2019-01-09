@@ -9,7 +9,7 @@ static bool Configure(SoundTemplate &self, const tinyxml2::XMLElement *element, 
 	// get sound length
 	float length;
 	element->QueryFloatAttribute("length", &length);
-	int count = int(ceilf(length * AUDIO_FREQUENCY));
+	int count = CeilToInt(length * AUDIO_FREQUENCY);
 
 	// reserve space
 	self.Reserve(count);
@@ -29,7 +29,7 @@ static bool Configure(SoundTemplate &self, const tinyxml2::XMLElement *element, 
 		float value = Expression::Evaluate<float>(context);
 
 		// add a sample
-		self.Append(short(Clamp(int(floorf(0.5f + value * SHRT_MAX)), SHRT_MIN, SHRT_MAX)));
+		self.Append(short(Clamp(RoundToInt(value * SHRT_MAX), SHRT_MIN, SHRT_MAX)));
 	}
 
 	return true;

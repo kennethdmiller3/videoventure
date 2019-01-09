@@ -10,7 +10,7 @@ static void HSV2RGB(const float h, const float s, const float v, float &r, float
 #if 1
 	// convert hue to index and fraction
 	const int bits = 20;
-	const int scaled = (int(floorf(h * (1 << bits))) & ((1 << bits) - 1)) * 6;
+	const int scaled = (FloorToInt(h * (1 << bits)) & ((1 << bits) - 1)) * 6;
 	const int i = scaled >> bits;
 	const float f = scaled * (1.0f / (1 << bits)) - i;
 
@@ -30,10 +30,13 @@ static void HSV2RGB(const float h, const float s, const float v, float &r, float
 	}
 #else
 	// http://www.xmission.com/~trevin/atari/video_notes.html
-	const float Y = 0.7f, S = 0.7f, theta = float(M_PI) - float(M_PI) * (sim_turn & 63) / 32.0f;
-	float R = Clamp(Y + S * sin(theta), 0.0f, 1.0f);
-	float G = Clamp(Y - (27/53) * S * sin(theta) - (10/53) * S * cos(theta), 0.0f, 1.0f);
-	float B = Clamp(Y + S * cos(theta), 0.0f, 1.0f);
+	const float Y = 0.7f * v, S = 0.7f * s, theta = 2.0f * float(M_PI) * h;
+	const float R = Y + S * sinf(theta);
+	const float B = Y + S * cosf(theta);
+	const float G = Y - (27 / 53) * (R - Y) - (10 / 53) * (B - Y);
+	r = Clamp(R, 0.0f, 1.0f);
+	g = Clamp(G, 0.0f, 1.0f);
+	b = Clamp(B, 0.0f, 1.0f);
 #endif
 }
 #pragma optimize( "", on )
@@ -497,7 +500,7 @@ void ShellTitle::Render(unsigned int aId, float aTime, const Transform2 &aTransf
 
 						// upright
 #ifdef USE_TITLE_VERTEX_ARRAY
-						unsigned int color = 0xFF000000 | (unsigned int(floorf(0.5f + B * 255)) << 16) | (unsigned int(floorf(0.5f + G * 255)) << 8) | (unsigned int(rountf(R * 255)));
+						unsigned int color = 0xFF000000 | (RoundToInt(B * 255) << 16) | (RoundToInt(G * 255) << 8) | (RoundToInt(R * 255));
 						*colorptr++ = color;
 						*colorptr++ = color;
 						*colorptr++ = color;
@@ -528,13 +531,13 @@ void ShellTitle::Render(unsigned int aId, float aTime, const Transform2 &aTransf
 							float yy1 = mirror_y0 + mirror_yd * m1;
 #ifdef USE_TITLE_VERTEX_ARRAY
 							color &= 0x00FFFFFF;
-							color |= unsigned int(floorf(0.5f + a1 * a1 * 255)) << 24;
+							color |= RoundToInt(a1 * a1 * 255) << 24;
 							*colorptr++ = color;
 							*colorptr++ = color;
 							*vertexptr++ = Vector2(x0 + dx1, yy1);
 							*vertexptr++ = Vector2(x1 + dx1, yy1);
 							color &= 0x00FFFFFF;
-							color |= unsigned int(floorf(0.5f + a0 * a0 * 255)) << 24;
+							color |= RoundToInt(a0 * a0 * 255) << 24;
 							*colorptr++ = color;
 							*colorptr++ = color;
 							*vertexptr++ = Vector2(x1 + dx0, yy0);

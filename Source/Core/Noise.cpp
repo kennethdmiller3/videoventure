@@ -113,7 +113,7 @@ static float Gradient(unsigned char hash, float x, float y, float z, float t)
 float Noise1D(float x)
 {
 	// split value into integer, fraction, and interpolator parts
-	const int ix = int(floorf(x));
+	const int ix = FloorToInt(x);
 	const float fx = x - ix;
 	const float tx = Fade(fx);
 
@@ -129,7 +129,7 @@ float Noise1D(float x)
 float Noise2D(float x, float y)
 {
 	// split values into integer, fraction, and interpolator parts
-	const int ix = int(floorf(x)), iy = int(floorf(y));
+	const int ix = FloorToInt(x), iy = FloorToInt(y);
 	const float fx = x - ix, fy = y - iy;
 	const float tx = Fade(fx), ty = Fade(fy);
 
@@ -185,7 +185,7 @@ float Noise2D(float x, float y)
 float Noise3D(float x, float y, float z)
 {
 	// split values into integer, fraction, and interpolator parts
-	const int ix = int(floorf(x)), iy = int(floorf(y)), iz = int(floorf(z)); 
+	const int ix = FloorToInt(x), iy = FloorToInt(y), iz = FloorToInt(z); 
 	const float fx = x - ix, fy = y - iy, fz = z - iz;
 	const float tx = Fade(fx), ty = Fade(fy), tz = Fade(fz);
 
@@ -258,7 +258,7 @@ float Noise4D(float x, float y, float z, float w)
 
 {
 	// split values into integer, fraction, and interpolator parts
-	const int ix = int(floorf(x)), iy = int(floorf(y)), iz = int(floorf(z)), iw = int(floorf(w));
+	const int ix = FloorToInt(x), iy = FloorToInt(y), iz = FloorToInt(z), iw = FloorToInt(w);
 	const float fx = x - ix, fy = y - iy, fz = z - iz, fw = w - iw;
 	const float tx = Fade(fx), ty = Fade(fy), tz = Fade(fz), tw = Fade(fw);
 
@@ -323,7 +323,7 @@ float Noise4D(float x, float y, float z, float w)
 	float noise(float x, float y, float z)
 	{
 		float s = (x+y+z)/3;
-		i=int(floorf(x+s)); j=int(floorf(y+s)); k=int(floorf(z+s));
+		i=FloorToInt(x+s); j=FloorToInt(y+s); k=FloorToInt(z+s);
 		s = (i+j+k)/6.0f; u = x-i+s; v = y-j+s; w = z-k+s;
 		A[0]=A[1]=A[2]=0;
 		int hi = u>=w ? u>=v ? 0 : 1 : v>=w ? 1 : 2;
