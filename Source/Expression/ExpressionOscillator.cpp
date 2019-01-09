@@ -162,7 +162,7 @@ void ConfigureSineWave(const tinyxml2::XMLElement *element, std::vector<unsigned
 static float TriangleWave(Expression::Context &aContext)
 {
 	float arg1(Expression::Evaluate<float>(aContext) + 0.25f);
-	return 2.0f * fabsf(2.0f * (arg1 - floorf(arg1))) - 1.0f;
+	return 2.0f * fabsf(2.0f * Frac(arg1)) - 1.0f;
 }
 
 // configure triangle wave oscillator
@@ -209,7 +209,7 @@ void ConfigureTriangleWave(const tinyxml2::XMLElement *element, std::vector<unsi
 static float SawtoothWave(Expression::Context &aContext)
 {
 	float arg1(Expression::Evaluate<float>(aContext));
-	return 2.0f * (arg1 - floorf(arg1));
+	return 2.0f * Frac(arg1);
 }
 
 // configure sawtooth wave oscillator
@@ -257,7 +257,7 @@ static float PulseWave(Expression::Context &aContext)
 {
 	float arg1(Expression::Evaluate<float>(aContext));
 	float arg2(Expression::Evaluate<float>(aContext));
-	return (arg1 - floorf(arg1) < arg2 - floorf(arg2)) ? 1.0f : -1.0f;
+	return (Frac(arg1) < Frac(arg2)) ? 1.0f : -1.0f;
 }
 
 // configure pulse wave oscillator
