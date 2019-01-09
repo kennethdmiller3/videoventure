@@ -110,3 +110,28 @@ inline __m128 SmoothStep(const __m128 e0, const __m128 e1, const __m128 v)
 	const __m128 t(_mm_div_ps(_mm_sub_ps(s, e0), _mm_sub_ps(e1, e0)));
 	return _mm_mul_ps(t, _mm_mul_ps(t, _mm_sub_ps(_mm_set_ps1(3), _mm_add_ps(t, t))));
 }
+
+
+// truncate to integer
+inline __m128i TruncateToInt(const __m128 v)
+{
+	return _mm_cvttps_epi32(v);
+}
+
+// round to integer
+inline __m128i RoundToInt(const __m128 v)
+{
+	return _mm_srai_epi32(_mm_cvtps_epi32(_mm_add_ps(_mm_add_ps(v, v), _mm_set_ps1(0.5f))), 1);
+}
+
+// floor to integer
+inline __m128i FloorToInt(const __m128 v)
+{
+	return _mm_srai_epi32(_mm_cvtps_epi32(_mm_sub_ps(_mm_add_ps(v, v), _mm_set_ps1(0.5f))), 1);
+}
+
+// ceiling to integer
+inline __m128i CeilToInt(const __m128 v)
+{
+	return _mm_srai_epi32(_mm_sub_epi32(_mm_setzero_si128(), _mm_cvtps_epi32(_mm_sub_ps(_mm_set_ps1(-0.5f), _mm_add_ps(v, v)))), 1);
+}

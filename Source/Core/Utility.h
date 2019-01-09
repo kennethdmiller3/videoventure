@@ -117,6 +117,30 @@ inline float SmoothStep(const float e0, const float e1, const float v)
 	return t * t * (3 - 2 * t);
 }
 
+// truncate to integer
+inline int TruncateToInt(const float v)
+{
+	return _mm_cvtt_ss2si(_mm_set_ss(v));
+}
+
+// round to integer
+inline int RoundToInt(const float v)
+{
+	return _mm_cvt_ss2si(_mm_set_ss(v + v + 0.5f)) >> 1;
+}
+
+// floor to integer
+inline int FloorToInt(const float v)
+{
+	return _mm_cvt_ss2si(_mm_set_ss(v + v - 0.5f)) >> 1;
+}
+
+// ceiling to integer
+inline int CeilToInt(const float v)
+{
+	return -(_mm_cvt_ss2si(_mm_set_ss(-0.5f - (v + v))) >> 1);
+}
+
 // rectangle template
 template<typename T> struct Rect
 {

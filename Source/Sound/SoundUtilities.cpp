@@ -8,7 +8,7 @@
 float OutputPulse(SoundTemplate &self, int ticks, float samplespertick, float samples, short value)
 {
 	samples += ticks * samplespertick;
-	int count = int(floorf(samples));
+	int count = FloorToInt(samples);
 	if (count > 0)
 	{
 		// append samples

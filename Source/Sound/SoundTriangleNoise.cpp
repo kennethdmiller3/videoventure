@@ -25,11 +25,11 @@ static bool Configure(SoundTemplate &self, const tinyxml2::XMLElement *element, 
 	element->QueryFloatAttribute("divider", &divider);
 
 	// outer loop delay ticks
-	int outerdelay = int(floorf(0.5f + frequency/(divider*AUDIO_FREQUENCY)));
+	int outerdelay = RoundToInt(frequency/(divider*AUDIO_FREQUENCY));
 	element->QueryIntAttribute("outerdelay", &outerdelay);
 
 	// inner loop delay ticks
-	int innerdelay = int(floorf(0.5f + frequency/(divider*AUDIO_FREQUENCY)));
+	int innerdelay = RoundToInt(frequency/(divider*AUDIO_FREQUENCY));
 	element->QueryIntAttribute("innerdelay", &innerdelay);
 
 	int value;

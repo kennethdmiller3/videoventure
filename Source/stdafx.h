@@ -14,6 +14,7 @@
 
 // SIMD intrinsics
 #include <xmmintrin.h>
+#include <emmintrin.h>
 
 // standard C library includes
 #define _USE_MATH_DEFINES

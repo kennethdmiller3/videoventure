@@ -28,7 +28,7 @@ static void HSV2RGB(const float h, const float s, const float v, float &r, float
 #if 1
 	// convert hue to index and fraction
 	const int bits = 20;
-	const int scaled = (int(floorf(h * (1 << bits))) & ((1 << bits) - 1)) * 6;
+	const int scaled = (FloorToInt(h * (1 << bits)) & ((1 << bits) - 1)) * 6;
 	const int i = scaled >> bits;
 	const float f = scaled * (1.0f / (1 << bits)) - i;
 
@@ -49,10 +49,13 @@ static void HSV2RGB(const float h, const float s, const float v, float &r, float
 	}
 #else
 	// http://www.xmission.com/~trevin/atari/video_notes.html
-	const float Y = 0.7f, S = 0.7f, theta = float(M_PI) - float(M_PI) * (sim_turn & 63) / 32.0f;
-	float R = Clamp(Y + S * sin(theta), 0.0f, 1.0f);
-	float G = Clamp(Y - (27/53) * S * sin(theta) - (10/53) * S * cos(theta), 0.0f, 1.0f);
-	float B = Clamp(Y + S * cos(theta), 0.0f, 1.0f);
+	const float Y = 0.7f * v, S = 0.7f * s, theta = 2.0f * float(M_PI) * h;
+	const float R = Y + S * sinf(theta);
+	const float B = Y + S * cosf(theta);
+	const float G = Y - (27 / 53) * (R - Y) - (10 / 53) * (B - Y);
+	r = Clamp(R, 0.0f, 1.0f);
+	g = Clamp(G, 0.0f, 1.0f);
+	b = Clamp(B, 0.0f, 1.0f);
 #endif
 }
 #pragma optimize( "", on )
@@ -550,9 +553,9 @@ void ShellTitle::Render(unsigned int aId, float aTime, const Transform2 &aTransf
 				bool border = (fill & ~(1<<BORDER_C)) != 0;
 				HSV2RGB(h + phase * 0.5f + border * 0.5f, 1.0f, 1.0f - 0.25f * border, R, G, B);
 				unsigned int color = 0xFF000000 
-					| (unsigned int(floorf(0.5f + B * 255)) << 16) 
-					| (unsigned int(floorf(0.5f + G * 255)) << 8)
-					| (unsigned int(floorf(0.5f + R * 255)));
+					| (RoundToInt(B * 255) << 16) 
+					| (RoundToInt(G * 255) << 8)
+					| (RoundToInt(R * 255));
 
 				// for each block...
 				for (int i = 0; i < 9; ++i)
@@ -608,14 +611,14 @@ void ShellTitle::Render(unsigned int aId, float aTime, const Transform2 &aTransf
 							float yy0 = mirror_y0 + mirror_yd * m0;
 							float yy1 = mirror_y0 + mirror_yd * m1;
 #if defined(USE_TITLE_PACKED_VERTEX)
-							unsigned int color1 = unsigned int(floorf(0.5f + a1 * a1 * 255)) << 24 | (color & 0x00FFFFFF);
+							unsigned int color1 = (RoundToInt(a1 * a1 * 255) << 24) | (color & 0x00FFFFFF);
 							v->pos = Vector2(x0 + dx1, yy1);
 							v->color = color1;
 							++v;
 							v->pos = Vector2(x1 + dx1, yy1);
 							v->color = color1;
 							++v;
-							unsigned int color0 = unsigned int(floorf(0.5f + a0 * a0 * 255)) << 24 | (color & 0x00FFFFFF);
+							unsigned int color0 = (RoundToInt(a0 * a0 * 255) << 24) | (color & 0x00FFFFFF);
 							v->pos = Vector2(x1 + dx0, yy0);
 							v->color = color0;
 							++v;

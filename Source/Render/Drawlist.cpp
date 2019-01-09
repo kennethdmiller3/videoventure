@@ -1064,7 +1064,7 @@ void DO_Block(EntityContext &aContext)
 	float t = aContext.mParam - start;
 	if (t >= 0.0f && length > 0.0f)
 	{
-		int loop = int(floorf(t / length));
+		int loop = FloorToInt(t / length);
 		if (repeat < 0 || loop <= repeat)
 		{
 			t -= loop * length;
