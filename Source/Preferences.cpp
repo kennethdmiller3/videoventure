@@ -7,7 +7,7 @@ bool ReadPreferences(const char *config)
 	DebugPrint("Preferences %s\n", config);
 	tinyxml2::XMLDocument document;
 	if (document.LoadFile(config) != tinyxml2::XML_SUCCESS)
-		DebugPrint("error loading preferences file \"%s\": s\n", config, document.ErrorStr());
+		DebugPrint("error loading preferences file \"%s\": %s\n", config, document.ErrorStr());
 
 	// process child elements of the root
 	if (const tinyxml2::XMLElement *root = document.FirstChildElement("preferences"))

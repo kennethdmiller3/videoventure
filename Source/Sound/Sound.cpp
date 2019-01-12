@@ -402,6 +402,12 @@ bool SoundTemplate::Configure(const tinyxml2::XMLElement *element, unsigned int 
 		}
 	}
 
+	if (mLength == 0)
+	{
+		DebugPrint("no sample data\n");
+		return false;
+	}
+
 	// trim excess space
 	Trim();
 
