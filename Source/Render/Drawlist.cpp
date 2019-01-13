@@ -1847,7 +1847,8 @@ void ConfigureDrawItem(unsigned int aId, const tinyxml2::XMLElement *element, st
 		break;
 
 	default:
-		for (int index = 0; index < sAttribCount; ++index)
+		// TO DO: look up attribute tags from the active shader?
+		for (int index = 0; index < SDL_arraysize(sAttribTag); ++index)
 		{
 			if (sAttribTag[index] == hash)
 			{
