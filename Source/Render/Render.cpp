@@ -1565,10 +1565,6 @@ void BindTexture(GLuint aTexture)
 #ifdef RENDER_USE_QUEUE
 	Expression::Append(sRenderQueue, RQ_BindTexture, aTexture);
 #else
-	if (aTexture)
-		glEnable(GL_TEXTURE_2D);
-	else
-		glDisable(GL_TEXTURE_2D);
 	glBindTexture(GL_TEXTURE_2D, aTexture);
 #endif
 }
