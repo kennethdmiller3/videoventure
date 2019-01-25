@@ -196,7 +196,7 @@ enum AttribIndex
 };
 
 extern void SetAttribCount(GLint aCount);
-extern void SetAttribFormat(GLint aIndex, GLuint aWidth, GLenum aType);
+extern void SetAttribFormat(GLint aIndex, GLuint aWidth, GLenum aType, GLboolean aNormalized = GL_TRUE);
 extern void SetAttribConstant(GLint aIndex, __m128 aValue);
 extern void SetAttribBuffer(GLint aIndex, BufferObject &aBuffer, GLuint aStride, GLuint aOffset);
 

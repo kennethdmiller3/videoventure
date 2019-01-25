@@ -121,6 +121,7 @@ __m128 sAttribValue[RENDER_MAX_ATTRIB];
 GLuint sAttribBuffer[RENDER_MAX_ATTRIB];
 GLuint sAttribWidth[RENDER_MAX_ATTRIB];
 GLenum sAttribType[RENDER_MAX_ATTRIB];
+GLboolean sAttribNormalized[RENDER_MAX_ATTRIB];
 GLuint sAttribSize[RENDER_MAX_ATTRIB];
 GLuint sAttribStride[RENDER_MAX_ATTRIB];
 GLuint sAttribOffset[RENDER_MAX_ATTRIB];
@@ -256,6 +257,7 @@ static void InitAttribs(void)
 	memset(sAttribBuffer, 0, sAttribCount * sizeof(sAttribBuffer[0]));
 	memset(sAttribWidth, 0, sAttribCount * sizeof(sAttribWidth[0]));
 	memset(sAttribType, 0, sAttribCount * sizeof(sAttribType[0]));
+	memset(sAttribNormalized, 0, sAttribCount * sizeof(sAttribNormalized[0]));
 	memset(sAttribSize, 0, sAttribCount * sizeof(sAttribSize[0]));
 	memset(sAttribStride, 0, sAttribCount * sizeof(sAttribStride[0]));
 	memset(sAttribOffset, 0, sAttribCount * sizeof(sAttribOffset[0]));
@@ -486,9 +488,10 @@ void RQ_BindIndexBuffer(Expression::Context &aContext)
 // set attribute array (shader)
 struct AttribArrayDesc
 {
-	GLubyte index;
-	GLubyte width;
-	GLubyte type;
+	GLubyte index : 4;
+	GLubyte width : 2;
+	GLubyte type : 4;
+	GLboolean normalized : 1;
 	GLubyte stride;
 	GLuint offset;
 };
@@ -497,7 +500,7 @@ void RQ_AttribArray(Expression::Context &aContext)
 	assert(sProgram != 0);
 	AttribArrayDesc desc(Expression::Read<AttribArrayDesc>(aContext));
 	glEnableVertexAttribArray(desc.index);
-	glVertexAttribPointer(desc.index, desc.width, desc.type + GL_BYTE, GL_TRUE, desc.stride, reinterpret_cast<const GLvoid *>(desc.offset));
+	glVertexAttribPointer(desc.index, desc.width + 1, desc.type + GL_BYTE, desc.normalized, desc.stride, reinterpret_cast<const GLvoid *>(desc.offset));
 }
 
 // bind texture
@@ -869,7 +872,8 @@ void SetAttribFormat(GLint aIndex, GLuint aWidth, GLenum aType)
 
 	if (aIndex < sAttribCount &&
 		sAttribWidth[aIndex] == aWidth &&
-		sAttribType[aIndex] == aType)
+		sAttribType[aIndex] == aType &&
+		sAttribNormalized[aIndex] == aNormalized)
 		return;
 
 	assert(sVertexCount == 0 && sIndexCount == 0);
@@ -878,6 +882,7 @@ void SetAttribFormat(GLint aIndex, GLuint aWidth, GLenum aType)
 		sAttribCount = aIndex + 1;
 	sAttribWidth[aIndex] = aWidth;
 	sAttribType[aIndex] = aType;
+	sAttribNormalized[aIndex] = aNormalized;
 	switch (aType)
 	{
 	case GL_BYTE:
@@ -972,11 +977,12 @@ void SetAttribBufferInternal(GLint aIndex, BufferObject &aBuffer, GLuint aStride
 	}
 
 	// queue attrib array command
-	AttribArrayDesc desc;
-	assert(aIndex <= UCHAR_MAX);
+	AttribArrayDesc desc = { 0 };
+	assert(aIndex < RENDER_MAX_ATTRIB);
 	desc.index = GLubyte(aIndex);
-	desc.width = GLubyte(sAttribWidth[aIndex]);
+	desc.width = GLubyte(sAttribWidth[aIndex] - 1);
 	desc.type = GLubyte(sAttribType[aIndex] - GL_BYTE);
+	desc.normalized = sAttribNormalized[aIndex];
 	assert(aStride <= UCHAR_MAX);
 	desc.stride = GLubyte(aStride);
 	desc.offset = aOffset;
@@ -989,7 +995,7 @@ void SetAttribBufferInternal(GLint aIndex, BufferObject &aBuffer, GLuint aStride
 		glBindBuffer(GL_ARRAY_BUFFER, aBuffer.mHandle);
 	}
 	glEnableVertexAttribArray(aIndex);
-	glVertexAttribPointer(aIndex, sAttribWidth[aIndex], sAttribType[aIndex], GL_TRUE, aStride, reinterpret_cast<const GLvoid *>(aOffset));
+	glVertexAttribPointer(aIndex, sAttribWidth[aIndex], sAttribType[aIndex], sAttribNormalized[aIndex], aStride, reinterpret_cast<const GLvoid *>(aOffset));
 #endif
 
 	// switch to buffer
@@ -1127,72 +1133,72 @@ static void PackAttribValue(GLint aIndex, __m128 aValue)
 	case GL_BYTE:
 		{
 			register GLbyte *dst = reinterpret_cast<GLbyte *>(sVertexPacked + displace);
-			//if (sAttribNormalize[aIndex])
+			if (sAttribNormalized[aIndex])
 				for (register GLuint i = 0; i < width; ++i)
-					*dst++ = GLbyte(Clamp(int(float(aValue.m128_f32[i] * 0x80)), CHAR_MIN, CHAR_MAX));
-			//else
-			//	for (register GLuint i = 0; i < width; ++i)
-			//		*dst++ = GLbyte(Clamp(xs_FloorToInt(aValue.m128_f32[i]), CHAR_MIN, CHAR_MAX));
+					*dst++ = GLbyte(Clamp(RoundToInt(0.5f * (aValue.m128_f32[i] * UCHAR_MAX - 1.0f)), CHAR_MIN, CHAR_MAX));
+			else
+				for (register GLuint i = 0; i < width; ++i)
+					*dst++ = GLbyte(Clamp(RoundToInt(aValue.m128_f32[i]), CHAR_MIN, CHAR_MAX));
 		}
 		break;
 
 	case GL_UNSIGNED_BYTE:
 		{
 			register GLubyte *dst = reinterpret_cast<GLubyte *>(sVertexPacked + displace);
-			//if (sAttribNormalize[aIndex])
+			if (sAttribNormalized[aIndex])
 				for (register GLuint i = 0; i < width; ++i)
-					*dst++ = GLubyte(Clamp(int(float(aValue.m128_f32[i] * 0x100)), 0, UCHAR_MAX));
-			//else
-			//	for (register GLuint i = 0; i < width; ++i)
-			//		reinterpret_cast<GLubyte *>(sAttribPacked[aIndex])[i] = GLubyte(Clamp(xs_FloorToInt(aValue.m128_f32[i]), 0, UCHAR_MAX));
+					*dst++ = GLubyte(Clamp(RoundToInt(aValue.m128_f32[i] * UCHAR_MAX), 0, UCHAR_MAX));
+			else
+				for (register GLuint i = 0; i < width; ++i)
+					*dst++ = GLubyte(Clamp(FloorToInt(aValue.m128_f32[i]), 0, UCHAR_MAX));
 		}
 		break;
 
 	case GL_SHORT:
 		{
-			//register GLshort *dst = reinterpret_cast<GLshort *>(sVertexPacked + displace);
-			//if (sAttribNormalize[aIndex])
-			//	for (register GLuint i = 0; i < width; ++i)
-			//		*dst++ = GLshort(Clamp(xs_FloorToInt(aValue.m128_f32[i] * 0x8000), SHRT_MIN, SHRT_MAX));
-			//else
-			//	for (register GLuint i = 0; i < width; ++i)
-			//		*dst++ = GLshort(Clamp(xs_FloorToInt(aValue.m128_f32[i]), SHRT_MIN, SHRT_MAX));
+			register GLshort *dst = reinterpret_cast<GLshort *>(sVertexPacked + displace);
+			if (sAttribNormalized[aIndex])
+				for (register GLuint i = 0; i < width; ++i)
+					*dst++ = GLshort(Clamp(RoundToInt(0.5f * (aValue.m128_f32[i] * USHRT_MAX - 1.0f)), SHRT_MIN, SHRT_MAX));
+			else
+				for (register GLuint i = 0; i < width; ++i)
+					*dst++ = GLshort(Clamp(FloorToInt(aValue.m128_f32[i]), SHRT_MIN, SHRT_MAX));
 		}
 		break;
 
 	case GL_UNSIGNED_SHORT:
 		{
-			//register GLushort *dst = reinterpret_cast<GLushort *>(sVertexPacked + displace);
-			//if (sAttribNormalize[aIndex])
-			//	for (register GLuint i = 0; i < width; ++i)
-			//		*dst++ = GLushort(Clamp(xs_FloorToInt(aValue.m128_f32[i] * 0x10000), 0, USHRT_MAX));
-			//else
-			//	for (register GLuint i = 0; i < width; ++i)
-			//		*dst++ = GLushort(Clamp(xs_FloorToInt(aValue.m128_f32[i]), 0, USHRT_MAX));
+			register GLushort *dst = reinterpret_cast<GLushort *>(sVertexPacked + displace);
+			if (sAttribNormalized[aIndex])
+				for (register GLuint i = 0; i < width; ++i)
+					*dst++ = GLushort(Clamp(RoundToInt(aValue.m128_f32[i] * USHRT_MAX), 0, USHRT_MAX));
+			else
+				for (register GLuint i = 0; i < width; ++i)
+					*dst++ = GLushort(Clamp(FloorToInt(aValue.m128_f32[i]), 0, USHRT_MAX));
 		}
 		break;
 
 	case GL_INT:
 		{
-			//register GLint *dst = reinterpret_cast<GLint *>(sVertexPacked + displace);
-			//if (sAttribNormalize[aIndex])
-			//	for (register GLuint i = 0; i < width; ++i)
-			//		*dst++ = GLint(Clamp(xs_FloorToInt(aValue.m128_f32[i] * 0x80000000), INT_MIN, INT_MAX));
-			//else
-			//	for (register GLuint i = 0; i < width; ++i)
-			//		*dst++ = GLint(Clamp(xs_FloorToInt(aValue.m128_f32[i]), INT_MIN, INT_MAX));
+			register GLint *dst = reinterpret_cast<GLint *>(sVertexPacked + displace);
+			if (sAttribNormalized[aIndex])
+				for (register GLuint i = 0; i < width; ++i)
+					*dst++ = GLint(Clamp(RoundToInt(0.5f * (aValue.m128_f32[i] * UINT_MAX - 1.0f)), INT_MIN, INT_MAX));
+			else
+				for (register GLuint i = 0; i < width; ++i)
+					*dst++ = GLint(Clamp(RoundToInt(aValue.m128_f32[i]), INT_MIN, INT_MAX));
 		}
 		break;
 
 	case GL_UNSIGNED_INT:
 		{
-			//register GLuint *dst = reinterpret_cast<GLuint *>(sVertexPacked + displace);
-			//if (sAttribNormalize[aIndex])
-			//	for (register GLuint i = 0; i < width; ++i)
-			//		*dst++ = GLuint(Clamp<GLuint>(xs_FloorToInt(aValue.m128_f32[i] * 0x100000000), 0, UINT_MAX));
-			//else
-			//	for (register GLuint i = 0; i < width; ++i)
-			//		*dst++ = GLuint(Clamp<GLuint>(xs_FloorToInt(aValue.m128_f32[i]), 0, UINT_MAX));
+			register GLuint *dst = reinterpret_cast<GLuint *>(sVertexPacked + displace);
+			if (sAttribNormalized[aIndex])
+				for (register GLuint i = 0; i < width; ++i)
+					*dst++ = GLuint(Clamp<GLuint>(RoundToInt(aValue.m128_f32[i] * UINT_MAX), 0, UINT_MAX));
+			else
+				for (register GLuint i = 0; i < width; ++i)
+					*dst++ = GLuint(Clamp<GLuint>(RoundToInt(aValue.m128_f32[i]), 0, UINT_MAX));
 		}
 		break;
 
