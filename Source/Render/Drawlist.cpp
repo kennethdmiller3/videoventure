@@ -37,7 +37,10 @@
 // 32 +/- 16 seems to work best, with rapid decline below 16 and slow decline above 48
 // the best value is probably CPU-, GPU-, and workload-dependent...
 // TO DO: get this working properly with GLubyte drawlist colors
-#define DRAWLIST_STATIC_THRESHOLD 8
+//#define DRAWLIST_STATIC_THRESHOLD 8
+//#define DRAWLIST_STATIC_THRESHOLD 16
+#define DRAWLIST_STATIC_THRESHOLD 32
+//#define DRAWLIST_STATIC_THRESHOLD 256
 
 // vertex normals
 // defined: enable support for normals
