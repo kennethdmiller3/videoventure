@@ -1407,9 +1407,9 @@ void ConfigureDrawItem(unsigned int aId, const tinyxml2::XMLElement *element, st
 			if (size != 0.0f)
 			{
 				if (bake)
-					Expression::Append(buffer, DO_PointSizeBake, 1);
+					Expression::Append(buffer, DO_PointSizeBake, 1.0f);
 				else
-					Expression::Append(buffer, DO_PointSize, 1);
+					Expression::Append(buffer, DO_PointSize, 1.0f);
 			}
 		}
 		break;
@@ -1429,9 +1429,9 @@ void ConfigureDrawItem(unsigned int aId, const tinyxml2::XMLElement *element, st
 			if (width != 0.0f)
 			{
 				if (bake)
-					Expression::Append(buffer, DO_LineWidthBake, 1);
+					Expression::Append(buffer, DO_LineWidthBake, 1.0f);
 				else
-					Expression::Append(buffer, DO_LineWidth, 1);
+					Expression::Append(buffer, DO_LineWidth, 1.0f);
 			}
 		}
 		break;
@@ -1451,9 +1451,9 @@ void ConfigureDrawItem(unsigned int aId, const tinyxml2::XMLElement *element, st
 			if (width != 0.0f)
 			{
 				if (bake)
-					Expression::Append(buffer, DO_LineWidthBake, 1);
+					Expression::Append(buffer, DO_LineWidthBake, 1.0f);
 				else
-					Expression::Append(buffer, DO_LineWidth, 1);
+					Expression::Append(buffer, DO_LineWidth, 1.0f);
 			}
 		}
 		break;
@@ -1473,9 +1473,9 @@ void ConfigureDrawItem(unsigned int aId, const tinyxml2::XMLElement *element, st
 			if (width != 0.0f)
 			{
 				if (bake)
-					Expression::Append(buffer, DO_LineWidthBake, 1);
+					Expression::Append(buffer, DO_LineWidthBake, 1.0f);
 				else
-					Expression::Append(buffer, DO_LineWidth, 1);
+					Expression::Append(buffer, DO_LineWidth, 1.0f);
 			}
 		}
 		break;
