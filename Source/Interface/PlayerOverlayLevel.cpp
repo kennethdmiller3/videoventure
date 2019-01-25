@@ -113,7 +113,7 @@ void PlayerOverlayLevel::Render(unsigned int aId, float aTime, const Transform2 
 	// draw level gauge
 
 	// use the color shader
-	if (UseProgram(ShaderColor::gProgramId) || &GetBoundVertexBuffer() != &GetDynamicVertexBuffer() || ViewProjChanged())
+	if (UseProgram(ShaderColor::gProgramId) || !IsDynamicActive() || ViewProjChanged())
 	{
 		// shader changed or switching back from non-dynamic geometry:
 		SetUniformMatrix4(ShaderColor::gUniformModelViewProj, ViewProjGet());

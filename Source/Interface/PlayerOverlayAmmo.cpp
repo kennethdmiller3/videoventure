@@ -98,7 +98,7 @@ void PlayerOverlayAmmo::Render(unsigned int aId, float aTime, const Transform2 &
 	cur_level = new_level;
 
 	// use the color shader
-	if (UseProgram(ShaderColor::gProgramId) || &GetBoundVertexBuffer() != &GetDynamicVertexBuffer() || ViewProjChanged())
+	if (UseProgram(ShaderColor::gProgramId) || !IsDynamicActive() || ViewProjChanged())
 	{
 		// shader changed or switching back from non-dynamic geometry:
 		// set model view projection matrix

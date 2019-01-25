@@ -164,7 +164,7 @@ void Console::Render()
 	};
 
 	// use the color shader
-	if (UseProgram(ShaderColor::gProgramId) || &GetBoundVertexBuffer() != &GetDynamicVertexBuffer() || ViewProjChanged())
+	if (UseProgram(ShaderColor::gProgramId) || !IsDynamicActive() || ViewProjChanged())
 	{
 		// shader changed:
 		// set model view projection matrix

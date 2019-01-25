@@ -62,7 +62,7 @@ void ShellMenuItem::Render(unsigned int aId, float aTime, const Transform2 &aTra
 		// render button
 
 		// use the color shader
-		if (UseProgram(ShaderColor::gProgramId) || &GetBoundVertexBuffer() != &GetDynamicVertexBuffer() || ViewProjChanged())
+		if (UseProgram(ShaderColor::gProgramId) || !IsDynamicActive() || ViewProjChanged())
 		{
 			// changed program or switching back from non-dynamic geometry:
 			// set model view projection matrix

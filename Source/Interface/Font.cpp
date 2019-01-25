@@ -280,7 +280,7 @@ static GLuint sVertexBase;
 void FontDrawBegin(GLuint handle)
 {
 	BindTexture(handle);
-	if (UseProgram(sFontProgramId) || &GetBoundVertexBuffer() != &GetDynamicVertexBuffer() || ViewProjChanged())
+	if (UseProgram(sFontProgramId) || !IsDynamicActive() || ViewProjChanged())
 	{
 		SetUniformMatrix4(sUniformModelViewProj, ViewProjGet());
 	}

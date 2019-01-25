@@ -139,7 +139,7 @@ void PlayerOverlayHealth::Render(unsigned int aId, float aTime, const Transform2
 	Color4 fillcolor = Lerp(Lerp(healthcolor[band][0], healthcolor[band+1][0], ratio), Lerp(healthcolor[band][1], healthcolor[band+1][1], ratio), pulse);
 
 	// use the color shader
-	if (UseProgram(ShaderColor::gProgramId) || &GetBoundVertexBuffer() != &GetDynamicVertexBuffer() || ViewProjChanged())
+	if (UseProgram(ShaderColor::gProgramId) || !IsDynamicActive() || ViewProjChanged())
 	{
 		// shader changed or switching back from non-dynamic geometry:
 		// set model view projection matrix

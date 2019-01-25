@@ -482,10 +482,10 @@ void DO_DrawMode(EntityContext &aContext)
 	// get the render state
 	PackedRenderState state(Expression::Read<PackedRenderState>(aContext));
 
-	// use the basic program
-	if (UseProgram(ShaderColorFog::gProgramId) || &GetBoundVertexBuffer() != &GetDynamicVertexBuffer() || ViewProjChanged())
+	// prepare shader for dynamic geometry in world space
+	// TO DO: get the shader from the render state
+	if (UseProgram(ShaderColorFog::gProgramId) || !IsDynamicActive() || ViewProjChanged())
 	{
-		// shader changed or switching back from non-dynamic geometry:
 		// set model view projection matrix
 		SetUniformMatrix4(ShaderColorFog::gUniformModelViewProj, ViewProjGet());
 
@@ -580,10 +580,10 @@ void DO_DisableBake(BakeContext &aContext)
 #pragma optimize("t", on)
 void DO_CopyElements(EntityContext &aContext)
 {
-	// use the basic program
-	if (UseProgram(ShaderColorFog::gProgramId) || &GetBoundVertexBuffer() != &GetDynamicVertexBuffer() || ViewProjChanged())
+	// prepare shader for dynamic geometry in world space
+	// TO DO: get the shader from the render state
+	if (UseProgram(ShaderColorFog::gProgramId) || !IsDynamicActive() || ViewProjChanged())
 	{
-		// shader changed or switching back from non-dynamic geometry:
 		// set model view projection matrix
 		SetUniformMatrix4(ShaderColorFog::gUniformModelViewProj, ViewProjGet());
 
@@ -749,26 +749,24 @@ static void SetupStaticAttribs(GLuint aFormat, GLuint aOffset)
 
 void DO_DrawElements(EntityContext &aContext)
 {
-	// if not currently in static mode...
-	if (IsDynamicActive())
+	// flush dynamic geometry
+	FlushDynamic();
+
+	// prepare shader for static geometry in model space
+	// TO DO: get the shader from the render state
+	if (UseProgram(ShaderColorFog::gProgramId) || IsDynamicActive() || ModelViewProjChanged())
 	{
-		// flush dynamic geometry
-		FlushDynamic();
+		// set model view projection matrix
+		SetUniformMatrix4(ShaderColorFog::gUniformModelViewProj, ModelViewProjGet());
+
+		// set model view matrix
+		SetUniformMatrix4(ShaderColorFog::gUniformModelView, ModelViewGet());
+
+		// set fog color and parameters
+		SetUniformVector4(ShaderColorFog::gUniformFogColor, GetFogColor());
+		const Vector4 fogparams(GetFogEnabled() ? 1.0f : 0.0f, GetFogStart(), GetFogEnd(), GetFogEnabled() ? 1.0f / (GetFogEnd() - GetFogStart()) : 0.f);
+		SetUniformVector4(ShaderColorFog::gUniformFogParams, fogparams);
 	}
-
-	// use the basic program
-	UseProgram(ShaderColorFog::gProgramId);
-
-	// get combined model view projection matrix
-	SetUniformMatrix4(ShaderColorFog::gUniformModelViewProj, ModelViewProjGet());
-
-	// set model view matrix
-	SetUniformMatrix4(ShaderColorFog::gUniformModelView, ModelViewGet());
-
-	// set fog color and parameters
-	SetUniformVector4(ShaderColorFog::gUniformFogColor, GetFogColor());
-	const Vector4 fogparams(GetFogEnabled() ? 1.0f : 0.0f, GetFogStart(), GetFogEnd(), GetFogEnabled() ? 1.0f / (GetFogEnd() - GetFogStart()) : 0.f);
-	SetUniformVector4(ShaderColorFog::gUniformFogParams, fogparams);
 
 	// set attribute formats
 	// TO DO: get these from the render state

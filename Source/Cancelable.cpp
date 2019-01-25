@@ -111,7 +111,7 @@ public:
 		const Vector2 aPos1 = Lerp(mSourcePos, aPos0, float(sim_turn - mStart + sim_fraction - mFraction) / float(mEnd - mStart - mFraction));
 
 		// use the color shader
-		if (UseProgram(ShaderColor::gProgramId) || &GetBoundVertexBuffer() != &GetDynamicVertexBuffer() || ViewProjChanged())
+		if (UseProgram(ShaderColor::gProgramId) || !IsDynamicActive() || ViewProjChanged())
 		{
 			// shader changed or switching back from non-dynamic geometry:
 			// set model view projection matrix

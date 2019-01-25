@@ -1043,7 +1043,7 @@ void RunState()
 			}
 
 			// use color shader
-			if (UseProgram(ShaderColor::gProgramId) || &GetBoundVertexBuffer() != &GetDynamicVertexBuffer() || ViewProjChanged())
+			if (UseProgram(ShaderColor::gProgramId) || !IsDynamicActive() || ViewProjChanged())
 			{
 				// set model view projection matrix
 				SetUniformMatrix4(ShaderColor::gUniformModelViewProj, ViewProjGet());

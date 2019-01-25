@@ -1108,7 +1108,7 @@ void EndScene(void)
 bool IsDynamicActive(void)
 {
 	return 
-		sVertexCount > 0;
+		sVertexCount > 0 || sVertexBuffer == &sDynamicVertexBuffer;
 }
 
 // pack attrib value
