@@ -226,7 +226,7 @@ struct BakeContext : public EntityContext
 		: EntityContext(aBuffer, aSize, aParam, aId, aVars)
 		, mTarget(aTarget)
 		, mProgram(ShaderColorFog::gProgramId)
-		, mFormat(1 << ShaderColorFog::gAttribPosition)
+		, mFormat(1 << ATTRIB_INDEX_POSITION)
 		, mDrawMode(GL_TRIANGLES)
 	{
 	}
@@ -249,13 +249,13 @@ static void FlushStatic(BakeContext &aContext)
 		DebugPrint("\t%d: p(%.2f %.2f %.2f)", i, vertex[0], vertex[1], vertex[2]);
 		vertex += 3;
 #ifdef DRAWLIST_NORMALS
-		if (aContext.mFormat & (1 << ShaderColorFog::gAttribNormal))
+		if (aContext.mFormat & (1 << ATTRIB_INDEX_NORMAL))
 		{
 			DebugPrint(" n(%.2f %.2f %.2f)", vertex[0], vertex[1], vertex[2]);
 			vertex += 3;
 		}
 #endif
-		if (aContext.mFormat & (1 << ShaderColorFog::gAttribColor))
+		if (aContext.mFormat & (1 << ATTRIB_INDEX_COLOR))
 		{
 #ifdef DRAWLIST_FLOAT_COLOR
 			DebugPrint(" c(%.2f %.2f %.2f %.2f)", vertex[0], vertex[1], vertex[2], vertex[3]);
@@ -266,7 +266,7 @@ static void FlushStatic(BakeContext &aContext)
 			vertex += 1;
 #endif
 		}
-		if (aContext.mFormat & (1 << ShaderColorFog::gAttribTexCoord))
+		if (aContext.mFormat & (1 << ATTRIB_INDEX_TEXCOORD))
 		{
 			DebugPrint(" t(%.2f %.2f)", vertex[0], vertex[1]);
 			vertex += 2;
@@ -498,23 +498,23 @@ void DO_DrawMode(EntityContext &aContext)
 		SetUniformVector4(ShaderColorFog::gUniformFogParams, fogparams);
 	}
 
-	// set up attributes
-	SetAttribFormat(ShaderColorFog::gAttribPosition, sPositionWidth, GL_FLOAT);
+	// set attribute formats
+	// TO DO: get these from the render state
+	SetAttribFormat(ATTRIB_INDEX_POSITION, sPositionWidth, GL_FLOAT);
 #ifdef DRAWLIST_NORMALS
-	SetAttribFormat(ShaderColorFog::gAttribNormal, sNormalWidth, GL_FLOAT);
+	SetAttribFormat(ATTRIB_INDEX_NORMAL, sNormalWidth, GL_FLOAT);
 #endif
-#ifdef DRAWLIST_FLOAT_COLOR	// always use float for dynamic stuff
-	SetAttribFormat(ShaderColorFog::gAttribColor, sColorWidth, GL_FLOAT);
+#ifdef DRAWLIST_FLOAT_COLOR
+	SetAttribFormat(ATTRIB_INDEX_COLOR, sColorWidth, GL_FLOAT);
 #else
-	SetAttribFormat(ShaderColorFog::gAttribColor, sColorWidth, GL_UNSIGNED_BYTE);
+	SetAttribFormat(ATTRIB_INDEX_COLOR, sColorWidth, GL_UNSIGNED_BYTE);
 #endif
-	// TO DO
-	//SetAttribFormat(ShaderColorFog::gAttribTexCoord, sTexCoordWidth, GL_FLOAT);
+	SetAttribFormat(ATTRIB_INDEX_TEXCOORD, sTexCoordWidth, GL_FLOAT);
 
 	// set work format
-	// include color attribute even if the state doesn't
+	// HACK: include color attribute even if the state doesn't
 	GLuint format = state.mFormat;
-	format |= 1 << ShaderColorFog::gAttribColor;
+	format |= 1 << ATTRIB_INDEX_COLOR;
 	SetWorkFormat(format);
 
 	// set draw mode
@@ -603,17 +603,18 @@ void DO_CopyElements(EntityContext &aContext)
 	GLuint indexOffset(Expression::Read<GLuint>(aContext));
 	GLuint indexCount(Expression::Read<GLuint>(aContext));
 
-	// set up attributes
-	SetAttribFormat(ShaderColorFog::gAttribPosition, sPositionWidth, GL_FLOAT);
+	// set attribute formats
+	// TO DO: get these from the render state
+	SetAttribFormat(ATTRIB_INDEX_POSITION, sPositionWidth, GL_FLOAT);
 #ifdef DRAWLIST_NORMALS
-	SetAttribFormat(ShaderColorFog::gAttribNormal, sNormalWidth, GL_FLOAT);
+	SetAttribFormat(ATTRIB_INDEX_NORMAL, sNormalWidth, GL_FLOAT);
 #endif
-#ifdef DRAWLIST_FLOAT_COLOR	// always use float for dynamic stuff
-	SetAttribFormat(ShaderColorFog::gAttribColor, sColorWidth, GL_FLOAT);
+#ifdef DRAWLIST_FLOAT_COLOR
+	SetAttribFormat(ATTRIB_INDEX_COLOR, sColorWidth, GL_FLOAT);
 #else
-	SetAttribFormat(ShaderColorFog::gAttribColor, sColorWidth, GL_UNSIGNED_BYTE);
+	SetAttribFormat(ATTRIB_INDEX_COLOR, sColorWidth, GL_UNSIGNED_BYTE);
 #endif
-	//SetAttribFormat(ShaderColorFog::gAttribTexCoord, sTexCoordWidth, GL_FLOAT);
+	SetAttribFormat(ATTRIB_INDEX_TEXCOORD, sTexCoordWidth, GL_FLOAT);
 
 	// get the source format
 	GLuint srcformat = state.mFormat;
@@ -648,7 +649,7 @@ void DO_CopyElements(EntityContext &aContext)
 		// position array always active
 		{
 			// copy position
-			const GLuint dstDisplace = sAttribDisplace[ShaderColorFog::gAttribPosition];
+			const GLuint dstDisplace = sAttribDisplace[ATTRIB_INDEX_POSITION];
 			memcpy(&pos, srcVertex, sPositionWidth * sizeof(float));
 			pos = StackTransformPosition(pos);
 			memcpy(dstVertex + dstDisplace, &pos, sPositionWidth * sizeof(float));
@@ -657,11 +658,11 @@ void DO_CopyElements(EntityContext &aContext)
 
 #ifdef DRAWLIST_NORMALS
 		// if normal array active...
-		if (dstformat & (1 << ShaderColorFog::gAttribNormal))
+		if (dstformat & (1 << ATTRIB_INDEX_NORMAL))
 		{
 			// copy normal
-			const size_t dstDisplace = sAttribDisplace[ShaderColorFog::gAttribNormal];
-			if (srcformat & (1 << ShaderColorFog::gAttribNormal))
+			const size_t dstDisplace = sAttribDisplace[ATTRIB_INDEX_NORMAL];
+			if (srcformat & (1 << ATTRIB_INDEX_NORMAL))
 			{
 				// copy source normal
 				memcpy(&nrm, srcVertex, sNormalWidth * sizeof(float));
@@ -678,7 +679,7 @@ void DO_CopyElements(EntityContext &aContext)
 #endif
 
 		// for other attributes...
-		assert(ShaderColorFog::gAttribPosition == 0);
+		assert(ATTRIB_INDEX_POSITION == 0);
 		for (int i = 1; i < sAttribCount; ++i)
 		{
 			// if attribute array active...
@@ -769,17 +770,18 @@ void DO_DrawElements(EntityContext &aContext)
 	const Vector4 fogparams(GetFogEnabled() ? 1.0f : 0.0f, GetFogStart(), GetFogEnd(), GetFogEnabled() ? 1.0f / (GetFogEnd() - GetFogStart()) : 0.f);
 	SetUniformVector4(ShaderColorFog::gUniformFogParams, fogparams);
 
-	// set up attributes
-	SetAttribFormat(ShaderColorFog::gAttribPosition, sPositionWidth, GL_FLOAT);
+	// set attribute formats
+	// TO DO: get these from the render state
+	SetAttribFormat(ATTRIB_INDEX_POSITION, sPositionWidth, GL_FLOAT);
 #ifdef DRAWLIST_NORMALS
-	SetAttribFormat(ShaderColorFog::gAttribNormal, sNormalWidth, GL_FLOAT);
+	SetAttribFormat(ATTRIB_INDEX_NORMAL, sNormalWidth, GL_FLOAT);
 #endif
-#ifdef DRAWLIST_FLOAT_COLOR	// always use float for dynamic stuff
-	SetAttribFormat(ShaderColorFog::gAttribColor, sColorWidth, GL_FLOAT);
+#ifdef DRAWLIST_FLOAT_COLOR
+	SetAttribFormat(ATTRIB_INDEX_COLOR, sColorWidth, GL_FLOAT);
 #else
-	SetAttribFormat(ShaderColorFog::gAttribColor, sColorWidth, GL_UNSIGNED_BYTE);
+	SetAttribFormat(ATTRIB_INDEX_COLOR, sColorWidth, GL_UNSIGNED_BYTE);
 #endif
-	//SetAttribFormat(ShaderColorFog::gAttribTexCoord, sTexCoordWidth, GL_FLOAT);
+	SetAttribFormat(ATTRIB_INDEX_TEXCOORD, sTexCoordWidth, GL_FLOAT);
 
 	// get rendering state
 	PackedRenderState state(Expression::Read<PackedRenderState>(aContext));
@@ -927,12 +929,12 @@ void DO_MultMatrix(EntityContext &aContext)
 #ifdef DRAWLIST_NORMALS
 void DO_Normal(EntityContext &aContext)
 {
-	SetAttribValue(ShaderColorFog::gAttribNormal, Expression::Evaluate<DLNormal>(aContext));
+	SetAttribValue(ATTRIB_INDEX_NORMAL, Expression::Evaluate<DLNormal>(aContext));
 }
 
 void DO_NormalBake(BakeContext &aContext)
 {
-	aContext.mFormat |= 1 << ShaderColorFog::gAttribNormal;
+	aContext.mFormat |= 1 << ATTRIB_INDEX_NORMAL;
 	_mm_storeu_ps(aContext.mNormal, Expression::Evaluate<DLNormal>(aContext));
 }
 #endif
@@ -1895,10 +1897,17 @@ static void ConfigureStatic(unsigned int aId, const tinyxml2::XMLElement *elemen
 	assert(sIndexCount == 0);
 	sIndexCount = 0;
 
-	// set format
-	// TO DO: get this from the shader
-	SetAttribFormat(ShaderColorFog::gAttribPosition, sPositionWidth, GL_FLOAT);
-	SetAttribFormat(ShaderColorFog::gAttribColor, sColorWidth, GL_UNSIGNED_BYTE);
+	// set attribute formats
+	SetAttribFormat(ATTRIB_INDEX_POSITION, sPositionWidth, GL_FLOAT);
+#ifdef DRAWLIST_NORMALS
+	SetAttribFormat(ATTRIB_INDEX_NORMAL, sNormalWidth, GL_FLOAT);
+#endif
+#ifdef DRAWLIST_FLOAT_COLOR
+	SetAttribFormat(ATTRIB_INDEX_COLOR, sColorWidth, GL_FLOAT);
+#else
+	SetAttribFormat(ATTRIB_INDEX_COLOR, sColorWidth, GL_UNSIGNED_BYTE);
+#endif
+	SetAttribFormat(ATTRIB_INDEX_TEXCOORD, sTexCoordWidth, GL_FLOAT);
 
 	// configure draw items
 	BakeContext context(&buffer, NULL, 0, 0.0f, aId);

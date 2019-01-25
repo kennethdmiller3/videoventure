@@ -75,7 +75,7 @@ PlayerOverlayLevel::PlayerOverlayLevel(unsigned int aPlayerId = 0)
 	if (drawlist.size())
 	{
 		// create drawlist for icon
-		Expression::Append(icon_drawlist, DO_AttribValue, ShaderColor::gAttribColor);
+		Expression::Append(icon_drawlist, DO_AttribValue, ATTRIB_INDEX_COLOR);
 		Expression::Append(icon_drawlist, Expression::Read<__m128>, 0.4f,  0.5f, 1.0f, 1.0f);
 		Expression::Append(icon_drawlist, DO_PushMatrix);
 		Expression::Append(icon_drawlist, DO_Translate, Expression::Read<__m128>, levelpos.x, levelpos.y, 0.0f, 1.0f);
@@ -120,11 +120,11 @@ void PlayerOverlayLevel::Render(unsigned int aId, float aTime, const Transform2 
 	}
 
 	// set attribute formats
-	SetAttribFormat(ShaderColor::gAttribPosition, 3, GL_FLOAT);
-	SetAttribFormat(ShaderColor::gAttribColor, 4, GL_UNSIGNED_BYTE);
+	SetAttribFormat(ATTRIB_INDEX_POSITION, 3, GL_FLOAT);
+	SetAttribFormat(ATTRIB_INDEX_COLOR, 4, GL_UNSIGNED_BYTE);
 
 	// set work buffer format
-	SetWorkFormat((1<<ShaderColor::gAttribPosition)|(1<<ShaderColor::gAttribColor));
+	SetWorkFormat((1<<ATTRIB_INDEX_POSITION)|(1<<ATTRIB_INDEX_COLOR));
 
 	SetDrawMode(GL_TRIANGLES);
 

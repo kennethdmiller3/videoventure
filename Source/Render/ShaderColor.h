@@ -15,8 +15,4 @@ namespace ShaderColor
 
 	// uniform locations
 	extern GLint gUniformModelViewProj;
-
-	// attribute locations
-	extern GLint gAttribPosition;
-	extern GLint gAttribColor;
 }

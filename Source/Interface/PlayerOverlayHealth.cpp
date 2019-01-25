@@ -147,11 +147,11 @@ void PlayerOverlayHealth::Render(unsigned int aId, float aTime, const Transform2
 	}
 
 	// set attribute formats
-	SetAttribFormat(ShaderColor::gAttribPosition, 3, GL_FLOAT);
-	SetAttribFormat(ShaderColor::gAttribColor, 4, GL_UNSIGNED_BYTE);
+	SetAttribFormat(ATTRIB_INDEX_POSITION, 3, GL_FLOAT);
+	SetAttribFormat(ATTRIB_INDEX_COLOR, 4, GL_UNSIGNED_BYTE);
 
 	// set work buffer format
-	SetWorkFormat((1<<ShaderColor::gAttribPosition)|(1<<ShaderColor::gAttribColor));
+	SetWorkFormat((1<<ATTRIB_INDEX_POSITION)|(1<<ATTRIB_INDEX_COLOR));
 
 	SetDrawMode(GL_TRIANGLES);
 

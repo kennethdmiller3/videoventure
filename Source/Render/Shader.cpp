@@ -131,6 +131,7 @@ namespace Database
 			GLuint vertexhandle = Database::vertexshader.Get(program.mVertex);
 			GLuint fragmenthandle = Database::fragmentshader.Get(program.mFragment);
 			GLuint programhandle = CreateProgram(vertexhandle, fragmenthandle);
+			LinkProgram(programhandle);
 			Database::program.Put(aId, programhandle);
 
 			for (const tinyxml2::XMLElement *child = element->FirstChildElement(); child; child = child->NextSiblingElement())
@@ -211,6 +212,7 @@ void RebuildShaders(void)
 		GLuint vertexhandle = Database::vertexshader.Get(program.mVertex);
 		GLuint fragmenthandle = Database::fragmentshader.Get(program.mFragment);
 		GLuint programhandle = CreateProgram(vertexhandle, fragmenthandle);
+		LinkProgram(programhandle);
 		Database::program.Put(id, programhandle);
 	}
 }

@@ -136,26 +136,19 @@ static GLuint sFontFragmentId;
 // uniform locations
 static GLint sUniformModelViewProj;
 
-// attribute locations
-static GLint sAttribPosition;
-static GLint sAttribNormal;
-static GLint sAttribColor;
-static GLint sAttribTexCoord;
-
 static void InitFontProgram(void)
 {
 	// create font shader
 	sFontVertexId = CreateVertexShader(sFontVertexShader);
 	sFontFragmentId = CreateFragmentShader(sFontFragmentShader);
 	sFontProgramId = CreateProgram(sFontVertexId, sFontFragmentId);
+	glBindAttribLocation(sFontProgramId, ATTRIB_INDEX_POSITION, "position");
+	glBindAttribLocation(sFontProgramId, ATTRIB_INDEX_COLOR, "color");
+	glBindAttribLocation(sFontProgramId, ATTRIB_INDEX_TEXCOORD, "texcoord");
+	LinkProgram(sFontProgramId);
 
 	// get uniform location
 	sUniformModelViewProj = glGetUniformLocation(sFontProgramId, "modelviewproj");
-
-	// get attribute locations
-	sAttribPosition = glGetAttribLocation(sFontProgramId, "position");
-	sAttribColor = glGetAttribLocation(sFontProgramId, "color");
-	sAttribTexCoord = glGetAttribLocation(sFontProgramId, "texcoord");
 }
 
 static void CleanupFontProgram(void)
@@ -291,10 +284,10 @@ void FontDrawBegin(GLuint handle)
 	{
 		SetUniformMatrix4(sUniformModelViewProj, ViewProjGet());
 	}
-	SetAttribFormat(sAttribPosition, 3, GL_FLOAT);
-	SetAttribFormat(sAttribColor, 4, GL_UNSIGNED_BYTE);
-	SetAttribFormat(sAttribTexCoord, 2, GL_FLOAT);
-	SetWorkFormat((1<<sAttribPosition)|(1<<sAttribColor)|(1<<sAttribTexCoord));
+	SetAttribFormat(ATTRIB_INDEX_POSITION, 3, GL_FLOAT);
+	SetAttribFormat(ATTRIB_INDEX_COLOR, 4, GL_UNSIGNED_BYTE);
+	SetAttribFormat(ATTRIB_INDEX_TEXCOORD, 2, GL_FLOAT);
+	SetWorkFormat((1<< ATTRIB_INDEX_POSITION)|(1<< ATTRIB_INDEX_COLOR)|(1<< ATTRIB_INDEX_TEXCOORD));
 	SetDrawMode(GL_TRIANGLES);
 	sVertexBase = GetVertexCount();
 }

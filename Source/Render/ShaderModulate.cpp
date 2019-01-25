@@ -48,25 +48,19 @@ namespace ShaderModulate
 	// uniform locations
 	GLint gUniformModelViewProj;
 
-	// attribute locations
-	GLint gAttribPosition;
-	GLint gAttribColor;
-	GLint gAttribTexCoord;
-
 	void Init(void)
 	{
 		// create program from source
 		sVertexId = CreateVertexShader(sVertexSource);
 		sFragmentId = CreateFragmentShader(sFragmentSource);
 		gProgramId = CreateProgram(sVertexId, sFragmentId);
+		glBindAttribLocation(gProgramId, ATTRIB_INDEX_POSITION, "position");
+		glBindAttribLocation(gProgramId, ATTRIB_INDEX_COLOR, "color");
+		glBindAttribLocation(gProgramId, ATTRIB_INDEX_TEXCOORD, "texcoord");
+		LinkProgram(gProgramId);
 
 		// get uniform location
 		gUniformModelViewProj = glGetUniformLocation(gProgramId, "modelviewproj");
-
-		// get attribute locations
-		gAttribPosition = glGetAttribLocation(gProgramId, "position");
-		gAttribColor = glGetAttribLocation(gProgramId, "color");
-		gAttribTexCoord = glGetAttribLocation(gProgramId, "texcoord");
 	}
 
 	void Cleanup(void)

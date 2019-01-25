@@ -18,8 +18,4 @@ namespace ShaderColorFog
 	extern GLint gUniformModelView;
 	extern GLint gUniformFogColor;
 	extern GLint gUniformFogParams;
-
-	// attribute locations
-	extern GLint gAttribPosition;
-	extern GLint gAttribColor;
 }

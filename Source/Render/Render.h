@@ -111,6 +111,9 @@ extern GLuint CreateFragmentShader(const char * aShaderCode);
 // create a shader program
 extern GLuint CreateProgram(GLuint aVertexShaderId, GLuint aFragmentShaderId);
 
+// link a shader program
+extern GLint LinkProgram(GLuint aProgramId);
+
 // delete a shader
 extern void DeleteShader(GLuint aShaderId);
 
@@ -181,6 +184,16 @@ extern void SetUniformMatrix4(GLint aIndex, const float aValue[]);
 //
 // ATTRIB FUNCTIONS
 //
+
+// preset attribute indices
+// TO DO: come up with an alternative
+enum AttribIndex
+{
+	ATTRIB_INDEX_POSITION = 0,
+	ATTRIB_INDEX_COLOR = 1,
+	ATTRIB_INDEX_TEXCOORD = 2,
+	ATTRIB_INDEX_COUNT
+};
 
 extern void SetAttribCount(GLint aCount);
 extern void SetAttribFormat(GLint aIndex, GLuint aWidth, GLenum aType);

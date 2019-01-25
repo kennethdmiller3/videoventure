@@ -496,10 +496,10 @@ static void ApplyMotionBlur(int blur)
 	SetUniformMatrix4(ShaderModulate::gUniformModelViewProj, IdentityGet());
 
 	// set attribute formats
-	SetAttribFormat(ShaderModulate::gAttribPosition, 2, GL_FLOAT);
-	SetAttribFormat(ShaderModulate::gAttribColor, 4, GL_UNSIGNED_BYTE);
-	SetAttribFormat(ShaderModulate::gAttribTexCoord, 2, GL_FLOAT);
-	SetWorkFormat((1 << ShaderModulate::gAttribPosition) | (1 << ShaderModulate::gAttribColor) | (1 << ShaderModulate::gAttribTexCoord));
+	SetAttribFormat(ATTRIB_INDEX_POSITION, 2, GL_FLOAT);
+	SetAttribFormat(ATTRIB_INDEX_COLOR, 4, GL_UNSIGNED_BYTE);
+	SetAttribFormat(ATTRIB_INDEX_TEXCOORD, 2, GL_FLOAT);
+	SetWorkFormat((1 << ATTRIB_INDEX_POSITION) | (1 << ATTRIB_INDEX_COLOR) | (1 << ATTRIB_INDEX_TEXCOORD));
 
 	SetDrawMode(GL_TRIANGLES);
 
@@ -1050,9 +1050,9 @@ void RunState()
 			}
 
 			// set attribs
-			SetAttribFormat(ShaderColor::gAttribPosition, 2, GL_FLOAT);
-			SetAttribConstant(ShaderColor::gAttribColor, _mm_setzero_ps());
-			SetWorkFormat(1<<ShaderColor::gAttribPosition);
+			SetAttribFormat(ATTRIB_INDEX_POSITION, 2, GL_FLOAT);
+			SetAttribConstant(ATTRIB_INDEX_COLOR, _mm_setzero_ps());
+			SetWorkFormat(1<<ATTRIB_INDEX_POSITION);
 
 			// draw triangle strips
 			SetDrawMode(GL_TRIANGLE_STRIP);
@@ -1064,7 +1064,7 @@ void RunState()
 				Vector2 *v0 = static_cast<Vector2 *>(AllocVertices(PerfTimer::NUM_SAMPLES * 2));
 				register Vector2 * __restrict v = v0;
 				const Color4 &color = band_info[band].color;
-				SetAttribConstant(ShaderColor::gAttribColor, _mm_loadu_ps(&color.r));
+				SetAttribConstant(ATTRIB_INDEX_COLOR, _mm_loadu_ps(&color.r));
 				float x = 0;
 				float dx = 640.0f / PerfTimer::NUM_SAMPLES;
 

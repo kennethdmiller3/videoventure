@@ -453,11 +453,11 @@ void ShellTitle::Render(unsigned int aId, float aTime, const Transform2 &aTransf
 	}
 
 	// set attribute formats
-	SetAttribFormat(ShaderColor::gAttribPosition, 2, GL_FLOAT);
-	SetAttribFormat(ShaderColor::gAttribColor, 4, GL_UNSIGNED_BYTE);
+	SetAttribFormat(ATTRIB_INDEX_POSITION, 2, GL_FLOAT);
+	SetAttribFormat(ATTRIB_INDEX_COLOR, 4, GL_UNSIGNED_BYTE);
 
 	// set work buffer format
-	SetWorkFormat((1<<ShaderColor::gAttribPosition)|(1<<ShaderColor::gAttribColor));
+	SetWorkFormat((1<<ATTRIB_INDEX_POSITION)|(1<<ATTRIB_INDEX_COLOR));
 
 	// draw triangle list 
 	// (because quads are deprecated)

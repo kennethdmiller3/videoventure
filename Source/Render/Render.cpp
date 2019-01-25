@@ -621,10 +621,14 @@ GLuint CreateProgram(GLuint aVertexShaderId, GLuint aFragmentShaderId)
 	GLuint program = glCreateProgram();
 	glAttachShader(program, aVertexShaderId);
 	glAttachShader(program, aFragmentShaderId);
-	glLinkProgram(program);
-	CheckProgram(program, "Error linking shader program:");
-
 	return program;
+}
+
+// link a shader program
+GLint LinkProgram(GLuint aProgramId)
+{
+	glLinkProgram(aProgramId);
+	return CheckProgram(aProgramId, "Error linking shader program:");
 }
 
 // delete a shader
