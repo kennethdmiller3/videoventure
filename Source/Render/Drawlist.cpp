@@ -563,6 +563,7 @@ void DO_BindTextureBake(BakeContext &aContext)
 	Expression::Append(*aContext.mTarget, DO_BindTexture, target, texture);
 }
 
+#if 0 // these are not currently used
 void DO_Disable(EntityContext &aContext)
 {
 	FlushDynamic();
@@ -576,6 +577,7 @@ void DO_DisableBake(BakeContext &aContext)
 	GLenum cap(Expression::Read<GLenum>(aContext));
 	Expression::Append(*aContext.mTarget, DO_Disable, cap);
 }
+#endif
 
 #pragma optimize("t", on)
 void DO_CopyElements(EntityContext &aContext)
@@ -616,10 +618,8 @@ void DO_CopyElements(EntityContext &aContext)
 #endif
 	SetAttribFormat(ATTRIB_INDEX_TEXCOORD, sTexCoordWidth, GL_FLOAT);
 
-	// get the source format
+	// set work format
 	GLuint srcformat = state.mFormat;
-
-	// set new work format
 	GLuint dstformat = srcformat | GetWorkFormat();
 	SetWorkFormat(dstformat);
 
@@ -721,6 +721,8 @@ extern void SetAttribBufferInternal(GLint aIndex, BufferObject &aBuffer, GLuint 
 
 static void SetupStaticAttribs(GLuint aFormat, GLuint aOffset)
 {
+	assert(aFormat != 0);
+
 	// get vertex stride
 	GLuint vertexsize = 0;
 	for (int index = 0; index < sAttribCount; ++index)
@@ -808,6 +810,7 @@ void DO_DrawElements(EntityContext &aContext)
 }
 #endif
 
+#if 0 // these are not currently used
 void DO_Enable(EntityContext &aContext)
 {
 	FlushDynamic();
@@ -821,6 +824,7 @@ void DO_EnableBake(BakeContext &aContext)
 	GLenum cap(Expression::Read<GLenum>(aContext));
 	Expression::Append(*aContext.mTarget, DO_Enable, cap);
 }
+#endif
 
 void DO_IndexPoints(EntityContext &aContext)
 {

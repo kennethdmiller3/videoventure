@@ -656,26 +656,6 @@ bool UseProgram(GLuint aProgram)
 
 	FlushDynamic();
 
-#ifndef RENDER_USE_QUEUE
-	if (sProgram && !aProgram)
-	{
-		// switch off vertex attribute arrays
-		for (int i = 0; i < sAttribCount; ++i)
-		{
-			if (sAttribBuffer[i])
-			{
-				glDisableVertexAttribArray(i);
-			}
-		}
-	}
-#endif
-
-	// initialize attribs
-	InitAttribs();
-
-	// init vertex format
-	InitVertexFormat();
-
 #ifdef RENDER_USE_QUEUE
 	// queue use program command
 	Expression::Append(sRenderQueue, RQ_UseProgram, aProgram);
@@ -809,6 +789,9 @@ BufferObject &GetDynamicIndexBuffer(void)
 // set uniform float
 extern void SetUniformFloat(GLint aIndex, const float aValue)
 {
+	// flush pending geometry
+	FlushDynamic();
+
 #ifdef RENDER_USE_QUEUE
 	Expression::Append(sRenderQueue, RQ_UniformFloat, aIndex, aValue);
 #else
@@ -819,6 +802,9 @@ extern void SetUniformFloat(GLint aIndex, const float aValue)
 // set uniform vector
 extern void SetUniformVector4(GLint aIndex, const float aValue[])
 {
+	// flush pending geometry
+	FlushDynamic();
+
 #ifdef RENDER_USE_QUEUE
 	Expression::Append(sRenderQueue, RQ_UniformVector4, aIndex);
 	memcpy(Expression::Alloc(sRenderQueue, 4 * sizeof(float)), aValue, 4 * sizeof(float));
@@ -828,8 +814,11 @@ extern void SetUniformVector4(GLint aIndex, const float aValue[])
 }
 
 // set uniform matrix
-static void SetUniformMatrix4Internal(GLint aIndex, const float aValue[])
+extern void SetUniformMatrix4(GLint aIndex, const float aValue[])
 {
+	// flush pending geometry
+	FlushDynamic();
+
 #ifdef RENDER_USE_QUEUE
 	// queue matrix command
 	Expression::Append(sRenderQueue, RQ_UniformMatrix4, aIndex);
@@ -838,13 +827,6 @@ static void SetUniformMatrix4Internal(GLint aIndex, const float aValue[])
 	// set uniform matrix
 	glUniformMatrix4fv(aIndex, 1, GL_FALSE, aValue);
 #endif
-}
-void SetUniformMatrix4(GLint aIndex, const float aValue[])
-{
-	// flush pending geometry
-	FlushDynamic();
-
-	SetUniformMatrix4Internal(aIndex, aValue);
 }
 
 
@@ -860,26 +842,43 @@ void SetAttribCount(GLint aCount)
 
 	assert(sVertexCount == 0 && sIndexCount == 0);
 
-	assert(sAttribCount < RENDER_MAX_ATTRIB);
+	assert(aCount < RENDER_MAX_ATTRIB);
+
+	// clear the affected attributes
+	const int clearFirst = std::min(sAttribCount, aCount);
+	const int clearCount = std::abs(sAttribCount - aCount);
+	memset(sAttribBuffer + clearFirst * sizeof(sAttribBuffer[0]), 0, clearCount * sizeof(sAttribBuffer[0]));
+	memset(sAttribWidth + clearFirst * sizeof(sAttribWidth[0]), 0, clearCount * sizeof(sAttribWidth[0]));
+	memset(sAttribType + clearFirst * sizeof(sAttribType[0]), 0, clearCount * sizeof(sAttribType[0]));
+	memset(sAttribNormalized + clearFirst * sizeof(sAttribNormalized[0]), 0, clearCount * sizeof(sAttribType[0]));
+	memset(sAttribSize + clearFirst * sizeof(sAttribSize[0]), 0, clearCount * sizeof(sAttribSize[0]));
+	memset(sAttribStride + clearFirst * sizeof(sAttribStride[0]), 0, clearCount * sizeof(sAttribStride[0]));
+	memset(sAttribOffset + clearFirst * sizeof(sAttribOffset[0]), 0, clearCount * sizeof(sAttribOffset[0]));
+	memset(sAttribDisplace + clearFirst * sizeof(sAttribDisplace[0]), 0, clearCount * sizeof(sAttribDisplace[0]));
+	
 	sAttribCount = aCount;
 }
 
 // set attribute format
-void SetAttribFormat(GLint aIndex, GLuint aWidth, GLenum aType)
+void SetAttribFormat(GLint aIndex, GLuint aWidth, GLenum aType, GLboolean aNormalized)
 {
 	if (aIndex < 0)
 		return;
 
+	// skip if nothing changed
 	if (aIndex < sAttribCount &&
 		sAttribWidth[aIndex] == aWidth &&
 		sAttribType[aIndex] == aType &&
 		sAttribNormalized[aIndex] == aNormalized)
 		return;
 
-	assert(sVertexCount == 0 && sIndexCount == 0);
+	FlushDynamic();
 
+	// update attribute count
 	if (sAttribCount < aIndex + 1)
-		sAttribCount = aIndex + 1;
+		SetAttribCount(aIndex + 1);
+
+	// set attribute values
 	sAttribWidth[aIndex] = aWidth;
 	sAttribType[aIndex] = aType;
 	sAttribNormalized[aIndex] = aNormalized;
@@ -906,7 +905,7 @@ void SetAttribFormat(GLint aIndex, GLuint aWidth, GLenum aType)
 		break;
 	}
 
-	// init vertex format
+	// invalidate the vertex format
 	InitVertexFormat();
 }
 
@@ -914,51 +913,48 @@ void SetAttribFormat(GLint aIndex, GLuint aWidth, GLenum aType)
 // (not bound to a buffer object)
 void SetAttribConstantInternal(GLint aIndex, __m128 aValue)
 {
+	// TO DO: add "dirty" flag to attribute to avoid redundant changes?
+#ifdef RENDER_USE_QUEUE
+	// queue attrib value command
+	Expression::Append(sRenderQueue, RQ_AttribConst, aIndex, aValue);
+#else
+	if (sAttribBuffer[aIndex] != 0)
+	{
+		glDisableVertexAttribArray(aIndex);
+	}
+	glVertexAttrib4fv(aIndex, aValue.m128_f32);
+#endif
+
 	// switch to constant
 	sAttribBuffer[aIndex] = 0;
 
 	// set the constant attribute value
 	sAttribValue[aIndex] = aValue;
 
-	// TO DO: add "dirty" flag to attribute to avoid redundant changes?
-#ifdef RENDER_USE_QUEUE
-	// queue attrib value command
-	Expression::Append(sRenderQueue, RQ_AttribConst, aIndex, aValue);
-#else
-	glDisableVertexAttribArray(aIndex);
-	glVertexAttrib4fv(aIndex, aValue.m128_f32);
-#endif
 }
 void SetAttribConstant(GLint aIndex, __m128 aValue)
 {
 	if (aIndex < 0)
 		return;
 
-	//if (aIndex < sAttribCount &&
-	//	sAttribBuffer[aIndex] == 0 &&
-	//	memcmp(sAttribValue[aIndex].m128_f32, aValue.m128_f32, sizeof(__m128)) == 0)
-	//	return;
+	// skip if nothing changed
+	if (aIndex < sAttribCount &&
+		sAttribBuffer[aIndex] == 0 &&
+		_mm_movemask_ps(_mm_cmpneq_ps(sAttribValue[aIndex], aValue)) == 0)
+		return;
 
-	// if not defined yet...
+	// flush dynamic geometry
+	FlushDynamic();
+
+	// update attribute count
 	if (sAttribCount < aIndex + 1)
-	{
-		// initialize to safe values
-		sAttribCount = aIndex + 1;
-		sAttribBuffer[aIndex] = 0;
-	}
+		SetAttribCount(aIndex + 1);
 
 	// if the attribute is currently array...
 	if (sAttribBuffer[aIndex] != 0)
 	{
-		// if building dynamic geometry...
-		if (sVertexWorkFormat)
-		{
-			// flush dynamic geometry
-			FlushDynamic();
-
-			// init vertex format
-			InitVertexFormat();
-		}
+		// init vertex format
+		InitVertexFormat();
 	}
 
 	// set the actual value
@@ -970,9 +966,8 @@ void SetAttribBufferInternal(GLint aIndex, BufferObject &aBuffer, GLuint aStride
 {
 #ifdef RENDER_USE_QUEUE
 	// queue buffer command
-	if (sVertexBuffer != &aBuffer)
+	if (sAttribBuffer[aIndex] != aBuffer.mHandle)
 	{
-		sVertexBuffer = &aBuffer;
 		Expression::Append(sRenderQueue, RQ_BindVertexBuffer, aBuffer.mHandle);
 	}
 
@@ -989,12 +984,14 @@ void SetAttribBufferInternal(GLint aIndex, BufferObject &aBuffer, GLuint aStride
 	Expression::Append(sRenderQueue, RQ_AttribArray, desc);
 #else
 	// bind buffer
-	if (sVertexBuffer != &aBuffer)
+	if (sAttribBuffer[aIndex] == 0)
 	{
-		sVertexBuffer = &aBuffer;
+		glEnableVertexAttribArray(aIndex);
+	}
+	if (sAttribBuffer[aIndex] != aBuffer.mHandle)
+	{
 		glBindBuffer(GL_ARRAY_BUFFER, aBuffer.mHandle);
 	}
-	glEnableVertexAttribArray(aIndex);
 	glVertexAttribPointer(aIndex, sAttribWidth[aIndex], sAttribType[aIndex], sAttribNormalized[aIndex], aStride, reinterpret_cast<const GLvoid *>(aOffset));
 #endif
 
@@ -1002,27 +999,29 @@ void SetAttribBufferInternal(GLint aIndex, BufferObject &aBuffer, GLuint aStride
 	sAttribBuffer[aIndex] = aBuffer.mHandle;
 	sAttribStride[aIndex] = aStride;
 	sAttribOffset[aIndex] = aOffset;
+
+	sVertexBuffer = &aBuffer;
 }
 void SetAttribBuffer(GLint aIndex, BufferObject &aBuffer, GLuint aStride, GLuint aOffset)
 {
 	if (aIndex < 0)
 		return;
 
+	sVertexBuffer = &aBuffer;
+
+	// skip if nothing changed
 	if (aIndex < sAttribCount &&
 		sAttribBuffer[aIndex] == aBuffer.mHandle &&
 		sAttribStride[aIndex] == aStride &&
 		sAttribOffset[aIndex] == aOffset)
 		return;
 
-	// if not defined yet...
+	// flush dynamic geometry
+	FlushDynamic();
+
+	// update attribute count
 	if (sAttribCount < aIndex + 1)
-	{
-		// initialize to safe values
-		sAttribCount = aIndex + 1;
-		sAttribBuffer[aIndex] = 0;
-		sAttribStride[aIndex] = 0;
-		sAttribOffset[aIndex] = 0;
-	}
+		SetAttribCount(aIndex + 1);
 
 	//assert(sVertexCount == 0 && sIndexCount == 0);
 	assert(aBuffer.mHandle != 0);
@@ -1032,15 +1031,8 @@ void SetAttribBuffer(GLint aIndex, BufferObject &aBuffer, GLuint aStride, GLuint
 	// if the attribute is currently constant...
 	if (sAttribBuffer[aIndex] == 0)
 	{
-		// if building dynamic geometry...
-		if (sVertexWorkFormat)
-		{
-			// flush dynamic geometry
-			FlushDynamic();
-
-			// init vertex format
-			InitVertexFormat();
-		}
+		// invalidate the vertex format
+		InitVertexFormat();
 	}
 
 	// set the actual values
@@ -1208,6 +1200,10 @@ static void PackAttribValue(GLint aIndex, __m128 aValue)
 			memcpy(sVertexPacked + displace, &aValue, width * sizeof(GLfloat));
 		}
 		break;
+
+	default:
+		assert(false);
+		break;
 	}
 }
 
@@ -1314,8 +1310,11 @@ void SetAttribValue(GLint aIndex, __m128 aValue)
 	// set the constant attribute value
 	sAttribValue[aIndex] = aValue;
 
-	// update the packed vertex
-	PackAttribValue(aIndex, aValue);
+	if (sVertexWorkFormat != 0)
+	{
+		// update the packed vertex
+		PackAttribValue(aIndex, aValue);
+	}
 }
 
 // add vertex to work buffer
@@ -1343,6 +1342,7 @@ void *AllocVertices(GLuint aCount)
 	{
 		FlushDynamic();
 	}
+	// TO DO: also return starting vertex count
 	void *dest = sVertexWork + sVertexUsed;
 	sVertexUsed += aCount * sVertexWorkSize / sizeof(float);
 	sVertexCount += aCount;
@@ -1356,6 +1356,7 @@ void *AllocIndices(GLuint aCount)
 	{
 		FlushDynamic();
 	}
+	// TO DO: also return starting index count
 	void *dest = sIndexWork + sIndexCount;
 	sIndexCount += aCount;
 	return dest;

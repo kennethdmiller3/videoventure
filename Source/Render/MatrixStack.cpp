@@ -514,9 +514,14 @@ bool ModelViewProjChanged(void)
 // get the combined model-view-projection matrix
 const float *ModelViewProjGet(void)
 {
+	if (sViewProjGenerated != sViewProjSequence)
+	{
+		sViewProjMatrix = sProjMatrix[sProjTop] * sViewMatrix;
+		sViewProjGenerated = sViewProjSequence;
+	}
 	if (sModelViewProjGenerated != sModelViewProjSequence)
 	{
-		sModelViewProjMatrix = sProjMatrix[sProjTop] * sViewMatrix * sStackMatrix[sStackTop];
+		sModelViewProjMatrix = sViewProjMatrix * sStackMatrix[sStackTop];
 		sModelViewProjGenerated = sModelViewProjSequence;
 	}
 	return sModelViewProjMatrix.m->m128_f32;
