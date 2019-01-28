@@ -842,6 +842,7 @@ void SetAttribCount(GLint aCount)
 
 	assert(sVertexCount == 0 && sIndexCount == 0);
 
+#if 0 // TO DO: synchronize the GL state
 	assert(aCount < RENDER_MAX_ATTRIB);
 
 	// clear the affected attributes
@@ -855,7 +856,8 @@ void SetAttribCount(GLint aCount)
 	memset(sAttribStride + clearFirst * sizeof(sAttribStride[0]), 0, clearCount * sizeof(sAttribStride[0]));
 	memset(sAttribOffset + clearFirst * sizeof(sAttribOffset[0]), 0, clearCount * sizeof(sAttribOffset[0]));
 	memset(sAttribDisplace + clearFirst * sizeof(sAttribDisplace[0]), 0, clearCount * sizeof(sAttribDisplace[0]));
-	
+#endif
+
 	sAttribCount = aCount;
 }
 
