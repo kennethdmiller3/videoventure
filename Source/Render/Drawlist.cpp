@@ -622,8 +622,10 @@ void DO_CopyElements(EntityContext &aContext)
 	SetAttribFormat(ATTRIB_INDEX_TEXCOORD, sTexCoordWidth, GL_FLOAT);
 
 	// set work format
+	// HACK: include color attribute even if the state doesn't
 	GLuint srcformat = state.mFormat;
 	GLuint dstformat = srcformat | GetWorkFormat();
+	dstformat |= 1 << ATTRIB_INDEX_COLOR;
 	SetWorkFormat(dstformat);
 
 	// set draw mode
