@@ -10,6 +10,7 @@
 
 #include "Render.h"
 #include "MatrixStack.h"
+#include "ShaderModulateFog.h"
 #include "ShaderColorFog.h"
 
 //
@@ -170,6 +171,10 @@ extern GLuint sAttribSize[RENDER_MAX_ATTRIB];
 extern GLuint sAttribStride[RENDER_MAX_ATTRIB];
 extern GLuint sAttribOffset[RENDER_MAX_ATTRIB];
 extern GLuint sAttribDisplace[RENDER_MAX_ATTRIB];
+
+// active texture
+// TO DO: get rid ofthis
+extern GLuint sTexture;
 
 // drawlist attributes
 static unsigned int sAttribTag[RENDER_MAX_ATTRIB] = { 0x934f4e0a /* "position" */, 0x3d7e6258 /* "color" */, 0xdd612dd3 /* "texcoord" */ };
@@ -487,18 +492,18 @@ void DO_DrawMode(EntityContext &aContext)
 
 	// prepare shader for dynamic geometry in world space
 	// TO DO: get the shader from the render state
-	if (UseProgram(ShaderColorFog::gProgramId) || !IsDynamicActive() || ViewProjChanged())
+	if (UseProgram(sTexture ? ShaderModulateFog::gProgramId : ShaderColorFog::gProgramId) || !IsDynamicActive() || ViewProjChanged())
 	{
 		// set model view projection matrix
-		SetUniformMatrix4(ShaderColorFog::gUniformModelViewProj, ViewProjGet());
+		SetUniformMatrix4(sTexture ? ShaderModulateFog::gUniformModelViewProj : ShaderColorFog::gUniformModelViewProj, ViewProjGet());
 
 		// set model view matrix
-		SetUniformMatrix4(ShaderColorFog::gUniformModelView, ViewGet());
+		SetUniformMatrix4(sTexture ? ShaderModulateFog::gUniformModelView : ShaderColorFog::gUniformModelView, ViewGet());
 
 		// set fog color and parameters
-		SetUniformVector4(ShaderColorFog::gUniformFogColor, GetFogColor());
+		SetUniformVector4(sTexture ? ShaderModulateFog::gUniformFogColor : ShaderColorFog::gUniformFogColor, GetFogColor());
 		const Vector4 fogparams(GetFogEnabled() ? 1.0f : 0.0f, GetFogStart(), GetFogEnd(), GetFogEnabled() ? 1.0f / (GetFogEnd() - GetFogStart()) : 0.f);
-		SetUniformVector4(ShaderColorFog::gUniformFogParams, fogparams);
+		SetUniformVector4(sTexture ? ShaderModulateFog::gUniformFogParams : ShaderColorFog::gUniformFogParams, fogparams);
 	}
 
 	// set attribute formats
@@ -550,20 +555,16 @@ void DO_DrawModeBake(BakeContext &aContext)
 
 void DO_BindTexture(EntityContext &aContext)
 {
-	FlushDynamic();
-
-	const GLenum target(Expression::Read<GLenum>(aContext));
 	const GLuint texture(Expression::Read<GLuint>(aContext));
-	glBindTexture(target, texture);
+	BindTexture(texture);
 }
 
 void DO_BindTextureBake(BakeContext &aContext)
 {
 	FlushStatic(aContext);
 
-	const GLenum target(Expression::Read<GLenum>(aContext));
 	const GLuint texture(Expression::Read<GLuint>(aContext));
-	Expression::Append(*aContext.mTarget, DO_BindTexture, target, texture);
+	Expression::Append(*aContext.mTarget, DO_BindTexture, texture);
 }
 
 #if 0 // these are not currently used
@@ -587,18 +588,18 @@ void DO_CopyElements(EntityContext &aContext)
 {
 	// prepare shader for dynamic geometry in world space
 	// TO DO: get the shader from the render state
-	if (UseProgram(ShaderColorFog::gProgramId) || !IsDynamicActive() || ViewProjChanged())
+	if (UseProgram(sTexture ? ShaderModulateFog::gProgramId : ShaderColorFog::gProgramId) || !IsDynamicActive() || ViewProjChanged())
 	{
 		// set model view projection matrix
-		SetUniformMatrix4(ShaderColorFog::gUniformModelViewProj, ViewProjGet());
+		SetUniformMatrix4(sTexture ? ShaderModulateFog::gUniformModelViewProj : ShaderColorFog::gUniformModelViewProj, ViewProjGet());
 
 		// set model view matrix
-		SetUniformMatrix4(ShaderColorFog::gUniformModelView, ViewGet());
+		SetUniformMatrix4(sTexture ? ShaderModulateFog::gUniformModelView : ShaderColorFog::gUniformModelView, ViewGet());
 
 		// set fog color and parameters
-		SetUniformVector4(ShaderColorFog::gUniformFogColor, GetFogColor());
+		SetUniformVector4(sTexture ? ShaderModulateFog::gUniformFogColor : ShaderColorFog::gUniformFogColor, GetFogColor());
 		const Vector4 fogparams(GetFogEnabled() ? 1.0f : 0.0f, GetFogStart(), GetFogEnd(), GetFogEnabled() ? 1.0f / (GetFogEnd() - GetFogStart()) : 0.f);
-		SetUniformVector4(ShaderColorFog::gUniformFogParams, fogparams);
+		SetUniformVector4(sTexture ? ShaderModulateFog::gUniformFogParams : ShaderColorFog::gUniformFogParams, fogparams);
 	}
 
 	// get rendering state
@@ -761,18 +762,18 @@ void DO_DrawElements(EntityContext &aContext)
 
 	// prepare shader for static geometry in model space
 	// TO DO: get the shader from the render state
-	if (UseProgram(ShaderColorFog::gProgramId) || IsDynamicActive() || ModelViewProjChanged())
+	if (UseProgram(sTexture ? ShaderModulateFog::gProgramId : ShaderColorFog::gProgramId) || IsDynamicActive() || ModelViewProjChanged())
 	{
 		// set model view projection matrix
 		SetUniformMatrix4(ShaderColorFog::gUniformModelViewProj, ModelViewProjGet());
 
 		// set model view matrix
-		SetUniformMatrix4(ShaderColorFog::gUniformModelView, ModelViewGet());
+		SetUniformMatrix4(sTexture ? ShaderModulateFog::gUniformModelViewProj : ShaderColorFog::gUniformModelView, ModelViewGet());
 
 		// set fog color and parameters
-		SetUniformVector4(ShaderColorFog::gUniformFogColor, GetFogColor());
+		SetUniformVector4(sTexture ? ShaderModulateFog::gUniformModelView : ShaderColorFog::gUniformFogColor, GetFogColor());
 		const Vector4 fogparams(GetFogEnabled() ? 1.0f : 0.0f, GetFogStart(), GetFogEnd(), GetFogEnabled() ? 1.0f / (GetFogEnd() - GetFogStart()) : 0.f);
-		SetUniformVector4(ShaderColorFog::gUniformFogParams, fogparams);
+		SetUniformVector4(sTexture ? ShaderModulateFog::gUniformFogParams : ShaderColorFog::gUniformFogParams, fogparams);
 	}
 
 	// set attribute formats
@@ -1538,17 +1539,11 @@ void ConfigureDrawItem(unsigned int aId, const tinyxml2::XMLElement *element, st
 					// bind the texture object
 					if (bake)
 					{
-#if 0
-						Expression::Append(buffer, DO_EnableBake, GL_TEXTURE_2D);
-#endif
-						Expression::Append(buffer, DO_BindTextureBake, GL_TEXTURE_2D, texture);
+						Expression::Append(buffer, DO_BindTextureBake, texture);
 					}
 					else
 					{
-#if 0
-						Expression::Append(buffer, DO_Enable, GL_TEXTURE_2D);
-#endif
-						Expression::Append(buffer, DO_BindTexture, GL_TEXTURE_2D, texture);
+						Expression::Append(buffer, DO_BindTexture, texture);
 					}
 				}
 				else
@@ -1560,17 +1555,11 @@ void ConfigureDrawItem(unsigned int aId, const tinyxml2::XMLElement *element, st
 			{
 				if (bake)
 				{
-#if 0
-					Expression::Append(buffer, DO_EnableBake, GL_TEXTURE_2D);
-#endif
-					Expression::Append(buffer, DO_BindTextureBake, GL_TEXTURE_2D, 0);
+					Expression::Append(buffer, DO_BindTextureBake, 0);
 				}
 				else
 				{
-#if 0
-					Expression::Append(buffer, DO_Enable, GL_TEXTURE_2D);
-#endif
-					Expression::Append(buffer, DO_BindTexture, GL_TEXTURE_2D, 0);
+					Expression::Append(buffer, DO_BindTexture, 0);
 				}
 			}
 		}
