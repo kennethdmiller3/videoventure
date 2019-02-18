@@ -1,6 +1,6 @@
 [submodule "Chipmunk2D"]
 	path = Chipmunk2D
-	url = https://github.com/slembcke/Chipmunk2D.git
+	url = https://github.com/kennethdmiller3/Chipmunk2D.git
 [submodule "GLFW"]
 	path = GLFW
 	url = https://github.com/glfw/glfw.git
