@@ -972,8 +972,9 @@ void Collidable::AddToWorld(Database::Key aId)
 	{
 		if (def.mLinearDamping || def.mAngularDamping)
 			body->velocity_func = BodyUpdateVelocity;
-		cpSpaceAddBody(world, body);
 	}
+
+	cpSpaceAddBody(world, body);
 
 	Database::collidablebody.Put(aId, body);
 
@@ -1063,7 +1064,11 @@ static void RemoveBodyFromWorld(cpBody *body)
 	cpBodyEachShape(body, RemoveShapeFromWorld, NULL);
 	cpBodyEachConstraint(body, RemoveConstraintFromWorld, NULL);
 	if (cpSpace *space = cpBodyGetSpace(body))
+	{
+		if (body == cpSpaceGetStaticBody(space))
+			return;
 		cpSpaceRemoveBody(space, body);
+	}
 	cpBodyFree(body);
 }
 
